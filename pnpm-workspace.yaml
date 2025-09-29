@@ -1,0 +1,12 @@
+packages:
+  - bob
+  - prague
+  - venice
+  - paris
+  - michael
+  - dieter
+  - tooling/*
+  - lab/*
+
+onlyBuiltDependencies:
+  - esbuild

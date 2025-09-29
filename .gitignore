@@ -1,0 +1,27 @@
+# Generated reports & logs
+_reports/
+*.log
+
+# Environment / secrets
+.DS_Store
+.env*
+
+# Build outputs & caches
+node_modules/
+dist/
+coverage/
+out/
+.turbo/
+.next/
+.vercel/
+.vercel/project.json
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo
+
+# Local tooling
+.zencoder/
+.vscode/
+
+# Git metadata stored outside worktree
+gitmeta/
