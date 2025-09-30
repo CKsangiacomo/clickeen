@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.app-base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@bob/*": ["./*"],
+      "@bob/components/*": ["app/components/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules"]
+}
