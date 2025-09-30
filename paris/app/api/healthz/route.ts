@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAll } from '@vercel/edge-config';
+import { withTimeout } from '@paris/lib/timeout';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,36 +12,30 @@ const SUPABASE_JWKS = process.env.SUPABASE_URL
 
 async function checkSupabase(timeoutMs = 1000) {
   if (!SUPABASE_JWKS) return false;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(SUPABASE_JWKS, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-    return res.ok;
+    return await withTimeout(async (signal) => {
+      const res = await fetch(SUPABASE_JWKS, {
+        method: 'GET',
+        cache: 'no-store',
+        signal,
+      });
+      return res.ok;
+    }, timeoutMs);
   } catch {
     return false;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
 async function checkEdgeConfig(timeoutMs = 1000) {
-  return new Promise<boolean>((resolve) => {
-    const timer = setTimeout(() => resolve(false), timeoutMs);
-    getAll()
-      .then(() => {
-        clearTimeout(timer);
-        resolve(true);
-      })
-      .catch(() => {
-        clearTimeout(timer);
-        resolve(false);
-      });
-  });
+  try {
+    await withTimeout(async (signal) => {
+      await getAll({ signal });
+    }, timeoutMs);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function GET() {

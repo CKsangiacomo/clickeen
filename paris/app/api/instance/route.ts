@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getServiceClient } from '/lib/supabaseAdmin';
+import { getServiceClient } from '@paris/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
@@ -18,11 +18,12 @@ function normalizePublicId(id?: string) {
     throw new ValidationError('publicId must be a string', 'publicId');
   }
 
-  const value = id?.trim() || globalThis.crypto?.randomUUID?.()?.replace(/[^a-z0-9-]/g, '').slice(0, 32) ||
+  const value = id?.trim() ||
+    globalThis.crypto?.randomUUID?.()?.replace(/[^a-z0-9-]/g, '').slice(0, 32) ||
     Math.random().toString(36).slice(2, 10);
 
   if (!/^[a-z0-9-]{6,64}$/.test(value)) {
-    throw new ValidationError('publicId must be 6–64 chars (lowercase a-z, 0-9, or -)', 'publicId');
+    throw new ValidationError('publicId must be 6–64 chars, lowercase a-z, 0-9, or -', 'publicId');
   }
 
   return value;
