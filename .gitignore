@@ -25,3 +25,4 @@ tsconfig.tsbuildinfo
 
 # Git metadata stored outside worktree
 gitmeta/
+TMP_OLDREPO/

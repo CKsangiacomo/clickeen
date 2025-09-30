@@ -54,7 +54,7 @@ NORMATIVE. This section is the only source of truth for Phase‑1 runtime contra
 - Overlay loader (popups/bars):
 - Canonical bundle served at `/embed/v{semver}/loader.js`
 - `/embed/latest/loader.js` alias points to the current version (maintained manually; no other loader endpoints exist in Phase‑1).
-  - Reads lowercase data attributes (e.g., `data-trigger="time|scroll|click"`, `data-delay`, `data-scrollpct`, `data-clickselector`) and injects an iframe pointed at `/e/:publicId`.
+  - Reads kebab-case data attributes (e.g., `data-trigger="time|scroll|click"`, `data-delay`, `data-scroll-pct`, `data-click-selector`) and injects an iframe pointed at `/e/:publicId`.
   - Budget: loader+runtime ≤ 28KB gz; no external deps; passive listeners only.
   - Event bus (minimal): publish/subscribe with buffering until ready; events: open, close, ready; unsubscribe supported.
 - Errors (exact strings): TOKEN_INVALID, TOKEN_REVOKED, NOT_FOUND, CONFIG_INVALID, RATE_LIMITED, SSR_ERROR.
@@ -293,11 +293,12 @@ Shared error keys (exact strings)
 
 ## S11. Data & RLS Minima
 - Tables (see DB Truth for exact columns and casing):
-  - embed_tokens(public_id UNIQUE, …),
-  - widget_instances(… config JSONB, schema_version …),
-  - events(idempotency_hash UNIQUE, … indexed),
-  - plan_features(… service-role writes)
-- RLS: workspace-scoped reads/writes; no client SQL in embeds.
+  - `embed_tokens` — `public_id` (TEXT, UNIQUE, FK → `widget_instances.public_id`), `widget_instance_id` (UUID FK), `token` (TEXT UNIQUE), expiry metadata.
+  - `widget_instances` — config JSONB, `schema_version`, `draft_token`, `public_id` (TEXT UNIQUE) surfaced to APIs.
+  - `events` — includes nullable `idempotency_hash` (TEXT UNIQUE WHERE NOT NULL) for deduplication; written server-side only.
+  - `plan_features` / `plan_limits` — authoritative entitlements and quotas; writes require service-role credentials.
+  - `usage_events` / `widget_events` — analytics tables; reads scoped to workspace membership.
+- RLS: enabled on all Phase-1 tables (profiles, usage_events, widget_events, plan_limits, etc.). Clients never bypass RLS; embed surfaces rely on Venice/Paris proxies.
 
 ---
 
