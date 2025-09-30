@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parisJson } from '@venice/lib/paris';
+import { parisJson, getParisBase } from '@venice/lib/paris';
 import { escapeHtml, stringify } from '@venice/lib/html';
 
 export const runtime = 'edge';
@@ -79,7 +79,8 @@ export async function GET(req: Request, { params }: { params: { publicId: string
     headers['ETag'] = toWeakEtag(instance.updatedAt);
   }
 
-  headers['Content-Security-Policy'] = buildCsp(nonce);
+  const parisOrigin = new URL(getParisBase()).origin;
+  headers['Content-Security-Policy'] = buildCsp(nonce, parisOrigin);
 
   return new NextResponse(responseHtml, { status: 200, headers });
 }
@@ -210,13 +211,13 @@ function renderErrorPage({ publicId, status, message }: { publicId: string; stat
 </html>`;
 }
 
-function buildCsp(nonce: string) {
+function buildCsp(nonce: string, parisOrigin: string) {
   return [
     "default-src 'self'",
-    "script-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'nonce-${nonce}'`,
     "img-src 'self' data:",
-    "connect-src 'self'",
+    `connect-src 'self' ${escapeHtml(parisOrigin)}`,
     "frame-ancestors *",
     "form-action 'self'",
   ].join('; ');
