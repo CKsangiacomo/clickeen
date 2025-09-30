@@ -63,7 +63,8 @@ export async function GET(req: Request, { params }: { params: { publicId: string
 
   const instance = body as InstanceResponse;
   const branding = instance.branding ?? { hide: false, enforced: instance.status !== 'published' };
-  const responseHtml = renderInstancePage({ instance, theme, device, branding });
+  const nonce = crypto.randomUUID();
+  const responseHtml = renderInstancePage({ instance, theme, device, branding, nonce });
 
   if (ts) {
     headers['Cache-Control'] = 'no-store';
@@ -78,7 +79,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
     headers['ETag'] = toWeakEtag(instance.updatedAt);
   }
 
-  headers['Content-Security-Policy'] = buildCsp();
+  headers['Content-Security-Policy'] = buildCsp(nonce);
 
   return new NextResponse(responseHtml, { status: 200, headers });
 }
@@ -88,11 +89,13 @@ function renderInstancePage({
   theme,
   device,
   branding,
+  nonce,
 }: {
   instance: InstanceResponse;
   theme: string;
   device: string;
   branding: { hide?: boolean; enforced?: boolean };
+  nonce: string;
 }) {
   const backlink = !branding.hide || branding.enforced;
   const updated = instance.updatedAt ? new Date(instance.updatedAt).toLocaleString() : 'unknown';
@@ -103,7 +106,7 @@ function renderInstancePage({
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(instance.widgetType ?? 'Clickeen widget')}</title>
-    <style>
+    <style nonce="${escapeHtml(nonce)}">
       :root { color-scheme: ${theme === 'dark' ? 'dark' : 'light'}; }
       body {
         margin: 0;
@@ -207,11 +210,11 @@ function renderErrorPage({ publicId, status, message }: { publicId: string; stat
 </html>`;
 }
 
-function buildCsp() {
+function buildCsp(nonce: string) {
   return [
     "default-src 'self'",
     "script-src 'self'",
-    "style-src 'self' 'unsafe-inline'",
+    `style-src 'self' 'nonce-${nonce}'`,
     "img-src 'self' data:",
     "connect-src 'self'",
     "frame-ancestors *",

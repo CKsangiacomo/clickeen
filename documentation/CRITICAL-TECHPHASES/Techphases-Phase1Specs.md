@@ -102,8 +102,8 @@ Endpoints (Phase‑1):
   - Returns 201 with payload shape below.
 
 - POST /api/instance/from-template → Create an instance from a template
-  - Body: { widgetType: string, templateId: string, publicId?: string, overrides?: object }
-  - Returns 201 with payload shape below.
+  - Body: { widgetType: string, templateId: string, schemaVersion?: string, publicId?: string, overrides?: object }
+  - Returns 201 `{ instance, draftToken }`.
 
 - GET /api/instance/:publicId → Load instance
   - Returns 200 with payload shape below, or 404 NOT_FOUND.
