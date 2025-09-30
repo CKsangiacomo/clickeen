@@ -1,0 +1,25 @@
+{
+  "extends": "../tsconfig.app-base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@paris/*": [
+        "./*"
+      ],
+      "@paris/lib/*": [
+        "lib/*"
+      ],
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
