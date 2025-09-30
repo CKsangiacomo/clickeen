@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { loadInstance } from '@paris/lib/instances';
+import { assertInstanceAccess } from '@paris/lib/access';
+import { AuthError } from '@paris/lib/auth';
+import { TokenError } from '@paris/lib/instances';
 
 export const runtime = 'nodejs';
 
@@ -60,6 +63,20 @@ export async function POST(req: Request) {
     const instance = await loadInstance(supabase, publicId);
     if (!instance) {
       return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+    }
+
+    try {
+      await assertInstanceAccess(req, supabase, instance);
+    } catch (err) {
+      if (err instanceof TokenError) {
+        const status = err.code === 'TOKEN_REVOKED' ? 410 : 401;
+        return NextResponse.json({ error: err.code }, { status });
+      }
+      if (err instanceof AuthError) {
+        const status = err.code === 'AUTH_REQUIRED' ? 401 : 403;
+        return NextResponse.json({ error: err.code }, { status });
+      }
+      throw err;
     }
 
     const timestamp = payload.timestamp ? new Date(payload.timestamp) : new Date();

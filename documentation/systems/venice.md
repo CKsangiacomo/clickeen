@@ -330,7 +330,7 @@ Content-Security-Policy:
   frame-ancestors *;
   script-src 'self' 'nonce-{{nonce}}' 'strict-dynamic';
   connect-src 'self' https://c-keen-api.vercel.app https://c-keen-embed.vercel.app;
-  style-src 'self' 'sha256-{{hash}}';
+  style-src 'self' 'nonce-{{nonce}}';
   img-src 'self' data:;
   form-action 'self';
 ```

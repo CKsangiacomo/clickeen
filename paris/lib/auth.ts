@@ -14,24 +14,33 @@ export interface AuthContext {
   token: string;
 }
 
-export async function requireUser(req: Request): Promise<AuthContext> {
+export function extractBearerToken(req: Request): string | null {
   const header = req.headers.get('authorization') ?? req.headers.get('Authorization');
-  if (!header?.startsWith('Bearer ')) {
-    throw new AuthError('AUTH_REQUIRED');
-  }
-
+  if (!header?.startsWith('Bearer ')) return null;
   const token = header.slice(7).trim();
-  if (!token) {
-    throw new AuthError('AUTH_REQUIRED');
-  }
+  return token.length > 0 ? token : null;
+}
 
-  const client = getServiceClient();
+export function looksLikeJwt(token: string) {
+  return token.split('.').length === 3;
+}
+
+export async function authenticateUser(client: AdminClient, token: string) {
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) {
     throw new AuthError('AUTH_REQUIRED');
   }
+  return data.user;
+}
 
-  return { client, user: data.user, token };
+export async function requireUser(req: Request): Promise<AuthContext> {
+  const token = extractBearerToken(req);
+  if (!token) {
+    throw new AuthError('AUTH_REQUIRED');
+  }
+  const client = getServiceClient();
+  const user = await authenticateUser(client, token);
+  return { client, user, token };
 }
 
 export async function assertWorkspaceMember(

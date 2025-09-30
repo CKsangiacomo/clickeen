@@ -1,4 +1,5 @@
-import { getServiceClient, type AdminClient } from '@paris/lib/supabaseAdmin';
+import { AuthError } from '@paris/lib/auth';
+import type { AdminClient } from '@paris/lib/supabaseAdmin';
 
 export interface InstanceRecord {
   id: string;
@@ -12,6 +13,13 @@ export interface InstanceRecord {
   config: Record<string, unknown>;
   updatedAt: string;
   workspaceId: string;
+}
+
+export class TokenError extends Error {
+  constructor(public readonly code: 'TOKEN_INVALID' | 'TOKEN_REVOKED') {
+    super(code);
+    this.name = 'TokenError';
+  }
 }
 
 export async function loadInstance(client: AdminClient, publicId: string): Promise<InstanceRecord | null> {
@@ -106,4 +114,32 @@ export function shapeInstanceResponse(record: InstanceRecord) {
     },
     updatedAt: record.updatedAt,
   };
+}
+
+export async function validateEmbedOrDraftToken(client: AdminClient, instance: InstanceRecord, token: string) {
+  if (instance.draftToken && token === instance.draftToken) {
+    return { kind: 'draft' as const };
+  }
+
+  const { data, error } = await client
+    .from('embed_tokens')
+    .select('token, expires_at, revoked_at')
+    .eq('public_id', instance.publicId)
+    .eq('token', token)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new TokenError('TOKEN_INVALID');
+  if (data.revoked_at) throw new TokenError('TOKEN_REVOKED');
+  if (data.expires_at && new Date(data.expires_at).getTime() < Date.now()) {
+    throw new TokenError('TOKEN_REVOKED');
+  }
+
+  return { kind: 'embed' as const };
+}
+
+export async function ensureInstanceWritable(instance: InstanceRecord) {
+  if (instance.status === 'inactive') {
+    throw new AuthError('FORBIDDEN', 'Instance is inactive');
+  }
 }

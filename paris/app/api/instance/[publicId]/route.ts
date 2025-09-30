@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
-import { loadInstance, shapeInstanceResponse } from '@paris/lib/instances';
+import { assertInstanceAccess } from '@paris/lib/access';
+import { loadInstance, shapeInstanceResponse, TokenError } from '@paris/lib/instances';
+import { AuthError, requireUser, assertWorkspaceMember } from '@paris/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -43,14 +45,27 @@ function assertStatus(status: unknown) {
   return status as 'draft' | 'published' | 'inactive';
 }
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   try {
-    const supabase = getServiceClient();
-    const record = await loadInstance(supabase, params.publicId);
-    if (!record) {
-      return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+    const client = getServiceClient();
+    const instance = await loadInstance(client, params.publicId);
+    if (!instance) return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
+
+    try {
+      await assertInstanceAccess(req, client, instance);
+    } catch (err) {
+      if (err instanceof TokenError) {
+        const status = err.code === 'TOKEN_REVOKED' ? 410 : 401;
+        return NextResponse.json({ error: err.code }, { status });
+      }
+      if (err instanceof AuthError) {
+        const status = err.code === 'AUTH_REQUIRED' ? 401 : 403;
+        return NextResponse.json({ error: err.code }, { status });
+      }
+      throw err;
     }
-    return NextResponse.json(shapeInstanceResponse(record));
+
+    return NextResponse.json(shapeInstanceResponse(instance));
   } catch (err) {
     return NextResponse.json({ error: 'SERVER_ERROR', details: (err as Error).message ?? String(err) }, { status: 500 });
   }
@@ -62,16 +77,18 @@ export async function PUT(req: Request, { params }: Params) {
     const config = assertConfig(payload.config);
     const status = assertStatus(payload.status);
 
-    const supabase = getServiceClient();
-    const existing = await loadInstance(supabase, params.publicId);
-    if (!existing) {
+    const { client, user } = await requireUser(req);
+    const instance = await loadInstance(client, params.publicId);
+    if (!instance) {
       return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
     }
+
+    await assertWorkspaceMember(client, instance.workspaceId, user.id);
 
     const update: Record<string, unknown> = { config };
     if (status) update.status = status;
 
-    const { error } = await supabase
+    const { error } = await client
       .from('widget_instances')
       .update(update)
       .eq('public_id', params.publicId);
@@ -80,7 +97,7 @@ export async function PUT(req: Request, { params }: Params) {
       return NextResponse.json({ error: 'DB_ERROR', details: error.message }, { status: 500 });
     }
 
-    const refreshed = await loadInstance(supabase, params.publicId);
+    const refreshed = await loadInstance(client, params.publicId);
     if (!refreshed) {
       return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance updated but could not be reloaded' }, { status: 500 });
     }
@@ -89,6 +106,10 @@ export async function PUT(req: Request, { params }: Params) {
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });
+    }
+    if (err instanceof AuthError) {
+      const status = err.code === 'AUTH_REQUIRED' ? 401 : 403;
+      return NextResponse.json({ error: err.code }, { status });
     }
     return NextResponse.json({ error: 'SERVER_ERROR', details: (err as Error).message ?? String(err) }, { status: 500 });
   }

@@ -45,7 +45,7 @@ NORMATIVE. This section is the only source of truth for Phase‑1 runtime contra
   - Support If-None-Match and If-Modified-Since; return 304 when unchanged.
   - Vary: Authorization, X-Embed-Token when auth can affect the response.
 - Security headers (minimum):
-  - Content-Security-Policy: default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-{{nonce}}' 'strict-dynamic'; style-src 'self' 'sha256-{{hash}}'; img-src 'self' data:; form-action 'self'
+  - Content-Security-Policy: default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-{{nonce}}' 'strict-dynamic'; style-src 'self' 'nonce-{{nonce}}'; img-src 'self' data:; form-action 'self'
 - Backlink (Phase‑1): SSR HTML MUST include “Made with Clickeen”.
 - Accessibility (minimum):
   - Forms: label/for, aria-describedby for errors, aria-live for success/error.
