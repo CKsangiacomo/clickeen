@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
+import { loadInstance, shapeInstanceResponse } from '@paris/lib/instances';
 
 export const runtime = 'nodejs';
 
@@ -81,11 +82,9 @@ export async function POST(req: Request) {
     if (payload.schemaVersion) record.schema_version = payload.schemaVersion;
 
     const supabase = getServiceClient();
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('widget_instances')
-      .insert([record])
-      .select('public_id,status,config,updated_at')
-      .single();
+      .insert([record]);
 
     if (error) {
       if (isUniqueViolation(error)) {
@@ -94,7 +93,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DB_ERROR', details: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(shapeInstance(data), { status: 201 });
+    const created = await loadInstance(supabase, publicId);
+    if (!created) {
+      return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance created but could not be reloaded' }, { status: 500 });
+    }
+
+    return NextResponse.json(shapeInstanceResponse(created), { status: 201 });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });
@@ -105,13 +109,4 @@ export async function POST(req: Request) {
 
 function isUniqueViolation(error: PostgrestError) {
   return /duplicate key|unique constraint|23505/i.test(error.message);
-}
-
-function shapeInstance(row: any) {
-  return {
-    publicId: row.public_id,
-    status: row.status,
-    config: row.config ?? {},
-    updatedAt: row.updated_at,
-  };
 }
