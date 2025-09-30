@@ -13,7 +13,6 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 **Owner:** Supabase project `ebmqwqdexmemhrdhkmwn`.  
 **Dependencies:** Paris (service role access), Venice (read-only via Paris), Geneva (schemas).  
 **Phase-1 Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.  
-**Key ADRs:** ADR-004, ADR-005, ADR-012.  
 **Common mistakes:** Exposing internal UUIDs, letting clients write to protected tables, ignoring `23505` unique-violation handling.
 
 ## Purpose
@@ -533,7 +532,7 @@ WHERE widget_instance = $1
   AND metadata->>'ip' = $3;
 ```
 
-> Any optimization MUST reuse these canonical queries. Deviations require an ADR.
+> Any optimization MUST reuse these canonical queries. Deviations require explicit CEO approval.
 
 ## Monitoring & Maintenance
 

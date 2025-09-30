@@ -12,7 +12,6 @@
 **Owner:** Workspace package `@ck/dieter` + Vercel project `c-keen-app`.  
 **Dependencies:** None at runtime; consumed by Bob/Venice.  
 **Phase-1 Assets:** `@ck/dieter` package, `dieter/dist/**`, `/dieter/*` copied assets.  
-**Key ADRs:** ADR-004, ADR-005, ADR-012.  
 **Common mistakes:** Importing Dieter React components in Venice, fetching SVG icons at runtime, hand-editing `/bob/public/dieter/`.
 
 ---
@@ -102,14 +101,14 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 - Single source: `dieter/` package.
 - Copy-on-build only; keep `/bob/public/dieter/` untracked and regenerate assets manually when drift appears.
 - SVG normalization scripts enforce consistent assets.
-- Versions follow SemVer; breaking changes require ADR update.
-- Rendering split (React consoles vs. SSR widgets) is authoritative—changes need an ADR.
-- Tokens-only rule: every CSS addition must lean on existing tokens; if a needed token is missing (e.g., additional radius values), file an issue/ADR before shipping.
+- Versions follow SemVer; breaking changes require explicit CEO approval before shipping.
+- Rendering split (React consoles vs. SSR widgets) is authoritative—changes need explicit CEO approval.
+- Tokens-only rule: every CSS addition must lean on existing tokens; if a needed token is missing (e.g., additional radius values), raise an issue and obtain approval before shipping.
 
 ## Change Process
 1. Update Dieter source (tokens/components/icons).
 2. Run `pnpm icons:build` (when generator lands) + `pnpm --filter @ck/dieter build`.
-3. Copy assets via script; ensure docs/ADRs stay in sync.
+3. Copy assets via script; ensure docs and the decision log stay in sync.
 
 ---
 

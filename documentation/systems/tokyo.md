@@ -1,4 +1,7 @@
-# System: Tokyo — Billing & Upsell
+STATUS: INFORMATIVE — FUTURE (NOT PHASE-1)
+Phase-1 excludes Tokyo. Future billing/upsell work requires explicit CEO approval before implementation.
+
+# System: Tokyo — Billing & Upsell (Future)
 ## Identity
 - Tier: Core
 - Purpose: Stripe billing, entitlements

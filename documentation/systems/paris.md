@@ -11,7 +11,6 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 **Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).  
 **Phase-1 Endpoints:** `POST /api/instance`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.  
 **Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.  
-**Key ADRs:** ADR-004 (tool versions), ADR-005 (Dieter assets), ADR-012 (Edge Config & workflow).  
 **Common mistakes:** Treating PUT as upsert, calling Paris directly from browser surfaces, skipping idempotency key handling.
 
 # Paris — HTTP API Service (Phase-1)
@@ -70,6 +69,22 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
   - Returns 201 instance payload plus `{ draftToken }`. Paris stores the token in `widget_instances.draft_token`; Venice MUST receive it via Authorization header until claim.
 - `GET /api/instance/:publicId`
   - Loads the latest instance snapshot (service role or authorized workspace member). Returns 200 payload or 404 `NOT_FOUND`.
+  - _Example response (200):_
+    ```json
+    {
+      "publicId": "wgt_42yx31",
+      "status": "draft",
+      "widgetType": "forms.contact",
+      "templateId": "classic-light",
+      "schemaVersion": "2025-09-01",
+      "config": {
+        "title": "Contact Us",
+        "fields": { "name": true, "email": true, "message": true }
+      },
+      "branding": { "hide": false, "enforced": true },
+      "updatedAt": "2025-09-28T19:15:03.000Z"
+    }
+    ```
 - `PUT /api/instance/:publicId`
   - Updates config/status/template. Unknown config fields reset to target template defaults. Returns 200 payload, 404 if missing, 422 on validation errors.
   - _Example validation error (CONFIG_INVALID, 422):_
@@ -82,6 +97,22 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     ```
     ```json
     [ { "path": "config.fields.email", "message": "must be boolean" } ]
+    ```
+  - _Example response (200):_
+    ```json
+    {
+      "publicId": "wgt_42yx31",
+      "status": "draft",
+      "widgetType": "forms.contact",
+      "templateId": "classic-light",
+      "schemaVersion": "2025-09-01",
+      "config": {
+        "title": "Contact Us",
+        "fields": { "name": true, "email": true, "message": true }
+      },
+      "branding": { "hide": false, "enforced": true },
+      "updatedAt": "2025-09-28T19:16:44.000Z"
+    }
     ```
 - `POST /api/claim`
   - `{ draftToken }` → 200 instance payload. Invalid/expired tokens return 401/410.
@@ -96,6 +127,22 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     Content-Type: application/json
 
     { "draftToken": "dft_fa0bde7d-1dbe-4a4f-8b0a-98a8ea" }
+    ```
+    _Example response (200):_
+    ```json
+    {
+      "publicId": "wgt_42yx31",
+      "status": "published",
+      "widgetType": "forms.contact",
+      "templateId": "classic-light",
+      "schemaVersion": "2025-09-01",
+      "config": {
+        "title": "Contact Us",
+        "fields": { "name": true, "email": true, "message": true }
+      },
+      "branding": { "hide": true, "enforced": false },
+      "updatedAt": "2025-09-28T19:20:11.000Z"
+    }
     ```
     _Example 410 response:_
     ```http
@@ -157,6 +204,18 @@ Content-Type: application/json
 ```json
 { "token": "cket_9c0b5e57d7b1", "publicId": "wgt_42yx31" }
 ```
+_Example list response (200):_
+```json
+{
+  "tokens": [
+    {
+      "token": "cket_9c0b5e57d7b1",
+      "createdAt": "2025-09-28T19:25:30.000Z",
+      "expiresAt": "2025-10-01T00:00:00.000Z"
+    }
+  ]
+}
+```
 
 _Example entitlements response_
 ```http
@@ -178,7 +237,7 @@ Authorization: Bearer <workspace JWT>
 ### Entitlements
 - `GET /api/entitlements`
   - Computes `{ plan, limits, features }` by joining `plan_features` (capabilities) and `plan_limits` (hard quotas).
-  - Free plan enforcement: publishing a second active widget returns 403 `PLAN_LIMIT` (auto-deactivate requires an ADR).
+  - Free plan enforcement: publishing a second active widget returns 403 `PLAN_LIMIT` (any auto-deactivate behavior requires explicit CEO approval).
   - Premium gating: if `features.premiumTemplates=false`, saving/publishing a premium template returns 403 `PREMIUM_REQUIRED`.
 
 ### Usage, Submissions & Attribution
@@ -194,9 +253,35 @@ Authorization: Bearer <workspace JWT>
     }
     ```
     Paris deduplicates using the unique index on `usage_events.idempotency_hash`. Returns 202 `{ recorded: true }` or 202 `{ recorded: false }` for duplicates.
+    _Example response (202):_
+    ```json
+    { "recorded": true }
+    ```
   - **Idempotency key (example, non-normative):** `{event}-{publicId}-{epochMs}` such as `load-wgt_f3k9qz-1695938148000`. Clients may use any unique string; Paris only requires uniqueness.
 - `POST /api/submit/:publicId`
   - Receives submissions proxied from Venice. Persists into `widget_submissions`; rate limited per IP and instance. Anonymous rows are retained 30 days by backend maintenance (no DB TTL).
+  - _Example request:_
+    ```http
+    POST /api/submit/wgt_42yx31
+    Content-Type: application/json
+    X-Request-ID: 5b3c3a2d-1981-4a6f-938d-a56f0e6fb5f0
+
+    {
+      "fields": {
+        "name": "Jane Baker",
+        "email": "jane@example.com",
+        "message": "Interested in pricing."
+      },
+      "metadata": {
+        "userAgent": "Mozilla/5.0",
+        "ip": "203.0.113.24"
+      }
+    }
+    ```
+  - _Example response (202):_
+    ```json
+    { "status": "accepted", "deduped": false }
+    ```
 - Viral attribution events are written via the `events` table with `event_type = 'user_attribution'`.
 
 ### Health & System (Phase-1)
@@ -314,6 +399,19 @@ _API error code mapping (Phase-1)_
 - `DB_ERROR`: Database operation failed
 - `SERVER_ERROR`: Unexpected internal error
 
+### Error Scenario Matrix (Phase-1)
+| Scenario | Endpoint(s) | Status / Error | Response Body | Client guidance |
+| --- | --- | --- | --- | --- |
+| Duplicate `publicId` on create | `POST /api/instance` | 409 `ALREADY_EXISTS` | `{ "error": "ALREADY_EXISTS", "message": "Instance already exists" }` | Retry with different `publicId` (service-role only) |
+| Validation failure | `POST/PUT /api/instance`, `/api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "config.fields.email", "message": "must be boolean" }]` | Surface field-level errors; block retry until corrected |
+| Draft token revoked | `POST /api/claim` | 410 `TOKEN_REVOKED` | `{ "error": "TOKEN_REVOKED" }` | Remove cached draft token and prompt user to refresh |
+| Missing auth | Any authenticated endpoint | 401 `AUTH_REQUIRED` | `{ "error": "AUTH_REQUIRED", "message": "Authentication required" }` | Redirect to login / refresh workspace session |
+| Plan limit exceeded | `PUT /api/instance` (publish), `POST /api/token` (issue) | 403 `PLAN_LIMIT` | `{ "error": "PLAN_LIMIT", "message": "Upgrade required" }` | Show upgrade CTA; retry only after plan change |
+| Premium template without entitlement | `PUT /api/instance`, `POST /api/instance/from-template` | 403 `PREMIUM_REQUIRED` | `{ "error": "PREMIUM_REQUIRED" }` | Prevent selection; prompt upgrade |
+| Rate limit triggered | `POST /api/usage`, `POST /api/submit`, token ops | 429 `RATE_LIMITED` | `{ "error": "RATE_LIMITED", "retryAfter": 60 }` | Back off; obey `Retry-After` header |
+| Idempotency replay | `POST /api/usage`, `POST /api/submit` | 202 | `{ "recorded": false }` | Treat as success; do not re-send same key |
+| Database constraint violation | Any mutation | 500 `DB_ERROR` | `{ "error": "DB_ERROR" }` | Log and show generic retry (internal follow-up required) |
+
 ## Security Requirements
 
 ### Authentication Flow
@@ -326,7 +424,7 @@ _API error code mapping (Phase-1)_
 ### Rate Limiting
 - Embed submissions: 60 requests/minute/IP and 120 requests/minute/instance (enforced when Venice proxies to `POST /api/submit/:publicId`).
 - Usage pixel: 600 requests/minute/IP when Venice proxies to `POST /api/usage`.
-- Authoritative values live in `documentation/dbschemacontext.md` (see `submission_rate_window` policies); adjust only with CEO approval + ADR.
+- Authoritative values live in `documentation/dbschemacontext.md` (see `submission_rate_window` policies); adjust only with CEO approval and updated documentation.
 - Repeated violations should trigger exponential backoff and logging for SRE follow-up.
 
 ### Input Validation
@@ -335,6 +433,15 @@ _API error code mapping (Phase-1)_
 - XSS prevention via input sanitization
 - File upload restrictions (if applicable)
 - Submission retention: backend job prunes anonymous rows in `widget_submissions` after 30 days (no database TTL).
+
+### Handler Checklist (Phase-1)
+Before shipping or modifying a Paris endpoint, verify:
+1. **Auth:** Validate Supabase JWT (unless route is explicitly public) and reject expired/invalid tokens with `401 AUTH_REQUIRED`.
+2. **Workspace scope:** Resolve workspace/member via service-role query or RLS-friendly SQL and enforce permissions/plan state (return `PLAN_LIMIT` / `PREMIUM_REQUIRED` when appropriate).
+3. **Idempotency & rate limits:** Require `idempotencyKey` for write surfaces (`/api/usage`, `/api/submit`, etc.) and invoke the documented rate-limit helper before executing mutations.
+4. **Canonical SQL:** Use the queries listed in `documentation/systems/michael.md` (“Canonical SQL Queries”) or utilities that wrap them—no ad-hoc SQL that could drift from DB Truth.
+5. **Error mapping:** Catch Postgres error codes (`23505`, `23514`, `23503`, etc.) and map to the Phase-1 API error taxonomy (`ALREADY_EXISTS`, `CONFIG_INVALID`, `DB_ERROR`, ...). Never emit raw database errors.
+6. **Telemetry:** Emit Berlin logs with `X-Request-ID`, endpoint identifier, latency, and result (success/error) while avoiding PII/secret leakage.
 
 ## Monitoring & Observability
 
@@ -396,7 +503,7 @@ JWT_SECRET=your-jwt-secret
 RATE_LIMIT_REDIS_URL=redis://...
 ```
 
-> Environment variables are summarized in `CONTEXT.md` (“Phase-1 Environment Variables”). Atlas remains read-only at runtime; the INTERNAL_ADMIN_KEY override is ops-only per ADR-012.
+> Environment variables are summarized in `CONTEXT.md` (“Phase-1 Environment Variables”). Atlas remains read-only at runtime; administrative overrides require INTERNAL_ADMIN_KEY and explicit ops approval.
 > Per Berlin policy: API surfaces (Paris) rely on application logs/metrics only. No third-party telemetry vendors (e.g., Sentry) in API or embeds; observability vendors are Bob/Prague only.
 
 This completes the Paris system specification. All endpoints should be implemented according to these contracts to ensure proper integration with Venice, Bob, and other services.

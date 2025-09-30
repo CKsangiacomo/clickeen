@@ -10,8 +10,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 **Owner:** Vercel project `c-keen-embed`.  
 **Dependencies:** Paris (API), Atlas (read-only config), Dieter (CSS tokens).  
 **Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.  
-**Database Tables:** None directly (reads via Paris/Michael).  
-**Key ADRs:** ADR-004, ADR-005, ADR-012.  
+**Database Tables:** None directly (reads via Paris/Michael).
 **Common mistakes:** Letting browsers call Paris directly, skipping 5s timeout/`X-Request-ID`, ignoring branding fail-closed rules.
 
 # Venice — Edge SSR Widget Renderer (Phase-1)
@@ -250,6 +249,15 @@ Venice uses Dieter design system for styling:
   - FID ≤100ms  
   - CLS ≤0.1
 
+### Release Checklist (Phase-1)
+1. **Loader size:** `embed/v{semver}/loader.js` ≤28 KB gzipped before release.
+2. **Widget payloads:** representative widgets (free + premium) render ≤10 KB gzipped initial HTML/CSS.
+3. **Headers:** SSR responses send the canonical Cache-Control directives plus `ETag`, `Last-Modified`, and `Vary: Authorization, X-Embed-Token`.
+4. **CSP:** rendered HTML sets `default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self' data:; form-action 'self'`.
+5. **Fallbacks:** error states (`TOKEN_INVALID`, `NOT_FOUND`, upstream 503) render branded stubs and log appropriately.
+6. **Atlas fallback:** simulate cache miss/timeout to confirm Venice falls back to Paris within the 5 s budget and emits an `atlas_unavailable` log.
+7. **Integration scenarios:** complete the end-to-end checklist in `documentation/INTEGRATION-TESTING.md` and confirm expected responses/logs before promoting.
+
 ### Caching Strategy
 <!-- Canonical TTLs (Phase-1 Specs) -->
 Published: `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=1800`  
@@ -437,6 +445,19 @@ When Venice cannot render a widget properly:
   </footer>
 </div>
 ```
+
+### Error Scenario Matrix (Phase-1)
+| Scenario | Trigger | HTTP status | Error key / payload | UI behaviour | Logging |
+| --- | --- | --- | --- | --- | --- |
+| Missing/invalid embed token | Draft/inactive instance without valid token | 401 | `TOKEN_INVALID` | Render token-invalid fallback; prompt refresh/claim | `token_invalid` with publicId + requestId |
+| Draft token already claimed | Venice receives token Paris marked revoked | 410 | `TOKEN_REVOKED` | Show “claimed” fallback; advise sign-in | `token_revoked` + token fingerprint (hashed) |
+| Instance not found | Paris returns 404 | 404 | `NOT_FOUND` | Render not-found fallback | `not_found` |
+| Config fails validation | Paris returns 422 with `[ { path, message } ]` | 422 | `CONFIG_INVALID` + validation array | Render config-invalid fallback with inline message | `config_invalid` + validation summary |
+| Rate limit exceeded | Paris returns 429 | 429 | `RATE_LIMITED` | Render rate-limited fallback and set retry-after | `rate_limited` with window metadata |
+| Paris/Geneva/Atlas outage | Upstream dependency unavailable / timeout | 503 | `SSR_ERROR` | Render branded 503 fallback; retry with backoff | `ssr_error` including dependency + latency |
+| Atlas miss/timeout | Edge Config unavailable but Paris succeeds | 200 | n/a (serves data) | Normal render | `atlas_unavailable` warning (once per window) |
+
+Implementers MUST log using Berlin helpers with the provided keys and include `X-Request-ID`, `publicId`, and dependency timing (when relevant). Repeated failures trigger the release checklist step that verifies fallbacks before shipping.
 
 ## Development & Testing
 

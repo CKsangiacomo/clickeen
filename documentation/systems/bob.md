@@ -9,14 +9,13 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 
 ## 0) Quick Facts
 - **Route:** `/bob`
-- **Repo path:** `bob/`
+- **Repo path:** `bob/` (Next.js App Router — entrypoint `bob/app/page.tsx`)
 - **Deploy surface:** Vercel project `c-keen-app`
 - **Purpose:** Single builder surface for configuring widgets, managing drafts/instances, and previewing Venice SSR output.
-- **Dependencies:** Paris (HTTP API), Venice (embed preview), Michael (DB via Paris), Dieter (design system), Cairo/Berlin integrations co-resident in the app.
-- **Key ADRs:** ADR-004, ADR-005, ADR-012 (Paris separation / Atlas policy)
+- **Dependencies:** Paris (HTTP API), Venice (embed preview), Michael (DB via Paris), Dieter (design system; assets copied into `bob/public/dieter`), Cairo/Berlin integrations co-resident in the app.
 
 ## 1) Purpose & Scope
-Bob is the unified builder application. It owns the shell (navigation, theming/device toggles, layout) and the editor UI (configuration tools, template switching, draft → claim). The entire builder experience lives at `/bob`; there is no separate “Studio” surface. Bob embeds Venice via iframe for live previews and never renders widgets client-side for production.
+Bob is the unified builder application. It owns the shell (navigation, theming/device toggles, layout) and the editor UI (configuration tools, template switching, draft → claim). Files live under `bob/app/**` using Next.js App Router conventions, with shared components in `bob/app/components/**`. The entire builder experience lives at `/bob`; there is no separate “Studio” surface. Bob embeds Venice via iframe for live previews and never renders widgets client-side for production.
 
 Goals in Phase‑1:
 - Provide a single working surface to configure widgets, preview changes, and manage drafts/instances.
@@ -52,6 +51,13 @@ Bob MUST keep everything inside one working surface. There is no separate “lib
 - **Theme & Device toggles**: Live in Workspace header, use tab semantics, react instantly, and drive iframe params.
 - **Latency targets**: aim for ≤200 ms end-to-end preview updates; transitions ≤150–200 ms. Budgets are guidance (CEO enforces).
 - **Error handling**: Surface Venice error codes (TOKEN_INVALID, TOKEN_REVOKED, NOT_FOUND, CONFIG_INVALID, RATE_LIMITED, SSR_ERROR) inline; fall back gracefully.
+
+### Preview Checklist (Phase-1)
+1. **Always append cache-buster:** every iframe reload must include `?ts=${Date.now()}` plus `theme` and `device` params.
+2. **Propagate toggles:** ensure theme/device switches update the iframe src immediately and keep UI state (tab/focus) in sync.
+3. **Double-buffer reloads:** use cross-fade or skeletons so the Workspace never flashes white; preserve scroll + focus on reload.
+4. **Map Venice errors:** render inline messaging for `TOKEN_INVALID`, `TOKEN_REVOKED`, `NOT_FOUND`, `CONFIG_INVALID`, `RATE_LIMITED`, `SSR_ERROR` and provide retry affordances.
+5. **Drop transient tokens:** when claim succeeds or draft tokens are revoked, remove stored tokens and force the iframe to reload without stale auth.
 
 ## 5) Template Switching Contract (NORMATIVE)
 - Bob owns carry-over logic. Bob MUST determine whether the new template is **CARRYABLE** (preserve compatible fields) or **NON_CARRYABLE** (prompt user).
@@ -92,7 +98,7 @@ Security & RLS:
 
 ## 9) Dependencies & Co-resident Systems
 - **Cairo** (custom domains flows) and **Berlin** instrumentation live in the same Vercel project (`c-keen-app`). Ensure instrumentation never leaks into Venice.
-- **Copenhagen/Helsinki** are Phase‑2/3 placeholders; ignore unless ADR updates scope.
+- **Copenhagen/Helsinki** are Phase‑2/3 placeholders; ignore unless the CEO explicitly updates scope.
 
 ## 10) Implementation Order (Phase‑1, NORMATIVE)
 1. Shell layout + Dieter scaffolding + iframe stub (static Venice URL).
@@ -108,6 +114,7 @@ Security & RLS:
 - Save flow: covered with automated tests (GET → PUT → POST path, error handling).
 - Template guard: tests for CARRYABLE vs NON_CARRYABLE, timeout handling.
 - Claim flow: draft creation → claim → Venice preview updates with `TOKEN_REVOKED` handled.
+- Integration scenarios: run the Bob-specific steps in `documentation/INTEGRATION-TESTING.md` before release to ensure cross-system flows remain green.
 
 ## 12) Common AI / Implementation Mistakes (DO NOT DO)
 - Treating `PUT` as upsert without prompting → creates duplicate instances.

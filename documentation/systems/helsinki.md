@@ -1,4 +1,7 @@
-# System: Helsinki — Analytics Warehouse
+STATUS: INFORMATIVE — FUTURE (NOT PHASE-1)
+This document describes a Phase-2/3 system. Do **not** implement without CEO approval. Phase-1 excludes Helsinki.
+
+# System: Helsinki — Analytics Warehouse (Future)
 ## Identity
 - Tier: Supporting
 - Purpose: BI and analytics aggregates

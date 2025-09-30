@@ -1,4 +1,7 @@
-# System: Robert — User & Workspace Management
+STATUS: INFORMATIVE — FUTURE (NOT PHASE-1)
+Phase-1 excludes Robert. Treat as future context only; implementation requires explicit CEO approval.
+
+# System: Robert — User & Workspace Management (Future)
 ## Identity
 - Tier: Core
 - Purpose: Auth, roles, invites

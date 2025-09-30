@@ -1,4 +1,7 @@
-# System: Zurich — Integrations
+STATUS: INFORMATIVE — FUTURE (NOT PHASE-1)
+Zurich integrations are out-of-scope for Phase-1. Do not implement without explicit CEO approval.
+
+# System: Zurich — Integrations (Future)
 ## Identity
 - Tier: Supporting
 - Purpose: Webhooks and third-party connectors (Zapier, etc.)

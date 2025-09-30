@@ -9,7 +9,7 @@ Authority order: DB Truth > Phase‑1 Specs > System PRDs > Techphases > WhyClic
 
 # CLICKEEN Platform Architecture — Phase 1 (Frozen)
 
-This document is the canonical Phase‑1 architecture snapshot: what’s in scope, boundaries between surfaces, and how the platform fits together. Architecture changes require an ADR and doc updates in the same PR.
+This document is the canonical Phase‑1 architecture snapshot: what’s in scope, boundaries between surfaces, and how the platform fits together. Architecture changes require CEO approval with documentation updates in the same PR.
 
 ---
 
@@ -41,7 +41,7 @@ This document is the canonical Phase‑1 architecture snapshot: what’s in scop
 | Denver — Assets/CDN | paris | c-keen-api | Asset storage (signed URLs) and delivery | Active (P1) |
 | Dieter — Design System | dieter | c-keen-app | Tokens, foundations, components; embeds output SSR HTML/CSS only | Active (P1) |
 
-> Atlas runtime writes remain read-only in Phase‑1. A temporary, key-gated write path exists solely for administrative overrides per ADR‑012 and must not be expanded without CEO approval.
+> Atlas runtime writes remain read-only in Phase‑1. A temporary, key-gated write path exists solely for administrative overrides approved by the CEO and guarded by INTERNAL_ADMIN_KEY; do not expand it without explicit direction.
 
 Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are placeholders and not deployed in Phase‑1.
 
@@ -131,7 +131,7 @@ Note: Embed budgets mirror systems/venice.md (normative).
 - Rate limiting on writes
 - No third-party scripts/cookies/storage in embeds; Sentry/PostHog allowed only in app/site (Berlin)
 - Secrets live in c-keen-api only (server surface)
-- Atlas runtime writes are read-only by policy. ADR‑012 documents a temporary, key-gated admin path for specific overrides; treat Atlas as read-only in all engineering work unless the CEO updates the ADR.
+- Atlas runtime writes are read-only by policy. Administrative overrides require the INTERNAL_ADMIN_KEY and the ops runbook described in the Atlas PRD; treat Atlas as read-only in all engineering work unless the CEO explicitly approves a change.
 
 ---
 
@@ -145,15 +145,15 @@ Note: Embed budgets mirror systems/venice.md (normative).
 
 ## Change control
 
-- Any cross‑surface change requires an ADR and docs updated in the same PR
+- Any cross‑surface change requires CEO approval with documentation updated in the same PR
 - Documentation drift is a P0 incident; fix docs first
 
 ---
 
-## Appendix: ADR‑012 summary (Paris separation)
+## Appendix: Paris / Atlas separation summary
 
-- Decision: Paris is a separate Vercel project to contain secrets and server‑only endpoints
-- Rationale: strict boundary between public embeddable code and secret‑bearing surfaces
-- Health: dependency‑aware healthz
-- Edge Config: read-only at runtime; administrative writes require INTERNAL_ADMIN_KEY
-- Risks: cold starts and schema drift; mitigated via health checks and docs‑as‑code
+- Decision: Paris is a separate Vercel project to contain secrets and server-only endpoints.
+- Rationale: strict boundary between public embeddable code and secret-bearing surfaces.
+- Health: dependency-aware healthz endpoint required.
+- Edge Config: read-only at runtime; administrative writes require INTERNAL_ADMIN_KEY and explicit ops approval.
+- Risks: cold starts and schema drift; mitigated via health checks and docs-as-code.

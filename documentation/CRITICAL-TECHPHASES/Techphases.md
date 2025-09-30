@@ -222,9 +222,9 @@ References: systems/venice.md (accessibility requirements).
 - Funnel: impressions (widget loads) → link clicks → account creations.
 - Storage: recorded in the `events` table (`event_type = 'user_attribution'`).
 - KPIs: viral coefficient; unique domains (eTLD+1 via Referer); time-to-embed (firstInteraction → embedCodeCopied).
-- Free plan: unlimited drafts; exactly 1 active instance (`embedCodeGenerated=true`). Downgrade requires respecting the Phase‑1 default `403 PLAN_LIMIT` enforcement (see Phase‑1 Specs); any auto-deactivate behavior demands an ADR.
+- Free plan: unlimited drafts; exactly 1 active instance (`embedCodeGenerated=true`). Downgrade requires respecting the Phase‑1 default `403 PLAN_LIMIT` enforcement (see Phase‑1 Specs); any auto-deactivate behavior demands CEO approval.
 - Premium templates: badged; free users can preview but must upgrade to select.
-- Enforcement semantics (Phase-1 default): see Phase-1 Specs for the canonical `403 PLAN_LIMIT` and `403 PREMIUM_REQUIRED` behaviors. Any change requires CEO approval + ADR.
+- Enforcement semantics (Phase-1 default): see Phase-1 Specs for the canonical `403 PLAN_LIMIT` and `403 PREMIUM_REQUIRED` behaviors. Any change requires CEO approval and documentation updates.
 - Expansion tracking: widgets-per-workspace over time; adoption order; average widgets/account.
 
 ---

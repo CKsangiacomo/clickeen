@@ -143,7 +143,7 @@ Endpoints (Phase‑1):
   - Body: { draftToken: string }
   - Returns 200 with the claimed instance payload; invalid/expired → 401/410.
 
-- Free plan enforcement (Phase‑1 default): When publishing would exceed the free plan limit of one active instance, Paris returns `403 PLAN_LIMIT` and leaves the new instance inactive. A future auto-deactivate flow would require explicit CEO approval and ADR update.
+- Free plan enforcement (Phase‑1 default): When publishing would exceed the free plan limit of one active instance, Paris returns `403 PLAN_LIMIT` and leaves the new instance inactive. A future auto-deactivate flow would require explicit CEO approval and updated documentation.
 - Premium template enforcement: When `entitlements.features.premiumTemplates=false`, attempts to save or publish an instance with `premium=true` template must return `403 PREMIUM_REQUIRED`. Bob must block selection with an upgrade CTA; previews via `?ts` remain allowed.
 
 - GET /api/healthz → Service health (richer shape)

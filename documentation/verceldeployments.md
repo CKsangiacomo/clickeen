@@ -57,7 +57,7 @@ Do NOT implement from this file. For specifications, see:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_ANON_KEY`
-- `INTERNAL_ADMIN_KEY` (ops-only; see ADR-012)
+- `INTERNAL_ADMIN_KEY` (ops-only; required for Atlas administrative overrides)
 - `ATLAS_EDGE_CONFIG_TOKEN` / `ATLAS_EDGE_CONFIG_ID` for administrative updates (never exposed to runtime handlers)
 
 ### c-keen-site (`prague/`)

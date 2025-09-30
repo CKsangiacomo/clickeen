@@ -22,7 +22,7 @@ CRITICAL P0 — documentation/ is the single source of truth for all AI & human 
 Clarifier: System PRDs are canonical for concrete endpoints and payload details in their surface. If any detail conflicts with Phase‑1 Contracts, Phase‑1 Contracts win. On any conflict: **DB Truth > Phase‑1 Contracts > System PRDs > Techphases > WhyClickeen.**
 
 Known exceptions (Phase‑1):
-- Atlas (Edge Config) is read-only at runtime by policy. ADR‑012 documents a temporary, gated admin write path; treat Atlas as read-only unless the CEO updates the ADR.
+- Atlas (Edge Config) is read-only at runtime by policy. Administrative overrides require INTERNAL_ADMIN_KEY and explicit CEO approval; treat Atlas as read-only unless directed otherwise.
 - If a referenced `documentation/systems/<System>.md` file is missing or incomplete, do **not** guess. Implement strictly from Phase‑1 Contracts and DB Truth, and escalate to the CEO for the missing PRD.
 
 ---
@@ -59,7 +59,7 @@ Known exceptions (Phase‑1):
 - **Codex/Git AIs** implement with full repository visibility in VS Code.
 - **Claude/GPT** review PRDs and cross-doc consistency; they do not execute code changes.
 - **PRDs & Phase-1 Specs** are the single source of truth; no guessing, no placeholders.
-- **Change control:** Any new behavior or surface requires an ADR plus PRD updates in the same PR.
+- **Change control:** Any new behavior or surface requires CEO approval plus PRD updates in the same PR.
 
 ---
 
@@ -77,7 +77,7 @@ Known exceptions (Phase‑1):
 2. **No skipping Techphases** — freeze scope first, then execute.  
 3. **Security** — must be reflected in Techphases before engineering; no bolting on mid-way.  
 
-Takeaway: **Always check/update Techphases, Context, ADRs BEFORE execution.**
+Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE execution.**
 
 ---
 
@@ -116,7 +116,7 @@ Takeaway: **Always check/update Techphases, Context, ADRs BEFORE execution.**
 - **Berlin** — logs/metrics/rate limits in `c-keen-app` (and `c-keen-site` if enabled); **never** in `c-keen-embed`  
 - **Cairo**, **Denver**, **Dieter**, **Geneva**, **Michael**, **Phoenix** — active as part of Phase-1 scope
 
-**Not built in Phase-1 (do not start without ADR):**  
+**Not built in Phase-1 (do not start without explicit CEO approval):**  
 - Billing & subscriptions (beyond stub)  
 - Workflow automation (Tokyo/Robert/Lisbon)  
 - Fine-grained RBAC (multi-role workspaces)  
@@ -133,7 +133,7 @@ Takeaway: **Always check/update Techphases, Context, ADRs BEFORE execution.**
 3. **Service boundaries are hard:** embed ≠ api ≠ app ≠ site.  
 4. **Secrets live only in c-keen-api** (server surface).  
 5. Edge Config is read-only at runtime; administrative updates require INTERNAL_ADMIN_KEY.  
-6. When changing behavior or surface area: land an **ADR** and update docs in the same PR.  
+6. When changing behavior or surface area: secure explicit CEO approval and update docs in the same PR.  
 
 ---
 
@@ -159,7 +159,7 @@ Takeaway: **Always check/update Techphases, Context, ADRs BEFORE execution.**
 - `documentation/dbschemacontext.md` — DB Truth (schema/tables)  
 - `documentation/systems/*.md` — system PRDs (Venice, Paris, Geneva, etc.)  
 - `documentation/WhyClickeen.md` — strategic context  
-- `documentation/ADRdecisions.md` — authoritative decisions (e.g., ADR-012)  
+- `documentation/ADRdecisions.md` — authoritative decisions (document new approvals here)  
 - `documentation/verceldeployments.md` — env/keys per project
 
 ---
@@ -207,12 +207,16 @@ Takeaway: **Always check/update Techphases, Context, ADRs BEFORE execution.**
 6. Integration tests → budgets & a11y checks
 7. Release checklist → manual budgets verification
 
+### Integration Testing (Phase-1 release gate)
+- Before shipping or promoting a release, run the scenarios in `documentation/INTEGRATION-TESTING.md` (draft → claim → publish, token lifecycle, submissions/usage, Atlas fallback).
+- Confirm expected status codes, UI fallbacks, and logs are produced for each scenario. If any step deviates, stop and update the documentation before coding fixes.
+
 ### Phase-1 Environment Variables
 **Venice**
 - `PARIS_URL` = `https://c-keen-api.vercel.app` (prod) / `http://localhost:3001` (dev)
 
 **Paris**
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`
-- `INTERNAL_ADMIN_KEY` (ops-only; see ADR-012)
+- `INTERNAL_ADMIN_KEY` (ops-only; required for Atlas administrative overrides)
 
 ---
