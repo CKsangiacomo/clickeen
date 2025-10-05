@@ -214,8 +214,9 @@ ts_second         TIMESTAMPTZ -- rate limit window
 
 **Constraint → API behavior (NORMATIVE)**
 - Payloads exceeding 32KB trigger Postgres `23514`; Paris returns **422 CONFIG_INVALID**.
-- Duplicate `payload_hash` within the active rate-window yields acceptance without insert → Paris returns **200** `{ "status": "accepted", "deduped": true }`.
+- Duplicate `payload_hash` within the active rate-window yields acceptance without insert → Paris returns **202 { "recorded": false }**.
 - Anonymous rows older than 30 days are removed by scheduled maintenance jobs (no client action required).
+- The `form_submissions` view exposed to analytics surfaces returns published submissions only; draft/inactive submissions are still queryable from `widget_submissions` or via `insert_form_submission()` when a valid token is presented.
 
 **Claim flow side-effect (non-normative SQL example)**
 ```sql
@@ -235,7 +236,7 @@ RETURNING *;
 id               UUID DEFAULT gen_random_uuid() PRIMARY KEY
 workspace_id     UUID REFERENCES workspaces(id)
 event_type       TEXT DEFAULT 'widget_load'
-widget_instance  TEXT -- public_id
+widget_instance_id  TEXT -- public_id
 quantity         INTEGER DEFAULT 1
 metadata         JSONB DEFAULT '{}'
 idempotency_hash TEXT UNIQUE -- deduplication key
@@ -244,7 +245,7 @@ created_at       TIMESTAMPTZ DEFAULT now()
 
 **Constraint → API behavior (NORMATIVE)**
 - Missing `idempotency_hash` triggers **422 CONFIG_INVALID** on `/api/usage`.
-- Duplicate `idempotency_hash` raises `23505` → Paris returns **200 { "recorded": false }**.
+- Duplicate `idempotency_hash` raises `23505` → Paris returns **202 { "recorded": false }**.
 - `quantity` must remain positive; negative values are rejected with **422 CONFIG_INVALID**.
 
 ### events (audit log)
@@ -264,7 +265,7 @@ idempotency_hash TEXT UNIQUE -- added per Phase-1
 created_at      TIMESTAMPTZ DEFAULT now()
 ```
 **Constraint → API behavior (NORMATIVE)**
-- `idempotency_hash` is honored for `event_type = 'user_attribution'`; duplicates return **200 { "recorded": false }**.
+- `idempotency_hash` is honored for `event_type = 'user_attribution'`; duplicates return **202 { "recorded": false }**.
 - Foreign key violations (e.g., orphaned `workspace_id`) raise `23503` → surfaced as **500 DB_ERROR** via Paris.
 
 ## RLS Policy Patterns
@@ -385,6 +386,21 @@ EXECUTE FUNCTION set_ts_second();
 ```
 
 ## Migration Strategy
+
+> **AI implementation note:** The Supabase CLI only executes SQL files stored under `supabase/migrations/`. Draft migrations may live in `michael/sql-drafts/` during review, but **nothing runs** until you copy the approved SQL into a timestamped file inside `supabase/migrations/`. The CLI applies files in lexical order and records the applied state under `supabase/.branches`.
+
+**Canonical workflow for AIs & humans:**
+1. Prototype the migration in `michael/sql-drafts/<yyyymmdd_slug>.sql` and write the paired change request in `michael/db-change-requests/`.
+2. After approval, duplicate the exact SQL into `supabase/migrations/<YYYYMMDDHHMMSS>__<slug>.sql` (keep snake_case, no spaces).
+3. From repo root with Docker Desktop running:
+   ```bash
+   supabase start            # if local stack isn’t already running
+   supabase migration up     # applies new files from supabase/migrations locally
+   supabase db push          # replays the same migrations on the hosted project
+   supabase db dump --schema public > documentation/dbschemacontext.md
+   supabase stop             # optional once verification passes
+   ```
+4. Review the dump diff, update ADRdecisions.md/PRDs if required, and include the migration ID in commit notes.
 
 ### Phase-1 Required Migrations
 ```sql
@@ -526,7 +542,7 @@ WHERE widget_instance_id = $1
 -- Pixel event rate limit (Venice /embed/pixel -> Paris /api/usage)
 SELECT COUNT(*)
 FROM usage_events
-WHERE widget_instance = $1
+WHERE widget_instance_id = $1
   AND event_type = $2 -- e.g. 'widget_load'
   AND created_at >= now() - interval '1 minute'
   AND metadata->>'ip' = $3;
@@ -580,7 +596,7 @@ SELECT cron.schedule(
 ### Database Error Mapping (NORMATIVE)
 | Postgres error | Typical cause | API mapping |
 | --- | --- | --- |
-| `23505` unique_violation | Duplicate key (e.g., `widget_instances.public_id`) | Paris returns **409 ALREADY_EXISTS**. For `usage_events`/`events` dedupe it returns **200 {"recorded": false }**.
+| `23505` unique_violation | Duplicate key (e.g., `widget_instances.public_id`) | Paris returns **409 ALREADY_EXISTS**. For `usage_events`/`events` dedupe it returns **202 {"recorded": false }**.
 | `23514` check_violation | CHECK constraint failed (status, payload size, quantity) | Paris returns **422 CONFIG_INVALID**.
 | `23503` foreign_key_violation | Orphan references (deleted workspace/widget) | Paris returns **500 DB_ERROR**.
 | `22001` / `22003` length or numeric overflow | Oversized metadata values | Paris returns **422 CONFIG_INVALID**.
@@ -687,7 +703,7 @@ return { publicId: instance.public_id, config: instance.config }; // CORRECT
 
 ❌ **Wrong:** Clients insert directly into `usage_events`
 ```typescript
-await supabase.from('usage_events').insert({ widget_instance: publicId, event_type: 'widget_load' });
+await supabase.from('usage_events').insert({ widget_instance_id: publicId, event_type: 'widget_load' });
 ```
 ✅ **Right:** Only Paris service-role writes usage via `/api/usage`
 ```typescript

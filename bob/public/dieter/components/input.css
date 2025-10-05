@@ -1,0 +1,169 @@
+/* Dieter Input — text field contract */
+.diet-input {
+  --input-height: var(--control-size-md, 1.5rem);
+  --input-radius: var(--control-radius-md, 0.375rem);
+  --input-padding-inline: var(--space-3, 0.75rem);
+  --input-font-size: var(--fs-14, 0.875rem);
+  --input-gap: var(--space-2, 0.5rem);
+  --input-border-color: var(--color-border, rgba(10,10,12,0.16));
+  --input-helper-color: color-mix(in oklab, var(--color-text), transparent 55%);
+  --input-placeholder-color: color-mix(in oklab, var(--color-text), transparent 60%);
+  display: grid;
+  gap: var(--input-gap);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+}
+
+.diet-input[data-size="sm"] {
+  --input-height: var(--control-size-sm, 1.25rem);
+  --input-radius: var(--control-radius-sm, 0.3125rem);
+  --input-padding-inline: var(--space-2, 0.5rem);
+  --input-font-size: var(--fs-13, 0.8125rem);
+}
+
+.diet-input[data-size="lg"] {
+  --input-height: var(--control-size-lg, 1.75rem);
+  --input-radius: var(--control-radius-lg, 0.4375rem);
+  --input-padding-inline: var(--space-4, 1rem);
+  --input-font-size: var(--fs-15, 0.9375rem);
+}
+
+.diet-input__label {
+  font: 600 var(--fs-12, 0.75rem)/var(--lh-tight, 1.15) var(--font-ui);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-text), transparent 35%);
+}
+
+.diet-input__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  block-size: var(--input-height);
+  padding-inline: var(--input-padding-inline);
+  border-radius: var(--input-radius);
+  background: var(--color-surface, #f6f7f9);
+  border: 1px solid var(--input-border-color);
+  transition:
+    border-color var(--duration-snap, 140ms) ease,
+    box-shadow var(--duration-snap, 140ms) ease,
+    background-color var(--duration-snap, 140ms) ease;
+}
+
+
+.diet-input__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: calc(var(--input-height) - var(--space-2, 0.5rem));
+  block-size: calc(var(--input-height) - var(--space-2, 0.5rem));
+  color: color-mix(in oklab, var(--color-text), transparent 40%);
+}
+
+.diet-input__icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.diet-input__affix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 var(--fs-12, 0.75rem)/1 var(--font-ui);
+  color: color-mix(in oklab, var(--color-text), transparent 45%);
+  white-space: nowrap;
+  flex: none;
+}
+
+.diet-input__affix[data-position="start"] {
+  padding-inline-end: var(--space-1, 0.25rem);
+}
+
+.diet-input__affix[data-position="end"] {
+  padding-inline-start: var(--space-1, 0.25rem);
+}
+
+.diet-input__field {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--input-font-size);
+  line-height: 1.3;
+  font-weight: 400;
+  padding: 0;
+}
+
+.diet-input__field:focus {
+  outline: none;
+}
+
+.diet-input__field::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.diet-input__helper {
+  font: 500 var(--fs-12, 0.75rem)/1.3 var(--font-ui);
+  color: var(--input-helper-color);
+}
+
+.diet-input__control:focus-within {
+  border-color: var(--focus-ring-color, var(--color-accent));
+  box-shadow:
+    0 0 0 var(--focus-ring-offset, 2px) var(--color-bg, #ffffff),
+    0 0 0 calc(var(--focus-ring-offset, 2px) + var(--focus-ring-width, 2px)) var(--focus-ring-color, var(--color-accent));
+}
+
+.diet-input[data-state="error"] .diet-input__control {
+  border-color: var(--role-danger-bg, #ff3b30);
+}
+
+.diet-input[data-state="error"] .diet-input__helper,
+.diet-input[data-state="error"] .diet-input__label {
+  color: var(--role-danger-bg, #ff3b30);
+}
+
+.diet-input[data-state="disabled"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.diet-input__field:read-only {
+  cursor: default;
+}
+
+.diet-input[data-state="disabled"] .diet-input__field,
+.diet-input__field:disabled {
+  cursor: not-allowed;
+}
+
+.diet-input[data-state="disabled"] .diet-input__affix {
+  color: color-mix(in oklab, var(--color-text), transparent 65%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-input {
+    --input-border-color: color-mix(in oklab, var(--color-text), transparent 65%);
+    --input-helper-color: color-mix(in oklab, var(--color-text), transparent 45%);
+    --input-placeholder-color: color-mix(in oklab, var(--color-text), transparent 55%);
+  }
+
+  .diet-input__control {
+    background: color-mix(in oklab, var(--color-surface, #14161b), transparent 15%);
+  }
+}
+
+:root[data-theme="dark"] .diet-input,
+[data-theme="dark"] .diet-input {
+  --input-border-color: color-mix(in oklab, var(--color-text), transparent 65%);
+  --input-helper-color: color-mix(in oklab, var(--color-text), transparent 45%);
+  --input-placeholder-color: color-mix(in oklab, var(--color-text), transparent 55%);
+}
+
+:root[data-theme="dark"] .diet-input__control,
+[data-theme="dark"] .diet-input__control {
+  background: color-mix(in oklab, var(--color-surface, #14161b), transparent 15%);
+}

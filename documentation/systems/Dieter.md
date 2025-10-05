@@ -1,6 +1,6 @@
 # Dieter PRD (v1, Frozen)
 
-**Status:** ✅ Frozen for Phase‑1  
+**Status:** ✅ Frozen (current release)  
 **Owner:** `dieter/` workspace package  
 **Last updated:** 2025‑09‑24
 
@@ -8,32 +8,33 @@
 
 ## AIs Quick Scan
 
-**Purpose:** Design system (tokens + CSS contracts) for Bob (builder app) and Venice.  
+**Purpose:** Design system (tokens + CSS contracts) shared across all Clickeen surfaces.  
 **Owner:** Workspace package `@ck/dieter` + Vercel project `c-keen-app`.  
-**Dependencies:** None at runtime; consumed by Bob/Venice.  
-**Phase-1 Assets:** `@ck/dieter` package, `dieter/dist/**`, `/dieter/*` copied assets.  
+**Dependencies:** None at runtime; consumed by every surface that renders Clickeen UI (builder, embeds, admin tools, marketing, etc.).  
+**Published assets:** `@ck/dieter` package, `dieter/dist/**`, `/dieter/*` copied assets.  
 **Common mistakes:** Importing Dieter React components in Venice, fetching SVG icons at runtime, hand-editing `/bob/public/dieter/`.
 
 ---
 
 ## Purpose
-- Dieter is Clickeen’s design system: design tokens, global foundations, and CSS component contracts shared across Bob and Venice.
+- Dieter is Clickeen’s design system: design tokens, global foundations, and CSS component contracts shared across every surface that renders our UI.
 - Ships as the workspace package **`@ck/dieter`** plus copy-on-build assets served from `/dieter/*`.
-- Single visual source of truth for Bob, MiniBob, admin surfaces. Venice generates widget HTML and styles it using Dieter CSS tokens/foundations (no Dieter React runtime in Venice).
+- Single visual source of truth for builder flows, embeds, admin tooling, and any future surfaces. Consumers (Bob, Venice, marketing, internal tools) all style via these tokens; no React runtime ships with the package.
 
-## Scope (Phase‑1)
+## Scope
 - **In:**
   - Global foundations (tokens, typography baseline, focus ring, spacing utilities) exported via `@ck/dieter/dist/tokens.css`.
-  - **Button** component contract (the only production-ready component) exported via `@ck/dieter/dist/components/button.css`.
+  - **Button** component contract exported via `@ck/dieter/dist/components/button.css`.
+  - **Segmented Control** component contract exported via `@ck/dieter/dist/components/segmented.css`.
   - Inline SVG icon set under `dieter/icons/svg/` for manual embedding.
-- **Out / future phases:** Additional controls (Input, Select, Segmented Control, Tabs, etc.), React component wrappers, theming APIs, and foundations beyond those listed above.
+- **Not shipped yet:** Additional controls (Input, Select, Tabs, etc.), React component wrappers, theming APIs, and foundations beyond those listed above. Do not build or assume them until this doc lists them.
 
 ## Consumers & Split
 | Surface | Usage |
 | --- | --- |
 | Bob shell (`bob/`) | imports Dieter tokens + CSS bundles for UI chrome |
-| Bob editor / MiniBob | apply Dieter classes/tokens inside the builder (HTML + CSS only in Phase‑1) |
-| Internal Dieter manager | consumes the same CSS bundles for component previews |
+| Bob editor / MiniBob | apply Dieter classes/tokens inside the builder (HTML + CSS) |
+| Internal Dieter manager / other tools | consume the same CSS bundles for component previews |
 | Venice embeds / published widgets | use Dieter CSS tokens/foundations + inline SVGs; never import Dieter React |
 
 ## Distribution & Build
@@ -41,22 +42,21 @@
 - Copy assets manually: `scripts/copy-dieter-assets.js`
 - Keep `bob/public/dieter/` in `.gitignore`
 - Developers must not hand-edit `/bob/public/dieter/**`
-- No automated CI enforcement in Phase-1
+- No automated CI enforcement (manual verification required)
 - Bundle responsibilities:
   - `dist/tokens.css` → tokens + foundational utilities only (no component scaffolding).
-  - `dist/components/*.css` → per-component contracts (currently `button.css`).
+  - `dist/components/*.css` → per-component contracts (currently `button.css`, `segmented.css`).
   - `dist/icons` → optimized SVG assets for manual inlining.
 
-**Minimal integration rules (NORMATIVE)**
 - Always consume the latest published `@ck/dieter` build plus copied `/dieter` assets; never hand-edit files under `bob/public/dieter/`.
-- Phase‑1 ships CSS only. Bob applies Dieter classes/tokens to plain HTML; React wrappers will arrive in a later phase.
+- The package ships CSS only. Bob applies Dieter classes/tokens to plain HTML; React wrappers are not available.
 - Venice consumes the generated CSS/tokens and inlines SVG icons; no runtime React or remote icon fetches.
 - Do not add telemetry/logging to Dieter assets; observability stays in app/site surfaces only.
 - Re-run `pnpm --filter @ck/dieter build && node scripts/copy-dieter-assets.js` whenever tokens/components change; treat drift as a build bug.
 
-## Icon Delivery Plan (Phase‑1)
+## Icon Delivery Plan
 - SVG sources live in `dieter/icons/svg/`; each file is optimized for inline use.
-- A manifest (`dieter/icons/manifest.ts`) tracks curated icons, but React wrappers are not released in Phase‑1.
+- A manifest (`dieter/icons/manifest.ts`) tracks curated icons, but React wrappers are not released.
 - Venice widgets inline the normalized SVG markup at SSR time; runtime fetches are forbidden.
 
 **Icon delivery clarifier (NORMATIVE)**
@@ -64,14 +64,28 @@
 - Venice renders Dieter icons as inline, normalized SVG snippets embedded in SSR HTML; no runtime fetch, no React.
 - Production builds must not lazy-load or dynamically fetch SVG assets; shipping inline keeps embeds within the loader budget.
 
-## Phase-1 Assets & Imports
+## Assets & Imports
 - Tokens & utilities: `import '@ck/dieter/dist/tokens.css';`
 - Button contract: `import '@ck/dieter/dist/components/button.css';`
+- Segmented Control contract: `import '@ck/dieter/dist/components/segmented.css';`
 - Icons: inline SVGs from `@ck/dieter/icons/svg/*.svg`
 
-> Phase‑1 does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML.
+> Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML.
 
-## Global Foundations (Phase‑1)
+### Theme Support (Light / Dark)
+- **Source of truth:** `dieter/tokens/tokens.css` defines both light defaults and a `@media (prefers-color-scheme: dark)` override block. Every Dieter utility and component must consume colors via existing custom properties (`--color-bg`, `--color-text`, `--color-border`, `--color-system-*`, etc.). Shading, hover, and pressed states must derive from `color-mix` + those tokens—never hard-coded hex values. Motion and elevation now ship via shared tokens: `--duration-snap`, `--duration-base`, `--duration-spin`, `--shadow-elevated`, `--shadow-floating`, `--shadow-inset-control`.
+- **Runtime behaviour:**
+  - Browsers auto-switch via `prefers-color-scheme`. The token bundle responds automatically; no extra code is required when the user’s OS changes modes.
+  - To force a theme (e.g., Bob preview toggle), set `data-theme="dark"` or `data-theme="light"` on the root element. The token bundle ships attribute-scoped overrides (`:root[data-theme="dark"]`) that mirror the media queries, so Venice/Bob can deterministically pin the palette during previews or SSR.
+  - Never duplicate tokens. If a surface needs a manual override (for example, Venice SSR fallback while the parent site is light-only), scope it by applying the attribute on the widget root: `<div data-theme="dark">…`. Do **not** copy the dark tokens or generate bespoke palettes.
+- **Implementation rules for AIs:**
+  1. **Always** reference the color tokens—`var(--color-bg)`, `var(--color-surface)`, `var(--color-text)`, `var(--color-system-blue)`—when styling new utilities or examples.
+  2. When creating helper utilities (container, panel, etc.) ensure every background, border, shadow, or text color pulls from tokens so the theme swap is automatic.
+  3. Embeds (Venice) must not inject their own `prefers-color-scheme` overrides; they inherit the token output and optionally pin `data-theme` if the instance configuration or preview experience demands it.
+  4. Bob’s preview harness should toggle theme by flipping the attribute on the iframe root and never by importing a second stylesheet.
+  5. AIs must not introduce additional theme flags or cascading classes. If a new palette is required, escalate for token additions.
+
+## Global Foundations
 
 **Files**
 - `dieter/dist/tokens.css` → exported tokens, focus styles, spacing and typography utilities.
@@ -80,7 +94,25 @@
 **Token families (examples)**
 - Typography: `--font-ui`, `--fs-10 … --fs-32`, `--lh-tight/normal/loose`.
 - Spacing: `--space-1 … --space-10` (4px grid) and control sizing tokens `--control-size-*`, `--control-font-*`.
+- Motion: `--duration-snap` (140 ms), `--duration-base` (160 ms), `--duration-spin` (600 ms).
+- Elevation: `--shadow-elevated`, `--shadow-floating`, and `--shadow-inset-control` are the only sanctioned shadow tokens; reuse them across components instead of defining ad-hoc box-shadows.
+- Admin shell layout tokens: `--sidebar-width` (expanded) and `--sidebar-width-collapsed` (icon rail).
 - Colors: `--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, plus semantic role tokens `--role-primary-bg`, `--role-danger-text`, etc.
+- **Derived color tints & shades (NORMATIVE)**
+  - We do not mint separate tokens for the lighter/darker chips shown in `admin/dietercomponents.html`. Instead, derive them from the base token with `color-mix` so a change to the source cascades everywhere.
+  - Naming convention (used in docs + code samples): `token.1 … token.5` are light blends, `token.1D … token.5D` are dark blends.
+  - Recipes (initial calibration — adjust the percentages here if design shifts):
+    - `token.1` → `color-mix(in oklab, var(--token), white 20%)`
+    - `token.2` → `color-mix(in oklab, var(--token), white 40%)`
+    - `token.3` → `color-mix(in oklab, var(--token), white 60%)`
+    - `token.4` → `color-mix(in oklab, var(--token), white 80%)`
+    - `token.5` → `color-mix(in oklab, var(--token), white 90%)`
+    - `token.1D` → `color-mix(in oklab, var(--token), black 20%)`
+    - `token.2D` → `color-mix(in oklab, var(--token), black 40%)`
+    - `token.3D` → `color-mix(in oklab, var(--token), black 60%)`
+    - `token.4D` → `color-mix(in oklab, var(--token), black 80%)`
+    - `token.5D` → `color-mix(in oklab, var(--token), black 90%)`
+  - Never hard-code the resulting RGB/hex values. Always reference the base token plus `color-mix` so tweaks to `--color-system-*` or role tokens flow through.
 - Accessibility: `--focus-ring-width`, `--focus-ring-color`, `--focus-ring-offset`, `--min-touch-target`.
 
 Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-16`). The token bundle also ships focus-ring defaults and a lightweight reset to harmonise across browsers. Utilities in `tokens.css` (e.g., `.panel-heading`) exist solely for internal previews and must not leak into shipped bundles.
@@ -90,6 +122,9 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 - Tokens follow the “role” palette (e.g., `--role-danger-bg`) instead of ad-hoc names like `--color-danger`. Use the role tokens to stay consistent with Button.
 - Preview helper selectors (e.g., `.panel-heading`) still live in `tokens.css` for the internal harness; do not ship or depend on them in production. These will be removed in a future cleanup.
 - Some legacy references (e.g., `--radius-2/3`) are being audited; treat `--radius-4` as the only published radius token until new ones are added.
+- Vertical rhythm is locked to the 4px scale. Stacks, margins, paddings, and gaps MUST use the published spacing tokens (`--space-1 = 4px`, `--space-2 = 8px`, `--space-3 = 12px`, `--space-4 = 16px`, `--space-6 = 24px`, `--space-8 = 32px`, `--space-10 = 40px`). Arbitrary values (10px, 18px, 26px…) are prohibited.
+- Control heights come from the control token family: `--control-size-xs|sm|md|lg|xl` define 16px / 20px / 24px / 28px / 32px rails, and the matching font + radii tokens (`--control-font-*`, `--control-radius-*`, `--control-icon-*`) must be used together to keep visuals aligned. `xs` is the 16px "icon stub" footprint (also used by the micro text-only button); any footprint that carries both icon and label starts at `sm` (20px) and ladders up. Never invent intermediate heights—escalate if a design needs a new token.
+- Honour `--min-touch-target` (44px). When a visual control is shorter (e.g., 24px rail) add transparent padding or outer spacing so the hit area meets the token rather than shrinking the target.
 
 ## Test harness checklist (NORMATIVE)
 - Build Dieter: `pnpm --filter @ck/dieter build`.
@@ -114,9 +149,9 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 
 _No new files were created; only this doc was rewritten._
 
-## Component Contracts (Phase‑1)
+## Component Contracts
 
-Phase‑1 exposes a single production-ready component. Treat it as the template for future contracts.
+The components listed here are the only production-ready Dieter contracts. Treat them as canonical until this section is updated.
 
 ### Button (`dieter/dist/components/button.css`)
 
@@ -141,9 +176,31 @@ Phase‑1 exposes a single production-ready component. Treat it as the template 
 **Testing**
 - `tests/dietercomponents.html` renders button examples for regression checks; run locally after rebuilding `@ck/dieter`.
 
+### Segmented Control (`dieter/dist/components/segmented.css`)
+
+**Class & attribute model**
+- Root radiogroup container: `.diet-segmented`
+- Segment wrapper (label): `.diet-segment`
+- Element hooks: `.diet-segment__input` (native radio), `.diet-segment__surface`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__sr`
+- Size modifiers: `data-size="sm|md|lg"`
+- Footprint modifiers: `data-footprint="icon-only|text-only"`
+- State selectors: `.diet-segment__input:checked`, `.diet-segment__input:focus-visible`, `.diet-segment__input:disabled`, `:hover` on `.diet-segment`, plus radiogroup ARIA (`role="radiogroup"`) applied by consumers
+
+**Token usage**
+- Component variables (`--seg-*`) derive from shared tokens (`--color-system-blue`, `--color-bg`, `--focus-ring-*`, sizing tokens) and may be overridden downstream when theming is approved.
+- No raw hex values outside the token palette; `color-mix` combines token colors to express hover/active states consistent with Button.
+
+**Accessibility**
+- Uses native radio inputs for semantics; `.diet-segment__sr` provides screen-reader labels when icons are used without text.
+- Focus-visible outline reuses the shared two-layer focus ring (`--focus-ring-*`).
+- `prefers-reduced-motion: reduce` turns off transitions, and disabled segments drop their pointer cursor to avoid false affordances.
+
+**Testing**
+- `admin/dietercomponents.html` renders segmented examples in multiple sizes/footprints; verify after rebuilding `@ck/dieter`.
+
 ### Future components
-- Additional controls (Input, Select, Segmented, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
-- Any preview remnants in the test harness (e.g., segmented drafts) are experimental and must not be consumed in production.
+- Additional controls (Input, Select, Tabs, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
+- Any preview remnants in the test harness (e.g., input/select prototypes) are experimental and must not be consumed in production.
 
 ## Common AI mistakes (NORMATIVE)
 
@@ -177,5 +234,5 @@ const icon = icons.checkmark; // string literal of <svg>
 .my-btn { background:var(--color-accent); border-radius:var(--radius-4,0.5rem); }
 ```
 
-❌ **Wrong:** Assuming Phase‑1 ships Input/Select/Tabs CSS contracts.
-✅ **Right:** Only Button is production-ready; wait for docs + code to mark other components ✅ before using them.
+❌ **Wrong:** Assuming additional component CSS contracts exist when they are not listed here.
+✅ **Right:** Use only the components explicitly documented above; treat this doc as the sole source for what is production-ready.

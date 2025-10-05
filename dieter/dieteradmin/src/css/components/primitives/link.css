@@ -1,0 +1,104 @@
+.diet-link {
+  --link-color: var(--color-accent);
+  --link-color-hover: color-mix(in oklab, var(--color-accent), white 20%);
+  --link-color-visited: color-mix(in oklab, var(--color-accent), black 12%);
+  --link-color-muted: color-mix(in oklab, var(--color-text), transparent 35%);
+  --link-color-inverse: var(--role-surface-text);
+  --link-color-shopping: #0a7d34;
+  --link-color-danger: var(--role-danger-bg);
+  --link-underline-color: currentColor;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  color: var(--link-color);
+  font: 600 var(--fs-14, 0.875rem)/1.4 var(--font-ui);
+  text-decoration: underline;
+  text-decoration-color: var(--link-underline-color);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.diet-link svg {
+  inline-size: 1em;
+  block-size: 1em;
+}
+
+.diet-link[data-variant='subtle'] {
+  --link-color: var(--link-color-muted);
+}
+
+.diet-link[data-variant='inverse'] {
+  --link-color: var(--link-color-inverse);
+}
+
+.diet-link[data-variant='shopping'] {
+  --link-color: var(--link-color-shopping);
+}
+
+.diet-link[data-variant='danger'] {
+  --link-color: var(--link-color-danger);
+}
+
+.diet-link[data-underline='hover'] {
+  text-decoration: none;
+}
+
+.diet-link[data-underline='none'] {
+  text-decoration: none;
+}
+
+.diet-link[data-weight='regular'] {
+  font-weight: 500;
+}
+
+.diet-link[data-weight='bold'] {
+  font-weight: 700;
+}
+
+.diet-link:hover,
+.diet-link:focus-visible {
+  color: var(--link-color-hover);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+.diet-link:visited {
+  color: var(--link-color-visited);
+}
+
+.diet-link:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset, 2px) var(--color-bg),
+    0 0 0 calc(var(--focus-ring-offset, 2px) + var(--focus-ring-width, 2px)) var(--focus-ring-color, var(--color-accent));
+}
+
+.diet-link[aria-current='page'] {
+  font-weight: 700;
+}
+
+.diet-link[data-underline='hover']:hover,
+.diet-link[data-underline='hover']:focus-visible {
+  text-decoration: underline;
+}
+
+.diet-link[data-underline='none']:hover,
+.diet-link[data-underline='none']:focus-visible {
+  text-decoration: none;
+}
+
+.diet-link[data-icon='leading'] {
+  flex-direction: row-reverse;
+}
+
+.diet-link[data-icon='leading'] svg {
+  order: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-link {
+    transition-duration: 0.001ms;
+  }
+}

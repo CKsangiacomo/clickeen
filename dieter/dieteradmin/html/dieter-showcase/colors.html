@@ -1,0 +1,1389 @@
+<style>
+.color-table{display:grid;gap:24px}
+
+.dieterpreview-section-head{margin:0;font:600 var(--fs-20,1.25rem)/var(--lh-normal) var(--font-ui);color:var(--color-system-gray)}
+.color-row{display:grid;grid-template-columns:180px repeat(14,minmax(0,1fr));gap:16px;align-items:flex-start}
+.color-header-row{font:600 11px var(--font-ui);text-transform:uppercase;letter-spacing:.06em;color:color-mix(in oklab,var(--color-text),transparent 45%);line-height:1.3}
+.color-header-row{display:none}
+.color-name{display:grid;gap:6px}
+.color-token{font:500 11px var(--font-ui);color:color-mix(in oklab,var(--color-text),transparent 50%)}
+.color-cell{display:grid;gap:4px;justify-items:start}
+.color-chip{width:48px;height:48px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.color-chip-label{font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text);line-height:1.2}
+.color-rgb{font:500 10px var(--font-ui);color:var(--color-text);line-height:1.2;opacity:.75}
+.color-table[data-color-theme='light'] [data-theme='dark'] {display:none}
+.color-table[data-color-theme='dark'] [data-theme='light'] {display:none}
+</style>
+<div class="color-table" data-color-theme="light">
+  <div class="color-row color-header-row"><div>Token</div><div data-theme="light">Default (Light)</div><div data-theme="light">Contrast (Light)</div><div data-theme="light">80%<br>.1</div><div data-theme="light">60%<br>.2</div><div data-theme="light">40%<br>.3</div><div data-theme="light">19%<br>.4</div><div data-theme="light">9%<br>.5</div><div data-theme="dark">Default (Dark)</div><div data-theme="dark">Contrast (Dark)</div><div data-theme="dark">80% d<br>.1d</div><div data-theme="dark">60% d<br>.2d</div><div data-theme="dark">40% d<br>.3d</div><div data-theme="dark">19% d<br>.4d</div><div data-theme="dark">9% d<br>.5d</div></div>
+  <h4 class="dieterpreview-section-head">Spectrum</h4>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Red</div>
+      <div class="color-token">--color-system-red</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF3B30"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 255 G 59 B 48</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FF453A"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 255 G 69 B 58</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BF2C24"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 191 G 44 B 36</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FF746B"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 255 G 116 B 107</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF6259"></div>
+      <div class="color-chip-label">RED.1</div>
+      <div class="color-rgb">R 255 G 98 B 89</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF8983"></div>
+      <div class="color-chip-label">RED.2</div>
+      <div class="color-rgb">R 255 G 137 B 131</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFB1AC"></div>
+      <div class="color-chip-label">RED.3</div>
+      <div class="color-rgb">R 255 G 177 B 172</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFD8D6"></div>
+      <div class="color-chip-label">RED.4</div>
+      <div class="color-rgb">R 255 G 216 B 214</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFEBEA"></div>
+      <div class="color-chip-label">RED.5</div>
+      <div class="color-rgb">R 255 G 235 B 234</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#CF433B"></div>
+      <div class="color-chip-label">RED.1D</div>
+      <div class="color-rgb">R 207 G 67 B 59</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#9F3630"></div>
+      <div class="color-chip-label">RED.2D</div>
+      <div class="color-rgb">R 159 G 54 B 48</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#6F2A25"></div>
+      <div class="color-chip-label">RED.3D</div>
+      <div class="color-rgb">R 111 G 42 B 37</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3F1C1B"></div>
+      <div class="color-chip-label">RED.4D</div>
+      <div class="color-rgb">R 63 G 28 B 27</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#271615"></div>
+      <div class="color-chip-label">RED.5D</div>
+      <div class="color-rgb">R 39 G 22 B 21</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Orange</div>
+      <div class="color-token">--color-system-orange</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF9500"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 255 G 149 B 0</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FF9F0A"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 255 G 159 B 10</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BF7000"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 191 G 112 B 0</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FFB747"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 255 G 183 B 71</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFAA33"></div>
+      <div class="color-chip-label">ORANGE.1</div>
+      <div class="color-rgb">R 255 G 170 B 51</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFBF66"></div>
+      <div class="color-chip-label">ORANGE.2</div>
+      <div class="color-rgb">R 255 G 191 B 102</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFD599"></div>
+      <div class="color-chip-label">ORANGE.3</div>
+      <div class="color-rgb">R 255 G 213 B 153</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFEACC"></div>
+      <div class="color-chip-label">ORANGE.4</div>
+      <div class="color-rgb">R 255 G 234 B 204</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFF4E6"></div>
+      <div class="color-chip-label">ORANGE.5</div>
+      <div class="color-rgb">R 255 G 244 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#CF8717"></div>
+      <div class="color-chip-label">ORANGE.1D</div>
+      <div class="color-rgb">R 207 G 135 B 23</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#9F6915"></div>
+      <div class="color-chip-label">ORANGE.2D</div>
+      <div class="color-rgb">R 159 G 105 B 21</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#6F4B13"></div>
+      <div class="color-chip-label">ORANGE.3D</div>
+      <div class="color-rgb">R 111 G 75 B 19</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3F2D11"></div>
+      <div class="color-chip-label">ORANGE.4D</div>
+      <div class="color-rgb">R 63 G 45 B 17</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#271E10"></div>
+      <div class="color-chip-label">ORANGE.5D</div>
+      <div class="color-rgb">R 39 G 30 B 16</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Yellow</div>
+      <div class="color-token">--color-system-yellow</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFCC00"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 255 G 204 B 0</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FFD60A"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 255 G 214 B 10</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BF9900"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 191 G 153 B 0</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FFE047"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 255 G 224 B 71</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFD633"></div>
+      <div class="color-chip-label">YELLOW.1</div>
+      <div class="color-rgb">R 255 G 214 B 51</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFE066"></div>
+      <div class="color-chip-label">YELLOW.2</div>
+      <div class="color-rgb">R 255 G 224 B 102</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFEB99"></div>
+      <div class="color-chip-label">YELLOW.3</div>
+      <div class="color-rgb">R 255 G 235 B 153</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFF5CC"></div>
+      <div class="color-chip-label">YELLOW.4</div>
+      <div class="color-rgb">R 255 G 245 B 204</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFFAE6"></div>
+      <div class="color-chip-label">YELLOW.5</div>
+      <div class="color-rgb">R 255 G 250 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#CFB017"></div>
+      <div class="color-chip-label">YELLOW.1D</div>
+      <div class="color-rgb">R 207 G 176 B 23</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#9F8815"></div>
+      <div class="color-chip-label">YELLOW.2D</div>
+      <div class="color-rgb">R 159 G 136 B 21</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#6F6013"></div>
+      <div class="color-chip-label">YELLOW.3D</div>
+      <div class="color-rgb">R 111 G 96 B 19</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3F3811"></div>
+      <div class="color-chip-label">YELLOW.4D</div>
+      <div class="color-rgb">R 63 G 56 B 17</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#272310"></div>
+      <div class="color-chip-label">YELLOW.5D</div>
+      <div class="color-rgb">R 39 G 35 B 16</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Green</div>
+      <div class="color-token">--color-system-green</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#34C759"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 52 G 199 B 89</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#30D158"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 48 G 209 B 88</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#279543"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 39 G 149 B 67</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#64DC82"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 100 G 220 B 130</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#5DD27A"></div>
+      <div class="color-chip-label">GREEN.1</div>
+      <div class="color-rgb">R 93 G 210 B 122</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#85DD9B"></div>
+      <div class="color-chip-label">GREEN.2</div>
+      <div class="color-rgb">R 133 G 221 B 155</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#AEE9BD"></div>
+      <div class="color-chip-label">GREEN.3</div>
+      <div class="color-rgb">R 174 G 233 B 189</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D6F4DE"></div>
+      <div class="color-chip-label">GREEN.4</div>
+      <div class="color-rgb">R 214 G 244 B 222</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EBF9EE"></div>
+      <div class="color-chip-label">GREEN.5</div>
+      <div class="color-rgb">R 235 G 249 B 238</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#33AC51"></div>
+      <div class="color-chip-label">GREEN.1D</div>
+      <div class="color-rgb">R 51 G 172 B 81</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#2B8541"></div>
+      <div class="color-chip-label">GREEN.2D</div>
+      <div class="color-rgb">R 43 G 133 B 65</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#215E30"></div>
+      <div class="color-chip-label">GREEN.3D</div>
+      <div class="color-rgb">R 33 G 94 B 48</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#193720"></div>
+      <div class="color-chip-label">GREEN.4D</div>
+      <div class="color-rgb">R 25 G 55 B 32</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#142318"></div>
+      <div class="color-chip-label">GREEN.5D</div>
+      <div class="color-rgb">R 20 G 35 B 24</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Mint</div>
+      <div class="color-token">--color-system-mint</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#00C7BE"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 0 G 199 B 190</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#00D3A7"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 0 G 211 B 167</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#00958E"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 0 G 149 B 142</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#40DEBD"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 64 G 222 B 189</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#33D2CB"></div>
+      <div class="color-chip-label">MINT.1</div>
+      <div class="color-rgb">R 51 G 210 B 203</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#66DDD8"></div>
+      <div class="color-chip-label">MINT.2</div>
+      <div class="color-rgb">R 102 G 221 B 216</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#99E9E5"></div>
+      <div class="color-chip-label">MINT.3</div>
+      <div class="color-rgb">R 153 G 233 B 229</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#CCF4F2"></div>
+      <div class="color-chip-label">MINT.4</div>
+      <div class="color-rgb">R 204 G 244 B 242</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E6F9F8"></div>
+      <div class="color-chip-label">MINT.5</div>
+      <div class="color-rgb">R 230 G 249 B 248</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0FAE8D"></div>
+      <div class="color-chip-label">MINT.1D</div>
+      <div class="color-rgb">R 15 G 174 B 141</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0F876D"></div>
+      <div class="color-chip-label">MINT.2D</div>
+      <div class="color-rgb">R 15 G 135 B 109</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0F5E4E"></div>
+      <div class="color-chip-label">MINT.3D</div>
+      <div class="color-rgb">R 15 G 94 B 78</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0F372E"></div>
+      <div class="color-chip-label">MINT.4D</div>
+      <div class="color-rgb">R 15 G 55 B 46</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0F231F"></div>
+      <div class="color-chip-label">MINT.5D</div>
+      <div class="color-rgb">R 15 G 35 B 31</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Teal</div>
+      <div class="color-token">--color-system-teal</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#30B0C7"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 48 G 176 B 199</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#40C8E0"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 64 G 200 B 224</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#248495"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 36 G 132 B 149</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#70D6E8"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 112 G 214 B 232</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#59C0D2"></div>
+      <div class="color-chip-label">TEAL.1</div>
+      <div class="color-rgb">R 89 G 192 B 210</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#83D0DD"></div>
+      <div class="color-chip-label">TEAL.2</div>
+      <div class="color-rgb">R 131 G 208 B 221</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#ACDFE9"></div>
+      <div class="color-chip-label">TEAL.3</div>
+      <div class="color-rgb">R 172 G 223 B 233</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D6EFF4"></div>
+      <div class="color-chip-label">TEAL.4</div>
+      <div class="color-rgb">R 214 G 239 B 244</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EAF7F9"></div>
+      <div class="color-chip-label">TEAL.5</div>
+      <div class="color-rgb">R 234 G 247 B 249</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3FA6B8"></div>
+      <div class="color-chip-label">TEAL.1D</div>
+      <div class="color-rgb">R 63 G 166 B 184</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#33808D"></div>
+      <div class="color-chip-label">TEAL.2D</div>
+      <div class="color-rgb">R 51 G 128 B 141</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#285A64"></div>
+      <div class="color-chip-label">TEAL.3D</div>
+      <div class="color-rgb">R 40 G 90 B 100</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1C353A"></div>
+      <div class="color-chip-label">TEAL.4D</div>
+      <div class="color-rgb">R 28 G 53 B 58</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#152224"></div>
+      <div class="color-chip-label">TEAL.5D</div>
+      <div class="color-rgb">R 21 G 34 B 36</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Cyan</div>
+      <div class="color-token">--color-system-cyan</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#32ADE6"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 50 G 173 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#64D2FF"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 100 G 210 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#2682AC"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 38 G 130 B 172</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#8BDDFF"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 139 G 221 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#5BBDEB"></div>
+      <div class="color-chip-label">CYAN.1</div>
+      <div class="color-rgb">R 91 G 189 B 235</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#84CEF0"></div>
+      <div class="color-chip-label">CYAN.2</div>
+      <div class="color-rgb">R 132 G 206 B 240</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#ADDEF5"></div>
+      <div class="color-chip-label">CYAN.3</div>
+      <div class="color-rgb">R 173 G 222 B 245</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D6EFFA"></div>
+      <div class="color-chip-label">CYAN.4</div>
+      <div class="color-rgb">R 214 G 239 B 250</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EAF7FC"></div>
+      <div class="color-chip-label">CYAN.5</div>
+      <div class="color-rgb">R 234 G 247 B 252</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#5AADCF"></div>
+      <div class="color-chip-label">CYAN.1D</div>
+      <div class="color-rgb">R 90 G 173 B 207</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#48869F"></div>
+      <div class="color-chip-label">CYAN.2D</div>
+      <div class="color-rgb">R 72 G 134 B 159</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#355E6F"></div>
+      <div class="color-chip-label">CYAN.3D</div>
+      <div class="color-rgb">R 53 G 94 B 111</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#22373F"></div>
+      <div class="color-chip-label">CYAN.4D</div>
+      <div class="color-rgb">R 34 G 55 B 63</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#192327"></div>
+      <div class="color-chip-label">CYAN.5D</div>
+      <div class="color-rgb">R 25 G 35 B 39</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Blue</div>
+      <div class="color-token">--color-system-blue</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#007AFF"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 0 G 122 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#0A84FF"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 10 G 132 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#005CBF"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 0 G 92 B 191</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#47A3FF"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 71 G 163 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#3395FF"></div>
+      <div class="color-chip-label">BLUE.1</div>
+      <div class="color-rgb">R 51 G 149 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#66AFFF"></div>
+      <div class="color-chip-label">BLUE.2</div>
+      <div class="color-rgb">R 102 G 175 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#99CAFF"></div>
+      <div class="color-chip-label">BLUE.3</div>
+      <div class="color-rgb">R 153 G 202 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#CCE4FF"></div>
+      <div class="color-chip-label">BLUE.4</div>
+      <div class="color-rgb">R 204 G 228 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E6F2FF"></div>
+      <div class="color-chip-label">BLUE.5</div>
+      <div class="color-rgb">R 230 G 242 B 255</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1773CF"></div>
+      <div class="color-chip-label">BLUE.1D</div>
+      <div class="color-rgb">R 23 G 115 B 207</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#155A9F"></div>
+      <div class="color-chip-label">BLUE.2D</div>
+      <div class="color-rgb">R 21 G 90 B 159</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#13416F"></div>
+      <div class="color-chip-label">BLUE.3D</div>
+      <div class="color-rgb">R 19 G 65 B 111</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#11283F"></div>
+      <div class="color-chip-label">BLUE.4D</div>
+      <div class="color-rgb">R 17 G 40 B 63</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#101C27"></div>
+      <div class="color-chip-label">BLUE.5D</div>
+      <div class="color-rgb">R 16 G 28 B 39</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Indigo</div>
+      <div class="color-token">--color-system-indigo</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#5856D6"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 88 G 86 B 214</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#5E5CE6"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 94 G 92 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#4240A0"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 66 G 64 B 160</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#8685EC"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 134 G 133 B 236</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#7978DE"></div>
+      <div class="color-chip-label">INDIGO.1</div>
+      <div class="color-rgb">R 121 G 120 B 222</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#9B9AE6"></div>
+      <div class="color-chip-label">INDIGO.2</div>
+      <div class="color-rgb">R 155 G 154 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BCBBEF"></div>
+      <div class="color-chip-label">INDIGO.3</div>
+      <div class="color-rgb">R 188 G 187 B 239</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DEDDF7"></div>
+      <div class="color-chip-label">INDIGO.4</div>
+      <div class="color-rgb">R 222 G 221 B 247</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EEEEFB"></div>
+      <div class="color-chip-label">INDIGO.5</div>
+      <div class="color-rgb">R 238 G 238 B 251</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#5655BC"></div>
+      <div class="color-chip-label">INDIGO.1D</div>
+      <div class="color-rgb">R 86 G 85 B 188</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#444391"></div>
+      <div class="color-chip-label">INDIGO.2D</div>
+      <div class="color-rgb">R 68 G 67 B 145</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#333266"></div>
+      <div class="color-chip-label">INDIGO.3D</div>
+      <div class="color-rgb">R 51 G 50 B 102</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#21203B"></div>
+      <div class="color-chip-label">INDIGO.4D</div>
+      <div class="color-rgb">R 33 G 32 B 59</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#181825"></div>
+      <div class="color-chip-label">INDIGO.5D</div>
+      <div class="color-rgb">R 24 G 24 B 37</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Purple</div>
+      <div class="color-token">--color-system-purple</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#AF52DE"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 175 G 82 B 222</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#BF5AF2"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 191 G 90 B 242</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#833EA6"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 131 G 62 B 166</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#CF83F5"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 207 G 131 B 245</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BF75E5"></div>
+      <div class="color-chip-label">PURPLE.1</div>
+      <div class="color-rgb">R 191 G 117 B 229</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#CF97EB"></div>
+      <div class="color-chip-label">PURPLE.2</div>
+      <div class="color-rgb">R 207 G 151 B 235</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DFBAF2"></div>
+      <div class="color-chip-label">PURPLE.3</div>
+      <div class="color-rgb">R 223 G 186 B 242</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EFDCF8"></div>
+      <div class="color-chip-label">PURPLE.4</div>
+      <div class="color-rgb">R 239 G 220 B 248</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F7EEFC"></div>
+      <div class="color-chip-label">PURPLE.5</div>
+      <div class="color-rgb">R 247 G 238 B 252</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#9F53C6"></div>
+      <div class="color-chip-label">PURPLE.1D</div>
+      <div class="color-rgb">R 159 G 83 B 198</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#7B4298"></div>
+      <div class="color-chip-label">PURPLE.2D</div>
+      <div class="color-rgb">R 123 G 66 B 152</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#57316A"></div>
+      <div class="color-chip-label">PURPLE.3D</div>
+      <div class="color-rgb">R 87 G 49 B 106</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#33203C"></div>
+      <div class="color-chip-label">PURPLE.4D</div>
+      <div class="color-rgb">R 51 G 32 B 60</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#211826"></div>
+      <div class="color-chip-label">PURPLE.5D</div>
+      <div class="color-rgb">R 33 G 24 B 38</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Pink</div>
+      <div class="color-token">--color-system-pink</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF2D55"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 255 G 45 B 85</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FF375F"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 255 G 55 B 95</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BF2240"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 191 G 34 B 64</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#FF6987"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 255 G 105 B 135</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF5777"></div>
+      <div class="color-chip-label">PINK.1</div>
+      <div class="color-rgb">R 255 G 87 B 119</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FF8199"></div>
+      <div class="color-chip-label">PINK.2</div>
+      <div class="color-rgb">R 255 G 129 B 153</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFABBB"></div>
+      <div class="color-chip-label">PINK.3</div>
+      <div class="color-rgb">R 255 G 171 B 187</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFD5DD"></div>
+      <div class="color-chip-label">PINK.4</div>
+      <div class="color-rgb">R 255 G 213 B 221</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FFEAEE"></div>
+      <div class="color-chip-label">PINK.5</div>
+      <div class="color-rgb">R 255 G 234 B 238</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#CF3957"></div>
+      <div class="color-chip-label">PINK.1D</div>
+      <div class="color-rgb">R 207 G 57 B 87</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#9F2E45"></div>
+      <div class="color-chip-label">PINK.2D</div>
+      <div class="color-rgb">R 159 G 46 B 69</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#6F2433"></div>
+      <div class="color-chip-label">PINK.3D</div>
+      <div class="color-rgb">R 111 G 36 B 51</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3F1A21"></div>
+      <div class="color-chip-label">PINK.4D</div>
+      <div class="color-rgb">R 63 G 26 B 33</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#271418"></div>
+      <div class="color-chip-label">PINK.5D</div>
+      <div class="color-rgb">R 39 G 20 B 24</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Brown</div>
+      <div class="color-token">--color-system-brown</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#A2845E"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 162 G 132 B 94</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#AC8E68"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 172 G 142 B 104</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#7A6346"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 122 G 99 B 70</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#C1AA8E"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 193 G 170 B 142</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#B59D7E"></div>
+      <div class="color-chip-label">BROWN.1</div>
+      <div class="color-rgb">R 181 G 157 B 126</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#C7B59E"></div>
+      <div class="color-chip-label">BROWN.2</div>
+      <div class="color-rgb">R 199 G 181 B 158</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DACEBF"></div>
+      <div class="color-chip-label">BROWN.3</div>
+      <div class="color-rgb">R 218 G 206 B 191</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#ECE6DF"></div>
+      <div class="color-chip-label">BROWN.4</div>
+      <div class="color-rgb">R 236 G 230 B 223</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F6F3EF"></div>
+      <div class="color-chip-label">BROWN.5</div>
+      <div class="color-rgb">R 246 G 243 B 239</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#917A5D"></div>
+      <div class="color-chip-label">BROWN.1D</div>
+      <div class="color-rgb">R 145 G 122 B 93</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#705F4A"></div>
+      <div class="color-chip-label">BROWN.2D</div>
+      <div class="color-rgb">R 112 G 95 B 74</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#504537"></div>
+      <div class="color-chip-label">BROWN.3D</div>
+      <div class="color-rgb">R 80 G 69 B 55</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#2F2A23"></div>
+      <div class="color-chip-label">BROWN.4D</div>
+      <div class="color-rgb">R 47 G 42 B 35</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1F1C19"></div>
+      <div class="color-chip-label">BROWN.5D</div>
+      <div class="color-rgb">R 31 G 28 B 25</div>
+    </div>
+  </div>
+  <h4 class="dieterpreview-section-head">Neutrals</h4>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray</div>
+      <div class="color-token">--color-system-gray</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#8E8E93"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 142 G 142 B 147</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#8E8E93"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 142 G 142 B 147</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#6A6A6E"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 106 G 106 B 110</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#AAAAAE"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 170 G 170 B 174</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#A5A5A9"></div>
+      <div class="color-chip-label">SYSTEMGRAY.1</div>
+      <div class="color-rgb">R 165 G 165 B 169</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BBBBBE"></div>
+      <div class="color-chip-label">SYSTEMGRAY.2</div>
+      <div class="color-rgb">R 187 G 187 B 190</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D2D2D4"></div>
+      <div class="color-chip-label">SYSTEMGRAY.3</div>
+      <div class="color-rgb">R 210 G 210 B 212</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E8E8E9"></div>
+      <div class="color-chip-label">SYSTEMGRAY.4</div>
+      <div class="color-rgb">R 232 G 232 B 233</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F4F4F4"></div>
+      <div class="color-chip-label">SYSTEMGRAY.5</div>
+      <div class="color-rgb">R 244 G 244 B 244</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#7A7A7E"></div>
+      <div class="color-chip-label">SYSTEMGRAY.1D</div>
+      <div class="color-rgb">R 122 G 122 B 126</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#5F5F62"></div>
+      <div class="color-chip-label">SYSTEMGRAY.2D</div>
+      <div class="color-rgb">R 95 G 95 B 98</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#454547"></div>
+      <div class="color-chip-label">SYSTEMGRAY.3D</div>
+      <div class="color-rgb">R 69 G 69 B 71</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#2A2A2B"></div>
+      <div class="color-chip-label">SYSTEMGRAY.4D</div>
+      <div class="color-rgb">R 42 G 42 B 43</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1C1C1D"></div>
+      <div class="color-chip-label">SYSTEMGRAY.5D</div>
+      <div class="color-rgb">R 28 G 28 B 29</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray 2</div>
+      <div class="color-token">--color-system-gray-2</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#AEAEB2"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 174 G 174 B 178</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#636366"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 99 G 99 B 102</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#828286"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 130 G 130 B 134</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#8A8A8C"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 138 G 138 B 140</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#BEBEC1"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.1</div>
+      <div class="color-rgb">R 190 G 190 B 193</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#CECED1"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.2</div>
+      <div class="color-rgb">R 206 G 206 B 209</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DFDFE0"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.3</div>
+      <div class="color-rgb">R 223 G 223 B 224</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EFEFF0"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.4</div>
+      <div class="color-rgb">R 239 G 239 B 240</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F7F7F7"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.5</div>
+      <div class="color-rgb">R 247 G 247 B 247</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#5A5A5C"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.1D</div>
+      <div class="color-rgb">R 90 G 90 B 92</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#474749"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.2D</div>
+      <div class="color-rgb">R 71 G 71 B 73</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#353536"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.3D</div>
+      <div class="color-rgb">R 53 G 53 B 54</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#222222"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.4D</div>
+      <div class="color-rgb">R 34 G 34 B 34</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#191919"></div>
+      <div class="color-chip-label">SYSTEMGRAY2.5D</div>
+      <div class="color-rgb">R 25 G 25 B 25</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray 3</div>
+      <div class="color-token">--color-system-gray-3</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#C7C7CC"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 199 G 199 B 204</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#48484A"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 72 G 72 B 74</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#959599"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 149 G 149 B 153</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#767677"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 118 G 118 B 119</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D2D2D6"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.1</div>
+      <div class="color-rgb">R 210 G 210 B 214</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DDDDE0"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.2</div>
+      <div class="color-rgb">R 221 G 221 B 224</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E9E9EB"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.3</div>
+      <div class="color-rgb">R 233 G 233 B 235</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F4F4F5"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.4</div>
+      <div class="color-rgb">R 244 G 244 B 245</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F9F9FA"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.5</div>
+      <div class="color-rgb">R 249 G 249 B 250</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#464647"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.1D</div>
+      <div class="color-rgb">R 70 G 70 B 71</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#383839"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.2D</div>
+      <div class="color-rgb">R 56 G 56 B 57</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#2B2B2C"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.3D</div>
+      <div class="color-rgb">R 43 G 43 B 44</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1C1C1D"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.4D</div>
+      <div class="color-rgb">R 28 G 28 B 29</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#161616"></div>
+      <div class="color-chip-label">SYSTEMGRAY3.5D</div>
+      <div class="color-rgb">R 22 G 22 B 22</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray 4</div>
+      <div class="color-token">--color-system-gray-4</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#D1D1D6"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 209 G 209 B 214</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3A3A3C"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 58 G 58 B 60</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#9D9DA0"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 157 G 157 B 160</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#6B6B6D"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 107 G 107 B 109</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#DADADE"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.1</div>
+      <div class="color-rgb">R 218 G 218 B 222</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E3E3E6"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.2</div>
+      <div class="color-rgb">R 227 G 227 B 230</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EDEDEF"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.3</div>
+      <div class="color-rgb">R 237 G 237 B 239</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F6F6F7"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.4</div>
+      <div class="color-rgb">R 246 G 246 B 247</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FAFAFB"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.5</div>
+      <div class="color-rgb">R 250 G 250 B 251</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#3B3B3C"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.1D</div>
+      <div class="color-rgb">R 59 G 59 B 60</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#303031"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.2D</div>
+      <div class="color-rgb">R 48 G 48 B 49</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#252526"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.3D</div>
+      <div class="color-rgb">R 37 G 37 B 38</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1B1B1B"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.4D</div>
+      <div class="color-rgb">R 27 G 27 B 27</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#151515"></div>
+      <div class="color-chip-label">SYSTEMGRAY4.5D</div>
+      <div class="color-rgb">R 21 G 21 B 21</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray 5</div>
+      <div class="color-token">--color-system-gray-5</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#E5E5EA"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 229 G 229 B 234</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#2C2C2E"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 44 G 44 B 46</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#ACACB0"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 172 G 172 B 176</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#616162"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 97 G 97 B 98</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EAEAEE"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.1</div>
+      <div class="color-rgb">R 234 G 234 B 238</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#EFEFF2"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.2</div>
+      <div class="color-rgb">R 239 G 239 B 242</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F5F5F7"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.3</div>
+      <div class="color-rgb">R 245 G 245 B 247</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FAFAFB"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.4</div>
+      <div class="color-rgb">R 250 G 250 B 251</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FCFCFD"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.5</div>
+      <div class="color-rgb">R 252 G 252 B 253</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#303032"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.1D</div>
+      <div class="color-rgb">R 48 G 48 B 50</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#28282A"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.2D</div>
+      <div class="color-rgb">R 40 G 40 B 42</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#202020"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.3D</div>
+      <div class="color-rgb">R 32 G 32 B 32</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#181818"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.4D</div>
+      <div class="color-rgb">R 24 G 24 B 24</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#131314"></div>
+      <div class="color-chip-label">SYSTEMGRAY5.5D</div>
+      <div class="color-rgb">R 19 G 19 B 20</div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-name">
+      <div>Gray 6</div>
+      <div class="color-token">--color-system-gray-6</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F2F2F7"></div>
+      <div class="color-chip-label">LIGHT</div>
+      <div class="color-rgb">R 242 G 242 B 247</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1C1C1E"></div>
+      <div class="color-chip-label">DARK</div>
+      <div class="color-rgb">R 28 G 28 B 30</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#B6B6B9"></div>
+      <div class="color-chip-label">CONTRAST</div>
+      <div class="color-rgb">R 182 G 182 B 185</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#555556"></div>
+      <div class="color-chip-label">CONTRAST D</div>
+      <div class="color-rgb">R 85 G 85 B 86</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F5F5F9"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.1</div>
+      <div class="color-rgb">R 245 G 245 B 249</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#F7F7FA"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.2</div>
+      <div class="color-rgb">R 247 G 247 B 250</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FAFAFC"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.3</div>
+      <div class="color-rgb">R 250 G 250 B 252</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FCFCFD"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.4</div>
+      <div class="color-rgb">R 252 G 252 B 253</div>
+    </div>
+    <div class="color-cell" data-theme="light">
+      <div class="color-chip" style="background:#FEFEFE"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.5</div>
+      <div class="color-rgb">R 254 G 254 B 254</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#242426"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.1D</div>
+      <div class="color-rgb">R 36 G 36 B 38</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1F1F20"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.2D</div>
+      <div class="color-rgb">R 31 G 31 B 32</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#1A1A1B"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.3D</div>
+      <div class="color-rgb">R 26 G 26 B 27</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#151515"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.4D</div>
+      <div class="color-rgb">R 21 G 21 B 21</div>
+    </div>
+    <div class="color-cell" data-theme="dark">
+      <div class="color-chip" style="background:#121212"></div>
+      <div class="color-chip-label">SYSTEMGRAY6.5D</div>
+      <div class="color-rgb">R 18 G 18 B 18</div>
+    </div>
+  </div>
+</div>

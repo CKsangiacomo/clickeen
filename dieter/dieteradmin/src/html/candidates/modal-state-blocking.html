@@ -1,0 +1,23 @@
+<div class="diet-modal" data-tone="danger" style="position:relative; inset:auto; padding:0; background: transparent;">
+  <div class="diet-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-danger-title" aria-describedby="modal-danger-desc">
+    <header class="diet-modal__header">
+      <div>
+        <h2 class="diet-modal__title" id="modal-danger-title">Delete activation?</h2>
+        <p class="diet-modal__subtitle" id="modal-danger-desc">This cannot be undone and removes all analytics history.</p>
+      </div>
+    </header>
+    <div class="diet-modal__body">
+      <p class="body" style="margin:0;">Type the activation name to confirm permanent deletion.</p>
+      <label class="diet-input">
+        <span class="visually-hidden">Confirmation text</span>
+        <span class="diet-input__control">
+          <input class="diet-input__field" type="text" placeholder="Activation name" />
+        </span>
+      </label>
+    </div>
+    <footer class="diet-modal__footer">
+      <button class="diet-btn" data-variant="neutral" data-size="sm">Cancel</button>
+      <button class="diet-btn" data-variant="danger" data-size="sm">Delete activation</button>
+    </footer>
+  </div>
+</div>

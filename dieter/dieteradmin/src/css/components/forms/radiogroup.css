@@ -1,0 +1,106 @@
+.diet-radio-group,
+.diet-radiogroup {
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+
+.diet-radio-group[data-direction='horizontal'] {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: var(--space-4, 1rem);
+}
+
+.diet-radio {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3, 0.75rem);
+  align-items: start;
+  cursor: pointer;
+  --radio-active-color: var(--color-accent, var(--color-system-blue));
+}
+
+.diet-radio__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.diet-radio__control {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%);
+  background: var(--color-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.diet-radio__circle {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  border-radius: 999px;
+  background: var(--radio-active-color);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.diet-radio__label {
+  font: 500 var(--fs-14, 0.875rem)/1.4 var(--font-ui);
+}
+
+.diet-radio__description {
+  font: 400 var(--fs-12, 0.75rem)/1.5 var(--font-ui);
+  color: color-mix(in oklab, var(--color-text), transparent 40%);
+}
+
+.diet-radio__input:focus-visible + .diet-radio__control {
+  outline: none;
+  border-color: var(--radio-active-color);
+  box-shadow:
+    0 0 0 var(--focus-ring-offset, 2px) var(--color-bg),
+    0 0 0 calc(var(--focus-ring-offset, 2px) + var(--focus-ring-width, 2px)) var(--focus-ring-color, var(--radio-active-color));
+}
+
+.diet-radio__input:checked + .diet-radio__control {
+  border-color: var(--radio-active-color);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--radio-active-color), transparent 75%);
+}
+
+.diet-radio__input:checked + .diet-radio__control .diet-radio__circle,
+.diet-radio__input:checked + .diet-radio__control .diet-radio__dot {
+  opacity: 1;
+}
+
+.diet-radio[data-state='error'] .diet-radio__control {
+  border-color: var(--role-danger-bg);
+}
+
+.diet-radio[data-state='disabled'] {
+  color: color-mix(in oklab, var(--color-text), transparent 55%);
+  cursor: not-allowed;
+}
+
+.diet-radio[data-state='disabled'] .diet-radio__control {
+  border-color: color-mix(in oklab, var(--role-border), transparent 65%);
+}
+
+.diet-radio-group[data-condensed='true'] .diet-radio {
+  gap: var(--space-2, 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-radio__control,
+  .diet-radio__dot,
+  .diet-radio__circle {
+    transition-duration: 0.001ms;
+  }
+}
+.diet-radio__dot {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  border-radius: 999px;
+  background: var(--radio-active-color);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}

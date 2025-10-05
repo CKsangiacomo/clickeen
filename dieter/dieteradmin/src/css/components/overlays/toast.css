@@ -1,0 +1,57 @@
+.diet-toast-stack {
+  position: fixed;
+  inset-inline-end: var(--space-6, 1.5rem);
+  inset-block-end: var(--space-6, 1.5rem);
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+  z-index: 1200;
+}
+
+.diet-toast {
+  min-inline-size: 320px;
+  max-inline-size: 420px;
+  background: var(--color-bg);
+  border-radius: var(--radius-4, 0.5rem);
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 60%);
+  box-shadow: 0 20px 40px rgba(12, 16, 24, 0.18);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+
+.diet-toast[data-tone='success'] {
+  border-color: color-mix(in oklab, var(--role-success-bg), transparent 60%);
+}
+
+.diet-toast[data-tone='error'] {
+  border-color: color-mix(in oklab, var(--role-danger-bg), transparent 55%);
+}
+
+.diet-toast__heading {
+  margin: 0;
+  font: 600 var(--fs-14, 0.875rem)/1.4 var(--font-ui);
+}
+
+.diet-toast__body {
+  margin: 0;
+  font: 400 var(--fs-13, 0.8125rem)/1.5 var(--font-ui);
+  color: color-mix(in oklab, var(--color-text), transparent 30%);
+}
+
+.diet-toast__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+}
+
+@media (max-width: 640px) {
+  .diet-toast-stack {
+    inset-inline: var(--space-4, 1rem);
+    inset-block-end: var(--space-4, 1rem);
+  }
+
+  .diet-toast {
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+}

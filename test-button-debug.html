@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Debug</title>
+  <link rel="stylesheet" href="./dieter/tokens/tokens.css">
+  <link rel="stylesheet" href="./dieter/components/button.css">
+  <style>
+    body { padding: 40px; background: var(--color-bg, #fff); }
+    .debug {
+      margin: 20px 0;
+      padding: 20px;
+      border: 2px solid red;
+      display: inline-block;
+    }
+    .debug-info {
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 10px;
+      background: #f0f0f0;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Icon+Text Button Debug</h1>
+
+  <div class="debug">
+    <h3>Default (no data-footprint)</h3>
+    <button type="button" class="diet-btn" data-size="md" data-variant="primary">
+      <span class="diet-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20">
+          <circle cx="10" cy="10" r="8" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="diet-btn__label">Action</span>
+    </button>
+    <div class="debug-info" id="info1"></div>
+  </div>
+
+  <div class="debug">
+    <h3>With data-footprint="icon-text"</h3>
+    <button type="button" class="diet-btn" data-size="md" data-variant="primary" data-footprint="icon-text">
+      <span class="diet-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="20" height="20">
+          <circle cx="10" cy="10" r="8" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="diet-btn__label">Action</span>
+    </button>
+    <div class="debug-info" id="info2"></div>
+  </div>
+
+  <div class="debug">
+    <h3>Text only</h3>
+    <button type="button" class="diet-btn" data-size="md" data-variant="primary" data-footprint="text-only">
+      <span class="diet-btn__label">Action</span>
+    </button>
+    <div class="debug-info" id="info3"></div>
+  </div>
+
+  <script>
+    function getDebugInfo(btn, targetId) {
+      const styles = window.getComputedStyle(btn);
+      const info = document.getElementById(targetId);
+      info.innerHTML = `
+        padding-inline-start: ${styles.paddingInlineStart}<br>
+        padding-inline-end: ${styles.paddingInlineEnd}<br>
+        gap: ${styles.gap}<br>
+        --btn-padding-inline: ${styles.getPropertyValue('--btn-padding-inline')}<br>
+        --btn-gap: ${styles.getPropertyValue('--btn-gap')}
+      `;
+    }
+
+    window.addEventListener('load', () => {
+      const buttons = document.querySelectorAll('.diet-btn');
+      getDebugInfo(buttons[0], 'info1');
+      getDebugInfo(buttons[1], 'info2');
+      getDebugInfo(buttons[2], 'info3');
+    });
+  </script>
+</body>
+</html>

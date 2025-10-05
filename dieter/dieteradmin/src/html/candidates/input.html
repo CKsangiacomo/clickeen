@@ -1,0 +1,299 @@
+<div class="dieter-preview" data-component="input">
+  <p class="dieter-preview__caption">
+    Inputs combine a label, helper messaging, and optional icon or affix slots around the core `.diet-input__field`.
+    The richest composition is shown first; remove slots as needed for lighter footprints.
+  </p>
+
+  <div class="dieter-preview__table" data-demo="matrix">
+    <div class="dieter-preview__row">
+      <h4>Icon + affixes + helper</h4>
+      <div class="dieter-preview__cells">
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>SMALL</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="sm"</span>
+            <span>slots: label · icon · prefix · suffix · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="sm">
+              <label class="diet-input__label" for="input-rich-sm">Label</label>
+              <div class="diet-input__control">
+                <span class="diet-input__icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <circle cx="9" cy="9" r="4.5" />
+                    <path d="m14 14 4 4" />
+                  </svg>
+                </span>
+                <span class="diet-input__affix" data-position="start">Prefix</span>
+                <input
+                  class="diet-input__field"
+                  type="text"
+                  id="input-rich-sm"
+                  placeholder="Placeholder"
+                  aria-describedby="input-rich-sm-help"
+                />
+                <span class="diet-input__affix" data-position="end">Suffix</span>
+              </div>
+              <span class="diet-input__helper" id="input-rich-sm-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>MEDIUM</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="md" (default)</span>
+            <span>slots: label · icon · prefix · suffix · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="md">
+              <label class="diet-input__label" for="input-rich-md">Label</label>
+              <div class="diet-input__control">
+                <span class="diet-input__icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <circle cx="9" cy="9" r="4.5" />
+                    <path d="m14 14 4 4" />
+                  </svg>
+                </span>
+                <span class="diet-input__affix" data-position="start">Prefix</span>
+                <input
+                  class="diet-input__field"
+                  type="text"
+                  id="input-rich-md"
+                  placeholder="Placeholder"
+                  aria-describedby="input-rich-md-help"
+                />
+                <span class="diet-input__affix" data-position="end">Suffix</span>
+              </div>
+              <span class="diet-input__helper" id="input-rich-md-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>LARGE</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="lg"</span>
+            <span>slots: label · icon · prefix · suffix · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="lg">
+              <label class="diet-input__label" for="input-rich-lg">Label</label>
+              <div class="diet-input__control">
+                <span class="diet-input__icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <circle cx="9" cy="9" r="4.5" />
+                    <path d="m14 14 4 4" />
+                  </svg>
+                </span>
+                <span class="diet-input__affix" data-position="start">Prefix</span>
+                <input
+                  class="diet-input__field"
+                  type="text"
+                  id="input-rich-lg"
+                  placeholder="Placeholder"
+                  aria-describedby="input-rich-lg-help"
+                />
+                <span class="diet-input__affix" data-position="end">Suffix</span>
+              </div>
+              <span class="diet-input__helper" id="input-rich-lg-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dieter-preview__row">
+      <h4>Label + helper</h4>
+      <div class="dieter-preview__cells">
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>SMALL</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="sm"</span>
+            <span>slots: label · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="sm">
+              <label class="diet-input__label" for="input-standard-sm">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-standard-sm" placeholder="Placeholder" aria-describedby="input-standard-sm-help" />
+              </div>
+              <span class="diet-input__helper" id="input-standard-sm-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>MEDIUM</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="md"</span>
+            <span>slots: label · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="md">
+              <label class="diet-input__label" for="input-standard-md">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-standard-md" placeholder="Placeholder" aria-describedby="input-standard-md-help" />
+              </div>
+              <span class="diet-input__helper" id="input-standard-md-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>LARGE</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="lg"</span>
+            <span>slots: label · helper</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="lg">
+              <label class="diet-input__label" for="input-standard-lg">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-standard-lg" placeholder="Placeholder" aria-describedby="input-standard-lg-help" />
+              </div>
+              <span class="diet-input__helper" id="input-standard-lg-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dieter-preview__row">
+      <h4>Control only</h4>
+      <div class="dieter-preview__cells">
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>SMALL</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="sm"</span>
+            <span>slots: control only</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="sm">
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>MEDIUM</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="md"</span>
+            <span>slots: control only</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="md">
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>LARGE</strong>
+            <span>class: .diet-input</span>
+            <span>data-size="lg"</span>
+            <span>slots: control only</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-size="lg">
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dieter-preview__row">
+      <h4>States</h4>
+      <div class="dieter-preview__cells">
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>ERROR</strong>
+            <span>class: .diet-input</span>
+            <span>data-state="error"</span>
+            <span>aria-invalid + helper linkage</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-state="error">
+              <label class="diet-input__label" for="input-error">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-error" placeholder="Placeholder" aria-invalid="true" aria-describedby="input-error-help" />
+              </div>
+              <span class="diet-input__helper" id="input-error-help">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>READ-ONLY</strong>
+            <span>class: .diet-input</span>
+            <span>attribute: readonly</span>
+            <span>visuals: neutral</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input">
+              <label class="diet-input__label" for="input-readonly">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-readonly" value="Read only value" readonly />
+              </div>
+              <span class="diet-input__helper">Helper text</span>
+            </div>
+          </div>
+        </div>
+        <div class="dieter-preview__cell">
+          <div class="dieter-preview__meta">
+            <strong>DISABLED</strong>
+            <span>class: .diet-input</span>
+            <span>data-state="disabled"</span>
+            <span>field attribute: disabled</span>
+          </div>
+          <div class="dieter-preview__demo">
+            <div class="diet-input" data-state="disabled">
+              <label class="diet-input__label" for="input-disabled">Label</label>
+              <div class="diet-input__control">
+                <input class="diet-input__field" type="text" id="input-disabled" value="Disabled" disabled />
+              </div>
+              <span class="diet-input__helper">Helper text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dieter-preview__columns" id="input-snippets" data-demo="snippets">
+    <div class="dieter-preview__column">
+      <h4>Form snippet</h4>
+      <div class="stack-sm">
+        <div class="diet-input">
+          <label class="diet-input__label" for="input-snippet-1">First label</label>
+          <div class="diet-input__control">
+            <input class="diet-input__field" type="text" id="input-snippet-1" placeholder="Placeholder" />
+          </div>
+        </div>
+        <div class="diet-input">
+          <label class="diet-input__label" for="input-snippet-2">Second label</label>
+          <div class="diet-input__control">
+            <input class="diet-input__field" type="text" id="input-snippet-2" placeholder="Placeholder" />
+          </div>
+        </div>
+        <div class="diet-input" data-size="lg">
+          <label class="diet-input__label" for="input-snippet-3">Large label</label>
+          <div class="diet-input__control">
+            <input class="diet-input__field" type="text" id="input-snippet-3" placeholder="Placeholder" />
+          </div>
+          <span class="diet-input__helper">Helper text</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

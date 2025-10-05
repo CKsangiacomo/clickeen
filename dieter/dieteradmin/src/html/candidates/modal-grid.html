@@ -1,0 +1,56 @@
+<div class="demo-grid">
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Small</span>
+    <div class="diet-modal" data-size="sm" style="position:relative; inset:auto; padding:0; background: transparent;">
+      <div class="diet-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-small-title" aria-describedby="modal-small-desc">
+        <header class="diet-modal__header">
+          <div>
+            <h2 class="diet-modal__title" id="modal-small-title">Rename workspace</h2>
+            <p class="diet-modal__subtitle" id="modal-small-desc">Keep the name concise and recognizable.</p>
+          </div>
+        </header>
+        <div class="diet-modal__body">
+          <label class="diet-input">
+            <span class="diet-input__label">Workspace name</span>
+            <span class="diet-input__control">
+              <input class="diet-input__field" type="text" value="Clickeen" />
+            </span>
+          </label>
+        </div>
+        <footer class="diet-modal__footer">
+          <button class="diet-btn" data-variant="neutral" data-size="sm">Cancel</button>
+          <button class="diet-btn" data-variant="primary" data-size="sm">Save</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Large</span>
+    <div class="diet-modal" data-size="lg" style="position:relative; inset:auto; padding:0; background: transparent;">
+      <div class="diet-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-large-title" aria-describedby="modal-large-desc">
+        <header class="diet-modal__header">
+          <div>
+            <h2 class="diet-modal__title" id="modal-large-title">Create new activation</h2>
+            <p class="diet-modal__subtitle" id="modal-large-desc">Set up the basics before designing content.</p>
+          </div>
+        </header>
+        <div class="diet-modal__body">
+          <label class="diet-input">
+            <span class="diet-input__label">Activation name</span>
+            <span class="diet-input__control">
+              <input class="diet-input__field" type="text" placeholder="Onboarding nudge" />
+            </span>
+          </label>
+          <label class="diet-textarea">
+            <span class="diet-textarea__label">Objective</span>
+            <textarea class="diet-textarea__field" rows="3">Drive users to complete their workspace setup checklist.</textarea>
+          </label>
+        </div>
+        <footer class="diet-modal__footer">
+          <button class="diet-btn" data-variant="ghost" data-size="sm">Cancel</button>
+          <button class="diet-btn" data-variant="primary" data-size="sm">Create activation</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,6 +5,7 @@ packages:
   - paris
   - michael
   - dieter
+  - dieter/*
   - tooling/*
   - lab/*
 

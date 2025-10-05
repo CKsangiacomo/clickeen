@@ -27,7 +27,7 @@ Use this checklist to exercise end-to-end flows across Bob ↔ Paris ↔ Venice 
 4. **Log verification**: ensure Berlin logs capture token issuance/revocation (app only) and Venice records `token_invalid` event.
 
 ## Scenario 3 — Submission + Usage pipeline
-1. **Simulate form submit**: POST to `http://localhost:3002/api/submit/:publicId` through Venice or directly to Paris (`/api/submit/:publicId`) with payload ≤32 KB.
+1. **Simulate form submit**: POST to `http://localhost:3002/api/submit/:publicId` through Venice or directly to Paris (`/api/submit/:publicId`) with payload ≤32 KB and a unique `idempotencyKey` header/body value. Repeat the call with the same `idempotencyKey` to confirm the duplicate returns **202 { recorded:false }**.
 2. **Check DB**: confirm row in `widget_submissions` with `widget_instance_id = publicId` and metadata captured.
 3. **Rate limits**: send >60 submissions/min/IP to confirm `429 RATE_LIMITED` and fallback UI.
 4. **Usage event**: call `POST /api/usage` with unique `idempotencyKey`; repeat to verify `{ recorded: false }` response on duplicate.

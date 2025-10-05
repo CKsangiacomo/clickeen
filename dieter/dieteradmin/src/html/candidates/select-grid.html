@@ -1,0 +1,48 @@
+<div class="demo-grid">
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Sizes</span>
+    <label class="diet-select" data-size="sm">
+      <span class="diet-select__label">Language</span>
+      <span class="diet-select__control">
+        <select class="diet-select__field diet-select__native">
+          <option>English</option>
+          <option>Spanish</option>
+        </select>
+        <span class="diet-select__icon" aria-hidden="true">⌄</span>
+      </span>
+    </label>
+    <label class="diet-select" data-size="md">
+      <span class="diet-select__label">Timezone</span>
+      <span class="diet-select__control">
+        <select class="diet-select__field diet-select__native">
+          <option>UTC-08:00</option>
+          <option>UTC-05:00</option>
+        </select>
+        <span class="diet-select__icon" aria-hidden="true">⌄</span>
+      </span>
+    </label>
+  </div>
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">States</span>
+    <label class="diet-select" data-state="error">
+      <span class="diet-select__label">Workspace</span>
+      <span class="diet-select__control">
+        <select class="diet-select__field diet-select__native" aria-describedby="select-error">
+          <option>Select workspace</option>
+          <option>Marketing HQ</option>
+        </select>
+        <span class="diet-select__icon" aria-hidden="true">⌄</span>
+      </span>
+      <span class="diet-select__helper" data-tone="error" id="select-error">Required field</span>
+    </label>
+    <label class="diet-select" data-state="disabled">
+      <span class="diet-select__label">Plan</span>
+      <span class="diet-select__control">
+        <select class="diet-select__field diet-select__native" disabled>
+          <option>Enterprise</option>
+        </select>
+        <span class="diet-select__icon" aria-hidden="true">⌄</span>
+      </span>
+    </label>
+  </div>
+</div>

@@ -138,7 +138,9 @@
 }
 
 .diet-segment__input:focus-visible ~ .diet-segment__surface {
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--seg-color-active), transparent 35%);
+  box-shadow:
+    0 0 0 var(--focus-ring-offset, 2px) var(--color-bg, #ffffff),
+    0 0 0 calc(var(--focus-ring-offset, 2px) + var(--focus-ring-width, 2px)) var(--focus-ring-color, var(--color-accent));
 }
 
 .diet-segment__sr {
@@ -158,6 +160,18 @@
 .diet-segment__input:disabled ~ .diet-segment__label {
   opacity: 0.45;
   cursor: default;
+}
+
+.diet-segment:has(.diet-segment__input:disabled) {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-segment__surface,
+  .diet-segment__icon,
+  .diet-segment__label {
+    transition: none;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

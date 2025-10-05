@@ -1,0 +1,75 @@
+<div class="demo-grid">
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Orientation</span>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Horizontal</span>
+      <div class="demo-divider-track__surface">
+        <p class="demo-divider-track__text">Use horizontal dividers to separate stacked content blocks while preserving Dieter spacing rhythm.</p>
+        <hr class="diet-divider" />
+        <p class="demo-divider-track__text">Margins collapse into the divider’s spacing tokens so surrounding copy stays aligned.</p>
+      </div>
+    </div>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Vertical</span>
+      <div class="demo-divider-track__surface demo-divider-track__surface--inline">
+        <div>
+          <p class="demo-divider-track__text" style="max-inline-size: 22ch;">Inline menus can use vertical dividers as separators between button clusters.</p>
+        </div>
+        <div
+          class="diet-divider"
+          data-orientation="vertical"
+          data-align="content"
+          role="separator"
+          aria-orientation="vertical"
+        ></div>
+        <div>
+          <p class="demo-divider-track__text" style="max-inline-size: 22ch;">Apply `role="separator"` + `aria-orientation="vertical"` when the element is not an `<hr>`.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Thickness presets</span>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Hairline</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-thickness="hairline" />
+      </div>
+    </div>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Medium</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-thickness="medium" />
+      </div>
+    </div>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Heavy</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-thickness="heavy" />
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-grid__item">
+    <span class="demo-grid__label">Spacing & tone</span>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Inset</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-align="inset" data-spacing="lg" />
+      </div>
+    </div>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Content align</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-align="content" data-spacing="sm" />
+      </div>
+    </div>
+    <div class="demo-divider-track">
+      <span class="demo-divider-track__label">Strong tone</span>
+      <div class="demo-divider-track__surface">
+        <hr class="diet-divider" data-tone="strong" data-spacing="none" />
+      </div>
+    </div>
+  </div>
+</div>
