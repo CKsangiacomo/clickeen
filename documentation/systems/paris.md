@@ -309,12 +309,13 @@ Authorization: Bearer <workspace JWT>
   "env": "development|preview|production",
   "up": true,
   "deps": {
-    "supabase": { "status": "ok|error", "latencyMs": "number" },
-    "edgeConfig": { "status": "ok|error", "lastSync": "iso_string" }
+    "supabase": { "status": "ok|error" },
+    "edgeConfig": { "status": "ok|error" },
+    "cors": { "configured": true, "allowlistCount": 2 }
   }
 }
 ```
-**Status**: 200 if all deps OK, 503 if any critical dep fails. Phase-1 acceptance requires this endpoint to return green on production.
+**Status**: 200 if all deps OK, 503 if any critical dep fails. `deps.cors` reflects whether `ALLOWED_ORIGINS` is configured (fail‑closed policy). Phase‑1 acceptance requires this endpoint to return green on production.
 
 ## Database Integration
 
@@ -529,6 +530,7 @@ RATE_LIMIT_REDIS_PREFIX=ck:rl:
 RATE_LIMIT_BREAKER_THRESHOLD=5
 RATE_LIMIT_BREAKER_WINDOW_MS=60000
 RATE_LIMIT_BREAKER_COOLDOWN_MS=300000
+RATE_LIMIT_IP_SALT=some-stable-secret
 ```
 
 > Environment variables are summarized in `CONTEXT.md` (“Phase-1 Environment Variables”). Atlas remains read-only at runtime; administrative overrides require INTERNAL_ADMIN_KEY and explicit ops approval.

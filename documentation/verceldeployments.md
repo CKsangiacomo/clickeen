@@ -65,6 +65,7 @@ Do NOT implement from this file. For specifications, see:
  - `RATE_LIMIT_BREAKER_THRESHOLD` — errors to open circuit (default 5)
  - `RATE_LIMIT_BREAKER_WINDOW_MS` — counting window (default 60000)
  - `RATE_LIMIT_BREAKER_COOLDOWN_MS` — cooldown before retry (default 300000)
+ - `RATE_LIMIT_IP_SALT` — optional salt for hashing client IPs in SQL fallback (privacy‑safe per‑IP rate limiting; raw IPs are never stored)
 
 ### c-keen-site (`prague/`)
 - Public marketing keys only (analytics, etc.); no secrets.
