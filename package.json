@@ -3,13 +3,16 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "test": "turbo test",
-    "typecheck": "turbo typecheck",
-    "e2e": "turbo run e2e",
-    "verify:dieter-button": "node scripts/check-dieter-button.js"
+    "dev": "turbo dev --filter=!@ck/dieteradmin",
+    "build": "turbo build --filter=!@ck/dieteradmin",
+    "lint": "turbo lint --filter=!@ck/dieteradmin",
+    "test": "turbo test --filter=!@ck/dieteradmin",
+    "typecheck": "turbo typecheck --filter=!@ck/dieteradmin",
+    "e2e": "turbo run e2e --filter=!@ck/dieteradmin",
+    "verify:dieter-button": "node scripts/check-dieter-button.js",
+    "dev:dieteradmin": "pnpm --filter @ck/dieteradmin dev",
+    "test:dieteradmin": "pnpm --filter @ck/dieteradmin test",
+    "build:dieteradmin": "pnpm --filter @ck/dieteradmin build"
   },
   "devDependencies": {
     "eslint": "^9.5.0",
