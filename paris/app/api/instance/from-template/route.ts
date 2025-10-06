@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { requireUser, resolveWorkspaceId, assertWorkspaceMember, AuthError } from '@paris/lib/auth';
-import { loadInstance, shapeInstanceResponse } from '@paris/lib/instances';
+import { loadInstance, shapeInstanceResponse, computeBranding } from '@paris/lib/instances';
 import { getTemplates } from '@paris/lib/catalog';
 
 export const runtime = 'nodejs';
@@ -133,13 +133,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance created but could not be reloaded' }, { status: 500 });
     }
 
-    return NextResponse.json(
-      {
-        instance: shapeInstanceResponse(created),
-        draftToken,
-      },
-      { status: 201 },
-    );
+    const branding = await computeBranding(client, workspaceId);
+    return NextResponse.json({ instance: shapeInstanceResponse(created, branding), draftToken }, { status: 201 });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });

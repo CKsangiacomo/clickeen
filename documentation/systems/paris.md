@@ -39,31 +39,8 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 ### Instance Management (Phase-1)
 `publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`.
 
-- `POST /api/instance`
-  - Creates an instance (defaults: status=`"draft"`, empty config, schemaVersion from template).
-  - Returns 201 `{ publicId, status, config, schemaVersion, branding, updatedAt }`.
-  - 409 `ALREADY_EXISTS` on duplicate `publicId`; 422 with `[ { path, message } ]` on validation failures.
-  - _Example request:_
-    ```http
-    POST /api/instance
-    Authorization: Bearer <service-token>
-    Content-Type: application/json
-
-    { "widgetType": "forms.contact", "templateId": "classic-light" }
-    ```
-    _Example response:_
-    ```json
-    {
-      "publicId": "wgt_42yx31",
-      "status": "draft",
-      "widgetType": "forms.contact",
-      "templateId": "classic-light",
-      "schemaVersion": "2025-09-01",
-      "config": {},
-      "branding": { "hide": false, "enforced": true },
-      "updatedAt": "2025-09-28T19:15:03.000Z"
-    }
-    ```
+- `POST /api/instance` (Phase‑1 status: disabled)
+  - In Phase‑1, instance creation must use `POST /api/instance/from-template` (workspace‑scoped). The plain create endpoint returns 422 with guidance.
 - `POST /api/instance/from-template`
   - Workspace flow for creating from a catalog template. Body includes `{ widgetType, templateId, publicId?, overrides? }`.
   - Returns 201 instance payload plus `{ draftToken }`. Paris stores the token in `widget_instances.draft_token`; Venice MUST receive it via Authorization header until claim.

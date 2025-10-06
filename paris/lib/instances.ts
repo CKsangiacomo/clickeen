@@ -116,6 +116,24 @@ export function shapeInstanceResponse(record: InstanceRecord, branding?: Brandin
   };
 }
 
+export async function computeBranding(client: AdminClient, workspaceId: string): Promise<BrandingConfig> {
+  const { data: ws, error: werr } = await client
+    .from('workspaces')
+    .select('plan')
+    .eq('id', workspaceId)
+    .maybeSingle();
+  if (werr) throw werr;
+  const planId = (ws?.plan as string) ?? 'free';
+  const { data: feats, error: ferr } = await client
+    .from('plan_features')
+    .select('feature_key, enabled')
+    .eq('plan_id', planId);
+  if (ferr) throw ferr;
+  const find = (k: string) => feats?.find((r) => r.feature_key === k || r.feature_key === k.replace(/[A-Z]/g, (l) => `_${l.toLowerCase()}`))?.enabled ?? false;
+  const brandingRemovable = find('brandingRemovable');
+  return { hide: false, enforced: !brandingRemovable };
+}
+
 export async function validateEmbedOrDraftToken(client: AdminClient, instance: InstanceRecord, token: string) {
   if (instance.draftToken && token === instance.draftToken) {
     return { kind: 'draft' as const };

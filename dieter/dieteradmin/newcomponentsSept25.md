@@ -153,7 +153,7 @@
 
 **Variants scope:**
 - **GA:** default, prefix icon.
-- **Future:** suffix icon/text, prefix text, inline validation badges, clear button inside suffix slot.
+- **Out of scope:** All other variants deferred to Phase 2.
 
 **State styling:**
 - Focus ring leverages shared tokens (`--focus-ring-width`, `--focus-ring-color`).

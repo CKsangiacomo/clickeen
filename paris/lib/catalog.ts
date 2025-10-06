@@ -124,6 +124,15 @@ export const TEMPLATE_CATALOG: TemplateCatalogEntry[] = [
     preview: 'https://static.clickeen.com/templates/faq/list.png',
     descriptor: { layout: 'LIST', skin: 'MINIMAL', density: 'COZY' },
   },
+  {
+    id: 'faq-accordion',
+    widgetType: 'content.faq',
+    name: 'Accordion',
+    premium: false,
+    schemaVersion: '2025-09-01',
+    preview: 'https://static.clickeen.com/templates/faq/accordion.png',
+    descriptor: { layout: 'ACCORDION', skin: 'SOFT', density: 'COZY' },
+  },
   // Testimonials
   {
     id: 'testimonials-grid',

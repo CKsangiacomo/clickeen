@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { assertWorkspaceMember, AuthError, requireUser, resolveWorkspaceId } from '@paris/lib/auth';
-import { loadInstanceByDraftToken, shapeInstanceResponse, loadInstance } from '@paris/lib/instances';
+import { loadInstanceByDraftToken, shapeInstanceResponse, loadInstance, computeBranding } from '@paris/lib/instances';
 
 export const runtime = 'nodejs';
 
@@ -96,7 +96,8 @@ export async function POST(req: Request) {
     if (!refreshed) {
       return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance reclaimed but could not be loaded' }, { status: 500 });
     }
-    const shaped = shapeInstanceResponse(refreshed);
+    const branding = await computeBranding(client, refreshed.workspaceId);
+    const shaped = shapeInstanceResponse(refreshed, branding);
 
     return NextResponse.json({
       instance: shaped,
