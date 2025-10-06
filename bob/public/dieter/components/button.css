@@ -12,19 +12,22 @@
   --btn-clicked-border-color: var(--btn-border-color);
   --btn-radius: var(--control-radius-md, 0.375rem);
   --btn-height: var(--control-size-lg, 1.75rem);
-  --btn-padding-inline-end: 1rem;
-  --btn-padding-inline-start-text: 1rem;
-  --btn-padding-inline-start-icon-text: 0.5rem;
-  --btn-gap: 0.25rem;
+  /* Inline paddings driven by Dieter spacing scale (default ~md) */
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  /* Icon+text uses same start padding as text (simplified model) */
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-font-size: var(--fs-14, 0.875rem);
   --btn-font-weight: 400;
   --btn-icon-box: var(--control-icon-md, 1.25rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.72);
+  /* Glyph size driven by global ratio token */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio));
   --btn-icon-color: currentColor;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--btn-gap);
+  /* Gap set per size blocks directly from global tokens */
+  gap: var(--control-inline-gap-md);
   min-height: var(--btn-height);
   padding-inline-start: var(--btn-padding-inline-start-text);
   padding-inline-end: var(--btn-padding-inline-end);
@@ -59,66 +62,72 @@
 .diet-btn--xs {
   /* xs size: 16px rail */
   --btn-height: var(--control-size-xs, 1rem);
-  --btn-padding-inline-end: 0.5rem;
-  --btn-padding-inline-start-text: 0.5rem;
-  --btn-padding-inline-start-icon-text: 0.375rem;
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-xs, 0.25rem);
-  --btn-gap: 0.125rem;
+  gap: var(--control-inline-gap-xs);
   --btn-font-size: var(--fs-12, 0.75rem);
   --btn-icon-box: var(--control-icon-xs, 0.75rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.9);
+  /* XS override: glyph ratio from token */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xs));
 }
 
 .diet-btn[data-size="sm"],
 .diet-btn--sm {
   --btn-height: var(--control-size-sm, 1.25rem);
-  --btn-padding-inline-end: 0.5rem;
-  --btn-padding-inline-start-text: 0.5rem;
-  --btn-padding-inline-start-icon-text: 0.375rem;
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-sm, 0.3125rem);
-  --btn-gap: 0.1875rem;
+  gap: var(--control-inline-gap-sm);
   --btn-font-size: var(--fs-13, 0.8125rem);
   --btn-icon-box: var(--control-icon-sm, 1rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.78);
+  /* sm: glyph ratio token */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
 }
 
 .diet-btn[data-size="md"],
 .diet-btn--md {
   --btn-height: var(--control-size-md, 1.5rem);
-  --btn-padding-inline-end: 0.75rem;
-  --btn-padding-inline-start-text: 0.75rem;
-  --btn-padding-inline-start-icon-text: 0.4rem;
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-md, 0.375rem);
-  --btn-gap: 0.2rem;
+  gap: var(--control-inline-gap-md);
   --btn-font-size: var(--fs-14, 0.875rem);
   --btn-icon-box: var(--control-icon-md, 1.25rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.74);
+  /* md: glyph ratio token */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-md));
 }
 
 .diet-btn[data-size="lg"],
 .diet-btn--lg {
   --btn-height: var(--control-size-lg, 1.75rem);
-  --btn-padding-inline-end: 1rem;
-  --btn-padding-inline-start-text: 1rem;
-  --btn-padding-inline-start-icon-text: 0.5rem;
+  /* Normalize to spacing scale: lg uses space-3 */
+  --btn-padding-inline-end: var(--space-3);
+  --btn-padding-inline-start-text: var(--space-3);
+  --btn-padding-inline-start-icon-text: var(--space-3);
   --btn-radius: var(--control-radius-lg, 0.4375rem);
-  --btn-gap: 0.25rem;
+  gap: var(--control-inline-gap-lg);
   --btn-font-size: var(--fs-15, 0.9375rem);
   --btn-icon-box: var(--control-icon-lg, 1.5rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.72);
+  /* Use global 80% */
 }
 
 .diet-btn[data-size="xl"],
 .diet-btn--xl {
   --btn-height: var(--control-size-xl, 2rem);
-  --btn-padding-inline-end: 1.25rem;
-  --btn-padding-inline-start-text: 1.25rem;
-  --btn-padding-inline-start-icon-text: 0.7rem;
+  /* Normalize to spacing scale: xl uses space-3 */
+  --btn-padding-inline-end: var(--space-3);
+  --btn-padding-inline-start-text: var(--space-3);
+  --btn-padding-inline-start-icon-text: var(--space-3);
   --btn-radius: var(--control-radius-xl, 0.5rem);
-  --btn-gap: 0.25rem;
+  gap: var(--control-inline-gap-xl);
   --btn-font-size: var(--fs-15, 0.9375rem);
   --btn-icon-box: var(--control-icon-xl, 1.75rem);
-  --btn-icon-glyph: calc(var(--btn-icon-box) * 0.7);
+  /* XL override via token */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xl));
 }
 
 .diet-btn__icon {
@@ -156,7 +165,8 @@
 
 .diet-btn[data-type="icon-text"],
 .diet-btn--icon-text {
-  padding-inline-start: var(--btn-padding-inline-start-icon-text);
+  /* Normalize: use same left padding as text-only; icon-only remains square */
+  padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
 .diet-btn[data-type="icon-only"],
@@ -168,6 +178,12 @@
   block-size: var(--btn-height);
   min-height: var(--btn-height);
   padding: 0;
+}
+
+/* XS icon-only: ensure glyph is 97% of the square (height-based) */
+.diet-btn[data-type="icon-only"][data-size="xs"],
+.diet-btn--icon-only.diet-btn--xs {
+  --btn-icon-glyph: calc(var(--btn-height) * var(--control-icon-glyph-ratio-xs));
 }
 
 .diet-btn[data-type="icon-only"] .diet-btn__icon,

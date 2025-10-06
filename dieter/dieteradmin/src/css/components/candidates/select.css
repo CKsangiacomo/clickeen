@@ -1,0 +1,83 @@
+/* Dieter Admin — Candidate: Select (V0) */
+.diet-select {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+  color: var(--color-text);
+}
+
+.diet-select__label {}
+
+.diet-select__control {
+  position: relative;
+}
+
+.diet-select__field {
+  inline-size: 100%;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: 0.75rem; /* md default */
+  padding-block: 0;
+  padding-inline-end: calc(0.75rem + var(--control-icon-md, 1.25rem) + 0.2rem);
+  border-radius: var(--control-radius-md, 0.375rem);
+  border: 1px solid var(--color-system-gray-4);
+  background: var(--color-system-gray-6);
+  color: var(--color-text);
+  font: 400 var(--control-font-md, 0.9375rem)/1 var(--font-ui);
+  outline: none;
+  appearance: none;
+  transition: border-color var(--duration-base, 160ms) ease, box-shadow var(--duration-base, 160ms) ease, background-color var(--duration-base, 160ms) ease;
+}
+
+.diet-select:focus-within .diet-select__field {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  box-shadow: none;
+}
+
+.diet-select__field:disabled {
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 55%);
+  cursor: not-allowed;
+}
+
+.diet-select__icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 0.75rem;
+  transform: translateY(-50%);
+  inline-size: var(--control-icon-md, 1.25rem);
+  block-size: var(--control-icon-md, 1.25rem);
+  color: color-mix(in oklab, var(--color-text), transparent 35%);
+  pointer-events: none;
+}
+
+.diet-select__helper {}
+
+/* Size modifiers */
+.diet-select[data-size="sm"] .diet-select__field {
+  min-block-size: var(--control-size-sm, 1.25rem);
+  border-radius: var(--control-radius-sm, 0.3125rem);
+  font-size: var(--control-font-sm, 0.8125rem);
+  padding-inline: 0.5rem;
+  padding-inline-end: calc(0.5rem + var(--control-icon-sm, 1rem) + 0.1875rem);
+}
+
+.diet-select[data-size="lg"] .diet-select__field {
+  min-block-size: var(--control-size-lg, 1.75rem);
+  border-radius: var(--control-radius-lg, 0.4375rem);
+  font-size: var(--fs-15, 0.9375rem);
+  padding-inline: 1rem;
+  padding-inline-end: calc(1rem + var(--control-icon-lg, 1.5rem) + 0.25rem);
+}
+
+.diet-select[data-size="sm"] .diet-select__icon { inset-inline-end: 0.5rem; }
+.diet-select[data-size="lg"] .diet-select__icon { inset-inline-end: 1rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-select__field {
+    transition: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-select__field { background: var(--color-system-gray-5); }
+  .diet-select__field:disabled { background: color-mix(in oklab, var(--color-system-gray-5), transparent 55%); }
+}

@@ -265,7 +265,7 @@
   display: grid;
   grid-template-columns: 0.8fr repeat(5, minmax(0, 1fr));
   gap: clamp(0.75rem, 2vw, 2rem);
-  align-items: center;
+  align-items: start; /* Align all cells from the top for consistent baselines */
   width: 100%;
 }
 
@@ -308,4 +308,12 @@
 .row[data-cols="1"] .componentpreview {
   justify-self: start;
   justify-content: flex-start;
+}
+
+/* Keep spec column a stable width and prevent wrapping so rows line up */
+.preview-specs {
+  min-inline-size: var(--spec-col-w, clamp(120px, 16ch, 180px));
+}
+.preview-specs__detail {
+  white-space: nowrap;
 }

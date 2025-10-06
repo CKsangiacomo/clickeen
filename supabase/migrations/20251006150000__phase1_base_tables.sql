@@ -1,4 +1,8 @@
 -- Phase-1 base tables (idempotent via IF NOT EXISTS)
+-- CONTEXT: This migration creates all core Phase-1 tables with proper FKs, indexes, and RLS.
+-- Idempotent guards (IF NOT EXISTS, CREATE OR REPLACE) allow safe re-application.
+-- See also: 20251004100000__phase1_base_tables.sql (earlier ordering to satisfy dependency constraints).
+
 -- Workspaces
 CREATE TABLE IF NOT EXISTS workspaces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,10 +65,15 @@ CREATE TABLE IF NOT EXISTS embed_tokens (
 );
 
 -- Widget submissions
+-- DESIGN NOTE: widget_instance_id stores publicId (TEXT, e.g., "wgt_abc123") intentionally.
+-- Rationale:
+--   1. Cross-service compatibility (Venice SSR sends publicId, not internal UUID)
+--   2. Survives instance deletion (submissions retained for audit/analytics)
+--   3. No FK constraint to allow orphan submissions after instance cleanup
 CREATE TABLE IF NOT EXISTS widget_submissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   widget_id UUID NOT NULL REFERENCES widgets(id),
-  widget_instance_id TEXT NOT NULL,
+  widget_instance_id TEXT NOT NULL,  -- publicId (no FK by design)
   payload JSONB NOT NULL CHECK (pg_column_size(payload) <= 32768),
   payload_hash TEXT,
   ip TEXT,
@@ -122,19 +131,22 @@ CREATE TABLE IF NOT EXISTS events (
 -- Helpful indexes
 CREATE INDEX IF NOT EXISTS idx_widget_instances_public_id ON widget_instances(public_id);
 CREATE INDEX IF NOT EXISTS idx_widget_instances_status ON widget_instances(status);
-CREATE INDEX IF NOT EXISTS idx_embed_tokens_active ON embed_tokens(token) WHERE revoked_at IS NULL AND expires_at > now();
+CREATE INDEX IF NOT EXISTS idx_embed_tokens_active ON embed_tokens(token) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_embed_tokens_expires_at ON embed_tokens(expires_at);
 CREATE INDEX IF NOT EXISTS idx_usage_events_hash ON usage_events(idempotency_hash);
 
 -- ts_second trigger for submissions (idempotent)
-DO $$ BEGIN
-  CREATE OR REPLACE FUNCTION set_ts_second() RETURNS TRIGGER AS $$
-  BEGIN NEW.ts_second = date_trunc('second', COALESCE(NEW.created_at, now())); RETURN NEW; END; $$ LANGUAGE plpgsql;
-EXCEPTION WHEN others THEN NULL; END $$;
+CREATE OR REPLACE FUNCTION set_ts_second() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.ts_second = date_trunc('second', COALESCE(NEW.created_at, now()));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-DO $$ BEGIN
-  DROP TRIGGER IF EXISTS set_submission_ts_second ON widget_submissions;
-  CREATE TRIGGER set_submission_ts_second BEFORE INSERT ON widget_submissions FOR EACH ROW EXECUTE FUNCTION set_ts_second();
-EXCEPTION WHEN others THEN NULL; END $$;
+DROP TRIGGER IF EXISTS set_submission_ts_second ON widget_submissions;
+CREATE TRIGGER set_submission_ts_second
+  BEFORE INSERT ON widget_submissions
+  FOR EACH ROW EXECUTE FUNCTION set_ts_second();
 
 -- Enable RLS where appropriate (errors ignored if already enabled)
 DO $$ BEGIN ALTER TABLE widgets ENABLE ROW LEVEL SECURITY; EXCEPTION WHEN others THEN NULL; END $$;
@@ -142,4 +154,3 @@ DO $$ BEGIN ALTER TABLE widget_instances ENABLE ROW LEVEL SECURITY; EXCEPTION WH
 DO $$ BEGIN ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY; EXCEPTION WHEN others THEN NULL; END $$;
 DO $$ BEGIN ALTER TABLE usage_events ENABLE ROW LEVEL SECURITY; EXCEPTION WHEN others THEN NULL; END $$;
 DO $$ BEGIN ALTER TABLE plan_limits ENABLE ROW LEVEL SECURITY; EXCEPTION WHEN others THEN NULL; END $$;
-

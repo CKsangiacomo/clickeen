@@ -64,6 +64,19 @@ function main() {
   const dist = path.join(dieterRoot, 'dist');
 
   // 1) Normalize and verify SVGs in-place under dieter/icons/svg
+  // If a curated svg_new override folder exists, copy it over the base source first
+  let usingOverrides = false;
+  try {
+    const svgNew = path.join(dieterRoot, 'icons', 'svg_new');
+    const svgBase = path.join(dieterRoot, 'icons', 'svg');
+    if (fs.existsSync(svgNew)) {
+      console.log('[build-dieter] Using curated overrides from icons/svg_new (designer-authoritative)');
+      copyRecursiveSync(svgNew, svgBase);
+      usingOverrides = true;
+    }
+  } catch (_) {}
+
+  // Always enforce currentColor fills
   runNodeScript('process-svgs.js');
   runNodeScript('verify-svgs.js');
 
@@ -92,6 +105,11 @@ function main() {
   if (fs.existsSync(iconsJsonSrc)) copyRecursiveSync(iconsJsonSrc, iconsJsonDst);
   copyRecursiveSync(svgsSrc, svgsDst);
 
+  // 4b) Generate Dieter Admin icons showcase from icon sources
+  try {
+    runNodeScript('generate-icons-showcase.js');
+  } catch (_) {}
+
   // 5) Copy component CSS (tokens refer to these in consumers)
   const componentsSrc = path.join(dieterRoot, 'components');
   const componentsDst = path.join(dist, 'components');
@@ -109,4 +127,3 @@ function main() {
 }
 
 main();
-

@@ -1,0 +1,66 @@
+/* Dieter Admin — Candidate: Textarea (V0) */
+.diet-textarea {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+  color: var(--color-text);
+}
+
+.diet-textarea__label {}
+/* Ensure typography matches global .label even if legacy forms CSS is present */
+.diet-textarea__label.label {
+  font: 500 var(--fs-12, 0.75rem)/var(--lh-tight, 1.15) var(--font-ui);
+  letter-spacing: -0.02em;
+  color: var(--color-system-gray-contrast);
+}
+
+.diet-textarea__field {
+  inline-size: 100%;
+  padding-inline: 0.75rem; /* md default */
+  padding-block: var(--space-2, 0.5rem);
+  border-radius: var(--control-radius-md, 0.375rem);
+  /* Default stroke/background per request (match Textfield; lighter in light theme) */
+  border: 1px solid var(--color-system-gray-4);
+  background: var(--color-system-gray-6);
+  color: var(--color-text);
+  font: 400 var(--fs-14, 0.875rem)/1.4 var(--font-ui);
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--duration-base, 160ms) ease, box-shadow var(--duration-base, 160ms) ease, background-color var(--duration-base, 160ms) ease;
+}
+
+.diet-textarea:focus-within .diet-textarea__field {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  box-shadow: none;
+}
+
+.diet-textarea__field:disabled {
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 55%);
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-textarea__field {
+    background: var(--color-system-gray-5);
+  }
+  .diet-textarea__field:disabled {
+    background: color-mix(in oklab, var(--color-system-gray-5), transparent 55%);
+  }
+}
+
+.diet-textarea__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diet-textarea__helper,
+.diet-textarea__counter {}
+
+/* Single size (Textarea uses one size in V0) */
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-textarea__field {
+    transition: none;
+  }
+}

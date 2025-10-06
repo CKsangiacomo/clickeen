@@ -85,9 +85,14 @@ export async function POST(req: Request) {
     }
 
     // Premium template gating (Phase-1): free plan cannot select premium templates
-    const template = getTemplates(widgetType).find((t) => t.id === templateId);
+    const availableTemplates = getTemplates(widgetType);
+    const template = availableTemplates.find((t) => t.id === templateId);
     if (!template) {
-      return NextResponse.json([{ path: 'templateId', message: 'unknown templateId' }], { status: 422 });
+      const validIds = availableTemplates.map((t) => t.id).join(', ');
+      return NextResponse.json(
+        [{ path: 'templateId', message: `unknown templateId. Valid options for ${widgetType}: ${validIds}` }],
+        { status: 422 }
+      );
     }
     const premium = Boolean(template.premium);
     if (premium) {

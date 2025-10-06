@@ -70,6 +70,35 @@ Every page under `src/html/dieter-showcase/` follows a standardized structure fo
 </div>
 ```
 
+### Alignment Invariants (Canonical Matrix)
+
+To keep columns and rows perfectly aligned across all preview pages, follow these invariants exactly:
+
+- One variant per row: each row is a single `.row` with a `.row-header` and a fixed number of cells via `data-cols="N"`.
+- One cell structure: every cell is a `.specdpreview` containing only:
+  - `.preview-specs` — minimal spec lines (use `.preview-specs__detail` for each; no extra labels)
+  - `.componentpreview` — the live component markup only
+- Top-aligned rows: rows are aligned from the top so differing demo heights (label + helper vs. icon‑only) don’t shift baselines.
+- Fixed spec column: specs do not wrap; a stable width prevents column jitter.
+  - CSS enforces `white-space: nowrap` and a minimum width.
+  - You can tune width per page with a single variable: `.dieter-preview { --spec-col-w: 150px; }`.
+- Close every row: ensure each `.row` is properly closed before starting the next. Nested rows will break alignment.
+- Consistent sizes per row: match the column count (e.g., Textfield uses `data-cols="3"` for `md|lg|xl`; textarea uses `data-cols="1"`).
+
+These rules are enforced by Dieter Admin CSS:
+
+```css
+.row { align-items: start; }
+.preview-specs { min-inline-size: var(--spec-col-w, clamp(120px, 16ch, 180px)); }
+.preview-specs__detail { white-space: nowrap; }
+```
+
+### Troubleshooting (fast)
+
+- Overlapping cells → a previous `.row` wasn’t closed or contained extra wrappers.
+- Columns not lining up → spec text is wrapping; shorten the detail text or increase `--spec-col-w` on the page wrapper.
+- Single demo row (e.g., textarea) → use `data-cols="1"` with one `.specdpreview` cell.
+
 ### CSS Grid System
 
 The layout uses responsive CSS Grid with the following structure defined in `src/css/dieter-previews.css`:

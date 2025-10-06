@@ -55,11 +55,12 @@
   --control-size-md: 1.5rem;    /* 24px */
   --control-size-lg: 1.75rem;   /* 28px */
   --control-size-xl: 2rem;      /* 32px */
-  --control-radius-xs: 0.25rem;
-  --control-radius-sm: 0.3125rem;
-  --control-radius-md: 0.375rem;
-  --control-radius-lg: 0.4375rem;
-  --control-radius-xl: 0.5rem;
+  /* Align control radii with Segmented’s visual scale (tighter corners) */
+  --control-radius-xs: 0.1875rem;  /* 3px */
+  --control-radius-sm: 0.25rem;    /* 4px */
+  --control-radius-md: 0.25rem;    /* 4px — matches Segmented md surface */
+  --control-radius-lg: 0.3125rem;  /* 5px — matches Segmented lg surface */
+  --control-radius-xl: 0.375rem;   /* 6px — extrapolated for xl */
   --control-icon-xs: 0.75rem;
   --control-icon-sm: 1rem;
   --control-icon-md: 1.25rem;
@@ -69,6 +70,19 @@
   --control-font-xs: 0.6875rem;  /* 11px */
   --control-font-sm: 0.8125rem;  /* 13px */
   --control-font-md: 0.9375rem;  /* 15px */
+  /* Inline gaps between icon and text by size (global tokens) */
+  --control-inline-gap-xs: 0.125rem;   /* 2px */
+  --control-inline-gap-sm: 0.15rem;    /* 2.4px */
+  --control-inline-gap-md: 0.165rem;   /* 2.64px */
+  --control-inline-gap-lg: 0.18rem;    /* 2.88px */
+  --control-inline-gap-xl: 0.20rem;    /* 3.2px */
+  /* Icon glyph ratios (unitless) */
+  --control-icon-glyph-ratio: 0.90;    /* default */
+  --control-icon-glyph-ratio-xs: 0.97;
+  --control-icon-glyph-ratio-sm: 0.95;
+  --control-icon-glyph-ratio-md: 0.95;
+  --control-icon-glyph-ratio-lg: 0.90;
+  --control-icon-glyph-ratio-xl: 0.87;
   --control-surface: #ffffff;
   --control-border: #e5e5ea;
   --control-color-primary: #212121;
@@ -118,6 +132,7 @@
   --color-system-white: #ffffff;
   --color-system-black: #000000;
   --color-system-gray: #8e8e93;
+  --color-system-gray-contrast: #636366; /* darker neutral for contrast in light theme */
   --color-system-gray-2: #aeaeb2;
   --color-system-gray-3: #c7c7cc;
   --color-system-gray-4: #d1d1d6;
@@ -247,6 +262,7 @@
     --color-system-white: #f5f6f8;
     --color-system-black: #000000;
     --color-system-gray: #9b9ba2;
+    --color-system-gray-contrast: #d1d1d6; /* lighter neutral for contrast in dark theme */
     --color-system-gray-2: #636366;
     --color-system-gray-3: #48484a;
     --color-system-gray-4: #3a3a3c;
@@ -306,6 +322,7 @@
   --color-system-white: #f5f6f8;
   --color-system-black: #000000;
   --color-system-gray:  #9b9ba2;
+  --color-system-gray-contrast: #d1d1d6;
   --color-system-gray-2:#636366;
   --color-system-gray-3:#48484a;
   --color-system-gray-4:#3a3a3c;
@@ -371,8 +388,8 @@ p, .body { font: 400 var(--fs-16)/var(--lh-normal) var(--font-ui); }
 .body-large { font: 400 var(--fs-18)/var(--lh-normal) var(--font-ui); }
 
 /* UI Labels & Captions */
-.label { font: 600 var(--fs-12)/var(--lh-tight) var(--font-ui); letter-spacing: 0.02em; }
-.label-small { font: 600 var(--fs-10)/1.1 var(--font-ui); letter-spacing: 0.04em; text-transform: uppercase; }
+.label { font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-gray-contrast); }
+.label-small { font: 600 var(--fs-10)/1.1 var(--font-ui); letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-system-gray-contrast); }
 .caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); color: var(--color-text-muted); }
 .caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); color: var(--color-text-muted); }
 

@@ -39,6 +39,20 @@ try {
   console.warn('[verify-svgs] Unable to read icons.json for count verification:', String(e && e.message ? e.message : e));
 }
 
+// (no geometry normalization checks; designer exports are authoritative)
+
+// Warn on stroke usage (prefer fill-only icons)
+let strokeWarn = [];
+for (const file of fs.readdirSync(svgDir)) {
+  if (!file.endsWith('.svg')) continue;
+  const content = fs.readFileSync(path.join(svgDir, file), 'utf8');
+  if (/\sstroke=\"/i.test(content)) {
+    strokeWarn.push(`${file}: contains stroke attribute — consider converting strokes to fills`);
+  }
+}
+if (strokeWarn.length) {
+  console.warn('[verify-svgs] Stroke usage warnings:');
+  console.warn(strokeWarn.slice(0, 50).join('\n'));
+}
+
 console.log(`[verify-svgs] OK: ${count} SVG files verified (currentColor only)`);
-
-

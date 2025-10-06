@@ -27,7 +27,7 @@
   - **Button** component contract exported via `@ck/dieter/dist/components/button.css`.
   - **Segmented Control** component contract exported via `@ck/dieter/dist/components/segmented.css`.
   - Inline SVG icon set under `dieter/icons/svg/` for manual embedding.
-- **Not shipped yet:** Additional controls (Input, Select, Tabs, etc.), React component wrappers, theming APIs, and foundations beyond those listed above. Do not build or assume them until this doc lists them.
+- **Not shipped yet:** Additional controls (Textfield, Select, Tabs, etc.), React component wrappers, theming APIs, and foundations beyond those listed above. Do not build or assume them until this doc lists them.
 
 ## Consumers & Split
 | Surface | Usage |
@@ -72,6 +72,61 @@
 
 > Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML.
 
+## Global Spacing & Icons (NORMATIVE)
+
+This section specifies the global spacing and icon rules every component must follow. The goal is one mental model and zero per‑component guesswork.
+
+- Spacing scale (padding/margins)
+  - Use the global 4‑px grid defined in `dieter/tokens/tokens.css`:
+  - `--space-1: 0.25rem`, `--space-2: 0.5rem`, `--space-3: 0.75rem`, `--space-4: 1rem`, `--space-5: 1.25rem`, `--space-6: 1.5rem`, `--space-7: 1.75rem`, `--space-8: 2rem`, `--space-9: 2.25rem`, `--space-10: 2.5rem`.
+  - Inline paddings MUST reference these tokens; do not hardcode rems.
+
+- Vertical rhythm (stack spacing)
+  - `--hspace-1..9` (0 → 0.8rem) are for tight vertical rhythm inside control stacks (label ↔ control ↔ helper). Do not use them for inline padding.
+
+- Icon box sizes (global, per size)
+  - `--control-icon-xs|sm|md|lg|xl` size the icon container; defined in tokens.
+
+- Icon–label spacing (global rule)
+  - The space between an icon and label is derived the SAME way everywhere.
+  - Use the global inline gap tokens by size and apply as the component’s CSS `gap:`:
+    - `--control-inline-gap-xs: 0.125rem`
+    - `--control-inline-gap-sm: 0.15rem`
+    - `--control-inline-gap-md: 0.165rem`
+    - `--control-inline-gap-lg: 0.18rem`
+    - `--control-inline-gap-xl: 0.20rem`
+  - Text‑only sets `gap: 0`; icon‑only ignores `gap` (no label).
+
+- Icon glyph sizing (SVG inside the icon box)
+  - Default ratio token: `--control-icon-glyph-ratio: 0.90` (unitless).
+  - Per‑size ratio tokens (when visual tuning is required):
+    - `--control-icon-glyph-ratio-xs: 0.97`, `--control-icon-glyph-ratio-sm: 0.95`, `--control-icon-glyph-ratio-md: 0.95`, `--control-icon-glyph-ratio-lg: 0.90`, `--control-icon-glyph-ratio-xl: 0.87`.
+  - Compute glyph size in components as: `glyph = calc(iconBox × glyphRatio)`.
+  - Icon‑only XS special case: compute against the square height when needed: `glyph = calc(btnHeight × --control-icon-glyph-ratio-xs)`.
+
+### Button — application of global rules (NORMATIVE)
+
+- Types
+  - Text‑only and Icon+text share the same left/right padding by size.
+  - Icon‑only is a square (width = height), zero inline padding; icon fills the square.
+
+- Padding (spacing scale; equal left/right)
+  - `xs/sm: var(--space-2)`
+  - `md: var(--space-2)`
+  - `lg: var(--space-3)`
+  - `xl: var(--space-3)`
+
+- Gap (icon ↔ label)
+  - Set `gap: var(--control-inline-gap-{size})`.
+  - Text‑only: `gap: 0`.
+
+- Icon sizing
+  - Box: `--control-icon-{size}` (global tokens)
+  - Glyph: `calc(--control-icon-{size} × --control-icon-glyph-ratio{-[size]})`
+  - Icon‑only XS: `calc(--btn-height × --control-icon-glyph-ratio-xs)`
+
+Implementation note: Components MUST reference these global tokens. Do not bake raw numbers into component CSS, and do not introduce per‑component spacing or ratio tokens without updating this document.
+
 ### System Colors (Tokens Only)
 - Dieter exposes a theme‑aware system palette purely as tokens. No helpers/selectors are added; components keep deriving states via `color-mix` on these tokens.
 - Hue tokens (light defaults under `:root`; dark values under `@media (prefers-color-scheme: dark)` and `[data-theme="dark"]`):
@@ -101,6 +156,7 @@
 **Token families (examples)**
 - Typography: `--font-ui`, `--fs-10 … --fs-32`, `--lh-tight/normal/loose`.
 - Spacing: `--space-1 … --space-10` (4px grid) and control sizing tokens `--control-size-*`, `--control-font-*`.
+- Vertical rhythm (hspace): `--hspace-1 … --hspace-9` (0.0rem → 0.8rem in 0.1rem steps) — for tight vertical spacing inside components (e.g., label ↔ field ↔ supporting text stacks). Prefer `--hspace-*` for intra‑component vertical gaps; keep `--space-*` for layout gutters/padding.
 - Motion: `--duration-snap` (140 ms), `--duration-base` (160 ms), `--duration-spin` (600 ms).
 - Elevation: `--shadow-elevated`, `--shadow-floating`, and `--shadow-inset-control` are the only sanctioned shadow tokens; reuse them across components instead of defining ad-hoc box-shadows.
 - Admin shell layout tokens: `--sidebar-width` (expanded) and `--sidebar-width-collapsed` (icon rail).
@@ -206,7 +262,7 @@ The components listed here are the only production-ready Dieter contracts. Treat
 - Use Dieter Admin: `pnpm --filter @ck/dieteradmin dev` and open the Segmented showcase.
 
 ### Future components
-- Additional controls (Input, Select, Tabs, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
+- Additional controls (Textfield, Select, Tabs, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
 - Dieter Admin includes preview-only primitives (e.g., `.diet-box`, `.diet-divider`) for scaffolding; these are not Dieter contracts and must not ship.
 
 ## Common AI mistakes (NORMATIVE)

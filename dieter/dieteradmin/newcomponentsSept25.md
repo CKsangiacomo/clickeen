@@ -14,7 +14,7 @@
 ## DIETER CANDIDATES (building these is project scope of this task)
 
 ### Form Fields
-5. Input
+5. Textfield
 6. Textarea
 7. Select
 
@@ -110,7 +110,7 @@
 
 ## Component Specifications
 
-### 5. Input
+### 5. Textfield
 
 **Purpose:** Single-line text entry field with label, helper text, and validation states.
 
@@ -136,13 +136,13 @@
   <div class="diet-input__control">
     <input type="text" class="diet-input__field" placeholder="you@example.com" />
   </div>
-  <span class="diet-input__helper">Helper text here</span>
+  <span class="diet-input__helper">Optional supporting text</span>
 </div>
 ```
 
 **Accessibility:**
 - Label must be associated with input
-- Helper text linked via `aria-describedby`
+- Optional supporting text linked via `aria-describedby`
 - Error messages announced to screen readers
 - Disabled state communicated
 
@@ -157,16 +157,16 @@
 
 **State styling:**
 - Focus ring leverages shared tokens (`--focus-ring-width`, `--focus-ring-color`).
-- Error state promotes helper text color to `var(--color-system-red)` and updates border + prefix icon tint.
+- Error state promotes optional supporting text color to `var(--color-system-red)` and updates border + prefix icon tint.
 - Disabled sets `background: color-mix(in oklab, var(--color-surface), transparent 55%)` while keeping text legible; read-only mirrors default visuals but blocks pointer events.
 
 **Accessibility & semantics:**
-- Wire helper IDs (`id="email-helper"`) and apply `aria-describedby` on the field; include validation ID when errors render.
+- Wire supporting-text IDs (`id="email-supporting"`) and apply `aria-describedby` on the field; include validation ID when errors render.
 - Ensure prefix/suffix buttons (e.g., visibility toggle) are separate focusable elements with `aria-label`/`aria-pressed` semantics.
 
 **QA focus:**
 - Verify placeholder contrast meets WCAG in both themes.
-- Confirm VoiceOver announces helper/error text exactly once per state change.
+- Confirm VoiceOver announces supporting/error text exactly once per state change.
 - Test mobile Safari autocapitalize/autofill attributes don’t break layout.
 
 ---
@@ -195,7 +195,7 @@
   <label class="diet-textarea__label">Description</label>
   <textarea class="diet-textarea__field" rows="4" placeholder="Enter details..."></textarea>
   <div class="diet-textarea__footer">
-    <span class="diet-textarea__helper">Helper text</span>
+    <span class="diet-textarea__helper">Optional supporting text</span>
     <span class="diet-textarea__counter">0 / 500</span>
   </div>
 </div>
@@ -207,15 +207,15 @@
 - Resize handle keyboard accessible
 
 **Token mapping & layout:**
-- Size tokens mirror Input; padding scales with `--space-*` while minimum height is driven by `rows` and `line-height`.
-- Footer stack spacing uses `gap: var(--space-2)` and aligns helper + counter baseline.
+  - Size tokens mirror Textfield; padding scales with `--space-*` while minimum height is driven by `rows` and `line-height`.
+- Footer stack spacing uses `gap: var(--space-2)` and aligns supporting text + counter baseline.
 
 **Variants scope:**
-- **GA:** fixed-height textarea with optional helper text; counter variant for max-length messaging.
+- **GA:** fixed-height textarea with optional supporting text; counter variant for max-length messaging.
 - **Future:** auto-resize behaviours, inline formatting affordances, spell-check toggle.
 
 **State styling:**
-- Focus ring identical to Input; error state reuses field border + footer text tone update.
+  - Focus ring identical to Textfield; error state reuses field border + footer text tone update.
 - Disabled state sets `background: color-mix(in oklab, var(--color-surface), transparent 50%)` and `cursor: not-allowed` but keeps text legible.
 - Transition effects (if used) should reference `var(--duration-snap)` and respect `prefers-reduced-motion`.
 
@@ -259,7 +259,7 @@
     </select>
     <span class="diet-select__icon">▼</span>
   </div>
-  <span class="diet-select__helper">Helper text</span>
+  <span class="diet-select__helper">Optional supporting text</span>
 </div>
 ```
 
@@ -269,7 +269,7 @@
 - Selected value announced
 
 **Token mapping & layout:**
-- Trigger inherits Input sizing tokens; caret icon slot fixed at `inline-size: var(--control-icon-md)` and aligns via flex.
+  - Trigger inherits Textfield sizing tokens; caret icon slot fixed at `inline-size: var(--control-icon-md)` and aligns via flex.
 - Menu surface (when a custom dropdown is required) uses `box-shadow: var(--shadow-floating)` with padding `var(--space-2)`.
 - Divider between items leverages `var(--color-border)` at `1px` via `linear-gradient` for pixel-snapping.
 

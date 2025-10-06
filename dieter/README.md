@@ -29,7 +29,7 @@ Only the following CSS contracts are GA in Phase‑1. Other CSS present in `dist
   - Hooks: `.diet-segmented` root; `.diet-segment` item; `.diet-segment__input` (native radio), `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__surface`
   - A11y: native radio semantics, focus ring via tokens, reduced‑motion aware
 
-Note: `dist/components/input.css` exists but is not GA. Do not consume it in production until the PRD marks it ✅.
+
 
 ## Theming & Tokens
 
