@@ -3,13 +3,13 @@
 
 export type Size = 'xs' | 'sm' | 'md';
 
-// Button (control/primary/danger) with footprints
+// Button (control/primary/danger) with layout types
 export interface DieterButtonProps {
   size?: Size;
   variant?: 'control' | 'primary' | 'danger';
-  footprint?: 'icon-only' | 'icon+label';
+  layout?: 'icon-only' | 'icon-text' | 'text-only';
   disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  buttonType?: 'button' | 'submit' | 'reset';
 }
 
 // Segmented control (single-select)

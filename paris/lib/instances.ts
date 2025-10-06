@@ -25,7 +25,7 @@ export class TokenError extends Error {
 export async function loadInstance(client: AdminClient, publicId: string): Promise<InstanceRecord | null> {
   const { data: instance, error: instanceError } = await client
     .from('widget_instances')
-    .select('id, public_id, status, widget_id, draft_token, widget_type, template_id, schema_version, config, updated_at')
+    .select('id, public_id, status, widget_id, draft_token, template_id, schema_version, config, updated_at')
     .eq('public_id', publicId)
     .maybeSingle();
 
@@ -39,7 +39,7 @@ export async function loadInstance(client: AdminClient, publicId: string): Promi
 
   const { data: widget, error: widgetError } = await client
     .from('widgets')
-    .select('id, workspace_id')
+    .select('id, workspace_id, type')
     .eq('id', instance.widget_id)
     .maybeSingle();
 
@@ -57,7 +57,7 @@ export async function loadInstance(client: AdminClient, publicId: string): Promi
     status: instance.status,
     widgetId: instance.widget_id,
     draftToken: instance.draft_token,
-    widgetType: instance.widget_type ?? null,
+    widgetType: (widget as any)?.type ?? null,
     templateId: instance.template_id ?? null,
     schemaVersion: instance.schema_version ?? null,
     config: instance.config ?? {},
@@ -69,7 +69,7 @@ export async function loadInstance(client: AdminClient, publicId: string): Promi
 export async function loadInstanceByDraftToken(client: AdminClient, draftToken: string) {
   const { data: instance, error } = await client
     .from('widget_instances')
-    .select('id, public_id, status, widget_id, draft_token, widget_type, template_id, schema_version, config, updated_at')
+    .select('id, public_id, status, widget_id, draft_token, template_id, schema_version, config, updated_at')
     .eq('draft_token', draftToken)
     .maybeSingle();
 
@@ -78,7 +78,7 @@ export async function loadInstanceByDraftToken(client: AdminClient, draftToken: 
 
   const { data: widget, error: widgetError } = await client
     .from('widgets')
-    .select('id, workspace_id')
+    .select('id, workspace_id, type')
     .eq('id', instance.widget_id)
     .maybeSingle();
 
@@ -91,7 +91,7 @@ export async function loadInstanceByDraftToken(client: AdminClient, draftToken: 
     status: instance.status,
     widgetId: instance.widget_id,
     draftToken: instance.draft_token,
-    widgetType: instance.widget_type ?? null,
+    widgetType: (widget as any)?.type ?? null,
     templateId: instance.template_id ?? null,
     schemaVersion: instance.schema_version ?? null,
     config: instance.config ?? {},
@@ -100,7 +100,9 @@ export async function loadInstanceByDraftToken(client: AdminClient, draftToken: 
   } satisfies InstanceRecord;
 }
 
-export function shapeInstanceResponse(record: InstanceRecord) {
+export type BrandingConfig = { hide: boolean; enforced: boolean };
+
+export function shapeInstanceResponse(record: InstanceRecord, branding?: BrandingConfig) {
   return {
     publicId: record.publicId,
     status: record.status,
@@ -108,10 +110,8 @@ export function shapeInstanceResponse(record: InstanceRecord) {
     templateId: record.templateId,
     schemaVersion: record.schemaVersion,
     config: record.config,
-    branding: {
-      hide: false,
-      enforced: record.status !== 'published',
-    },
+    // Default to safe, enforced branding unless a plan-based branding is provided
+    branding: branding ?? { hide: false, enforced: true },
     updatedAt: record.updatedAt,
   };
 }
@@ -124,7 +124,7 @@ export async function validateEmbedOrDraftToken(client: AdminClient, instance: I
   const { data, error } = await client
     .from('embed_tokens')
     .select('token, expires_at, revoked_at')
-    .eq('public_id', instance.publicId)
+    .eq('widget_instance_id', instance.id)
     .eq('token', token)
     .maybeSingle();
 

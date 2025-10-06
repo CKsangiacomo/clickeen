@@ -61,6 +61,7 @@ Venice is Clickeen's edge-deployed widget rendering service that delivers server
 - Exposes a minimal event bus with `publish(event, payload)` and `subscribe(event, handler)` (returns `unsubscribe`)
 - Buffers events until the iframe reports `ready`
 - Keeps zero third-party dependencies to stay within the manual budget
+  - Event semantics: `ready` fires on iframe `load`; `open` publishes when overlay is injected; `close` publishes when overlay is dismissed (click outside)
 
 ### Embed Snippets (Phase-1)
 Inline (iframe) example:
@@ -86,7 +87,7 @@ Overlay (loader) example:
 ></script>
 ```
 
-Event bus usage:
+Event bus usage (canonical global = `window.ckeenBus`):
 ```javascript
 const unsubscribe = window.ckeenBus.subscribe('ready', () => {
   console.log('Widget ready');
@@ -104,6 +105,8 @@ interface CkeenBus {
 }
 ```
 Supported core events: `open`, `close`, `ready`. Widget-specific events may be added (document alongside the widget config).
+
+Naming clarifier (Phase‑1): The canonical global is `window.ckeenBus`. The loader also exposes a backward‑compatible alias at `window.Clickeen`; new integrations must use `window.ckeenBus`.
 
 ## Service Communication Rules (Phase-1, binding)
 
@@ -252,6 +255,7 @@ Venice uses Dieter design system for styling:
 ### Release Checklist (Phase-1)
 1. **Loader size:** `embed/v{semver}/loader.js` ≤28 KB gzipped before release.
 2. **Widget payloads:** representative widgets (free + premium) render ≤10 KB gzipped initial HTML/CSS.
+   - Optional helper: `pnpm --filter venice run check:budgets` (report-only) or `-- --strict` locally to enforce
 3. **Headers:** SSR responses send the canonical Cache-Control directives plus `ETag`, `Last-Modified`, and `Vary: Authorization, X-Embed-Token`.
 4. **CSP:** rendered HTML sets `default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self' data:; form-action 'self'`.
 5. **Fallbacks:** error states (`TOKEN_INVALID`, `NOT_FOUND`, upstream 503) render branded stubs and log appropriately.

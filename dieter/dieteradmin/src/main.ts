@@ -14,7 +14,7 @@ import {
 } from './data/routes';
 import { navigate, startRouter, type RouteMatch } from './router';
 
-const htmlFragments = import.meta.glob('../html/**/*.html', {
+const htmlFragments = import.meta.glob('./html/**/*.html', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -23,7 +23,11 @@ const htmlFragments = import.meta.glob('../html/**/*.html', {
 const getFragment = (path: string): string => {
   const [rawPath, rawAnchor] = path.split('#', 2);
   const anchor = rawAnchor?.trim();
-  const normalised = rawPath.startsWith('../') ? rawPath : `../${rawPath}`;
+  const normalised = rawPath.startsWith('./')
+    ? rawPath
+    : rawPath.startsWith('../')
+      ? rawPath.replace('../', './')
+      : `./${rawPath}`;
   const fragment =
     htmlFragments[normalised] ??
     htmlFragments[`${normalised}?raw` as keyof typeof htmlFragments];
@@ -104,7 +108,7 @@ const createSidebarToggle = (direction: 'collapse' | 'expand') => {
   button.type = 'button';
   button.className = `sidebar-toggle sidebar-toggle--${direction} diet-btn`;
   button.setAttribute('data-size', 'md');
-  button.setAttribute('data-footprint', 'icon-only');
+  button.setAttribute('data-type', 'icon-only');
   button.setAttribute('data-variant', 'neutral');
   button.setAttribute('aria-label', direction === 'collapse' ? 'Collapse sidebar' : 'Expand sidebar');
   button.innerHTML = direction === 'collapse'
@@ -120,7 +124,7 @@ const themeControl = document.createElement('div');
 themeControl.className = 'diet-segmented';
 themeControl.setAttribute('role', 'radiogroup');
 themeControl.setAttribute('data-size', 'lg');
-themeControl.setAttribute('data-footprint', 'icon-only');
+themeControl.setAttribute('data-type', 'icon-only');
 themeControl.innerHTML = `
   <label class="diet-segment">
     <input type="radio" name="theme" value="light" class="diet-segment__input" checked>

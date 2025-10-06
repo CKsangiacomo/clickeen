@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { loadInstance } from '@paris/lib/instances';
 import { assertInstanceAccess } from '@paris/lib/access';
 import { AuthError } from '@paris/lib/auth';
 import { TokenError } from '@paris/lib/instances';
+import { rateLimitUsage, setRateHeaders } from '@paris/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -84,13 +86,28 @@ export async function POST(req: Request) {
       throw new ValidationError('timestamp must be ISO-8601 string', 'timestamp');
     }
 
+    // Rate limit per IP
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0]?.trim() || undefined;
+    const rl = await rateLimitUsage(supabase, publicId, ip);
+    if (rl.limited) {
+      const headers = new Headers();
+      setRateHeaders(headers, rl);
+      headers.set('Retry-After', '60');
+      headers.set('X-RateLimit-Backend', rl.backend);
+      return new Response(JSON.stringify({ error: 'RATE_LIMITED' }), { status: 429, headers });
+    }
+
+    // Privacy: never store raw IP. For SQL fallback rate limiting, include a
+    // deterministic hash in metadata when available.
+    const ipHash = ip ? createHash('sha256').update(String(process.env.RATE_LIMIT_IP_SALT || 'v1')).update(ip).digest('hex') : undefined;
+
     const insert = await supabase
       .from('usage_events')
       .insert({
         workspace_id: instance.workspaceId,
         event_type: event,
-        widget_instance: publicId,
-        metadata,
+        widget_instance_id: publicId,
+        metadata: ipHash ? { ...metadata, ipHash } : metadata,
         idempotency_hash: idempotencyKey,
         created_at: timestamp.toISOString(),
       })
@@ -104,7 +121,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DB_ERROR', details: insert.error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ recorded: true }, { status: 202 });
+    const headers = new Headers();
+    setRateHeaders(headers, rl);
+    headers.set('X-RateLimit-Backend', rl.backend);
+    return new Response(JSON.stringify({ recorded: true }), { status: 202, headers });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });

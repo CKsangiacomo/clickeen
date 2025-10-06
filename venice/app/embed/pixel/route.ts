@@ -31,6 +31,9 @@ export async function GET(req: Request) {
 
   return new NextResponse(null, {
     status: 204,
-    headers: { 'Cache-Control': 'no-store' },
+    headers: {
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+    },
   });
 }

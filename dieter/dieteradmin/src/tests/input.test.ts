@@ -7,7 +7,7 @@ const dom = new JSDOM(`<div id="root">${markup}</div>`);
 const root = dom.window.document.querySelector('#root')!;
 
 describe('Input preview', () => {
-  it('renders rows for rich, standard, bare footprints with sm/md/lg tiles', () => {
+  it('renders rows for rich, standard, bare types with sm/md/lg tiles', () => {
     const rows = Array.from(root.querySelectorAll('.dieter-preview__row'));
     expect(rows.length).toBeGreaterThanOrEqual(4);
 

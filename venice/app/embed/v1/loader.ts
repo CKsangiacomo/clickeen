@@ -17,6 +17,23 @@ const script = `(() => {
     return;
   }
 
+  // Minimal event bus with buffering
+  const bus = { listeners: {}, queue: [], ready: false };
+  bus.publish = function(event, payload) {
+    if (!this.ready) { this.queue.push({ event, payload }); return; }
+    (this.listeners[event] || []).forEach((fn) => fn(payload));
+  };
+  bus.subscribe = function(event, handler) {
+    this.listeners[event] = this.listeners[event] || [];
+    this.listeners[event].push(handler);
+    return () => { this.listeners[event] = (this.listeners[event] || []).filter((fn) => fn !== handler); };
+  };
+
+  // Expose under both canonical and legacy names for compatibility
+  // Docs reference window.ckeenBus; older snippets may look for window.Clickeen
+  window.ckeenBus = window.ckeenBus || bus;
+  window.Clickeen = window.Clickeen || window.ckeenBus;
+
   const origin = new URL(scriptEl.src, window.location.href).origin;
   const embedUrl = (params = {}) => {
     const url = new URL(`${origin}/e/${encodeURIComponent(publicId)}`);
@@ -40,6 +57,7 @@ const script = `(() => {
   container.style.position = 'relative';
   container.style.zIndex = '2147483647';
   container.appendChild(iframe);
+  let overlayEl = null;
 
   function injectInline() {
     if (scriptEl.parentNode) {
@@ -61,11 +79,15 @@ const script = `(() => {
     overlay.style.zIndex = '2147483647';
     overlay.addEventListener('click', (evt) => {
       if (evt.target === overlay) {
-        document.body.removeChild(overlay);
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        overlayEl = null;
+        bus.publish('close');
       }
     });
     overlay.appendChild(container);
     document.body.appendChild(overlay);
+    overlayEl = overlay;
+    bus.publish('open');
   }
 
   function triggerInjection() {
@@ -118,19 +140,15 @@ const script = `(() => {
       injectInline();
   }
 
-  window.Clickeen = window.Clickeen || {
-    listeners: {},
-    publish(event, payload) {
-      (this.listeners[event] || []).forEach((fn) => fn(payload));
-    },
-    subscribe(event, handler) {
-      this.listeners[event] = this.listeners[event] || [];
-      this.listeners[event].push(handler);
-      return () => {
-        this.listeners[event] = (this.listeners[event] || []).filter((fn) => fn !== handler);
-      };
-    },
-  };
+  iframe.addEventListener('load', () => {
+    if (!bus.ready) {
+      bus.ready = true;
+      const q = bus.queue.slice();
+      bus.queue.length = 0;
+      q.forEach(({ event, payload }) => bus.publish(event, payload));
+      bus.publish('ready');
+    }
+  });
 })();
 `;
 
@@ -143,6 +161,7 @@ export function GET() {
     headers: {
       'Content-Type': 'application/javascript; charset=utf-8',
       'Cache-Control': 'public, max-age=300, s-maxage=600',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }

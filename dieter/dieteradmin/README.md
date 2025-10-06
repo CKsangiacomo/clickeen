@@ -1,71 +1,184 @@
-# Dieter Admin Lab
+# Dieter Admin
 
-This Vite + TypeScript workspace hosts the Dieter preview shell. It renders the frozen Dieter components that ship in `@ck/dieter` and the in-progress "Dieter candidates" we prototype before they are promoted to the PRD.
+This Vite + TypeScript workspace hosts the Dieter preview shell. It renders the frozen Dieter components that ship in `@ck/dieter` and the in-progress "Dieter candidates" we prototype before they are promoted to the PRD. The preview HTML lives **only** inside this package; components themselves remain in `dieter/components/**`.
 
 ## What lives here
 
 - **Shell (`src/main.ts`, `src/router.ts`)** — builds the docs chrome, listens to hash-based routes, and injects HTML fragments into the content area.
-- **Preview data (`src/data`)** — lists published Dieter components (`dieterPreviews`) and the candidate routes/specs the lab should display.
-- **HTML snippets (`src/html/**`)** — component demo markup loaded via `import.meta.glob`.
-  - `src/html/dieter-showcase/` mirrors the frozen Dieter package (button, segmented, colors, typography). Treat these as read-only references.
-  - `src/html/candidates/` holds lab previews for in-progress components. Each candidate should use a single consolidated document with sections/anchors for variants and states so the file list stays manageable.
-- **Preview helpers (`src/css/dieter-previews.css` + siblings)** — light layout scaffolding for the lab only. These styles must never change the appearance of real `.diet-*` classes.
+- **Preview data (`src/data`)** — lists published Dieter components (`dieterPreviews`) and the candidate routes/specs Dieter Admin should display.
+- **Preview markup (`src/html/**`)** — the single source of truth for all showcase HTML.
+  - `src/html/dieter-showcase/` mirrors the frozen Dieter package (Button, Colors, Segmented, Typography). Edits here must stay in lockstep with the Dieter PRD.
+  - `src/html/candidates/` hosts any work-in-progress preview pages. At the moment we keep only `input.html`; add or remove files here as candidates come and go.
+- **Preview helpers (`src/css/dieter-previews.css` + siblings)** — light layout scaffolding for Dieter Admin only. These styles must never change the appearance of real `.diet-*` classes.
 
 ## Working rules
 
 1. **PRD stays frozen.** `documentation/systems/Dieter.md` is the normative contract. Update it only when a candidate is ready to graduate.
-2. **Published vs. candidate.** "Dieter components" are the GA assets already exported from `@ck/dieter`; treat them as read-only here. "Dieter candidates" (Input, Textarea, Select, etc.) are the experiments we iterate on inside this lab.
-3. **No contract overrides.** Custom CSS/JS in this workspace may position demos, but must never tweak the visuals or behavior of the shipped Dieter selectors. If a demo needs a different state, change the actual component CSS in `dieter/components/**` instead.
-4. **Keep previews modular.** Use per-component folders or anchors in a single HTML file rather than scattering many `*-variant*.html` fragments. This keeps the harness maintainable as we add components.
-5. **Document decisions locally.** Any lab-specific conventions or open questions belong here (or in a scoped notes file), not in the frozen PRD.
+2. **Published vs. candidate.** "Dieter components" are the GA assets already exported from `@ck/dieter`; treat the HTML under `src/html/dieter-showcase/` as read-only mirrors. "Dieter candidates" live under `src/html/candidates/` until they are promoted (or deleted).
+3. **No contract overrides.** Custom CSS/JS in this workspace may position demos, but must never tweak the visuals or behavior of the shipped Dieter selectors. Update `dieter/components/**` first, then refresh the preview markup to match.
+4. **Keep previews simple.** One HTML file per page (GA or candidate). Avoid scattering extra fragments; when a candidate graduates, delete its preview and move the contract into Dieter.
+5. **Document decisions locally.** Any Dieter Admin–specific conventions or open questions belong here (or in a scoped notes file), not in the frozen PRD.
 6. **No ad-lib copy.** Previews must only contain component markup + metadata derived from Dieter tokens/attributes. Do not invent descriptive text, examples, or labels beyond the standard scaffold; if additional copy is required, a human must provide it.
 
-## Component preview blueprint
+## Showcase page architecture
 
-Every page under `src/html/dieter-showcase/` (GA references) and `src/html/candidates/` (lab work) follows the same scaffold so AIs can compose them consistently:
+Every page under `src/html/dieter-showcase/` follows a standardized structure for displaying component variations. The pattern uses CSS Grid for responsive layout and BEM naming for dieteradmin-specific classes.
 
-1. **Wrapper:** Wrap the entire page in `<div class="dieter-preview">`. This gives the card frame, padding, and background.
-2. **Caption:** Add a `<p class="dieter-preview__caption">` describing the contract at the top.
-3. **Hero matrix:** Use one of the shared grid helpers to present variants vs. sizes:
-   - `.dieter-preview__table → __row → __cells → __cell` (buttons, segmented control, etc.).
-   - `.dieter-preview__swatches` (color palette) or `.dieter-preview__columns` (typography) if the component needs another layout. Inside each cell place the metadata block (`.dieter-preview__meta`) plus a single live component instance.
-4. **Supporting sections:** Optional blocks (e.g., CSS contract snippet, state grid, font-weight explorer) follow the hero matrix as additional `<div>`s inside the wrapper. Only add them when the PRD explicitly calls for extra context; the default should look exactly like the Segmented Control reference (hero matrix only).
-5. **Real markup only:** Inside each demo tile, render the true Dieter contract markup (`.diet-btn`, `.diet-segmented`, typography classes, etc.). The preview styles only handle layout—never override the component CSS or add bespoke wrappers.
+### HTML Structure
 
-Following this blueprint keeps the showcase consistent and prevents drift between GA references and candidate experiments.
+```html
+<div class="dieter-preview">
 
-### Hero matrix semantics (rows vs. columns)
+  <!-- Optional section header when component has variants -->
+  <h3 class="section-header">Section Name</h3>
 
-- **Rows = footprint families.** Each `<div class="dieter-preview__row">` groups one footprint of the component (icon-only, icon+text, text-only, etc.). Use an `<h4>` at the start of the row to label the footprint.
-- **Columns = size ladder.** `.dieter-preview__cells` is a responsive grid (`repeat(auto-fit, minmax(180px, 1fr))`). Provide one `.dieter-preview__cell` per size preset (XS → XL, or the published rail). The grid handles wrapping—no custom flexbox needed.
-- **Cell anatomy.** Inside each cell:
-  - Add `<div class="dieter-preview__meta">` entries for the selectors applied (`class:diet-btn`, `data-size="sm"`, `data-footprint="icon-only"`, etc.). Keep the metadata short—mirror the Segmented Control showcase.
-  - Follow with a **single** live control wrapped in `<div class="dieter-preview__demo">`. Do not stack permutations inside the hero cell; additional variants belong in a supporting section below the table. If no supporting section is needed, stop after the hero matrix.
-  - If a note is required inside the tile (e.g., “Primary”), reuse `.dieter-preview__caption` for the label.
+  <!-- Row for each type (icon-only, icon-text, text-only, etc.) -->
+  <div class="row" data-cols="5">
 
-### Layout helpers (no hand-rolling)
+    <!-- Row header describes the type or variant -->
+    <div class="row-header">Type/Variant Name</div>
 
-- `dieter-preview__table`, `__row`, `__cells`, `__cell`, `__meta`, and `__demo` handle the layout. Do **not** replace them with ad-hoc flexbox; the helpers include the spacing, wrapping, and neutral background tokens shared across Segmented, Button, etc.
-- Use the stack helpers (`stack-sm`, `stack`, `stack-lg`) **outside** the hero matrix—e.g., for state samplers or code snippets. Hero cells stay limited to one component instance so they resemble the Segmented reference.
-- For code examples, wrap the snippet in `<pre><code>…</code></pre>` inside the `.dieter-preview` wrapper. The base styles in `utilities.css` format the block to match the existing “CSS contract” sections.
-- When you need a full-width supporting section (font weight explorer, CSS contract, variant sampler), append another `<div>` after the hero table and use the helpers there. The outer `.dieter-preview` grid provides the vertical spacing.
+    <!-- One specdpreview block per size (xs, sm, md, lg, xl) -->
+    <div class="specdpreview">
 
-### Checklist before shipping a page
+      <!-- Specs column: class name and attributes -->
+      <div class="preview-specs">
+        <div class="preview-specs__row">
+          <span class="preview-specs__detail">diet-btn</span>
+        </div>
+        <div class="preview-specs__row">
+          <span class="preview-specs__detail">data-size="xs"</span>
+        </div>
+        <div class="preview-specs__row">
+          <span class="preview-specs__detail">data-type="icon-only"</span>
+        </div>
+      </div>
 
-1. Files live in the correct folder: GA references → `src/html/dieter-showcase/`, candidates → `src/html/candidates/`.
-2. Page markup follows the wrapper → caption → hero table → supporting sections flow.
-3. Each hero row corresponds to a footprint, each column to a size, and every cell shows exactly one live component sample plus metadata.
-4. All cells use the helper classes (`dieter-preview__*`); optional stacks (`stack-sm`, etc.) only appear in supporting sections after the table.
-5. Optional extras (state samplers, code snippets, explorers) sit after the hero table and use existing utility classes. If the spec doesn’t call for them, don’t add them.
-6. The component’s Dieter CSS is already imported via `dieterPreviews` (for GA pages) or the candidate spec (for lab pages); never add local overrides.
+      <!-- Preview column: live component -->
+      <div class="componentpreview">
+        <button class="diet-btn" data-size="xs" data-type="icon-only">
+          <!-- component markup -->
+        </button>
+      </div>
 
-If the above holds, the page will render identically to the existing Button/Segmented/Color/Typo demos and future AIs can focus on component logic instead of layout guesswork.
+    </div>
+    <!-- Repeat specdpreview for each size -->
+
+  </div>
+  <!-- Repeat row for each type/variant -->
+
+</div>
+```
+
+### CSS Grid System
+
+The layout uses responsive CSS Grid with the following structure defined in `src/css/dieter-previews.css`:
+
+- **`.row`**: Main grid container
+  - Default: `grid-template-columns: max-content repeat(5, 1fr)` for 5-column layout (buttons)
+  - Uses `data-cols` attribute to adjust column count
+  - `data-cols="3"`: 3 columns (segmented control)
+  - `data-cols="1"`: single column (typography)
+  - Full width with responsive gap: `clamp(0.75rem, 2vw, 2rem)`
+
+- **`.row-header`**: First column, sizes naturally to content width using `max-content`
+
+- **`.specdpreview`**: Each size variation
+  - Two-column grid: `grid-template-columns: auto 1fr`
+  - Responsive gap: `clamp(1rem, 3vw, 3rem)`
+  - Left column (specs) uses natural width, right column (preview) takes remaining space
+
+- **`.preview-specs`**: Metadata column
+  - Vertical stack with minimal gap: `gap: var(--hspace-1, 0rem)`
+  - Left-aligned: `justify-self: start`
+  - Shows only detail (class name and attributes)
+
+- **`.componentpreview`**: Live component column
+  - Left-aligned: `justify-self: start`
+  - Contains actual Dieter component markup
+
+### Section Headers
+
+Section headers use Heading 3 style with System Gray color:
+
+```css
+.section-header {
+  font: 600 var(--fs-20)/var(--lh-normal) var(--font-ui);
+  color: var(--color-system-gray);
+  margin: 0;
+}
+```
+
+**When to use section headers:**
+- **Use** when component has variants (e.g., Button has Primary, Secondary, Neutral, Line 1, Line 2)
+- **Skip** when component only has types and sizes (e.g., Segmented has no variants, only Icon only / Icon + text / Text only)
+
+### Component Matrix Patterns
+
+**Button showcase** (75 examples):
+- 3 section headers: "Icon only", "Icon + text", "Text only"
+- Each section has 5 rows (one per variant)
+- Each row has 5 specdpreview blocks (one per size: xs, sm, md, lg, xl)
+- Uses `data-cols="5"`
+
+**Segmented showcase** (9 examples):
+- No section headers (no variants)
+- 3 rows: Icon only, Icon + text, Text only
+- Each row has 3 specdpreview blocks (one per size: sm, md, lg)
+- Uses `data-cols="3"`
+
+**Typography showcase** (multiple text styles):
+- 4 section headers: Headings, Body, Labels & Captions, Overline
+- Each text style in its own row
+- Single column layout
+- Uses `data-cols="1"`
+
+### Preview Specs Format
+
+The preview-specs block shows metadata in detail-only format:
+- Class name: `<span class="preview-specs__detail">diet-btn</span>`
+- Each attribute: `<span class="preview-specs__detail">data-size="xs"</span>`
+- No labels, no titles, just the raw specification
+
+### Class Naming
+
+All layout classes use BEM and are dieteradmin-specific:
+- `.dieter-preview` — outer wrapper
+- `.section-header` — section heading
+- `.row` — grid row container
+- `.row-header` — type/variant label
+- `.specdpreview` — specs + preview pair
+- `.preview-specs` — metadata column
+- `.preview-specs__row` — metadata line wrapper
+- `.preview-specs__detail` — metadata value
+- `.componentpreview` — component wrapper
+
+**Never** pollute Dieter component classes (`.diet-*`) with dieteradmin layout styles.
+
+### Responsive Behavior
+
+- Row headers size naturally to longest label using `max-content`
+- Preview columns use `1fr` to fill available space
+- Gaps scale responsively using `clamp()` between min and max values
+- Full width enforced with `width: 100%` on `.row`
+- All alignment uses `justify-self` instead of static values
+
+### Building a New Showcase Page
+
+1. **Read the component CSS** from `dieter/components/*.css` to understand all variants, sizes, and types
+2. **Determine structure**: Does the component have variants? How many types? How many sizes?
+3. **Choose column count**: Set `data-cols` attribute on `.row` based on number of sizes
+4. **Add section headers** only if component has variants
+5. **Build rows** for each type (or variant + type combination)
+6. **Fill specdpreview blocks** for each size with specs and live component
+7. **Keep icons consistent** throughout the page - use same icon across all examples
+8. **Test responsive behavior** by resizing viewport to ensure gutters absorb space properly
 
 ## Common tasks
 
 ```bash
 pnpm install        # one-time setup
-pnpm dev            # run the lab locally at http://localhost:xxxx
+pnpm dev            # run Dieter Admin locally at http://localhost:xxxx
 pnpm build          # build the static bundle
 pnpm test           # run Vitest regression checks
 ```

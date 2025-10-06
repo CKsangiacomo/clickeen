@@ -20,6 +20,16 @@ Use this checklist to exercise end-to-end flows across Bob ↔ Paris ↔ Venice 
    - Venice renders without Authorization header (published status)
 5. **Publish enforcement**: attempt to publish second widget on free plan; expect `403 PLAN_LIMIT`.
 
+## Scenario 1b — Template switch dry‑run → confirm
+1. **Dry‑run preview**: `PUT /api/instance/:publicId?dryRun=true` with `{ templateId: "new-template", config: { ... } }`.
+   - Expect 200 with `{ action: "template-switch-preview", target, diff: { dropped, added }, proposedConfig }`.
+2. **Confirm apply**: resend with `?confirm=true` (or body `{"confirm":true}`) and same payload.
+   - Expect 200 with updated instance payload. Unknown fields removed; defaults applied.
+3. **Missing confirm**: send `templateId` without confirm flag.
+   - Expect `409 CONFIRM_REQUIRED` with `diff` and no persisted change.
+4. **Invalid config**: force schema violation.
+   - Expect `422` with `[ { path, message } ]`.
+
 ## Scenario 2 — Token lifecycle & embed auth
 1. **Issue embed token**: `POST /api/token` `{ action: "issue" }`; record token.
 2. **Render Venice with token**: request `GET /e/:publicId` with `Authorization: Bearer <token>`; expect 200.
@@ -31,6 +41,7 @@ Use this checklist to exercise end-to-end flows across Bob ↔ Paris ↔ Venice 
 2. **Check DB**: confirm row in `widget_submissions` with `widget_instance_id = publicId` and metadata captured.
 3. **Rate limits**: send >60 submissions/min/IP to confirm `429 RATE_LIMITED` and fallback UI.
 4. **Usage event**: call `POST /api/usage` with unique `idempotencyKey`; repeat to verify `{ recorded: false }` response on duplicate.
+5. **Rate limits**: drive beyond per‑IP/instance limits; expect 429 with headers `X-RateLimit-Limit|Remaining|Reset`, `Retry-After`, and `X-RateLimit-Backend` set to `sql` (or `redis` if configured).
 
 ## Scenario 4 — Atlas fallback
 1. **Disable Edge Config temporarily**: point `PARIS_URL` to local Paris but omit `ATLAS_EDGE_CONFIG` or mock failure.
@@ -42,5 +53,24 @@ Use this checklist to exercise end-to-end flows across Bob ↔ Paris ↔ Venice 
 - No console errors in Bob or Venice during flows.
 - Logs include `X-Request-ID` correlation across Bob → Venice → Paris.
 - Bundle budgets checked via Venice release checklist before shipping.
+
+## Scenario 5 — CORS allowlist
+1. **Allowed origin**: set `Origin` to allowlisted value; verify normal responses and `Access-Control-Allow-Origin` echoes origin.
+2. **Blocked origin**: set `Origin` to non‑allowlisted; expect `403 FORBIDDEN`.
+3. **Preflight**: send OPTIONS with allowlisted origin; expect 204 and correct `Access-Control-Allow-*` headers.
+
+## Scenario 6 — Venice caching (validators)
+1. First GET `/e/:publicId` → expect 200 with `ETag` and `Last-Modified`.
+2. Repeat with `If-None-Match` set to returned ETag → expect 304.
+3. Repeat with `If-Modified-Since` set to `Last-Modified` when unchanged → expect 304.
+
+## Scenario 7 — Redis degradation (optional)
+1. Configure `RATE_LIMIT_REDIS_URL`, hit endpoints to observe `X-RateLimit-Backend: redis`.
+2. Break Redis connectivity; expect automatic fallback to SQL and `X-RateLimit-Backend: sql`.
+3. Restore Redis; expect transparent recovery.
+
+## Scenario 8 — SSR budget check (report‑only)
+1. Run `pnpm --filter venice run check:budgets` and record gzipped bytes vs 10KB threshold.
+2. For local strictness, run with `-- --strict` to ensure non‑zero exit on failure (not used in CI).
 
 > If any step behaves unexpectedly, stop and update documentation or specs before coding fixes. Documentation is the single source of truth.

@@ -62,7 +62,7 @@
   font-family: var(--control-font-family, var(--font-ui));
 }
 
-.diet-segment[data-footprint="icon-only"] {
+.diet-segment[data-type="icon-only"] {
   padding-inline: 0;
   inline-size: calc(var(--seg-track-height) - var(--seg-rail-padding) * 2);
   block-size: calc(var(--seg-track-height) - var(--seg-rail-padding) * 2);
@@ -71,7 +71,7 @@
 }
 
 
-.diet-segment[data-footprint="text-only"] {
+.diet-segment[data-type="text-only"] {
   padding-inline: var(--seg-content-padding);
 }
 

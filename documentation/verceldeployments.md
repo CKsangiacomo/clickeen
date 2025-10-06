@@ -59,6 +59,12 @@ Do NOT implement from this file. For specifications, see:
 - `SUPABASE_ANON_KEY`
 - `INTERNAL_ADMIN_KEY` (ops-only; required for Atlas administrative overrides)
 - `ATLAS_EDGE_CONFIG_TOKEN` / `ATLAS_EDGE_CONFIG_ID` for administrative updates (never exposed to runtime handlers)
+ - `ALLOWED_ORIGINS` — comma‑separated allowlist of origins (Bob/Prague). Required in prod.
+ - `RATE_LIMIT_REDIS_URL` — optional Redis for distributed rate limiting
+ - `RATE_LIMIT_REDIS_PREFIX` — optional Redis key prefix (default `ck:rl:`)
+ - `RATE_LIMIT_BREAKER_THRESHOLD` — errors to open circuit (default 5)
+ - `RATE_LIMIT_BREAKER_WINDOW_MS` — counting window (default 60000)
+ - `RATE_LIMIT_BREAKER_COOLDOWN_MS` — cooldown before retry (default 300000)
 
 ### c-keen-site (`prague/`)
 - Public marketing keys only (analytics, etc.); no secrets.

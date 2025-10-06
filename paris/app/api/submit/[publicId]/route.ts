@@ -5,6 +5,7 @@ import { loadInstance } from '@paris/lib/instances';
 import { assertInstanceAccess } from '@paris/lib/access';
 import { AuthError } from '@paris/lib/auth';
 import { TokenError } from '@paris/lib/instances';
+import { rateLimitSubmissions, setRateHeaders } from '@paris/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -66,6 +67,16 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
     const ip = getClientIp(req);
     const userAgent = req.headers.get('user-agent') ?? undefined;
 
+    // Rate limiting (per IP + per instance)
+    const rl = await rateLimitSubmissions(client, publicId, ip);
+    if (rl.limited) {
+      const headers = new Headers();
+      setRateHeaders(headers, rl);
+      headers.set('Retry-After', '60');
+      headers.set('X-RateLimit-Backend', rl.backend);
+      return new NextResponse(JSON.stringify({ error: 'RATE_LIMITED' }), { status: 429, headers });
+    }
+
     const insert = await client
       .from('widget_submissions')
       .insert({
@@ -89,7 +100,10 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
       return NextResponse.json({ error: 'DB_ERROR', details: insert.error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ status: 'accepted', deduped: false }, { status: 200 });
+    const headers = new Headers();
+    setRateHeaders(headers, rl);
+    headers.set('X-RateLimit-Backend', rl.backend);
+    return new NextResponse(JSON.stringify({ status: 'accepted', deduped: false }), { status: 200, headers });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });

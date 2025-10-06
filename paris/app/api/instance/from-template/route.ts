@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { requireUser, resolveWorkspaceId, assertWorkspaceMember, AuthError } from '@paris/lib/auth';
 import { loadInstance, shapeInstanceResponse } from '@paris/lib/instances';
+import { getTemplates } from '@paris/lib/catalog';
 
 export const runtime = 'nodejs';
 
@@ -39,16 +40,17 @@ function requireString(value: unknown, path: string) {
   return value.trim();
 }
 
+function generatePublicId() {
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `wgt_${rand}`;
+}
+
 function normalizePublicId(id?: string) {
-  if (id === undefined) {
-    return randomUUID().replace(/[^a-z0-9-]/g, '').slice(0, 24).toLowerCase();
-  }
-  if (typeof id !== 'string') {
-    throw new ValidationError('publicId must be a string', 'publicId');
-  }
+  if (id === undefined) return generatePublicId();
+  if (typeof id !== 'string') throw new ValidationError('publicId must be a string', 'publicId');
   const trimmed = id.trim();
-  if (!/^[a-z0-9-]{6,64}$/.test(trimmed)) {
-    throw new ValidationError('publicId must be 6–64 chars, lowercase a-z, 0-9, or -', 'publicId');
+  if (!/^wgt_[a-z0-9]{6}$/.test(trimmed)) {
+    throw new ValidationError('publicId must match wgt_{base36_6}', 'publicId');
   }
   return trimmed;
 }
@@ -82,6 +84,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
     }
 
+    // Premium template gating (Phase-1): free plan cannot select premium templates
+    const template = getTemplates(widgetType).find((t) => t.id === templateId);
+    if (!template) {
+      return NextResponse.json([{ path: 'templateId', message: 'unknown templateId' }], { status: 422 });
+    }
+    const premium = Boolean(template.premium);
+    if (premium) {
+      const features = await fetchPlanFeatures(client, workspace.plan);
+      if (!features.premiumTemplates) {
+        return NextResponse.json({ error: 'PREMIUM_REQUIRED' }, { status: 403 });
+      }
+    }
+
     const widget = await createWidget(client, {
       workspaceId,
       name: payload.name ?? defaultWidgetName(widgetType),
@@ -102,7 +117,6 @@ export async function POST(req: Request) {
         template_id: templateId,
         schema_version: schemaVersion,
         draft_token: draftToken,
-        widget_type: widgetType,
       })
       .select('public_id')
       .single();
@@ -160,7 +174,7 @@ async function createWidget(client: ReturnType<typeof getServiceClient>, {
   workspaceId: string;
   name: string;
   widgetType: string;
-}) {
+  }) {
   const { data, error } = await client
     .from('widgets')
     .insert({
@@ -180,4 +194,21 @@ function defaultWidgetName(widgetType: string) {
     .replace(/[^a-z0-9]+/gi, ' ')
     .replace(/(^|\s)(\w)/g, (_, ws, letter) => `${ws}${letter.toUpperCase()}`)
     .trim();
+}
+
+async function fetchPlanFeatures(client: ReturnType<typeof getServiceClient>, planId: string) {
+  const { data, error } = await client
+    .from('plan_features')
+    .select('feature_key, enabled')
+    .eq('plan_id', planId);
+  if (error) throw error;
+  const find = (key: string) => data?.find((row) => row.feature_key === key || row.feature_key === snakeCase(key))?.enabled ?? false;
+  return {
+    premiumTemplates: find('premiumTemplates'),
+    brandingRemovable: find('brandingRemovable'),
+  };
+}
+
+function snakeCase(value: string) {
+  return value.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }

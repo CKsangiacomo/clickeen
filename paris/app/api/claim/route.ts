@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         claimed_at: new Date().toISOString(),
       })
       .eq('id', claimed.id)
-      .select('public_id,status,widget_type,template_id,schema_version,config,updated_at')
+      .select('public_id,status,template_id,schema_version,config,updated_at')
       .single();
 
     if (update.error) {
@@ -77,11 +77,10 @@ export async function POST(req: Request) {
     const embedToken = generateToken();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const insert = await client
-      .from('embed_tokens')
-      .insert({
+  const insert = await client
+    .from('embed_tokens')
+    .insert({
         widget_instance_id: claimed.id,
-        public_id: claimed.publicId,
         token: embedToken,
         expires_at: expiresAt,
         created_by: user.id,
@@ -93,17 +92,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DB_ERROR', details: insert.error.message }, { status: 500 });
     }
 
-    const refreshed = await loadInstanceByDraftToken(client, draftToken);
-    let shaped;
-    if (refreshed) {
-      shaped = shapeInstanceResponse(refreshed);
-    } else {
-      const fallback = await loadInstance(client, claimed.publicId);
-      if (!fallback) {
-        return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance reclaimed but could not be loaded' }, { status: 500 });
-      }
-      shaped = shapeInstanceResponse(fallback);
+    const refreshed = await loadInstance(client, claimed.publicId);
+    if (!refreshed) {
+      return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance reclaimed but could not be loaded' }, { status: 500 });
     }
+    const shaped = shapeInstanceResponse(refreshed);
 
     return NextResponse.json({
       instance: shaped,

@@ -71,7 +71,7 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 - Overlay loader (popups/bars):
   - Static bundle served at `/embed/v{semver}/loader.js` (`/embed/latest/loader.js` alias maintained manually during releases)
   - Reads data attributes (e.g., `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`) and injects a positioned iframe that points at `/e/:publicId`
-  - Minimal event bus: open, close, ready; publish/subscribe with buffer‑until‑ready
+  - Minimal event bus (`window.ckeenBus`): open, close, ready; publish/subscribe with buffer‑until‑ready (legacy alias `window.Clickeen` exists; new code must use `window.ckeenBus`)
   - Bundle budget ≤ 28KB gz; no third-party deps
 - Front-door pattern: All third-party embed traffic terminates at Venice. Browsers never call Paris directly; Venice enforces tokens/branding/entitlements and proxies to Paris over a private channel.
 - Accessibility: WCAG AA; labeled form controls; aria-live; overlays focus trap and Esc; keyboard operable

@@ -11,7 +11,15 @@ export function getParisBase() {
 export async function parisFetch(path: string, init: RequestInit = {}) {
   const base = getParisBase();
   const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
-  return fetch(url, init);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const headers = new Headers(init.headers as HeadersInit);
+    if (!headers.has('X-Request-ID')) headers.set('X-Request-ID', crypto.randomUUID());
+    return await fetch(url, { ...init, headers, signal: controller.signal, cache: 'no-store' });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function parisJson<T>(path: string, init: RequestInit = {}) {

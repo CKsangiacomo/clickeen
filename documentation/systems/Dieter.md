@@ -38,8 +38,8 @@
 | Venice embeds / published widgets | use Dieter CSS tokens/foundations + inline SVGs; never import Dieter React |
 
 ## Distribution & Build
-- `pnpm --filter @ck/dieter build` → `dieter/dist/**`
-- Copy assets manually: `scripts/copy-dieter-assets.js`
+- `pnpm --filter @ck/dieter build` → builds `dieter/dist/**` and copies assets into `bob/public/dieter/` automatically
+- Manual copy helper (when needed): `scripts/copy-dieter-assets.js`
 - Keep `bob/public/dieter/` in `.gitignore`
 - Developers must not hand-edit `/bob/public/dieter/**`
 - No automated CI enforcement (manual verification required)
@@ -55,8 +55,8 @@
 - Re-run `pnpm --filter @ck/dieter build && node scripts/copy-dieter-assets.js` whenever tokens/components change; treat drift as a build bug.
 
 ## Icon Delivery Plan
-- SVG sources live in `dieter/icons/svg/`; each file is optimized for inline use.
-- A manifest (`dieter/icons/manifest.ts`) tracks curated icons, but React wrappers are not released.
+- SVG sources live in `dieter/icons/svg/`; each SVG is normalized to `fill="currentColor"` and optimized.
+- The curated icon list is `dieter/icons/icons.json`; the build emits `dieter/dist/icons/svg/*` plus a lightweight registry (`dieter/dist/icons.js`, `dieter/dist/icons.d.ts`) for app surfaces.
 - Venice widgets inline the normalized SVG markup at SSR time; runtime fetches are forbidden.
 
 **Icon delivery clarifier (NORMATIVE)**
@@ -68,9 +68,16 @@
 - Tokens & utilities: `import '@ck/dieter/dist/tokens.css';`
 - Button contract: `import '@ck/dieter/dist/components/button.css';`
 - Segmented Control contract: `import '@ck/dieter/dist/components/segmented.css';`
-- Icons: inline SVGs from `@ck/dieter/icons/svg/*.svg`
+- Icons: inline SVGs from the built paths (e.g., `dieter/dist/icons/svg/*.svg`, copied to `/dieter/icons/svg/*.svg`)
 
 > Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML.
+
+### System Colors (Tokens Only)
+- Dieter exposes a theme‑aware system palette purely as tokens. No helpers/selectors are added; components keep deriving states via `color-mix` on these tokens.
+- Hue tokens (light defaults under `:root`; dark values under `@media (prefers-color-scheme: dark)` and `[data-theme="dark"]`):
+  - `--color-system-red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown`
+  - Contrast companions: `--color-system-<hue>-contrast`
+- Usage (unchanged): override `--color-accent` globally or component custom properties (e.g., `--btn-bg`) in your selectors. Components will continue to compute hover/active via `color-mix`.
 
 ### Theme Support (Light / Dark)
 - **Source of truth:** `dieter/tokens/tokens.css` defines both light defaults and a `@media (prefers-color-scheme: dark)` override block. Every Dieter utility and component must consume colors via existing custom properties (`--color-bg`, `--color-text`, `--color-border`, `--color-system-*`, etc.). Shading, hover, and pressed states must derive from `color-mix` + those tokens—never hard-coded hex values. Motion and elevation now ship via shared tokens: `--duration-snap`, `--duration-base`, `--duration-spin`, `--shadow-elevated`, `--shadow-floating`, `--shadow-inset-control`.
@@ -123,7 +130,7 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 - Preview helper selectors (e.g., `.panel-heading`) still live in `tokens.css` for the internal harness; do not ship or depend on them in production. These will be removed in a future cleanup.
 - Some legacy references (e.g., `--radius-2/3`) are being audited; treat `--radius-4` as the only published radius token until new ones are added.
 - Vertical rhythm is locked to the 4px scale. Stacks, margins, paddings, and gaps MUST use the published spacing tokens (`--space-1 = 4px`, `--space-2 = 8px`, `--space-3 = 12px`, `--space-4 = 16px`, `--space-6 = 24px`, `--space-8 = 32px`, `--space-10 = 40px`). Arbitrary values (10px, 18px, 26px…) are prohibited.
-- Control heights come from the control token family: `--control-size-xs|sm|md|lg|xl` define 16px / 20px / 24px / 28px / 32px rails, and the matching font + radii tokens (`--control-font-*`, `--control-radius-*`, `--control-icon-*`) must be used together to keep visuals aligned. `xs` is the 16px "icon stub" footprint (also used by the micro text-only button); any footprint that carries both icon and label starts at `sm` (20px) and ladders up. Never invent intermediate heights—escalate if a design needs a new token.
+- Control heights come from the control token family: `--control-size-xs|sm|md|lg|xl` define 16px / 20px / 24px / 28px / 32px rails, and the matching font + radii tokens (`--control-font-*`, `--control-radius-*`, `--control-icon-*`) must be used together to keep visuals aligned. `xs` (16px) is the smallest size, used for icon-only buttons and minimal text-only buttons; any button with both icon and label starts at `sm` (20px) and ladders up. Never invent intermediate heights—escalate if a design needs a new token.
 - Honour `--min-touch-target` (44px). When a visual control is shorter (e.g., 24px rail) add transparent padding or outer spacing so the hit area meets the token rather than shrinking the target.
 
 ## Test harness checklist (NORMATIVE)
@@ -158,9 +165,9 @@ The components listed here are the only production-ready Dieter contracts. Treat
 **Class & attribute model**
 - Root: `.diet-btn` (inline-flex control)
 - Element hooks: `.diet-btn__icon`, `.diet-btn__label`
-- Size modifiers: data attribute or class (`data-size="xs|sm|md|lg"`, `.diet-btn--xs`, etc.)
-- Footprint modifiers: `data-footprint="icon-only|text-only"`, `.diet-btn--icon-only`
-- Variants: `data-variant="primary|secondary|neutral|ghost|danger"`, matching classes `.diet-btn--primary` etc.
+- Size modifiers: data attribute or class (`data-size="xs|sm|md|lg|xl"`, or `.diet-btn--xs|--sm|--md|--lg|--xl`)
+- Type modifiers: attribute for icon-only (`data-type="icon-only"`) and class modifiers `.diet-btn--icon-only`, `.diet-btn--icon-text`, `.diet-btn--text-only`
+- Variants: `data-variant="primary|secondary|neutral|line1|line2"` (class equivalents `.diet-btn--*`). Aliases: `data-tone="ghost"` maps to neutral; `data-tone="control"` maps to a lined style.
 - State attributes: `:hover`, `:active`, `:focus-visible`, `:disabled`, `[aria-disabled="true"]`, `[aria-pressed="true"]`, `[data-state="loading"|"active"|"selected"]`
 
 **Token usage**
@@ -169,12 +176,12 @@ The components listed here are the only production-ready Dieter contracts. Treat
 
 **Accessibility**
 - Focus-visible outline uses `--focus-ring-*` tokens with a two-layer box-shadow.
-- `--min-touch-target` guides control height; default min height ≥ 44px.
-- Loading state (`data-state="loading"`) dims label and can display a spinner overlay (spinner markup not shipped yet; implementers add `<span class="diet-btn__spinner">` if needed).
+- Tokens include `--min-touch-target` (44px) as guidance; compose spacing/containers to meet touch targets on touch surfaces.
+- Loading state (`data-state="loading"`) dims label and shows a spinner pseudo-element.
 - Disabled + aria-disabled lower opacity and remove pointer events; maintain keyboard focus handling.
 
 **Testing**
-- `tests/dietercomponents.html` renders button examples for regression checks; run locally after rebuilding `@ck/dieter`.
+- Use Dieter Admin for previews/regression checks after rebuilding `@ck/dieter`: `pnpm --filter @ck/dieteradmin dev`.
 
 ### Segmented Control (`dieter/dist/components/segmented.css`)
 
@@ -183,7 +190,7 @@ The components listed here are the only production-ready Dieter contracts. Treat
 - Segment wrapper (label): `.diet-segment`
 - Element hooks: `.diet-segment__input` (native radio), `.diet-segment__surface`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__sr`
 - Size modifiers: `data-size="sm|md|lg"`
-- Footprint modifiers: `data-footprint="icon-only|text-only"`
+- Type modifiers: `data-type="icon-only|text-only"`
 - State selectors: `.diet-segment__input:checked`, `.diet-segment__input:focus-visible`, `.diet-segment__input:disabled`, `:hover` on `.diet-segment`, plus radiogroup ARIA (`role="radiogroup"`) applied by consumers
 
 **Token usage**
@@ -196,11 +203,11 @@ The components listed here are the only production-ready Dieter contracts. Treat
 - `prefers-reduced-motion: reduce` turns off transitions, and disabled segments drop their pointer cursor to avoid false affordances.
 
 **Testing**
-- `admin/dietercomponents.html` renders segmented examples in multiple sizes/footprints; verify after rebuilding `@ck/dieter`.
+- Use Dieter Admin: `pnpm --filter @ck/dieteradmin dev` and open the Segmented showcase.
 
 ### Future components
 - Additional controls (Input, Select, Tabs, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
-- Any preview remnants in the test harness (e.g., input/select prototypes) are experimental and must not be consumed in production.
+- Dieter Admin includes preview-only primitives (e.g., `.diet-box`, `.diet-divider`) for scaffolding; these are not Dieter contracts and must not ship.
 
 ## Common AI mistakes (NORMATIVE)
 

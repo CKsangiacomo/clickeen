@@ -27,6 +27,14 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 - Template switches trigger re-validation against the target template’s `schemaVersion`. Unknown fields are dropped; defaults from Geneva are merged server-side.
 - Premium templates (`premium=true`) require entitlements (`features.premiumTemplates=true`). Geneva marks premium templates; Paris enforces the gate.
 
+### Template Switch Transform & Validation (Phase‑1)
+- Order of operations (non‑destructive by default):
+  1) Transform the incoming `config` to the target schema by removing non‑carryable/unknown fields.
+  2) Apply target defaults from `widget_templates.defaults`.
+  3) Validate against target `widget_schemas` using AJV; on failure return `422` with `[ { path, message } ]`.
+- Dry‑run preview: Paris supports dry‑run template switches that return a deterministic `diff` (`dropped`, `added`) and a `proposedConfig` without persisting. Clients must confirm before committing (`confirm=true`).
+- Unknown/missing `schemaVersion` returns `422` with `{ path: "schemaVersion", message: "unknown schema version" }`.
+
 ## 3) APIs & Contracts
 | Endpoint | Purpose |
 | --- | --- |
@@ -35,6 +43,13 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 | `POST/PUT /api/instance` | Invokes Geneva validation before writing. |
 
 Response payloads include `schemaVersion` so clients can decide whether a draft needs migration.
+#### Example error payload
+```json
+[
+  { "path": "config.fields.email", "message": "must be boolean" },
+  { "path": "schemaVersion", "message": "unknown schema version" }
+]
+```
 
 ## 4) Change Control
 - Modifying schemas or templates requires:

@@ -1,299 +1,1135 @@
-<div class="dieter-preview" data-component="input">
-  <p class="dieter-preview__caption">
-    Inputs combine a label, helper messaging, and optional icon or affix slots around the core `.diet-input__field`.
-    The richest composition is shown first; remove slots as needed for lighter footprints.
-  </p>
-
-  <div class="dieter-preview__table" data-demo="matrix">
-    <div class="dieter-preview__row">
-      <h4>Icon + affixes + helper</h4>
-      <div class="dieter-preview__cells">
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>SMALL</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="sm"</span>
-            <span>slots: label · icon · prefix · suffix · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="sm">
-              <label class="diet-input__label" for="input-rich-sm">Label</label>
-              <div class="diet-input__control">
-                <span class="diet-input__icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <circle cx="9" cy="9" r="4.5" />
-                    <path d="m14 14 4 4" />
-                  </svg>
-                </span>
-                <span class="diet-input__affix" data-position="start">Prefix</span>
-                <input
-                  class="diet-input__field"
-                  type="text"
-                  id="input-rich-sm"
-                  placeholder="Placeholder"
-                  aria-describedby="input-rich-sm-help"
-                />
-                <span class="diet-input__affix" data-position="end">Suffix</span>
+<div class="dieter-preview">
+  <section class="button-matrix" aria-labelledby="button-icon">
+    <h3 class="button-matrix__heading" id="button-icon">Icon type</h3>
+    <table class="button-matrix__table">
+      <thead>
+        <tr>
+          <th scope="col">Variant</th>
+          <th scope="col">XS · 16px</th>
+          <th scope="col">SM · 20px</th>
+          <th scope="col">MD · 24px</th>
+          <th scope="col">LG · 28px</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Primary<small>data-variant="primary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
               </div>
-              <span class="diet-input__helper" id="input-rich-sm-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>MEDIUM</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="md" (default)</span>
-            <span>slots: label · icon · prefix · suffix · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="md">
-              <label class="diet-input__label" for="input-rich-md">Label</label>
-              <div class="diet-input__control">
-                <span class="diet-input__icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <circle cx="9" cy="9" r="4.5" />
-                    <path d="m14 14 4 4" />
-                  </svg>
-                </span>
-                <span class="diet-input__affix" data-position="start">Prefix</span>
-                <input
-                  class="diet-input__field"
-                  type="text"
-                  id="input-rich-md"
-                  placeholder="Placeholder"
-                  aria-describedby="input-rich-md-help"
-                />
-                <span class="diet-input__affix" data-position="end">Suffix</span>
-              </div>
-              <span class="diet-input__helper" id="input-rich-md-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>LARGE</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="lg"</span>
-            <span>slots: label · icon · prefix · suffix · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="lg">
-              <label class="diet-input__label" for="input-rich-lg">Label</label>
-              <div class="diet-input__control">
-                <span class="diet-input__icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <circle cx="9" cy="9" r="4.5" />
-                    <path d="m14 14 4 4" />
-                  </svg>
-                </span>
-                <span class="diet-input__affix" data-position="start">Prefix</span>
-                <input
-                  class="diet-input__field"
-                  type="text"
-                  id="input-rich-lg"
-                  placeholder="Placeholder"
-                  aria-describedby="input-rich-lg-help"
-                />
-                <span class="diet-input__affix" data-position="end">Suffix</span>
-              </div>
-              <span class="diet-input__helper" id="input-rich-lg-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dieter-preview__row">
-      <h4>Label + helper</h4>
-      <div class="dieter-preview__cells">
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>SMALL</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="sm"</span>
-            <span>slots: label · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="sm">
-              <label class="diet-input__label" for="input-standard-sm">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-standard-sm" placeholder="Placeholder" aria-describedby="input-standard-sm-help" />
-              </div>
-              <span class="diet-input__helper" id="input-standard-sm-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>MEDIUM</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="md"</span>
-            <span>slots: label · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="md">
-              <label class="diet-input__label" for="input-standard-md">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-standard-md" placeholder="Placeholder" aria-describedby="input-standard-md-help" />
-              </div>
-              <span class="diet-input__helper" id="input-standard-md-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>LARGE</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="lg"</span>
-            <span>slots: label · helper</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="lg">
-              <label class="diet-input__label" for="input-standard-lg">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-standard-lg" placeholder="Placeholder" aria-describedby="input-standard-lg-help" />
-              </div>
-              <span class="diet-input__helper" id="input-standard-lg-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dieter-preview__row">
-      <h4>Control only</h4>
-      <div class="dieter-preview__cells">
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>SMALL</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="sm"</span>
-            <span>slots: control only</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="sm">
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="icon-only" data-variant="primary" aria-label="Primary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>MEDIUM</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="md"</span>
-            <span>slots: control only</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="md">
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="icon-only" data-variant="primary" aria-label="Primary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>LARGE</strong>
-            <span>class: .diet-input</span>
-            <span>data-size="lg"</span>
-            <span>slots: control only</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-size="lg">
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" placeholder="Placeholder" />
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="icon-only" data-variant="primary" aria-label="Primary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dieter-preview__row">
-      <h4>States</h4>
-      <div class="dieter-preview__cells">
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>ERROR</strong>
-            <span>class: .diet-input</span>
-            <span>data-state="error"</span>
-            <span>aria-invalid + helper linkage</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-state="error">
-              <label class="diet-input__label" for="input-error">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-error" placeholder="Placeholder" aria-invalid="true" aria-describedby="input-error-help" />
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
               </div>
-              <span class="diet-input__helper" id="input-error-help">Helper text</span>
-            </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>READ-ONLY</strong>
-            <span>class: .diet-input</span>
-            <span>attribute: readonly</span>
-            <span>visuals: neutral</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input">
-              <label class="diet-input__label" for="input-readonly">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-readonly" value="Read only value" readonly />
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="icon-only" data-variant="primary" aria-label="Primary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
               </div>
-              <span class="diet-input__helper">Helper text</span>
             </div>
-          </div>
-        </div>
-        <div class="dieter-preview__cell">
-          <div class="dieter-preview__meta">
-            <strong>DISABLED</strong>
-            <span>class: .diet-input</span>
-            <span>data-state="disabled"</span>
-            <span>field attribute: disabled</span>
-          </div>
-          <div class="dieter-preview__demo">
-            <div class="diet-input" data-state="disabled">
-              <label class="diet-input__label" for="input-disabled">Label</label>
-              <div class="diet-input__control">
-                <input class="diet-input__field" type="text" id="input-disabled" value="Disabled" disabled />
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Secondary<small>data-variant="secondary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
               </div>
-              <span class="diet-input__helper">Helper text</span>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="icon-only" data-variant="secondary" aria-label="Secondary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="dieter-preview__columns" id="input-snippets" data-demo="snippets">
-    <div class="dieter-preview__column">
-      <h4>Form snippet</h4>
-      <div class="stack-sm">
-        <div class="diet-input">
-          <label class="diet-input__label" for="input-snippet-1">First label</label>
-          <div class="diet-input__control">
-            <input class="diet-input__field" type="text" id="input-snippet-1" placeholder="Placeholder" />
-          </div>
-        </div>
-        <div class="diet-input">
-          <label class="diet-input__label" for="input-snippet-2">Second label</label>
-          <div class="diet-input__control">
-            <input class="diet-input__field" type="text" id="input-snippet-2" placeholder="Placeholder" />
-          </div>
-        </div>
-        <div class="diet-input" data-size="lg">
-          <label class="diet-input__label" for="input-snippet-3">Large label</label>
-          <div class="diet-input__control">
-            <input class="diet-input__field" type="text" id="input-snippet-3" placeholder="Placeholder" />
-          </div>
-          <span class="diet-input__helper">Helper text</span>
-        </div>
-      </div>
-    </div>
-  </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="icon-only" data-variant="secondary" aria-label="Secondary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="icon-only" data-variant="secondary" aria-label="Secondary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="icon-only" data-variant="secondary" aria-label="Secondary action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Neutral<small>data-variant="neutral"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="icon-only" data-variant="neutral" aria-label="Neutral action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="icon-only" data-variant="neutral" aria-label="Neutral action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="icon-only" data-variant="neutral" aria-label="Neutral action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="icon-only" data-variant="neutral" aria-label="Neutral action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 1<small>data-variant="line1"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="icon-only" data-variant="line1" aria-label="Line 1 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="icon-only" data-variant="line1" aria-label="Line 1 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="icon-only" data-variant="line1" aria-label="Line 1 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="icon-only" data-variant="line1" aria-label="Line 1 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 2<small>data-variant="line2"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="icon-only" data-variant="line2" aria-label="Line 2 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="icon-only" data-variant="line2" aria-label="Line 2 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="icon-only" data-variant="line2" aria-label="Line 2 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="icon-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="icon-only" data-variant="line2" aria-label="Line 2 action">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="button-matrix" aria-labelledby="button-icon-text">
+    <h3 class="button-matrix__heading" id="button-icon-text">Icon + text type</h3>
+    <table class="button-matrix__table">
+      <thead>
+        <tr>
+          <th scope="col">Variant</th>
+          <th scope="col">XS · 16px</th>
+          <th scope="col">SM · 20px</th>
+          <th scope="col">MD · 24px</th>
+          <th scope="col">LG · 28px</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Primary<small>data-variant="primary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-variant="primary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-variant="primary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-variant="primary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-variant="primary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Secondary<small>data-variant="secondary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-variant="secondary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-variant="secondary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-variant="secondary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-variant="secondary">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Neutral<small>data-variant="neutral"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-variant="neutral">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-variant="neutral">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-variant="neutral">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-variant="neutral">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 1<small>data-variant="line1"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-variant="line1">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-variant="line1">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-variant="line1">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-variant="line1">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 2<small>data-variant="line2"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-variant="line2">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-variant="line2">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-variant="line2">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-variant="line2">
+                  <span class="diet-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+  <circle cx="10" cy="10" r="4.5" />
+  <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.42 1.42M5.76 14.24l-1.42 1.42M15.66 15.66l-1.42-1.42M5.76 5.76 4.34 4.34" />
+</svg>
+                  </span>
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="button-matrix" aria-labelledby="button-text">
+    <h3 class="button-matrix__heading" id="button-text">Text type</h3>
+    <table class="button-matrix__table">
+      <thead>
+        <tr>
+          <th scope="col">Variant</th>
+          <th scope="col">XS · 16px</th>
+          <th scope="col">SM · 20px</th>
+          <th scope="col">MD · 24px</th>
+          <th scope="col">LG · 28px</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Primary<small>data-variant="primary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="text-only" data-variant="primary">
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="text-only" data-variant="primary">
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="text-only" data-variant="primary">
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="text-only" data-variant="primary">
+                  <span class="diet-btn__label">Primary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Secondary<small>data-variant="secondary"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="text-only" data-variant="secondary">
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="text-only" data-variant="secondary">
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="text-only" data-variant="secondary">
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="text-only" data-variant="secondary">
+                  <span class="diet-btn__label">Secondary</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Neutral<small>data-variant="neutral"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="text-only" data-variant="neutral">
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="text-only" data-variant="neutral">
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="text-only" data-variant="neutral">
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="text-only" data-variant="neutral">
+                  <span class="diet-btn__label">Neutral</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 1<small>data-variant="line1"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="text-only" data-variant="line1">
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="text-only" data-variant="line1">
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="text-only" data-variant="line1">
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="text-only" data-variant="line1">
+                  <span class="diet-btn__label">Line 1</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Line 2<small>data-variant="line2"</small></th>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="xs"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="xs" data-type="text-only" data-variant="line2">
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="sm"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="sm" data-type="text-only" data-variant="line2">
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="md"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="md" data-type="text-only" data-variant="line2">
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="button-matrix__cell">
+              <div class="preview-specs button-matrix__meta">
+                <span class="preview-specs__detail">class:diet-btn</span>
+                <span class="preview-specs__detail">data-size="lg"</span>
+                <span class="preview-specs__detail">data-type="text-only"</span>
+              </div>
+              <div class="button-matrix__demo">
+                <button class="diet-btn" data-size="lg" data-type="text-only" data-variant="line2">
+                  <span class="diet-btn__label">Line 2</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </div>

@@ -80,7 +80,6 @@ export async function POST(req: Request) {
           .from('embed_tokens')
           .insert({
             widget_instance_id: instance.id,
-            public_id: instance.publicId,
             token,
             expires_at: expiresAt,
             created_by: user.id,
@@ -99,7 +98,7 @@ export async function POST(req: Request) {
         const { error, data } = await client
           .from('embed_tokens')
           .update({ revoked_at: new Date().toISOString() })
-          .eq('public_id', instance.publicId)
+          .eq('widget_instance_id', instance.id)
           .eq('token', token)
           .is('revoked_at', null)
           .select('token')
@@ -117,7 +116,7 @@ export async function POST(req: Request) {
         const { data, error } = await client
           .from('embed_tokens')
           .select('token, expires_at, revoked_at, created_at')
-          .eq('public_id', instance.publicId)
+          .eq('widget_instance_id', instance.id)
           .order('created_at', { ascending: false });
 
         if (error) {

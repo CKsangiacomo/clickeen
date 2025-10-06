@@ -114,6 +114,20 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
       "updatedAt": "2025-09-28T19:16:44.000Z"
     }
     ```
+  - Template switch safety (Phase‑1): Two‑phase, non‑destructive flow.
+    - Dry‑run preview (no write): `PUT /api/instance/:publicId?dryRun=true` or body `{ "dryRun": true }` returns 200 with:
+      ```json
+      {
+        "action": "template-switch-preview",
+        "target": { "templateId": "…", "schemaVersion": "…" },
+        "diff": { "dropped": ["config.oldField"], "added": ["config.newDefault"] },
+        "proposedConfig": { /* transformed config */ },
+        "errors": [ { "path": "config.fields.email", "message": "must be boolean" } ]
+      }
+      ```
+    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed config + target template/schema after validation.
+    - If `templateId` is provided without `confirm`, returns `409 CONFIRM_REQUIRED` and a `diff` payload; nothing is persisted.
+    - Validation order: transform (drop unknowns) → apply target defaults → validate via Geneva (422 on failure) → persist on confirm.
 - `POST /api/claim`
   - `{ draftToken }` → 200 instance payload. Invalid/expired tokens return 401/410.
   - **On success (200):** Paris MUST
@@ -426,6 +440,15 @@ _API error code mapping (Phase-1)_
 - Usage pixel: 600 requests/minute/IP when Venice proxies to `POST /api/usage`.
 - Authoritative values live in `documentation/dbschemacontext.md` (see `submission_rate_window` policies); adjust only with CEO approval and updated documentation.
 - Repeated violations should trigger exponential backoff and logging for SRE follow-up.
+#### Headers and backend visibility
+- All rate‑limited endpoints return `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`.
+- On limit, responses include `Retry-After: 60` and `{ "error": "RATE_LIMITED" }` with status 429.
+- Backend: `X-RateLimit-Backend: redis|sql` indicates the active limiter backend (Redis counters when available; SQL window fallback otherwise). Paris degrades to SQL automatically on Redis issues and recovers without intervention; transitions are logged.
+
+#### CORS allowlist (Phase‑1)
+- Allowed origins are configured via `ALLOWED_ORIGINS` (comma‑separated URLs). Non‑allowlisted origins receive `403 FORBIDDEN`.
+- OPTIONS preflight includes: `Access-Control-Allow-Methods: GET,POST,PUT,OPTIONS` and `Access-Control-Allow-Headers: Authorization,Content-Type,X-Request-ID,X-Workspace-Id,X-Embed-Token`.
+- In development, localhost origins are allowed when `ALLOWED_ORIGINS` is unset.
 
 ### Input Validation
 - All JSON payloads validated against JSON Schema
@@ -500,7 +523,12 @@ SUPABASE_ANON_KEY=eyJ...
 JWT_SECRET=your-jwt-secret
 
 # Optional (Phase-1)
+ALLOWED_ORIGINS=https://app.clickeen.com,https://clickeen.com
 RATE_LIMIT_REDIS_URL=redis://...
+RATE_LIMIT_REDIS_PREFIX=ck:rl:
+RATE_LIMIT_BREAKER_THRESHOLD=5
+RATE_LIMIT_BREAKER_WINDOW_MS=60000
+RATE_LIMIT_BREAKER_COOLDOWN_MS=300000
 ```
 
 > Environment variables are summarized in `CONTEXT.md` (“Phase-1 Environment Variables”). Atlas remains read-only at runtime; administrative overrides require INTERNAL_ADMIN_KEY and explicit ops approval.

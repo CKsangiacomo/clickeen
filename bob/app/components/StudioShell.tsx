@@ -27,7 +27,8 @@ function buildEmbedUrl({
   theme: ThemeMode;
   device: DeviceMode;
 }) {
-  const envBase = process.env.NEXT_PUBLIC_EMBED_BASE?.replace(/\/$/, '');
+  // Prefer canonical env var from docs; fallback to previous name for compatibility
+  const envBase = (process.env.NEXT_PUBLIC_VENICE_URL || process.env.NEXT_PUBLIC_EMBED_BASE)?.replace(/\/$/, '');
   const base =
     envBase ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://c-keen-embed.vercel.app');
 

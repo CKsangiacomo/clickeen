@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { getServiceClient } from '@paris/lib/supabaseAdmin';
 import { loadInstance, shapeInstanceResponse } from '@paris/lib/instances';
+import { getTemplateDescriptor, validateConfig } from '@paris/lib/geneva';
 
 export const runtime = 'nodejs';
 
@@ -14,19 +15,21 @@ interface CreateInstancePayload {
   config?: Record<string, unknown>;
 }
 
+function generatePublicId() {
+  // Phase-1 contract: wgt_{base36_6}
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `wgt_${rand}`;
+}
+
 function normalizePublicId(id?: string) {
   if (id !== undefined && typeof id !== 'string') {
     throw new ValidationError('publicId must be a string', 'publicId');
   }
-
-  const value = id?.trim() ||
-    globalThis.crypto?.randomUUID?.()?.replace(/[^a-z0-9-]/g, '').slice(0, 32) ||
-    Math.random().toString(36).slice(2, 10);
-
-  if (!/^[a-z0-9-]{6,64}$/.test(value)) {
-    throw new ValidationError('publicId must be 6–64 chars, lowercase a-z, 0-9, or -', 'publicId');
+  const value = id?.trim() || generatePublicId();
+  // Enforce prefix and basic format
+  if (!/^wgt_[a-z0-9]{6}$/.test(value)) {
+    throw new ValidationError('publicId must match wgt_{base36_6}', 'publicId');
   }
-
   return value;
 }
 
@@ -65,23 +68,61 @@ async function readJson(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    // Phase-1 note: creating an instance without a backing widget (workspace)
+    // leads to orphan rows due to the NOT NULL FK on widget_id.
+    // The GA flow is `/api/instance/from-template` which creates a widget row
+    // and associates the instance properly. Until a workspace-aware
+    // implementation for this endpoint is introduced, return a clear error
+    // instructing clients to use the supported flow.
+    return NextResponse.json(
+      [{ path: 'endpoint', message: 'Use /api/instance/from-template (workspace-scoped) in Phase-1' }],
+      { status: 422 },
+    );
+
+    // The code path below remains as reference but is not executed because of
+    // the early return above. When enabling this endpoint, ensure a widget row
+    // is created (workspace-scoped) and its id set as widget_id on the insert.
+
     const payload = await readJson(req);
 
     const publicId = normalizePublicId(payload.publicId);
     const status = normalizeStatus(payload.status);
     const config = normalizeConfig(payload.config);
 
+    // Determine widgetType + schemaVersion
+    let widgetType = payload.widgetType;
+    let schemaVersion = payload.schemaVersion ?? undefined;
+    if (!widgetType && payload.templateId) {
+      const client = getServiceClient();
+      const tpl = await getTemplateDescriptor(client, payload.templateId);
+      if (!tpl) {
+        return NextResponse.json([{ path: 'templateId', message: 'unknown templateId' }], { status: 422 });
+      }
+      widgetType = tpl.widgetType;
+      schemaVersion = tpl.schemaVersion;
+    }
+    if (!widgetType || !schemaVersion) {
+      return NextResponse.json([
+        { path: 'widgetType', message: 'widgetType is required (or provide templateId)' },
+        { path: 'schemaVersion', message: 'schemaVersion is required (or derive from templateId)' },
+      ], { status: 422 });
+    }
+
+    // Validate config against Geneva schema
+    const supabase = getServiceClient();
+    const result = await validateConfig(supabase, widgetType, schemaVersion, config);
+    if (!result.ok) {
+      return NextResponse.json(result.errors, { status: 422 });
+    }
+
     const record: Record<string, unknown> = {
       public_id: publicId,
       status,
       config,
+      template_id: payload.templateId,
+      schema_version: schemaVersion,
     };
 
-    if (payload.widgetType) record.widget_type = payload.widgetType;
-    if (payload.templateId) record.template_id = payload.templateId;
-    if (payload.schemaVersion) record.schema_version = payload.schemaVersion;
-
-    const supabase = getServiceClient();
     const { error } = await supabase
       .from('widget_instances')
       .insert([record]);

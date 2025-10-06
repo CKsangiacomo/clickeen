@@ -57,7 +57,7 @@
 
 .diet-btn[data-size="xs"],
 .diet-btn--xs {
-  /* Icon/text micro footprint: 16px rail */
+  /* xs size: 16px rail */
   --btn-height: var(--control-size-xs, 1rem);
   --btn-padding-inline-end: 0.5rem;
   --btn-padding-inline-start-text: 0.5rem;
@@ -144,22 +144,22 @@
   white-space: nowrap;
 }
 
-.diet-btn[data-footprint="text-only"],
+.diet-btn[data-type="text-only"],
 .diet-btn--text-only {
   gap: 0;
   padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
-.diet-btn:not([data-footprint]) {
+.diet-btn:not([data-type]) {
   padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
-.diet-btn[data-footprint="icon-text"],
+.diet-btn[data-type="icon-text"],
 .diet-btn--icon-text {
   padding-inline-start: var(--btn-padding-inline-start-icon-text);
 }
 
-.diet-btn[data-footprint="icon-only"],
+.diet-btn[data-type="icon-only"],
 .diet-btn--icon-only {
   --btn-padding-inline-start-text: 0;
   --btn-padding-inline-start-icon-text: 0;
@@ -170,7 +170,7 @@
   padding: 0;
 }
 
-.diet-btn[data-footprint="icon-only"] .diet-btn__icon,
+.diet-btn[data-type="icon-only"] .diet-btn__icon,
 .diet-btn--icon-only .diet-btn__icon {
   inline-size: 100%;
   block-size: 100%;
