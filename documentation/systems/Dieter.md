@@ -66,9 +66,10 @@
 - Tokens & utilities: `import '@ck/dieter/dist/tokens.css';`
 - Button contract: `import '@ck/dieter/dist/components/button.css';`
 - Segmented Control contract: `import '@ck/dieter/dist/components/segmented.css';`
+- Textfield contract: `import '@ck/dieter/dist/components/textfield.css';`
 - Icons: inline SVGs from the built paths (e.g., `dieter/dist/icons/svg/*.svg`, copied to `/dieter/icons/svg/*.svg`)
 
-> Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML.
+> Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML using attributes only.
 
 ## Global Spacing & Icons (NORMATIVE)
 
@@ -216,13 +217,13 @@ The components listed here are the only production-ready Dieter contracts. Treat
 
 ### Button (`dieter/dist/components/button.css`)
 
-**Class & attribute model**
-- Root: `.diet-btn` (inline-flex control)
+**Contract (attributes-only)**
+- Root: `.diet-btn`
 - Element hooks: `.diet-btn__icon`, `.diet-btn__label`
-- Size modifiers: data attribute or class (`data-size="xs|sm|md|lg|xl"`, or `.diet-btn--xs|--sm|--md|--lg|--xl`)
-- Type modifiers: attribute for icon-only (`data-type="icon-only"`) and class modifiers `.diet-btn--icon-only`, `.diet-btn--icon-text`, `.diet-btn--text-only`
-- Variants: `data-variant="primary|secondary|neutral|line1|line2"` (class equivalents `.diet-btn--*`). Aliases: `data-tone="ghost"` maps to neutral; `data-tone="control"` maps to a lined style.
-- State attributes: `:hover`, `:active`, `:focus-visible`, `:disabled`, `[aria-disabled="true"]`, `[aria-pressed="true"]`, `[data-state="loading"|"active"|"selected"]`
+- Size: `data-size="xs|sm|md|lg|xl"`
+- Type: `data-type="icon-only|icon-text|text-only"`
+- Variants: `data-variant="primary|secondary|neutral|line1|line2"`
+- States: `:hover`, `:active`, `:focus-visible`, `:disabled`, `[aria-disabled="true"]`, `[aria-pressed="true"]`, `[data-state="loading"]`
 
 **Token usage**
 - Relies exclusively on tokens (e.g., `--color-accent`, control sizing tokens) and derives all colors via `color-mix` + tokens. Introducing raw color values is prohibited.
@@ -259,10 +260,23 @@ The components listed here are the only production-ready Dieter contracts. Treat
 **Testing**
 - Use Dieter Admin: `pnpm --filter @ck/dieteradmin dev` and open the Segmented showcase.
 
-### Future components
-Additional controls (Textfield, Select, Tabs, etc.) may be explored in the Admin lab and moved into `dieter/components/**` when approved by the design owner. This document does not use labels; approval is reflected by the component code staying in `dieter/` (unapproved work is removed).
+### Textfield (`dieter/dist/components/textfield.css`)
 
-Admin‑lab utilities and previews exist to aid review and are not part of the `@ck/dieter` package; apps must not import Admin‑lab‑only CSS.
+**Contract (attributes-only)**
+- Root: `.diet-input`
+- Element hooks: `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`, optional composed wrapper `.diet-input__control`
+- Size: `data-size="md|lg|xl"`
+- States: `:focus-visible`, `:disabled` (or `[aria-disabled="true"]`)
+
+**Token usage**
+- Field rail height/radius/padding derive from `--control-size-*`, `--control-radius-*`, `--space-*` per size.
+- Icon sizing (when composed) derives from `--control-icon-*` and `--control-icon-glyph-ratio-*`.
+
+**Accessibility**
+- Associate label and input via `for`/`id`. Helper text may be referenced via `aria-describedby`.
+
+**Testing**
+- Use Dieter Admin textfield showcase to verify sizes and focus/disabled states.
 
 ## Common AI mistakes (NORMATIVE)
 

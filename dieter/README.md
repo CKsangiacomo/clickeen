@@ -16,7 +16,7 @@ Run `pnpm --filter @ck/dieter build` after editing tokens/components to regenera
 Current CSS contracts exported from `@ck/dieter`:
 
 - Button (`dist/components/button.css`)
-  - Sizes: `xs | sm | md | lg | xl` (`data-size` or `.diet-btn--*`)
+  - Sizes: `xs | sm | md | lg | xl` (`data-size`)
   - Types: `icon-only | icon-text | text-only` (`data-type`)
   - Variants: `primary | secondary | neutral | line1 | line2` (`data-variant`)
   - Hooks: `.diet-btn__icon`, `.diet-btn__label`

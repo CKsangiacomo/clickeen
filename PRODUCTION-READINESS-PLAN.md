@@ -90,4 +90,31 @@ Checklist (run when done)
 - [ ] Templates: 8 present or decision documented to stay at 7.
 - [ ] (Optional) Submissions IP hashing aligned and documented.
 - [ ] Production `ALLOWED_ORIGINS` configured; healthz CORS fields green.
+## Verification Report — Dieter Single-Contract Migration (vs. Dieternew.md)
+
+1) Adherence to Phase‑1 Scope — Status: Nearly Complete
+- Canonical component HTML present: `dieter/components/button.html`, `segmented.html`, `textfield.html`.
+- Segmented canonical markup uses correct structure (`role="radiogroup"` + radio inputs).
+- Legacy class modifiers removed from active component CSS; tone/state aliases absent.
+- data-footprint was present in legacy Admin pages; replaced with `data-type`.
+- Stale README reference to `.diet-btn--*` removed.
+Verdict: Once guard script lands, adherence is 100%.
+
+2) Elegant Engineering — Verdict: Yes
+- No new packages or runtimes; lean CSS + HTML co‑location; attributes‑only.
+- Accessibility preserved; grep-based guardrails recommended for CI.
+
+3) Complexity — Verdict: Controlled
+- Single attribute triad (size/type/variant); canonical snippets per component.
+- Transitional duplication eliminated (footprint axis removed; README synced).
+- Next: add a tiny guard script to prevent regression.
+
+4) Discrepancies / Drift Risks — Addressed
+- Footprint axis: removed from Admin legacy pages (`dieter/.../button.html`, `.../segmented.html`).
+- README stale: updated to remove `.diet-btn--*` mention.
+- Guardrails: pending small script to bundle grep checks.
+
+### Next Actions
+- Add `scripts/verify-dieter-contract.sh` to run forbidden-pattern and SVG normalization checks across components and component showcases.
+- Wire script into PR checks for Dieter changes.
 
