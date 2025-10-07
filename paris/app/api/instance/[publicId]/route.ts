@@ -13,6 +13,7 @@ type Params = { params: { publicId: string } };
 type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'draft' | 'published' | 'inactive';
+  templateId?: string;
 };
 
 class ValidationError extends Error {

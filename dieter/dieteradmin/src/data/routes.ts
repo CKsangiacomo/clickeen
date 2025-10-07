@@ -51,6 +51,7 @@ const toTitle = (slug: string) =>
 const showcaseCssMap: Record<string, string[]> = {
   button: ['@dieter/dist/components/button.css'],
   segmented: ['@dieter/dist/components/segmented.css'],
+  textfield: ['@dieter/dist/components/textfield.css'],
   colors: ['@dieter/dist/tokens.css'],
   typography: ['@dieter/dist/tokens.css'],
 };
@@ -88,13 +89,20 @@ export const candidatePages: CandidatePage[] = candidatePaths
 export const showcaseIndex = new Map(showcasePages.map((page) => [page.slug, page] as const));
 export const candidateIndex = new Map(candidatePages.map((page) => [page.slug, page] as const));
 
-const showcaseNavItems: NavItem[] = showcasePages.map((page) => ({
+// Optional navigation config to group and order showcase pages
+import { navConfig } from './nav.config';
+interface NavConfigGroup { id: string; title: string; items: string[] }
+interface NavConfig { groups: NavConfigGroup[]; includeCandidatesGroup?: boolean; candidatesTitle?: string }
+
+const allShowcaseSlugs = new Set(showcasePages.map((p) => p.slug));
+
+const pageToNav = (page: ShowcasePage): NavItem => ({
   id: `showcase-${page.slug}`,
   title: page.title,
   path: page.path,
   kind: 'showcase' as const,
   summary: page.summary,
-}));
+});
 
 const candidateNavItems: NavItem[] = candidatePages.map((page) => ({
   id: `candidate-${page.slug}`,
@@ -103,17 +111,40 @@ const candidateNavItems: NavItem[] = candidatePages.map((page) => ({
   kind: 'component' as const,
 }));
 
+const buildShowcaseGroups = (): NavGroup[] => {
+  if (!navConfig) {
+    // Fallback: single group with all showcase pages
+    return [{ id: 'components', title: 'Components', items: showcasePages.map(pageToNav) }];
+  }
+  const remaining = new Set(allShowcaseSlugs);
+  const groups: NavGroup[] = [];
+  for (const g of navConfig.groups) {
+    const items: NavItem[] = [];
+    for (const slug of g.items) {
+      const page = showcaseIndex.get(slug);
+      if (!page) continue;
+      items.push(pageToNav(page));
+      remaining.delete(slug);
+    }
+    if (items.length) groups.push({ id: g.id, title: g.title, items });
+  }
+  // Append any pages not listed in config under "Other"
+  if (remaining.size) {
+    const leftovers = Array.from(remaining)
+      .sort((a, b) => a.localeCompare(b))
+      .map((slug) => pageToNav(showcaseIndex.get(slug)!));
+    groups.push({ id: 'other', title: 'Other', items: leftovers });
+  }
+  return groups;
+};
+
+const showcaseGroups = buildShowcaseGroups();
+
 export const navGroups: NavGroup[] = [
-  {
-    id: 'dieter',
-    title: 'Dieter Components',
-    items: showcaseNavItems,
-  },
-  {
-    id: 'candidates',
-    title: 'Candidates Lab',
-    items: candidateNavItems,
-  },
+  ...showcaseGroups,
+  ...(navConfig?.includeCandidatesGroup !== false && candidateNavItems.length
+    ? [{ id: 'previews', title: navConfig?.candidatesTitle || 'Previews', items: candidateNavItems }]
+    : []),
 ];
 
 export const navIndex = new Map<string, NavItem>();

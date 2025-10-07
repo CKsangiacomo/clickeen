@@ -3,10 +3,9 @@ import '@dieter/dist/components/button.css';
 import '@dieter/dist/components/segmented.css';
 import './css/components/primitives/box.css';
 import './css/components/primitives/divider.css';
-// Candidate component CSS (preview-only; not GA)
-import './css/components/candidates/textfield.css';
-import './css/components/candidates/textarea.css';
-import './css/components/candidates/select.css';
+// Preview-only CSS (when used) should not ship
+import '@dieter/dist/components/textfield.css';
+// Removed Select and Textarea candidates
 
 import {
   showcasePages,

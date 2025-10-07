@@ -203,7 +203,7 @@ Shared error keys (exact strings)
 ## S0. Scope & Principles
 - Budgets (size/latency) are strict objectives; enforcement is CEO decision.
 - Phase‑1 has NO CSR fallback and uses ONLY a single SSR route for embeds.
-- GA plans: FREE and PAID only; do not add tiers without CEO approval.
+- Plans: FREE and PAID only; do not add tiers without CEO approval.
 - API JSON is camelCase; DB columns may be snake_case (see DB Truth).
 - Path note: the folder name “CRITICAL-TECHPHASES” is LITERAL; treat it as an exact path.
 
@@ -272,8 +272,8 @@ Shared error keys (exact strings)
 
 ---
 
-## S8. Seed Widgets (GA list)
-- “Optional” == NOT in GA. Do not implement optional widgets unless CEO says GO.
+## S8. Seed Widgets (Phase‑1 list)
+- “Optional” items are not part of the initial list. Do not implement optional widgets unless CEO says GO.
 - FAQ, Testimonials, Announcement/Promo, Newsletter, Contact, Social Proof.
 - Optional: Pricing Cards, Gallery.
 - Each: schema, presets, SSR HTML, error/loading/empty states.

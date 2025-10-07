@@ -1,7 +1,7 @@
 import type { AdminClient } from '@paris/lib/supabaseAdmin';
 import { getRedisClient, getRedisPrefix } from '@paris/lib/redis';
 import { createHash } from 'node:crypto';
-import type { RedisClientType } from 'redis';
+import type { RedisClientType } from '@paris/lib/redis';
 
 export interface RateContext {
   limit: number;

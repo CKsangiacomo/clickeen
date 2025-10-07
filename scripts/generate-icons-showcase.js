@@ -29,28 +29,39 @@ function readSvg(filepath) {
 }
 
 function row(name, svg) {
-  // Compact: one column, token + icon next to each other at sm
-  return `
-  <div class="row" data-cols="1">
-    <div class="row-header">${name}</div>
-    <div class="specdpreview">
-      <div class="preview-specs"></div>
-      <div class="componentpreview">
-        <div class="diet-input" data-size="sm" style="display:flex;align-items:center;gap:var(--space-3)">
-          <code class="caption">--control-icon-sm</code>
-          <span class="diet-input__icon" aria-hidden="true">${svg}</span>
+  // One row per icon, sizes 16→40 (16,20,24,28,32,36,40)
+  const sizes = [16, 20, 24, 28, 32, 36, 40];
+  const cells = sizes
+    .map((px) => `
+      <div class="specdpreview">
+        <div class="preview-specs">
+          <div class="preview-specs__row"><span class="preview-specs__detail">${px}px</span></div>
         </div>
-      </div>
-    </div>
+        <div class="componentpreview">
+          <span class="diet-icon" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;">
+            ${svg.replace('<svg', `<svg style=\"width:${px}px;height:${px}px;display:block;\"`)}
+          </span>
+        </div>
+      </div>`)
+    .join('\n');
+  return `
+  <div class="row" data-cols="7">
+    <div class="row-header">${name}</div>
+    ${cells}
   </div>`;
 }
 
 function buildPage(rowsHtml) {
   return `
 <div class="dieter-preview" style="--spec-col-w: 60px;">
-  <h3 class="section-header">Icons — Compact (sm only)</h3>
+  <style>
+    /* tighter gaps for the icon grid */
+    .dieter-preview .specdpreview { gap: 0.75rem; }
+    .dieter-preview .row[data-cols="7"] { grid-template-columns: 0.8fr repeat(7, minmax(0, 1fr)); }
+  </style>
+  <h3 class="section-header">Icons — Sizes 16 to 40</h3>
   ${rowsHtml}
-  <p class="caption">Icons rendered with Dieter token sizing (sm). Designer exports are authoritative.</p>
+  <p class="caption">One row per icon; sizes 16, 20, 24, 28, 32, 36, 40px. SVGs are embedded verbatim; designer exports are authoritative.</p>
   
 </div>`;
 }

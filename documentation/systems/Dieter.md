@@ -22,12 +22,10 @@
 - Single visual source of truth for builder flows, embeds, admin tooling, and any future surfaces. Consumers (Bob, Venice, marketing, internal tools) all style via these tokens; no React runtime ships with the package.
 
 ## Scope
-- **In:**
-  - Global foundations (tokens, typography baseline, focus ring, spacing utilities) exported via `@ck/dieter/dist/tokens.css`.
-  - **Button** component contract exported via `@ck/dieter/dist/components/button.css`.
-  - **Segmented Control** component contract exported via `@ck/dieter/dist/components/segmented.css`.
-  - Inline SVG icon set under `dieter/icons/svg/` for manual embedding.
-- **Not shipped yet:** Additional controls (Textfield, Select, Tabs, etc.), React component wrappers, theming APIs, and foundations beyond those listed above. Do not build or assume them until this doc lists them.
+- Global foundations (tokens, typography baseline, focus ring, spacing utilities) exported via `@ck/dieter/dist/tokens.css`.
+- Component contracts live in `dieter/components/**` and build to `dieter/dist/components/**` (e.g., `button.css`, `segmented.css`).
+- Inline SVG icon set under `dieter/icons/svg/` for manual embedding.
+- Additional components may be added or removed at the design owner’s discretion. This document does not track statuses; components either live in `dieter/` (kept) or are deleted.
 
 ## Consumers & Split
 | Surface | Usage |
@@ -193,7 +191,7 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 - Build Dieter: `pnpm --filter @ck/dieter build`.
 - Copy assets: `node scripts/copy-dieter-assets.js` (or the Turbo task) and confirm `bob/public/dieter/` matches `dieter/dist/`.
 - Open `tests/dietercomponents.html` in a local server/iframe harness.
-- Verify Button examples render with correct tokens, focus states, and variants. Any additional demos in the harness are experimental and must not ship.
+- Verify Button examples render with correct tokens, focus states, and variants. The harness may include work‑in‑progress demos for evaluation; only rely on CSS that ships from the `@ck/dieter` package (do not import Admin‑lab‑only CSS in apps).
 
 ## Governance
 - Single source: `dieter/` package.
@@ -262,8 +260,9 @@ The components listed here are the only production-ready Dieter contracts. Treat
 - Use Dieter Admin: `pnpm --filter @ck/dieteradmin dev` and open the Segmented showcase.
 
 ### Future components
-- Additional controls (Textfield, Select, Tabs, etc.) remain under active design. Do not ship contracts or rely on draft CSS until they are marked ✅ in both docs and code.
-- Dieter Admin includes preview-only primitives (e.g., `.diet-box`, `.diet-divider`) for scaffolding; these are not Dieter contracts and must not ship.
+Additional controls (Textfield, Select, Tabs, etc.) may be explored in the Admin lab and moved into `dieter/components/**` when approved by the design owner. This document does not use labels; approval is reflected by the component code staying in `dieter/` (unapproved work is removed).
+
+Admin‑lab utilities and previews exist to aid review and are not part of the `@ck/dieter` package; apps must not import Admin‑lab‑only CSS.
 
 ## Common AI mistakes (NORMATIVE)
 

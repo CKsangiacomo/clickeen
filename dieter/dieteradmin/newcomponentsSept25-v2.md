@@ -1,6 +1,6 @@
 # Dieter Component Candidates — V0 Build Guide
 
-> STATUS: DRAFT — Candidate build guide. Nothing here is GA until promoted into `documentation/systems/Dieter.md` in the same PR as the code change.
+> STATUS: DRAFT — Candidate build guide. Use this to build previews. When approved, move the component into `dieter/components/**` and update `documentation/systems/Dieter.md`. If not approved, delete it.
 
 ## Build Philosophy (CRITICAL)
 
@@ -94,7 +94,7 @@ Always blend tokens with tokens; do not blend raw hex values.
 
 ## Candidate Build Queue (V0)
 
-Not GA. Build candidates here, preview in Dieter Admin, and promote to the Dieter PRD only when approved.
+Build previews here, view them in Dieter Admin, and when approved move the component into Dieter (otherwise delete it).
 
 ### 1. Textfield
 
@@ -138,85 +138,13 @@ Vertical spacing (hspace)
 
 ---
 
-### 2. Textarea
-
-**Purpose:** Multi-line text entry.
-
-**V0 Scope (Candidate Minimum):**
-- One variant: clean textarea with label
-- Single size (V0): padding/font-size fixed; height controlled by `rows`
-- States: default, focus, disabled
-- Optional: helper text below
-
-**V0 HTML (Target):**
-```html
-<div class="diet-textarea">
-  <label class="diet-textarea__label">Label</label>
-  <textarea class="diet-textarea__field" rows="4" placeholder="Placeholder"></textarea>
-  <span class="diet-textarea__helper">Optional supporting text</span>
-</div>
-```
-
-**CSS Mandate:**
-- Inherits Textfield's border/disabled logic
-- Focus: 1px system-blue stroke (border-color `var(--color-system-blue)`), no box-shadow ring
-- Height controlled by `rows` attribute (not CSS)
-- Resize handle remains visible
-
-**Out of V0 Scope:**
-- Character counter (V1)
-- Auto-resize JS behavior (V1)
-- Inline formatting toolbar (V2)
-
----
-
-### 3. Select
-
-**Purpose:** Dropdown list for choosing one option.
-
-**V0 Scope (GA Minimum):**
-- Native `<select>` element (mobile-friendly, accessible)
-- Three sizes: `sm`, `md`, `lg`
-- States: default, focus, disabled
-- Custom caret icon
-
-**V0 HTML (Target):**
-```html
-<div class="diet-select" data-size="md">
-  <label class="diet-select__label">Label</label>
-  <div class="diet-select__control">
-    <select class="diet-select__field">
-      <option value="">Choose…</option>
-      <option value="one">Option 1</option>
-      <option value="two">Option 2</option>
-    </select>
-    <span class="diet-select__icon" aria-hidden="true">
-      <svg><!-- chevron down --></svg>
-    </span>
-  </div>
-  <span class="diet-select__helper">Optional supporting text</span>
-</div>
-```
-
-**CSS Mandate:**
-- Control wrapper mimics Textfield border/focus styling
-- Native `<select>` with `appearance: none` to hide default arrow
-- Custom icon positioned absolute on the right
-- Icon uses `--control-icon-md` sizing
-- Focus: 1px system-blue stroke (border-color `var(--color-system-blue)`), no box-shadow ring
-
-**Out of V0 Scope:**
-- Custom dropdown overlay (Listbox pattern) — too complex for V0
-- Multi-select (V2)
-- Async search/combobox (V2)
-
----
+<!-- Textarea and Select sections removed -->
 
 ### 4. Checkbox
 
 **Purpose:** Binary choice (checked/unchecked).
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Standalone checkbox with label
 - Three sizes: `sm`, `md`, `lg`
 - States: unchecked, checked, disabled
@@ -252,7 +180,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Select exactly one option from multiple choices.
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Vertical stack of radio options
 - Three sizes: `sm`, `md`, `lg`
 - States: unselected, selected, disabled
@@ -296,7 +224,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Binary toggle for instant on/off actions (iOS-style).
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Switch with optional trailing label
 - Three sizes: `sm`, `md`, `lg`
 - States: off, on, disabled
@@ -331,7 +259,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Layout container with padding and optional border/shadow.
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Four padding presets: `none`, `sm`, `md`, `lg`
 - Three surface treatments: `flat`, `raised`, `bordered`
 
@@ -366,7 +294,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Visual separator between sections.
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Horizontal and vertical orientations
 - One thickness: hairline (1px)
 
@@ -396,7 +324,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Small label showing status or category.
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Two tones: `solid` (filled), `subtle` (light bg)
 - One type: `info` (blue accent)
 - Three sizes: `sm`, `md`, `lg`
@@ -428,7 +356,7 @@ Vertical spacing (hspace)
 
 **Purpose:** Loading indicator for async operations.
 
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - Spinning circle animation
 - Three sizes: `sm`, `md`, `lg`
 
@@ -537,7 +465,7 @@ Vertical spacing (hspace)
 
 ## Success Criteria (V0 Done)
 
-A component graduates from candidate to GA when:
+A component is kept in Dieter when:
 
 - [ ] CSS uses tokens exclusively (no hardcoded colors/spacing)
 - [ ] Works in light + dark themes without explicit overrides

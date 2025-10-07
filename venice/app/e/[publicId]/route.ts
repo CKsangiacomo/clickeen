@@ -70,7 +70,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
   const instance = body as InstanceResponse;
   const branding = instance.branding ?? { hide: false, enforced: instance.status !== 'published' };
   const nonce = crypto.randomUUID();
-  const backlink = !branding.hide || branding.enforced;
+  const backlink = (!branding.hide) || Boolean(branding.enforced);
   let responseHtml: string;
   const wtype = (instance.widgetType || '').toLowerCase();
   if (wtype === 'forms.contact') {

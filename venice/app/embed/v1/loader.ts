@@ -36,7 +36,7 @@ const script = `(() => {
 
   const origin = new URL(scriptEl.src, window.location.href).origin;
   const embedUrl = (params = {}) => {
-    const url = new URL(`${origin}/e/${encodeURIComponent(publicId)}`);
+    const url = new URL(origin + '/e/' + encodeURIComponent(publicId));
     const combined = { theme, device, ...params };
     Object.entries(combined).forEach(([key, value]) => {
       if (value) url.searchParams.set(key, String(value));

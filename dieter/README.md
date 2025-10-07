@@ -3,7 +3,7 @@
 Clickeen's design system workspace. Source tokens, component CSS contracts, and icon SVGs live here and build into `dist/` via `pnpm --filter @ck/dieter build`.
 
 - `tokens/` → canonical design tokens
-- `components/` → Phase‑1 CSS contracts (Button, Segmented)
+- `components/` → CSS contracts (e.g., Button, Segmented, Textfield)
 - `icons/` → curated SVG set (normalized to `fill="currentColor"`)
 - `dist/` → generated output; copied into `bob/public/dieter` automatically by the build script
 
@@ -11,23 +11,26 @@ Run `pnpm --filter @ck/dieter build` after editing tokens/components to regenera
 
 > Do not hand-edit files under `bob/public/dieter/`. Treat drift as a build bug; rebuild/copy instead.
 
-## GA Components (Phase‑1)
+## Components
 
-Only the following CSS contracts are GA in Phase‑1. Other CSS present in `dist/components/` may be experimental and must not be consumed in production until promoted in the PRD.
+Current CSS contracts exported from `@ck/dieter`:
 
 - Button (`dist/components/button.css`)
-  - Sizes: `xs | sm | md | lg | xl` via `data-size` or class (`.diet-btn--xs` … `--xl`)
-  - Types: icon-only (attribute `data-type="icon-only"` or class `.diet-btn--icon-only`), icon + text (`.diet-btn--icon-text`), text-only (`.diet-btn--text-only`)
-  - Variants: `primary | secondary | neutral | line1 | line2` (`data-variant` or `.diet-btn--*`)
-  - Aliases: `data-tone="ghost"` (neutral), `data-tone="control"` (lined style)
+  - Sizes: `xs | sm | md | lg | xl` (`data-size` or `.diet-btn--*`)
+  - Types: `icon-only | icon-text | text-only` (`data-type`)
+  - Variants: `primary | secondary | neutral | line1 | line2` (`data-variant`)
   - Hooks: `.diet-btn__icon`, `.diet-btn__label`
-  - A11y: focus ring via tokens; compose to meet `--min-touch-target` (44px) on touch surfaces; `data-state="loading"` shows spinner
+  - A11y: tokenized focus ring; `data-state="loading"` spinner
 
 - Segmented Control (`dist/components/segmented.css`)
   - Sizes: `sm | md | lg` (`data-size`)
   - Types: `icon-only | text-only` (`data-type`)
-  - Hooks: `.diet-segmented` root; `.diet-segment` item; `.diet-segment__input` (native radio), `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__surface`
-  - A11y: native radio semantics, focus ring via tokens, reduced‑motion aware
+  - Hooks: `.diet-segmented`, `.diet-segment`, `.diet-segment__input`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__surface`
+  - A11y: native radio semantics; reduced‑motion aware
+
+- Textfield (`dist/components/textfield.css`)
+  - Sizes: `md | lg | xl` (`data-size`)
+  - Structure: `.diet-input` with `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`; composed variant uses `.diet-input__control`
 
 
 

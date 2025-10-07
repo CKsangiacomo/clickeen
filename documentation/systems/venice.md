@@ -284,7 +284,7 @@ Cache-Control: no-store
 
 ### Phase-1 Supported Widgets
 
-> Examples below are illustrative. The authoritative list of GA widgets lives in `CRITICAL-TECHPHASES/Techphases-Phase1Specs.md` (section S8 Seed Widgets).
+> Examples below are illustrative. The authoritative list of Phase‑1 widgets lives in `CRITICAL-TECHPHASES/Techphases-Phase1Specs.md` (section S8 Seed Widgets).
 
 #### Contact Form Widget
 **Config Schema**:

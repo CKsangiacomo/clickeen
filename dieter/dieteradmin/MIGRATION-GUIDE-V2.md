@@ -19,7 +19,7 @@
 
 **New Approach:**
 ```markdown
-**V0 States (GA Minimum):**
+**V0 States (Minimum):**
 - default, focus, disabled
 (Error/success states deferred to V1)
 ```
@@ -48,7 +48,7 @@
 
 **New Approach:**
 ```markdown
-**V0 Scope (GA Minimum):**
+**V0 Scope (Minimum):**
 - One variant: clean text input with label
 - Three sizes: sm, md, lg
 - States: default, focus, disabled
@@ -150,8 +150,8 @@ Each component now has:
 - Teaches correct token usage patterns
 
 ### **5. Added "Success Criteria"**
-- Clear graduation checklist
-- Enforces quality bar before GA promotion
+- Clear acceptance checklist
+- Enforces quality bar before keeping a component in Dieter
 - Prevents half-baked components shipping
 
 ---

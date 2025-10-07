@@ -1,0 +1,158 @@
+/* Dieter Textfield — tokenized input control */
+.diet-input {
+  display: grid;
+  gap: var(--hspace-4, 0.3rem);
+  color: var(--color-text);
+}
+
+.diet-input__label {}
+
+.diet-input__field {
+  inline-size: 100%;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--space-2);
+  padding-block: 0;
+  border-radius: var(--control-radius-md, 0.375rem);
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%);
+  background: var(--role-surface-bg);
+  color: var(--color-text);
+  font: 400 var(--control-font-md, 0.9375rem)/1 var(--font-ui);
+  outline: none;
+  transition: border-color var(--duration-base, 160ms) ease, box-shadow var(--duration-base, 160ms) ease, background-color var(--duration-base, 160ms) ease;
+}
+
+.diet-input__field::placeholder {
+  font-size: var(--fs-14, 0.875rem);
+  color: color-mix(in oklab, var(--color-text), transparent 60%);
+}
+
+.diet-input:focus-within .diet-input__field,
+.diet-input__field:focus,
+.diet-input__field:active {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  box-shadow: none;
+}
+
+.diet-input__field:disabled {
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 55%);
+  cursor: not-allowed;
+}
+
+.diet-input__helper {}
+
+/* Size modifiers */
+.diet-input[data-size="md"] .diet-input__field {
+  min-block-size: var(--control-size-md, 1.5rem);
+  border-radius: var(--control-radius-md, 0.375rem);
+}
+
+.diet-input[data-size="lg"] .diet-input__field {
+  min-block-size: var(--control-size-lg, 1.75rem);
+  border-radius: var(--control-radius-lg, 0.4375rem);
+  font-size: var(--fs-15, 0.9375rem);
+  padding-inline: var(--space-3);
+}
+
+.diet-input[data-size="lg"] .diet-input__field::placeholder {
+  font-size: var(--fs-14, 0.875rem);
+}
+
+.diet-input[data-size="xl"] .diet-input__field {
+  min-block-size: var(--control-size-xl, 2rem);
+  border-radius: var(--control-radius-xl, 0.5rem);
+  font-size: var(--fs-15, 0.9375rem);
+  padding-inline: var(--space-3);
+}
+
+.diet-input[data-size="xl"] .diet-input__field::placeholder {
+  font-size: var(--fs-15, 0.9375rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-input__field { transition: none; }
+}
+
+/* Composed control (icon slots, trailing actions) */
+.diet-input__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--control-inline-gap-md);
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--space-2);
+  border-radius: var(--control-radius-md, 0.375rem);
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%);
+  background: var(--role-surface-bg);
+  transition: border-color var(--duration-base, 160ms) ease, box-shadow var(--duration-base, 160ms) ease;
+}
+
+.diet-input[data-size="lg"] .diet-input__control { min-block-size: var(--control-size-lg); border-radius: var(--control-radius-lg); gap: var(--control-inline-gap-lg); padding-inline: var(--space-3); }
+.diet-input[data-size="xl"] .diet-input__control { min-block-size: var(--control-size-xl); border-radius: var(--control-radius-xl); gap: var(--control-inline-gap-xl); padding-inline: var(--space-3); }
+
+.diet-input__control:focus-within,
+.diet-input__control:active {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-input__field,
+  .diet-input__control { background: var(--color-system-gray-5); }
+  .diet-input__field:disabled { background: color-mix(in oklab, var(--color-system-gray-5), transparent 55%); }
+}
+
+.diet-input__control .diet-input__field {
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-block-size: auto;
+}
+
+.diet-input__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--control-icon-md, 1.25rem);
+  block-size: var(--control-icon-md, 1.25rem);
+  color: color-mix(in oklab, var(--color-text), transparent 35%);
+  flex: none;
+}
+
+.diet-input[data-size="lg"] .diet-input__icon { inline-size: var(--control-icon-lg, 1.5rem); block-size: var(--control-icon-lg, 1.5rem); }
+.diet-input[data-size="xl"] .diet-input__icon { inline-size: var(--control-icon-xl, 1.75rem); block-size: var(--control-icon-xl, 1.75rem); }
+.diet-input[data-size="sm"] .diet-input__icon { inline-size: var(--control-icon-sm, 1rem); block-size: var(--control-icon-sm, 1rem); }
+
+.diet-input__icon svg {
+  inline-size: calc(var(--control-icon-md, 1.25rem) * var(--control-icon-glyph-ratio-md, 0.95));
+  block-size: calc(var(--control-icon-md, 1.25rem) * var(--control-icon-glyph-ratio-md, 0.95));
+  display: block;
+}
+
+.diet-input[data-size="lg"] .diet-input__icon svg {
+  inline-size: calc(var(--control-icon-lg, 1.5rem) * var(--control-icon-glyph-ratio-lg, 0.9));
+  block-size: calc(var(--control-icon-lg, 1.5rem) * var(--control-icon-glyph-ratio-lg, 0.9));
+}
+
+.diet-input[data-size="xl"] .diet-input__icon svg {
+  inline-size: calc(var(--control-icon-xl, 1.75rem) * var(--control-icon-glyph-ratio-xl, 0.87));
+  block-size: calc(var(--control-icon-xl, 1.75rem) * var(--control-icon-glyph-ratio-xl, 0.87));
+}
+
+.diet-input[data-size="sm"] .diet-input__icon svg {
+  inline-size: calc(var(--control-icon-sm, 1rem) * var(--control-icon-glyph-ratio-sm, 0.95));
+  block-size: calc(var(--control-icon-sm, 1rem) * var(--control-icon-glyph-ratio-sm, 0.95));
+}
+
+.diet-input__control > button.diet-input__icon {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+

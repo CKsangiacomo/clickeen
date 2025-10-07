@@ -1,8 +1,8 @@
 # DieterAdmin Component Status
 
-> **STATUS:** DRAFT — proposal in flight. Final contracts must be promoted to `documentation/systems/Dieter.md` before any component ships. Treat this page as the working backlog, not a normative PRD.
+> **STATUS:** DRAFT — proposal in flight. When a component is kept in Dieter, reflect it in `documentation/systems/Dieter.md`. Treat this page as the working backlog, not a normative PRD.
 
-## DIETER COMPONENTS (Graduated to @ck/dieter)
+## DIETER COMPONENTS (in `@ck/dieter`)
 
 1. Button ✅
 2. Segmented Control ✅
@@ -15,8 +15,6 @@
 
 ### Form Fields
 5. Textfield
-6. Textarea
-7. Select
 
 ### Choice Controls
 8. Checkbox
@@ -82,7 +80,7 @@
 - [ ] Focus, hover, active, error, disabled, and read-only states verified
 - [ ] `prefers-reduced-motion` honored where animation exists
 - [ ] ARIA relationships validated with VoiceOver/NVDA smoke test
-- [ ] Component demos added to Dieter admin harness with at least one GA variant
+- [ ] Component demos added to Dieter admin harness with at least one representative variant
 
 ### Demo Layout Contract
 
@@ -152,7 +150,7 @@
 - Borders derive from `var(--color-border)` (default) and `var(--color-system-red)` (error) using the Button neutral/primary hover mixes for consistency.
 
 **Variants scope:**
-- **GA:** default, prefix icon.
+- **Kept:** default, prefix icon.
 - **Out of scope:** All other variants deferred to Phase 2.
 
 **State styling:**
@@ -211,7 +209,7 @@
 - Footer stack spacing uses `gap: var(--space-2)` and aligns supporting text + counter baseline.
 
 **Variants scope:**
-- **GA:** fixed-height textarea with optional supporting text; counter variant for max-length messaging.
+- **Kept:** fixed-height textarea with optional supporting text; counter variant for max-length messaging.
 - **Future:** auto-resize behaviours, inline formatting affordances, spell-check toggle.
 
 **State styling:**
@@ -274,7 +272,7 @@
 - Divider between items leverages `var(--color-border)` at `1px` via `linear-gradient` for pixel-snapping.
 
 **Variants scope:**
-- **GA:** native select with placeholder option and optgroup headings.
+- **Kept:** native select with placeholder option and optgroup headings.
 - **Future:** custom combobox overlay, async search, multi-select chips.
 
 **State styling:**
@@ -334,7 +332,7 @@
 - Icon glyphs sourced from Dieter manifest sized to 60% of box.
 
 **Variants scope:**
-- **GA:** standalone, standalone with helper description, indeterminate.
+- **Kept:** standalone, standalone with helper description, indeterminate.
 - **Future:** checkbox list group with header, inline action link.
 
 **State styling:**
@@ -401,7 +399,7 @@
 - Label typography follows size token map (sm → `var(--control-font-sm)`, md → `var(--control-font-md)`, etc.).
 
 **Variants scope:**
-- **GA:** vertical stack, horizontal inline, descriptive option body.
+- **Kept:** vertical stack, horizontal inline, descriptive option body.
 - **Future:** cards-as-radio (Box hybrid) once layout tokens land.
 
 **State styling:**
@@ -457,7 +455,7 @@
 - Use `--color-system-blue` for on state background and `var(--color-system-gray-5)` for off; apply `box-shadow: var(--shadow-inset-control)` for the subtle inner edge.
 
 **Variants scope:**
-- **GA:** switch only, switch + trailing label.
+- **Kept:** switch only, switch + trailing label.
 - **Future:** leading icon, nested description text.
 
 **State styling:**
@@ -516,7 +514,7 @@
 - Header/body/footer separators use `gap: var(--space-3)` ensuring consistent rhythm.
 
 **Variants scope:**
-- **GA:** flat, raised, bordered, borderless, padding presets.
+- **Kept:** flat, raised, bordered, borderless, padding presets.
 - **Future:** accent border (plan-specific), callout tone links.
 
 **State styling:**
@@ -574,7 +572,7 @@
 - Labeled variant adds `padding-inline: var(--space-4)` and `gap: var(--space-2)` around the label while leveraging `text-transform: uppercase` + `var(--fs-11)`.
 
 **Variants scope:**
-- **GA:** horizontal, vertical, labeled.
+- **Kept:** horizontal, vertical, labeled.
 - **Future:** icon-backed dividers or badge pills (needs product brief).
 
 **State styling:**
@@ -635,7 +633,7 @@
   - `type="success"` → mix of `var(--role-success-bg)` etc. Document full matrix in CSS comments when implemented.
 
 **Variants scope:**
-- **GA:** info and success badges in solid or subtle tones (text-only footprint).
+- **Kept:** info and success badges in solid or subtle tones (text-only footprint).
 - **Future:** additional types (warning/error/neutral), outline treatment, icons, dismissible behaviour, numeric counters, inline avatar badge.
 
 **State styling:**
@@ -693,7 +691,7 @@
 - Inline variant aligns spinner and label with `gap: var(--space-2)` and inherits font tokens from parent.
 
 **Variants scope:**
-- **GA:** default spinner, labeled (stacked), inline with text.
+- **Kept:** default spinner, labeled (stacked), inline with text.
 - **Future:** determinate progress arc, inverse-on-dark background.
 
 **State styling:**

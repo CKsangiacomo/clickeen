@@ -29,8 +29,8 @@ async function checkSupabase(timeoutMs = 1000) {
 
 async function checkEdgeConfig(timeoutMs = 1000) {
   try {
-    await withTimeout(async (signal) => {
-      await getAll({ signal });
+    await withTimeout(async () => {
+      await getAll();
     }, timeoutMs);
     return true;
   } catch {

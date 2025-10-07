@@ -73,7 +73,7 @@ Casing: All JSON examples here use camelCase. For DB table/column names, always 
 ## Phase-1 Overview (NORMATIVE)
 
 Scope
-- Widgets: 20–30 widget types (GA list defined in Phase-1 Specs).
+- Widgets: 20–30 widget types (list defined in Phase‑1 Specs).
 - Templates: 10–20 per widget type (~200–600 total).
 - Renderer: one renderer per widget type; templates are data-only.
 - Embed: static versioned loader at `/embed/v{semver}/loader.js` (`/embed/latest/loader.js` alias maintained manually); ≤28KB gzipped, tiny event bus (publish/subscribe). See Phase-1 Specs for trigger attributes parsed from `data-*`.

@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   try {
     // Phase-1 note: creating an instance without a backing widget (workspace)
     // leads to orphan rows due to the NOT NULL FK on widget_id.
-    // The GA flow is `/api/instance/from-template` which creates a widget row
+    // The primary flow is `/api/instance/from-template` which creates a widget row
     // and associates the instance properly. Until a workspace-aware
     // implementation for this endpoint is introduced, return a clear error
     // instructing clients to use the supported flow.
@@ -94,12 +94,13 @@ export async function POST(req: Request) {
     let schemaVersion = payload.schemaVersion ?? undefined;
     if (!widgetType && payload.templateId) {
       const client = getServiceClient();
-      const tpl = await getTemplateDescriptor(client, payload.templateId);
+      const tpl = await getTemplateDescriptor(client, payload.templateId as string);
       if (!tpl) {
         return NextResponse.json([{ path: 'templateId', message: 'unknown templateId' }], { status: 422 });
       }
-      widgetType = tpl.widgetType;
-      schemaVersion = tpl.schemaVersion;
+      const t = tpl!;
+      widgetType = t.widgetType;
+      schemaVersion = t.schemaVersion;
     }
     if (!widgetType || !schemaVersion) {
       return NextResponse.json([
@@ -110,7 +111,7 @@ export async function POST(req: Request) {
 
     // Validate config against Geneva schema
     const supabase = getServiceClient();
-    const result = await validateConfig(supabase, widgetType, schemaVersion, config);
+    const result = await validateConfig(supabase, widgetType as string, schemaVersion as string, config);
     if (!result.ok) {
       return NextResponse.json(result.errors, { status: 422 });
     }
@@ -128,10 +129,10 @@ export async function POST(req: Request) {
       .insert([record]);
 
     if (error) {
-      if (isUniqueViolation(error)) {
+      if (isUniqueViolation(error as PostgrestError)) {
         return NextResponse.json({ error: 'ALREADY_EXISTS', details: 'publicId already exists' }, { status: 409 });
       }
-      return NextResponse.json({ error: 'DB_ERROR', details: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'DB_ERROR', details: (error as PostgrestError).message }, { status: 500 });
     }
 
     const created = await loadInstance(supabase, publicId);
@@ -139,7 +140,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'SERVER_ERROR', details: 'Instance created but could not be reloaded' }, { status: 500 });
     }
 
-    return NextResponse.json(shapeInstanceResponse(created), { status: 201 });
+    return NextResponse.json(shapeInstanceResponse(created as any), { status: 201 });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });
