@@ -1,0 +1,10 @@
+{
+  "id": 7,
+  "name": "redis-breaker",
+  "status": "skipped",
+  "error": null,
+  "metrics": {
+    "reason": "Redis URL not provided or test disabled",
+    "durationMs": 0
+  }
+}

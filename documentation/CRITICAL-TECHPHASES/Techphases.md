@@ -12,7 +12,7 @@ This is the authoritative roadmap for humans and AIs.
 
 ## Authority & Conflict Resolution (NORMATIVE)
 
-- **DB Truth (`dbschemacontext.md`)** is canonical for schema and table definitions.  
+- **DB schema (`supabase/migrations/`)** is canonical for schema and table definitions.  
 - **System specs (`documentation/systems/*.md`)** (e.g., Venice, Paris, Geneva) are canonical for API/payload shapes.  
 - **Techphases.md** is architectural guidance.  
 - If there is any conflict: **DB Truth and system specs win.**
@@ -66,7 +66,7 @@ Example:
 - Single tag — the embed snippet a website places; widget type determines inline vs overlay.  
 - Templates as data — structured JSON; switching templates changes config only, not code.
 
-Casing: All JSON examples here use camelCase. For DB table/column names, always refer to DB Truth (`dbschemacontext.md`). Do not infer casing.
+Casing: All JSON examples here use camelCase. For DB table/column names, always refer to `supabase/migrations/`. Do not infer casing.
 
 ---
 
@@ -287,7 +287,7 @@ Note: Only Phase‑1 surfaces are active; Phase‑2/3 items listed here are plac
 
 RLS: deny-all default; explicit allow via workspace membership.
 
-Note: This section mirrors DB Truth for orientation. The authoritative schema is documentation/dbschemacontext.md.
+Note: This section mirrors schema excerpts for orientation. The authoritative schema lives under `supabase/migrations/`.
 
 ---
 

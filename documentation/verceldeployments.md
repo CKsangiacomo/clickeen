@@ -1,6 +1,6 @@
 STATUS: INFORMATIVE — CONTEXT ONLY
 Do NOT implement from this file. For specifications, see:
-1) documentation/dbschemacontext.md (DB Truth)
+1) supabase/migrations/ (DB schema truth)
 2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts)
 3) documentation/systems/<System>.md (System PRDs, Phase-1)
 

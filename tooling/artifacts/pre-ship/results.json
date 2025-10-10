@@ -1,0 +1,99 @@
+{
+  "summary": {
+    "passed": true,
+    "failedCount": 0
+  },
+  "tests": [
+    {
+      "id": 1,
+      "name": "csp-nonce",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "status": 200,
+        "nonceCount": 1,
+        "hasCspHeader": true,
+        "durationMs": 56
+      }
+    },
+    {
+      "id": 2,
+      "name": "cors-s2s",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "status": 200,
+        "statusValue": "draft",
+        "durationMs": 78
+      }
+    },
+    {
+      "id": 3,
+      "name": "cors-disallowed",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "status": 403,
+        "error": "FORBIDDEN",
+        "durationMs": 11
+      }
+    },
+    {
+      "id": 4,
+      "name": "put-guard",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "status": 422,
+        "message": "At least one field (config, status, templateId) required",
+        "durationMs": 27
+      }
+    },
+    {
+      "id": 5,
+      "name": "put-status-only",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "status": 200,
+        "statusValue": "inactive",
+        "durationMs": 53
+      }
+    },
+    {
+      "id": 6,
+      "name": "dedup",
+      "status": "pass",
+      "error": null,
+      "metrics": {
+        "firstStatus": 202,
+        "secondStatus": 202,
+        "dedupedStates": [
+          false,
+          true
+        ],
+        "durationMs": 859
+      }
+    },
+    {
+      "id": 7,
+      "name": "redis-breaker",
+      "status": "skipped",
+      "error": null,
+      "metrics": {
+        "reason": "Redis URL not provided or test disabled",
+        "durationMs": 0
+      }
+    },
+    {
+      "id": "db-indexes",
+      "name": "db-indexes",
+      "status": "skipped",
+      "error": null,
+      "metrics": {
+        "reason": "DB index verification requires direct SQL access (not implemented yet)",
+        "durationMs": 0
+      }
+    }
+  ]
+}

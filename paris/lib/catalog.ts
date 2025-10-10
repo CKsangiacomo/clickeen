@@ -1,3 +1,15 @@
+/**
+ * Phase-1 Source of Truth (static catalog)
+ *
+ * NOTE: During Phase-1, this static catalog is the authoritative source for
+ * widget types and template descriptors (including the `premium` flag) used by
+ * API flows such as instance creation from template and premium gating checks.
+ *
+ * Database tables `widget_templates` and `widget_schemas` exist and are
+ * populated via migrations for future alignment, but are not the runtime source
+ * of truth in Phase-1. Do not wire API gating to DB until the Phase-2
+ * migration/rollout is explicitly approved.
+ */
 export interface WidgetCatalogEntry {
   id: string;
   name: string;

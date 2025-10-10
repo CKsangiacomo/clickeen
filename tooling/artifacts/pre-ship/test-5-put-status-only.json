@@ -1,0 +1,11 @@
+{
+  "id": 5,
+  "name": "put-status-only",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "status": 200,
+    "statusValue": "inactive",
+    "durationMs": 53
+  }
+}

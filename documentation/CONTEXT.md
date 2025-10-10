@@ -2,10 +2,11 @@
 
 STATUS: INFORMATIVE — CONTEXT ONLY  
 Do NOT implement from this file. For specifications, see:
-1) documentation/dbschemacontext.md (DB Truth)
+1) supabase/migrations/ (DB schema truth)
 2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase‑1 Contracts)
 3) documentation/CRITICAL-TECHPHASES/Techphases.md (Architecture & Global Contracts)
 4) documentation/systems/<System>.md (System PRD, if Phase‑1)
+5) all execution docs and temp docs live in CURRENTLY_EXECUTING/ - no .md is created in repo root
 
 CRITICAL P0 — documentation/ is the single source of truth for all AI & human work. You MUST read and follow it. If you see discrepancies, STOP and ask for alignment.
 
@@ -13,7 +14,7 @@ CRITICAL P0 — documentation/ is the single source of truth for all AI & human 
 
 ## AUTHORITY & PRECEDENCE (HIGH-LEVEL)
 
-- **dbschemacontext.md** — NORMATIVE DB Truth; code must match.  
+- **supabase/migrations/** — NORMATIVE DB schema; code must match.  
 - **CRITICAL-TECHPHASES/Techphases-Phase1Specs.md** — NORMATIVE Phase‑1 Contracts.  
 - **documentation/systems/<System>.md** — NORMATIVE PRDs for Phase‑1 systems.  
 - **CRITICAL-TECHPHASES/Techphases.md** — NORMATIVE architecture & phase roadmap.  
@@ -29,9 +30,9 @@ Known exceptions (Phase‑1):
 
 ## DB SCHEMA POLICY (POINTER)
 
-- dbschemacontext.md is canonical (Supabase dump by CEO).  
+- The schema in `supabase/migrations/` is canonical.  
 - Engineers may request schema changes with motivation + exact DDL.  
-- Until updated by CEO, always code to the dump. **No schema-in-code drift.**
+- Until updated by migration, always code to the applied schema. **No schema-in-code drift.**
 
 ---
 
@@ -156,8 +157,9 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 
 - `documentation/CRITICAL-TECHPHASES/Techphases.md` — frozen Phase-1 scope & phase gates  
 - `documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md` — locked Phase-1 contracts  
-- `documentation/dbschemacontext.md` — DB Truth (schema/tables)  
+- `supabase/migrations/` — DB schema (tables, columns, constraints)  
 - `documentation/systems/*.md` — system PRDs (Venice, Paris, Geneva, etc.)  
+- `documentation/widgets/*.md` — per‑widget docs (one file per widget; WIP in Phase‑1)  
 - `documentation/WhyClickeen.md` — strategic context  
 - `documentation/ADRdecisions.md` — authoritative decisions (document new approvals here)  
 - `documentation/verceldeployments.md` — env/keys per project
@@ -169,7 +171,7 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 - **Start with WhyClickeen.md** for context (strategy, PLG motion). INFORMATIVE only.  
 - **Use Techphases.md** for architecture (systems vs services, scope, boundaries).  
 - **Implement only from Techphases-Phase1Specs.md** (binding contracts).  
-- **Always check dbschemacontext.md** for schema truth.  
+- **Always check `supabase/migrations/`** for schema truth.  
 - **System PRDs** (`documentation/systems/*.md`) are authoritative for their surfaces (e.g., Venice SSR, Paris API).  
 - On conflict: **DB Truth > Phase1Specs > System PRDs > Techphases > WhyClickeen.**
 
@@ -193,13 +195,13 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 ## Implementation Context for CODEX/Git AIs
 
 ### Quick Navigation
-- **Schema source:** `documentation/dbschemacontext.md`
+- **Schema source:** `supabase/migrations/`
 - **Contracts:** `documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md`
 - **System PRDs:** `documentation/systems/*.md` (Paris, Venice, Michael, Bob, Dieter)
 - **Past mistakes:** `documentation/FailuresRCAs-IMPORTANT.md`
 
 ### Phase-1 Build Order (strict)
-1. Database migrations → **Michael** → `michael/`
+1. Database migrations → **Michael** → `supabase/migrations/`
 2. HTTP API → **Paris** → `paris/`
 3. Edge SSR → **Venice** → `venice/`
 4. Builder app (shell + editor) → **Bob** → `bob/`
@@ -208,15 +210,31 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 7. Release checklist → manual budgets verification
 
 ### Integration Testing (Phase-1 release gate)
-- Before shipping or promoting a release, run the scenarios in `documentation/INTEGRATION-TESTING.md` (draft → claim → publish, token lifecycle, submissions/usage, Atlas fallback).
+- Before shipping or promoting a release, run the scenarios in `CURRENTLY_EXECUTING/TESTING.md` (draft → claim → publish, token lifecycle, submissions/usage, Atlas fallback).
 - Confirm expected status codes, UI fallbacks, and logs are produced for each scenario. If any step deviates, stop and update the documentation before coding fixes.
 
 ### Phase-1 Environment Variables
 **Venice**
-- `PARIS_URL` = `https://c-keen-api.vercel.app` (prod) / `http://localhost:3001` (dev)
+- `PARIS_URL` — `https://c-keen-api.vercel.app` (prod) / `http://localhost:3001` (dev)
 
 **Paris**
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`
-- `INTERNAL_ADMIN_KEY` (ops-only; required for Atlas administrative overrides)
+- Supabase secrets (URL / anon key / service-role key) must be stored in environment variables or secret managers.
+- Do **not** hardcode credentials in documentation or source files. Rotate immediately if exposed.
+- Refer to operational runbooks for secret distribution and storage.
 
 ---
+
+**KEYS - OK TO STORE UNTIL WE'RE GA - WE'RE NOW IN BOOSTRAP SO NO SECURITY CONCERNS **
+SUPABASE
+
+Supabase pw - Helen@santacroce2238
+
+SUPABASE_SERVICE_ROLE_KEY > eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVibXF3cWRleG1lbWhyZGhrbXduIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjQwMjI5NiwiZXhwIjoyMDcxOTc4Mjk2fQ.9a8Ey4cIo5vuYONQmX0cdTbTIWPtBnFbVuWTd0GNf6s
+
+SUPABASE_URL @https://ebmqwqdexmemhrdhkmwn.supabase.co
+
+SUPABASE_ANON_KEY >eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVibXF3cWRleG1lbWhyZGhrbXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0MDIyOTYsImV4cCI6MjA3MTk3ODI5Nn0.nSDLhUbkSLbJhnSpq2dxBJFb0B9_isw3fvhPq4CJe_s
+
+GITCICD sbp_a1fbfad9c52aa17965c51fa70c99d4d1828baa06
+
+SUPABASE REF ebmqwqdexmemhrdhkmwn

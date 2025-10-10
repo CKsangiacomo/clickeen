@@ -1,5 +1,5 @@
 /* Import Dieter design system tokens */
-@import '../../../../dieter/dist/tokens.css';
+@import '../../../../dieter/tokens/tokens.css';
 
 /* Shell-specific layout tokens only */
 :root {

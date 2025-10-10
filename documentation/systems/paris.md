@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It MUST NOT conflict with:
-1) documentation/dbschemacontext.md (DB Truth) and
+1) supabase/migrations/ (DB schema truth) and
 2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
@@ -9,7 +9,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 **Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).  
 **Owner:** Vercel project `c-keen-api`.  
 **Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).  
-**Phase-1 Endpoints:** `POST /api/instance`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.  
+**Phase-1 Endpoints:** `POST /api/instance (disabled)`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.  
 **Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.  
 **Common mistakes:** Treating PUT as upsert, calling Paris directly from browser surfaces, skipping idempotency key handling.
 
@@ -273,6 +273,7 @@ Authorization: Bearer <workspace JWT>
     ```json
     { "status": "accepted", "deduped": false }
     ```
+  - Privacy: Paris computes a salted SHA‑256 of the request IP (`RATE_LIMIT_IP_SALT` || `v1`) and stores only the hash in the `ip` column. Raw IPs are not stored. SQL fallback for rate limiting queries on the hash. Redis keys also use the hash.
 - Viral attribution events are written via the `events` table with `event_type = 'user_attribution'`.
 
 ### Health & System (Phase-1)
@@ -293,6 +294,12 @@ Authorization: Bearer <workspace JWT>
 }
 ```
 **Status**: 200 if all deps OK, 503 if any critical dep fails. `deps.cors` reflects whether `ALLOWED_ORIGINS` is configured (fail‑closed policy). Phase‑1 acceptance requires this endpoint to return green on production.
+
+### Privacy & Rate Limiting (Phase‑1)
+- IP hashing: When an endpoint needs per‑IP rate limiting, Paris computes a deterministic hash:
+  `sha256( (RATE_LIMIT_IP_SALT || 'v1') + ip )` and uses this value for storage/keys.
+- Storage: Submissions write the hash into `widget_submissions.ip` (TEXT). Usage events may include the hash in `metadata.ipHash` for SQL fallback limits.
+- Backends: Redis counters use the hash; SQL fallbacks query the hash from storage columns/metadata.
 
 ## Database Integration
 
@@ -394,8 +401,8 @@ _API error code mapping (Phase-1)_
 ### Error Scenario Matrix (Phase-1)
 | Scenario | Endpoint(s) | Status / Error | Response Body | Client guidance |
 | --- | --- | --- | --- | --- |
-| Duplicate `publicId` on create | `POST /api/instance` | 409 `ALREADY_EXISTS` | `{ "error": "ALREADY_EXISTS", "message": "Instance already exists" }` | Retry with different `publicId` (service-role only) |
-| Validation failure | `POST/PUT /api/instance`, `/api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "config.fields.email", "message": "must be boolean" }]` | Surface field-level errors; block retry until corrected |
+| Duplicate `publicId` on create | `POST /api/instance/from-template` | 409 `ALREADY_EXISTS` | `{ "error": "ALREADY_EXISTS", "message": "Instance already exists" }` | Retry with different `publicId` |
+| Validation failure | `PUT /api/instance`, `POST /api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "config.fields.email", "message": "must be boolean" }]` | Surface field-level errors; block retry until corrected |
 | Draft token revoked | `POST /api/claim` | 410 `TOKEN_REVOKED` | `{ "error": "TOKEN_REVOKED" }` | Remove cached draft token and prompt user to refresh |
 | Missing auth | Any authenticated endpoint | 401 `AUTH_REQUIRED` | `{ "error": "AUTH_REQUIRED", "message": "Authentication required" }` | Redirect to login / refresh workspace session |
 | Plan limit exceeded | `PUT /api/instance` (publish), `POST /api/token` (issue) | 403 `PLAN_LIMIT` | `{ "error": "PLAN_LIMIT", "message": "Upgrade required" }` | Show upgrade CTA; retry only after plan change |
@@ -416,7 +423,7 @@ _API error code mapping (Phase-1)_
 ### Rate Limiting
 - Embed submissions: 60 requests/minute/IP and 120 requests/minute/instance (enforced when Venice proxies to `POST /api/submit/:publicId`).
 - Usage pixel: 600 requests/minute/IP when Venice proxies to `POST /api/usage`.
-- Authoritative values live in `documentation/dbschemacontext.md` (see `submission_rate_window` policies); adjust only with CEO approval and updated documentation.
+- Authoritative schema lives under `supabase/migrations/` (see rate window policies there); adjust only with CEO approval and updated documentation.
 - Repeated violations should trigger exponential backoff and logging for SRE follow-up.
 #### Headers and backend visibility
 - All rate‑limited endpoints return `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`.

@@ -1,0 +1,10 @@
+{
+  "id": "db-indexes",
+  "name": "db-indexes",
+  "status": "skipped",
+  "error": null,
+  "metrics": {
+    "reason": "DB index verification requires direct SQL access (not implemented yet)",
+    "durationMs": 0
+  }
+}

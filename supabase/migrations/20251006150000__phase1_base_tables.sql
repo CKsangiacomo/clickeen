@@ -1,7 +1,8 @@
--- Phase-1 base tables (idempotent via IF NOT EXISTS)
--- CONTEXT: This migration creates all core Phase-1 tables with proper FKs, indexes, and RLS.
--- Idempotent guards (IF NOT EXISTS, CREATE OR REPLACE) allow safe re-application.
--- See also: 20251004100000__phase1_base_tables.sql (earlier ordering to satisfy dependency constraints).
+-- CANONICAL BASE MIGRATION (Phase-1)
+-- This file supersedes the historical shim 20251004100000__phase1_base_tables.sql.
+-- Do not introduce new tables in the historical shim. New base-layer objects or
+-- structural changes must be additive migrations referencing this canonical file.
+-- Post Phase-1: plan to squash shim + canonical if migration history needs compaction.
 
 -- Workspaces
 CREATE TABLE IF NOT EXISTS workspaces (

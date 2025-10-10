@@ -1,34 +1,32 @@
 # Dieter
 
-Clickeen's design system workspace. Source tokens, component CSS contracts, and icon SVGs live here and build into `dist/` via `pnpm --filter @ck/dieter build`.
+Design tokens, component CSS contracts, and icon SVGs live here. Edit only the source directories:
 
-- `tokens/` → canonical design tokens
-- `components/` → CSS contracts (e.g., Button, Segmented, Textfield)
-- `icons/` → curated SVG set (normalized to `fill="currentColor"`)
-- `dist/` → generated output; copied into `bob/public/dieter` automatically by the build script
+- `tokens/` → canonical token definitions (import `@dieter/tokens/tokens.css`)
+- `components/` → CSS contracts with matching HTML snippets (Button, Segmented, Textfield)
+- `icons/` → normalized SVG set (`fill="currentColor"`)
+- Control typography: use `--control-text-xs|sm|md|lg|xl` for text inside any control-sized component (buttons, segmented, textfields, dropdowns). Tokens map to the Dieter UI font with the correct size/weight per rail.
 
-Run `pnpm --filter @ck/dieter build` after editing tokens/components to regenerate assets. The build also copies `dist/` into `bob/public/dieter/`. Then run `pnpm verify:dieter-button` to confirm the button contract hash matches expectations.
-
-> Do not hand-edit files under `bob/public/dieter/`. Treat drift as a build bug; rebuild/copy instead.
+`dist/` is generated when we package the system; ignore it while iterating.
 
 ## Components
 
 Current CSS contracts exported from `@ck/dieter`:
 
-- Button (`dist/components/button.css`)
+- Button (`components/button.css`)
   - Sizes: `xs | sm | md | lg | xl` (`data-size`)
   - Types: `icon-only | icon-text | text-only` (`data-type`)
   - Variants: `primary | secondary | neutral | line1 | line2` (`data-variant`)
   - Hooks: `.diet-btn__icon`, `.diet-btn__label`
   - A11y: tokenized focus ring; `data-state="loading"` spinner
 
-- Segmented Control (`dist/components/segmented.css`)
+- Segmented Control (`components/segmented.css`)
   - Sizes: `sm | md | lg` (`data-size`)
   - Types: `icon-only | text-only` (`data-type`)
   - Hooks: `.diet-segmented`, `.diet-segment`, `.diet-segment__input`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__surface`
   - A11y: native radio semantics; reduced‑motion aware
 
-- Textfield (`dist/components/textfield.css`)
+- Textfield (`components/textfield.css`)
   - Sizes: `md | lg | xl` (`data-size`)
   - Structure: `.diet-input` with `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`; composed variant uses `.diet-input__control`
 
@@ -42,17 +40,11 @@ Current CSS contracts exported from `@ck/dieter`:
 ## Icons
 
 - Sources: `icons/svg/` normalized to `fill="currentColor"`. Curated list in `icons/icons.json`.
-- Build emits `dist/icons/svg/*` plus a tiny registry (`dist/icons.js`, `icons.d.ts`).
-- Embeds (Venice) must inline SVG strings; app surfaces may reference copied assets under `/dieter/icons/svg/*.svg`.
+- Embeds (Venice) should inline SVG strings; app surfaces may reference copied assets under `/dieter/icons/svg/*.svg` when the package is built.
 
-## Preview & Testing (Dieter Admin)
+## Preview
 
-- Dev server: `pnpm --filter @ck/dieteradmin dev` (Vite). It imports `@dieter/dist/tokens.css`, `@dieter/dist/components/*.css` and renders showcase HTML.
-- Use it to visually verify Button/Segmented matrices, colors, and typography after rebuilding Dieter.
-
-## Verification
-
-- Check contract drift: `pnpm verify:dieter-button` (compares `dist/components/button.css` hash with `dieter/.button-css.sha256`).
+- `pnpm --filter @ck/dieteradmin dev` launches the Dieter Admin preview shell. It consumes the source tokens/components directly from this package.
 
 ## Typography
 

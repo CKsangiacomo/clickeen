@@ -1,7 +1,10 @@
--- Phase-1 base tables (earlier ordering to satisfy prior ALTER TABLE migrations)
--- CONTEXT: This earlier-dated migration ensures base tables exist before dependent migrations
--- that reference them (e.g., future ALTER TABLE commands or FKs added in separate files).
--- Content mirrors 20251006150000__phase1_base_tables.sql; idempotent guards prevent conflicts.
+-- HISTORICAL SHIM (Phase-1)
+-- DO NOT EDIT: Retained temporarily to preserve migration ordering in environments
+-- created prior to canonical consolidation. Canonical base migration:
+--   20251006150000__phase1_base_tables.sql
+-- Purpose: Provide stable earlier timestamp so downstream ALTER/INDEX migrations
+-- applied in the interim do not fail on fresh environments. Will be removed /
+-- squashed after Phase-1 production push.
 
 CREATE TABLE IF NOT EXISTS workspaces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

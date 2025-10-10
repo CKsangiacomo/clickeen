@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It must not conflict with:
-1) documentation/dbschemacontext.md (DB Truth) and
+1) supabase/migrations/ (DB schema truth) and
 2) documentation/CRITICAL-TECHPHASES/Techphases.md (Global Contracts).
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
@@ -75,7 +75,7 @@ NORMATIVE. This section is the only source of truth for Phase‑1 runtime contra
   - GET /embed/pixel?widget=:publicId&event=load|view|interact|submit|success|error&ts=...
   - Returns 204 No Content; Cache-Control: no-store; may proxy to Paris POST /api/usage.
   - No PII; respect DNT.
-- Rate limits & retention (defaults; see `documentation/dbschemacontext.md` for authoritative values): submissions 60 req/min/IP and 120 req/min/instance; pixel 600 req/min/IP. Anonymous submissions retained 30 days via backend maintenance on `widget_submissions` (no database TTL).
+- Rate limits & retention (defaults; schema lives in `supabase/migrations/`): submissions 60 req/min/IP and 120 req/min/instance; pixel 600 req/min/IP. Anonymous submissions retained 30 days via backend maintenance on `widget_submissions` (no database TTL).
 - Usage storage: Paris writes usage metrics to the `usage_events` table (DB Truth). Any legacy name such as `usageCountersDaily` is obsolete.
 - Attribution storage: User attribution rows are recorded in the `events` table with `event_type = 'user_attribution'`.
 - **Submissions key (binding):** `widget_submissions.widget_instance_id` stores the instance’s textual `publicId` (`TEXT`); no internal UUIDs appear in this column.
@@ -95,11 +95,9 @@ Retention follows DB Truth. Do not hardcode durations in code. Expired drafts ma
 All JSON payloads are camelCase.
 
 Endpoints (Phase‑1):
-- POST /api/instance → Create instance
-  - Body (optional): { publicId?: string, status?: "draft"|"published"|"inactive", widgetType?: string, templateId?: string, config?: object, schemaVersion?: string }
-  - Defaults: server publicId, status="draft", config={}, schemaVersion resolved from template.
-  - Conflicts → 409 ALREADY_EXISTS
-  - Returns 201 with payload shape below.
+- POST /api/instance — Disabled in Phase‑1
+  - Returns 422 with guidance to use `POST /api/instance/from-template` (workspace‑scoped creation).
+  - Rationale: avoids orphan rows and enforces workspace context.
 
 - POST /api/instance/from-template → Create an instance from a template
   - Body: { widgetType: string, templateId: string, schemaVersion?: string, publicId?: string, overrides?: object }
@@ -285,7 +283,7 @@ Shared error keys (exact strings)
 - POST /api/usage (idempotent write; idempotency hash)
 - GET /api/entitlements (plan→capabilities)
 - Catalog: GET /api/widgets, GET /api/templates?widgetType=...
-- Instance: POST /api/instance, POST /api/instance/from-template, GET /api/instance/:publicId, PUT /api/instance/:publicId
+- Instance: POST /api/instance (disabled), POST /api/instance/from-template, GET /api/instance/:publicId, PUT /api/instance/:publicId
 - Submissions: POST /api/submit/:publicId
 - Health: GET /api/healthz (richer shape as specified above)
 

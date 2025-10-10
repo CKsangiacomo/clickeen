@@ -1,0 +1,51 @@
+/* Dieter button preview layout (harness-only) */
+.button-table {
+  display: grid;
+  gap: 2rem;
+}
+
+.button-section {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.button-section-head {
+  padding-bottom: 0.125rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border), transparent 50%);
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 180px) repeat(4, minmax(0, 1fr));
+  gap: 1.125rem;
+  align-items: flex-start;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-border), transparent 65%);
+}
+
+.button-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  color: var(--color-text);
+}
+
+.button-cell-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.button-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  text-align: left;
+  min-width: 7.5rem;
+}
+
+.button-visual {
+  display: flex;
+  justify-content: flex-start;
+}

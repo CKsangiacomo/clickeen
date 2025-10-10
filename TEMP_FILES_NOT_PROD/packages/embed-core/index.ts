@@ -1,0 +1,2 @@
+export function mountShadow(host, html, cssText){const root=host.shadowRoot||host.attachShadow({mode:'open'});const st=document.createElement('style');st.textContent=cssText;root.append(st);const wrap=document.createElement('div');wrap.innerHTML=html;root.append(wrap);return root;}
+export function beacon(type, meta={}){try{navigator.sendBeacon?.('/api/ingest', JSON.stringify({type,meta,ts:Date.now()}));}catch{}}

@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (PHASE-1)
 This document is authoritative for the Atlas system. It MUST NOT conflict with:
-1) documentation/dbschemacontext.md (DB Truth)
+1) supabase/migrations/ (DB schema truth)
 2) documentation/CRITICAL-TECHPHASES/Techphases.md (Global Contracts)
 3) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase-1 Contracts)
 If any conflict is found, STOP and escalate to the CEO. Do not guess.

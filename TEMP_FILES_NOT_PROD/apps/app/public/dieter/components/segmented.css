@@ -1,0 +1,169 @@
+/* Dieter Segmented Control — radio-based segments with animated icons */
+.diet-segmented {
+  --segment-gap: var(--space-1, 0.25rem);
+  --segment-rail-radius: 4px;
+  --track-width: 44px;
+  --track-height: 20px;
+  --segment-size: 12px;
+  --segment-radius: 3px;
+  --segment-icon-size: 15px;
+  --segment-icon-scale-active: 1.12;
+  --segment-icon-scale-inactive: 1;
+  --segment-color-inactive: var(--color-system-gray, #8e8e93);
+  --segment-color-active: var(--color-system-blue, #0A84FF);
+  --segment-surface-inactive: transparent;
+  --segment-surface-active: var(--color-bg, #ffffff);
+  --segment-focus-ring: color-mix(in oklab, var(--segment-color-active), transparent 40%);
+  --segment-transition: 160ms cubic-bezier(0.76, 0.05, 0.24, 0.95);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 4px;
+  border-radius: var(--segment-rail-radius);
+  background: color-mix(in oklab, var(--color-system-gray-5, #e5e5ea), #ffffff 12%);
+  height: var(--track-height);
+  width: var(--track-width);
+}
+
+.diet-segmented[data-size="sm"] {
+  --segment-size: 16px;
+  --segment-radius: 4px;
+  --segment-icon-size: 14px;
+}
+
+.diet-segmented[data-size="md"] {
+  --segment-size: 18px;
+  --segment-radius: 5px;
+  --segment-icon-size: 16px;
+}
+
+.diet-segment {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--segment-size);
+  height: var(--track-height);
+  border-radius: var(--segment-radius);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.diet-segment__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  z-index: 3;
+}
+
+.diet-segment__surface {
+  position: absolute;
+  top: calc((var(--track-height) - var(--segment-size)) / 2);
+  left: 0;
+  width: var(--segment-size);
+  height: var(--segment-size);
+  border-radius: var(--segment-radius);
+  background: var(--segment-surface-inactive);
+  transition: background var(--segment-transition);
+  z-index: 1;
+}
+
+.diet-segment__icon {
+  position: absolute;
+  top: calc((var(--track-height) - var(--segment-icon-size)) / 2);
+  left: calc((var(--segment-size) - var(--segment-icon-size)) / 2);
+  inline-size: var(--segment-icon-size);
+  block-size: var(--segment-icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  transition: opacity calc(var(--segment-transition) * 0.8), transform calc(var(--segment-transition) * 0.8);
+  pointer-events: none;
+  z-index: 2;
+  --icon-offset-x: 0px;
+}
+
+.diet-segment__icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
+
+.diet-segment__icon--moon {
+  --icon-offset-x: 3px;
+}
+
+.diet-segment__icon--moon {
+  --icon-offset-x: 3px;
+}
+
+.diet-segment__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.diet-segment__icon--inactive {
+  color: var(--segment-color-inactive);
+  opacity: 1;
+  transform: translateX(var(--icon-offset-x)) scale(var(--segment-icon-scale-inactive));
+}
+
+.diet-segment__icon--active {
+  color: var(--segment-color-active);
+  opacity: 0;
+  transform: translateX(var(--icon-offset-x)) scale(var(--segment-icon-scale-inactive));
+}
+
+.diet-segment:hover .diet-segment__surface {
+  background: color-mix(in oklab, var(--segment-surface-active), transparent 60%);
+}
+
+.diet-segment:hover .diet-segment__icon--inactive {
+  color: color-mix(in oklab, var(--segment-color-inactive), var(--segment-color-active) 25%);
+}
+
+
+.diet-segment__input:checked ~ .diet-segment__surface {
+  background: var(--segment-surface-active);
+}
+
+.diet-segment__input:checked ~ .diet-segment__icon--inactive {
+  opacity: 0;
+  transform: translateX(var(--icon-offset-x)) scale(var(--segment-icon-scale-inactive));
+}
+
+.diet-segment__input:checked ~ .diet-segment__icon--active {
+  opacity: 1;
+  transform: translateX(var(--icon-offset-x)) scale(var(--segment-icon-scale-active));
+}
+
+.diet-segment__input:focus-visible ~ .diet-segment__surface {
+  box-shadow: 0 0 0 2px var(--segment-focus-ring);
+}
+
+.diet-segment__input:disabled ~ .diet-segment__surface,
+.diet-segment__input:disabled ~ .diet-segment__icon {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-segmented {
+    background: color-mix(in oklab, var(--color-surface, #14161b), #000 25%);
+  }
+  .diet-segmented {
+    --segment-color-inactive: color-mix(in oklab, var(--color-text, #f5f6f8), transparent 55%);
+    --segment-surface-inactive: color-mix(in oklab, var(--color-surface, #14161b), #000 35%);
+    --segment-surface-active: color-mix(in oklab, var(--color-bg, #0e0f13), #ffffff 12%);
+    --segment-focus-ring: color-mix(in oklab, var(--segment-color-active), transparent 50%);
+  }
+}

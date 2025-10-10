@@ -6,11 +6,13 @@ export function renderSocialProofPage({
   theme,
   device,
   backlink,
+  nonce,
 }: {
   instance: InstanceLike;
   theme: 'light' | 'dark';
   device: 'desktop' | 'mobile';
   backlink: boolean;
+  nonce: string;
 }) {
   const cfg = instance.config || {};
   const title = typeof (cfg as any).title === 'string' ? (cfg as any).title : 'Trusted by great teams';
@@ -31,7 +33,7 @@ export function renderSocialProofPage({
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(title)}</title>
-    <style>
+    <style nonce="${escapeHtml(nonce)}">
       :root { color-scheme: ${theme === 'dark' ? 'dark' : 'light'}; }
       body { margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; background:${bgPage}; color:${textPage}; }
       .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
@@ -55,4 +57,3 @@ export function renderSocialProofPage({
   </body>
  </html>`;
 }
-

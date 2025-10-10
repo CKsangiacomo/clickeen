@@ -23,6 +23,15 @@ export function getRedisClient(): RedisClientType | null {
     client.on('error', (err: unknown) => {
       console.warn('[rate-limit] redis client error:', (err as Error)?.message || String(err));
     });
+    try {
+      if (typeof client.connect === 'function' && !client.isOpen) {
+        // Fire-and-forget connect; breaker will degrade to SQL if unavailable.
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        client.connect();
+      }
+    } catch {
+      // ignore; breaker path will handle degradation
+    }
     return client;
   } catch {
     console.warn('[rate-limit] redis module not available; degrading to SQL');

@@ -9,7 +9,8 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
-    "verify:dieter-button": "node scripts/check-dieter-button.js"
+    "verify:dieter-button": "node scripts/check-dieter-button.js",
+    "verify:pre-ship": "pnpm --filter @clickeen/pre-ship verify"
   },
   "devDependencies": {
     "eslint": "^9.5.0",

@@ -261,59 +261,53 @@
   margin: 0;
 }
 
-.row {
+.section {
   display: grid;
-  grid-template-columns: 0.8fr repeat(5, minmax(0, 1fr));
-  gap: clamp(0.75rem, 2vw, 2rem);
-  align-items: start; /* Align all cells from the top for consistent baselines */
+  /* Section-level table: header + repeated (spec, preview) tracks sized by content */
+  grid-template-columns: max-content repeat(var(--cols, 5), min-content max-content);
+  column-gap: clamp(1rem, 3vw, 3rem);
+  row-gap: clamp(0.75rem, 2vw, 2rem);
+  align-items: start;
   width: 100%;
 }
 
-.row[data-cols="3"] {
-  grid-template-columns: 0.8fr repeat(3, minmax(0, 1fr));
-}
+.section[data-cols="5"] { --cols: 5; }
+.section[data-cols="3"] { --cols: 3; }
+.section[data-cols="2"] { --cols: 2; }
+.section[data-cols="1"] { --cols: 1; }
 
-.row[data-cols="2"] {
-  grid-template-columns: 0.8fr repeat(2, minmax(0, 1fr));
-}
+.row { display: contents; }
 
-.row[data-cols="1"] {
-  grid-template-columns: 100px 100px 1fr;
-}
+/* Make the section header span the full table width so rows start on the next line */
+.section > .section-header { grid-column: 1 / -1; }
+
+/* Ensure each row starts at the first track */
+.row-header { grid-column: 1; }
 
 .row-header {
   font: 600 var(--fs-13, 0.8125rem)/1.3 var(--font-ui);
   color: var(--color-text);
 }
 
-.specdpreview {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: clamp(1rem, 3vw, 3rem);
-  align-items: center;
-}
-
-.row[data-cols="1"] .specdpreview {
-  display: contents;
-}
+.specdpreview { display: contents; }
 
 
 .componentpreview {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  display: block;
+  inline-size: max-content;
+  width: max-content;
+}
+.componentpreview > * {
+  inline-size: max-content;
+  width: max-content;
 }
 
-.row[data-cols="1"] .componentpreview {
-  justify-self: start;
-  justify-content: flex-start;
-}
-
-/* Keep spec column a stable width and prevent wrapping so rows line up */
-.preview-specs {
-  min-inline-size: var(--spec-col-w, clamp(120px, 16ch, 180px));
-}
-.preview-specs__detail {
+/* Allow description to wrap; the widest spec in the row defines the spec track */
+.preview-specs { min-inline-size: 0; }
+/* Keep each spec line on a single line (size + component name),
+   while still stacking as two rows. */
+.preview-specs .label-small,
+.preview-specs .caption-small {
+  display: block;
   white-space: nowrap;
 }

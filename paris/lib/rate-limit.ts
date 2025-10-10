@@ -36,11 +36,15 @@ export async function rateLimitSubmissions(
   // Count per IP
   let ipCount = 0;
   if (ip) {
+    const ipHash = createHash('sha256')
+      .update(String(process.env.RATE_LIMIT_IP_SALT || 'v1'))
+      .update(ip)
+      .digest('hex');
     const { count, error } = await client
       .from('widget_submissions')
       .select('id', { count: 'exact', head: true })
       .eq('widget_instance_id', publicId)
-      .eq('ip', ip)
+      .eq('ip', ipHash)
       .gte('created_at', windowStartIso);
     if (!error) ipCount = count ?? 0;
   }
@@ -167,7 +171,11 @@ async function tryRedisLimitSubmissions(redis: RedisClientType | null, publicId:
     const cmds: Array<Promise<any>> = [];
     let ipCount = 0;
     if (ip) {
-      const keyIp = `${prefix}submit:ip:${publicId}:${ip}:${windowPart}`;
+      const ipHash = createHash('sha256')
+        .update(String(process.env.RATE_LIMIT_IP_SALT || 'v1'))
+        .update(ip)
+        .digest('hex');
+      const keyIp = `${prefix}submit:ip:${publicId}:${ipHash}:${windowPart}`;
       const p = redis.multi().incr(keyIp).expire(keyIp, 90).exec();
       const res = await p;
       ipCount = Number((res?.[0] as any)?.[1] || 0);

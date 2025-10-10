@@ -39,6 +39,12 @@ export function middleware(req: NextRequest) {
   const origin = req.headers.get('origin');
   const method = req.method.toUpperCase();
 
+  // Allow server-to-server requests (no Origin) to pass through.
+  // Browser requests include an Origin and are subject to CORS checks below.
+  if (!origin) {
+    return NextResponse.next();
+  }
+
   const headers = new Headers();
   const isAllowed = origin && allowlist.includes(origin);
 

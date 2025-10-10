@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (PHASE-1)
 This document is authoritative for the Geneva system. It MUST NOT conflict with:
-1) documentation/dbschemacontext.md (DB Truth)
+1) supabase/migrations/ (DB schema truth)
 2) documentation/CRITICAL-TECHPHASES/Techphases.md (Global Contracts)
 3) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase-1 Contracts)
 If any conflict is found, STOP and escalate to the CEO. Do not guess.
@@ -53,7 +53,7 @@ Response payloads include `schemaVersion` so clients can decide whether a draft 
 
 ## 4) Change Control
 - Modifying schemas or templates requires:
-  1. Update DB Truth (`documentation/dbschemacontext.md`) + corresponding migration SQL.
+  1. Update the schema under `supabase/migrations/` with the exact SQL.
   2. Update Geneva doc (this file) and Phase-1 specs if contracts change.
   3. Regenerate any cached Atlas payloads by running the Paris sync job.
 - Never overwrite existing `schemaVersion` entries; create a new version and a migration path.

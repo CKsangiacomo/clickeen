@@ -1,27 +1,30 @@
-import '@dieter/dist/tokens.css';
-import '@dieter/dist/components/button.css';
-import '@dieter/dist/components/segmented.css';
-import './css/components/primitives/box.css';
-import './css/components/primitives/divider.css';
-// Preview-only CSS (when used) should not ship
-import '@dieter/dist/components/textfield.css';
-// Removed Select and Textarea candidates
+import '@dieter/tokens/tokens.css';
+import '@dieter/components/button.css';
+import '@dieter/components/segmented.css';
+import '@dieter/components/textfield.css';
 
-import {
-  showcasePages,
-  showcaseIndex,
-  candidatePages,
-  candidateIndex,
-  navGroups,
-  type NavItem,
-} from './data/routes';
+import { showcasePages, showcaseIndex, navGroups, type NavItem } from './data/routes';
+import { getIcon } from './data/icons';
 import { navigate, startRouter, type RouteMatch } from './router';
 
-const htmlFragments = import.meta.glob('./html/**/*.html', {
+const htmlFragments = import.meta.glob('./html/dieter-showcase/*.html', {
   query: '?raw',
   import: 'default',
   eager: true,
 });
+
+function hydrateIcons(scope: Element | DocumentFragment) {
+  scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((node) => {
+    const name = node.getAttribute('data-icon');
+    if (!name) return;
+    const markup = getIcon(name);
+    if (!markup) {
+      return;
+    }
+    node.innerHTML = markup;
+    node.removeAttribute('data-icon');
+  });
+}
 
 const getFragment = (path: string): string => {
   const [rawPath, rawAnchor] = path.split('#', 2);
@@ -238,51 +241,6 @@ setSidebarLayout('expanded');
 
 type RenderResult = HTMLElement;
 
-const renderHome = (): RenderResult => {
-  const article = document.createElement('article');
-  article.className = 'stack';
-
-  const overview = document.createElement('header');
-  overview.className = 'stack';
-  overview.innerHTML = `
-    <p class="overline">Welcome</p>
-    <h1 class="heading-2" style="margin:0">Dieter Component Lab</h1>
-    <p class="body" style="margin:0">CSS-first sandbox for future Dieter contracts.</p>
-  `;
-
-  const list = document.createElement('div');
-  list.className = 'grid-auto';
-
-  candidatePages.forEach((page) => {
-    const card = document.createElement('a');
-    card.className = 'home-card';
-    card.href = page.path;
-    card.addEventListener('click', (event) => {
-      event.preventDefault();
-      navigate(page.path);
-    });
-
-    const overline = document.createElement('span');
-    overline.className = 'overline';
-    overline.textContent = 'Candidate';
-
-    const heading = document.createElement('strong');
-    heading.className = 'heading-5';
-    heading.style.margin = '0';
-    heading.textContent = page.title;
-
-    const paragraph = document.createElement('p');
-    paragraph.className = 'body';
-    paragraph.style.margin = '0';
-    paragraph.textContent = 'Preview fragment';
-
-    card.append(overline, heading, paragraph);
-    list.append(card);
-  });
-
-  article.append(overview, list);
-  return article;
-};
 const renderShowcase = (slug?: string): RenderResult => {
   if (!slug) return renderNotFound('Component showcase not specified');
   const preview = showcaseIndex.get(slug);
@@ -311,28 +269,6 @@ const renderShowcase = (slug?: string): RenderResult => {
   return article;
 };
 
-const renderComponent = (slug?: string): RenderResult => {
-  if (!slug) return renderNotFound('Component not specified');
-  const page = candidateIndex.get(slug);
-  if (!page) return renderNotFound('Component not found');
-
-  const article = document.createElement('article');
-  article.className = 'stack';
-
-  const headerSection = document.createElement('header');
-  headerSection.className = 'stack';
-  headerSection.innerHTML = `
-    <h1 class="heading-2" style="margin:0">${page.title}</h1>
-  `;
-
-  const previewSection = document.createElement('section');
-  previewSection.className = 'stack';
-  previewSection.append(buildHtmlFragment(page.htmlPath));
-
-  article.append(headerSection, previewSection);
-  return article;
-};
-
 const renderNotFound = (message: string): RenderResult => {
   const article = document.createElement('article');
   article.className = 'stack';
@@ -349,6 +285,14 @@ const buildHtmlFragment = (path: string) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'demo-fragment';
   wrapper.innerHTML = getFragment(path);
+  // After injecting the static fragment, dynamically generate spec blocks
+  // for each demo cell so specs never drift from the live markup.
+  try {
+    hydrateIcons(wrapper);
+    applyDynamicSpecs(wrapper);
+  } catch {
+    // Non-fatal: previews still render with original content
+  }
   return wrapper;
 };
 
@@ -399,18 +343,150 @@ const handleRoute = (match: RouteMatch) => {
     }
   }
 
-  let rendered: RenderResult;
-  if (match.kind === 'showcase') {
-    rendered = renderShowcase(match.slug);
-    document.title = `New Dieter Lab · Dieter · ${match.slug ?? ''}`;
-    setActiveNav(`#/dieter/${match.slug ?? ''}`);
-  } else {
-    rendered = renderComponent(match.slug);
-    document.title = `New Dieter Lab · Component · ${match.slug ?? ''}`;
-    setActiveNav(`#/components/${match.slug ?? ''}`);
-  }
+  const rendered = renderShowcase(match.slug);
+  document.title = `Dieter Preview · ${match.slug ?? ''}`;
+  setActiveNav(`#/dieter/${match.slug ?? ''}`);
 
   contentSection.replaceChildren(rendered);
+  // Also run a final pass on the whole rendered section
+  hydrateIcons(rendered);
+  try { applyDynamicSpecs(rendered); } catch {}
 };
 
 startRouter(handleRoute);
+
+// ---- Dynamic spec generation (Admin-only) ----
+
+const SIZE_PX: Record<string, number> = { xs: 16, sm: 20, md: 24, lg: 28, xl: 32 } as const;
+const DEFAULT_SIZE_BY_COMPONENT: Record<string, string> = {
+  'diet-segmented': 'sm',
+  'diet-input': 'md',
+  'diet-btn': 'md',
+};
+
+function findComponentRoot(container: Element): { el: HTMLElement; name: string } | null {
+  // Prefer explicit known roots
+  const explicit = container.querySelector<HTMLElement>('.diet-btn, .diet-segmented, .diet-input');
+  if (explicit) {
+    const cls = Array.from(explicit.classList).find((c) => c === 'diet-btn' || c === 'diet-segmented' || c === 'diet-input');
+    if (cls) return { el: explicit, name: cls };
+  }
+  // Fallback: first class that looks like a root diet-* (exclude element subclasses)
+  const all = Array.from(container.querySelectorAll<HTMLElement>('*'));
+  for (const el of all) {
+    const root = Array.from(el.classList).find(
+      (c) => c.startsWith('diet-') && !c.startsWith('diet-btn__') && !c.startsWith('diet-segment__') && !c.startsWith('diet-input__'),
+    );
+    if (root === 'diet-btn' || root === 'diet-segmented' || root === 'diet-input') {
+      return { el, name: root };
+    }
+  }
+  return null;
+}
+
+function deriveSize(el: HTMLElement, componentName: string): string {
+  const attr = el.getAttribute('data-size');
+  if (attr && SIZE_PX[attr]) return attr;
+  // Default when data-size is omitted (e.g., segmented small rows use default)
+  return DEFAULT_SIZE_BY_COMPONENT[componentName] || 'md';
+}
+
+function applyDynamicSpecs(scope: Element) {
+  const cells = scope.querySelectorAll<HTMLElement>('.specdpreview');
+  cells.forEach((cell) => {
+    const specs = cell.querySelector<HTMLElement>('.preview-specs');
+    const demo = cell.querySelector<HTMLElement>('.componentpreview');
+    if (!specs || !demo) return;
+
+    const comp = findComponentRoot(demo);
+    if (!comp) return;
+    const size = deriveSize(comp.el, comp.name);
+    const px = SIZE_PX[size] ?? undefined;
+
+    // Clear and rebuild specs area with the required two lines:
+    // 1) data-size + px (body-small)
+    // 2) component class name (caption-small)
+    specs.innerHTML = '';
+
+    const sizeRow = document.createElement('div');
+    sizeRow.className = 'preview-specs__row';
+    const sizeSpan = document.createElement('span');
+    sizeSpan.className = 'label-small';
+    sizeSpan.textContent = px ? `${size} · ${px}` : size;
+    sizeRow.append(sizeSpan);
+
+    const nameRow = document.createElement('div');
+    nameRow.className = 'preview-specs__row';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'caption-small';
+    nameSpan.textContent = comp.name;
+    nameRow.append(nameSpan);
+
+    specs.append(sizeRow, nameRow);
+  });
+}
+
+// Align columns across all rows within a section (under the same header).
+// For each section, measure the widest spec and preview per column and
+// set an explicit grid-template-columns on each row so columns line up.
+function applySectionColumnSizing(scope: Element) {
+  const previewBlocks = scope.querySelectorAll<HTMLElement>('.dieter-preview');
+  previewBlocks.forEach((block) => {
+    // Walk direct children and split into sections: header + following rows until next header
+    const children = Array.from(block.children) as HTMLElement[];
+    let sectionRows: HTMLElement[] = [];
+    const flushSection = () => {
+      if (sectionRows.length === 0) return;
+      // Determine max columns among rows in this section.
+      // Prefer explicit data-cols; fallback to counting .specdpreview items.
+      const cols = sectionRows.reduce((max, r) => {
+        const fromAttr = Number(r.getAttribute('data-cols') || '0') || 0;
+        const fromDom = r.querySelectorAll('.specdpreview').length;
+        return Math.max(max, fromAttr, fromDom);
+      }, 0);
+      if (cols <= 0) { sectionRows = []; return; }
+
+      const specMax: number[] = Array(cols).fill(0);
+      const prevMax: number[] = Array(cols).fill(0);
+      // Measure widths per column index across rows
+      sectionRows.forEach((row) => {
+        const groups = Array.from(row.querySelectorAll<HTMLElement>('.specdpreview'));
+        for (let i = 0; i < Math.min(cols, groups.length); i += 1) {
+          const g = groups[i];
+          const spec = g.querySelector<HTMLElement>('.preview-specs');
+          const prev = g.querySelector<HTMLElement>('.componentpreview');
+          if (!spec || !prev) continue;
+          const sw = spec.getBoundingClientRect().width;
+          const pw = prev.getBoundingClientRect().width;
+          if (sw > specMax[i]) specMax[i] = sw;
+          if (pw > prevMax[i]) prevMax[i] = pw;
+        }
+      });
+
+      // Build track list: header + per-column (spec px, preview px)
+      const tracks: string[] = ['max-content'];
+      for (let i = 0; i < cols; i += 1) {
+        const s = Math.ceil(specMax[i]);
+        const p = Math.ceil(prevMax[i]);
+        tracks.push(`${s}px`, `${p}px`);
+      }
+      const trackStr = tracks.join(' ');
+      sectionRows.forEach((row) => { row.style.gridTemplateColumns = trackStr; });
+      sectionRows = [];
+    };
+
+    for (const el of children) {
+      if (el.classList.contains('section-header')) {
+        // New section starts; flush previous
+        flushSection();
+        continue;
+      }
+      if (el.classList.contains('row')) {
+        sectionRows.push(el);
+        continue;
+      }
+    }
+    // Flush trailing section
+    flushSection();
+  });
+}

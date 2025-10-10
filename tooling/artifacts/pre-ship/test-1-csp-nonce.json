@@ -1,0 +1,12 @@
+{
+  "id": 1,
+  "name": "csp-nonce",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "status": 200,
+    "nonceCount": 1,
+    "hasCspHeader": true,
+    "durationMs": 56
+  }
+}

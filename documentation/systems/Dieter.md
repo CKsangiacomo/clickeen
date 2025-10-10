@@ -75,13 +75,11 @@
 
 This section specifies the global spacing and icon rules every component must follow. The goal is one mental model and zero per‑component guesswork.
 
-- Spacing scale (padding/margins)
-  - Use the global 4‑px grid defined in `dieter/tokens/tokens.css`:
-  - `--space-1: 0.25rem`, `--space-2: 0.5rem`, `--space-3: 0.75rem`, `--space-4: 1rem`, `--space-5: 1.25rem`, `--space-6: 1.5rem`, `--space-7: 1.75rem`, `--space-8: 2rem`, `--space-9: 2.25rem`, `--space-10: 2.5rem`.
-  - Inline paddings MUST reference these tokens; do not hardcode rems.
+### Spacing Token Families (NORMATIVE)
 
-- Vertical rhythm (stack spacing)
-  - `--hspace-1..9` (0 → 0.8rem) are for tight vertical rhythm inside control stacks (label ↔ control ↔ helper). Do not use them for inline padding.
+- `--space-*` — horizontal padding/margins on the global 4 px grid. Every control’s left/right padding MUST come from this ladder (`--space-1`, `--space-2`, etc.). No other token family may be used for inline padding.
+- `--hspace-*` — vertical rhythm tokens (0 → 0.8 rem in 0.1 rem steps). Use only for vertical spacing inside a control (label ↔ input, helper text, stacked content). Never repurpose them for horizontal padding.
+- `--control-inline-gap-*` — icon ↔ text gap tokens. Apply them via `gap:` in icon-bearing layouts. Do not use them for padding.
 
 - Icon box sizes (global, per size)
   - `--control-icon-xs|sm|md|lg|xl` size the icon container; defined in tokens.
@@ -103,28 +101,23 @@ This section specifies the global spacing and icon rules every component must fo
   - Compute glyph size in components as: `glyph = calc(iconBox × glyphRatio)`.
   - Icon‑only XS special case: compute against the square height when needed: `glyph = calc(btnHeight × --control-icon-glyph-ratio-xs)`.
 
-### Button — application of global rules (NORMATIVE)
+## Global Control Specification (NORMATIVE)
 
-- Types
-  - Text‑only and Icon+text share the same left/right padding by size.
-  - Icon‑only is a square (width = height), zero inline padding; icon fills the square.
+All Dieter controls (buttons, segmented, textfield, future peers) must draw from the same size ladder. The table below is authoritative; any change to a token mapping requires updating this table and every control contract.
 
-- Padding (spacing scale; equal left/right)
-  - `xs/sm: var(--space-2)`
-  - `md: var(--space-2)`
-  - `lg: var(--space-3)`
-  - `xl: var(--space-3)`
+| Control size | Rail height (`--control-size-*`) | Radius (`--control-radius-*`) | Side padding (text-bearing) | Icon box (`--control-icon-*`) | Icon↔text gap (`--control-inline-gap-*`) | Typography (`--control-text-*`) |
+| --- | --- | --- | --- | --- | --- | --- |
+| xs | `--control-size-xs` | `--control-radius-xs` | `--space-1` | `--control-icon-xs` | `--control-inline-gap-xs` | `--control-text-xs` |
+| sm | `--control-size-sm` | `--control-radius-sm` | `--space-1` | `--control-icon-xs` | `--control-inline-gap-sm` | `--control-text-sm` |
+| md | `--control-size-md` | `--control-radius-md` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-md` | `--control-text-md` |
+| lg | `--control-size-lg` | `--control-radius-lg` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-lg` | `--control-text-lg` |
+| xl | `--control-size-xl` | `--control-radius-xl` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-xl` | `--control-text-xl` |
 
-- Gap (icon ↔ label)
-  - Set `gap: var(--control-inline-gap-{size})`.
-  - Text‑only: `gap: 0`.
-
-- Icon sizing
-  - Box: `--control-icon-{size}` (global tokens)
-  - Glyph: `calc(--control-icon-{size} × --control-icon-glyph-ratio{-[size]})`
-  - Icon‑only XS: `calc(--btn-height × --control-icon-glyph-ratio-xs)`
-
-Implementation note: Components MUST reference these global tokens. Do not bake raw numbers into component CSS, and do not introduce per‑component spacing or ratio tokens without updating this document.
+Additional rules:
+- Icon-only variants use a square footprint (`inline-size = block-size = rail height`) with zero inline padding.
+- Vertical spacing inside a control (label ↔ helper, stacked content) uses the `--hspace-*` ladder; do not repurpose the horizontal `--space-*` tokens for vertical rhythm.
+- Glyph size is derived via the global ratio tokens (`--control-icon-glyph-ratio{-[size]}`) and must be computed (`calc(icon × ratio)`), never hard-coded.
+- If a control needs a new size, radius, or spacing value, add the token first, update this table, then touch component CSS.
 
 ### System Colors (Tokens Only)
 - Dieter exposes a theme‑aware system palette purely as tokens. No helpers/selectors are added; components keep deriving states via `color-mix` on these tokens.
@@ -183,9 +176,11 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 - Every component style MUST reference tokens via `var(--token-name)`. Introducing raw hex values or fixed px sizes is forbidden.
 - Tokens follow the “role” palette (e.g., `--role-danger-bg`) instead of ad-hoc names like `--color-danger`. Use the role tokens to stay consistent with Button.
 - Preview helper selectors (e.g., `.panel-heading`) still live in `tokens.css` for the internal harness; do not ship or depend on them in production. These will be removed in a future cleanup.
-- Some legacy references (e.g., `--radius-2/3`) are being audited; treat `--radius-4` as the only published radius token until new ones are added.
+- Use `--radius-4` for border radii. Additional radius tokens will be added as needed.
 - Vertical rhythm is locked to the 4px scale. Stacks, margins, paddings, and gaps MUST use the published spacing tokens (`--space-1 = 4px`, `--space-2 = 8px`, `--space-3 = 12px`, `--space-4 = 16px`, `--space-6 = 24px`, `--space-8 = 32px`, `--space-10 = 40px`). Arbitrary values (10px, 18px, 26px…) are prohibited.
 - Control heights come from the control token family: `--control-size-xs|sm|md|lg|xl` define 16px / 20px / 24px / 28px / 32px rails, and the matching font + radii tokens (`--control-font-*`, `--control-radius-*`, `--control-icon-*`) must be used together to keep visuals aligned. `xs` (16px) is the smallest size, used for icon-only buttons and minimal text-only buttons; any button with both icon and label starts at `sm` (20px) and ladders up. Never invent intermediate heights—escalate if a design needs a new token.
+- Control icon ladder (normalized `fill="currentColor"` glyphs) has an explicit mapping: `--control-icon-xxs` (12px), `--control-icon-xs` (16px), `--control-icon-sm` (20px), `--control-icon-md` (24px), `--control-icon-lg` (28px), `--control-icon-xl` (32px). Components reference these tokens directly; do not hard-code icon dimensions.
+- Control text ladder mirrors control rails: use `--control-text-xs|sm|md|lg|xl` for 16 / 20 / 24 / 28 / 32px controls respectively. These tokens bundle weight, size, line-height, and font family so buttons, segmented, textfields, dropdowns, etc. stay in sync.
 - Honour `--min-touch-target` (44px). When a visual control is shorter (e.g., 24px rail) add transparent padding or outer spacing so the hit area meets the token rather than shrinking the target.
 
 ## Test harness checklist (NORMATIVE)
@@ -211,72 +206,78 @@ Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-1
 
 _No new files were created; only this doc was rewritten._
 
-## Component Contracts
+## Component Reference
 
-The components listed here are the only production-ready Dieter contracts. Treat them as canonical until this section is updated.
+Per-component contracts live alongside the CSS source in `dieter/components/*.css`. Each file documents supported attributes, element hooks, and state handling in comments at the top of the file. When a component is promoted to production, make sure the file header and Dieter Admin showcase reflect the current contract. This PRD stays component agnostic—update those source files and the decision log whenever the contract changes.
 
 ### Button (`dieter/dist/components/button.css`)
 
-**Contract (attributes-only)**
+**Selectors & attributes**
 - Root: `.diet-btn`
 - Element hooks: `.diet-btn__icon`, `.diet-btn__label`
-- Size: `data-size="xs|sm|md|lg|xl"`
-- Type: `data-type="icon-only|icon-text|text-only"`
-- Variants: `data-variant="primary|secondary|neutral|line1|line2"`
+- `data-size="xs|sm|md|lg|xl"`
+- `data-type="icon-only|icon-text|text-only"`
+- `data-variant="primary|secondary|neutral|line1|line2"`
 - States: `:hover`, `:active`, `:focus-visible`, `:disabled`, `[aria-disabled="true"]`, `[aria-pressed="true"]`, `[data-state="loading"]`
 
-**Token usage**
-- Relies exclusively on tokens (e.g., `--color-accent`, control sizing tokens) and derives all colors via `color-mix` + tokens. Introducing raw color values is prohibited.
-- Exposes CSS custom properties (`--btn-*`) that cascade from tokens; consumers may override them cautiously to theme variants.
+**Token mapping (per size)**
+- `xs` → rail `--control-size-xs`, side padding `--space-1`, icon box `--control-icon-xs`, gap `--control-inline-gap-xs`, typography `--control-text-xs`
+- `sm` → `--control-size-sm`, `--space-1`, `--control-icon-xs`, `--control-inline-gap-xs`, `--control-text-sm`
+- `md` → `--control-size-md`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-sm`, `--control-text-md`
+- `lg` → `--control-size-lg`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-sm`, `--control-text-lg`
+- `xl` → `--control-size-xl`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-md`, `--control-text-xl`
+- Icon-only → square rail (`inline/block size = rail height`), padding `0`, icon fills the square. Text-only sets `gap: 0`.
+- Glyph size uses `calc(--btn-icon-box × --control-icon-glyph-ratio{-[size]})` with the global ratio tokens.
 
-**Accessibility**
-- Focus-visible outline uses `--focus-ring-*` tokens with a two-layer box-shadow.
-- Tokens include `--min-touch-target` (44px) as guidance; compose spacing/containers to meet touch targets on touch surfaces.
-- Loading state (`data-state="loading"`) dims label and shows a spinner pseudo-element.
-- Disabled + aria-disabled lower opacity and remove pointer events; maintain keyboard focus handling.
-
-**Testing**
-- Use Dieter Admin for previews/regression checks after rebuilding `@ck/dieter`: `pnpm --filter @ck/dieteradmin dev`.
+**Behaviour & accessibility**
+- Loading state (`[data-state="loading"]`) dims the label and shows a spinner pseudo-element.
+- Focus-visible uses the shared two-layer ring (`--focus-ring-*`).
+- Disabled and `aria-disabled` remove pointer affordances but preserve focus handling.
+- Icons must come from the Dieter registry (inline SVG or hydrated via `data-icon`).
 
 ### Segmented Control (`dieter/dist/components/segmented.css`)
 
-**Class & attribute model**
-- Root radiogroup container: `.diet-segmented`
-- Segment wrapper (label): `.diet-segment`
-- Element hooks: `.diet-segment__input` (native radio), `.diet-segment__surface`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__sr`
-- Size modifiers: `data-size="sm|md|lg"`
-- Type modifiers: `data-type="icon-only|text-only"`
-- State selectors: `.diet-segment__input:checked`, `.diet-segment__input:focus-visible`, `.diet-segment__input:disabled`, `:hover` on `.diet-segment`, plus radiogroup ARIA (`role="radiogroup"`) applied by consumers
+**Selectors & attributes**
+- Root radiogroup: `.diet-segmented`
+- Segment label: `.diet-segment`
+- Hooks: `.diet-segment__input` (radio), `.diet-segment__surface`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__sr`
+- `data-size="sm|md|lg"`
+- `data-type="icon-only|text-only"` (omit for icon+text)
+- Consumers must apply `role="radiogroup"` and native radio semantics.
 
-**Token usage**
-- Component variables (`--seg-*`) derive from shared tokens (`--color-system-blue`, `--color-bg`, `--focus-ring-*`, sizing tokens) and may be overridden downstream when theming is approved.
-- No raw hex values outside the token palette; `color-mix` combines token colors to express hover/active states consistent with Button.
+**Token mapping**
+- `sm` → rail `--control-size-sm`, surface padding `--space-1`, icon box `--control-icon-xxs`, icon/text gap `--control-inline-gap-xs`, typography `--control-text-sm`
+- `md` → `--control-size-md`, `--space-2`, `--control-icon-xxs`, `--control-inline-gap-sm`, typography `--control-text-md`
+- `lg` → `--control-size-lg`, `--space-2`, `--control-icon-xs`, `--control-inline-gap-sm`, typography `--control-text-lg`
+- Icon-only segments drop `padding-inline` to `0` and rely on the square rail; `.diet-segment__sr` supplies screen-reader text when no label is present.
+- The rail padding (`--seg-rail-padding`) insets the surface so the focus ring and hover states render correctly.
 
-**Accessibility**
-- Uses native radio inputs for semantics; `.diet-segment__sr` provides screen-reader labels when icons are used without text.
-- Focus-visible outline reuses the shared two-layer focus ring (`--focus-ring-*`).
-- `prefers-reduced-motion: reduce` turns off transitions, and disabled segments drop their pointer cursor to avoid false affordances.
-
-**Testing**
-- Use Dieter Admin: `pnpm --filter @ck/dieteradmin dev` and open the Segmented showcase.
+**Behaviour & accessibility**
+- Checked state follows native radio (`.diet-segment__input:checked`).
+- Focus-visible reuses the global focus ring, and `prefers-reduced-motion` removes transitions.
+- Disabled segments reduce opacity and cursor affordance.
+- Icons must be the curated Dieter SVGs; do not fetch at runtime.
 
 ### Textfield (`dieter/dist/components/textfield.css`)
 
-**Contract (attributes-only)**
+**Selectors & attributes**
 - Root: `.diet-input`
-- Element hooks: `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`, optional composed wrapper `.diet-input__control`
-- Size: `data-size="md|lg|xl"`
-- States: `:focus-visible`, `:disabled` (or `[aria-disabled="true"]`)
+- Hooks: `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`, optional wrappers `.diet-input__inner` / `.diet-input__control`, optional `.diet-input__icon`
+- `data-size="md|lg|xl"`
+- States: `:focus-visible`, `:disabled`, `[aria-disabled="true"]`
 
-**Token usage**
-- Field rail height/radius/padding derive from `--control-size-*`, `--control-radius-*`, `--space-*` per size.
-- Icon sizing (when composed) derives from `--control-icon-*` and `--control-icon-glyph-ratio-*`.
+**Token mapping**
+- Side padding (all sizes, field + wrapper) → `--space-2`
+- Vertical stack gap → root uses `--hspace-2`; helper margin uses `--hspace-4`
+- Icon/text gap inside composed wrapper → `--control-inline-gap-md`
+- Icon boxes: `md` → `--control-icon-xxs`, `lg` → `--control-icon-xs`, `xl` → `--control-icon-xs`
+- Rail heights/typography follow the global ladder (`--control-size-*`, `--control-text-*`)
+- Composed wrapper preserves border radius/border tokens and keeps the input flexible (`flex: 1 1 0`).
 
-**Accessibility**
-- Associate label and input via `for`/`id`. Helper text may be referenced via `aria-describedby`.
-
-**Testing**
-- Use Dieter Admin textfield showcase to verify sizes and focus/disabled states.
+**Behaviour & accessibility**
+- Labels and fields must be linked via `for`/`id`; helpers can be referenced with `aria-describedby`.
+- Focus-visible uses the shared ring; disabled state applies opacity/tint via tokens.
+- Icons are inline Dieter SVGs (via `data-icon` hydration or copied markup). Trailing action buttons share the same icon hook.
 
 ## Common AI mistakes (NORMATIVE)
 

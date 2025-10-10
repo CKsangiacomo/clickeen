@@ -1,4 +1,4 @@
-export type NavItemKind = 'home' | 'showcase' | 'component';
+export type NavItemKind = 'home' | 'showcase';
 
 export interface NavItem {
   id: string;
@@ -23,20 +23,7 @@ export interface ShowcasePage {
   summary?: string;
 }
 
-export interface CandidatePage {
-  slug: string;
-  title: string;
-  path: string;
-  htmlPath: string;
-}
-
 const showcaseModules = import.meta.glob('../html/dieter-showcase/*.html', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-});
-
-const candidateModules = import.meta.glob('../html/candidates/*.html', {
   eager: true,
   query: '?raw',
   import: 'default',
@@ -49,17 +36,14 @@ const toTitle = (slug: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const showcaseCssMap: Record<string, string[]> = {
-  button: ['@dieter/dist/components/button.css'],
-  segmented: ['@dieter/dist/components/segmented.css'],
-  textfield: ['@dieter/dist/components/textfield.css'],
-  colors: ['@dieter/dist/tokens.css'],
-  typography: ['@dieter/dist/tokens.css'],
+  button: ['@dieter/components/button.css'],
+  segmented: ['@dieter/components/segmented.css'],
+  textfield: ['@dieter/components/textfield.css'],
+  colors: ['@dieter/tokens/tokens.css'],
+  typography: ['@dieter/tokens/tokens.css'],
 };
 
 const showcasePaths = Object.keys(showcaseModules).sort();
-const candidatePaths = Object.keys(candidateModules).sort();
-const candidateFilter = (slug: string) => !/(grid|snippet|state|variant)/i.test(slug);
-
 export const showcasePages: ShowcasePage[] = showcasePaths.map((path) => {
   const slug = toSlug(path);
   const title = toTitle(slug);
@@ -72,27 +56,12 @@ export const showcasePages: ShowcasePage[] = showcasePaths.map((path) => {
   } satisfies ShowcasePage;
 });
 
-export const candidatePages: CandidatePage[] = candidatePaths
-  .map((path) => {
-    const slug = toSlug(path);
-    if (!candidateFilter(slug)) return undefined;
-    const title = toTitle(slug);
-    return {
-      slug,
-      title,
-      path: `#/components/${slug}`,
-      htmlPath: path,
-    } satisfies CandidatePage;
-  })
-  .filter((value): value is CandidatePage => Boolean(value));
-
 export const showcaseIndex = new Map(showcasePages.map((page) => [page.slug, page] as const));
-export const candidateIndex = new Map(candidatePages.map((page) => [page.slug, page] as const));
 
 // Optional navigation config to group and order showcase pages
 import { navConfig } from './nav.config';
 interface NavConfigGroup { id: string; title: string; items: string[] }
-interface NavConfig { groups: NavConfigGroup[]; includeCandidatesGroup?: boolean; candidatesTitle?: string }
+interface NavConfig { groups: NavConfigGroup[] }
 
 const allShowcaseSlugs = new Set(showcasePages.map((p) => p.slug));
 
@@ -103,13 +72,6 @@ const pageToNav = (page: ShowcasePage): NavItem => ({
   kind: 'showcase' as const,
   summary: page.summary,
 });
-
-const candidateNavItems: NavItem[] = candidatePages.map((page) => ({
-  id: `candidate-${page.slug}`,
-  title: page.title,
-  path: page.path,
-  kind: 'component' as const,
-}));
 
 const buildShowcaseGroups = (): NavGroup[] => {
   if (!navConfig) {
@@ -138,14 +100,7 @@ const buildShowcaseGroups = (): NavGroup[] => {
   return groups;
 };
 
-const showcaseGroups = buildShowcaseGroups();
-
-export const navGroups: NavGroup[] = [
-  ...showcaseGroups,
-  ...(navConfig?.includeCandidatesGroup !== false && candidateNavItems.length
-    ? [{ id: 'previews', title: navConfig?.candidatesTitle || 'Previews', items: candidateNavItems }]
-    : []),
-];
+export const navGroups: NavGroup[] = buildShowcaseGroups();
 
 export const navIndex = new Map<string, NavItem>();
 navGroups.forEach((group) => {

@@ -79,6 +79,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else if (wtype === 'content.faq') {
     responseHtml = renderFaqPage({
@@ -86,6 +87,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else if (wtype === 'social.testimonials') {
     responseHtml = renderTestimonialsPage({
@@ -93,6 +95,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else if (wtype === 'engagement.announcement') {
     responseHtml = renderAnnouncementPage({
@@ -100,6 +103,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else if (wtype === 'engagement.newsletter') {
     responseHtml = renderNewsletterPage({
@@ -107,6 +111,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else if (wtype === 'social.proof') {
     responseHtml = renderSocialProofPage({
@@ -114,6 +119,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       theme: theme as 'light' | 'dark',
       device: device as 'desktop' | 'mobile',
       backlink,
+      nonce,
     });
   } else {
     responseHtml = renderInstancePage({ instance, theme, device, branding, nonce });

@@ -17,9 +17,7 @@
   --btn-padding-inline-start-text: var(--space-2);
   /* Icon+text uses same start padding as text (simplified model) */
   --btn-padding-inline-start-icon-text: var(--space-2);
-  --btn-font-size: var(--fs-14, 0.875rem);
-  --btn-font-weight: 400;
-  --btn-icon-box: var(--control-icon-md, 1.25rem);
+  --btn-icon-box: var(--control-icon-md, 1.5rem);
   /* Glyph size driven by global ratio token */
   --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio));
   --btn-icon-color: currentColor;
@@ -36,11 +34,8 @@
   border: var(--btn-border-width) solid var(--btn-border-color);
   background: var(--btn-bg);
   color: var(--btn-color);
-  font-family: var(--control-font-family, var(--font-ui));
-  font-size: var(--btn-font-size);
-  font-weight: var(--btn-font-weight);
-  line-height: 1;
-  letter-spacing: 0.01em;
+  font: var(--control-text-lg);
+  letter-spacing: var(--control-letter-spacing, 0);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -58,76 +53,72 @@
   .diet-btn { transition: none; }
 }
 
-.diet-btn[data-size="xs"],
-.diet-btn--xs {
+.diet-btn[data-size="xs"] {
   /* xs size: 16px rail */
   --btn-height: var(--control-size-xs, 1rem);
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
+  --btn-padding-inline-end: var(--space-1);
+  --btn-padding-inline-start-text: var(--space-1);
+  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-xs, 0.25rem);
   gap: var(--control-inline-gap-xs);
-  --btn-font-size: var(--fs-12, 0.75rem);
-  --btn-icon-box: var(--control-icon-xs, 0.75rem);
+  --btn-icon-box: var(--control-icon-xs, 1rem);
   /* XS override: glyph ratio from token */
   --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xs));
+  font: var(--control-text-xs);
 }
 
-.diet-btn[data-size="sm"],
-.diet-btn--sm {
+.diet-btn[data-size="sm"] {
   --btn-height: var(--control-size-sm, 1.25rem);
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
+  --btn-padding-inline-end: var(--space-1);
+  --btn-padding-inline-start-text: var(--space-1);
+  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-sm, 0.3125rem);
-  gap: var(--control-inline-gap-sm);
-  --btn-font-size: var(--fs-13, 0.8125rem);
-  --btn-icon-box: var(--control-icon-sm, 1rem);
-  /* sm: glyph ratio token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  gap: var(--control-inline-gap-xs);
+  --btn-icon-box: var(--control-icon-xs, 1rem);
+  /* sm buttons reuse the XS icon ladder */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xs));
+  font: var(--control-text-sm);
 }
 
-.diet-btn[data-size="md"],
-.diet-btn--md {
+.diet-btn[data-size="md"] {
   --btn-height: var(--control-size-md, 1.5rem);
   --btn-padding-inline-end: var(--space-2);
   --btn-padding-inline-start-text: var(--space-2);
   --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-md, 0.375rem);
-  gap: var(--control-inline-gap-md);
-  --btn-font-size: var(--fs-14, 0.875rem);
-  --btn-icon-box: var(--control-icon-md, 1.25rem);
+  gap: var(--control-inline-gap-sm);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
   /* md: glyph ratio token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-md));
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-md);
 }
 
-.diet-btn[data-size="lg"],
-.diet-btn--lg {
+.diet-btn[data-size="lg"] {
   --btn-height: var(--control-size-lg, 1.75rem);
   /* Normalize to spacing scale: lg uses space-3 */
-  --btn-padding-inline-end: var(--space-3);
-  --btn-padding-inline-start-text: var(--space-3);
-  --btn-padding-inline-start-icon-text: var(--space-3);
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-lg, 0.4375rem);
-  gap: var(--control-inline-gap-lg);
-  --btn-font-size: var(--fs-15, 0.9375rem);
-  --btn-icon-box: var(--control-icon-lg, 1.5rem);
+  gap: var(--control-inline-gap-sm);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
   /* Use global 80% */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-lg);
 }
 
-.diet-btn[data-size="xl"],
-.diet-btn--xl {
+.diet-btn[data-size="xl"] {
   --btn-height: var(--control-size-xl, 2rem);
   /* Normalize to spacing scale: xl uses space-3 */
-  --btn-padding-inline-end: var(--space-3);
-  --btn-padding-inline-start-text: var(--space-3);
-  --btn-padding-inline-start-icon-text: var(--space-3);
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-xl, 0.5rem);
-  gap: var(--control-inline-gap-xl);
-  --btn-font-size: var(--fs-15, 0.9375rem);
-  --btn-icon-box: var(--control-icon-xl, 1.75rem);
-  /* XL override via token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xl));
+  gap: var(--control-inline-gap-md);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
+  /* XL shares the SM icon ladder to keep glyphs compact */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-xl);
 }
 
 .diet-btn__icon {
@@ -153,8 +144,7 @@
   white-space: nowrap;
 }
 
-.diet-btn[data-type="text-only"],
-.diet-btn--text-only {
+.diet-btn[data-type="text-only"] {
   gap: 0;
   padding-inline-start: var(--btn-padding-inline-start-text);
 }
@@ -163,14 +153,12 @@
   padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
-.diet-btn[data-type="icon-text"],
-.diet-btn--icon-text {
+.diet-btn[data-type="icon-text"] {
   /* Normalize: use same left padding as text-only; icon-only remains square */
   padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
-.diet-btn[data-type="icon-only"],
-.diet-btn--icon-only {
+.diet-btn[data-type="icon-only"] {
   --btn-padding-inline-start-text: 0;
   --btn-padding-inline-start-icon-text: 0;
   --btn-padding-inline-end: 0;
@@ -181,13 +169,11 @@
 }
 
 /* XS icon-only: ensure glyph is 97% of the square (height-based) */
-.diet-btn[data-type="icon-only"][data-size="xs"],
-.diet-btn--icon-only.diet-btn--xs {
+.diet-btn[data-type="icon-only"][data-size="xs"] {
   --btn-icon-glyph: calc(var(--btn-height) * var(--control-icon-glyph-ratio-xs));
 }
 
-.diet-btn[data-type="icon-only"] .diet-btn__icon,
-.diet-btn--icon-only .diet-btn__icon {
+.diet-btn[data-type="icon-only"] .diet-btn__icon {
   inline-size: 100%;
   block-size: 100%;
 }
@@ -198,17 +184,14 @@
   border-color: var(--btn-hover-border-color);
 }
 
-.diet-btn:active:not(:disabled):not([aria-disabled="true"]),
-.diet-btn[data-state="active"] {
+.diet-btn:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--btn-clicked-bg);
   color: var(--btn-clicked-color);
   border-color: var(--btn-clicked-border-color);
   transform: translateY(1px);
 }
 
-.diet-btn[aria-pressed="true"],
-.diet-btn[data-state="selected"],
-.diet-btn[data-pressed="true"] {
+.diet-btn[aria-pressed="true"] {
   background: var(--btn-clicked-bg);
   color: var(--btn-clicked-color);
   border-color: var(--btn-clicked-border-color);
@@ -228,8 +211,7 @@
 }
 
 /* Variants */
-.diet-btn[data-variant="primary"],
-.diet-btn--primary {
+.diet-btn[data-variant="primary"] {
   --btn-bg: var(--color-system-blue, #0a84ff);
   --btn-color: var(--color-system-white, #ffffff);
   --btn-border-color: transparent;
@@ -237,26 +219,21 @@
   --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
 }
 
-.diet-btn[data-variant="secondary"],
-.diet-btn--secondary {
+.diet-btn[data-variant="secondary"] {
   --btn-bg: color-mix(in oklab, var(--color-surface), var(--color-text) 6%);
   --btn-border-color: color-mix(in oklab, var(--color-border), transparent 35%);
   --btn-hover-bg: color-mix(in oklab, var(--btn-bg), var(--color-text) 8%);
   --btn-clicked-bg: color-mix(in oklab, var(--btn-bg), var(--color-text) 25%);
 }
 
-.diet-btn[data-variant="neutral"],
-.diet-btn--neutral,
-.diet-btn[data-tone="ghost"] {
+.diet-btn[data-variant="neutral"] {
   --btn-bg: transparent;
   --btn-border-color: transparent;
   --btn-hover-bg: color-mix(in oklab, var(--color-text), transparent 88%);
   --btn-clicked-bg: color-mix(in oklab, var(--color-text), transparent 75%);
 }
 
-.diet-btn[data-variant="line1"],
-.diet-btn--line1,
-.diet-btn[data-tone="control"] {
+.diet-btn[data-variant="line1"] {
   --btn-bg: transparent;
   --btn-color: var(--color-system-blue, #0a84ff);
   --btn-border-width: 1px;
@@ -265,8 +242,7 @@
   --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 30%);
 }
 
-.diet-btn[data-variant="line2"],
-.diet-btn--line2 {
+.diet-btn[data-variant="line2"] {
   --btn-bg: transparent;
   --btn-color: #838386; /* Gray 2 contrast */
   --btn-border-width: 1px;
@@ -303,38 +279,32 @@
   }
 
   .diet-btn[data-variant="primary"],
-  .diet-btn--primary {
+  .diet-btn[data-variant="primary"] {
     --btn-color: var(--color-system-white, #f5f6f8);
     --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
     --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
   }
 
-  .diet-btn[data-variant="secondary"],
-  .diet-btn--secondary,
-  .diet-btn[data-tone="control"] {
+  .diet-btn[data-variant="secondary"] {
     --btn-bg: color-mix(in oklab, var(--color-surface, #14161b), #000000 35%);
     --btn-border-color: color-mix(in oklab, var(--color-border), transparent 10%);
     --btn-hover-bg: color-mix(in oklab, var(--btn-bg), var(--color-system-white) 20%);
     --btn-clicked-bg: color-mix(in oklab, var(--btn-bg), var(--color-system-white) 40%);
   }
 
-  .diet-btn[data-variant="neutral"],
-  .diet-btn--neutral,
-  .diet-btn[data-tone="ghost"] {
+  .diet-btn[data-variant="neutral"] {
     --btn-hover-bg: color-mix(in oklab, var(--color-system-white, #f5f6f8), transparent 88%);
     --btn-clicked-bg: color-mix(in oklab, var(--color-system-white, #f5f6f8), transparent 70%);
   }
 
-  .diet-btn[data-variant="line1"],
-  .diet-btn--line1 {
+  .diet-btn[data-variant="line1"] {
     --btn-color: var(--color-system-blue, #0a84ff);
     --btn-border-color: var(--color-system-blue, #0a84ff);
     --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 68%);
     --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 46%);
   }
 
-  .diet-btn[data-variant="line2"],
-  .diet-btn--line2 {
+  .diet-btn[data-variant="line2"] {
     --btn-color: #8a8a8c; /* Gray 2 contrast dark */
     --btn-border-color: #8a8a8c;
     --btn-hover-bg: color-mix(in oklab, #8a8a8c, transparent 68%);

@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (PHASE-1)
 This document is authoritative for the Bob system. It MUST NOT conflict with:
-1) documentation/dbschemacontext.md (DB Truth)
+1) supabase/migrations/ (DB schema truth)
 2) documentation/CRITICAL-TECHPHASES/Techphases.md (Global Contracts)
 3) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase-1 Contracts)
 If any conflict is found, STOP and escalate to the CEO. Do not guess.
@@ -69,7 +69,7 @@ Bob MUST keep everything inside one working surface. There is no separate “lib
 **Bob MUST NEVER treat `PUT /api/instance/:publicId` as an upsert.** Follow the canonical flow:
 1. `GET /api/instance/:publicId` with workspace auth.
 2. If 200 → `PUT /api/instance/:publicId` with edited payload.
-3. If 404 → prompt user to create; on confirm, `POST /api/instance`; on cancel, abort.
+3. If 404 → prompt user to create; on confirm, `POST /api/instance/from-template` (workspace‑scoped); on cancel, abort.
 4. Surface 4xx inline (map `path` to fields), escalate 5xx with toast + retry.
 
 Other APIs Bob may call:
@@ -114,7 +114,7 @@ Security & RLS:
 - Save flow: covered with automated tests (GET → PUT → POST path, error handling).
 - Template guard: tests for CARRYABLE vs NON_CARRYABLE, timeout handling.
 - Claim flow: draft creation → claim → Venice preview updates with `TOKEN_REVOKED` handled.
-- Integration scenarios: run the Bob-specific steps in `documentation/INTEGRATION-TESTING.md` before release to ensure cross-system flows remain green.
+- Integration scenarios: run the Bob-specific steps in `CURRENTLY_EXECUTING/TESTING.md` before release to ensure cross-system flows remain green.
 
 ## 12) Common AI / Implementation Mistakes (DO NOT DO)
 - Treating `PUT` as upsert without prompting → creates duplicate instances.

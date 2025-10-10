@@ -17,9 +17,7 @@
   --btn-padding-inline-start-text: var(--space-2);
   /* Icon+text uses same start padding as text (simplified model) */
   --btn-padding-inline-start-icon-text: var(--space-2);
-  --btn-font-size: var(--fs-14, 0.875rem);
-  --btn-font-weight: 400;
-  --btn-icon-box: var(--control-icon-md, 1.25rem);
+  --btn-icon-box: var(--control-icon-md, 1.5rem);
   /* Glyph size driven by global ratio token */
   --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio));
   --btn-icon-color: currentColor;
@@ -36,11 +34,8 @@
   border: var(--btn-border-width) solid var(--btn-border-color);
   background: var(--btn-bg);
   color: var(--btn-color);
-  font-family: var(--control-font-family, var(--font-ui));
-  font-size: var(--btn-font-size);
-  font-weight: var(--btn-font-weight);
-  line-height: 1;
-  letter-spacing: 0.01em;
+  font: var(--control-text-lg);
+  letter-spacing: var(--control-letter-spacing, 0);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -61,28 +56,28 @@
 .diet-btn[data-size="xs"] {
   /* xs size: 16px rail */
   --btn-height: var(--control-size-xs, 1rem);
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
+  --btn-padding-inline-end: var(--space-1);
+  --btn-padding-inline-start-text: var(--space-1);
+  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-xs, 0.25rem);
   gap: var(--control-inline-gap-xs);
-  --btn-font-size: var(--fs-12, 0.75rem);
-  --btn-icon-box: var(--control-icon-xs, 0.75rem);
+  --btn-icon-box: var(--control-icon-xs, 1rem);
   /* XS override: glyph ratio from token */
   --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xs));
+  font: var(--control-text-xs);
 }
 
 .diet-btn[data-size="sm"] {
   --btn-height: var(--control-size-sm, 1.25rem);
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
+  --btn-padding-inline-end: var(--space-1);
+  --btn-padding-inline-start-text: var(--space-1);
+  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-sm, 0.3125rem);
-  gap: var(--control-inline-gap-sm);
-  --btn-font-size: var(--fs-13, 0.8125rem);
-  --btn-icon-box: var(--control-icon-sm, 1rem);
-  /* sm: glyph ratio token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  gap: var(--control-inline-gap-xs);
+  --btn-icon-box: var(--control-icon-xs, 1rem);
+  /* sm buttons reuse the XS icon ladder */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xs));
+  font: var(--control-text-sm);
 }
 
 .diet-btn[data-size="md"] {
@@ -91,38 +86,39 @@
   --btn-padding-inline-start-text: var(--space-2);
   --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-md, 0.375rem);
-  gap: var(--control-inline-gap-md);
-  --btn-font-size: var(--fs-14, 0.875rem);
-  --btn-icon-box: var(--control-icon-md, 1.25rem);
+  gap: var(--control-inline-gap-sm);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
   /* md: glyph ratio token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-md));
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-md);
 }
 
 .diet-btn[data-size="lg"] {
   --btn-height: var(--control-size-lg, 1.75rem);
   /* Normalize to spacing scale: lg uses space-3 */
-  --btn-padding-inline-end: var(--space-3);
-  --btn-padding-inline-start-text: var(--space-3);
-  --btn-padding-inline-start-icon-text: var(--space-3);
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-lg, 0.4375rem);
-  gap: var(--control-inline-gap-lg);
-  --btn-font-size: var(--fs-15, 0.9375rem);
-  --btn-icon-box: var(--control-icon-lg, 1.5rem);
+  gap: var(--control-inline-gap-sm);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
   /* Use global 80% */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-lg);
 }
 
 .diet-btn[data-size="xl"] {
   --btn-height: var(--control-size-xl, 2rem);
   /* Normalize to spacing scale: xl uses space-3 */
-  --btn-padding-inline-end: var(--space-3);
-  --btn-padding-inline-start-text: var(--space-3);
-  --btn-padding-inline-start-icon-text: var(--space-3);
+  --btn-padding-inline-end: var(--space-2);
+  --btn-padding-inline-start-text: var(--space-2);
+  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-xl, 0.5rem);
-  gap: var(--control-inline-gap-xl);
-  --btn-font-size: var(--fs-15, 0.9375rem);
-  --btn-icon-box: var(--control-icon-xl, 1.75rem);
-  /* XL override via token */
-  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-xl));
+  gap: var(--control-inline-gap-md);
+  --btn-icon-box: var(--control-icon-sm, 1.25rem);
+  /* XL shares the SM icon ladder to keep glyphs compact */
+  --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio-sm));
+  font: var(--control-text-xl);
 }
 
 .diet-btn__icon {

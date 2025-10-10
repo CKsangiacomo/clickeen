@@ -1,4 +1,4 @@
-export type RouteKind = 'home' | 'showcase' | 'component';
+export type RouteKind = 'home' | 'showcase';
 
 export interface RouteMatch {
   kind: RouteKind;
@@ -15,11 +15,6 @@ export const parseHash = (hash: string): RouteMatch => {
   if (hash.startsWith('#/dieter/')) {
     const slug = hash.replace('#/dieter/', '').trim();
     return { kind: 'showcase', slug: slug || undefined };
-  }
-
-  if (hash.startsWith('#/components/')) {
-    const slug = hash.replace('#/components/', '').trim();
-    return { kind: 'component', slug: slug || undefined };
   }
 
   return { kind: 'home' };

@@ -1,0 +1,11 @@
+{
+  "id": 2,
+  "name": "cors-s2s",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "status": 200,
+    "statusValue": "draft",
+    "durationMs": 78
+  }
+}

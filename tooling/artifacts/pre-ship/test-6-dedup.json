@@ -1,0 +1,15 @@
+{
+  "id": 6,
+  "name": "dedup",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "firstStatus": 202,
+    "secondStatus": 202,
+    "dedupedStates": [
+      false,
+      true
+    ],
+    "durationMs": 859
+  }
+}

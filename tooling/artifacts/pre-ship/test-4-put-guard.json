@@ -1,0 +1,11 @@
+{
+  "id": 4,
+  "name": "put-guard",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "status": 422,
+    "message": "At least one field (config, status, templateId) required",
+    "durationMs": 27
+  }
+}

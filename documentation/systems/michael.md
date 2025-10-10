@@ -1,7 +1,7 @@
 ```markdown
 STATUS: NORMATIVE – SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It must not conflict with:
-1) documentation/dbschemacontext.md (DB Truth) and
+1) supabase/migrations/ (DB schema truth) and
 2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
@@ -111,7 +111,7 @@ id              UUID DEFAULT gen_random_uuid() PRIMARY KEY
 workspace_id    UUID NOT NULL REFERENCES workspaces(id)
 name            TEXT NOT NULL
 type            TEXT NOT NULL -- widget type identifier
-public_key      TEXT UNIQUE NOT NULL -- legacy, may deprecate
+public_key      TEXT UNIQUE NOT NULL
 status          TEXT DEFAULT 'active'
 config          JSONB DEFAULT '{}' -- default config
 template_id     TEXT -- default template
@@ -211,6 +211,9 @@ ts_second         TIMESTAMPTZ -- rate limit window
 
 -- Anonymous submissions auto-deleted after 30 days via cron
 ```
+
+Privacy (Phase‑1):
+- The `ip` column stores a salted SHA‑256 hash of the client IP using `RATE_LIMIT_IP_SALT` (or `'v1'` when unset). Raw IPs are not persisted. SQL fallback rate limiting queries the hashed value; Redis keys also use the hash.
 
 **Constraint → API behavior (NORMATIVE)**
 - Payloads exceeding 32KB trigger Postgres `23514`; Paris returns **422 CONFIG_INVALID**.
@@ -397,7 +400,6 @@ EXECUTE FUNCTION set_ts_second();
    supabase start            # if local stack isn’t already running
    supabase migration up     # applies new files from supabase/migrations locally
    supabase db push          # replays the same migrations on the hosted project
-   supabase db dump --schema public > documentation/dbschemacontext.md
    supabase stop             # optional once verification passes
    ```
 4. Review the dump diff, update ADRdecisions.md/PRDs if required, and include the migration ID in commit notes.

@@ -2,10 +2,10 @@ STATUS: INFORMATIVE — CONTEXT ONLY
 Do NOT implement from this file. For specifications, see:
 - documentation/CRITICAL-TECHPHASES/Techphases.md (architecture & global contracts)
 - documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase‑1 contracts)
-- documentation/dbschemacontext.md (DB Truth)
+- supabase/migrations/ (DB schema truth)
 - documentation/systems/venice.md, documentation/systems/paris.md, documentation/systems/geneva.md (system PRDs)
 
-Authority order: DB Truth > Phase‑1 Specs > System PRDs > Techphases > WhyClickeen.
+Authority order: DB Schema (supabase/migrations/) > Phase‑1 Specs > System PRDs > Techphases > WhyClickeen.
 
 # CLICKEEN Platform Architecture — Phase 1 (Frozen)
 
@@ -20,7 +20,7 @@ This document is the canonical Phase‑1 architecture snapshot: what’s in scop
 - Instance — a saved, private copy of a template with user edits; identified by publicId
 - Single tag — inline = iframe; overlays/popups = script that injects an iframe; both load Venice SSR HTML
 - Templates are data — switching templates changes config, not code
-- JSON casing — API payloads are camelCase; DB casing follows DB Truth
+- JSON casing — API payloads are camelCase; DB casing follows the schema in supabase/migrations/
 
 ---
 
@@ -53,7 +53,14 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 - bob/ → c-keen-app (Bob builder app at `/bob`, Cairo, Berlin app instrumentation)
 - venice/ → c-keen-embed (Venice; edge runtime)
 - paris/ → c-keen-api (Paris + Geneva + Phoenix; node runtime)
-- Supabase → Michael (Postgres + RLS; DB Truth source)
+- Supabase → Michael (Postgres + RLS; DB schema source defined by supabase/migrations/)
+
+---
+
+## Widget Docs (Phase‑1)
+
+- Per‑widget documentation lives under `documentation/widgets/*.md` (one file per widget). These are WIP and reflect Venice SSR wiring only; they are not GA.
+- See `documentation/widgets/README.md` for the current list and links.
 
 ---
 

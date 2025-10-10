@@ -38,8 +38,9 @@ function row(name, svg) {
           <div class="preview-specs__row"><span class="preview-specs__detail">${px}px</span></div>
         </div>
         <div class="componentpreview">
-          <span class="diet-icon" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;">
-            ${svg.replace('<svg', `<svg style=\"width:${px}px;height:${px}px;display:block;\"`)}
+          <!-- RAW inline SVG as components do: wrapper sets size; svg fills 100% -->
+          <span class="diet-icon" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:${px}px;height:${px}px;">
+            ${svg.replace('<svg', '<svg style=\"width:100%;height:100%;display:block;\"')}
           </span>
         </div>
       </div>`)

@@ -78,6 +78,9 @@ export async function validateConfig(
     }
     if (!ajv) {
       // No AJV available; accept-all fallback (Phase-1 build compatibility)
+      // Log loudly to surface misconfiguration in environments where AJV is expected.
+      // eslint-disable-next-line no-console
+      console.error('[geneva] AJV module unavailable; using permissive fallback validator');
       const compiled: any = ((_: unknown) => true);
       compiled.errors = null;
       entry = { compiled, expiresAt: now + SCHEMA_TTL_MS };
@@ -123,6 +126,8 @@ export async function transformConfig(
   // Use a separate AJV to transform (drop additional + apply defaults)
   if (!AjvCtor) {
     // No AJV available in this environment; return the original config without transform
+    // eslint-disable-next-line no-console
+    console.error('[geneva] AJV module unavailable; returning untransformed config');
     return { config: inputConfig, dropped: [], added: [] };
   }
   const ajvTransform = new AjvCtor({ allErrors: true, strict: false, removeAdditional: 'all', useDefaults: true });

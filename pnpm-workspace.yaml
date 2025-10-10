@@ -3,7 +3,6 @@ packages:
   - prague
   - venice
   - paris
-  - michael
   - dieter
   - dieter/*
   - tooling/*

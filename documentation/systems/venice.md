@@ -1,6 +1,6 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It MUST NOT conflict with:
-1) documentation/dbschemacontext.md (DB Truth) and
+1) supabase/migrations/ (DB schema truth) and
 2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
@@ -260,7 +260,7 @@ Venice uses Dieter design system for styling:
 4. **CSP:** rendered HTML sets `default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self' data:; form-action 'self'`.
 5. **Fallbacks:** error states (`TOKEN_INVALID`, `NOT_FOUND`, upstream 503) render branded stubs and log appropriately.
 6. **Atlas fallback:** simulate cache miss/timeout to confirm Venice falls back to Paris within the 5 s budget and emits an `atlas_unavailable` log.
-7. **Integration scenarios:** complete the end-to-end checklist in `documentation/INTEGRATION-TESTING.md` and confirm expected responses/logs before promoting.
+7. **Integration scenarios:** complete the end-to-end checklist in `CURRENTLY_EXECUTING/TESTING.md` and confirm expected responses/logs before promoting.
 
 ### Caching Strategy
 <!-- Canonical TTLs (Phase-1 Specs) -->
@@ -281,6 +281,8 @@ Cache-Control: no-store
 ```
 
 ## Widget Types & Rendering
+
+Per‑widget docs live under `documentation/widgets/*.md` (one file per widget; WIP in Phase‑1). Widgets currently wired for SSR in Venice are not GA.
 
 ### Phase-1 Supported Widgets
 

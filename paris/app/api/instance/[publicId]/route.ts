@@ -81,7 +81,7 @@ export async function GET(req: Request, { params }: Params) {
 export async function PUT(req: Request, { params }: Params) {
   try {
     const payload = await parseJson(req);
-    const config = assertConfig(payload.config);
+    const config = payload.config !== undefined ? assertConfig(payload.config) : undefined;
     const status = assertStatus(payload.status);
 
     const { client, user } = await requireUser(req);
@@ -91,6 +91,13 @@ export async function PUT(req: Request, { params }: Params) {
     }
 
     await assertWorkspaceMember(client, instance.workspaceId, user.id);
+
+    // Reject empty update payloads to avoid no-op UPDATEs
+    if (config === undefined && !status && !payload.templateId) {
+      return NextResponse.json([
+        { path: 'body', message: 'At least one field (config, status, templateId) required' },
+      ], { status: 422 });
+    }
 
     // Enforce plan limits when publishing (Phase-1)
     if (status === 'published' && instance.status !== 'published') {
@@ -103,7 +110,8 @@ export async function PUT(req: Request, { params }: Params) {
       }
     }
 
-    const update: Record<string, unknown> = { config };
+    const update: Record<string, unknown> = {};
+    if (config !== undefined) update.config = config;
     if (status) update.status = status;
 
     // Template switch handling with dry-run/confirm
@@ -126,7 +134,8 @@ export async function PUT(req: Request, { params }: Params) {
     // Validate or transform based on target schema
     if (instance.widgetType && (targetSchemaVersion || instance.schemaVersion)) {
       const version = targetSchemaVersion || instance.schemaVersion!;
-      const transformed = await transformConfig(client, instance.widgetType, version, config as any);
+      const baseConfig = (config !== undefined ? config : (instance.config as any));
+      const transformed = await transformConfig(client, instance.widgetType, version, baseConfig);
 
       if (dryRun) {
         return NextResponse.json({

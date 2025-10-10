@@ -1,0 +1,25 @@
+{
+  "name": "@ck/embed-service",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "smoke:atlas": "node ./scripts/atlas-smoke.mjs",
+    "smoke:e2e": "NODE_OPTIONS=--no-warnings node ./scripts/e2e-real-widget.mjs",
+    "smoke:form": "NODE_OPTIONS=--no-warnings node ./scripts/smoke-form.mjs"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "@types/react": "^18.3.3",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

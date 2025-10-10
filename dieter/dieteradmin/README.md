@@ -1,24 +1,23 @@
 # Dieter Admin
 
-This Vite + TypeScript workspace hosts the Dieter preview shell. It renders the Dieter components that ship in `@ck/dieter` and in‑progress previews we prototype before deciding whether to keep them (move into `dieter/`) or delete them. The preview HTML lives **only** inside this package; components themselves remain in `dieter/components/**`.
+This Vite + TypeScript workspace hosts the Dieter preview shell. It renders the foundations and components that live in `dieter/components/**` so we can verify tokens and contracts as we build them. Dieter Admin never defines component CSS; it only assembles preview markup.
 
 ## What lives here
 
 - **Shell (`src/main.ts`, `src/router.ts`)** — builds the docs chrome, listens to hash-based routes, and injects HTML fragments into the content area.
-- **Preview data (`src/data`)** — lists Dieter component showcases and any preview pages Dieter Admin should display.
-- **Preview markup (`src/html/**`)** — the single source of truth for all showcase HTML.
-  - `src/html/dieter-showcase/` mirrors the Dieter package (Button, Colors, Segmented, Typography, etc.). Edits here must stay in lockstep with the Dieter PRD.
-  - `src/html/candidates/` hosts any work‑in‑progress preview pages. Add or remove files here as previews come and go.
+- **Preview data (`src/data`)** — lists the available showcases and their navigation metadata.
+- **Preview markup (`src/html/dieter-showcase/`)** — single source of truth for showcase HTML. Each page mirrors the Dieter contracts (Typography, Colors, Icons, Button, Segmented, Textfield). Keep these in lockstep with the Dieter PRD.
 - **Preview helpers (`src/css/dieter-previews.css` + siblings)** — light layout scaffolding for Dieter Admin only. These styles must never change the appearance of real `.diet-*` classes.
 
 ## Working rules
 
 1. **PRD is authoritative.** `documentation/systems/Dieter.md` is the normative contract. Update it when a component is kept in Dieter.
-2. **Components vs. previews.** Showcases under `src/html/dieter-showcase/` mirror exported CSS from `@ck/dieter`. Preview pages live under `src/html/candidates/` until they are either moved into Dieter (kept) or deleted.
+2. **Components only.** Showcases under `src/html/dieter-showcase/` mirror the Dieter contracts. There are no WIP/candidate surfaces in this workspace.
 3. **No contract overrides.** Custom CSS/JS in this workspace may position demos, but must never tweak the visuals or behavior of the shipped Dieter selectors. Update `dieter/components/**` first, then refresh the preview markup to match.
-4. **Keep previews simple.** One HTML file per page (component or preview). Avoid scattering extra fragments; when a preview is kept, delete its preview and move the contract into Dieter.
-5. **Document decisions locally.** Any Dieter Admin–specific conventions or open questions belong here (or in a scoped notes file), not in the frozen PRD.
-6. **No ad-lib copy.** Previews must only contain component markup + metadata derived from Dieter tokens/attributes. Do not invent descriptive text, examples, or labels beyond the standard scaffold; if additional copy is required, a human must provide it.
+4. **Icons come from Dieter.** Use `data-icon="<name>"` on preview nodes; the shell injects SVGs from `@dieter/icons/svg`. Do not paste ad-hoc SVGs.
+5. **Keep previews simple.** One HTML file per page. If a contract changes, update the matching showcase file immediately.
+6. **Document decisions locally.** Any Dieter Admin specifics belong here (or in scoped notes), not in the frozen PRD.
+7. **No ad-lib copy.** Previews must only contain component markup + metadata derived from Dieter tokens/attributes. If additional copy is required, a human must provide it.
 
 ## Showcase page architecture
 

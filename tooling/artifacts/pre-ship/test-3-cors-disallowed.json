@@ -1,0 +1,11 @@
+{
+  "id": 3,
+  "name": "cors-disallowed",
+  "status": "pass",
+  "error": null,
+  "metrics": {
+    "status": 403,
+    "error": "FORBIDDEN",
+    "durationMs": 11
+  }
+}

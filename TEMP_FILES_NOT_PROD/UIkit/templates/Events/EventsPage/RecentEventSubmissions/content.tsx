@@ -1,0 +1,38 @@
+export const tableContent = [
+    {
+        id: 0,
+        title: "Mystic Moon Festival",
+        organizer: "Michael Thompson",
+        category: "Music",
+        status: "Active",
+        ticketsSold: 245,
+        startDate: "August 14, 2025",
+    },
+    {
+        id: 1,
+        title: "Galactic Adventure Day",
+        organizer: "Emily Carter",
+        category: "Music",
+        status: "Active",
+        ticketsSold: 312,
+        startDate: "June 9, 2025",
+    },
+    {
+        id: 2,
+        title: "Enchanted Garden Gala",
+        organizer: "James Anderson",
+        category: "Music",
+        status: "Active",
+        ticketsSold: 178,
+        startDate: "November 30, 2025",
+    },
+    {
+        id: 3,
+        title: "Epic Quest Extravaganza",
+        organizer: "Sophia Martinez",
+        category: "Music",
+        status: "Active",
+        ticketsSold: 389,
+        startDate: "December 17, 2025",
+    },
+];

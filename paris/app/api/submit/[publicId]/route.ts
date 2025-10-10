@@ -65,10 +65,16 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
 
     const payloadHash = computeHash(payload);
     const ip = getClientIp(req);
+    const ipHash = ip
+      ? createHash('sha256')
+          .update(String(process.env.RATE_LIMIT_IP_SALT || 'v1'))
+          .update(ip)
+          .digest('hex')
+      : undefined;
     const userAgent = req.headers.get('user-agent') ?? undefined;
 
     // Rate limiting (per IP + per instance)
-    const rl = await rateLimitSubmissions(client, publicId, ip);
+  const rl = await rateLimitSubmissions(client, publicId, ip);
     if (rl.limited) {
       const headers = new Headers();
       setRateHeaders(headers, rl);
@@ -77,6 +83,7 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
       return new NextResponse(JSON.stringify({ error: 'RATE_LIMITED' }), { status: 429, headers });
     }
 
+    // Store hashed IP (privacy). Write the deterministic hash into the ip column.
     const insert = await client
       .from('widget_submissions')
       .insert({
@@ -84,7 +91,7 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
         widget_instance_id: instance.publicId,
         payload,
         payload_hash: payloadHash,
-        ip,
+        ip: ipHash ?? null,
         ua: userAgent,
       })
       .select('id')
@@ -92,7 +99,7 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
 
     if (insert.error) {
       if (/duplicate key|unique constraint|23505/i.test(insert.error.message)) {
-        return NextResponse.json({ status: 'accepted', deduped: true }, { status: 200 });
+        return NextResponse.json({ status: 'accepted', deduped: true }, { status: 202 });
       }
       if (/value too long|payload size/i.test(insert.error.message)) {
         return NextResponse.json([{ path: 'payload', message: 'payload exceeds maximum size' }], { status: 422 });
@@ -103,7 +110,7 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
     const headers = new Headers();
     setRateHeaders(headers, rl);
     headers.set('X-RateLimit-Backend', rl.backend);
-    return new NextResponse(JSON.stringify({ status: 'accepted', deduped: false }), { status: 200, headers });
+    return new NextResponse(JSON.stringify({ status: 'accepted', deduped: false }), { status: 202, headers });
   } catch (err) {
     if (err instanceof ValidationError) {
       return NextResponse.json([{ path: err.path, message: err.message }], { status: 422 });

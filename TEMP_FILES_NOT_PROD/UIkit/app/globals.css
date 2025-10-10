@@ -1,0 +1,163 @@
+@import "tailwindcss";
+@plugin "tailwind-scrollbar";
+
+@theme {
+    --breakpoint-*: initial;
+    --breakpoint-sm: 480px;
+    --breakpoint-md: 767px;
+    --breakpoint-lg: 1023px;
+    --breakpoint-xl: 1259px;
+    --breakpoint-2xl: 1419px;
+    --breakpoint-3xl: 1719px;
+    --breakpoint-4xl: 1899px;
+    --color-primary-50: #e8f0ff;
+    --color-primary-100: #b6cfff;
+    --color-primary-200: #93b8ff;
+    --color-primary-300: #6298ff;
+    --color-primary-400: #4484ff;
+    --color-primary-500: #1565ff;
+    --color-primary-600: #135ce8;
+    --color-primary-700: #0f48b5;
+    --color-primary-800: #0c388c;
+    --color-primary-900: #092a6b;
+    --color-gray-0: #ffffff;
+    --color-gray-25: #f6f8fa;
+    --color-gray-50: #eceff3;
+    --color-gray-100: #dfe1e7;
+    --color-gray-200: #c1c7d0;
+    --color-gray-300: #a4acb9;
+    --color-gray-400: #818898;
+    --color-gray-500: #666d80;
+    --color-gray-600: #36394a;
+    --color-gray-700: #272835;
+    --color-gray-800: #1a1b25;
+    --color-gray-900: #0d0d12;
+    --color-error-0: #fff0f3;
+    --color-error-25: #fadbe1;
+    --color-error-50: #ed8296;
+    --color-error-100: #df1c41;
+    --color-error-200: #96132c;
+    --color-error-300: #710e21;
+    --color-error-500: #df1c41;
+    --color-warning-0: #fff6e0;
+    --color-warning-25: #faedcc;
+    --color-warning-50: #fcda83;
+    --color-warning-100: #ffbe4c;
+    --color-warning-200: #966422;
+    --color-warning-300: #5c3d1f;
+    --color-warning-600: #d39c3d;
+    --color-success-0: #effefa;
+    --color-success-25: #ddf3ef;
+    --color-success-50: #9ee1d4;
+    --color-success-100: #40c4aa;
+    --color-success-200: #28806f;
+    --color-success-300: #184e44;
+    --color-success-600: #339d88;
+    --color-sky-0: #f0fbff;
+    --color-sky-25: #d1f0fa;
+    --color-sky-100: #33cfff;
+    --color-sky-200: #116b97;
+    --color-sky-300: #0c4e6e;
+    --color-white: #ffffff;
+    --default-transition-duration: 0.2s;
+    --font-inter-tight: var(--font-inter-tight);
+    --default-border-width: 0.0625rem;
+    --text-0: 0;
+    --text-h1: 3rem;
+    --text-h1--line-height: 3.6rem;
+    --text-h1--letter-spacing: 0;
+    --text-h1--font-weight: 600;
+    --text-h2: 2.5rem;
+    --text-h2--line-height: 2.75rem;
+    --text-h2--letter-spacing: 0;
+    --text-h2--font-weight: 600;
+    --text-h3: 2rem;
+    --text-h3--line-height: 2.5rem;
+    --text-h3--letter-spacing: 0;
+    --text-h3--font-weight: 600;
+    --text-h4: 1.5rem;
+    --text-h4--line-height: 1.95rem;
+    --text-h4--letter-spacing: 0;
+    --text-h4--font-weight: 600;
+    --text-h5: 1.25rem;
+    --text-h5--line-height: 1.65rem;
+    --text-h5--letter-spacing: 0;
+    --text-h5--font-weight: 600;
+    --text-h6: 1.125rem;
+    --text-h6--line-height: 1.5rem;
+    --text-h6--letter-spacing: 0;
+    --text-h6--font-weight: 600;
+    --text-body-sm: 0.75rem;
+    --text-body-sm--line-height: 1.125rem;
+    --text-body-sm--font-weight: 400;
+    --text-body-sm--letter-spacing: 0.02em;
+    --text-body-md: 0.875rem;
+    --text-body-md--line-height: 1.3rem;
+    --text-body-md--font-weight: 400;
+    --text-body-md--letter-spacing: 0.02em;
+    --text-body-lg: 1rem;
+    --text-body-lg--line-height: 1.5rem;
+    --text-body-lg--font-weight: 400;
+    --text-body-lg--letter-spacing: 0.02em;
+    --text-body-xl: 1.125rem;
+    --text-body-xl--line-height: 1.6rem;
+    --text-body-xl--font-weight: 400;
+    --text-body-xl--letter-spacing: 0.02em;
+    --shadow-xs: 0 0.0625rem 0.125rem 0 rgba(13, 13, 18, 0.06);
+    --shadow-sm: 0 0.0625rem 0.1875rem 0 rgba(13, 13, 18, 0.05),
+        0 0.0625rem 0.125rem 0 rgba(13, 13, 18, 0.04);
+    --shadow-md: 0 0.3125rem 0.625rem -0.125rem rgba(13, 13, 18, 0.04),
+        0 0.25rem 0.5rem -0.0625rem rgba(13, 13, 18, 0.02);
+    --shadow-lg: 0 0.75rem 1rem -0.25rem rgba(13, 13, 18, 0.08),
+        0 0.25rem 0.375rem -0.125rem rgba(13, 13, 18, 0.03);
+    --shadow-xl: 0 1.5rem 3rem -0.75rem rgba(13, 13, 18, 0.12);
+    --shadow-2xl: 0 1.5rem 3rem -0.75rem rgba(13, 13, 18, 0.18);
+}
+
+@layer base {
+    button {
+        @apply cursor-pointer;
+    }
+}
+
+@layer components {
+    .react-tooltip {
+        @apply z-50 !bg-gray-900 !px-3 !py-1.5 !rounded-lg !text-body-sm !text-white;
+    }
+    .recharts-surface {
+        @apply outline-none;
+    }
+    .recharts-sector {
+        @apply stroke-transparent outline-none;
+    }
+    .chart-tooltip {
+        @apply p-2.5 rounded-lg bg-white border border-gray-100 shadow-[0_0.25rem_0.6875rem_0_rgba(13,13,18,0.12)];
+    }
+    .status {
+        @apply inline-flex items-center gap-1 h-5 px-1.75 rounded-full border text-body-sm font-medium before:size-1.5 before:-ml-0.5 before:rounded-full;
+    }
+    .status-red {
+        @apply border-error-500 text-error-500 before:bg-error-500;
+    }
+    .status-green {
+        @apply border-success-600 text-success-600 before:bg-success-600;
+    }
+    .status-yellow {
+        @apply border-warning-600 text-warning-600 before:bg-warning-600;
+    }
+    .status-blue {
+        @apply border-primary-500 text-primary-500 before:bg-primary-500;
+    }
+    .status-sky {
+        @apply border-sky-100 text-sky-100 before:bg-sky-100;
+    }
+    .status-purple {
+        @apply border-[#6B39F4] text-[#6B39F4] before:bg-[#6B39F4];
+    }
+    .pattern-dots {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle fill='%23a4abb8' cx='1.5' cy='1.5' r='1.5'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 24px 24px;
+        background-position: 0 0;
+    }
+}

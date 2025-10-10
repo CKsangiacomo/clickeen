@@ -56,6 +56,8 @@ export async function GET() {
     },
   } as const;
 
-  const status = supabaseOk && edgeConfigOk ? 200 : 503;
+  // In development, Edge Config is optional since it's not available locally
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const status = supabaseOk && (edgeConfigOk || isDevelopment) ? 200 : 503;
   return NextResponse.json(body, { status });
 }

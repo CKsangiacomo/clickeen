@@ -1,0 +1,39 @@
+@import url('/dieter/tokens.css');
+@import url('/dieter/components/icon.css');
+@import url('/dieter/components/button.css');
+@import url('/dieter/components/segmented.css');
+
+/* Basic global styles */
+.btn {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background: #f5f5f5;
+}
+
+/* Icon sizing + color (fallbacks if tokens missing) */
+.studio-icon {
+  display: inline-block;
+  color: var(--studio-fg-muted, currentColor);
+  inline-size: var(--studio-icon-size, 16px);
+  block-size: var(--studio-icon-size, 16px);
+}
+.studio-icon[data-size="sm"] { --studio-icon-size: var(--studio-size-sm, 14px); }
+.studio-icon[data-size="md"] { --studio-icon-size: var(--studio-size-md, 16px); }
+.studio-icon[data-size="lg"] { --studio-icon-size: var(--studio-size-lg, 20px); }
+
+.studio-icon--loading,
+.studio-icon--missing {
+  inline-size: var(--studio-icon-size, 16px);
+  block-size: var(--studio-icon-size, 16px);
+  line-height: var(--studio-icon-size, 16px);
+  text-align: center;
+}

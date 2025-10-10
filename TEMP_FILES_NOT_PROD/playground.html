@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Dieter Playground</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+    <!-- Inter from Google Fonts (approved source) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Dieter tokens -->
+    <link rel="stylesheet" href="dieter/tokens/tokens.css">
+    <link rel="stylesheet" href="dieter/components/button.css">
+    <link rel="stylesheet" href="dieter/components/input.css">
+    <link rel="stylesheet" href="dieter/components/select.css">
+    <link rel="stylesheet" href="dieter/components/form.css">
+    <link rel="stylesheet" href="dieter/components/choice.css">
+    <link rel="stylesheet" href="dieter/components/textarea.css">
+    <link rel="stylesheet" href="dieter/components/form-validation.css">
+    <link rel="stylesheet" href="dieter/components/alert.css">
+    <link rel="stylesheet" href="dieter/components/skeleton.css">
+    <link rel="stylesheet" href="dieter/components/progress.css">
+    <link rel="stylesheet" href="dieter/components/badge.css">
+    <link rel="stylesheet" href="dieter/components/card.css">
+    <link rel="stylesheet" href="dieter/components/divider.css">
+    <link rel="stylesheet" href="dieter/components/container.css">
+    <link rel="stylesheet" href="dieter/components/table.css">
+    <link rel="stylesheet" href="dieter/components/pagination.css">
+    <link rel="stylesheet" href="dieter/components/breadcrumb.css">
+    <link rel="stylesheet" href="dieter/components/modal.css">
+    <link rel="stylesheet" href="dieter/components/toast.css">
+    <link rel="stylesheet" href="dieter/components/tabs.css">
+    <link rel="stylesheet" href="dieter/components/accordion.css">
+    <link rel="stylesheet" href="dieter/components/tooltip.css">
+    <link rel="stylesheet" href="dieter/components/popover.css">
+    <link rel="stylesheet" href="dieter/components/drawer.css">
+    <link rel="stylesheet" href="dieter/components/banner.css">
+    <link rel="stylesheet" href="dieter/components/navbar.css">
+    <link rel="stylesheet" href="dieter/components/sidebar.css">
+    <link rel="stylesheet" href="dieter/components/stepper.css">
+    <link rel="stylesheet" href="dieter/components/status.css">
+    <link rel="stylesheet" href="dieter/components/empty-state.css">
+    <link rel="stylesheet" href="dieter/components/chip.css">
+    <link rel="stylesheet" href="dieter/components/avatar.css">
+    <link rel="stylesheet" href="dieter/components/icon.css">
+    <link rel="stylesheet" href="dieter/components/icon-helpers.css">
+    <link rel="stylesheet" href="dieter/components/utilities.css">
+    <link rel="stylesheet" href="dieter/components/switch.css">
+    <link rel="stylesheet" href="dieter/components/toggle.css">
+    <link rel="stylesheet" href="dieter/components/button-group.css">
+    <link rel="stylesheet" href="dieter/components/segmented.css">
+
+    <style>
+      body { font: var(--fs-body)/var(--lh-body) var(--font-ui); background: var(--color-bg); color: var(--color-text); margin: 0; }
+      main { padding: var(--space-6); max-width: 72rem; margin: 0 auto; }
+      h1 { margin: 0 0 var(--space-4); }
+      p { color: var(--color-text-muted); }
+      .row { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
+      .grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); }
+      .k { width: 12rem; display:inline-block; color: var(--color-text-muted); }
+      .card { border-radius: var(--radius-4); padding: var(--space-4); }
+      .divider { height:1px; background: var(--color-border); margin: var(--space-6) 0; }
+      .badge { display:inline-block; border-radius: 999px; padding: 0.25rem 0.6rem; font: 600 var(--fs-12)/1 var(--font-ui); }
+
+      /* skip link */
+      .skip-link {
+        position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;
+      }
+      .skip-link:focus { position:static; width:auto; height:auto; padding: var(--space-2); background: var(--role-primary-bg); color: var(--role-primary-text); border-radius: var(--radius-4); }
+    </style>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <main id="main">
+      <div class="text-title-fluid m-4">Dieter Tokens Playground</div>
+      <p>Toggle OS dark mode; set <code>data-theme="hc"</code> on &lt;html&gt; to test high-contrast. Press <span class="kbd">Tab</span> to see focus rings.</p>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2 class="text-18 m-2">Buttons & Links (with focus ring)</h2>
+        <div class="row">
+          <button class="diet-btn">Primary Button</button>
+          <a class="diet-link" href="#">Link Example</a>
+        </div>
+      </section>
+
+      <section>
+        <h2>Controls Pack: Switch, Toggle, Button Group, Segmented</h2>
+        <div class="stack">
+
+          <!-- Switch -->
+          <div>
+            <h3>Switch</h3>
+            <label class="diet-switch">
+              <input type="checkbox" role="switch" aria-checked="false" aria-label="Airplane mode">
+              <span class="diet-switch__label">Airplane mode</span>
+            </label>
+            &nbsp;&nbsp;
+            <label class="diet-switch">
+              <input type="checkbox" role="switch" aria-checked="true" checked aria-label="Wi-Fi">
+              <span class="diet-switch__label">Wi-Fi</span>
+            </label>
+            &nbsp;&nbsp;
+            <label class="diet-switch">
+              <input type="checkbox" role="switch" disabled aria-label="Bluetooth (disabled)">
+              <span class="diet-switch__label">Bluetooth (disabled)</span>
+            </label>
+          </div>
+
+          <!-- Toggle (aria-pressed) -->
+          <div>
+            <h3>Toggle</h3>
+            <button class="diet-toggle" aria-pressed="false">Bold</button>
+            <button class="diet-toggle" aria-pressed="true">Italic</button>
+            <button class="diet-toggle diet-toggle--lg" aria-pressed="false">Underline</button>
+          </div>
+
+          <!-- Button Group -->
+          <div>
+            <h3>Button Group</h3>
+            <div class="diet-btn-group" role="group" aria-label="Align">
+              <button class="diet-btn" aria-pressed="true">Left</button>
+              <button class="diet-btn" aria-pressed="false">Center</button>
+              <button class="diet-btn" aria-pressed="false">Right</button>
+            </div>
+          </div>
+
+          <!-- Segmented Control -->
+          <div>
+            <h3>Segmented Control</h3>
+            <div class="diet-segmented" role="tablist" aria-label="Time range">
+              <button role="tab" aria-selected="true">7d</button>
+              <button role="tab" aria-selected="false">30d</button>
+              <button role="tab" aria-selected="false">90d</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Navbar -->
+      <section>
+        <h2>Navbar</h2>
+        <nav class="diet-navbar" aria-label="Top">
+          <div class="diet-navbar__brand">Clickeen</div>
+          <div class="diet-navbar__links">
+            <a class="diet-navbar__link" href="#" aria-current="page">Home</a>
+            <a class="diet-navbar__link" href="#">Docs</a>
+            <a class="diet-navbar__link" href="#">Pricing</a>
+            <a class="diet-navbar__link" href="#">About</a>
+          </div>
+        </nav>
+      </section>
+
+      <!-- Sidebar -->
+      <section>
+        <h2>Sidebar</h2>
+        <aside class="diet-sidebar" aria-label="Sections">
+          <div class="diet-sidebar__section">
+            <div class="diet-sidebar__label">General</div>
+            <a class="diet-sidebar__link" href="#" aria-current="page">Overview</a>
+            <a class="diet-sidebar__link" href="#">Activity</a>
+          </div>
+          <div class="diet-sidebar__section">
+            <div class="diet-sidebar__label">Settings</div>
+            <a class="diet-sidebar__link" href="#">Profile</a>
+            <a class="diet-sidebar__link" href="#">Billing</a>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Stepper -->
+      <section>
+        <h2>Stepper</h2>
+        <ol class="diet-stepper" role="list">
+          <li class="diet-step" aria-current="step"><span class="diet-step__circle">1</span> Account</li>
+          <li class="diet-step"><span class="diet-step__circle">2</span> Profile</li>
+          <li class="diet-step"><span class="diet-step__circle">3</span> Confirm</li>
+        </ol>
+      </section>
+
+      <!-- Status Indicator -->
+      <section>
+        <h2>Status Indicator</h2>
+        <p>
+          <span class="diet-status diet-status--success" role="status"><span class="diet-status__dot" aria-hidden="true"></span> Live</span>
+          &nbsp;&nbsp;
+          <span class="diet-status diet-status--warning" role="status"><span class="diet-status__dot" aria-hidden="true"></span> Degraded</span>
+          &nbsp;&nbsp;
+          <span class="diet-status diet-status--error" role="status"><span class="diet-status__dot" aria-hidden="true"></span> Down</span>
+        </p>
+      </section>
+
+      <!-- Empty State -->
+      <section>
+        <h2>Empty State</h2>
+        <div class="diet-empty" role="region" aria-label="Empty">
+          <div class="diet-empty__icon" aria-hidden="true"></div>
+          <div class="diet-empty__title">No items yet</div>
+          <p>Add your first item to get started.</p>
+          <button class="diet-empty__cta">Add Item</button>
+        </div>
+      </section>
+
+      <!-- Chip -->
+      <section>
+        <h2>Chip</h2>
+        <p>
+          <span class="diet-chip">Default</span>
+          &nbsp;
+          <span class="diet-chip diet-chip--primary">Primary <button class="diet-chip__dismiss" aria-label="Remove chip"></button></span>
+        </p>
+      </section>
+
+      <!-- Avatar -->
+      <section>
+        <h2>Avatar</h2>
+        <div style="display:flex; align-items:center; gap: var(--space-3);">
+          <span class="diet-avatar">CK</span>
+          <span class="diet-avatar diet-avatar--lg"><img src="https://picsum.photos/80" alt="User avatar"></span>
+        </div>
+      </section>
+
+      <!-- Banner -->
+      <section>
+        <h2>Banner</h2>
+        <div class="diet-banner diet-banner--info" role="status" aria-live="polite">
+          <span class="diet-banner__icon" aria-hidden="true"></span>
+          <div>
+            <div class="diet-banner__title">Heads up</div>
+            <div>We’ve updated our terms.</div>
+          </div>
+          <div class="diet-banner__actions">
+            <button class="diet-banner__btn">Review</button>
+            <button class="diet-banner__btn">Dismiss</button>
+          </div>
+        </div>
+        <div class="diet-banner diet-banner--error" role="alert" aria-live="assertive" style="margin-top: var(--space-3);">
+          <span class="diet-banner__icon" aria-hidden="true"></span>
+          <div>
+            <div class="diet-banner__title">Submission failed</div>
+            <div>Retry your request.</div>
+          </div>
+          <div class="diet-banner__actions">
+            <button class="diet-banner__btn">Retry</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drawer -->
+      <section id="drawer">
+        <h2>Drawer</h2>
+        <p><a class="diet-btn" href="#drawer">Open Drawer</a></p>
+        <!-- Target peers (must be siblings of #drawer anchor target) -->
+        <div class="diet-drawer-overlay" aria-hidden="true"></div>
+        <aside class="diet-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+          <header class="diet-drawer__header">
+            <div class="diet-drawer__title" id="drawer-title">Filters</div>
+            <a class="diet-drawer__close" href="#">Close</a>
+          </header>
+          <div>
+            <p class="text-14">Drawer content uses tokens and scrolls if long.</p>
+          </div>
+          <footer style="display:flex; gap: var(--space-2); justify-content:flex-end;">
+            <a class="diet-banner__btn" href="#">Cancel</a>
+            <a class="diet-banner__btn" href="#">Apply</a>
+          </footer>
+        </aside>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Feedback — Tooltip & Popover</h2>
+        <div class="stack">
+
+          <!-- Tooltip demo -->
+          <div>
+            <p>Hover or focus the info button to see a tooltip:</p>
+            <div class="diet-tooltip">
+              <button class="diet-tooltip-trigger" aria-describedby="tt-1">Info</button>
+              <div id="tt-1" role="tooltip" class="diet-tooltip-bubble">
+                Tooltips provide short, helpful hints. They appear on hover and keyboard focus.
+              </div>
+            </div>
+          </div>
+
+          <!-- Popover demo (details/summary) -->
+          <div>
+            <details class="diet-popover">
+              <summary aria-haspopup="menu" aria-expanded="false">Quick actions</summary>
+              <div class="diet-popover__panel" role="menu" aria-label="Quick actions">
+                <ul class="diet-popover__list">
+                  <li class="diet-popover__item"><a role="menuitem" href="#">Rename</a></li>
+                  <li class="diet-popover__item"><a role="menuitem" href="#">Duplicate</a></li>
+                  <li class="diet-popover__item"><a role="menuitem" href="#">Archive</a></li>
+                </ul>
+              </div>
+            </details>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Navigation — Tabs & Accordion</h2>
+        <div class="stack">
+
+          <!-- Tabs (CSS-only via :target) -->
+          <nav class="diet-tabs" aria-label="Sample tabs">
+            <div class="diet-tabs__list" role="tablist">
+              <a class="diet-tab" role="tab" href="#tab-overview" aria-controls="tab-overview" aria-current="page">Overview</a>
+              <a class="diet-tab" role="tab" href="#tab-details"  aria-controls="tab-details">Details</a>
+              <a class="diet-tab" role="tab" href="#tab-usage"    aria-controls="tab-usage">Usage</a>
+            </div>
+            <div class="diet-tabs__panels">
+              <section id="tab-overview" class="diet-tabpanel is-default" role="tabpanel" tabindex="-1" aria-labelledby="tab-overview">
+                <p>Overview content. Uses tokens-only chrome and is visible by default (no hash).</p>
+              </section>
+              <section id="tab-details" class="diet-tabpanel" role="tabpanel" tabindex="-1" aria-labelledby="tab-details">
+                <p>Details content. Shows when the URL hash targets <code>#tab-details</code>.</p>
+              </section>
+              <section id="tab-usage" class="diet-tabpanel" role="tabpanel" tabindex="-1" aria-labelledby="tab-usage">
+                <p>Usage content. Shows when the URL hash targets <code>#tab-usage</code>.</p>
+              </section>
+            </div>
+          </nav>
+
+          <!-- Accordion (native details/summary) -->
+          <div class="diet-accordion" aria-label="Sample accordion">
+            <details>
+              <summary><span class="diet-accordion__chev" aria-hidden="true"></span><strong>Account</strong></summary>
+              <div class="diet-accordion__panel">
+                <p>Manage profile, security, and preferences with accessible, native controls.</p>
+              </div>
+            </details>
+            <details>
+              <summary><span class="diet-accordion__chev" aria-hidden="true"></span><strong>Billing</strong></summary>
+              <div class="diet-accordion__panel">
+                <p>Payment methods, invoices, and usage breakdown live here.</p>
+              </div>
+            </details>
+            <details>
+              <summary><span class="diet-accordion__chev" aria-hidden="true"></span><strong>Notifications</strong></summary>
+              <div class="diet-accordion__panel">
+                <p>Email and push notifications, digest frequency, and message filters.</p>
+              </div>
+            </details>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Overlays</h2>
+        <div class="stack">
+          <!-- Modal -->
+          <div class="diet-modal-fallback">
+            <dialog class="diet-modal" open>
+              <div class="diet-modal__header">
+                <h3 class="diet-modal__title">Example Modal</h3>
+                <button class="diet-modal__close">Close</button>
+              </div>
+              <div class="diet-modal__body">
+                <p>This is a modal body. Tokens-only styling. Resize window to test centering.</p>
+              </div>
+              <div class="diet-modal__footer">
+                <button class="diet-btn diet-btn--secondary">Cancel</button>
+                <button class="diet-btn">Confirm</button>
+              </div>
+            </dialog>
+          </div>
+          <!-- Toast -->
+          <div class="diet-toast-region" role="region" aria-live="polite">
+            <div class="diet-toast diet-toast--success">
+              <div>
+                <div class="diet-toast__title">Success!</div>
+                <p>Your action completed.</p>
+              </div>
+              <button class="diet-toast__close">×</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Layout Pack B — Table, Pagination, Breadcrumb</h2>
+
+        <!-- Breadcrumb -->
+        <nav class="diet-breadcrumb" aria-label="Breadcrumb">
+          <span class="diet-crumb"><a href="#!">Home</a><span class="diet-crumb__sep">/</span></span>
+          <span class="diet-crumb"><a href="#!">Dashboard</a><span class="diet-crumb__sep">/</span></span>
+          <span class="diet-crumb diet-crumb--truncate" aria-current="page">Quarterly Performance Overview</span>
+        </nav>
+
+        <!-- Table (standard) -->
+        <div class="stack">
+          <table class="diet-table diet-table--zebra" role="table">
+            <thead>
+              <tr><th>Project</th><th>Owner</th><th>Status</th><th>Updated</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="Project"><a href="#!">Alpha</a></td>
+                <td data-label="Owner">Sofia</td>
+                <td data-label="Status"><span class="diet-badge diet-badge--soft diet-badge--success">On Track</span></td>
+                <td data-label="Updated">Today</td>
+              </tr>
+              <tr>
+                <td data-label="Project"><a href="#!">Beta</a></td>
+                <td data-label="Owner">Jon</td>
+                <td data-label="Status"><span class="diet-badge diet-badge--soft diet-badge--warning">At Risk</span></td>
+                <td data-label="Updated">Yesterday</td>
+              </tr>
+              <tr>
+                <td data-label="Project"><a href="#!">Gamma</a></td>
+                <td data-label="Owner">Priya</td>
+                <td data-label="Status"><span class="diet-badge diet-badge--soft diet-badge--danger">Blocked</span></td>
+                <td data-label="Updated">2 days ago</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Table compact -->
+          <table class="diet-table diet-table--compact" role="table" aria-label="Compact table example">
+            <thead><tr><th>Key</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Key">Build</td><td data-label="Value">#1428</td></tr>
+              <tr><td data-label="Key">Branch</td><td data-label="Value">main</td></tr>
+              <tr><td data-label="Key">Commit</td><td data-label="Value"><a href="#!">b9b43ef</a></td></tr>
+            </tbody>
+          </table>
+
+          <!-- Stacked responsive preview (opt-in) -->
+          <div data-table="stacked">
+            <table class="diet-table" role="table" aria-label="Stacked table example">
+              <thead><tr><th>Metric</th><th>Today</th><th>7d</th></tr></thead>
+              <tbody>
+                <tr><td data-label="Metric">Signups</td><td data-label="Today">128</td><td data-label="7d">923</td></tr>
+                <tr><td data-label="Metric">DAU</td><td data-label="Today">2,341</td><td data-label="7d">15,802</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="diet-pagination" aria-label="Pagination">
+          <a class="diet-page" href="#!" aria-disabled="true" aria-label="Previous">‹</a>
+          <a class="diet-page" href="!#">1</a>
+          <a class="diet-page" href="#!" aria-current="page">2</a>
+          <a class="diet-page" href="#!">3</a>
+          <a class="diet-page" href="#!" aria-label="Next">›</a>
+        </nav>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Layout Pack A — Card, Divider, Container</h2>
+
+        <div class="diet-container diet-stack">
+          <!-- Standard card -->
+          <article class="diet-card">
+            <header class="diet-card__header">
+              <div>
+                <div class="diet-card__title">Standard Card</div>
+                <div class="diet-card__subtitle">Header, body, footer with tokens-only styles</div>
+              </div>
+            </header>
+            <div class="diet-card__body">
+              <p class="text-16">Cards use surface, border, and text role tokens. Density can switch to compact. Elevated adds subtle shadow.</p>
+              <hr class="diet-divider diet-divider--inset">
+              <p class="text-14">This divider demonstrates the inset variant aligned to the card padding.</p>
+            </div>
+            <footer class="diet-card__footer">
+              <button class="diet-btn diet-btn--secondary">Cancel</button>
+              <button class="diet-btn">Primary</button>
+            </footer>
+          </article>
+
+          <!-- Compact + elevated -->
+          <article class="diet-card diet-card--compact diet-card--elevated">
+            <header class="diet-card__header">
+              <div>
+                <div class="diet-card__title">Compact Elevated</div>
+                <div class="diet-card__subtitle">Reduced padding, hover elevation</div>
+              </div>
+            </header>
+            <div class="diet-card__body">
+              <p class="text-14">Great for dense dashboards and side panels.</p>
+            </div>
+            <footer class="diet-card__footer">
+              <button class="diet-btn diet-btn--ghost">Details</button>
+              <button class="diet-btn">Action</button>
+            </footer>
+          </article>
+
+          <!-- Focusable card -->
+          <a class="diet-card diet-card--elevated" href="#!" tabindex="0" aria-label="Open project Alpha">
+            <header class="diet-card__header">
+              <div>
+                <div class="diet-card__title">Focusable Card Link</div>
+                <div class="diet-card__subtitle">Tab to see focus ring via tokens</div>
+              </div>
+            </header>
+            <div class="diet-card__body">
+              <p class="text-14">Cards can be links; focus-visible ring uses Dieter focus tokens.</p>
+            </div>
+          </a>
+
+          <!-- Container wide example -->
+          <div class="diet-container diet-container--wide">
+            <div class="diet-card">
+              <div class="diet-card__body">
+                <p class="text-14">This card sits in a wide container (max-width tokens). Resize the viewport to verify.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Checkbox & Radio (native)</h2>
+        <div class="stack">
+
+          <!-- Checkbox group -->
+          <div class="diet-choice-field" aria-describedby="cb-hint">
+            <div class="diet-choice-row">
+              <input id="cb1" class="diet-checkbox" type="checkbox" />
+              <label class="diet-choice-label" for="cb1">Email notifications</label>
+            </div>
+            <div class="diet-choice-row">
+              <input id="cb2" class="diet-checkbox diet-choice--lg" type="checkbox" checked />
+              <label class="diet-choice-label" for="cb2">SMS alerts (large)</label>
+            </div>
+            <p class="diet-choice-hint" id="cb-hint">You can change this anytime.</p>
+          </div>
+
+          <!-- Error + disabled checkbox -->
+          <div class="diet-choice-field" data-state="error" aria-describedby="cb-err">
+            <div class="diet-choice-row">
+              <input id="cb3" class="diet-checkbox" type="checkbox" aria-invalid="true" />
+              <label class="diet-choice-label" for="cb3">Terms not accepted</label>
+            </div>
+            <p class="diet-choice-error" id="cb-err">Please accept the terms.</p>
+            <div class="diet-choice-row">
+              <input id="cb4" class="diet-checkbox" type="checkbox" disabled />
+              <label class="diet-choice-label" for="cb4">Disabled option</label>
+            </div>
+          </div>
+
+          <!-- Radio group -->
+          <fieldset class="diet-choice-field" role="radiogroup" aria-describedby="rg-hint">
+            <legend class="diet-choice-label">Plan</legend>
+            <div class="diet-choice-row">
+              <input id="r1" class="diet-radio" name="plan" type="radio" checked />
+              <label class="diet-choice-label" for="r1">Free</label>
+            </div>
+            <div class="diet-choice-row">
+              <input id="r2" class="diet-radio" name="plan" type="radio" />
+              <label class="diet-choice-label" for="r2">Pro</label>
+            </div>
+            <div class="diet-choice-row">
+              <input id="r3" class="diet-radio diet-choice--sm" name="plan" type="radio" />
+              <label class="diet-choice-label" for="r3">Enterprise (small)</label>
+            </div>
+            <p class="diet-choice-hint" id="rg-hint">Choose one.</p>
+          </fieldset>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Form Group (layout + messages)</h2>
+
+        <div class="diet-form-stack">
+
+          <!-- Vertical field with help -->
+          <div class="diet-field">
+            <label class="diet-label diet-label--required" for="fg-email">Email</label>
+            <input id="fg-email" class="diet-input" type="email" placeholder="you@company.com" aria-describedby="fg-email-hint">
+            <p class="diet-hint" id="fg-email-hint">We’ll send receipts here.</p>
+          </div>
+
+          <!-- Horizontal field with error -->
+          <div class="diet-field diet-field--row">
+            <label class="diet-label" for="fg-plan">Plan</label>
+            <select id="fg-plan" class="diet-select" aria-invalid="true" aria-describedby="fg-plan-err">
+              <option>Free</option><option>Pro</option><option>Enterprise</option>
+            </select>
+            <p class="diet-error" id="fg-plan-err">Please choose a valid plan.</p>
+          </div>
+
+          <!-- Compact group with inline actions -->
+          <div class="diet-field diet-field--compact">
+            <label class="diet-label" for="fg-code">Invite code</label>
+            <div class="diet-inline">
+              <input id="fg-code" class="diet-input diet-input--sm" type="text" placeholder="ABC-123">
+              <button class="diet-btn diet-btn--sm">Apply</button>
+            </div>
+            <p class="diet-hint">Optional. Improves onboarding.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2 class="text-18 m-2">Color Roles</h2>
+        <div class="row">
+          <span class="badge bg-primary">Primary</span>
+          <span class="badge bg-success">Success</span>
+          <span class="badge bg-warn">Warn</span>
+          <span class="badge bg-danger">Danger</span>
+          <span class="badge bg-surface border-default" style="color:var(--color-text);">Surface</span>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="grid">
+        <div class="card bg-surface border-default state-surface">
+          <div class="text-16"><strong>Surface Card</strong></div>
+          <p class="muted">Hover/active overlays demonstrate state layers on surface. Focus any control to see focus ring.</p>
+          <button class="diet-btn">Action</button>
+        </div>
+
+        <div class="card bg-primary state-primary">
+          <div class="text-16">Primary Area</div>
+          <p class="text-14" style="opacity:.9">Hover/active overlays demonstrate state layers on primary.</p>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2 class="text-18 m-2">Touch Target & Labels</h2>
+        <div class="row">
+          <button class="diet-btn">Min 44px Height</button>
+          <label class="text-12" for="demo-input">Label (12px allowed)</label>
+          <input id="demo-input" class="p-2 border-default" style="border-radius: var(--radius-4);" placeholder="Focus me with Tab"/>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2 class="text-18 m-2">Spacing Utilities (quick check)</h2>
+        <div class="row">
+          <div class="card bg-surface border-default p-4 m-2">.p-4 .m-2</div>
+          <div class="card bg-surface border-default px-6 py-2 mx-4 my-6">.px-6 .py-2 .mx-4 .my-6</div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Buttons</h2>
+        <div class="stack">
+          <button class="diet-btn">Default</button>
+          <button class="diet-btn diet-btn--primary">Primary</button>
+          <button class="diet-btn diet-btn--ghost">Ghost</button>
+          <button class="diet-btn diet-btn--danger">Danger</button>
+        </div>
+
+        <div class="stack" style="margin-top: var(--space-4);">
+          <button class="diet-btn diet-btn--primary diet-btn--sm">Small</button>
+          <button class="diet-btn diet-btn--primary">Medium</button>
+          <button class="diet-btn diet-btn--primary diet-btn--lg">Large</button>
+        </div>
+
+        <div class="stack" style="margin-top: var(--space-4);">
+          <button class="diet-btn" disabled>Disabled</button>
+          <button class="diet-btn diet-btn--primary" data-state="loading" aria-busy="true">Loading</button>
+          <a class="diet-btn diet-btn--ghost" href="#" role="button">Link style</a>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Text Inputs</h2>
+
+        <div class="stack">
+          <div class="diet-field">
+            <label class="diet-label" for="ex1">Your name</label>
+            <input id="ex1" class="diet-input" type="text" placeholder="Jane Doe">
+            <p class="diet-help" id="ex1-help">We use this to personalize your experience.</p>
+          </div>
+
+          <div class="diet-field" data-state="error">
+            <label class="diet-label" for="ex2">Email <span class="diet-required"></span></label>
+            <input id="ex2" class="diet-input" type="email" placeholder="you@example.com" aria-invalid="true" aria-describedby="ex2-err">
+            <p class="diet-error" id="ex2-err">Please enter a valid email address.</p>
+          </div>
+
+          <div class="diet-field">
+            <label class="diet-label" for="ex3">Read-only</label>
+            <input id="ex3" class="diet-input" type="text" value="Fixed value" readonly>
+          </div>
+
+          <div class="diet-field">
+            <label class="diet-label" for="ex4">Disabled</label>
+            <input id="ex4" class="diet-input" type="text" placeholder="Cannot edit" disabled>
+          </div>
+
+          <div class="diet-field">
+            <label class="diet-label" for="ex5">Sizes</label>
+            <input id="ex5" class="diet-input diet-input--sm" placeholder="Small">
+            <input class="diet-input" placeholder="Medium">
+            <input class="diet-input diet-input--lg" placeholder="Large">
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Selects (native)</h2>
+        <div class="stack">
+
+          <div class="diet-select-field">
+            <label class="diet-label" for="sel1">Country</label>
+            <select id="sel1" class="diet-select" aria-describedby="sel1-help">
+              <option value="" disabled selected class="diet-select-placeholder">Select a country</option>
+              <option>United States</option>
+              <option>Canada</option>
+              <option>United Kingdom</option>
+            </select>
+            <p class="diet-select-help" id="sel1-help">Used for localization and taxes.</p>
+          </div>
+
+          <div class="diet-select-field" data-state="error">
+            <label class="diet-label" for="sel2">Plan</label>
+            <select id="sel2" class="diet-select" aria-invalid="true" aria-describedby="sel2-err">
+              <option value="" disabled selected class="diet-select-placeholder">Choose a plan</option>
+              <option>Free</option><option>Pro</option><option>Enterprise</option>
+            </select>
+            <p class="diet-select-error" id="sel2-err">Please pick a plan.</p>
+          </div>
+
+          <div class="diet-select-field">
+            <label class="diet-label" for="sel3">Read-only (disabled)</label>
+            <select id="sel3" class="diet-select" disabled>
+              <option>Unavailable</option>
+            </select>
+          </div>
+
+          <div class="diet-select-field">
+            <label class="diet-label" for="sel4">Sizes</label>
+            <select id="sel4" class="diet-select diet-select--sm"><option>Small</option></select>
+            <select class="diet-select"><option>Medium</option></select>
+            <select class="diet-select diet-select--lg"><option>Large</option></select>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Alert</h2>
+        <div class="stack">
+
+          <div class="diet-alert diet-alert--info" role="status" aria-live="polite">
+            <span class="diet-alert__icon" aria-hidden="true"></span>
+            <div>
+              <p class="diet-alert__title">Heads up</p>
+              <p class="diet-alert__body">This is an informational message. <a href="#">Learn more</a></p>
+            </div>
+          </div>
+
+          <div class="diet-alert diet-alert--success" role="status" aria-live="polite">
+            <span class="diet-alert__icon" aria-hidden="true"></span>
+            <div>
+              <p class="diet-alert__title">Success</p>
+              <p class="diet-alert__body">Your settings were saved.</p>
+            </div>
+          </div>
+
+          <div class="diet-alert diet-alert--warning" role="status" aria-live="polite">
+            <span class="diet-alert__icon" aria-hidden="true"></span>
+            <div>
+              <p class="diet-alert__title">Warning</p>
+              <p class="diet-alert__body">You’re nearing your plan limits.</p>
+            </div>
+          </div>
+
+          <div class="diet-alert diet-alert--error" role="alert" aria-live="assertive">
+            <span class="diet-alert__icon" aria-hidden="true"></span>
+            <div>
+              <p class="diet-alert__title">Error</p>
+              <p class="diet-alert__body">Something went wrong. <button type="button">Retry</button></p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Loading Primitives</h2>
+        <div class="stack">
+
+          <!-- Skeleton -->
+          <div>
+            <h3>Skeleton</h3>
+            <div class="stack" style="gap: var(--space-2); max-inline-size: 40rem;">
+              <span class="diet-skeleton diet-skeleton--text"></span>
+              <span class="diet-skeleton diet-skeleton--text diet-skeleton--sm" style="inline-size: 80%;"></span>
+              <span class="diet-skeleton diet-skeleton--text diet-skeleton--lg" style="inline-size: 60%;"></span>
+              <div style="display:flex; align-items:center; gap: var(--space-3);">
+                <span class="diet-skeleton diet-skeleton--avatar" aria-hidden="true"></span>
+                <div style="flex:1">
+                  <span class="diet-skeleton diet-skeleton--text" style="inline-size: 70%;"></span>
+                  <span class="diet-skeleton diet-skeleton--text diet-skeleton--sm" style="inline-size: 40%; margin-block-start: var(--space-2);"></span>
+                </div>
+              </div>
+              <div class="diet-skeleton diet-skeleton--rect" style="inline-size: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div>
+            <h3>Progress (determinate)</h3>
+            <div class="stack" style="gap: var(--space-3); max-inline-size: 40rem;">
+              <div class="diet-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="24" aria-label="Uploading">
+                <div class="diet-progress__bar" style="inline-size:24%;"></div>
+                <span class="diet-sr">Uploading — 24%</span>
+              </div>
+
+              <div class="diet-progress diet-progress--success diet-progress--sm" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="68" aria-label="Processing">
+                <div class="diet-progress__bar" style="inline-size:68%;"></div>
+                <span class="diet-sr">Processing — 68%</span>
+              </div>
+
+              <div class="diet-progress diet-progress--warning" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="92" aria-label="Indexing">
+                <div class="diet-progress__bar" style="inline-size:92%;"></div>
+                <span class="diet-sr">Indexing — 92%</span>
+              </div>
+
+              <div class="diet-progress diet-progress--danger diet-progress--lg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="12" aria-label="Retrying">
+                <div class="diet-progress__bar" style="inline-size:12%;"></div>
+                <span class="diet-sr">Retrying — 12%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Badge & Tag</h2>
+        <div class="stack">
+
+          <!-- Badges: solid -->
+          <div>
+            <h3 class="text-14">Badges — solid</h3>
+            <div class="diet-badges">
+              <span class="diet-badge diet-badge--md diet-badge--neutral">Neutral</span>
+              <span class="diet-badge diet-badge--md diet-badge--primary">Primary</span>
+              <span class="diet-badge diet-badge--md diet-badge--success">Success</span>
+              <span class="diet-badge diet-badge--md diet-badge--warning">Warning</span>
+              <span class="diet-badge diet-badge--md diet-badge--danger">Danger</span>
+            </div>
+          </div>
+
+          <!-- Badges: soft -->
+          <div>
+            <h3 class="text-14">Badges — soft</h3>
+            <div class="diet-badges">
+              <span class="diet-badge diet-badge--md diet-badge--soft diet-badge--primary">Primary</span>
+              <span class="diet-badge diet-badge--md diet-badge--soft diet-badge--success">Success</span>
+              <span class="diet-badge diet-badge--md diet-badge--soft diet-badge--warning">Warning</span>
+              <span class="diet-badge diet-badge--md diet-badge--soft diet-badge--danger">Danger</span>
+            </div>
+          </div>
+
+          <!-- Tags: outline + dismiss affordance (no JS) -->
+          <div>
+            <h3 class="text-14">Tags — outline</h3>
+            <div class="diet-badges">
+              <span class="diet-tag diet-tag--md diet-tag--neutral">Neutral</span>
+              <span class="diet-tag diet-tag--md diet-tag--primary">Primary</span>
+              <span class="diet-tag diet-tag--md diet-tag--success">Success</span>
+              <span class="diet-tag diet-tag--md diet-tag--warning">Warning</span>
+              <span class="diet-tag diet-tag--md diet-tag--danger">Danger</span>
+            </div>
+          </div>
+
+          <!-- Tags with dismiss button (keyboard focusable) -->
+          <div>
+            <h3 class="text-14">Tags — dismiss affordance</h3>
+            <div class="diet-badges">
+              <span class="diet-tag diet-tag--md diet-tag--primary" role="group" aria-label="Tag: Design">
+                Design
+                <button type="button" class="diet-tag__dismiss" aria-label="Remove tag Design">×</button>
+              </span>
+              <span class="diet-tag diet-tag--md diet-tag--success" role="group" aria-label="Tag: Ready">
+                Ready
+                <button type="button" class="diet-tag__dismiss" aria-label="Remove tag Ready">×</button>
+              </span>
+              <span class="diet-tag diet-tag--md diet-tag--warning" role="group" aria-label="Tag: Review">
+                Review
+                <button type="button" class="diet-tag__dismiss" aria-label="Remove tag Review">×</button>
+              </span>
+            </div>
+            <p class="text-12">Note: dismiss is markup-only for focus/accessibility; no JS behavior in v0.</p>
+          </div>
+
+          <!-- Size matrix -->
+          <div>
+            <h3 class="text-14">Sizes</h3>
+            <div class="diet-badges">
+              <span class="diet-badge diet-badge--sm diet-badge--primary">sm</span>
+              <span class="diet-badge diet-badge--md diet-badge--primary">md</span>
+              <span class="diet-badge diet-badge--lg diet-badge--primary">lg</span>
+              <span class="diet-tag diet-tag--sm diet-tag--neutral">sm</span>
+              <span class="diet-tag diet-tag--md diet-tag--neutral">md</span>
+              <span class="diet-tag diet-tag--lg diet-tag--neutral">lg</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Form Validation Patterns</h2>
+        <div class="stack">
+
+          <!-- Validation Summary (Error) -->
+          <div class="diet-validate-summary diet-validate-summary--error" role="alert" aria-live="assertive">
+            <span class="diet-validate-summary__icon" aria-hidden="true"></span>
+            <div>
+              <strong>There are problems with your submission.</strong>
+              <div>Please fix the highlighted fields below. <a href="#v-email">Jump to email</a></div>
+            </div>
+          </div>
+
+          <!-- Email (error) -->
+          <div class="diet-input-field" id="v-email" data-state="error">
+            <label class="diet-label" for="email1">Email</label>
+            <input id="email1" class="diet-input" type="email" aria-invalid="true" aria-describedby="email1-err" placeholder="you@company.com">
+            <p class="diet-inline-msg diet-inline-msg--error" id="email1-err">Enter a valid email address.</p>
+          </div>
+
+          <!-- Bio (warning) -->
+          <div class="diet-textarea-field" data-state="warning">
+            <label class="diet-label" for="bio1">Bio</label>
+            <textarea id="bio1" class="diet-textarea" aria-describedby="bio1-warn" placeholder="Max 200 chars"></textarea>
+            <p class="diet-inline-msg diet-inline-msg--warning" id="bio1-warn">You’re nearing the 200 character limit.</p>
+          </div>
+
+          <!-- Country (success) -->
+          <div class="diet-select-field" data-state="success">
+            <label class="diet-label" for="country1">Country</label>
+            <select id="country1" class="diet-select" aria-describedby="country1-ok">
+              <option>United States</option>
+              <option>Canada</option>
+              <option>Italy</option>
+            </select>
+            <p class="diet-inline-msg diet-inline-msg--success" id="country1-ok">Looks good!</p>
+          </div>
+
+          <!-- Success summary example -->
+          <div class="diet-validate-summary diet-validate-summary--success" role="status" aria-live="polite">
+            <span class="diet-validate-summary__icon" aria-hidden="true"></span>
+            <div>
+              <strong>All checks passed.</strong>
+              <div>Your form is ready to submit.</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section>
+        <h2>Textarea (native)</h2>
+        <div class="stack">
+
+          <!-- Basic with help -->
+          <div class="diet-textarea-field">
+            <label class="diet-label" for="ta1">About you</label>
+            <textarea id="ta1" class="diet-textarea" placeholder="Tell us something..." aria-describedby="ta1-hint"></textarea>
+            <p class="diet-textarea-hint" id="ta1-hint">Max 500 characters.</p>
+          </div>
+
+          <!-- Error -->
+          <div class="diet-textarea-field" data-state="error">
+            <label class="diet-label" for="ta2">Feedback</label>
+            <textarea id="ta2" class="diet-textarea" aria-invalid="true" aria-describedby="ta2-err">This is too short</textarea>
+            <p class="diet-textarea-error" id="ta2-err">Please provide more details.</p>
+          </div>
+
+          <!-- Disabled & sizes -->
+          <div class="diet-textarea-field">
+            <label class="diet-label" for="ta3">Disabled</label>
+            <textarea id="ta3" class="diet-textarea" disabled>Unavailable</textarea>
+          </div>
+
+          <div class="diet-textarea-field">
+            <label class="diet-label" for="ta4">Sizes</label>
+            <textarea id="ta4" class="diet-textarea diet-textarea--sm" placeholder="Small"></textarea>
+            <textarea class="diet-textarea" placeholder="Medium"></textarea>
+            <textarea class="diet-textarea diet-textarea--lg" placeholder="Large"></textarea>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </body>
+  
+  <!-- Dieter Playground Controls: theme + type scale -->
+  <style>
+    .play-controls {
+      position: fixed; inset: 1rem 1rem auto auto;
+      display: grid; gap: .5rem; padding: .75rem;
+      background: var(--color-role-surface);
+      border: 1px solid var(--color-role-border);
+      border-radius: .5rem;
+      box-shadow: var(--shadow-md, 0 2px 8px rgb(0 0 0 / .1));
+      z-index: 9999;
+    }
+    .play-controls .row { display:flex; gap:.5rem; align-items:center; }
+    .play-controls .title { font-weight:600; }
+    .play-controls button {
+      font: inherit; cursor: pointer; min-height: 2.75rem;
+      padding: 0 .75rem; border-radius: .375rem;
+      border: 1px solid var(--color-role-border);
+      background: var(--color-role-surface);
+      color: var(--color-role-text-primary);
+    }
+    .play-controls button[aria-pressed="true"]{
+      background: var(--color-role-primary-bg);
+      color: var(--color-role-on-primary, #fff);
+      border-color: var(--color-role-primary-border, transparent);
+    }
+    .play-controls input[type="range"]{ width: 8rem; }
+  </style>
+
+  <div class="play-controls" role="group" aria-label="Playground controls">
+    <div class="row"><span class="title">Theme</span>
+      <button class="js-theme" data-theme="light"  aria-pressed="false">Light</button>
+      <button class="js-theme" data-theme="dark"   aria-pressed="false">Dark</button>
+      <button class="js-theme" data-theme="hc"     aria-pressed="false">High Contrast</button>
+      <button id="js-theme-reset" aria-pressed="false" title="Reset theme">Reset</button>
+    </div>
+    <div class="row"><span class="title">Type</span>
+      <label for="js-type">base rem</label>
+      <input id="js-type" type="range" min="14" max="20" step="1" value="16" />
+      <span id="js-type-val">16px</span>
+      <button id="js-type-reset" aria-pressed="false" title="Reset type">Reset</button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    const root = document.documentElement;
+    const pressed = (btn) => {
+      document.querySelectorAll('.js-theme').forEach(b=>b.setAttribute('aria-pressed','false'));
+      if (btn) btn.setAttribute('aria-pressed','true');
+    };
+    const applyTheme = (mode) => {
+      // Light/Dark rely on prefers-color-scheme CSS already present; we toggle data-theme only for hc.
+      if (mode === 'hc') {
+        root.setAttribute('data-theme','hc'); pressed(document.querySelector('[data-theme="hc"].js-theme'));
+      } else {
+        root.removeAttribute('data-theme');
+        if (mode === 'light') pressed(document.querySelector('[data-theme="light"].js-theme'));
+        if (mode === 'dark')  pressed(document.querySelector('[data-theme="dark"].js-theme'));
+      }
+    };
+    document.querySelectorAll('.js-theme').forEach(btn=>{
+      btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+    });
+    document.getElementById('js-theme-reset').addEventListener('click', () => { root.removeAttribute('data-theme'); pressed(null); });
+
+    // Type scale (rem) — adjusts root font-size only, everything uses rem
+    const range = document.getElementById('js-type');
+    const label = document.getElementById('js-type-val');
+    const setRem = (px) => { root.style.fontSize = px + 'px'; label.textContent = px + 'px'; };
+    range.addEventListener('input', () => setRem(range.value));
+    document.getElementById('js-type-reset').addEventListener('click', () => { range.value = 16; setRem(16); });
+
+    // Init
+    setRem(range.value);
+  })();
+  </script>
+  <!-- /Dieter Playground Controls -->
+</html>
+
+
