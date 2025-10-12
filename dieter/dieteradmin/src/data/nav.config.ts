@@ -6,6 +6,6 @@ export interface NavConfig {
 export const navConfig: NavConfig = {
   groups: [
     { id: 'foundations', title: 'Foundations', items: ['typography', 'colors', 'icons'] },
-    { id: 'components', title: 'Components', items: ['button', 'segmented', 'textfield'] },
+    { id: 'components', title: 'Components', items: ['button', 'segmented', 'textfield', 'dropdown'] },
   ],
 };

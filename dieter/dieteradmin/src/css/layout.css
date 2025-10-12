@@ -112,7 +112,6 @@ body {
   width: 100%;
   text-decoration: none;
   color: inherit;
-  --btn-padding-inline: 0.75rem;
 }
 
 .nav-link.diet-btn {
@@ -318,6 +317,79 @@ body {
   border-radius: var(--radius-4, 0.5rem);
   padding: var(--space-6, 1.5rem);
   background: var(--color-bg);
+}
+
+.notes-block {
+  display: grid;
+  gap: var(--hspace-9, 0.8rem);
+}
+
+.notes-block__heading {
+  margin: 0;
+  color: color-mix(in oklab, var(--color-text), transparent 40%);
+}
+
+.notes-block__cards {
+  display: grid;
+  gap: var(--hspace-8, 0.7rem);
+}
+
+.notes-card {
+  display: grid;
+  gap: var(--hspace-3, 0.2rem);
+  padding: var(--space-4, 1rem);
+  border-radius: var(--radius-4, 0.5rem);
+  background: var(--color-system-gray-4);
+  border: none;
+  box-shadow: none;
+}
+
+.notes-card__label {
+  margin: 0;
+  display: block;
+  color: color-mix(in oklab, var(--color-text), transparent 25%);
+}
+
+.notes-card__body {
+  display: grid;
+  gap: var(--hspace-2, 0.1rem);
+}
+
+.notes-card__body .body-small {
+  margin: 0;
+  padding-left: var(--space-3, 0.75rem);
+  color: color-mix(in oklab, var(--color-text), transparent 15%);
+  position: relative;
+}
+
+.notes-card__body .body-small::before {
+  content: '- ';
+  position: absolute;
+  inset-inline-start: 0;
+}
+
+.code-block {
+  display: grid;
+  gap: var(--hspace-8, 0.7rem);
+  padding: var(--space-4, 1rem);
+  border-radius: var(--radius-4, 0.5rem);
+  background: var(--color-system-gray-4);
+  border: none;
+  box-shadow: none;
+}
+
+.code-block__heading {
+  margin: 0;
+  color: color-mix(in oklab, var(--color-text), transparent 40%);
+  color: inherit;
+}
+
+.code-block__body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 }
 
 .demo-grid {

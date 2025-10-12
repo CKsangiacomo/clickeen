@@ -2,6 +2,10 @@ import '@dieter/tokens/tokens.css';
 import '@dieter/components/button.css';
 import '@dieter/components/segmented.css';
 import '@dieter/components/textfield.css';
+import '@dieter/components/dropdown.css';
+import '@dieter/components/expander.css';
+import '@dieter/components/toggle.css';
+import '@dieter/components/tabs.css';
 
 import { showcasePages, showcaseIndex, navGroups, type NavItem } from './data/routes';
 import { getIcon } from './data/icons';
@@ -130,25 +134,23 @@ const themeControl = document.createElement('div');
 themeControl.className = 'diet-segmented';
 themeControl.setAttribute('role', 'radiogroup');
 themeControl.setAttribute('data-size', 'lg');
-themeControl.setAttribute('data-type', 'icon-only');
 themeControl.innerHTML = `
-  <label class="diet-segment">
+  <label class="diet-segment" data-type="icon-only">
     <input type="radio" name="theme" value="light" class="diet-segment__input" checked>
-    <span class="diet-segment__surface"></span>
-    <span class="diet-segment__icon">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.5" fill="currentColor"/><path d="M8 1v2M8 13v2M15 8h-2M3 8H1M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41M12.95 12.95l-1.41-1.41M4.46 4.46L3.05 3.05" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    </span>
+    <span class="diet-segment__surface" aria-hidden="true"></span>
+    <span class="diet-segment__icon" aria-hidden="true" data-icon="sun.max"></span>
     <span class="diet-segment__sr">Light theme</span>
   </label>
-  <label class="diet-segment">
+  <label class="diet-segment" data-type="icon-only">
     <input type="radio" name="theme" value="dark" class="diet-segment__input">
-    <span class="diet-segment__surface"></span>
-    <span class="diet-segment__icon">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8.5c-.3 3.9-3.6 7-7.5 7C2.9 15.5 0 12.6 0 9S2.9 2.5 6.5 2.5c.8 0 1.5.1 2.2.4-.5.6-.7 1.4-.7 2.2 0 2.1 1.7 3.8 3.8 3.8.8 0 1.6-.2 2.2-.6z" fill="currentColor"/></svg>
-    </span>
+    <span class="diet-segment__surface" aria-hidden="true"></span>
+    <span class="diet-segment__icon" aria-hidden="true" data-icon="moon.fill"></span>
     <span class="diet-segment__sr">Dark theme</span>
   </label>
 `;
+
+// Hydrate Dieter icons in the sidebar segmented, same as previews
+try { hydrateIcons(themeControl); } catch {}
 
 themeControl.querySelectorAll('input[name="theme"]').forEach((input) => {
   input.addEventListener('change', (e) => {
@@ -243,6 +245,76 @@ type RenderResult = HTMLElement;
 
 const renderShowcase = (slug?: string): RenderResult => {
   if (!slug) return renderNotFound('Component showcase not specified');
+  // Special case: Bob page → keep page header, but preview body is a pure empty container.
+  if (slug === 'bob') {
+    const article = document.createElement('article');
+    article.className = 'stack';
+    // Ensure bottom breathing room so preview doesn't touch viewport bottom
+    try {
+      (article.style as any).paddingBottom = '40px';
+      // Constrain the article to viewport height minus the bottom padding,
+      // and let the preview fill remaining space without overflowing.
+      (article.style as any).minHeight = 'calc(100vh - 40px)';
+      (article.style as any).display = 'grid';
+      (article.style as any).gridTemplateRows = 'auto 1fr';
+    } catch {}
+
+    const headerSection = document.createElement('header');
+    headerSection.className = 'stack';
+    headerSection.innerHTML = `
+      <h1 class="heading-2" style="margin:0">Bob</h1>
+    `;
+
+    const previewSection = document.createElement('section');
+    previewSection.id = 'Bob-Preview';
+    previewSection.className = 'stack';
+    // Bob preview should be a pure empty container filling the available height
+    try {
+      (previewSection.style as any).background = 'var(--color-system-gray-5)';
+      (previewSection.style as any).minHeight = '0';
+      (previewSection.style as any).height = '100%';
+      (previewSection.style as any).overflow = 'hidden';
+      (previewSection.style as any).padding = '16px';
+      (previewSection.style as any).boxSizing = 'border-box';
+    } catch {}
+
+    // Serve Bob inside the preview as an iframe (fills the container)
+    // Default behavior: point to the root path '/' to match local Next dev
+    // and typical deployments. Still honor VITE_BOB_URL and VITE_BOB_PATH
+    // when provided.
+    try {
+      const base = String((import.meta as any).env?.VITE_BOB_URL || 'http://localhost:3000');
+      let bobPath = (import.meta as any).env?.VITE_BOB_PATH as string | undefined;
+      if (!bobPath) {
+        try {
+          const u = new URL(base);
+          // Prefer root '/' by default (works for local dev and most hosts)
+          // Only use '/bob' when explicitly provided via VITE_BOB_PATH.
+          bobPath = '/';
+          // If someone really hosts Bob at a subpath, they can set VITE_BOB_PATH.
+          // Keep a minimal heuristic: if port is non-empty and not 3000, still default to '/'.
+          // This avoids hardcoding '/bob' which caused 404s in production builds.
+          void u; // avoid unused var in some bundlers
+        } catch {
+          // If base is not a valid URL string, still fall back to root
+          bobPath = '/';
+        }
+      }
+      const url = base.replace(/\/$/, '') + (bobPath.startsWith('/') ? bobPath : `/${bobPath}`);
+      const frame = document.createElement('iframe');
+      frame.src = url;
+      frame.setAttribute('title', 'Bob');
+      frame.style.width = '100%';
+      frame.style.height = '100%';
+      frame.style.border = '0';
+      frame.style.background = 'transparent';
+      frame.style.borderRadius = '12px';
+      previewSection.append(frame);
+    } catch {}
+
+    article.append(headerSection, previewSection);
+    return article;
+  }
   const preview = showcaseIndex.get(slug);
   if (!preview) return renderNotFound('Component showcase not found');
 
@@ -259,6 +331,7 @@ const renderShowcase = (slug?: string): RenderResult => {
   previewSection.id = 'preview';
   previewSection.className = 'stack';
   const previewFragment = buildHtmlFragment(preview.htmlPath);
+  wireDropdownDemo(previewFragment);
   previewSection.append(previewFragment);
 
   if (preview.css.length > 0) {
@@ -290,9 +363,11 @@ const buildHtmlFragment = (path: string) => {
   try {
     hydrateIcons(wrapper);
     applyDynamicSpecs(wrapper);
+    applySectionColumnSizing(wrapper);
   } catch {
     // Non-fatal: previews still render with original content
   }
+  wireDropdownDemo(wrapper);
   return wrapper;
 };
 
@@ -335,6 +410,18 @@ const setActiveNav = (path: string) => {
 };
 
 const handleRoute = (match: RouteMatch) => {
+  // Per-page background override: Bob page uses pure white page background only for this page
+  try {
+    if (match.kind === 'showcase' && match.slug === 'bob') {
+      document.body.style.background = 'var(--color-system-white)';
+      (shell.style as any).background = 'var(--color-system-white)';
+    } else {
+      // Revert to stylesheet defaults for all other pages
+      document.body.style.removeProperty('background');
+      (shell.style as any).removeProperty?.('background');
+    }
+  } catch {}
+
   const firstNavItem = navGroups.find((group) => group.items.length > 0)?.items[0];
   if (match.kind === 'home') {
     if (firstNavItem) {
@@ -350,25 +437,112 @@ const handleRoute = (match: RouteMatch) => {
   contentSection.replaceChildren(rendered);
   // Also run a final pass on the whole rendered section
   hydrateIcons(rendered);
-  try { applyDynamicSpecs(rendered); } catch {}
+  try {
+    applyDynamicSpecs(rendered);
+    applySectionColumnSizing(rendered);
+    wireDropdownDemo(rendered);
+  } catch {}
 };
 
 startRouter(handleRoute);
 
 // ---- Dynamic spec generation (Admin-only) ----
 
+const activeDropdowns = new Set<HTMLElement>();
+let dropdownDocumentListenersAttached = false;
+
+function closeDropdown(dropdown: HTMLElement) {
+  const trigger = dropdown.querySelector<HTMLElement>('[data-dropdown-trigger]');
+  const surface = dropdown.querySelector<HTMLElement>('[data-dropdown-surface]');
+  dropdown.setAttribute('data-state', 'closed');
+  trigger?.setAttribute('aria-expanded', 'false');
+  surface?.removeAttribute('tabindex');
+  activeDropdowns.delete(dropdown);
+}
+
+function handleDropdownDocPointer(event: Event) {
+  activeDropdowns.forEach((dropdown) => {
+    if (!dropdown.contains(event.target as Node)) {
+      closeDropdown(dropdown);
+    }
+  });
+}
+
+function handleDropdownDocKey(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return;
+  const targetDropdown = Array.from(activeDropdowns).find((dropdown) => dropdown.contains(event.target as Node));
+  if (targetDropdown) {
+    closeDropdown(targetDropdown);
+    const trigger = targetDropdown.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
+    trigger?.focus();
+  }
+}
+
+function ensureDropdownDocumentListeners() {
+  if (dropdownDocumentListenersAttached) return;
+  document.addEventListener('pointerdown', handleDropdownDocPointer, true);
+  document.addEventListener('keydown', handleDropdownDocKey);
+  dropdownDocumentListenersAttached = true;
+}
+
+function toggleDropdown(dropdown: HTMLElement, force?: 'open' | 'closed') {
+  const trigger = dropdown.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
+  const isOpen = dropdown.getAttribute('data-state') === 'open';
+  const nextState = force ? force : isOpen ? 'closed' : 'open';
+  if (nextState === 'open') {
+    dropdown.setAttribute('data-state', 'open');
+    trigger?.setAttribute('aria-expanded', 'true');
+    ensureDropdownDocumentListeners();
+    activeDropdowns.add(dropdown);
+    const surface = dropdown.querySelector<HTMLElement>('[data-dropdown-surface]');
+    surface?.setAttribute('tabindex', '-1');
+    surface?.focus({ preventScroll: true });
+  } else {
+    closeDropdown(dropdown);
+  }
+}
+
+function wireDropdownDemo(scope: Element) {
+  const dropdowns = scope.querySelectorAll<HTMLElement>('[data-demo="dropdown"]');
+  dropdowns.forEach((dropdown) => {
+    if (dropdown.dataset.dropdownWired === 'true') return;
+    dropdown.dataset.dropdownWired = 'true';
+    const trigger = dropdown.querySelector<HTMLButtonElement>('[data-dropdown-trigger]');
+    if (!trigger) return;
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      toggleDropdown(dropdown);
+    });
+    trigger.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleDropdown(dropdown, 'open');
+      }
+    });
+    dropdown.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        closeDropdown(dropdown);
+        trigger.focus();
+      }
+    });
+  });
+}
+
 const SIZE_PX: Record<string, number> = { xs: 16, sm: 20, md: 24, lg: 28, xl: 32 } as const;
 const DEFAULT_SIZE_BY_COMPONENT: Record<string, string> = {
   'diet-segmented': 'sm',
   'diet-input': 'md',
   'diet-btn': 'md',
+  'diet-toggle': 'md',
+  'diet-tabs': 'md',
 };
 
 function findComponentRoot(container: Element): { el: HTMLElement; name: string } | null {
   // Prefer explicit known roots
-  const explicit = container.querySelector<HTMLElement>('.diet-btn, .diet-segmented, .diet-input');
+  const explicit = container.querySelector<HTMLElement>('.diet-btn, .diet-segmented, .diet-input, .diet-toggle, .diet-tabs');
   if (explicit) {
-    const cls = Array.from(explicit.classList).find((c) => c === 'diet-btn' || c === 'diet-segmented' || c === 'diet-input');
+    const cls = Array.from(explicit.classList).find((c) => c === 'diet-btn' || c === 'diet-segmented' || c === 'diet-input' || c === 'diet-toggle' || c === 'diet-tabs');
     if (cls) return { el: explicit, name: cls };
   }
   // Fallback: first class that looks like a root diet-* (exclude element subclasses)
@@ -377,7 +551,7 @@ function findComponentRoot(container: Element): { el: HTMLElement; name: string 
     const root = Array.from(el.classList).find(
       (c) => c.startsWith('diet-') && !c.startsWith('diet-btn__') && !c.startsWith('diet-segment__') && !c.startsWith('diet-input__'),
     );
-    if (root === 'diet-btn' || root === 'diet-segmented' || root === 'diet-input') {
+    if (root === 'diet-btn' || root === 'diet-segmented' || root === 'diet-input' || root === 'diet-toggle' || root === 'diet-tabs') {
       return { el, name: root };
     }
   }
@@ -426,67 +600,7 @@ function applyDynamicSpecs(scope: Element) {
   });
 }
 
-// Align columns across all rows within a section (under the same header).
-// For each section, measure the widest spec and preview per column and
-// set an explicit grid-template-columns on each row so columns line up.
-function applySectionColumnSizing(scope: Element) {
-  const previewBlocks = scope.querySelectorAll<HTMLElement>('.dieter-preview');
-  previewBlocks.forEach((block) => {
-    // Walk direct children and split into sections: header + following rows until next header
-    const children = Array.from(block.children) as HTMLElement[];
-    let sectionRows: HTMLElement[] = [];
-    const flushSection = () => {
-      if (sectionRows.length === 0) return;
-      // Determine max columns among rows in this section.
-      // Prefer explicit data-cols; fallback to counting .specdpreview items.
-      const cols = sectionRows.reduce((max, r) => {
-        const fromAttr = Number(r.getAttribute('data-cols') || '0') || 0;
-        const fromDom = r.querySelectorAll('.specdpreview').length;
-        return Math.max(max, fromAttr, fromDom);
-      }, 0);
-      if (cols <= 0) { sectionRows = []; return; }
-
-      const specMax: number[] = Array(cols).fill(0);
-      const prevMax: number[] = Array(cols).fill(0);
-      // Measure widths per column index across rows
-      sectionRows.forEach((row) => {
-        const groups = Array.from(row.querySelectorAll<HTMLElement>('.specdpreview'));
-        for (let i = 0; i < Math.min(cols, groups.length); i += 1) {
-          const g = groups[i];
-          const spec = g.querySelector<HTMLElement>('.preview-specs');
-          const prev = g.querySelector<HTMLElement>('.componentpreview');
-          if (!spec || !prev) continue;
-          const sw = spec.getBoundingClientRect().width;
-          const pw = prev.getBoundingClientRect().width;
-          if (sw > specMax[i]) specMax[i] = sw;
-          if (pw > prevMax[i]) prevMax[i] = pw;
-        }
-      });
-
-      // Build track list: header + per-column (spec px, preview px)
-      const tracks: string[] = ['max-content'];
-      for (let i = 0; i < cols; i += 1) {
-        const s = Math.ceil(specMax[i]);
-        const p = Math.ceil(prevMax[i]);
-        tracks.push(`${s}px`, `${p}px`);
-      }
-      const trackStr = tracks.join(' ');
-      sectionRows.forEach((row) => { row.style.gridTemplateColumns = trackStr; });
-      sectionRows = [];
-    };
-
-    for (const el of children) {
-      if (el.classList.contains('section-header')) {
-        // New section starts; flush previous
-        flushSection();
-        continue;
-      }
-      if (el.classList.contains('row')) {
-        sectionRows.push(el);
-        continue;
-      }
-    }
-    // Flush trailing section
-    flushSection();
-  });
+// DELETED: applySectionColumnSizing - CSS handles all layout now
+function applySectionColumnSizing(_scope: Element) {
+  // No-op: removed JS-based grid column sizing
 }

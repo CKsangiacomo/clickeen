@@ -41,6 +41,7 @@ const showcaseCssMap: Record<string, string[]> = {
   textfield: ['@dieter/components/textfield.css'],
   colors: ['@dieter/tokens/tokens.css'],
   typography: ['@dieter/tokens/tokens.css'],
+  dropdown: ['@dieter/components/dropdown.css'],
 };
 
 const showcasePaths = Object.keys(showcaseModules).sort();
