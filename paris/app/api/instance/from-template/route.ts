@@ -175,12 +175,19 @@ async function createWidget(client: ReturnType<typeof getServiceClient>, {
   name: string;
   widgetType: string;
   }) {
+  // Generate a simple public key for the widget (required by schema)
+  function generatePublicKey() {
+    const rand = Math.random().toString(36).slice(2, 14);
+    return `pk_${rand}`;
+  }
+  const publicKey = generatePublicKey();
   const { data, error } = await client
     .from('widgets')
     .insert({
       workspace_id: workspaceId,
       name,
       type: widgetType,
+      public_key: publicKey,
       status: 'active',
     })
     .select('id')

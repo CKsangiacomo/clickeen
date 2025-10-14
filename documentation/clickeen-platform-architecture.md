@@ -1,11 +1,11 @@
 STATUS: INFORMATIVE — CONTEXT ONLY
 Do NOT implement from this file. For specifications, see:
-- documentation/CRITICAL-TECHPHASES/Techphases.md (architecture & global contracts)
-- documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase‑1 contracts)
+- documentation/CONTEXT.md (glossary, Phase-1 scope, precedence rules)
+- documentation/systems/ (system PRDs: Venice, Paris, Bob, Copenhagen, etc.)
 - supabase/migrations/ (DB schema truth)
 - documentation/systems/venice.md, documentation/systems/paris.md, documentation/systems/geneva.md (system PRDs)
 
-Authority order: DB Schema (supabase/migrations/) > Phase‑1 Specs > System PRDs > Techphases > WhyClickeen.
+Authority order: DB Schema (supabase/migrations/) > System PRDs > Widget PRDs > CONTEXT.md > WhyClickeen.
 
 # CLICKEEN Platform Architecture — Phase 1 (Frozen)
 

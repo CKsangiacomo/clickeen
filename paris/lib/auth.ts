@@ -26,6 +26,23 @@ export function looksLikeJwt(token: string) {
 }
 
 export async function authenticateUser(client: AdminClient, token: string) {
+  // In dev mode, accept SERVICE_ROLE_KEY and return a synthetic dev user
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceKey && token === serviceKey) {
+      // Return synthetic dev user that bypasses all checks
+      return {
+        id: '00000000-0000-0000-0000-000000000000',
+        email: 'dev@clickeen.local',
+        role: 'authenticated',
+        aud: 'authenticated',
+        app_metadata: { provider: 'dev', providers: ['dev'] },
+        user_metadata: { dev_mode: true },
+        created_at: new Date().toISOString(),
+      } as User;
+    }
+  }
+
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) {
     throw new AuthError('AUTH_REQUIRED');
@@ -48,6 +65,12 @@ export async function assertWorkspaceMember(
   workspaceId: string,
   userId: string,
 ) {
+  // In dev mode, bypass workspace membership check for synthetic dev user
+  if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') &&
+      userId === '00000000-0000-0000-0000-000000000000') {
+    return { role: 'owner', status: 'active' };
+  }
+
   const { data, error } = await client
     .from('workspace_members')
     .select('role,status')

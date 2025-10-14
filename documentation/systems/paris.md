@@ -1,7 +1,8 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It MUST NOT conflict with:
-1) supabase/migrations/ (DB schema truth) and
-2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
+1) supabase/migrations/ (DB schema truth)
+2) documentation/CONTEXT.md (Global terms and precedence)
+3) Other system PRDs in documentation/systems/
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 ## AIs Quick Scan

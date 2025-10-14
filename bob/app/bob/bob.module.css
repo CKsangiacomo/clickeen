@@ -1,0 +1,178 @@
+
+/* Bob consumes Dieter tokens; no ad-hoc values. */
+.root {
+  /* Host window provides chrome; Bob surfaces are square by default */
+  --panel-radius: 0px;
+
+  width: 100vw;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-2);
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  overflow-x: hidden;
+}
+
+/* Top drawer */
+.topdrawer {
+  background: transparent;
+  background-color: transparent;
+  /* Remove stroke; rounded corners via Dieter token */
+  border: none;
+  border-radius: var(--radius-4);
+  padding: var(--space-2) var(--space-2);
+}
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+.topdmain {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.topdright {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface-hover);
+  font: var(--control-text-sm);
+}
+
+/* Main grid: left drawer, workspace, right drawer */
+.grid {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+/* Left tool drawer */
+.tooldrawer {
+  background: var(--control-surface, #ffffff);
+  /* Remove strokes; rounded corners via Dieter token */
+  border: none;
+  border-radius: var(--radius-4);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-1);
+  min-height: 0;
+  overflow: hidden;
+}
+.tdheader, .sdheader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--control-surface, #ffffff);
+  /* Remove strokes on drawer headers */
+  border-bottom: none;
+  padding: var(--space-2) var(--space-2);
+  /* Match drawer rounding using Dieter token */
+  border-top-left-radius: var(--radius-4);
+  border-top-right-radius: var(--radius-4);
+}
+.tdcontent, .sdcontent {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: var(--space-6);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.tdmenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--control-surface, #ffffff);
+}
+
+.tdmenucontent {
+  overflow: auto;
+  min-height: 0;
+  padding-top: var(--space-2);
+}
+
+/* Workspace */
+.workspace {
+  /* WS header lives inside workspace; workspace owns the surface */
+  background: var(--control-surface, #ffffff);
+  /* Remove stroke; rounded corners via Dieter token */
+  border: none;
+  border-radius: var(--radius-4);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+.wsheader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: transparent;
+  background-color: transparent;
+  /* No stroke under header; let background unify */
+  border-bottom: none;
+  padding: var(--space-2) var(--space-2);
+}
+.wsheaderRow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+.wsheader-left { justify-self: start; display: inline-flex; gap: var(--space-2); align-items: center; }
+.wsheader-center { justify-self: center; display: inline-flex; gap: var(--space-2); align-items: center; }
+.wsheader-right { justify-self: end; display: inline-flex; gap: var(--space-2); align-items: center; }
+
+.widget_preview {
+  min-height: 0;
+  /* Workspace content is the scroll container; header stays in place */
+  overflow: auto;
+  padding: var(--space-2);
+  background: transparent;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.placeholder {
+  font: var(--control-text-sm);
+  color: var(--control-color-secondary);
+}
+
+/* Right secondary drawer */
+.secondarydrawer {
+  background: var(--control-surface, #ffffff);
+  /* Remove strokes; rounded corners via Dieter token */
+  border: none;
+  border-radius: var(--radius-4);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+button.btn {
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-2);
+  font: var(--control-text-sm);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+button.btn:hover { background: var(--control-surface-hover); }
+button.btn:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }

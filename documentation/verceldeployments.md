@@ -1,7 +1,7 @@
 STATUS: INFORMATIVE — CONTEXT ONLY
 Do NOT implement from this file. For specifications, see:
 1) supabase/migrations/ (DB schema truth)
-2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts)
+2) documentation/CONTEXT.md (Glossary and precedence rules)
 3) documentation/systems/<System>.md (System PRDs, Phase-1)
 
 # Vercel Deployments (Phase-1 Reset)
@@ -70,4 +70,4 @@ Do NOT implement from this file. For specifications, see:
 ### c-keen-site (`prague/`)
 - Public marketing keys only (analytics, etc.); no secrets.
 
-> Keep this file in sync with system PRDs and Techphases when deployments or env contracts change.
+> Keep this file in sync with system PRDs when deployments or env contracts change.

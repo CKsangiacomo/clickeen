@@ -1,0 +1,81 @@
+/* Dieter Expander — inline expanding container (CSS-only toggle via input/label)
+   Contract:
+   - Root: .diet-expander
+   - State input (checkbox): .diet-expander__input.sr-only (placed first)
+   - Trigger (label): .diet-expander__trigger[for] — visually a Dieter Button (.diet-btn)
+     • Icon side follows markup order (no attributes): place `.diet-btn__icon` before `.diet-btn__label` for left, after for right
+     • Gap and side paddings come from Dieter Button tokens (control ladder)
+   - Content wrapper (inline block revealed under trigger): .diet-expander__content
+   Behaviour:
+   - The input:checked toggles open styles on the sibling content and updates trigger labels.
+*/
+
+.diet-expander {
+  position: relative;
+  display: block;               /* full-width by default */
+  overflow: visible;            /* allow content shadow to render when open */
+  border: 0;                    /* remove debug stroke */
+  border-radius: 0;
+  background: transparent;
+  inline-size: 100%;            /* take container width */
+  max-inline-size: none;
+  min-inline-size: 0;
+}
+
+.diet-expander__trigger { cursor: pointer; user-select: none; }
+
+/* Remove hover styling for Expander trigger only */
+.diet-expander__trigger.diet-btn {
+  --btn-hover-bg: var(--btn-bg);
+  --btn-hover-color: var(--btn-color);
+  --btn-hover-border-color: var(--btn-border-color);
+}
+.diet-expander__trigger.diet-btn:hover {
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  border-color: var(--btn-border-color);
+}
+
+/* Forward input focus ring to the visual trigger */
+.diet-expander__input:focus-visible + .diet-expander__trigger {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset, 2px) var(--color-bg, #ffffff),
+    0 0 0 calc(var(--focus-ring-offset, 2px) + var(--focus-ring-width, 2px)) var(--focus-ring-color, var(--color-accent));
+}
+
+/* Optional affordance: rotate chevron icons on open (if present) */
+.diet-expander__trigger .diet-btn__icon svg {
+  transition: transform var(--duration-base, 160ms) ease;
+  transform-origin: center;
+}
+.diet-expander__input:checked + .diet-expander__trigger .diet-btn__icon svg {
+  transform: rotate(180deg);
+}
+
+/* Content (revealed inline) */
+.diet-expander__content {
+  display: none;
+  padding: var(--space-4, 1rem);
+  inline-size: 100%;
+  box-sizing: border-box; /* keep overall width equal to trigger width */
+  /* content inherits clipping from container; no border here */
+}
+
+
+
+/* When checked (open) */
+.diet-expander__input:checked ~ .diet-expander__content {
+  display: block;
+  box-shadow: var(--shadow-floating);
+}
+
+
+
+/* Content is unopinionated; no inner content styles imposed */
+.diet-expander__trigger .label-open { display: inline; }
+.diet-expander__trigger .label-close { display: none; }
+
+/* Swap trigger labels when open */
+.diet-expander__input:checked ~ .diet-expander__trigger .label-open { display: none; }
+.diet-expander__input:checked ~ .diet-expander__trigger .label-close { display: inline; }

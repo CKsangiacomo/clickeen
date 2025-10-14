@@ -1,26 +1,86 @@
-# CONTEXT.md
+# We're Building CLICKEEN (A SaaS Platform)
 
-STATUS: INFORMATIVE — CONTEXT ONLY  
+**Team:**  
+- CEO (Human)  
+- Principal Full Stack Engineer (Codex AI) 
+- Principal Full Stack Engineer (Claude AI)  
+- Principal Full Stack Engineer (ChatGPT AI)  
+- Principal Full Stack Engineer (Gemini AI) 
+
+ALL OPERATE IN VS CODE SO ALL AIs have visibility on full codebase and all systems (supbase/CLIs/vercel/Git/etc
+
+**When talking to CEO/Human be considerate of:**  
+- a) Talking to the CEO  
+- b) Be thorough in your statements/assertions  
+- c) Don't be verbose  
+
+**PRINCIPAL FULL STACK ENGINEER MODE:**  
+- *** CRITICAL **** All AIs (GPT, Codex, Claude, Gemini) operate as experienced full‑stack engineers; their first priority is to not break the system or any built artifacts. - *** CRITICAL ****
+- *** CRITICAL **** Elegant engineering required: smallest working change, consistent with patterns, reduces complexity; no speculative abstractions. - *** CRITICAL ****
+
+**Discipline rules:**  
+1. **No over-engineering** — Do the smallest working change by reusing existing patterns; no new abstractions, refactors, or extra scope.
+2. **No guessing** - When uncertain: ask one yes/no question; then proceed.
+
+Takeaway: **Always check CONTEXT.md, system PRDs, and the decision log BEFORE execution.**
+
+STATUS: INFORMATIVE — CONTEXT ONLY
 Do NOT implement from this file. For specifications, see:
 1) supabase/migrations/ (DB schema truth)
-2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase‑1 Contracts)
-3) documentation/CRITICAL-TECHPHASES/Techphases.md (Architecture & Global Contracts)
-4) documentation/systems/<System>.md (System PRD, if Phase‑1)
-5) all execution docs and temp docs live in CURRENTLY_EXECUTING/ - no .md is created in repo root
+2) documentation/systems/<System>.md (System PRDs - authoritative for Phase-1)
+3) documentation/widgets/<widget>.md (Widget PRDs - authoritative specifications)
+4) all execution docs and temp docs live in CURRENTLY_EXECUTING/ - no .md is created in repo root
 
 CRITICAL P0 — documentation/ is the single source of truth for all AI & human work. You MUST read and follow it. If you see discrepancies, STOP and ask for alignment.
 
 ---
 
+## Glossary (Canonical Terms)
+
+**Widget:** Functional unit that renders on third-party sites (e.g., FAQ, announcement, contact form)
+
+**Template:** Curated, data-only preset for a widgetType providing default layout/skin/styling (JSON configuration, no per-template JavaScript)
+
+**Instance:** User's saved widget configuration (private config) derived from a template; identified by `publicId` (TEXT field in `widget_instances.public_id`)
+
+**Single tag:** The embed snippet placed on websites - either one iframe (inline widgets) or one script tag (overlay widgets via loader)
+
+**publicId:** Textual identifier for widget instances (e.g., `wgt_abc123`), stored as TEXT in `widget_instances.public_id`
+
+**Draft token:** Temporary token stored in `widget_instances.draft_token`, allows anonymous editing until widget is claimed by workspace
+
+**Casing conventions:**
+- API JSON payloads: camelCase (e.g., `publicId`, `widgetType`)
+- Database columns: snake_case (e.g., `public_id`, `widget_id`)
+
+---
+
+## Phase-1 Widget List
+
+**Active widgets (implement these):**
+- FAQ (`content.faq`) - Accordion/list/multicolumn layouts with categories
+- Testimonials (`social.testimonials`) - Customer testimonials display
+- Announcement (`engagement.announcement`) - Promotional bars/popups
+- Newsletter (`engagement.newsletter`) - Email signup forms
+- Contact Form (`forms.contact`) - Contact/inquiry forms
+- Social Proof (`social.proof`) - Activity notifications
+
+**Optional (NOT Phase-1, require CEO approval):**
+- Pricing Cards
+- Gallery
+
+Each widget requires: schema definition, renderer implementation, SSR HTML template, error/loading/empty states.
+
+---
+
 ## AUTHORITY & PRECEDENCE (HIGH-LEVEL)
 
-- **supabase/migrations/** — NORMATIVE DB schema; code must match.  
-- **CRITICAL-TECHPHASES/Techphases-Phase1Specs.md** — NORMATIVE Phase‑1 Contracts.  
-- **documentation/systems/<System>.md** — NORMATIVE PRDs for Phase‑1 systems.  
-- **CRITICAL-TECHPHASES/Techphases.md** — NORMATIVE architecture & phase roadmap.  
+- **supabase/migrations/** — NORMATIVE DB schema; code must match.
+- **documentation/systems/<System>.md** — NORMATIVE PRDs for Phase-1 systems (Venice, Paris, Bob, Copenhagen, etc.)
+- **documentation/widgets/<widget>.md** — NORMATIVE PRDs for widget implementations
 - **WhyClickeen.md** — INFORMATIVE strategy context.
 
-Clarifier: System PRDs are canonical for concrete endpoints and payload details in their surface. If any detail conflicts with Phase‑1 Contracts, Phase‑1 Contracts win. On any conflict: **DB Truth > Phase‑1 Contracts > System PRDs > Techphases > WhyClickeen.**
+On any conflict: **DB Truth > System PRDs > Widget PRDs > CONTEXT.md > WhyClickeen.**
 
 Known exceptions (Phase‑1):
 - Atlas (Edge Config) is read-only at runtime by policy. Administrative overrides require INTERNAL_ADMIN_KEY and explicit CEO approval; treat Atlas as read-only unless directed otherwise.
@@ -33,52 +93,6 @@ Known exceptions (Phase‑1):
 - The schema in `supabase/migrations/` is canonical.  
 - Engineers may request schema changes with motivation + exact DDL.  
 - Until updated by migration, always code to the applied schema. **No schema-in-code drift.**
-
----
-
-# We're Building CLICKEEN (A SaaS Platform)
-
-**Team:**  
-- CEO (Human)  
-- Principal Full Stack Engineer (Codex AI) 
-- Principal Full Stack Engineer (Claude AI)  
-- Principal Full Stack Engineer (ChatGPT AI)  
-
----
-
-## Communication Guidelines
-
-**When talking to CEO/Human be considerate of:**  
-- a) Talking to the CEO  
-- b) Be thorough in your statements/assertions  
-- c) Don't be verbose  
-
----
-
-## Development Workflow (Current)
-
-- **Codex/Git AIs** implement with full repository visibility in VS Code.
-- **Claude/GPT** review PRDs and cross-doc consistency; they do not execute code changes.
-- **PRDs & Phase-1 Specs** are the single source of truth; no guessing, no placeholders.
-- **Change control:** Any new behavior or surface requires CEO approval plus PRD updates in the same PR.
-
----
-
-## Prompting AIs
-
-**PRINCIPAL FULL STACK ENGINEER MODE:**  
-- No guessing, no assumptions. You're reliable and don't make mistakes.  
-- If context is missing, ask human to paste the relevant .md from /docs.  
-- Use documentation/ as the single source of truth.  
-- No placeholders — if you don't know, you ask.  
-- If in doubt about speed or scale, always ask for peer review.  
-
-**Discipline rules:**  
-1. **No over-engineering** — stay boring and aligned with frozen process.  
-2. **No skipping Techphases** — freeze scope first, then execute.  
-3. **Security** — must be reflected in Techphases before engineering; no bolting on mid-way.  
-
-Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE execution.**
 
 ---
 
@@ -122,8 +136,7 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 - Workflow automation (Tokyo/Robert/Lisbon)  
 - Fine-grained RBAC (multi-role workspaces)  
 - Runtime writes to Edge Config (must remain administrative-only with INTERNAL_ADMIN_KEY)  
-- Analytics warehouse (Helsinki)  
-- AI orchestration (Copenhagen)
+- Analytics warehouse (Helsinki) 
 
 ---
 
@@ -155,25 +168,93 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 
 ## Canonical Docs (Start Here)
 
-- `documentation/CRITICAL-TECHPHASES/Techphases.md` — frozen Phase-1 scope & phase gates  
-- `documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md` — locked Phase-1 contracts  
-- `supabase/migrations/` — DB schema (tables, columns, constraints)  
-- `documentation/systems/*.md` — system PRDs (Venice, Paris, Geneva, etc.)  
-- `documentation/widgets/*.md` — per‑widget docs (one file per widget; WIP in Phase‑1)  
-- `documentation/WhyClickeen.md` — strategic context  
-- `documentation/ADRdecisions.md` — authoritative decisions (document new approvals here)  
+- `supabase/migrations/` — DB schema (tables, columns, constraints)
+- `documentation/CONTEXT.md` — THIS FILE: glossary, widget list, precedence rules
+- `documentation/systems/*.md` — system PRDs (Venice, Paris, Bob, Copenhagen, Geneva, etc.)
+  - `bob.md` — Builder app, preview UX, Save model, Manual/AI Copilot modes
+  - `venice.md` — SSR rendering, preview=1 mode, postMessage contracts, caching
+  - `paris.md` — HTTP API, instance management, token lifecycle
+  - `copenhagen.md` — AI service layer, DeepSeek vs Claude routing, Copilot behavior
+- `documentation/widgets/*.md` — per-widget PRDs (one file per widget)
+  - `content.faq.md` — FAQ widget with AI features
+  - `testbutton.md` — Phase-0 tokenization reference, postMessage patch example
+- `documentation/WhyClickeen.md` — strategic context
+- `documentation/ADRdecisions.md` — authoritative decisions (document new approvals here)
 - `documentation/verceldeployments.md` — env/keys per project
+
+---
+
+---
+
+## Bob Preview System Architecture (Phase-1 Critical)
+
+**Background:** The conversation summary from the previous session revealed critical requirements for Bob's world-class preview UX. This section ensures AIs understand the architecture.
+
+### Core Requirements
+
+1. **Tokenization Prerequisite (Phase-0):**
+   - All widgets MUST use CSS variables for patchable fields
+   - Example: `border-radius: var(--btn-radius, 12px)` NOT `border-radius: 12px`
+   - HTML MUST include `data-widget-element` attributes for patch targeting
+   - See `documentation/widgets/testbutton.md` for reference
+
+2. **Double-Buffered Preview (Phase-1a):**
+   - Two iframes (A and B), load next state in hidden iframe
+   - Cross-fade swap on load (no white flash)
+   - Smooth transitions between saved states
+
+3. **postMessage Patches (Phase-1b):**
+   - Instant preview updates while typing (no reload lag)
+   - Updates CSS variables on `data-widget-element` elements
+   - Only injected when `?preview=1` query param present
+   - Origin whitelist, field whitelist, value validation
+
+4. **Save UX Model:**
+   - **MiniBob** (clickeen.com): NO Save button, only "Publish" → signup
+   - **In-App Bob** (authenticated): Save button appears when dirty, click to persist
+   - NO auto-save, NO debouncing on Save, NO "Saved" toasts
+
+5. **Security:**
+   - Draft tokens stay server-side (preview proxy route)
+   - postMessage origin whitelist (Bob + MiniBob only)
+   - Field whitelist per widget (documented in widget PRDs)
+   - Value validation (type checks, enums, clamping)
+
+### Key Contracts
+
+**Venice:**
+- `?preview=1` query param enables preview features
+- Injects postMessage patch script ONLY when preview=1
+- Production embeds (no preview=1) = pure SSR HTML/CSS
+
+**Bob:**
+- Preview proxy route: `bob/app/api/preview/e/[publicId]/route.ts`
+- Injects draft tokens server-side (tokens never exposed to browser)
+- Double-buffer preview manager (~80 LOC Phase-1a)
+- postMessage sender for instant typing (~30 LOC Phase-1a)
+
+**Widgets:**
+- MUST be tokenized (Phase-0 requirement)
+- CSS variables set from config in inline style
+- `data-widget-element` attributes on patchable elements
+
+### Documentation References
+
+- `documentation/systems/bob.md` — Preview system details, Save UX model
+- `documentation/systems/venice.md` — preview=1 mode, postMessage handler
+- `documentation/widgets/testbutton.md` — Tokenization reference, patch example
+- `documentation/CONTEXT.md` — Glossary and Phase-1 widget list
 
 ---
 
 ## AI Consumption Guide
 
-- **Start with WhyClickeen.md** for context (strategy, PLG motion). INFORMATIVE only.  
-- **Use Techphases.md** for architecture (systems vs services, scope, boundaries).  
-- **Implement only from Techphases-Phase1Specs.md** (binding contracts).  
-- **Always check `supabase/migrations/`** for schema truth.  
-- **System PRDs** (`documentation/systems/*.md`) are authoritative for their surfaces (e.g., Venice SSR, Paris API).  
-- On conflict: **DB Truth > Phase1Specs > System PRDs > Techphases > WhyClickeen.**
+- **Start with WhyClickeen.md** for context (strategy, PLG motion). INFORMATIVE only.
+- **Check CONTEXT.md** for glossary, Phase-1 widget list, and precedence rules
+- **Always check `supabase/migrations/`** for schema truth
+- **System PRDs** (`documentation/systems/*.md`) are authoritative for their surfaces (e.g., Venice SSR, Paris API, Copenhagen AI)
+- **Widget PRDs** (`documentation/widgets/*.md`) are authoritative for widget implementations
+- On conflict: **DB Truth > System PRDs > Widget PRDs > CONTEXT.md > WhyClickeen**
 
 ---
 
@@ -196,8 +277,9 @@ Takeaway: **Always check/update Techphases, Context, and the decision log BEFORE
 
 ### Quick Navigation
 - **Schema source:** `supabase/migrations/`
-- **Contracts:** `documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md`
-- **System PRDs:** `documentation/systems/*.md` (Paris, Venice, Michael, Bob, Dieter)
+- **Glossary & widget list:** `documentation/CONTEXT.md`
+- **System PRDs:** `documentation/systems/*.md` (Paris, Venice, Bob, Copenhagen, etc.)
+- **Widget PRDs:** `documentation/widgets/*.md` (content.faq, testbutton, etc.)
 - **Past mistakes:** `documentation/FailuresRCAs-IMPORTANT.md`
 
 ### Phase-1 Build Order (strict)

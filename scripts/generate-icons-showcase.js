@@ -46,7 +46,7 @@ function row(name, svg) {
       </div>`)
     .join('\n');
   return `
-  <div class="row" data-cols="7">
+  <div class="row">
     <div class="row-header">${name}</div>
     ${cells}
   </div>`;
@@ -58,10 +58,12 @@ function buildPage(rowsHtml) {
   <style>
     /* tighter gaps for the icon grid */
     .dieter-preview .specdpreview { gap: 0.75rem; }
-    .dieter-preview .row[data-cols="7"] { grid-template-columns: 0.8fr repeat(7, minmax(0, 1fr)); }
+    /* grid columns are defined on .section; .row is display: contents */
   </style>
-  <h3 class="section-header">Icons — Sizes 16 to 40</h3>
-  ${rowsHtml}
+  <div class="section" data-cols="7">
+    <h3 class="section-header">Icons — Sizes 16 to 40</h3>
+    ${rowsHtml}
+  </div>
   <p class="caption">One row per icon; sizes 16, 20, 24, 28, 32, 36, 40px. SVGs are embedded verbatim; designer exports are authoritative.</p>
   
 </div>`;

@@ -322,6 +322,10 @@ body {
 .notes-block {
   display: grid;
   gap: var(--hspace-9, 0.8rem);
+  background: #ffffff;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .notes-block__heading {
@@ -339,9 +343,10 @@ body {
   gap: var(--hspace-3, 0.2rem);
   padding: var(--space-4, 1rem);
   border-radius: var(--radius-4, 0.5rem);
-  background: var(--color-system-gray-4);
-  border: none;
-  box-shadow: none;
+  background: color-mix(in oklab, var(--color-system-gray-2), white 80%);
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .notes-card__label {
@@ -360,6 +365,9 @@ body {
   padding-left: var(--space-3, 0.75rem);
   color: color-mix(in oklab, var(--color-text), transparent 15%);
   position: relative;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .notes-card__body .body-small::before {
@@ -368,26 +376,45 @@ body {
   inset-inline-start: 0;
 }
 
+.notes-card__code {
+  padding: var(--hspace-3, 0.2rem) var(--space-4, 1rem);
+  margin: 0;
+  border-radius: var(--radius-4, 0.5rem);
+  background: color-mix(in oklab, var(--color-system-gray), white 80%);
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  position: relative;
+  padding-left: calc(var(--space-4, 1rem) + var(--space-3, 0.75rem));
+}
+
+.notes-card__code::before {
+  content: '- ';
+  position: absolute;
+  inset-inline-start: var(--space-4, 1rem);
+}
+
 .code-block {
   display: grid;
   gap: var(--hspace-8, 0.7rem);
   padding: var(--space-4, 1rem);
   border-radius: var(--radius-4, 0.5rem);
-  background: var(--color-system-gray-4);
+  background: color-mix(in oklab, var(--color-system-gray), white 80%);
   border: none;
   box-shadow: none;
 }
 
 .code-block__heading {
   margin: 0;
-  color: color-mix(in oklab, var(--color-text), transparent 40%);
   color: inherit;
 }
 
 .code-block__body {
   margin: 0;
-  padding: 0;
-  background: transparent;
+  padding: var(--hspace-3, 0.2rem) var(--space-4, 1rem);
+  border-radius: var(--radius-4, 0.5rem);
+  background: color-mix(in oklab, var(--color-system-gray), white 80%);
   border: none;
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 }

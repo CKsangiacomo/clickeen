@@ -7,6 +7,7 @@ import { renderTestimonialsPage } from '@venice/lib/renderers/testimonials';
 import { renderAnnouncementPage } from '@venice/lib/renderers/announcement';
 import { renderNewsletterPage } from '@venice/lib/renderers/newsletter';
 import { renderSocialProofPage } from '@venice/lib/renderers/socialProof';
+import { renderTestButtonPage } from '@venice/lib/renderers/testButton';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const ts = url.searchParams.get('ts');
+  const preview = url.searchParams.get('preview') === '1' || url.searchParams.get('preview') === 'true';
 
   const headers: Record<string, string> = {
     'Content-Type': 'text/html; charset=utf-8',
@@ -121,6 +123,14 @@ export async function GET(req: Request, { params }: { params: { publicId: string
       backlink,
       nonce,
     });
+  } else if (wtype === 'testbutton') {
+    responseHtml = renderTestButtonPage({
+      instance: { publicId: instance.publicId, config: instance.config },
+      theme: theme as 'light' | 'dark',
+      device: device as 'desktop' | 'mobile',
+      backlink,
+      nonce,
+    });
   } else {
     responseHtml = renderInstancePage({ instance, theme, device, branding, nonce });
   }
@@ -162,6 +172,23 @@ export async function GET(req: Request, { params }: { params: { publicId: string
 
   const parisOrigin = new URL(getParisBase()).origin;
   headers['Content-Security-Policy'] = buildCsp(nonce, parisOrigin);
+
+  // Inject a tiny preview-only patch script (nonce'd) that lets the builder update
+  // safe fields instantly via postMessage while typing. Never inject for production embeds.
+  if (preview) {
+    const allowed = (process.env.PREVIEW_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const script = `\n<script nonce="${escapeHtml(nonce)}">\n(() => {\n  const ALLOWED = ${JSON.stringify(allowed)};\n  function clamp(v, min, max){ v = Number(v); if(!Number.isFinite(v)) return min; return Math.max(min, Math.min(max, Math.round(v))); }\n  function mapColor(c){ return c === 'red' ? '#ef4444' : '#22c55e'; }\n  window.addEventListener('message', (event) => {\n    try {\n      if (!ALLOWED.includes(event.origin)) return;\n      const data = event.data || {};\n      if (data.type !== 'patch' || !data.widget || !data.fields) return;\n      // Only support testbutton in Phase-1 preview patching\n      if (String(data.widget) !== 'testbutton') return;\n      const fields = data.fields || {};\n      const btn = document.querySelector('[data-widget-element="button"]');\n      const label = document.querySelector('[data-widget-element="label"]');\n      if (!btn) return;\n      if (Object.prototype.hasOwnProperty.call(fields, 'text') && label) {\n        const t = String(fields.text ?? '');\n        label.textContent = t;\n      }\n      if (Object.prototype.hasOwnProperty.call(fields, 'color')) {\n        const col = String(fields.color) === 'red' ? 'red' : 'green';\n        btn.style.setProperty('--btn-bg', mapColor(col));\n      }\n      if (Object.prototype.hasOwnProperty.call(fields, 'radiusPx')) {\n        const px = clamp(fields.radiusPx, 0, 32);\n        btn.style.setProperty('--btn-radius', px + 'px');\n      }\n    } catch { /* ignore */ }\n  });\n})();\n</script>`;
+    // Best-effort injection before </body>
+    const idx = responseHtml.lastIndexOf('</body>');
+    if (idx !== -1) {
+      responseHtml = responseHtml.slice(0, idx) + script + responseHtml.slice(idx);
+    } else {
+      responseHtml += script;
+    }
+  }
 
   return new NextResponse(responseHtml, { status: 200, headers });
 }

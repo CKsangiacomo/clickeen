@@ -7,6 +7,7 @@ import type { AdminClient } from '@paris/lib/supabaseAdmin';
 import { validateConfig, getTemplateDescriptor, transformConfig } from '@paris/lib/geneva';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 type Params = { params: { publicId: string } };
 

@@ -1,8 +1,8 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (PHASE-1)
 This document is authoritative for the Berlin system. It MUST NOT conflict with:
 1) supabase/migrations/ (DB schema truth)
-2) documentation/CRITICAL-TECHPHASES/Techphases.md (Global Contracts)
-3) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase-1 Contracts)
+2) documentation/CONTEXT.md (Global terms and precedence)
+3) Other system PRDs in documentation/systems/
 If any conflict is found, STOP and escalate to the CEO. Do not guess.
 
 # System: Berlin — Observability & App/Site Security (Phase-1)

@@ -29,6 +29,15 @@ export interface TemplateCatalogEntry {
 
 export const WIDGET_CATALOG: WidgetCatalogEntry[] = [
   {
+    id: 'testbutton',
+    name: 'Test Widget',
+    description: 'Simple pill button with configurable text and color.',
+    defaults: {
+      text: 'Change me',
+      color: 'green',
+    },
+  },
+  {
     id: 'forms.contact',
     name: 'Contact Form',
     description: 'Collect leads and messages from visitors.',
@@ -100,6 +109,16 @@ export const WIDGET_CATALOG: WidgetCatalogEntry[] = [
 ];
 
 export const TEMPLATE_CATALOG: TemplateCatalogEntry[] = [
+  // Test Widget
+  {
+    id: 'testbutton-pill',
+    widgetType: 'testbutton',
+    name: 'Pill',
+    premium: false,
+    schemaVersion: '2025-09-01',
+    preview: 'https://static.clickeen.com/templates/test/testbutton-pill.png',
+    descriptor: { layout: 'INLINE', skin: 'MINIMAL', density: 'COZY' },
+  },
   {
     id: 'classic-light',
     widgetType: 'forms.contact',

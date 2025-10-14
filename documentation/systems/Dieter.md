@@ -1,315 +1,330 @@
-# Dieter PRD (v1, Frozen)
+# Dieter System Overview
 
-**Status:** ✅ Frozen (current release)  
-**Owner:** `dieter/` workspace package  
-**Last updated:** 2025‑09‑24
+This document is the canonical reference for Clickeen’s design system and its preview harness. It consolidates all guidance previously found in `dieter/README.md` and replaces outdated versions of this doc.
 
----
+**Last updated:** 2025-10-12 — Always verify against `dieter/components/*.css`, `dieter/tokens/tokens.css`, and the Dieter Admin showcases when making changes.
 
-## AIs Quick Scan
-
-**Purpose:** Design system (tokens + CSS contracts) shared across all Clickeen surfaces.  
-**Owner:** Workspace package `@ck/dieter` + Vercel project `c-keen-app`.  
-**Dependencies:** None at runtime; consumed by every surface that renders Clickeen UI (builder, embeds, admin tools, marketing, etc.).  
-**Published assets:** `@ck/dieter` package, `dieter/dist/**`, `/dieter/*` copied assets.  
-**Common mistakes:** Importing Dieter React components in Venice, fetching SVG icons at runtime, hand-editing `/bob/public/dieter/`.
+- [1. Dieter Core](#1-dieter-core)
+- [2. Dieter Admin](#2-dieter-admin)
 
 ---
 
-## Purpose
-- Dieter is Clickeen’s design system: design tokens, global foundations, and CSS component contracts shared across every surface that renders our UI.
-- Ships as the workspace package **`@ck/dieter`** plus copy-on-build assets served from `/dieter/*`.
-- Single visual source of truth for builder flows, embeds, admin tooling, and any future surfaces. Consumers (Bob, Venice, marketing, internal tools) all style via these tokens; no React runtime ships with the package.
+## 1. Dieter Core
 
-## Scope
-- Global foundations (tokens, typography baseline, focus ring, spacing utilities) exported via `@ck/dieter/dist/tokens.css`.
-- Component contracts live in `dieter/components/**` and build to `dieter/dist/components/**` (e.g., `button.css`, `segmented.css`).
-- Inline SVG icon set under `dieter/icons/svg/` for manual embedding.
-- Additional components may be added or removed at the design owner’s discretion. This document does not track statuses; components either live in `dieter/` (kept) or are deleted.
+Dieter is Clickeen’s shared design system: a token-first, CSS-only library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
 
-## Consumers & Split
-| Surface | Usage |
+### 1.1 Workspace Layout
+
+| Path | Description |
 | --- | --- |
-| Bob shell (`bob/`) | imports Dieter tokens + CSS bundles for UI chrome |
-| Bob editor / MiniBob | apply Dieter classes/tokens inside the builder (HTML + CSS) |
-| Internal Dieter manager / other tools | consume the same CSS bundles for component previews |
-| Venice embeds / published widgets | use Dieter CSS tokens/foundations + inline SVGs; never import Dieter React |
+| `tokens/` | Canonical design tokens (`@dieter/tokens/tokens.css`). Includes spacing, typography, color, focus, and motion tokens. |
+| `components/` | CSS contracts for each primitive (e.g., `button.css`, `segmented.css`). Compiled into `dist/components/*.css`. |
+| `icons/` | Source SVGs normalized to `fill="currentColor"` plus the generated registry (`icons/icons.json`). |
+| `dietercomponents.md` | Live integration guide: markup, behavior expectations, QA per component. |
+| `dieteradmin/` | Preview harness (documented in [Section 2](#2-dieter-admin)). |
+| `dist/` | Generated artifacts produced by `pnpm --filter @ck/dieter build` (ignored during development). |
 
-## Distribution & Build
-- `pnpm --filter @ck/dieter build` → builds `dieter/dist/**` and copies assets into `bob/public/dieter/` automatically
-- Manual copy helper (when needed): `scripts/copy-dieter-assets.js`
-- Keep `bob/public/dieter/` in `.gitignore`
-- Developers must not hand-edit `/bob/public/dieter/**`
-- No automated CI enforcement (manual verification required)
-- Bundle responsibilities:
-  - `dist/tokens.css` → tokens + foundational utilities only (no component scaffolding).
-  - `dist/components/*.css` → per-component contracts (currently `button.css`, `segmented.css`).
-  - `dist/icons` → optimized SVG assets for manual inlining.
+### 1.2 Using Dieter in an Application
 
-- Always consume the latest published `@ck/dieter` build plus copied `/dieter` assets; never hand-edit files under `bob/public/dieter/`.
-- The package ships CSS only. Bob applies Dieter classes/tokens to plain HTML; React wrappers are not available.
-- Venice consumes the generated CSS/tokens and inlines SVG icons; no runtime React or remote icon fetches.
-- Do not add telemetry/logging to Dieter assets; observability stays in app/site surfaces only.
-- Re-run `pnpm --filter @ck/dieter build && node scripts/copy-dieter-assets.js` whenever tokens/components change; treat drift as a build bug.
+1. **Install / link the package:** `pnpm install @ck/dieter` (or link the workspace package).
+2. **Load tokens** (and fonts if using the packaged font):
+   ```html
+   <link rel="stylesheet" href="/dieter/tokens/tokens.css">
+   <link rel="stylesheet" href="/dieter/fonts.css"> <!-- optional: loads Inter Tight -->
+   ```
+3. **Import the component stylesheet(s) you need:**
+   ```html
+   <link rel="stylesheet" href="/dieter/components/button.css">
+   ```
+4. **Copy markup + behaviors** from `dietercomponents.md`, wire with your application logic, and run the QA checklist.
 
-## Icon Delivery Plan
-- SVG sources live in `dieter/icons/svg/`; each SVG is normalized to `fill="currentColor"` and optimized.
-- The curated icon list is `dieter/icons/icons.json`; the build emits `dieter/dist/icons/svg/*` plus a lightweight registry (`dieter/dist/icons.js`, `dieter/dist/icons.d.ts`) for app surfaces.
-- Venice widgets inline the normalized SVG markup at SSR time; runtime fetches are forbidden.
+Dieter ships **CSS only**. Host applications manage all interactivity (e.g., toggling `data-state` attributes, focus management, persistence).
 
-**Icon delivery clarifier (NORMATIVE)**
-- Bob may inline SVGs or create local wrappers, but must not publish new icon bundles without updating the manifest.
-- Venice renders Dieter icons as inline, normalized SVG snippets embedded in SSR HTML; no runtime fetch, no React.
-- Production builds must not lazy-load or dynamically fetch SVG assets; shipping inline keeps embeds within the loader budget.
+### 1.3 Token System
 
-## Assets & Imports
-- Tokens & utilities: `import '@ck/dieter/dist/tokens.css';`
-- Button contract: `import '@ck/dieter/dist/components/button.css';`
-- Segmented Control contract: `import '@ck/dieter/dist/components/segmented.css';`
-- Textfield contract: `import '@ck/dieter/dist/components/textfield.css';`
-- Icons: inline SVGs from the built paths (e.g., `dieter/dist/icons/svg/*.svg`, copied to `/dieter/icons/svg/*.svg`)
+All Dieter primitives use the custom properties defined in `tokens/tokens.css`. Prefer overriding tokens to hand-editing component CSS.
 
-> Dieter does **not** ship React components or runtime JS helpers. Apply the CSS classes/tokens to plain HTML using attributes only.
+#### 1.3.1 Spacing & Sizing Tokens
 
-## Global Spacing & Icons (NORMATIVE)
+| Token Family | Purpose | Notes |
+| --- | --- | --- |
+| `--space-*` | Horizontal spacing scale (≈4px increments). | Used for padding/margins outside controls. |
+| `--hspace-*` | Vertical spacing scale (smaller increments). | Use for vertical rhythm (labels ↔ inputs, stacked content). |
+| `--control-size-*` | Control heights for buttons, toggles, etc. | `xs` → `xl` ladder shared by all controls. |
+| `--control-padding-inline` | Side padding inside controls. | Do **not** override; maps to the `--space-*` scale per size. |
+| `--control-inline-gap-*` | Icon ↔ text gaps (per size). | Maps to `--space-*`; applied via `gap:`. |
+| `--control-radius-*` / `--radius-*` | Border radii. | Control vs. surface radii. |
 
-This section specifies the global spacing and icon rules every component must follow. The goal is one mental model and zero per‑component guesswork.
+Text labels sometimes apply `padding-inline: var(--space-0)` for optical balance; keep root padding set via the control tokens.
 
-### Spacing Token Families (NORMATIVE)
+#### 1.3.2 Icon Tokens
 
-- `--space-*` — horizontal padding/margins on the global 4 px grid. Every control’s left/right padding MUST come from this ladder (`--space-1`, `--space-2`, etc.). No other token family may be used for inline padding.
-- `--hspace-*` — vertical rhythm tokens (0 → 0.8 rem in 0.1 rem steps). Use only for vertical spacing inside a control (label ↔ input, helper text, stacked content). Never repurpose them for horizontal padding.
-- `--control-inline-gap-*` — icon ↔ text gap tokens. Apply them via `gap:` in icon-bearing layouts. Do not use them for padding.
+| Token | Description |
+| --- | --- |
+| `--control-icon-xs|sm|md|lg|xl` | Icon container sizes aligned with control ladder. |
+| `--control-icon-glyph-ratio` (+ per-size variants) | Ratio for scaling the SVG glyph inside the icon box (`glyph = calc(iconBox × ratio)`). |
 
-- Icon box sizes (global, per size)
-  - `--control-icon-xs|sm|md|lg|xl` size the icon container; defined in tokens.
+Icon-only controls use the square control height for both dimensions and zero inline padding.
 
-- Icon–label spacing (global rule)
-  - The space between an icon and label is derived the SAME way everywhere.
-  - Use the global inline gap tokens by size and apply as the component’s CSS `gap:`:
-    - `--control-inline-gap-xs: 0.125rem`
-    - `--control-inline-gap-sm: 0.15rem`
-    - `--control-inline-gap-md: 0.165rem`
-    - `--control-inline-gap-lg: 0.18rem`
-    - `--control-inline-gap-xl: 0.20rem`
-  - Text‑only sets `gap: 0`; icon‑only ignores `gap` (no label).
+#### 1.3.3 Typography Tokens
 
-- Icon glyph sizing (SVG inside the icon box)
-  - Default ratio token: `--control-icon-glyph-ratio: 0.90` (unitless).
-  - Per‑size ratio tokens (when visual tuning is required):
-    - `--control-icon-glyph-ratio-xs: 0.97`, `--control-icon-glyph-ratio-sm: 0.95`, `--control-icon-glyph-ratio-md: 0.95`, `--control-icon-glyph-ratio-lg: 0.90`, `--control-icon-glyph-ratio-xl: 0.87`.
-  - Compute glyph size in components as: `glyph = calc(iconBox × glyphRatio)`.
-  - Icon‑only XS special case: compute against the square height when needed: `glyph = calc(btnHeight × --control-icon-glyph-ratio-xs)`.
+| Token | Usage |
+| --- | --- |
+| `--font-ui` | Global UI font stack (Inter Tight by default). Override globally to customize fonts. |
+| `--control-text-xs|sm|md|lg|xl` | Control typography (weight/size) matching the control ladder. |
+| Semantic tokens (`--heading-*`, `--body-*`, etc.) | Applied via utility classes or element defaults. |
 
-## Global Control Specification (NORMATIVE)
+See [Typography](#135-typography) for utility classes and font loading guidance.
 
-All Dieter controls (buttons, segmented, textfield, future peers) must draw from the same size ladder. The table below is authoritative; any change to a token mapping requires updating this table and every control contract.
+#### 1.3.4 Color Tokens & Theme Model
 
-| Control size | Rail height (`--control-size-*`) | Radius (`--control-radius-*`) | Side padding (text-bearing) | Icon box (`--control-icon-*`) | Icon↔text gap (`--control-inline-gap-*`) | Typography (`--control-text-*`) |
+- Core tokens (`--color-text`, `--color-bg`) define baseline foreground/background colors.
+- Accent tokens (`--color-system-blue`, `--color-system-green`, etc.) represent branded color roles.
+- Surface/border tokens (`--role-surface-*`, `--role-border`) style panels and subtle dividers via `color-mix` operations.
+- Focus tokens (`--focus-ring-*`) control ring color, width, and offset.
+
+Theme switching occurs automatically via:
+
+1. `@media (prefers-color-scheme: dark)` for OS-level dark mode.
+2. `:root[data-theme="dark"|"light"|"hc"]` for explicit overrides (e.g., manual theme toggle).
+
+Many component states use transparency blends (e.g., `.12`, `.2`) via `color-mix(in oklab, baseColor, transparent X%)`. These mix ratios are already encoded in the CSS; override the base tokens rather than reapplying mixes.
+
+#### 1.3.5 Motion Tokens
+
+| Token | Description |
+| --- | --- |
+| `--duration-snap` | Fast transitions (≈140ms). |
+| `--duration-base` | Standard transitions (≈160ms). |
+| `--duration-spin` | Loading/animation duration (≈600ms). |
+| `--easing-standard` | Primary easing curve. |
+
+All components respect `@media (prefers-reduced-motion: reduce)` and disable transitions accordingly.
+
+#### 1.3.6 Global Control Ladder
+
+Every control must consume the shared size ladder. Adjusting token mappings here requires updating all controls.
+
+| Control size | Height | Radius | Side padding | Icon box | Icon gap | Typography |
 | --- | --- | --- | --- | --- | --- | --- |
-| xs | `--control-size-xs` | `--control-radius-xs` | `--space-1` | `--control-icon-xs` | `--control-inline-gap-xs` | `--control-text-xs` |
-| sm | `--control-size-sm` | `--control-radius-sm` | `--space-1` | `--control-icon-xs` | `--control-inline-gap-sm` | `--control-text-sm` |
-| md | `--control-size-md` | `--control-radius-md` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-md` | `--control-text-md` |
-| lg | `--control-size-lg` | `--control-radius-lg` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-lg` | `--control-text-lg` |
-| xl | `--control-size-xl` | `--control-radius-xl` | `--space-2` | `--control-icon-sm` | `--control-inline-gap-xl` | `--control-text-xl` |
+| xs | `--control-size-xs` | `--control-radius-xs` | `--control-padding-inline` | `--control-icon-xs` | `--control-inline-gap-xs` | `--control-text-xs` |
+| sm | `--control-size-sm` | `--control-radius-sm` | `--control-padding-inline` | `--control-icon-xs` | `--control-inline-gap-sm` | `--control-text-sm` |
+| md | `--control-size-md` | `--control-radius-md` | `--control-padding-inline` | `--control-icon-sm` | `--control-inline-gap-md` | `--control-text-md` |
+| lg | `--control-size-lg` | `--control-radius-lg` | `--control-padding-inline` | `--control-icon-sm` | `--control-inline-gap-lg` | `--control-text-lg` |
+| xl | `--control-size-xl` | `--control-radius-xl` | `--control-padding-inline` | `--control-icon-sm` | `--control-inline-gap-xl` | `--control-text-xl` |
 
-Additional rules:
-- Icon-only variants use a square footprint (`inline-size = block-size = rail height`) with zero inline padding.
-- Vertical spacing inside a control (label ↔ helper, stacked content) uses the `--hspace-*` ladder; do not repurpose the horizontal `--space-*` tokens for vertical rhythm.
-- Glyph size is derived via the global ratio tokens (`--control-icon-glyph-ratio{-[size]}`) and must be computed (`calc(icon × ratio)`), never hard-coded.
-- If a control needs a new size, radius, or spacing value, add the token first, update this table, then touch component CSS.
+### 1.4 Typography
 
-### System Colors (Tokens Only)
-- Dieter exposes a theme‑aware system palette purely as tokens. No helpers/selectors are added; components keep deriving states via `color-mix` on these tokens.
-- Hue tokens (light defaults under `:root`; dark values under `@media (prefers-color-scheme: dark)` and `[data-theme="dark"]`):
-  - `--color-system-red|orange|yellow|green|mint|teal|cyan|blue|indigo|purple|pink|brown`
-  - Contrast companions: `--color-system-<hue>-contrast`
-- Usage (unchanged): override `--color-accent` globally or component custom properties (e.g., `--btn-bg`) in your selectors. Components will continue to compute hover/active via `color-mix`.
+#### 1.4.1 Fonts
 
-### Theme Support (Light / Dark)
-- **Source of truth:** `dieter/tokens/tokens.css` defines both light defaults and a `@media (prefers-color-scheme: dark)` override block. Every Dieter utility and component must consume colors via existing custom properties (`--color-bg`, `--color-text`, `--color-border`, `--color-system-*`, etc.). Shading, hover, and pressed states must derive from `color-mix` + those tokens—never hard-coded hex values. Motion and elevation now ship via shared tokens: `--duration-snap`, `--duration-base`, `--duration-spin`, `--shadow-elevated`, `--shadow-floating`, `--shadow-inset-control`.
-- **Runtime behaviour:**
-  - Browsers auto-switch via `prefers-color-scheme`. The token bundle responds automatically; no extra code is required when the user’s OS changes modes.
-  - To force a theme (e.g., Bob preview toggle), set `data-theme="dark"` or `data-theme="light"` on the root element. The token bundle ships attribute-scoped overrides (`:root[data-theme="dark"]`) that mirror the media queries, so Venice/Bob can deterministically pin the palette during previews or SSR.
-  - Never duplicate tokens. If a surface needs a manual override (for example, Venice SSR fallback while the parent site is light-only), scope it by applying the attribute on the widget root: `<div data-theme="dark">…`. Do **not** copy the dark tokens or generate bespoke palettes.
-- **Implementation rules for AIs:**
-  1. **Always** reference the color tokens—`var(--color-bg)`, `var(--color-surface)`, `var(--color-text)`, `var(--color-system-blue)`—when styling new utilities or examples.
-  2. When creating helper utilities (container, panel, etc.) ensure every background, border, shadow, or text color pulls from tokens so the theme swap is automatic.
-  3. Embeds (Venice) must not inject their own `prefers-color-scheme` overrides; they inherit the token output and optionally pin `data-theme` if the instance configuration or preview experience demands it.
-  4. Bob’s preview harness should toggle theme by flipping the attribute on the iframe root and never by importing a second stylesheet.
-  5. AIs must not introduce additional theme flags or cascading classes. If a new palette is required, escalate for token additions.
+- **Default font (Inter Tight):**
+  ```html
+  <link rel="stylesheet" href="/dieter/fonts.css">
+  <link rel="stylesheet" href="/dieter/tokens/tokens.css">
+  ```
+- **Custom font:** load your font first, then override `--font-ui` (skip `fonts.css`):
+  ```html
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap">
+  <link rel="stylesheet" href="/dieter/tokens/tokens.css">
+  <style>
+    :root { --font-ui: "Roboto", sans-serif; }
+  </style>
+  ```
 
-## Global Foundations
+#### 1.4.2 Element Defaults & Utilities
 
-**Files**
-- `dieter/dist/tokens.css` → exported tokens, focus styles, spacing and typography utilities.
-- `dieter/tokens/tokens.css` → source for the build; do not consume directly.
+- `body`: 16px, 400 weight.
+- `h1`…`h6`: scaled 32px → 14px, weights 700 → 500.
+- `.heading-*`, `.body*`, `.label*`, `.caption*`, `.overline*` utilities provide semantic typography in class form.
+- Numeric utilities (`.text-10`…`.text-32`) remain for legacy usage.
 
-**Token families (examples)**
-- Typography: `--font-ui`, `--fs-10 … --fs-32`, `--lh-tight/normal/loose`.
-- Spacing: `--space-1 … --space-10` (4px grid) and control sizing tokens `--control-size-*`, `--control-font-*`.
-- Vertical rhythm (hspace): `--hspace-1 … --hspace-9` (0.0rem → 0.8rem in 0.1rem steps) — for tight vertical spacing inside components (e.g., label ↔ field ↔ supporting text stacks). Prefer `--hspace-*` for intra‑component vertical gaps; keep `--space-*` for layout gutters/padding.
-- Motion: `--duration-snap` (140 ms), `--duration-base` (160 ms), `--duration-spin` (600 ms).
-- Elevation: `--shadow-elevated`, `--shadow-floating`, and `--shadow-inset-control` are the only sanctioned shadow tokens; reuse them across components instead of defining ad-hoc box-shadows.
-- Admin shell layout tokens: `--sidebar-width` (expanded) and `--sidebar-width-collapsed` (icon rail).
-- Colors: `--color-bg`, `--color-surface`, `--color-text`, `--color-accent`, plus semantic role tokens `--role-primary-bg`, `--role-danger-text`, etc.
-- **Derived color tints & shades (NORMATIVE)**
-  - We do not mint separate tokens for the lighter/darker chips shown in `admin/dietercomponents.html`. Instead, derive them from the base token with `color-mix` so a change to the source cascades everywhere.
-  - Naming convention (used in docs + code samples): `token.1 … token.5` are light blends, `token.1D … token.5D` are dark blends.
-  - Recipes (initial calibration — adjust the percentages here if design shifts):
-    - `token.1` → `color-mix(in oklab, var(--token), white 20%)`
-    - `token.2` → `color-mix(in oklab, var(--token), white 40%)`
-    - `token.3` → `color-mix(in oklab, var(--token), white 60%)`
-    - `token.4` → `color-mix(in oklab, var(--token), white 80%)`
-    - `token.5` → `color-mix(in oklab, var(--token), white 90%)`
-    - `token.1D` → `color-mix(in oklab, var(--token), black 20%)`
-    - `token.2D` → `color-mix(in oklab, var(--token), black 40%)`
-    - `token.3D` → `color-mix(in oklab, var(--token), black 60%)`
-    - `token.4D` → `color-mix(in oklab, var(--token), black 80%)`
-    - `token.5D` → `color-mix(in oklab, var(--token), black 90%)`
-  - Never hard-code the resulting RGB/hex values. Always reference the base token plus `color-mix` so tweaks to `--color-system-*` or role tokens flow through.
-- Accessibility: `--focus-ring-width`, `--focus-ring-color`, `--focus-ring-offset`, `--min-touch-target`.
+### 1.5 Colors in Practice
 
-Global typography defaults to Inter (`--font-ui`) with a 16px body size (`--fs-16`). The token bundle also ships focus-ring defaults and a lightweight reset to harmonise across browsers. Utilities in `tokens.css` (e.g., `.panel-heading`) exist solely for internal previews and must not leak into shipped bundles.
+- `--color-system-*` tokens provide accent colors; components reference them via variants (e.g., `data-variant="primary"`).
+- `color-mix` is used for hover/active states (e.g., mixing the base color with `--color-text` or transparent white).
+- Light/dark switching uses the aforementioned theme hooks; tokens degrade gracefully when custom themes are applied (override the base token values).
 
-**Usage rules (NORMATIVE)**
-- Every component style MUST reference tokens via `var(--token-name)`. Introducing raw hex values or fixed px sizes is forbidden.
-- Tokens follow the “role” palette (e.g., `--role-danger-bg`) instead of ad-hoc names like `--color-danger`. Use the role tokens to stay consistent with Button.
-- Preview helper selectors (e.g., `.panel-heading`) still live in `tokens.css` for the internal harness; do not ship or depend on them in production. These will be removed in a future cleanup.
-- Use `--radius-4` for border radii. Additional radius tokens will be added as needed.
-- Vertical rhythm is locked to the 4px scale. Stacks, margins, paddings, and gaps MUST use the published spacing tokens (`--space-1 = 4px`, `--space-2 = 8px`, `--space-3 = 12px`, `--space-4 = 16px`, `--space-6 = 24px`, `--space-8 = 32px`, `--space-10 = 40px`). Arbitrary values (10px, 18px, 26px…) are prohibited.
-- Control heights come from the control token family: `--control-size-xs|sm|md|lg|xl` define 16px / 20px / 24px / 28px / 32px rails, and the matching font + radii tokens (`--control-font-*`, `--control-radius-*`, `--control-icon-*`) must be used together to keep visuals aligned. `xs` (16px) is the smallest size, used for icon-only buttons and minimal text-only buttons; any button with both icon and label starts at `sm` (20px) and ladders up. Never invent intermediate heights—escalate if a design needs a new token.
-- Control icon ladder (normalized `fill="currentColor"` glyphs) has an explicit mapping: `--control-icon-xxs` (12px), `--control-icon-xs` (16px), `--control-icon-sm` (20px), `--control-icon-md` (24px), `--control-icon-lg` (28px), `--control-icon-xl` (32px). Components reference these tokens directly; do not hard-code icon dimensions.
-- Control text ladder mirrors control rails: use `--control-text-xs|sm|md|lg|xl` for 16 / 20 / 24 / 28 / 32px controls respectively. These tokens bundle weight, size, line-height, and font family so buttons, segmented, textfields, dropdowns, etc. stay in sync.
-- Honour `--min-touch-target` (44px). When a visual control is shorter (e.g., 24px rail) add transparent padding or outer spacing so the hit area meets the token rather than shrinking the target.
+### 1.6 Icons
 
-## Test harness checklist (NORMATIVE)
-- Build Dieter: `pnpm --filter @ck/dieter build`.
-- Copy assets: `node scripts/copy-dieter-assets.js` (or the Turbo task) and confirm `bob/public/dieter/` matches `dieter/dist/`.
-- Open `tests/dietercomponents.html` in a local server/iframe harness.
-- Verify Button examples render with correct tokens, focus states, and variants. The harness may include work‑in‑progress demos for evaluation; only rely on CSS that ships from the `@ck/dieter` package (do not import Admin‑lab‑only CSS in apps).
+- Source SVGs: `icons/svg/*.svg` (normalized to `fill="currentColor"`).
+- Build output: `dieter/dist/icons/svg/*`, plus registry files (`icons.json`, `icons.js`, typings).
+- Copy process: `pnpm --filter @ck/dieter build` followed by `node scripts/copy-dieter-assets.js` (or Turbo task) to sync `/dieter/icons/**` in consuming apps.
+- Consumption rules:
+  - Inline SVG markup from the registry (`dieter/dist/icons.js` or JSON).
+  - Bob housed icons can use local helpers (e.g., a React wrapper) but must source markup from the registry.
+  - Venice embeds MUST inline SVG during SSR; client-side fetches are forbidden to protect loader budgets.
+  - No ad-hoc icon bundles: update source SVGs, rebuild, copy assets.
 
-## Governance
-- Single source: `dieter/` package.
-- Copy-on-build only; keep `/bob/public/dieter/` untracked and regenerate assets manually when drift appears.
-- SVG normalization scripts enforce consistent assets.
-- Versions follow SemVer; breaking changes require explicit CEO approval before shipping.
-- Rendering split (React consoles vs. SSR widgets) is authoritative—changes need explicit CEO approval.
-- Tokens-only rule: every CSS addition must lean on existing tokens; if a needed token is missing (e.g., additional radius values), raise an issue and obtain approval before shipping.
+### 1.7 Component Contracts
 
-## Change Process
-1. Update Dieter source (tokens/components/icons).
-2. Run `pnpm icons:build` (when generator lands) + `pnpm --filter @ck/dieter build`.
-3. Copy assets via script; ensure docs and the decision log stay in sync.
+The full integration guide (markup, behaviors, QA) lives in [dieter/dietercomponents.md](../../dieter/dietercomponents.md). Always consult it before wiring a component. Current components include:
+
+| Component | Purpose |
+| --- | --- |
+| Button | Primary/secondary calls to action (icon-only/text-only/icon-text). |
+| Segmented | Radio-based segmented control. |
+| Textfield | Core input field + composed variants. |
+| Dropdown | Trigger + floating surface pattern. |
+| Expander | Checkbox-driven disclosure section. |
+| Toggle | Checkbox-based switch. |
+| Tabs | Radio-based tablist with baseline indicator. |
+| Textrename | Inline editable text field with view/edit state toggle. |
+
+### 1.8 Build & Distribution Workflow
+
+Whenever tokens or component CSS changes:
+
+1. Update source files in `tokens/` or `components/`.
+2. Update `dietercomponents.md` with the new contract.
+3. Update Dieter Admin fragments for previews.
+4. Run `pnpm --filter @ck/dieteradmin dev` to verify visually.
+5. Build and copy assets:
+   ```bash
+   pnpm --filter @ck/dieter build
+   node scripts/copy-dieter-assets.js
+   ```
+6. Commit changes; the consuming apps should re-run their asset copy or build step.
+
+Never hand-edit `/bob/public/dieter/**`; treat it as a generated artifact.
 
 ---
 
-_No new files were created; only this doc was rewritten._
+## 2. Dieter Admin
 
-## Component Reference
+Dieter Admin is the internal preview harness used for documentation and manual QA. It imports Dieter source CSS directly; it is not a production surface.
 
-Per-component contracts live alongside the CSS source in `dieter/components/*.css`. Each file documents supported attributes, element hooks, and state handling in comments at the top of the file. When a component is promoted to production, make sure the file header and Dieter Admin showcase reflect the current contract. This PRD stays component agnostic—update those source files and the decision log whenever the contract changes.
+### 2.1 Role & Scope
 
-### Button (`dieter/dist/components/button.css`)
+| Dieter Admin **is** | Dieter Admin **is not** |
+| --- | --- |
+| Static Vite app for previews & documentation. | A runtime bundle or component library. |
+| A safe playground for interaction demos. | A source of truth for component contracts (the CSS is). |
+| A QA checklist driver before shipping CSS. | Replacement for app-specific logic (Bob/Venice still own JS). |
 
-**Selectors & attributes**
-- Root: `.diet-btn`
-- Element hooks: `.diet-btn__icon`, `.diet-btn__label`
-- `data-size="xs|sm|md|lg|xl"`
-- `data-type="icon-only|icon-text|text-only"`
-- `data-variant="primary|secondary|neutral|line1|line2"`
-- States: `:hover`, `:active`, `:focus-visible`, `:disabled`, `[aria-disabled="true"]`, `[aria-pressed="true"]`, `[data-state="loading"]`
+### 2.2 Project Structure
 
-**Token mapping (per size)**
-- `xs` → rail `--control-size-xs`, side padding `--space-1`, icon box `--control-icon-xs`, gap `--control-inline-gap-xs`, typography `--control-text-xs`
-- `sm` → `--control-size-sm`, `--space-1`, `--control-icon-xs`, `--control-inline-gap-xs`, `--control-text-sm`
-- `md` → `--control-size-md`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-sm`, `--control-text-md`
-- `lg` → `--control-size-lg`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-sm`, `--control-text-lg`
-- `xl` → `--control-size-xl`, `--space-2`, `--control-icon-sm`, `--control-inline-gap-md`, `--control-text-xl`
-- Icon-only → square rail (`inline/block size = rail height`), padding `0`, icon fills the square. Text-only sets `gap: 0`.
-- Glyph size uses `calc(--btn-icon-box × --control-icon-glyph-ratio{-[size]})` with the global ratio tokens.
+| Path | Description |
+| --- | --- |
+| `src/main.ts` | Bootstraps the shell, router, and shared renderer. |
+| `src/html/dieter-showcase/*.html` | HTML fragments for each component preview. |
+| `src/css/*` | Styles for the admin shell (never shipped). |
+| `src/data/routes.ts` | Maps slugs to showcase fragments and CSS imports. |
+| `src/data/nav.config.ts` | Sidebar grouping and ordering. |
 
-**Behaviour & accessibility**
-- Loading state (`[data-state="loading"]`) dims the label and shows a spinner pseudo-element.
-- Focus-visible uses the shared two-layer ring (`--focus-ring-*`).
-- Disabled and `aria-disabled` remove pointer affordances but preserve focus handling.
-- Icons must come from the Dieter registry (inline SVG or hydrated via `data-icon`).
+### 2.3 Running & Building
 
-### Segmented Control (`dieter/dist/components/segmented.css`)
+- Development: `pnpm --filter @ck/dieteradmin dev` → `http://localhost:5173`
+- Production build (optional): `pnpm --filter @ck/dieteradmin build`
 
-**Selectors & attributes**
-- Root radiogroup: `.diet-segmented`
-- Segment label: `.diet-segment`
-- Hooks: `.diet-segment__input` (radio), `.diet-segment__surface`, `.diet-segment__icon`, `.diet-segment__label`, `.diet-segment__sr`
-- `data-size="sm|md|lg"`
-- `data-type="icon-only|text-only"` (omit for icon+text)
-- Consumers must apply `role="radiogroup"` and native radio semantics.
+### 2.4 Authoring / Updating Pages
 
-**Token mapping**
-- `sm` → rail `--control-size-sm`, surface padding `--space-1`, icon box `--control-icon-xxs`, icon/text gap `--control-inline-gap-xs`, typography `--control-text-sm`
-- `md` → `--control-size-md`, `--space-2`, `--control-icon-xxs`, `--control-inline-gap-sm`, typography `--control-text-md`
-- `lg` → `--control-size-lg`, `--space-2`, `--control-icon-xs`, `--control-inline-gap-sm`, typography `--control-text-lg`
-- Icon-only segments drop `padding-inline` to `0` and rely on the square rail; `.diet-segment__sr` supplies screen-reader text when no label is present.
-- The rail padding (`--seg-rail-padding`) insets the surface so the focus ring and hover states render correctly.
+1. Create or edit the HTML fragment under `src/html/dieter-showcase/`.
+2. Ensure the fragment’s CSS imports are listed in `routes.ts`.
+3. Register the page in `nav.config.ts` to expose it in the sidebar.
+4. If the demo needs interaction, add local inline scripts guarded by `data-demo` hooks (admin-only; do not ship to production).
 
-**Behaviour & accessibility**
-- Checked state follows native radio (`.diet-segment__input:checked`).
-- Focus-visible reuses the global focus ring, and `prefers-reduced-motion` removes transitions.
-- Disabled segments reduce opacity and cursor affordance.
-- Icons must be the curated Dieter SVGs; do not fetch at runtime.
+### 2.5 Shared Renderer Warnings
 
-### Textfield (`dieter/dist/components/textfield.css`)
+`main.ts` renders all component pages. Changes to its layout or DOM helpers affect every showcase. Always leave a warning block near the renderer:
 
-**Selectors & attributes**
-- Root: `.diet-input`
-- Hooks: `.diet-input__label`, `.diet-input__field`, optional `.diet-input__helper`, optional wrappers `.diet-input__inner` / `.diet-input__control`, optional `.diet-input__icon`
-- `data-size="md|lg|xl"`
-- States: `:focus-visible`, `:disabled`, `[aria-disabled="true"]`
-
-**Token mapping**
-- Side padding (all sizes, field + wrapper) → `--space-2`
-- Vertical stack gap → root uses `--hspace-2`; helper margin uses `--hspace-4`
-- Icon/text gap inside composed wrapper → `--control-inline-gap-md`
-- Icon boxes: `md` → `--control-icon-xxs`, `lg` → `--control-icon-xs`, `xl` → `--control-icon-xs`
-- Rail heights/typography follow the global ladder (`--control-size-*`, `--control-text-*`)
-- Composed wrapper preserves border radius/border tokens and keeps the input flexible (`flex: 1 1 0`).
-
-**Behaviour & accessibility**
-- Labels and fields must be linked via `for`/`id`; helpers can be referenced with `aria-describedby`.
-- Focus-visible uses the shared ring; disabled state applies opacity/tint via tokens.
-- Icons are inline Dieter SVGs (via `data-icon` hydration or copied markup). Trailing action buttons share the same icon hook.
-
-## Common AI mistakes (NORMATIVE)
-
-❌ **Wrong:** Importing Dieter React components in Venice renderers.
-```ts
-import { Button } from '@ck/dieter/components'; // WRONG — React never ships to embeds
-```
-✅ **Right:** Render SSR HTML with Dieter classes/tokens only.
-```ts
-const html = `<button class="diet-btn" data-variant="primary">${label}</button>`;
+```text
+// ⚠️ Shared renderer: affects all showcase pages.
+// After editing, verify at minimum:
+// 1) Button grid renders correctly.
+// 2) Segmented layout intact.
+// 3) Textfield/Dropdown toggles.
+// 4) Textrename view/edit toggle.
 ```
 
-❌ **Wrong:** Fetching SVG icons at runtime in embeds.
-```ts
-await fetch('/dieter/icons/checkmark.svg');
-```
-✅ **Right:** Inline the normalized SVG string emitted at build time.
-```ts
-const icon = icons.checkmark; // string literal of <svg>
-```
+### 2.6 QA Checklist (Admin)
 
-❌ **Wrong:** Editing copied assets under `bob/public/dieter/` manually.
-✅ **Right:** Regenerate via `pnpm --filter @ck/dieter build` + `node scripts/copy-dieter-assets.js`.
+After modifying shared code or CSS imports, manually confirm:
 
-❌ **Wrong:** Styling components with hard-coded hex values or px instead of tokens.
-```css
-.my-btn { background:#0a84ff; border-radius:8px; }
-```
-✅ **Right:** Reference Dieter tokens so theming stays consistent.
-```css
-.my-btn { background:var(--color-accent); border-radius:var(--radius-4,0.5rem); }
-```
+1. **Button** page: icon-only/icon-text/text-only grids render and respond on hover/focus.
+2. **Segmented** page: all sizes show correct rail, icons, and active states.
+3. **Textfield** page: basic and composed variants display correctly.
+4. **Dropdown** page: trigger toggles surface open/closed; icon rotates.
+5. **Expander** page: disclosure opens/closes, chevron rotates.
+6. **Toggle** page: knob animates, track color updates.
+7. **Tabs** page: underline tracks active radio.
+8. **Textrename** page: view/edit toggle works and focus is managed.
+9. **Typography/Colors** pages: tokens render without layout issues.
 
-❌ **Wrong:** Assuming additional component CSS contracts exist when they are not listed here.
-✅ **Right:** Use only the components explicitly documented above; treat this doc as the sole source for what is production-ready.
+### 2.7 Best Practices for Contributors (Human or AI)
+
+- Keep component wiring local to the fragment—do **not** add admin-specific logic to shared CSS or app code.
+- When adding new demos, follow the button page pattern: spec/preview area + component preview + optional CSS/UX blocks.
+- Use inline scripts guarded by `data-demo` attributes for interaction (e.g., dropdown click handler). These scripts must not ship externally.
+- Always verify markup against `dietercomponents.md`; the admin harness does not supersede the component contract.
+
+### 2.8 Keeping Admin in Sync
+
+Whenever components change:
+
+1. Update the canonical CSS in `dieter/components/`.
+2. Update the integration guide (`dietercomponents.md`).
+3. Update the admin fragment and run `pnpm --filter @ck/dieteradmin dev`.
+4. Confirm the QA checklist before committing.
+
+---
+
+## 3. Accessibility & Privacy Baseline
+
+All Dieter components and widgets using Dieter MUST meet these minimum standards:
+
+### 3.1 Accessibility (WCAG AA)
+
+**Color Contrast:**
+- WCAG AA minimum contrast ratios enforced
+- Visible focus states on all interactive elements
+- Focus indicators use `--focus-ring` token
+
+**Form Controls:**
+- All inputs have associated `<label>` elements (using `for` attribute)
+- Error messages use `aria-describedby` to link to input
+- Dynamic feedback uses `aria-live` regions for screen readers
+- Required fields indicated both visually and via `aria-required`
+
+**Keyboard Navigation:**
+- All interactive elements keyboard operable (Tab, Enter, Space, Arrow keys)
+- Focus trap in overlays/modals (Tab cycles within, Escape closes)
+- Return focus to opener when overlay closes
+- No keyboard traps (users can always Tab out)
+
+**Screen Reader Support:**
+- Semantic HTML (buttons, links, headings, landmarks)
+- ARIA labels where visual context isn't sufficient
+- State changes announced (loading, success, error via aria-live)
+
+### 3.2 Privacy (Embed Requirements)
+
+**No Tracking in Embeds:**
+- No cookies or localStorage used in Venice-rendered widgets
+- No third-party scripts injected
+- Respect Do Not Track (DNT) browser setting
+- Analytics pixel is fire-and-forget, no PII
+
+**Data Minimization:**
+- Only collect data user explicitly provides in forms
+- No fingerprinting or session tracking
+- Submission data retention: 30 days for anonymous submissions
+
+**GDPR Compliance:**
+- Form submissions include data processing notice
+- Users can opt out of analytics via `data-ckeen-analytics="false"`
+- IP addresses hashed before storage (SHA-256 with salt)
+
+### 3.3 Testing Checklist
+
+Before shipping any Dieter component or widget:
+- [ ] Manual keyboard test (Tab, Shift+Tab, Enter, Space, Escape)
+- [ ] Screen reader test (VoiceOver/NVDA) for announcements
+- [ ] Color contrast check (use browser DevTools accessibility panel)
+- [ ] Focus visible on all interactive elements
+- [ ] No console errors for missing aria-labels
+- [ ] Form validation errors announced via aria-live
+- [ ] Overlay focus trap works and returns focus on close
+
+---
+
+This document now supersedes older Dieter write-ups. `dietercomponents.md` remains the detailed per-component contract file; refer to both together when integrating or modifying Dieter components.

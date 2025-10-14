@@ -2,7 +2,7 @@
 STATUS: NORMATIVE – SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It must not conflict with:
 1) supabase/migrations/ (DB schema truth) and
-2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
+2) documentation/CONTEXT.md (Global terms and precedence).
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 # Michael – Data Plane (Phase-1)

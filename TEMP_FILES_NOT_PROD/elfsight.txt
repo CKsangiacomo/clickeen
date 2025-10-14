@@ -1,0 +1,79 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <title>Untitled widget</title>
+
+        <meta charset="utf-8" />
+
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+
+        <!-- Icons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="https://elf.site/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="https://elf.site/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="https://elf.site/icon-32х32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="https://elf.site/icon-16х16.png" />
+
+        <!-- OG -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://f6a5c3e5fe8f41f09a76a475b1f02ec5.elf.site" />
+        <meta property="og:title" content="Untitled widget" />
+        <meta property="og:description" content="Click the link to interact with Elfsight Google Reviews" />
+        <meta property="og:image" content="https://services-universe-prod.sfo3.digitaloceanspaces.com/widget-thumbnails/911e0d46-b6b2-47b1-b6d8-6fe83b3de27b@2x.png" />
+        <meta property="og:image:alt" content="Untitled widget" />
+
+        <!-- Preloading -->
+        <link rel="preconnect" href="https://core.service.elfsight.com" />
+        <link rel="preload" href="https://universe-static.elfsightcdn.com/app-releases/google-reviews/stable/v3.23.8/2566dd40e6b04b51fdfee3433df64a88ef4ecdee/widget/googleReviews.js" as="script" />
+
+        <!-- Platform -->
+        
+        <script
+          src="https://static.elfsight.com/platform/platform.js"
+          async
+        ></script>
+
+        <!-- Etc -->
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.7/iframeResizer.contentWindow.js"
+          async
+        ></script>
+
+        <style>
+          body {
+            margin: 0;
+            font:
+              400 18px/1.555 -apple-system,
+              BlinkMacSystemFont,
+              Roboto,
+              Open Sans,
+              Helvetica Neue,
+              sans-serif;
+          }
+
+          body:not(.iframe) {
+            padding: 60px 40px;
+          }
+
+          @media (max-width: 900px) {
+            body:not(.iframe) {
+              padding: 32px 20px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="elfsight-app-f6a5c3e5-fe8f-41f0-9a76-a475b1f02ec5"></div>
+
+        <script>
+          document.body.classList.toggle('iframe', window !== window.parent);
+          document.body.style.padding = '';
+        </script>
+
+        
+      </body>
+    </html>
+  

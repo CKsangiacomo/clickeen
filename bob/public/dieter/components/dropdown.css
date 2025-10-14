@@ -1,0 +1,51 @@
+.diet-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.diet-dropdown__surface {
+  /* Solid, theme-aware surface (no bleed-through of content below) */
+  --dd-surface-bg: var(--color-bg);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: calc(100% + var(--hspace-4, 0.3rem));
+  z-index: 20;
+  display: grid;
+  gap: var(--space-4, 1rem);
+  min-inline-size: 240px;
+  padding: var(--space-4, 1rem);
+  border-radius: var(--radius-4, 0.5rem);
+  background: var(--dd-surface-bg);
+  box-shadow: var(--shadow-floating);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity var(--duration-base, 160ms) ease,
+    transform var(--duration-base, 160ms) ease,
+    visibility var(--duration-base, 160ms) ease;
+}
+
+.diet-dropdown[data-state="open"] > .diet-dropdown__surface {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.diet-dropdown [data-dropdown-trigger] .diet-btn__icon svg {
+  transition: transform var(--duration-base, 160ms) ease;
+  transform-origin: center;
+}
+
+.diet-dropdown[data-state="open"] [data-dropdown-trigger] .diet-btn__icon svg {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-dropdown__surface {
+    transition: none;
+  }
+}

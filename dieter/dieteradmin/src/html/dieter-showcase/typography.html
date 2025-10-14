@@ -1,4 +1,22 @@
-<div class="dieter-preview">
+<div class="dieter-preview typography-page">
+  <style>
+    /* Page-scoped overrides — fluid rows that never wrap blocks */
+    .typography-page .row {
+      display: flex;
+      flex-wrap: nowrap;                 /* never wrap blocks */
+      align-items: center;
+      column-gap: clamp(4px, 2vw, 32px); /* outer gutter shrinks first */
+      row-gap: 0;
+      width: 100%;
+      overflow-x: auto;                  /* fallback if still too narrow */
+      -webkit-overflow-scrolling: touch;
+    }
+    .typography-page .row-header { flex: 0 0 clamp(80px, 12vw, 160px); white-space: nowrap; }
+    /* Text sample */
+    .typography-page .specdpreview { display: inline-flex; align-items: center; gap: clamp(4px, 1vw, 12px); flex: 0 1 auto; min-width: 0; white-space: nowrap; }
+    .typography-page .preview-specs { width: clamp(56px, 14vw, 160px); text-align: right; overflow: hidden; text-overflow: ellipsis; }
+    .typography-page .componentpreview { justify-content: flex-start; }
+  </style>
 
   <h3 class="section-header">Headings</h3>
 

@@ -1,7 +1,8 @@
 STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (SCOPED)
 This document is authoritative for its scope. It MUST NOT conflict with:
-1) supabase/migrations/ (DB schema truth) and
-2) documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Global Contracts).
+1) supabase/migrations/ (DB schema truth)
+2) documentation/CONTEXT.md (Global terms and precedence)
+3) Other system PRDs in documentation/systems/
 If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 ## AIs Quick Scan
@@ -38,18 +39,84 @@ Venice is Clickeen's edge-deployed widget rendering service that delivers server
 
 **Query Parameters**:
 - `theme=light|dark` (optional, defaults to 'light')
-- `device=desktop|mobile` (optional, defaults to 'desktop')  
-- `ts=<milliseconds>` (optional, triggers preview mode with no-store cache)
+- `device=desktop|mobile` (optional, defaults to 'desktop')
+- `ts=<milliseconds>` (optional, triggers cache-bust preview mode with no-store)
+- `preview=1` (optional, enables preview-only features: postMessage patch script)
 
 **Response**: `text/html; charset=utf-8` with complete widget HTML
 
 **Integration Flow**:
 1. Extract `publicId` from URL path
 2. Load widget configuration from Paris: `GET /api/instance/:publicId`
-3. Apply theme/device hints to configuration  
+3. Apply theme/device hints to configuration
 4. Render widget HTML using configuration + Dieter design system
-5. Inject "Made with Clickeen" backlink (Phase-1 requirement)
-6. Return HTML with appropriate cache headers
+5. **If `?preview=1` present:** Inject postMessage patch script (preview-only feature)
+6. Inject "Made with Clickeen" backlink (Phase-1 requirement)
+7. Return HTML with appropriate cache headers
+
+**Preview Mode (`?preview=1`):**
+
+When `preview=1` query parameter is present, Venice injects a preview-only patch script that enables instant updates:
+
+**What it does:**
+- Listens for postMessage from Bob/MiniBob with patch data
+- Updates CSS variables on elements with `data-widget-element` attributes
+- Updates DOM content (text, innerHTML) safely
+- Enables instant typing feedback without iframe reload
+
+**Security:**
+- Origin whitelist: Only Bob and MiniBob origins allowed
+- Field whitelist: Per-widget whitelist of patchable fields (see widget PRDs)
+- Value validation: Type checks, enum validation, numeric clamping
+- Script uses CSP nonce, strict-dynamic
+
+**Example postMessage:**
+```javascript
+// From Bob to Venice iframe
+iframe.contentWindow.postMessage({
+  type: 'patch',
+  widget: 'testbutton',
+  fields: {
+    text: 'New text',
+    color: 'red',
+    radiusPx: 16
+  }
+}, veniceOrigin);
+```
+
+**Example patch handler (injected only when preview=1):**
+```javascript
+window.addEventListener('message', (event) => {
+  // Origin check
+  const allowedOrigins = ['http://localhost:3000', 'https://app.clickeen.com'];
+  if (!allowedOrigins.includes(event.origin)) return;
+
+  const { type, widget, fields } = event.data;
+  if (type !== 'patch' || widget !== 'testbutton') return;
+
+  const button = document.querySelector('[data-widget-element="button"]');
+  if (!button) return;
+
+  // Whitelist + validate each field
+  if ('text' in fields) {
+    button.textContent = String(fields.text).slice(0, 50);
+  }
+  if ('color' in fields && ['green', 'red'].includes(fields.color)) {
+    const bg = fields.color === 'red' ? '#ef4444' : '#22c55e';
+    button.style.setProperty('--btn-bg', bg);
+  }
+  if ('radiusPx' in fields) {
+    const radius = Math.max(0, Math.min(32, Number(fields.radiusPx) || 12));
+    button.style.setProperty('--btn-radius', `${radius}px`);
+  }
+});
+```
+
+**Production embeds (preview=1 absent):**
+- NO postMessage script injected
+- Pure SSR HTML/CSS only
+- No client JS required for basic functionality
+- See `documentation/widgets/testbutton.md` for reference implementation
 
 ### Overlay Loader Bundle: `/embed/v{semver}/loader.js`
 **Purpose**: Provide overlay/pop-up delivery via a single script  
@@ -133,7 +200,7 @@ const { config, status, updated_at } = await response.json();
 - **Network Timeout**: Render "Loading failed" state with retry option
 
 **Cache Coordination**:
-- Venice applies the canonical TTLs/validators defined in Techphases-Phase1Specs.md.
+- Venice applies canonical caching rules (see Caching Strategy section below)
 - Published widgets may be cached longer than drafts; preview (`?ts`) is always `no-store`.
 - Outbound fetches to Paris MUST use an AbortController with a ≤5s timeout to protect edge latency budgets.
 
@@ -286,7 +353,7 @@ Per‑widget docs live under `documentation/widgets/*.md` (one file per widget; 
 
 ### Phase-1 Supported Widgets
 
-> Examples below are illustrative. The authoritative list of Phase‑1 widgets lives in `CRITICAL-TECHPHASES/Techphases-Phase1Specs.md` (section S8 Seed Widgets).
+> The authoritative list of Phase-1 widgets lives in `documentation/CONTEXT.md` (Phase-1 Widget List section).
 
 #### Contact Form Widget
 **Config Schema**:

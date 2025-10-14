@@ -6,6 +6,7 @@ import '@dieter/components/dropdown.css';
 import '@dieter/components/expander.css';
 import '@dieter/components/toggle.css';
 import '@dieter/components/tabs.css';
+import '@dieter/components/textrename.css';
 
 import { showcasePages, showcaseIndex, navGroups, type NavItem } from './data/routes';
 import { getIcon } from './data/icons';
@@ -16,6 +17,41 @@ const htmlFragments = import.meta.glob('./html/dieter-showcase/*.html', {
   import: 'default',
   eager: true,
 });
+
+const notesMap = new Map<string, { use: string; ux: string[] }>([
+  ['button', {
+    use: 'Primary call-to-action or utility control rendered as a standalone button. Supports icon-only, icon-text, and text-only configurations.',
+    ux: ['Hover applies a subtle surface tint.', 'Press adds a stronger tint and nudges the button down by 1px.', 'Focus-visible draws the shared Dieter focus ring.', 'Optional loading state replaces the label/icon with a spinner while disabling interactions.'],
+  }],
+  ['segmented', {
+    use: 'Single-select control for mode toggles (e.g., day/night) rendered as a compact segmented rail.',
+    ux: ['Rail shows inactive options with muted icons/text.', 'Hover lightens the surface while the active segment highlights in the accent color.', 'Focus-visible draws the shared Dieter focus ring.', 'Disabled segments dim and ignore pointer input.'],
+  }],
+  ['textfield', {
+    use: 'Primary text input for forms and configuration panels, with optional helper text and composed variants for icons/actions.',
+    ux: ['Idle state shows a neutral border and placeholder text.', 'Focus swaps border/background to the accent surface and fades the placeholder.', 'Disabled state softens the background and blocks interaction.'],
+  }],
+  ['dropdown', {
+    use: 'Floating panel anchored to a trigger button for menus, filters, or contextual content.',
+    ux: ['Closed by default; opening fades the surface in with a slight upward offset.', 'Trigger icon rotates 180° when the dropdown opens.', 'Surface uses elevated shadow and spacing tokens for offset and padding.'],
+  }],
+  ['expander', {
+    use: 'Inline disclosure that reveals additional content beneath a trigger without navigating away.',
+    ux: ['Trigger reuses Dieter button styling; clicking toggles the content region and chevron rotation.', 'Open state displays content with a floating shadow; closed state hides it.', 'Focus-visible highlights the trigger with the shared Dieter ring.'],
+  }],
+  ['toggle', {
+    use: 'Binary on/off switch for settings, built on a checkbox while matching Dieter control sizing.',
+    ux: ['Track color changes from neutral gray to success green when on.', 'Knob slides horizontally with a 160ms transition.', 'Focus-visible highlights the track using the shared ring.', 'Disabled toggles dim and block pointer/keyboard interaction.'],
+  }],
+  ['tabs', {
+    use: 'Horizontal tab row for switching between panels within the same view.',
+    ux: ['Tabs sit on a continuous baseline; the active tab paints a 2px accent underline.', 'Hover fades the label opacity and press lowers it further.', 'Focus-visible highlights the tab; disabled tabs dim and are skipped in keyboard navigation.'],
+  }],
+  ['textrename', {
+    use: 'Inline editable text field with view/edit state toggle.',
+    ux: ['View state resembles a neutral button with hover/press feedback.', 'Entering edit state swaps to a textfield and moves the caret to the end.', 'Leaving edit state restores the view pill.'],
+  }],
+]);
 
 function hydrateIcons(scope: Element | DocumentFragment) {
   scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((node) => {
@@ -279,37 +315,64 @@ const renderShowcase = (slug?: string): RenderResult => {
     } catch {}
 
     // Serve Bob inside the preview as an iframe (fills the container)
-    // Default behavior: point to the root path '/' to match local Next dev
-    // and typical deployments. Still honor VITE_BOB_URL and VITE_BOB_PATH
-    // when provided.
+    // Deterministic dev behavior: auto-discover Bob at common localhost ports
+    // using a CORS-friendly health endpoint. Falls back to 3000/bob.
     try {
-      const base = String((import.meta as any).env?.VITE_BOB_URL || 'http://localhost:3000');
-      let bobPath = (import.meta as any).env?.VITE_BOB_PATH as string | undefined;
-      if (!bobPath) {
+      const envBase = (import.meta as any).env?.VITE_BOB_URL as string | undefined;
+      const envPath = (import.meta as any).env?.VITE_BOB_PATH as string | undefined;
+      const envPublicId = (import.meta as any).env?.VITE_BOB_PUBLIC_ID as string | undefined;
+      const candidates = envBase
+        ? [String(envBase)]
+        : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://localhost:3002'];
+
+      async function ping(base: string, timeoutMs = 800): Promise<boolean> {
         try {
-          const u = new URL(base);
-          // Prefer root '/' by default (works for local dev and most hosts)
-          // Only use '/bob' when explicitly provided via VITE_BOB_PATH.
-          bobPath = '/';
-          // If someone really hosts Bob at a subpath, they can set VITE_BOB_PATH.
-          // Keep a minimal heuristic: if port is non-empty and not 3000, still default to '/'.
-          // This avoids hardcoding '/bob' which caused 404s in production builds.
-          void u; // avoid unused var in some bundlers
+          const controller = new AbortController();
+          const t = setTimeout(() => controller.abort(), timeoutMs);
+          const res = await fetch(base.replace(/\/$/, '') + '/api/healthz', { cache: 'no-store', signal: controller.signal });
+          clearTimeout(t);
+          if (!res.ok) return false;
+          // Expect a small JSON shape; tolerate extra fields
+          const body = await res.json().catch(() => ({} as any));
+          return Boolean((body as any).up ?? true);
         } catch {
-          // If base is not a valid URL string, still fall back to root
-          bobPath = '/';
+          return false;
         }
       }
-      const url = base.replace(/\/$/, '') + (bobPath.startsWith('/') ? bobPath : `/${bobPath}`);
+
+      async function resolveBase(): Promise<string> {
+        for (const base of candidates) {
+          // If an env base is provided, we trust it and skip ping to avoid CORS issues in custom setups
+          if (envBase) return base;
+          // Probe standard dev ports
+          // eslint-disable-next-line no-await-in-loop
+          if (await ping(base)) return base;
+        }
+        return candidates[0];
+      }
+
       const frame = document.createElement('iframe');
-      frame.src = url;
       frame.setAttribute('title', 'Bob');
       frame.style.width = '100%';
       frame.style.height = '100%';
       frame.style.border = '0';
       frame.style.background = 'transparent';
-      frame.style.borderRadius = '12px';
+      frame.style.borderRadius = '0';
+      // Optimistically append the frame; set src after base resolution
       previewSection.append(frame);
+
+      (async () => {
+        const base = await resolveBase();
+        const defaultPublicId = 'wgt_ztrdpn';
+        const path = (envPath && envPath.startsWith('/'))
+          ? envPath
+          : (envPath
+              ? `/${envPath}`
+              : (envPublicId && envPublicId.trim().length > 0
+                  ? `/bob?publicId=${encodeURIComponent(envPublicId.trim())}`
+                  : `/bob?publicId=${defaultPublicId}`));
+        frame.src = base.replace(/\/$/, '') + path;
+      })();
     } catch {}
 
     article.append(headerSection, previewSection);
@@ -332,13 +395,18 @@ const renderShowcase = (slug?: string): RenderResult => {
   previewSection.className = 'stack';
   const previewFragment = buildHtmlFragment(preview.htmlPath);
   wireDropdownDemo(previewFragment);
+  wireTextRenameDemo(previewFragment);
   previewSection.append(previewFragment);
 
-  if (preview.css.length > 0) {
-    article.append(headerSection, previewSection, buildCodeBlock(preview.css.map((href) => `import '${href}';`).join('\n')));
-  } else {
-    article.append(headerSection, previewSection);
+  const blocks: HTMLElement[] = [headerSection, previewSection];
+  const notes = notesMap.get(preview.slug);
+  const cssCode = preview.css.length > 0 ? preview.css.map((href) => `import '${href}';`).join('\n') : undefined;
+  if (notes) {
+    blocks.push(buildNotesBlock(notes, cssCode));
+  } else if (cssCode) {
+    blocks.push(buildCodeBlock(cssCode));
   }
+  article.append(...blocks);
   return article;
 };
 
@@ -371,7 +439,7 @@ const buildHtmlFragment = (path: string) => {
   return wrapper;
 };
 
-const buildCodeBlock = (code: string) => {
+const buildCodeBlock = (code: string, title = 'CSS contract') => {
   if (!code) {
     const placeholder = document.createElement('div');
     placeholder.className = 'demo-fragment';
@@ -379,22 +447,70 @@ const buildCodeBlock = (code: string) => {
   }
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'demo-fragment';
+  wrapper.className = 'demo-fragment code-block';
 
   const heading = document.createElement('div');
-  heading.style.fontWeight = '600';
-  heading.style.fontSize = '14px';
-  heading.style.lineHeight = '1.4';
-  heading.style.marginBottom = '8px';
-  heading.textContent = 'CSS contract';
+  heading.className = 'label code-block__heading';
+  heading.textContent = title;
 
   const pre = document.createElement('pre');
-  pre.style.margin = '0';
-  const codeEl = document.createElement('code');
-  codeEl.textContent = code;
-  pre.append(codeEl);
+  pre.className = 'body-small code-block__body';
+  pre.style.whiteSpace = 'pre-wrap';
+  pre.textContent = code;
 
   wrapper.append(heading, pre);
+  return wrapper;
+};
+
+const buildNotesBlock = (notes: { use: string; ux: string[] }, cssCode?: string) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'demo-fragment notes-block';
+
+  const heading = document.createElement('div');
+  heading.className = 'label notes-block__heading';
+  heading.textContent = 'Notes';
+
+  const cards: Array<{ label: string; copy: string[]; isCode?: boolean }> = [
+    { label: 'Use', copy: [notes.use] },
+    { label: 'UX summary', copy: notes.ux },
+  ];
+
+  if (cssCode) {
+    cards.push({ label: 'CSS contract', copy: [cssCode], isCode: true });
+  }
+
+  const cardContainer = document.createElement('div');
+  cardContainer.className = 'notes-block__cards';
+
+  cards.forEach(({ label, copy, isCode }) => {
+    const card = document.createElement('div');
+    card.className = 'notes-card';
+
+    const cardLabel = document.createElement('p');
+    cardLabel.className = 'label notes-card__label';
+    cardLabel.textContent = label;
+    card.append(cardLabel);
+
+    const body = document.createElement('div');
+    body.className = 'notes-card__body';
+    copy.forEach((line) => {
+      if (isCode) {
+        const pre = document.createElement('pre');
+        pre.className = 'body-small notes-card__code';
+        pre.textContent = line;
+        body.append(pre);
+      } else {
+        const paragraph = document.createElement('p');
+        paragraph.className = 'body-small';
+        paragraph.textContent = line;
+        body.append(paragraph);
+      }
+    });
+    card.append(body);
+    cardContainer.append(card);
+  });
+
+  wrapper.append(heading, cardContainer);
   return wrapper;
 };
 
@@ -441,6 +557,7 @@ const handleRoute = (match: RouteMatch) => {
     applyDynamicSpecs(rendered);
     applySectionColumnSizing(rendered);
     wireDropdownDemo(rendered);
+    wireTextRenameDemo(rendered);
   } catch {}
 };
 
@@ -524,6 +641,89 @@ function wireDropdownDemo(scope: Element) {
         event.stopPropagation();
         closeDropdown(dropdown);
         trigger.focus();
+      }
+    });
+  });
+}
+
+// ---- TextRename demo wiring (Admin-only) ----
+
+const activeRenames = new Set<HTMLElement>();
+let renameDocumentListenersAttached = false;
+
+function closeRename(root: HTMLElement, commit: boolean) {
+  const view = root.querySelector<HTMLElement>('.diet-textrename__view');
+  const input = root.querySelector<HTMLInputElement>('.diet-textrename__input');
+  if (!view || !input) return;
+  if (commit) {
+    const next = (input.value ?? '').trim() || 'Untitled widget';
+    const label = view.querySelector<HTMLElement>('.diet-textrename__label');
+    if (label) label.textContent = next;
+    input.value = next;
+  } else {
+    const label = view.querySelector<HTMLElement>('.diet-textrename__label');
+    input.value = (label?.textContent ?? '').trim();
+  }
+  root.setAttribute('data-state', 'view');
+  input.blur();
+  activeRenames.delete(root);
+}
+
+function handleRenameDocPointer(event: Event) {
+  activeRenames.forEach((root) => {
+    if (!root.contains(event.target as Node)) {
+      closeRename(root, false);
+    }
+  });
+}
+
+function handleRenameDocKey(event: KeyboardEvent) {
+  if (event.key !== 'Escape' && event.key !== 'Enter') return;
+  const target = Array.from(activeRenames).find((root) => root.contains(event.target as Node));
+  if (!target) return;
+  if (event.key === 'Escape') {
+    event.stopPropagation();
+    closeRename(target, false);
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    closeRename(target, true);
+  }
+}
+
+function ensureRenameDocumentListeners() {
+  if (renameDocumentListenersAttached) return;
+  document.addEventListener('pointerdown', handleRenameDocPointer, true);
+  document.addEventListener('keydown', handleRenameDocKey);
+  renameDocumentListenersAttached = true;
+}
+
+function wireTextRenameDemo(scope: Element | DocumentFragment) {
+  scope.querySelectorAll<HTMLElement>('.diet-textrename').forEach((root) => {
+    const view = root.querySelector<HTMLElement>('.diet-textrename__view');
+    const input = root.querySelector<HTMLInputElement>('.diet-textrename__input');
+    if (!view || !input) return;
+    if ((root as any)._renameWired) return;
+    (root as any)._renameWired = true;
+    view.setAttribute('tabindex', '0');
+    view.addEventListener('click', () => {
+      root.setAttribute('data-state', 'editing');
+      ensureRenameDocumentListeners();
+      activeRenames.add(root);
+      const label = view.querySelector<HTMLElement>('.diet-textrename__label');
+      input.value = (label?.textContent ?? '').trim();
+      input.focus({ preventScroll: true });
+      try {
+        const v = input.value;
+        input.setSelectionRange(v.length, v.length);
+      } catch {}
+    });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        closeRename(root, true);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        closeRename(root, false);
       }
     });
   });

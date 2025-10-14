@@ -42,6 +42,11 @@ const showcaseCssMap: Record<string, string[]> = {
   colors: ['@dieter/tokens/tokens.css'],
   typography: ['@dieter/tokens/tokens.css'],
   dropdown: ['@dieter/components/dropdown.css'],
+  expander: ['@dieter/components/expander.css'],
+  toggle: ['@dieter/components/toggle.css'],
+  tabs: ['@dieter/components/tabs.css'],
+  textrename: ['@dieter/components/textrename.css'],
+  bob: [],
 };
 
 const showcasePaths = Object.keys(showcaseModules).sort();
@@ -91,13 +96,7 @@ const buildShowcaseGroups = (): NavGroup[] => {
     }
     if (items.length) groups.push({ id: g.id, title: g.title, items });
   }
-  // Append any pages not listed in config under "Other"
-  if (remaining.size) {
-    const leftovers = Array.from(remaining)
-      .sort((a, b) => a.localeCompare(b))
-      .map((slug) => pageToNav(showcaseIndex.get(slug)!));
-    groups.push({ id: 'other', title: 'Other', items: leftovers });
-  }
+  // Ignore pages not listed in config; no implicit 'Other' group
   return groups;
 };
 

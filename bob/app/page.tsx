@@ -1,5 +1,5 @@
-import StudioShell from './components/StudioShell';
+import { redirect } from 'next/navigation';
 
-export default function BobPage() {
-  return <StudioShell />;
+export default function Root() {
+  redirect('/bob');
 }

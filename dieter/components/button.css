@@ -13,10 +13,6 @@
   --btn-radius: var(--control-radius-md, 0.375rem);
   --btn-height: var(--control-size-lg, 1.75rem);
   /* Inline paddings driven by Dieter spacing scale (default ~md) */
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  /* Icon+text uses same start padding as text (simplified model) */
-  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-icon-box: var(--control-icon-md, 1.5rem);
   /* Glyph size driven by global ratio token */
   --btn-icon-glyph: calc(var(--btn-icon-box) * var(--control-icon-glyph-ratio));
@@ -27,8 +23,7 @@
   /* Gap set per size blocks directly from global tokens */
   gap: var(--control-inline-gap-md);
   min-height: var(--btn-height);
-  padding-inline-start: var(--btn-padding-inline-start-text);
-  padding-inline-end: var(--btn-padding-inline-end);
+  padding-inline: var(--control-padding-inline);
   padding-block: 0;
   border-radius: var(--btn-radius);
   border: var(--btn-border-width) solid var(--btn-border-color);
@@ -56,9 +51,6 @@
 .diet-btn[data-size="xs"] {
   /* xs size: 16px rail */
   --btn-height: var(--control-size-xs, 1rem);
-  --btn-padding-inline-end: var(--space-1);
-  --btn-padding-inline-start-text: var(--space-1);
-  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-xs, 0.25rem);
   gap: var(--control-inline-gap-xs);
   --btn-icon-box: var(--control-icon-xs, 1rem);
@@ -69,9 +61,6 @@
 
 .diet-btn[data-size="sm"] {
   --btn-height: var(--control-size-sm, 1.25rem);
-  --btn-padding-inline-end: var(--space-1);
-  --btn-padding-inline-start-text: var(--space-1);
-  --btn-padding-inline-start-icon-text: var(--space-1);
   --btn-radius: var(--control-radius-sm, 0.3125rem);
   gap: var(--control-inline-gap-xs);
   --btn-icon-box: var(--control-icon-xs, 1rem);
@@ -82,9 +71,6 @@
 
 .diet-btn[data-size="md"] {
   --btn-height: var(--control-size-md, 1.5rem);
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-md, 0.375rem);
   gap: var(--control-inline-gap-sm);
   --btn-icon-box: var(--control-icon-sm, 1.25rem);
@@ -96,9 +82,6 @@
 .diet-btn[data-size="lg"] {
   --btn-height: var(--control-size-lg, 1.75rem);
   /* Normalize to spacing scale: lg uses space-3 */
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-lg, 0.4375rem);
   gap: var(--control-inline-gap-sm);
   --btn-icon-box: var(--control-icon-sm, 1.25rem);
@@ -110,9 +93,6 @@
 .diet-btn[data-size="xl"] {
   --btn-height: var(--control-size-xl, 2rem);
   /* Normalize to spacing scale: xl uses space-3 */
-  --btn-padding-inline-end: var(--space-2);
-  --btn-padding-inline-start-text: var(--space-2);
-  --btn-padding-inline-start-icon-text: var(--space-2);
   --btn-radius: var(--control-radius-xl, 0.5rem);
   gap: var(--control-inline-gap-md);
   --btn-icon-box: var(--control-icon-sm, 1.25rem);
@@ -142,26 +122,20 @@
   align-items: center;
   font: inherit;
   white-space: nowrap;
+  padding-inline: var(--space-0);
 }
+
 
 .diet-btn[data-type="text-only"] {
   gap: 0;
-  padding-inline-start: var(--btn-padding-inline-start-text);
-}
-
-.diet-btn:not([data-type]) {
-  padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
 .diet-btn[data-type="icon-text"] {
   /* Normalize: use same left padding as text-only; icon-only remains square */
-  padding-inline-start: var(--btn-padding-inline-start-text);
 }
 
+
 .diet-btn[data-type="icon-only"] {
-  --btn-padding-inline-start-text: 0;
-  --btn-padding-inline-start-icon-text: 0;
-  --btn-padding-inline-end: 0;
   inline-size: var(--btn-height);
   block-size: var(--btn-height);
   min-height: var(--btn-height);
@@ -177,6 +151,12 @@
   inline-size: 100%;
   block-size: 100%;
 }
+
+/* Alignment Utilities */
+.diet-btn--align-start { justify-content: flex-start; }
+.diet-btn--align-end { justify-content: flex-end; }
+.diet-btn--split { justify-content: space-between; }
+.diet-btn--block { inline-size: 100%; }
 
 .diet-btn:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--btn-hover-bg);
@@ -220,10 +200,12 @@
 }
 
 .diet-btn[data-variant="secondary"] {
-  --btn-bg: color-mix(in oklab, var(--color-surface), var(--color-text) 6%);
-  --btn-border-color: color-mix(in oklab, var(--color-border), transparent 35%);
-  --btn-hover-bg: color-mix(in oklab, var(--btn-bg), var(--color-text) 8%);
-  --btn-clicked-bg: color-mix(in oklab, var(--btn-bg), var(--color-text) 25%);
+  /* Transparent overlay mix (matches Segmented rail logic) */
+  --btn-bg: color-mix(in oklab, var(--color-text) 8%, transparent);
+  --btn-border-width: 0px;
+  --btn-border-color: transparent;
+  --btn-hover-bg: color-mix(in oklab, var(--color-text) 12%, transparent);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-text) 20%, transparent);
 }
 
 .diet-btn[data-variant="neutral"] {
@@ -244,11 +226,11 @@
 
 .diet-btn[data-variant="line2"] {
   --btn-bg: transparent;
-  --btn-color: #838386; /* Gray 2 contrast */
+  --btn-color: var(--color-system-gray-2, #aeaeb2);
   --btn-border-width: 1px;
-  --btn-border-color: #838386;
-  --btn-hover-bg: color-mix(in oklab, #838386, transparent 75%);
-  --btn-clicked-bg: color-mix(in oklab, #838386, transparent 55%);
+  --btn-border-color: var(--color-system-gray-2, #aeaeb2);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-2, #aeaeb2), transparent 75%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-2, #aeaeb2), transparent 55%);
 }
 
 /* Loading state */
@@ -286,10 +268,11 @@
   }
 
   .diet-btn[data-variant="secondary"] {
-    --btn-bg: color-mix(in oklab, var(--color-surface, #14161b), #000000 35%);
-    --btn-border-color: color-mix(in oklab, var(--color-border), transparent 10%);
-    --btn-hover-bg: color-mix(in oklab, var(--btn-bg), var(--color-system-white) 20%);
-    --btn-clicked-bg: color-mix(in oklab, var(--btn-bg), var(--color-system-white) 40%);
+    /* Keep the same transparent text overlay system in dark */
+    --btn-bg: color-mix(in oklab, var(--color-text) 8%, transparent);
+    --btn-border-color: transparent;
+    --btn-hover-bg: color-mix(in oklab, var(--color-text) 12%, transparent);
+    --btn-clicked-bg: color-mix(in oklab, var(--color-text) 20%, transparent);
   }
 
   .diet-btn[data-variant="neutral"] {
@@ -305,9 +288,9 @@
   }
 
   .diet-btn[data-variant="line2"] {
-    --btn-color: #8a8a8c; /* Gray 2 contrast dark */
-    --btn-border-color: #8a8a8c;
-    --btn-hover-bg: color-mix(in oklab, #8a8a8c, transparent 68%);
-    --btn-clicked-bg: color-mix(in oklab, #8a8a8c, transparent 46%);
+    --btn-color: var(--color-system-gray-2, #aeaeb2);
+    --btn-border-color: var(--color-system-gray-2, #aeaeb2);
+    --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-2, #aeaeb2), transparent 68%);
+    --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-2, #aeaeb2), transparent 46%);
   }
 }
