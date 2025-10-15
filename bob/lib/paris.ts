@@ -13,7 +13,7 @@ export function getDevJwt(): string | undefined {
   return (jwt && jwt.trim().length > 0) ? jwt.trim() : undefined;
 }
 
-async function parisFetch(path: string, init: RequestInit = {}, jwt?: string) {
+async function parisFetch(path: string, init: RequestInit = {}, jwt?: string, timeoutMs = 5000) {
   // If path starts with /api, it's a local proxy route - use it as-is
   // Otherwise, prepend Paris base URL for direct server-side calls
   const url = path.startsWith('/api/')
@@ -23,7 +23,12 @@ async function parisFetch(path: string, init: RequestInit = {}, jwt?: string) {
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (!headers.has('X-Request-ID')) headers.set('X-Request-ID', crypto.randomUUID());
   if (jwt && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${jwt}`);
-  const res = await fetch(url, { ...init, headers, cache: 'no-store' });
+  const controller = new AbortController();
+  const t = setTimeout(() => {
+    try { controller.abort(); } catch {}
+  }, Math.max(100, timeoutMs));
+  const res = await fetch(url, { ...init, headers, cache: 'no-store', signal: controller.signal });
+  clearTimeout(t);
   return res;
 }
 

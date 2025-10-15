@@ -298,7 +298,7 @@ const renderShowcase = (slug?: string): RenderResult => {
     const headerSection = document.createElement('header');
     headerSection.className = 'stack';
     headerSection.innerHTML = `
-      <h1 class="heading-2" style="margin:0">Bob</h1>
+      <h1 class="heading-2" style="margin:0">FAQ Widget Builder</h1>
     `;
 
     const previewSection = document.createElement('section');
@@ -363,15 +363,9 @@ const renderShowcase = (slug?: string): RenderResult => {
 
       (async () => {
         const base = await resolveBase();
-        const defaultPublicId = 'wgt_ztrdpn';
-        const path = (envPath && envPath.startsWith('/'))
-          ? envPath
-          : (envPath
-              ? `/${envPath}`
-              : (envPublicId && envPublicId.trim().length > 0
-                  ? `/bob?publicId=${encodeURIComponent(envPublicId.trim())}`
-                  : `/bob?publicId=${defaultPublicId}`));
-        frame.src = base.replace(/\/$/, '') + path;
+        const pid = 'wgt_faq_dieter_001';
+        const mkUrl = (pid: string) => base.replace(/\/$/, '') + `/bob?publicId=${encodeURIComponent(pid)}`;
+        frame.src = mkUrl(pid);
       })();
     } catch {}
 

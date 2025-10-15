@@ -5,9 +5,7 @@
   color: var(--color-text);
 }
 
-.diet-input__label {
-  padding-inline: var(--space-0);
-}
+.diet-input__label { padding-inline: var(--space-0); }
 
 .diet-input__field {
   inline-size: 100%;

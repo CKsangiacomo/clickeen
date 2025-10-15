@@ -16,6 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/dieter/components/textfield.css" />
         <link rel="stylesheet" href="/dieter/components/textrename.css" />
         <link rel="stylesheet" href="/dieter/components/dropdown.css" />
+        {/* Content-first preloads: ensure no FOUC for Content panel */}
+        <link rel="stylesheet" href="/dieter/components/toggle.css" />
+        <link rel="stylesheet" href="/dieter/components/expander.css" />
       </head>
       <body>{children}</body>
     </html>

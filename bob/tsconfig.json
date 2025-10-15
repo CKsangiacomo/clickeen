@@ -8,6 +8,18 @@
       ],
       "@bob/components/*": [
         "app/components/*"
+      ],
+      "@bob/controls/*": [
+        "controls/*"
+      ],
+      "@bob/hooks/*": [
+        "hooks/*"
+      ],
+      "@bob/core/*": [
+        "core/*"
+      ],
+      "@bob/lib/*": [
+        "lib/*"
       ]
     },
     "incremental": true,

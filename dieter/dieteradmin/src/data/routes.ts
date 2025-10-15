@@ -47,6 +47,7 @@ const showcaseCssMap: Record<string, string[]> = {
   tabs: ['@dieter/components/tabs.css'],
   textrename: ['@dieter/components/textrename.css'],
   bob: [],
+  'widget-faq': [], // FAQ widget has inline styles
 };
 
 const showcasePaths = Object.keys(showcaseModules).sort();
