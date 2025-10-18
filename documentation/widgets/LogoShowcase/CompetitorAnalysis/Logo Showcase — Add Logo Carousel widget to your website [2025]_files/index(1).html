@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- saved from url=(0113)https://static.elfsight.com/apps/logo-showcase/stable/3c4b7811a43cd5f03e70f311aa278749e16021e1/preview/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Logo Showcase Preview</title><style type="text/css">.rfm-marquee-container {
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: var(--width);
+  transform: var(--transform);
+}
+.rfm-marquee-container:hover div {
+  animation-play-state: var(--pause-on-hover);
+}
+.rfm-marquee-container:active div {
+  animation-play-state: var(--pause-on-click);
+}
+
+.rfm-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.rfm-overlay::before, .rfm-overlay::after {
+  background: linear-gradient(to right, var(--gradient-color), rgba(255, 255, 255, 0));
+  content: "";
+  height: 100%;
+  position: absolute;
+  width: var(--gradient-width);
+  z-index: 2;
+  pointer-events: none;
+  touch-action: none;
+}
+.rfm-overlay::after {
+  right: 0;
+  top: 0;
+  transform: rotateZ(180deg);
+}
+.rfm-overlay::before {
+  left: 0;
+  top: 0;
+}
+
+.rfm-marquee {
+  flex: 0 0 auto;
+  min-width: var(--min-width);
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  animation: scroll var(--duration) linear var(--delay) var(--iteration-count);
+  animation-play-state: var(--play);
+  animation-delay: var(--delay);
+  animation-direction: var(--direction);
+}
+@keyframes scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.rfm-initial-child-container {
+  flex: 0 0 auto;
+  display: flex;
+  min-width: auto;
+  flex-direction: row;
+  align-items: center;
+}
+
+.rfm-child {
+  transform: var(--transform);
+}</style><style>.eapp-logo-showcase-slider-container{display:block;flex-grow:1;max-width:100%;position:relative;direction:ltr}.eapp-logo-showcase-slider-container .eapp-logo-showcase-slider-slider{position:initial}.eapp-logo-showcase-slider-container .eapp-logo-showcase-slider-inner{position:initial}.eapp-logo-showcase-slider-inner{margin:0 auto;align-items:stretch}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-icon{fill:#000}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-arrow{background-color:transparent}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-next{right:0}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-previous{left:0}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-next:hover{right:-4px}.eapp-logo-showcase-slider-inner .eapp-logo-showcase-navigation-previous:hover{left:-4px}.eapp-logo-showcase-slider-pagination{display:inherit}.eapp-logo-showcase-slider-innerSlider{justify-content:center}.eapp-logo-showcase-slider-slider{height:unset !important}.eapp-logo-showcase-slider-item{display:flex;align-items:stretch}.eapp-logo-showcase-slider-item > div{display:flex;justify-content:center}</style><style>.eapp-logo-showcase-logo-component{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative;max-width:100%;width:fit-content}.eapp-logo-showcase-logo-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative;max-width:100%;margin:0 auto}.eapp-logo-showcase-logo-innerInner{width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative}.eapp-logo-showcase-logo-innerInner a{display:flex;align-items:center;justify-content:center;height:100%}.eapp-logo-showcase-logo-innerInner a,.eapp-logo-showcase-logo-innerInner a:hover{position:static !important;text-decoration:none !important}.eapp-logo-showcase-logo-caption{display:block;text-align:center;line-height:1.334;overflow-wrap:break-word;white-space:initial}</style><style data-styled="active" data-styled-version="5.3.11"></style></head><body><div id="root"><div class="Preview__Container-sc-1jggitl-0 ilHaSz"></div></div><script defer="defer" src="./index.js"></script><script defer="" src="./vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;1714c263e11d4f35a4688bac417d4a65&quot;,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+</body></html>

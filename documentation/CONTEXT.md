@@ -37,21 +37,121 @@ CRITICAL P0 — documentation/ is the single source of truth for all AI & human 
 
 ## Glossary (Canonical Terms)
 
-**Widget:** Functional unit that renders on third-party sites (e.g., FAQ, announcement, contact form)
+### 🔒 CRITICAL DISTINCTION: Widget JSON vs Instance
 
-**Template:** Curated, data-only preset for a widgetType providing default layout/skin/styling (JSON configuration, no per-template JavaScript)
+**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/{widgetName}.json`):
+- Complete software for a widget type (FAQ, Countdown, etc.)
+- Lives in CODEBASE (paris/lib/widgets/ directory)
+- **NOT STORED in database**
+- **NOT EDITABLE by users**
+- Contains: metadata, defaults, templates, uiSchema (defines ToolDrawer UI and functionality)
+- ONE file per widget type (shared by all instances)
+- Version controlled, git-managed, deployed with platform
+- This IS the widget - the complete functional software
 
-**Instance:** User's saved widget configuration (private config) derived from a template; identified by `publicId` (TEXT field in `widget_instances.public_id`)
+**Widget Instance = THE DATA** (database table: `widget_instances`):
+- ONE user's specific widget instance with their custom instanceData
+- Stored in DATABASE
+- **EDITABLE by users** (via Bob → Paris API)
+- Contains: `publicId`, `widgetName` (string identifier like "faq"), `instanceData` (user's actual values)
+- Millions of instances at scale
+- All instances of the same widget type have the same widgetName but different instanceData
+
+**The Relationship:**
+- Widget JSON IS the software
+- Widget Instance IS the data the software processes
+- Paris serves widget JSON via API: `GET /api/widgets/:widgetType`
+- Paris stores/loads instances (user data only)
+- Bob fetches widget JSON to render ToolDrawer UI
+- Bob edits instanceData (not widget JSON)
+- Venice fetches instanceData and executes the widget software to render HTML
+- ToolDrawer is DUMB - just renders UI defined in Widget JSON
+
+**Example:**
+- Widget JSON: `/paris/lib/widgets/faq.json` (one file - THE SOFTWARE)
+- Instance 1: `{ publicId: "wgt_abc", widgetName: "faq", instanceData: { title: "Customer FAQs", ... } }`
+- Instance 2: `{ publicId: "wgt_def", widgetName: "faq", instanceData: { title: "Tech Support", ... } }`
+- Both instances have widgetName "faq", different instanceData
+
+### 🔑 CRITICAL: Bob's Two-API-Call Architecture (NEW)
+
+**Bob owns instanceData in React state during editing. Only saves to Paris on publish.**
+
+**The Two-Place Rule:**
+instanceData exists in EXACTLY 2 places:
+1. **Paris (database)** - Published version (source of truth for production)
+2. **Bob's React state** - Working copy (during editing session)
+
+**The Two-API-Call Pattern:**
+Bob makes EXACTLY 2 calls to Paris per editing session:
+1. **Load** - `GET /api/instance/:publicId` when Bob mounts
+2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish
+
+**Between load and publish:**
+- All edits happen in Bob's React state (in memory)
+- Preview updates via postMessage (NO Paris API calls)
+- ZERO database writes
+
+**Why This Matters:**
+- **Scalability:** 10,000 users editing simultaneously → no server load
+- **Database cost savings:** Only published widgets stored → no pollution from abandoned edits
+- **Landing page demos:** Millions of visitors playing with widgets → ZERO database writes until signup + publish
+
+See [Widget Architecture](./widgets/WidgetArchitecture.md), [Bob](./systems/bob.md), [Paris](./systems/paris.md) for details.
+
+---
+
+### 🔑 CRITICAL: Widget Editing UI Flexibility
+
+Every widget defines its own editing UI in Widget JSON (uiSchema section).
+
+**Different widgets = Different editing UIs:**
+- FAQ widget: category/question/answer editors with repeater controls
+- Countdown widget: date/time pickers
+- Logo Showcase widget: image uploaders with drag-drop reordering
+- Each widget's editing UI is completely custom to its functionality
+- Widget JSON defines the complete ToolDrawer UI and functionality
+
+**Maximum flexibility:**
+- Widget JSON can define ANY editing UI needed
+- No limitations on complexity or structure
+- Widget JSON IS the software - it defines ToolDrawer's UI and functionality
+
+**How we keep it consistent:**
+- Widget JSON uses Dieter components when defining the UI
+- Dieter components ensure the same look/feel across all widgets
+- Users get consistent UI patterns even though every widget's editor is unique
+- ToolDrawer is DUMB - just renders what Widget JSON tells it to render
+
+**This means:**
+- Widget JSON has complete freedom to define custom editing interfaces
+- Platform-wide design consistency through Dieter
+- ToolDrawer has NO widget-specific logic
+- Bob serves all 100 widgets with ONE codebase
+
+---
+
+### Other Terms
+
+**Widget:** The complete software defined in Widget JSON (e.g., FAQ, announcement, contact form)
+
+**Template:** Predefined instanceData configuration in Widget JSON providing default layout/styling
 
 **Single tag:** The embed snippet placed on websites - either one iframe (inline widgets) or one script tag (overlay widgets via loader)
 
-**publicId:** Textual identifier for widget instances (e.g., `wgt_abc123`), stored as TEXT in `widget_instances.public_id`
+**publicId:** Unique identifier for widget instances (e.g., `wgt_abc123`), stored as TEXT in `widget_instances.public_id`
+
+**widgetName:** String identifier for widget type (e.g., "faq"), stored in widget instances to identify which Widget JSON to use
+
+**instanceData:** User's custom values for their widget instance, stored in database
+
+**uiSchema:** Section of Widget JSON that defines ToolDrawer UI and functionality
 
 **Draft token:** Temporary token stored in `widget_instances.draft_token`, allows anonymous editing until widget is claimed by workspace
 
 **Casing conventions:**
-- API JSON payloads: camelCase (e.g., `publicId`, `widgetType`)
-- Database columns: snake_case (e.g., `public_id`, `widget_id`)
+- API JSON payloads: camelCase (e.g., `publicId`, `widgetName`, `instanceData`)
+- Database columns: snake_case (e.g., `public_id`, `widget_name`)
 
 ---
 
@@ -177,12 +277,55 @@ Known exceptions (Phase‑1):
   - `copenhagen.md` — AI service layer, DeepSeek vs Claude routing, Copilot behavior
 - `documentation/widgets/*.md` — per-widget PRDs (one file per widget)
   - `content.faq.md` — FAQ widget with AI features
-  - `testbutton.md` — Phase-0 tokenization reference, postMessage patch example
+  
 - `documentation/WhyClickeen.md` — strategic context
 - `documentation/ADRdecisions.md` — authoritative decisions (document new approvals here)
 - `documentation/verceldeployments.md` — env/keys per project
 
 ---
+
+## Builder Taxonomy (Canonical Names)
+
+These names are frozen and MUST be used consistently in docs and code:
+- `tooldrawer` — the entire builder drawer on the left
+- `tdheader` — the drawer header (assist toggle, status)
+- `tdcontent` — the drawer body (scroll container)
+- `tdmenu` — the vertical icon rail (the menu)
+- `tdmenucontent` — the active panel surface (the panel)
+- Panel controls — inputs inside `tdmenucontent` that edit the instance config
+
+Layout sketch: `tdheader` (top), then `tdcontent` which contains `tdmenu` (left rail) and `tdmenucontent` (panel).
+
+Mapping (schema → UI):
+- UI schema defines: menu (ordered items), panels (by id), and panel controls
+- Interpreter returns: menu, panels, default menu item, and per‑panel requirements
+- The first menu (usually “content”) is loaded first and must be instant/styled; other panels may lazy‑load their UI assets on activation
+
+---
+
+## Builder Flow (NEW ARCHITECTURE - Two-API-Call Pattern)
+
+Bob owns instanceData in React state during editing. Only saves to Paris on publish.
+
+**The Flow:**
+- **Load:** Bob requests instance from Paris (`GET /api/instance/:publicId`) → stores instanceData in React state
+- **Edit:** User edits in ToolDrawer → Bob updates React state (in memory, NO API calls)
+- **Preview:** Bob sends updated instanceData to preview iframe via postMessage → instant updates (~16ms)
+- **Publish:** User clicks Publish → Bob sends instanceData to Paris (`PUT /api/instance/:publicId`) → first database write
+
+**Key Points:**
+- EXACTLY 2 API calls per session (load + publish)
+- NO Save button (only Publish)
+- NO autosave, NO intermediate database writes
+- All editing happens in memory (instant, zero latency)
+- Preview updates via postMessage (CSS variables + DOM, no reload)
+
+**Why This Matters:**
+- Scalability: 10,000 users editing simultaneously → no server load
+- Cost savings: Millions of landing page visitors → ZERO database pollution
+- Performance: Instant feedback, no network delays
+
+See [Widget Architecture](./widgets/WidgetArchitecture.md) for complete details.
 
 ---
 
@@ -196,7 +339,7 @@ Known exceptions (Phase‑1):
    - All widgets MUST use CSS variables for patchable fields
    - Example: `border-radius: var(--btn-radius, 12px)` NOT `border-radius: 12px`
    - HTML MUST include `data-widget-element` attributes for patch targeting
-   - See `documentation/widgets/testbutton.md` for reference
+   
 
 2. **Double-Buffered Preview (Phase-1a):**
    - Two iframes (A and B), load next state in hidden iframe
@@ -242,7 +385,7 @@ Known exceptions (Phase‑1):
 
 - `documentation/systems/bob.md` — Preview system details, Save UX model
 - `documentation/systems/venice.md` — preview=1 mode, postMessage handler
-- `documentation/widgets/testbutton.md` — Tokenization reference, patch example
+ 
 - `documentation/CONTEXT.md` — Glossary and Phase-1 widget list
 
 ---
@@ -279,7 +422,7 @@ Known exceptions (Phase‑1):
 - **Schema source:** `supabase/migrations/`
 - **Glossary & widget list:** `documentation/CONTEXT.md`
 - **System PRDs:** `documentation/systems/*.md` (Paris, Venice, Bob, Copenhagen, etc.)
-- **Widget PRDs:** `documentation/widgets/*.md` (content.faq, testbutton, etc.)
+- **Widget PRDs:** `documentation/widgets/*.md` (content.faq, etc.)
 - **Past mistakes:** `documentation/FailuresRCAs-IMPORTANT.md`
 
 ### Phase-1 Build Order (strict)

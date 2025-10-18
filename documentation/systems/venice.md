@@ -7,17 +7,70 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 ## AIs Quick Scan
 
-**Purpose:** Edge-deployed SSR embed runtime for widgets.  
-**Owner:** Vercel project `c-keen-embed`.  
-**Dependencies:** Paris (API), Atlas (read-only config), Dieter (CSS tokens).  
-**Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.  
+**Purpose:** Edge-deployed SSR embed runtime for widgets.
+**Owner:** Vercel project `c-keen-embed`.
+**Dependencies:** Paris (API), Atlas (read-only config), Dieter (CSS tokens).
+**Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.
 **Database Tables:** None directly (reads via Paris/Michael).
 **Common mistakes:** Letting browsers call Paris directly, skipping 5s timeout/`X-Request-ID`, ignoring branding fail-closed rules.
+
+### 🔑 CRITICAL: Bob's Preview Integration (NEW ARCHITECTURE)
+
+**Venice receives instanceData updates from Bob via postMessage (NOT via Paris API).**
+
+**Bob's editing flow:**
+1. Bob loads widget instance from Paris (ONE time on mount)
+2. Bob stores instanceData in React state (working copy)
+3. User edits in ToolDrawer → Bob updates React state
+4. Bob sends updated instanceData to Venice preview iframe via postMessage
+5. Venice preview updates in real-time (NO reload, NO Paris API call)
+6. User clicks Publish → Bob sends to Paris (ONE time on publish)
+
+**For Venice:**
+- Venice receives postMessage with updated instanceData from Bob
+- Preview iframe updates CSS variables and DOM without reload
+- Venice does NOT fetch from Paris on every edit
+- Venice only fetches from Paris on initial load or when iframe URL changes (with `?ts=` cache-bust)
+
+**Key points:**
+- postMessage patches enable instant preview feedback
+- No database writes during editing (only on publish)
+- Venice preview uses Bob's working copy of instanceData (from postMessage), not Paris database
+
+See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details.
+
+### 🔒 CRITICAL: Widget JSON vs Instance
+
+**Venice renders INSTANCES using Widget JSON (the software).**
+
+**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/faq.json`):
+- Complete functional software for a widget type
+- Lives in CODEBASE (Paris codebase)
+- **NOT STORED in database**
+- **NOT EDITABLE by users**
+- Contains: metadata, defaults, templates, rendering logic
+- This IS the widget - the complete functional software
+
+**Widget Instance = THE DATA** (database):
+- ONE user's specific widget instance with their custom instanceData
+- Lives in database
+- Contains: `publicId`, `widgetName` (string identifier like "faq"), `instanceData` (user's actual values)
+- User edits instanceData in Bob
+
+**When Venice renders `/e/:publicId`:**
+1. Fetches **Widget Instance** from Paris → gets user's instanceData
+2. Reads `widgetName` from instance (e.g., `"faq"`)
+3. Fetches **Widget JSON** from Paris via `GET /api/widgets/:widgetType`
+4. Dispatches to **widget renderer** (`venice/lib/renderers/faq.ts`)
+5. Renderer executes Widget JSON using user's instanceData to generate HTML
+6. Returns complete server-rendered HTML
+
+**Venice executes Widget JSON (the software) using instanceData (user's data) to render HTML.**
 
 # Venice — Edge SSR Widget Renderer (Phase-1)
 
 ## Purpose
-Venice is Clickeen's edge-deployed widget rendering service that delivers server-rendered HTML widgets to external websites via a single script tag. It serves as the public-facing embed endpoint that transforms widget configurations into live, interactive HTML without shipping React bundles to end users.
+Venice is Clickeen's edge-deployed widget rendering service that delivers server-rendered HTML widgets to external websites via a single script tag. It serves as the public-facing embed endpoint that executes Widget JSON (the software) using user's instanceData to generate live, interactive HTML without shipping React bundles to end users.
 
 ## Deployment & Runtime
 - **Vercel Project**: `c-keen-embed`
@@ -47,12 +100,13 @@ Venice is Clickeen's edge-deployed widget rendering service that delivers server
 
 **Integration Flow**:
 1. Extract `publicId` from URL path
-2. Load widget configuration from Paris: `GET /api/instance/:publicId`
-3. Apply theme/device hints to configuration
-4. Render widget HTML using configuration + Dieter design system
-5. **If `?preview=1` present:** Inject postMessage patch script (preview-only feature)
-6. Inject "Made with Clickeen" backlink (Phase-1 requirement)
-7. Return HTML with appropriate cache headers
+2. Load widget instance from Paris: `GET /api/instance/:publicId` → gets user's instanceData
+3. Load Widget JSON from Paris: `GET /api/widgets/:widgetType` → gets the software
+4. Apply theme/device hints to instanceData
+5. Execute Widget JSON using instanceData to render widget HTML (with Dieter design system)
+6. **If `?preview=1` present:** Inject postMessage patch script (preview-only feature)
+7. Inject "Made with Clickeen" backlink (Phase-1 requirement)
+8. Return HTML with appropriate cache headers
 
 **Preview Mode (`?preview=1`):**
 
@@ -75,7 +129,7 @@ When `preview=1` query parameter is present, Venice injects a preview-only patch
 // From Bob to Venice iframe
 iframe.contentWindow.postMessage({
   type: 'patch',
-  widget: 'testbutton',
+  widget: 'content.faq',
   fields: {
     text: 'New text',
     color: 'red',
@@ -92,7 +146,7 @@ window.addEventListener('message', (event) => {
   if (!allowedOrigins.includes(event.origin)) return;
 
   const { type, widget, fields } = event.data;
-  if (type !== 'patch' || widget !== 'testbutton') return;
+  if (type !== 'patch' || widget !== 'content.faq') return;
 
   const button = document.querySelector('[data-widget-element="button"]');
   if (!button) return;
@@ -116,7 +170,7 @@ window.addEventListener('message', (event) => {
 - NO postMessage script injected
 - Pure SSR HTML/CSS only
 - No client JS required for basic functionality
-- See `documentation/widgets/testbutton.md` for reference implementation
+ 
 
 ### Overlay Loader Bundle: `/embed/v{semver}/loader.js`
 **Purpose**: Provide overlay/pop-up delivery via a single script  
@@ -171,7 +225,7 @@ interface CkeenBus {
   subscribe(event: string, handler: (payload?: unknown) => void): () => void;
 }
 ```
-Supported core events: `open`, `close`, `ready`. Widget-specific events may be added (document alongside the widget config).
+Supported core events: `open`, `close`, `ready`. Widget-specific events may be added (document alongside the Widget JSON).
 
 Naming clarifier (Phase‑1): The canonical global is `window.ckeenBus`. The loader also exposes a backward‑compatible alias at `window.Clickeen`; new integrations must use `window.ckeenBus`.
 
@@ -186,12 +240,19 @@ Naming clarifier (Phase‑1): The canonical global is `window.ckeenBus`. The loa
 ## Paris Integration
 
 ### Configuration Loading
-Venice fetches widget configurations from Paris on each render:
+Venice fetches widget instances and Widget JSON from Paris on each render:
 
 ```typescript
-// Fetch config from Paris API
-const response = await fetch(`${PARIS_BASE_URL}/api/instance/${publicId}`);
-const { config, status, updated_at } = await response.json();
+// Fetch instance from Paris API (user's data)
+const instanceResponse = await fetch(`${PARIS_BASE_URL}/api/instance/${publicId}`);
+const { widgetName, instanceData, status, updated_at } = await instanceResponse.json();
+
+// Fetch Widget JSON from Paris API (the software)
+const widgetResponse = await fetch(`${PARIS_BASE_URL}/api/widgets/${widgetName}`);
+const widgetJSON = await widgetResponse.json();
+
+// Execute Widget JSON using instanceData to render HTML
+const html = executeWidgetRenderer(widgetJSON, instanceData);
 ```
 
 **Error Handling**:
@@ -256,7 +317,7 @@ async function parisFetch(path: string, headers: Record<string, string> = {}) {
 ## Widget Rendering System
 
 ### Server-Side Rendering (SSR)
-Venice generates complete HTML for widgets without client-side JavaScript:
+Venice executes Widget JSON (the software) using instanceData (user's data) to generate complete HTML for widgets without client-side JavaScript:
 
 ```html
 <!-- Example output structure -->
@@ -267,7 +328,7 @@ Venice generates complete HTML for widgets without client-side JavaScript:
       <label for="name">Name</label>
       <input type="text" id="name" name="name" required>
     </div>
-    <!-- ... more fields based on config ... -->
+    <!-- ... more fields based on instanceData ... -->
     <button type="submit" class="ckeen-button">Send Message</button>
   </form>
   <footer class="ckeen-backlink">
@@ -277,19 +338,23 @@ Venice generates complete HTML for widgets without client-side JavaScript:
 ```
 
 ### Configuration Application
-Widget config JSON is transformed into HTML attributes and structure:
+Widget instanceData is used by Widget JSON rendering logic to generate HTML:
 
 ```json
 {
-  "title": "Contact Us",
-  "fields": ["name", "email", "message"],
-  "theme": "light", 
-  "submitText": "Send Message",
-  "branding": { "hide": false }
+  "title": "Frequently Asked Questions",
+  "categories": [
+    {
+      "title": "Getting Started",
+      "questions": [
+        { "question": "How do I get started?", "answer": "Follow our quick start guide." }
+      ]
+    }
+  ]
 }
 ```
 
-Becomes structured HTML with appropriate form fields, styling, and behavior.
+Widget JSON executes its rendering logic using this instanceData to generate structured HTML with appropriate fields, styling, and behavior.
 
 ### Dieter Integration  
 Venice uses Dieter design system for styling:
@@ -337,10 +402,10 @@ Preview (`?ts`): `Cache-Control: no-store`
 Validators: set `ETag` and `Last-Modified=updatedAt`; `Vary: Authorization, X-Embed-Token`.  
 
 ```http
-# Published widgets (stable config)
+# Published widgets (stable instanceData)
 Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=1800
 
-# Draft widgets (changing config)  
+# Draft widgets (changing instanceData)
 Cache-Control: public, max-age=60, s-maxage=60, stale-while-revalidate=300
 
 # Preview mode (live editing)
@@ -355,43 +420,19 @@ Per‑widget docs live under `documentation/widgets/*.md` (one file per widget; 
 
 > The authoritative list of Phase-1 widgets lives in `documentation/CONTEXT.md` (Phase-1 Widget List section).
 
-#### Contact Form Widget
-**Config Schema**:
-```json
-{
-  "title": "string",
-  "description": "string (optional)",
-  "fields": {
-    "name": "boolean",
-    "email": "boolean", 
-    "phone": "boolean",
-    "company": "boolean",
-    "message": "boolean"
-  },
-  "submitText": "string",
-  "successMessage": "string",
-  "theme": "light|dark",
-  "accentColor": "hex_color"
-}
-```
+Each widget has:
+- **Widget JSON** (`/paris/lib/widgets/{widgetName}.json`) — The software containing rendering logic, defaults, templates, uiSchema
+- **Widget Renderer** (`/venice/lib/renderers/{widgetName}.ts`) — Pure function that executes Widget JSON to generate HTML
+- **Widget Instance** (database) — User's custom instanceData
 
-**Rendering Logic**:
-1. Generate form with enabled fields only
-2. Apply theme and accent color via CSS custom properties
-3. Include client-side validation and submission handling
-4. Show success/error states based on form submission
+**How Venice renders:**
+1. Fetch Widget Instance → get user's instanceData
+2. Fetch Widget JSON → get the software (rendering logic, defaults, templates)
+3. Execute renderer using Widget JSON + instanceData → generate HTML
 
-#### Newsletter Signup Widget  
-**Config Schema**:
-```json
-{
-  "title": "string",
-  "placeholder": "string",
-  "buttonText": "string", 
-  "theme": "light|dark",
-  "layout": "inline|stacked"
-}
-```
+Example widget renderers in Venice:
+- `/venice/lib/renderers/faq.ts` — FAQ widget renderer
+- Each renderer is a pure function: `render(widgetJSON, instanceData) → HTML string`
 
 ### Widget State Management
 Each widget handles multiple states:
@@ -426,7 +467,7 @@ Content-Security-Policy:
 - **Retention**: Submissions proxied to Paris live in `widget_submissions`; anonymous rows are pruned after 30 days by backend maintenance (no client storage).
 
 ### XSS Prevention
-- All user-provided config values are HTML-escaped
+- All user-provided instanceData values are HTML-escaped
 - CSS values are validated against allowed patterns
 - No `eval()` or `innerHTML` usage in client scripts
 - Strict input validation on all configuration fields
@@ -462,7 +503,7 @@ new Image().src = `/embed/pixel?widget=${widgetId}&event=load&ts=${Date.now()}`;
 
 ### Graceful Degradation
 When Venice cannot render a widget properly:
-1. **Configuration Error**: Render the validated error state returned by Paris.
+1. **instanceData Validation Error**: Render the validated error state returned by Paris.
 2. **Upstream Failure (Paris/Geneva/Atlas unavailable)**: Return a 503 response with branded HTML (see below) and appropriate cache headers.
 3. **Timeout**: Show loading state with manual retry option while logging the failure for follow-up.
 
@@ -525,7 +566,7 @@ When Venice cannot render a widget properly:
 | Missing/invalid embed token | Draft/inactive instance without valid token | 401 | `TOKEN_INVALID` | Render token-invalid fallback; prompt refresh/claim | `token_invalid` with publicId + requestId |
 | Draft token already claimed | Venice receives token Paris marked revoked | 410 | `TOKEN_REVOKED` | Show “claimed” fallback; advise sign-in | `token_revoked` + token fingerprint (hashed) |
 | Instance not found | Paris returns 404 | 404 | `NOT_FOUND` | Render not-found fallback | `not_found` |
-| Config fails validation | Paris returns 422 with `[ { path, message } ]` | 422 | `CONFIG_INVALID` + validation array | Render config-invalid fallback with inline message | `config_invalid` + validation summary |
+| instanceData fails validation | Paris returns 422 with `[ { path, message } ]` | 422 | `CONFIG_INVALID` + validation array | Render config-invalid fallback with inline message | `config_invalid` + validation summary |
 | Rate limit exceeded | Paris returns 429 | 429 | `RATE_LIMITED` | Render rate-limited fallback and set retry-after | `rate_limited` with window metadata |
 | Paris/Geneva/Atlas outage | Upstream dependency unavailable / timeout | 503 | `SSR_ERROR` | Render branded 503 fallback; retry with backoff | `ssr_error` including dependency + latency |
 | Atlas miss/timeout | Edge Config unavailable but Paris succeeds | 200 | n/a (serves data) | Normal render | `atlas_unavailable` warning (once per window) |
@@ -569,7 +610,7 @@ curl "http://localhost:3002/e/demo-widget?theme=light&device=desktop"
 - **Real-time Updates**: WebSocket connections for live widget updates
 
 ### Scalability Improvements
-- **Edge Caching**: Intelligent cache invalidation based on config changes
+- **Edge Caching**: Intelligent cache invalidation based on instanceData changes
 - **CDN Optimization**: Serve static assets from closest edge location  
 - **Bundle Splitting**: Load widget code on-demand to reduce initial payload
 - **Image Optimization**: Automatic image resizing and format conversion

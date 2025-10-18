@@ -1,5 +1,5 @@
-STATUS: NORMATIVE — PHASE-1 REQUIRED
-This system is required for Phase-1 to support AI-powered features across Bob (Manual/AI Copilot modes).
+STATUS: HISTORICAL — NOT PHASE-1 (FUTURE)
+This document describes a planned AI service layer that is NOT part of Phase-1. Copenhagen is deferred to Phase-2 or later.
 
 # System: Copenhagen — AI Service Layer
 

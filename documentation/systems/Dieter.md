@@ -11,7 +11,70 @@ This document is the canonical reference for Clickeen’s design system and its 
 
 ## 1. Dieter Core
 
-Dieter is Clickeen’s shared design system: a token-first, CSS-only library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
+Dieter is Clickeen's shared design system: a token-first, CSS-only library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
+
+### 🔑 CRITICAL: Dieter is the Mama Library (NEW ARCHITECTURE)
+
+**Dieter is the mama of all HTML/CSS** — it contains both primitives AND widget-specific composed components.
+
+**What Dieter Contains:**
+
+1. **Primitives** - Core design system components
+   - `button.css`, `toggle.css`, `textfield.css`, `expander.css`, `dropdown.css`, etc.
+   - Universal tokens (`tokens.css`)
+   - Typography, colors, spacing, motion
+
+2. **Widget-Specific Compositions** - Components built FROM primitives for specific widgets
+   - `expander-faq.css` - FAQ-specific expander with delete button, Q&A structure
+   - `card-testimonials.css` - Testimonial card layout
+   - `timer-countdown.css` - Countdown widget timer display
+   - Each widget can create its own compositions as needed
+
+3. **Bob-Specific Components** - Components for Bob's UI
+   - `bob-basetooldrawer.css` - Tool drawer base styles
+   - Other Bob-specific UI patterns
+
+**Why This Matters:**
+
+**Performance:** We never load all of Dieter. Each widget only loads the CSS for components it actually uses:
+- FAQ widget loads: `expander-faq.css`, `button.css`, `textfield.css`
+- Countdown widget loads: `timer-countdown.css`, `color-picker.css`, `dropdown.css`
+- Newsletter widget loads: whatever IT needs
+
+**Scalability:** Dieter can grow to 1,000+ components without performance penalty:
+- Each widget stays lean (only loads what it uses)
+- No bloat, no unnecessary CSS
+- Infinite scalability
+
+**Developer Experience:**
+- One place for ALL UI components (primitives + compositions)
+- Engineers go to Dieter to find components
+- "Need an FAQ expander? Go to Dieter, grab `expander-faq`"
+- "Building a new widget? Copy similar component, rename it, customize it"
+
+**Component Organization:**
+```
+dieter/components/
+  // Primitives (universal)
+  button.css
+  toggle.css
+  textfield.css
+  expander.css
+
+  // Widget-specific compositions
+  expander-faq.css
+  expander-countdown.css
+  card-testimonials.css
+  timer-countdown.css
+
+  // Bob-specific
+  bob-basetooldrawer.css
+```
+
+**For Widget JSON:**
+Widget JSON files contain HTML using Dieter components. They only load the specific CSS files they need. This keeps each widget's footprint tiny while allowing Dieter to grow infinitely.
+
+See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details on how widgets use Dieter components.
 
 ### 1.1 Workspace Layout
 
@@ -74,7 +137,7 @@ Icon-only controls use the square control height for both dimensions and zero in
 | `--control-text-xs|sm|md|lg|xl` | Control typography (weight/size) matching the control ladder. |
 | Semantic tokens (`--heading-*`, `--body-*`, etc.) | Applied via utility classes or element defaults. |
 
-See [Typography](#135-typography) for utility classes and font loading guidance.
+See [Typography](#14-typography) for utility classes and font loading guidance.
 
 #### 1.3.4 Color Tokens & Theme Model
 
@@ -115,21 +178,44 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 
 ### 1.4 Typography
 
-#### 1.4.1 Fonts
+#### 1.4.1 Font Loading Policy (Per Surface)
 
-- **Default font (Inter Tight):**
+**Different surfaces have different font loading requirements:**
+
+**Bob & Dieter Admin (Apps):**
+- Use Google Fonts via `<link>` tag in app layout
+- Allowed domains: `fonts.googleapis.com` and `fonts.gstatic.com`
+- Example:
   ```html
-  <link rel="stylesheet" href="/dieter/fonts.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap">
   <link rel="stylesheet" href="/dieter/tokens/tokens.css">
   ```
-- **Custom font:** load your font first, then override `--font-ui` (skip `fonts.css`):
-  ```html
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap">
-  <link rel="stylesheet" href="/dieter/tokens/tokens.css">
-  <style>
-    :root { --font-ui: "Roboto", sans-serif; }
-  </style>
+- Tokens assume font is already loaded globally
+
+**Venice (Embeds):**
+- **User-selected fonts:** Load via Google Fonts `<link>` tag in SSR (from widget instanceData)
+- **CSP must allow:** `fonts.googleapis.com` and `fonts.gstatic.com` for widgets with Typography menu
+- **Default fallback:** If no font selected or CSP blocks, use system fonts
+- **NO @import in CSS:** Conflicts with strict embed CSP
+- Example SSR pattern:
+  ```typescript
+  // Venice renderer
+  const fontUrl = instanceData.typography?.customFontUrl ||
+                  widgetJson.typography?.availableFonts.find(f => f.name === instanceData.typography?.selectedFont)?.googleFontsUrl;
+
+  if (fontUrl) {
+    html = `<link rel="stylesheet" href="${fontUrl}">` + html;
+  }
   ```
+
+**Prague (Marketing):**
+- Same as Bob/Admin (Google Fonts via `<link>` tag)
+
+**Key Rules:**
+1. **Never use @import for fonts** - Use `<link>` tags only
+2. **SSR font loading** - Venice injects font `<link>` server-side, never client-side
+3. **CSP compliance** - All font URLs must be allowed in CSP for that surface
+4. **Fallback fonts** - Always provide system font fallback in `--font-ui`
 
 #### 1.4.2 Element Defaults & Utilities
 

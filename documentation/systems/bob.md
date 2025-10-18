@@ -1,18 +1,318 @@
 # Bob — Widget Builder Application
 
+## 🔑 CRITICAL: New Architecture (Read This First!)
+
+**Bob is the temporary owner of instanceData during editing.**
+
+This is a fundamental architectural change that enables massive scalability and eliminates database pollution.
+
+### The Two-Place Rule
+
+**instanceData exists in EXACTLY 2 places:**
+
+1. **Paris (database)** - Published version (production source of truth)
+2. **Bob's React state** - Working copy (during editing session)
+
+**NOT in:**
+- Database on every keystroke ❌
+- Database on every field change ❌
+- localStorage ❌
+- ToolDrawer state ❌
+- Some intermediate cache ❌
+
+### The Two-API-Call Pattern
+
+Bob makes EXACTLY 2 calls to Paris per editing session:
+
+1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets published instanceData
+2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish → saves working copy
+
+**Between load and publish:**
+- User edits in ToolDrawer → Bob updates React state
+- Bob sends updated instanceData to preview via postMessage
+- Preview updates in real-time
+- ZERO API calls to Paris
+- ZERO database writes
+
+### Why This Matters
+
+**Scalability:**
+- 1 user or 10,000 users editing simultaneously → no difference
+- All editing happens client-side in memory
+- No server load from editing sessions
+- Only published widgets hit the database
+
+**Database Cost Savings:**
+- Old model: Every visitor to clickeen.com playing with widgets → database instance created
+- New model: Only users who click Publish → database instance created
+- Landing page with 100 widgets + millions of visitors → **ZERO database pollution**
+- Saves potentially hundreds of thousands of dollars in database costs
+
+**No Pollution:**
+- Database only contains published widgets users actually care about
+- No abandoned experiments
+- No half-edited drafts
+- Clean, maintainable data
+
+### Widget JSON Architecture
+
+**Widget JSON = 50% of the software**
+
+Each widget type provides a JSON file that contains:
+1. **HTML** - Dieter markup for controls (the actual UI)
+2. **Data binding** - How controls map to instanceData paths
+3. **Helper functions** - JavaScript for complex operations (add/delete/reorder)
+
+**Bob = the other 50% of the software**
+
+Bob provides:
+- Container and layout (ToolDrawer, Workspace, TopDrawer)
+- instanceData state management (React state + updates)
+- Data binding layer (wires HTML controls to instanceData)
+- Preview sync (postMessage to iframe)
+- Save to Paris (on publish only)
+
+Together, **Bob + Widget JSON = complete widget instance editor**.
+
+### Dieter Strategy
+
+**Dieter is the mama of all HTML/CSS.**
+
+Dieter contains:
+- **Primitives** - button.css, toggle.css, textfield.css, expander.css
+- **Widget-specific compositions** - expander-faq.css, card-testimonials.css, timer-countdown.css
+- **Bob-specific** - bob-basetooldrawer.css
+
+**Performance win:** We never load all of Dieter. Each widget only loads the CSS/JS for components it actually uses.
+
+FAQ widget loads:
+- `diet-expander-faq.css`
+- `diet-button.css`
+- `diet-textfield.css`
+
+Countdown widget loads:
+- `diet-expander-countdown.css`
+- `diet-color-picker.css`
+- `diet-dropdown.css`
+
+**Result:** Dieter can have 10 components or 1,000 components—doesn't matter. Each widget stays lean because it only loads what it uses. No bloat. No performance penalty. Infinite scalability.
+
+For complete architecture details, see [WidgetArchitecture.md](../widgets/WidgetArchitecture.md).
+
+---
+
+## Editor API v1 (Bob ↔ Widget JSON Contract)
+
+**Bob exposes a minimal, frozen API surface for widget JSON to interact with instanceData.**
+
+### API Methods
+
+```typescript
+// Update a value in instanceData at a specific path
+updateInstanceData(path: string, value: any): void
+
+// Get current instanceData (read-only)
+getInstanceData(): Readonly<InstanceData>
+
+// Get current instanceData at a specific path
+getInstanceDataValue(path: string): any
+```
+
+### Lifecycle Hooks (Optional)
+
+Widget JSON can optionally define lifecycle functions:
+
+```javascript
+// Called when widget editor loads
+function onEditorMount(api) {
+  // api.updateInstanceData, api.getInstanceData available
+}
+
+// Called when widget editor unloads
+function onEditorUnmount() {
+  // Cleanup if needed
+}
+
+// Called after instanceData changes (debounced)
+function onInstanceDataChange(newData, previousData) {
+  // React to changes if needed
+}
+```
+
+### Rules & Constraints
+
+1. **No Network Calls** - Widget scripts MUST NOT make network requests (fetch, XMLHttpRequest, etc.)
+2. **Script Size Budget** - Widget editor scripts ≤ 50KB total per widget
+3. **Sandboxed Execution** - Scripts run in isolated scope, no access to window globals except approved APIs
+4. **Synchronous Only** - No async/await, no Promises (except in lifecycle hooks)
+5. **No DOM Manipulation** - Scripts only update instanceData; Bob handles rendering
+
+### Data Path Format
+
+Paths use dot notation with array indices:
+
+```javascript
+// Simple property
+updateInstanceData('title', 'New Title')
+
+// Nested property
+updateInstanceData('typography.selectedFont', 'Roboto')
+
+// Array item
+updateInstanceData('categories.0.title', 'Category 1')
+
+// Deep nested
+updateInstanceData('categories.0.items.2.question', 'What is this?')
+```
+
+### Helper Function Pattern
+
+Widget JSON can include helper functions for complex operations:
+
+```javascript
+// In widget JSON
+{
+  "scripts": {
+    "addCategory": `function(title) {
+      const data = getInstanceData();
+      const newCategory = { title, items: [] };
+      updateInstanceData('categories', [...data.categories, newCategory]);
+    }`,
+
+    "deleteCategory": `function(index) {
+      const data = getInstanceData();
+      const updated = data.categories.filter((_, i) => i !== index);
+      updateInstanceData('categories', updated);
+    }`
+  }
+}
+```
+
+### Admin Parity
+
+**Dieter Admin and Bob expose identical Editor API.**
+
+Widget JSON runs identically in both environments. This allows:
+- Testing widgets in Admin before deploying to Bob
+- Consistent behavior across development and production
+- Single widget JSON works everywhere
+
+### Security
+
+- Scripts execute in sandboxed environment
+- No access to localStorage, sessionStorage, cookies
+- No access to window, document (except via approved APIs)
+- Content Security Policy enforced
+- All user input sanitized before rendering
+
+**This API surface is frozen for v1. Changes require CEO approval and version bump.**
+
+---
+
 ## Tool Drawer Architecture (ToolDrawer)
 
-**How the drawer works:**
+### 🚨 SUPERSEDED: Schema-Driven ToolDrawer (Legacy)
+
+**This section describes the OLD architecture and is being replaced by the new HTML-based approach.**
+
+For the NEW architecture, see:
+- [Widget Architecture](../widgets/WidgetArchitecture.md) - Complete new architecture
+- "Editor API v1" section below - Bob's contract with widget JSON
+
+**The section below is kept for reference only and will be removed once migration is complete.**
+
+---
+
+### ⚠️ LEGACY: ToolDrawer is Schema-Driven (Old Approach)
+
+**ToolDrawer is a DUMB RENDERER** — it does NOT contain widget-specific controls or logic.
+
+**How it actually works:**
+1. **Widget JSON defines controls** — Each widget's `/paris/lib/widgets/{widgetName}.json` contains a `uiSchema` section
+2. **ToolDrawer reads the schema** — Loads the widget JSON and interprets `uiSchema.tdmenucontent`
+3. **ToolDrawer renders controls dynamically** — Loops through control definitions and renders Dieter components
+4. **All 200 widgets work identically** — Same ToolDrawer code renders every widget
+
+**WRONG MENTAL MODEL:**
+```
+❌ "I need to add FAQ-specific controls to ToolDrawer.tsx"
+❌ "ToolDrawer has hardcoded controls for each widget"
+❌ "I should add a case statement for this widget"
+```
+
+**CORRECT MENTAL MODEL:**
+```
+✅ "I define controls in the widget's JSON uiSchema"
+✅ "ToolDrawer automatically renders whatever the JSON says"
+✅ "ToolDrawer is widget-agnostic - it just follows instructions"
+```
+
+**Example - FAQ Widget Controls:**
+
+**Widget JSON** (`paris/lib/widgets/faq.json`):
+```json
+{
+  "uiSchema": {
+    "tdmenu": [
+      { "id": "content", "icon": "scribble", "label": "Content" }
+    ],
+    "tdmenucontent": {
+      "content": {
+        "title": "Content",
+        "controls": [
+          { "type": "textfield", "configPath": "title", "label": "Widget Title" },
+          { "type": "toggle", "configPath": "showTitle", "label": "Show Title" }
+        ]
+      }
+    }
+  }
+}
+```
+
+**ToolDrawer Behavior:**
+- Reads FAQ widget JSON
+- Sees "content" tab defined in `tdmenu`
+- Sees textfield + toggle defined in `tdmenucontent.content.controls`
+- Renders those controls using Dieter components
+- NO FAQ-specific code in ToolDrawer
+
+**To add controls to a widget:**
+1. ❌ DO NOT edit `bob/app/bob/ToolDrawer.tsx`
+2. ✅ DO edit `paris/lib/widgets/{widgetName}.json` → `uiSchema.tdmenucontent`
+3. ToolDrawer will automatically render the new controls
+
+**🔑 CRITICAL: Widget Editing UI Flexibility**
+
+Every widget defines its own editing UI in Widget JSON (uiSchema section).
+
+**Different widgets = Different editing UIs:**
+- FAQ widget: category/question/answer editors with repeater controls
+- Countdown widget: date/time pickers
+- Logo Showcase widget: image uploaders with drag-drop reordering
+- Each widget's editing UI is completely custom to its functionality
+- Widget JSON defines the complete ToolDrawer UI and functionality
+
+**Maximum flexibility:**
+- Widget JSON can define ANY editing UI needed
+- No limitations on complexity or structure
+- Widget JSON IS the software - it defines ToolDrawer's UI and functionality
+
+**How we keep it consistent:**
+- Widget JSON uses Dieter components when defining the UI
+- Dieter components ensure the same look/feel across all widgets
+- Users get consistent UI patterns even though every widget's editor is unique
+- ToolDrawer is DUMB - just renders what Widget JSON tells it to render
+
+**This means:**
+- Widget JSON has complete freedom to define custom editing interfaces
+- Platform-wide design consistency through Dieter
+- ToolDrawer has NO widget-specific logic
+- Bob serves all 100 widgets with ONE codebase
+
+**Physical layout:**
 - Left side: **tdmenu** (48px wide) — vertical icon menu with LG-28 Dieter buttons
 - Right side: **tdmenucontent** — control panels that change based on which icon is active
 - Gap between columns: `var(--space-6)` (24px)
-
-**Adding controls:**
-- Each icon in tdmenu triggers a different control panel in tdmenucontent
-- Panel structure: heading-3 title at top (e.g., "Content"), followed by form controls
-- Controls go inside `.stack` div with `gap: '12px'` and `padding: 'var(--space-2)'`
-- Use Dieter components at LG size: textfield (`data-size="lg"`), dropdown, buttons, etc.
-- The heading text matches what the panel is for (e.g., "Content" for the pencil icon panel)
 
 **Spacing locked in stone (bob.module.css):**
 - `.tooldrawer` gap: `var(--space-1)` (4px) — between header and content
@@ -42,6 +342,37 @@
 Bob is Clickeen's **widget builder** for registered users. It's where customers configure, preview, and publish their widgets.
 
 **Simple version:** Bob is a web app where users customize widgets and see them update live before embedding them on their site.
+
+### 🔒 CRITICAL: Widget JSON vs Widget Instance
+
+**Bob edits INSTANCES (instanceData), NOT Widget JSON.**
+
+**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/faq.json`):
+- Complete functional software for a widget type
+- Lives in codebase (git-controlled, versioned)
+- **NOT EDITABLE by users**
+- Defines ToolDrawer UI and functionality (uiSchema section)
+- Contains: metadata, defaults, templates, uiSchema
+- ONE file shared by all instances of that type
+
+**Widget Instance = THE DATA** (database row):
+- User's specific widget with their custom instanceData
+- Lives in database (`widget_instances` table)
+- **EDITABLE by users in Bob**
+- Contains: publicId, widgetName (string like "faq"), instanceData (user's actual values)
+- Millions of instances have the same widgetName but different instanceData
+
+**When user edits in Bob:**
+- Bob fetches Widget JSON via `GET /api/widgets/:widgetType` to render ToolDrawer UI
+- Bob fetches Widget Instance via `GET /api/instance/:publicId` to get user's current instanceData
+- User edits → updates instanceData only
+- Widget JSON remains unchanged
+- Bob saves instanceData changes via `PUT /api/instance/:publicId`
+
+**The separation:**
+- Widget JSON = THE SOFTWARE (platform-controlled)
+- Widget Instance instanceData = THE DATA (user-controlled)
+- Bob provides the UI to edit user's data within platform rules
 
 ---
 
@@ -111,13 +442,14 @@ Bob is Clickeen's **widget builder** for registered users. It's where customers 
 
 Bob provides a single workspace where users can:
 
-1. **Edit widget config** — Modify content, colors, settings (widget type already chosen before Bob opens)
-2. **Switch templates** — Change widget layout/style without losing content
+1. **Edit widget instanceData** — Modify content, colors, settings (widgetName already set when instance created)
+2. **Switch templates** — Change widget layout/style without losing instanceData
 3. **Preview live** — See real-time preview as they edit (same HTML that will appear on their site)
-4. **Save changes** — Persist config updates to Paris (authenticated Bob only, explicit action)
-5. **Publish & get code** — Publish widget and copy embed snippet
+4. **Publish & get code** — Publish widget (saves to Paris) and copy embed snippet
 
-**CRITICAL:** Bob does NOT have widget type selection. User picks widget type on marketing site, Prague creates instance, then opens Bob with that specific widget loaded.
+**CRITICAL:** Bob does NOT have widget selection. User picks widget on marketing site, Prague creates instance with widgetName, then opens Bob with that instance loaded.
+
+**NEW ARCHITECTURE:** Bob holds instanceData in React state during editing. All edits happen in memory. Only when user clicks "Publish" does Bob send instanceData to Paris. No auto-save. No intermediate database writes. See "New Architecture" section above for details.
 
 ---
 
@@ -157,27 +489,31 @@ Users work in **one screen** with three areas:
 - Shows exactly what will appear on their website
 - Preview system requires tokenized widgets (CSS variables for patchable fields)
 
-### 2. Save UX Model
+### 2. Publish UX Model (NEW ARCHITECTURE)
 
 **MiniBob (on clickeen.com website):**
 - NO Save button
 - Only "Publish" button → triggers signup flow → widget saved to account
-- Anonymous editing with draft tokens
+- Anonymous editing with all instanceData in memory (no database writes)
 
 **In-App Bob (authenticated users):**
 - "Copy Code" button always visible
-- "Save" button appears when dirty (local state ≠ server state)
-- Clicking Save:
-  1. Sends PUT to Paris with updated config
-  2. Triggers cross-fade to new iframe state (no white flash)
-  3. Hides Save button until next change
-- NO auto-save, NO debouncing on Save (explicit user action only)
-- NO "Saved" toast or notifications
+- "Publish" button always visible
+- Clicking Publish:
+  1. Sends PUT to Paris with instanceData from Bob's React state
+  2. Saves to database (first database write of the session)
+  3. Triggers preview iframe refresh to show published state
+  4. User can copy embed code
+- NO auto-save, NO intermediate saves (explicit user action only)
+- NO "Save" button (only "Publish")
+- NO dirty detection needed (all edits stay in memory until publish)
 
-**Dirty Detection:**
-- Compare current control values vs last saved snapshot
-- Dirty = any schema field differs from server state
-- Save button visibility tied to dirty state
+**Why No Save Button:**
+- Bob owns instanceData in React state during editing
+- All edits happen in memory (instant, no network latency)
+- Preview updates via postMessage (instant feedback)
+- Only "Publish" writes to database
+- Simpler UX: Edit → Publish → Done (no intermediate save step)
 
 ### 3. Widget Naming
 - Top left: Editable widget name
@@ -191,11 +527,11 @@ Users work in **one screen** with three areas:
 
 ### 5. Assist Mode (AI Copilot)
 - Left drawer header: Toggle between "Manual" and "AI Copilot"
-- **Manual mode**: User configures via form controls (text fields, dropdowns, etc.)
-- **AI Copilot mode**: User configures via natural language conversation
-  - Agent reads widget config/schema from Paris
+- **Manual mode**: User edits instanceData via form controls (text fields, dropdowns, etc.)
+- **AI Copilot mode**: User edits instanceData via natural language conversation
+  - Agent reads Widget JSON and instanceData from Paris
   - User types: "Make the button red" or "Change text to 'Click here'"
-  - Agent maps intent to config changes and calls Paris PUT
+  - Agent maps intent to instanceData changes and calls Paris PUT
   - Agent explains what changed
   - Uses same Paris API endpoints as manual controls
 - **LLM Providers**:
@@ -207,26 +543,48 @@ Users work in **one screen** with three areas:
 
 ## Technical Architecture
 
-### How Bob Works
+### How Bob Works (NEW ARCHITECTURE)
 
 ```
-User edits in Bob
+Bob loads widget instance
     ↓
-Bob calls Paris API (save config)
+Bob calls Paris GET /api/instance/:publicId (API CALL #1 - Load)
     ↓
-Bob refreshes preview iframe
+Bob stores instanceData in React state (working copy)
     ↓
-Iframe loads Venice (GET /e/:publicId)
+User edits in ToolDrawer
     ↓
-Venice renders widget HTML (server-side)
+Bob updates instanceData in React state (NO API call)
     ↓
-User sees live preview
+Bob sends updated instanceData to preview via postMessage
+    ↓
+Preview iframe updates in real-time (NO reload)
+    ↓
+User continues editing (all in memory, instant feedback)
+    ↓
+User clicks "Publish"
+    ↓
+Bob calls Paris PUT /api/instance/:publicId (API CALL #2 - Publish)
+    ↓
+instanceData saved to database
+    ↓
+Preview iframe refreshes to show published state
+    ↓
+Done (exactly 2 API calls total)
 ```
+
+**Key Points:**
+- ONLY 2 API calls to Paris per session (load and publish)
+- All editing happens in Bob's React state (in memory)
+- Preview updates via postMessage (instant, no reload)
+- No intermediate database writes
+- No auto-save, no dirty detection
 
 ### Dependencies
 
 **Paris (API):**
-- Bob talks to Paris to load/save widget configs
+- Bob fetches Widget JSON via `GET /api/widgets/:widgetType`
+- Bob loads/saves widget instanceData via instance endpoints
 - All data operations go through Paris
 - Bob never touches database directly
 
@@ -315,7 +673,7 @@ Bob implements a **double-buffered preview system** with instant typing feedback
 - Widgets MUST be tokenized (use CSS variables for patchable fields)
 - Example: `border-radius: var(--btn-radius, 12px)` not `border-radius: 999px`
 - postMessage patches update CSS variables directly in preview iframe
-- See `documentation/widgets/testbutton.md` for tokenization reference
+ 
 
 **Preview-Only Features:**
 - Gated by `?preview=1` query param in Venice
@@ -539,8 +897,8 @@ curl -X POST "http://localhost:3001/api/instance/from-template" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT" \
   -d '{
-    "widgetType": "testbutton",
-    "templateId": "testbutton-pill",
+    "widgetType": "content.faq",
+    "templateId": "faq-list",
     "schemaVersion": "2025-09-01"
   }'
 
@@ -597,14 +955,14 @@ export const dynamic = 'force-dynamic';  // ✅ Correct
 
 **Root cause:** Widget is in `draft` status and Venice requires authentication token for draft widgets
 
-**Fix:** Publish the widget (see "Creating a Test Widget" above, step 3)
+**Fix:** Bob uses a preview proxy route (`/api/preview/e/:publicId`) that forwards auth headers server-side. If this doesn't work, publish the widget (see "Creating a Test Widget" above, step 3)
 
 **Why this happens:**
 - Draft widgets require `X-Embed-Token` or `Authorization` header
-- Iframe `src` cannot send custom headers
-- For Phase-1, widgets must be published to preview in Bob
+- Iframe `src` cannot send custom headers directly
+- Bob's preview proxy at `/api/preview/e/[publicId]/route.ts` solves this by forwarding headers server-side
 
-**Future fix:** Use loader path or server-side preview proxy to inject tokens
+**If proxy fails:** Publish the widget as a workaround
 
 ---
 
@@ -1037,4 +1395,3 @@ Bob's AI Copilot feature allows users to edit widgets via natural language inste
 - Look at Paris API contracts in `documentation/systems/Paris.md`
 - Look at Venice preview contracts in `documentation/systems/Venice.md`
 - Look at Dieter showcase HTML for component patterns
-

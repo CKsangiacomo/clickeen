@@ -15,12 +15,47 @@ This document is the canonical Phase‑1 architecture snapshot: what’s in scop
 
 ## Canonical Concepts (Phase‑1)
 
-- Widget — functional unit (e.g., contact form, FAQ, testimonials)
-- Template — data‑only preset for a widget (layout, skin, density, tokens, defaults)
-- Instance — a saved, private copy of a template with user edits; identified by publicId
-- Single tag — inline = iframe; overlays/popups = script that injects an iframe; both load Venice SSR HTML
-- Templates are data — switching templates changes config, not code
-- JSON casing — API payloads are camelCase; DB casing follows the schema in supabase/migrations/
+- **Widget JSON** — THE SOFTWARE; complete functional software for a widget type (e.g., FAQ, testimonials); lives in `/paris/lib/widgets/{widgetName}.json`
+- **Widget Instance** — THE DATA; user's specific widget with their custom instanceData; stored in database with publicId, widgetName, instanceData
+- **widgetName** — string identifier for widget type (e.g., "faq"); stored in instances to identify which Widget JSON to use
+- **instanceData** — user's custom values for their widget instance
+- **Template** — predefined instanceData configuration in Widget JSON providing default layout/styling
+- **uiSchema** — section of Widget JSON that defines ToolDrawer UI and functionality
+- **Single tag** — inline = iframe; overlays/popups = script that injects an iframe; both load Venice SSR HTML
+- **Templates are instanceData** — switching templates merges instanceData, not code
+- **JSON casing** — API payloads are camelCase (publicId, widgetName, instanceData); DB casing follows the schema in supabase/migrations/
+
+### 🔑 NEW: Bob's Two-API-Call Architecture
+
+**Major architectural change: Bob owns instanceData in React state during editing. Only saves to Paris on publish.**
+
+**The Two-Place Rule:**
+instanceData exists in EXACTLY 2 places:
+1. **Paris (database)** - Published version (production source of truth)
+2. **Bob's React state** - Working copy (during editing session)
+
+**The Two-API-Call Pattern:**
+Bob makes EXACTLY 2 calls to Paris per editing session:
+1. **Load** - `GET /api/instance/:publicId` when Bob mounts
+2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish
+
+**Between load and publish:**
+- All edits happen in Bob's React state (in memory)
+- Preview updates via postMessage (NO Paris API calls)
+- ZERO database writes
+
+**Impact on Systems:**
+- **Bob:** Holds instanceData in state, only saves on publish
+- **Paris:** Expects GET once on mount, PUT once on publish (no intermediate saves)
+- **Venice:** Receives instanceData updates via postMessage from Bob (not from Paris)
+- **Database:** Only stores published widgets (no abandoned edits, no drafts during editing)
+
+**Business Impact:**
+- **Scalability:** 10,000 users editing simultaneously → no server load
+- **Cost savings:** Millions of landing page visitors → ZERO database pollution until signup + publish
+- **Performance:** Instant editing feedback (in-memory), no network latency
+
+See [Widget Architecture](./widgets/WidgetArchitecture.md), [Bob](./systems/bob.md), [Paris](./systems/paris.md), [Venice](./systems/venice.md) for complete details.
 
 ---
 
@@ -59,8 +94,9 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 
 ## Widget Docs (Phase‑1)
 
-- Per‑widget documentation lives under `documentation/widgets/*.md` (one file per widget). These are WIP and reflect Venice SSR wiring only; they are not GA.
-- See `documentation/widgets/README.md` for the current list and links.
+- Widget system architecture: `documentation/widgets/WidgetArchitecture.md` (NORMATIVE - authoritative for widget system)
+- Widget JSON files: `/paris/lib/widgets/{widgetName}.json` (the complete software for each widget)
+- Per‑widget PRDs: `documentation/widgets/*.md` (one file per widget)
 
 ---
 
@@ -90,12 +126,13 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 
 ## Template & Render Model
 
-- One server renderer per widget type → HTML string (pure; no inline handlers)
-- Template descriptor: { layout, skin, density, accents[], tokens?, defaults, schemaVersion }
-- Composition precedence: instance.config → template.defaults → theme.tokenOverrides
-- Validation: JSON Schema per widgetType; invalid → 422 with [{ path, message }]
+- Widget JSON IS the software (defines rendering logic, ToolDrawer UI, templates, defaults)
+- Venice renderer executes Widget JSON to generate HTML string (pure function; no inline handlers)
+- Template = predefined instanceData configuration in Widget JSON
+- Composition precedence: instance.instanceData → template instanceData → Widget JSON defaults
+- Validation: JSON Schema per widgetName; invalid → 422 with [{ path, message }]
 - Authorities:
-  - Paris — instance configs & entitlements
+  - Paris — serves Widget JSON via `GET /api/widgets/:widgetType`, stores instances with instanceData
   - Geneva — schemas/catalog
   - Atlas — cache/mirror only; never authoritative
 

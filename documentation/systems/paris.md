@@ -7,12 +7,77 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 ## AIs Quick Scan
 
-**Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).  
-**Owner:** Vercel project `c-keen-api`.  
-**Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).  
-**Phase-1 Endpoints:** `POST /api/instance (disabled)`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.  
-**Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.  
+**Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).
+**Owner:** Vercel project `c-keen-api`.
+**Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).
+**Phase-1 Endpoints:** `POST /api/instance (disabled)`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.
+**Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.
 **Common mistakes:** Treating PUT as upsert, calling Paris directly from browser surfaces, skipping idempotency key handling.
+
+### 🔑 CRITICAL: Bob's Two-API-Call Pattern (NEW ARCHITECTURE)
+
+**Bob makes EXACTLY 2 calls to Paris per editing session:**
+
+1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets published instanceData
+2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish → saves working copy
+
+**Between load and publish:**
+- User edits in ToolDrawer → Bob updates React state (NO API calls to Paris)
+- Bob sends updated instanceData to preview via postMessage (NO API calls to Paris)
+- Preview updates in real-time (NO API calls to Paris)
+- ZERO database writes
+
+**Why This Matters:**
+- **Scalability:** 10,000 users editing simultaneously → no server load, all edits in memory
+- **Database cost savings:** Only published widgets stored → no database pollution from abandoned edits
+- **Landing page demos:** Millions of visitors playing with widgets → ZERO database writes until they sign up and publish
+
+**For Paris:**
+- Paris expects `GET` once on mount, `PUT` once on publish
+- No intermediate saves, no auto-save, no draft saves during editing
+- Database only stores published widgets users actually care about
+
+See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details.
+
+### 🔒 CRITICAL: Widget JSON vs Instance
+
+**Paris manages INSTANCES, NOT widget definitions.**
+
+**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/faq.json`):
+- Complete functional software for a widget type
+- Lives in CODEBASE (paris/lib/widgets/)
+- **NOT STORED in database**
+- **NOT EDITABLE by users**
+- Contains: metadata, defaults, templates, uiSchema (defines ToolDrawer UI and functionality)
+- Served via `GET /api/widgets/:widgetType` API endpoint
+- This IS the widget - the complete functional software
+
+**Widget Instance = THE DATA** (database table: `widget_instances`):
+- ONE user's specific widget instance with their custom instanceData
+- Stored in database
+- **EDITABLE by users** (via Bob → Paris PUT)
+- Contains: `publicId`, `widgetName` (string identifier like "faq"), `instanceData` (user's actual values)
+- All instances of the same widget type have the same widgetName but different instanceData
+
+**What Paris stores:**
+```json
+{
+  "publicId": "wgt_abc123",
+  "widgetName": "faq",
+  "instanceData": {
+    "title": "My Customer FAQs",
+    "categories": [...]
+  }
+}
+```
+
+**Paris endpoints:**
+- `GET /api/widgets/:widgetType` — Returns complete Widget JSON (the software)
+- `POST /api/instance/from-template` — Creates instance from widget JSON template
+- `GET /api/instance/:publicId` — Loads instance + merges with widget JSON defaults
+- `PUT /api/instance/:publicId` — Updates instance instanceData (user's data only)
+
+**Paris NEVER modifies widget JSON files. Users edit instances, Paris stores instance data.**
 
 # Paris — HTTP API Service (Phase-1)
 
@@ -37,13 +102,48 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 
 ## Phase-1 API Endpoints
 
+### Widget JSON API (Phase-1)
+
+- `GET /api/widgets/:widgetType`
+  - Returns complete Widget JSON (the software) for a widget type
+  - Public endpoint (no authentication required)
+  - Widget JSON files live in `/paris/lib/widgets/{widgetName}.json`
+  - Bob fetches this to render ToolDrawer UI defined in uiSchema
+  - Venice fetches this to execute rendering logic
+  - _Example request:_
+    ```http
+    GET /api/widgets/faq
+    ```
+  - _Example response (200):_
+    ```json
+    {
+      "widgetName": "faq",
+      "version": "1.0.0",
+      "metadata": {
+        "displayName": "FAQ",
+        "description": "Frequently Asked Questions widget"
+      },
+      "defaults": {
+        "title": "Frequently Asked Questions",
+        "categories": []
+      },
+      "templates": [...],
+      "uiSchema": {
+        "tdmenu": [...],
+        "tdmenucontent": {...}
+      }
+    }
+    ```
+  - Returns 404 if widget type not found
+  - Response cached with `Cache-Control: public, max-age=300, s-maxage=600`
+
 ### Instance Management (Phase-1)
 `publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`.
 
 - `POST /api/instance` (Phase‑1 status: disabled)
   - In Phase‑1, instance creation must use `POST /api/instance/from-template` (workspace‑scoped). The plain create endpoint returns 422 with guidance.
 - `POST /api/instance/from-template`
-  - Workspace flow for creating from a catalog template. Body includes `{ widgetType, templateId, publicId?, overrides? }`.
+  - Workspace flow for creating from a catalog template. Body includes `{ widgetName, templateId, publicId?, overrides? }`.
   - Returns 201 instance payload plus `{ draftToken }`. Paris stores the token in `widget_instances.draft_token`; Venice MUST receive it via Authorization header until claim.
 - `GET /api/instance/:publicId`
   - Loads the latest instance snapshot (service role or authorized workspace member). Returns 200 payload or 404 `NOT_FOUND`.
@@ -52,41 +152,39 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     {
       "publicId": "wgt_42yx31",
       "status": "draft",
-      "widgetType": "forms.contact",
-      "templateId": "classic-light",
+      "widgetName": "faq",
       "schemaVersion": "2025-09-01",
-      "config": {
-        "title": "Contact Us",
-        "fields": { "name": true, "email": true, "message": true }
+      "instanceData": {
+        "title": "Frequently Asked Questions",
+        "categories": [...]
       },
       "branding": { "hide": false, "enforced": true },
       "updatedAt": "2025-09-28T19:15:03.000Z"
     }
     ```
 - `PUT /api/instance/:publicId`
-  - Updates config/status/template. Unknown config fields reset to target template defaults. Returns 200 payload, 404 if missing, 422 on validation errors.
+  - Updates instanceData/status/template. Unknown instanceData fields reset to target template defaults. Returns 200 payload, 404 if missing, 422 on validation errors.
   - _Example validation error (CONFIG_INVALID, 422):_
     ```http
     PUT /api/instance/wgt_42yx31
     Authorization: Bearer <workspace JWT>
     Content-Type: application/json
 
-    { "config": { "fields": { "email": "maybe" } } }
+    { "instanceData": { "categories": [{ "title": "" }] } }
     ```
     ```json
-    [ { "path": "config.fields.email", "message": "must be boolean" } ]
+    [ { "path": "instanceData.categories.0.title", "message": "Title is required" } ]
     ```
   - _Example response (200):_
     ```json
     {
       "publicId": "wgt_42yx31",
       "status": "draft",
-      "widgetType": "forms.contact",
-      "templateId": "classic-light",
+      "widgetName": "faq",
       "schemaVersion": "2025-09-01",
-      "config": {
-        "title": "Contact Us",
-        "fields": { "name": true, "email": true, "message": true }
+      "instanceData": {
+        "title": "Frequently Asked Questions",
+        "categories": [...]
       },
       "branding": { "hide": false, "enforced": true },
       "updatedAt": "2025-09-28T19:16:44.000Z"
@@ -98,12 +196,12 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
       {
         "action": "template-switch-preview",
         "target": { "templateId": "…", "schemaVersion": "…" },
-        "diff": { "dropped": ["config.oldField"], "added": ["config.newDefault"] },
-        "proposedConfig": { /* transformed config */ },
-        "errors": [ { "path": "config.fields.email", "message": "must be boolean" } ]
+        "diff": { "dropped": ["instanceData.oldField"], "added": ["instanceData.newDefault"] },
+        "proposedInstanceData": { /* transformed instanceData */ },
+        "errors": [ { "path": "instanceData.categories.0.title", "message": "Required field" } ]
       }
       ```
-    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed config + target template/schema after validation.
+    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed instanceData + target template/schema after validation.
     - If `templateId` is provided without `confirm`, returns `409 CONFIRM_REQUIRED` and a `diff` payload; nothing is persisted.
     - Validation order: transform (drop unknowns) → apply target defaults → validate via Geneva (422 on failure) → persist on confirm.
 - `POST /api/claim`
@@ -125,12 +223,11 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     {
       "publicId": "wgt_42yx31",
       "status": "published",
-      "widgetType": "forms.contact",
-      "templateId": "classic-light",
+      "widgetName": "faq",
       "schemaVersion": "2025-09-01",
-      "config": {
-        "title": "Contact Us",
-        "fields": { "name": true, "email": true, "message": true }
+      "instanceData": {
+        "title": "Frequently Asked Questions",
+        "categories": [...]
       },
       "branding": { "hide": true, "enforced": false },
       "updatedAt": "2025-09-28T19:20:11.000Z"
@@ -147,12 +244,11 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 {
   "publicId": "wgt_42yx31",
   "status": "draft",
-  "widgetType": "forms.contact",
-  "templateId": "classic-light",
+  "widgetName": "faq",
   "schemaVersion": "2025-09-01",
-  "config": {
-    "title": "Contact Us",
-    "fields": { "name": true, "email": true, "message": true }
+  "instanceData": {
+    "title": "Frequently Asked Questions",
+    "categories": [...]
   },
   "branding": { "hide": false, "enforced": true },
   "updatedAt": "2025-09-28T19:15:03.000Z"
@@ -163,10 +259,9 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 | API field | DB column/property |
 | --- | --- |
 | `publicId` | `widget_instances.public_id` |
-| `widgetType` | `widgets.type` |
-| `templateId` | `widget_instances.template_id` |
+| `widgetName` | `widget_instances.widget_name` (string identifier like "faq") |
 | `schemaVersion` | `widget_instances.schema_version` |
-| `config` | `widget_instances.config` |
+| `instanceData` | `widget_instances.config` (JSONB column with user's custom values) |
 | `branding.hide` | Derived from entitlements (not persisted; Venice/Paris enforce based on plan) |
 | `updatedAt` | `widget_instances.updated_at` |
 
@@ -182,7 +277,7 @@ Embed tokens live in `embed_tokens` and are scoped per instance/workspace.
 - `POST /api/token` with `{ publicId, action: "revoke" }` → 204.
 - `POST /api/token` with `{ publicId, action: "list" }` → 200 `{ tokens: [...] }`.
 - `GET /api/widgets` → Public catalog of widget types (id, name, description, defaults).
-- `GET /api/templates?widgetType=…` → List templates for the given widget type (id, name, premium flag, schemaVersion, descriptor, preview URL).
+- `GET /api/templates?widgetName=…` → List templates for the given widget type (id, name, premium flag, schemaVersion, descriptor, preview URL).
   - Enforcement: free plan may preview premium templates but cannot select them; selection attempts return 403 FORBIDDEN.
 
 _Example token issue request/response_
@@ -317,7 +412,7 @@ const supabase = createClient(
 ```
 
 ### Key Tables Used
-- `widget_instances`: CRUD operations for widget configs (`public_id` aligns with API `publicId`, `widget_id` links to `widgets.id`, `draft_token` invalidated on claim)
+- `widget_instances`: CRUD operations for widget instances (`public_id` aligns with API `publicId`, `widget_name` stores widget type identifier, `instance_data` stores user's custom values, `draft_token` invalidated on claim)
 - `embed_tokens`: Token lifecycle management  
 - `workspaces`: Tenant isolation and plan enforcement
 - `workspace_members`: Authorization and role checking
@@ -336,17 +431,21 @@ Supabase row-level security remains enabled on all tables (see policies defined 
 ## Integration Contracts
 
 ### Venice (Embed Service)
-Paris provides widget configuration data to Venice:
-- Venice calls `GET /api/instance/:publicId` to load configs
+Paris provides widget instance data to Venice:
+- Venice calls `GET /api/instance/:publicId` to load instanceData
+- Venice calls `GET /api/widgets/:widgetType` to load Widget JSON (the software)
 - Paris validates embed tokens before serving data
 - Response cached by Venice with TTL based on status
+- Venice executes Widget JSON to render HTML using instanceData
 
 ### Bob (Builder App)
 Bob manages widgets through Paris APIs:
-- Instance CRUD operations for widget builder
+- Fetches Widget JSON via `GET /api/widgets/:widgetType` to render ToolDrawer UI
+- Fetches Widget Instance via `GET /api/instance/:publicId` to get user's current instanceData
+- User edits → updates instanceData only
+- Saves instanceData changes via `PUT /api/instance/:publicId`
 - Token management for embed code generation
 - Entitlements checking for feature gating
-- Real-time config updates via PUT endpoints
 
 ### Site (Marketing)
 Site creates anonymous widgets via Paris:
@@ -364,7 +463,7 @@ Site creates anonymous widgets via Paris:
   "message": "Human readable message", 
   "details": "Additional context (optional)",
   "field_errors": [
-    { "path": "config.title", "message": "Required field" }
+    { "path": "instanceData.title", "message": "Required field" }
   ]
 }
 ```
@@ -403,7 +502,7 @@ _API error code mapping (Phase-1)_
 | Scenario | Endpoint(s) | Status / Error | Response Body | Client guidance |
 | --- | --- | --- | --- | --- |
 | Duplicate `publicId` on create | `POST /api/instance/from-template` | 409 `ALREADY_EXISTS` | `{ "error": "ALREADY_EXISTS", "message": "Instance already exists" }` | Retry with different `publicId` |
-| Validation failure | `PUT /api/instance`, `POST /api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "config.fields.email", "message": "must be boolean" }]` | Surface field-level errors; block retry until corrected |
+| Validation failure | `PUT /api/instance`, `POST /api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "instanceData.categories.0.title", "message": "Required field" }]` | Surface field-level errors; block retry until corrected |
 | Draft token revoked | `POST /api/claim` | 410 `TOKEN_REVOKED` | `{ "error": "TOKEN_REVOKED" }` | Remove cached draft token and prompt user to refresh |
 | Missing auth | Any authenticated endpoint | 401 `AUTH_REQUIRED` | `{ "error": "AUTH_REQUIRED", "message": "Authentication required" }` | Redirect to login / refresh workspace session |
 | Plan limit exceeded | `PUT /api/instance` (publish), `POST /api/token` (issue) | 403 `PLAN_LIMIT` | `{ "error": "PLAN_LIMIT", "message": "Upgrade required" }` | Show upgrade CTA; retry only after plan change |

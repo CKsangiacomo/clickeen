@@ -5,7 +5,7 @@ This page explains what we're building and why. It is not a spec.
 For implementation, see:
 - documentation/CONTEXT.md (glossary, widget list, precedence)
 - documentation/systems/ (system PRDs: Venice, Paris, Bob, Copenhagen, etc.)
-- documentation/widgets/ (widget PRDs: content.faq, testbutton, etc.)
+- documentation/widgets/ (widget PRDs: content.faq, etc.)
 
 ---
 
@@ -27,11 +27,14 @@ Clickeen is different:
 Clickeen provides embeddable widgets that businesses add to their websites with one line of code.
 
 Core definitions
-- Widget: a functional unit (e.g., contact form, FAQ, pricing table)
-- Template: a pre-designed visual style for that widget (e.g., minimal, modern, playful)
-- Instance: your saved copy of a template with your edits (private to your workspace)
+- **Widget JSON**: complete software definition (the Widget) - ONE file per widget type
+- **Widget Instance**: the data the program processes - database row with instanceData 
+- **Template**: predefined instanceData configuration within widget JSON (not separate code)
+- **publicId**: instance unique identifier in DB
+- **widgetName**: unique widget identifier referencing the widget JSON definition
+- **instanceData**: specific instance's custom values (user's data)
 - Single tag: inline = iframe; overlays/popups = script; both load Venice SSR HTML
-- Templates are data: switching templates changes config, not code
+- Templates are data: switching templates merges instanceData configurations, same renderer handles all
 
 Widget categories (illustrative, not final)
 - Data collection — contact forms, lead capture, surveys
@@ -51,11 +54,11 @@ Play without an account (marketing site)
 - Clicks on a widget card (e.g., "Contact Form", "FAQ", "Testimonials")
 - Prague creates draft instance via Paris `POST /api/instance/from-template` with chosen widget + default template
 - Prague opens MiniBob (Bob iframe with `?minibob=true&publicId=wgt_xxx`)
-- MiniBob loads with that specific widget already instantiated and ready to edit
-- User can customize config (text, colors, etc.) AND switch templates inside MiniBob
-- Preview updates live as they edit
+- MiniBob loads widget JSON from Paris via `GET /api/widgets/:widgetType` and renders uiSchema controls
+- User can customize instanceData (text, colors, etc.) AND switch templates inside MiniBob
+- Preview iframe loads Venice SSR: `/e/:publicId?preview=1` and updates live as they edit
 - No signup needed to experiment
-- **NO Save button** in MiniBob
+- **NO Save button** in MiniBob (claim persists on signup)
 - **NO "Copy Code" button** in MiniBob
 - Only one button: **"Publish"**
 
@@ -66,8 +69,6 @@ Publish triggers signup
 
 Inside the app (authenticated Bob)
 - **"Copy Code" button always visible** — get embed snippet anytime
-- **"Save" button appears when dirty** — shows when local changes differ from server state
-- Clicking Save persists changes to Paris (explicit user action, NO auto-save)
 - User can continue editing, create more widgets, view collected data
 
 What a free account provides
@@ -89,7 +90,7 @@ While the `build -> signup -> embed` flow is standard, our execution is radicall
 
 Clickeen is architected by a designer. We win by delivering a 100x better user experience, focusing on craftsmanship and simplicity that others structurally cannot.
 
-- **Zero-Friction Experience**: We don't just offer a free builder; we make it instant, intuitive, and delightful. Our obsession with speed and simplicity (codified in specs like `bob.md`) creates a "time to value" that feels effortless compared to the friction-filled builders of our competitors.
+- **Zero-Friction Experience**: We don't just offer a free builder; we make it instant, intuitive, and delightful. Our obsession with speed and simplicity creates a "time to value" that feels effortless compared to competitors. Bob is widget-agnostic - ONE codebase serves ALL 100 widgets by reading JSON definitions.
 - **Delight as a Weapon**: We treat motion, timing, and a "no jank" policy as core requirements, not afterthoughts. This commitment to high-fidelity craftsmanship creates a product that doesn't just work better—it *feels* better to use.
 
 Natural upgrade path
@@ -160,19 +161,22 @@ Without both, AI is useless. With both, it's magic.
 **Clickeen:**
 - Built from scratch with AI in mind
 - Every system has normative documentation
-- Everything is tokenized (widgets, templates, components, schemas)
+- Widget JSON is source of truth - complete software definitions in ONE file per widget type
+- Templates are predefined instanceData configurations within widget JSON (not separate code)
+- Bob is DUMB renderer - reads widget JSON uiSchema and displays whatever controls are defined
 - Attributes-only contracts (`data-variant="primary"` not `class="btn-blue-500"`)
 - Single source of truth (Dieter showcase HTML is canonical)
 - Structured JSON schemas for every widget type
-- Complete API contracts (Paris/Venice/Geneva documented)
+- Complete API contracts (Paris/Venice documented)
 - Migration history capturing every decision
 
 **Result:** AI can actually work:
-- Read widget schema → know what's editable
-- Read Dieter showcase → generate correct UI
+- Read widget JSON defaults → know what's editable
+- Read widget JSON uiSchema → know how to edit it
+- Read Dieter showcase → generate correct UI components
 - Read Paris API docs → make correct calls
-- Read user's config → understand current state
-- Map "make button red" → `{ color: "red" }` → Paris PUT → Done
+- Read user's instanceData → understand current state
+- Map "make button red" → update instanceData → Venice renders with change
 
 ### Why This Is Unfair
 
@@ -188,11 +192,11 @@ AI: "Done!" (narrator: it didn't work)
 **Clickeen:**
 ```
 User: "Add email field to my form"
-AI: *reads widget schema* "engagement.contact has fields array"
-AI: *reads Paris docs* "PUT /api/instance/:id with config.fields[]"
-AI: *makes API call* { config: { fields: [...existing, {type: "email"}] } }
+AI: *reads widget JSON* "contact widget has fields array in defaults"
+AI: *reads Paris docs* "PUT /api/instance/:id with instanceData.fields[]"
+AI: *makes API call* { instanceData: { fields: [...existing, {type: "email"}] } }
 AI: "Added email field"
-User: *sees it working immediately in preview*
+User: *sees it working immediately in Venice SSR preview*
 ```
 
 ### Why Pure Tokens Everywhere
@@ -233,6 +237,19 @@ This only works because we have:
 **We built this from scratch knowing AI was coming.**
 
 This isn't just an AI feature. **This is the business model.**
+
+### The Widget-Agnostic Architecture
+
+**Key insight:** Bob is completely widget-agnostic.
+
+- **ONE Bob codebase serves ALL 100 widgets**
+- Bob reads widget JSON's `uiSchema` and renders whatever controls are defined
+- Adding a new widget = add ONE JSON file, Bob automatically works
+- Bob has NO widget-specific code - no `if (widgetName === 'faq')` statements
+- ToolDrawer is a dumb renderer using Dieter components
+- Same renderer architecture: Venice has pure function per widget type
+
+**This is the ONLY way to manage 100 widgets and millions of instances.**
 
 ---
 
