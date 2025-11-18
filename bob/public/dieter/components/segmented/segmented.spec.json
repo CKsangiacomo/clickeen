@@ -1,0 +1,232 @@
+{
+  "component": "segmented",
+  "description": "Multi-option segmented control built from Dieter buttons and radio inputs.",
+  "syntax": "<div class=\"diet-segmented-{{VARIANT}}\" role=\"radiogroup\" data-size=\"{{SIZE}}\" aria-label=\"{{ARIA_LABEL}}\">…</div>",
+  "attributes": {
+    "variant": {
+      "type": "enum",
+      "values": [
+        "ic",
+        "ictxt",
+        "txt"
+      ],
+      "default": "ictxt",
+      "required": true,
+      "description": "Visual treatment. `ic` = icon only, `ictxt` = icon + text, `txt` = text only."
+    },
+    "size": {
+      "type": "enum",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "required": false,
+      "description": "Rail size token. Button size typically maps to the next smaller ladder step."
+    },
+    "ariaLabel": {
+      "type": "string",
+      "required": true,
+      "description": "Describes the selection purpose for assistive tech."
+    },
+    "groupName": {
+      "type": "string",
+      "required": true,
+      "description": "Shared name attribute for the hidden radio inputs."
+    },
+    "buttonLayout": {
+      "type": "enum",
+      "values": [
+        "ic",
+        "ictxt",
+        "txt"
+      ],
+      "default": "ictxt",
+      "required": false,
+      "description": "Button class suffix used inside each segment. Defaults to `variant`."
+    },
+    "buttonSize": {
+      "type": "enum",
+      "values": [
+        "xs",
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "sm",
+      "required": false,
+      "description": "Size for the button element within each segment."
+    },
+    "buttonVariant": {
+      "type": "enum",
+      "values": [
+        "primary",
+        "secondary",
+        "neutral"
+      ],
+      "default": "neutral",
+      "required": false,
+      "description": "Variant propagated to the inner button."
+    },
+    "segments": {
+      "type": "array",
+      "required": true,
+      "description": "Ordered list of segment definitions. Provide at least two entries to form a control.",
+      "items": {
+        "type": "object",
+        "fields": {
+          "value": {
+            "type": "string",
+            "required": true,
+            "description": "Value emitted when the segment is selected."
+          },
+          "label": {
+            "type": "string",
+            "required": false,
+            "description": "Visible label for icon+text or text layouts."
+          },
+          "icon": {
+            "type": "string",
+            "required": false,
+            "description": "Icon token displayed for icon layouts."
+          },
+          "srLabel": {
+            "type": "string",
+            "required": false,
+            "description": "Screen reader fallback text. Recommended when `variant` is `ic`."
+          },
+          "checked": {
+            "type": "boolean",
+            "required": false,
+            "description": "Marks the segment as selected."
+          },
+          "disabled": {
+            "type": "boolean",
+            "required": false,
+            "description": "Disables the segment when true."
+          }
+        }
+      }
+    }
+  },
+  "defaults": [
+    {
+      "id": "segmented-ictxt",
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "spec": [
+        "diet-segmented-ictxt",
+        "data-size='{{size}}'"
+      ],
+      "context": {
+        "variant": "ictxt",
+        "size": "md",
+        "ariaLabel": "Assist mode",
+        "groupName": "assist-mode-{{size}}",
+        "buttonLayout": "ictxt",
+        "buttonClass": "diet-btn-{{buttonLayout}}",
+        "buttonSize": "{{size}}",
+        "buttonVariant": "neutral",
+        "segments": [
+          {
+            "value": "manual",
+            "label": "Manual",
+            "icon": "hand.tap",
+            "checked": true
+          },
+          {
+            "value": "copilot",
+            "label": "Copilot",
+            "icon": "sparkles"
+          }
+        ]
+      }
+    },
+    {
+      "id": "segmented-ic",
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "spec": [
+        "diet-segmented-ic",
+        "data-size='{{size}}'"
+      ],
+      "context": {
+        "variant": "ic",
+        "size": "md",
+        "ariaLabel": "Theme selection",
+        "groupName": "theme-{{size}}",
+        "buttonLayout": "ic",
+        "buttonClass": "diet-btn-{{buttonLayout}}",
+        "buttonSize": "{{size}}",
+        "buttonVariant": "neutral",
+        "segments": [
+          {
+            "value": "light",
+            "icon": "sun.max",
+            "srLabel": "Light",
+            "checked": true
+          },
+          {
+            "value": "dark",
+            "icon": "moon.fill",
+            "srLabel": "Dark"
+          }
+        ]
+      }
+    },
+    {
+      "id": "segmented-txt",
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "spec": [
+        "diet-segmented-txt",
+        "data-size='{{size}}'"
+      ],
+      "context": {
+        "variant": "txt",
+        "size": "md",
+        "ariaLabel": "Alignment",
+        "groupName": "alignment-{{size}}",
+        "buttonLayout": "txt",
+        "buttonClass": "diet-btn-{{buttonLayout}}",
+        "buttonSize": "{{size}}",
+        "buttonVariant": "neutral",
+        "segments": [
+          {
+            "value": "left",
+            "label": "Left",
+            "checked": true
+          },
+          {
+            "value": "center",
+            "label": "Center"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
+        ]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "description": "Icon + text segmented control",
+      "code": "<div class=\"diet-segmented-ictxt\" role=\"radiogroup\" data-size=\"md\" aria-label=\"Assist mode\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"assist-mode\" value=\"manual\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ictxt\" data-size=\"sm\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ictxt__icon\" data-icon=\"hand.tap\"></span><span class=\"diet-btn-ictxt__label\">Manual</span></button></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"assist-mode\" value=\"copilot\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ictxt\" data-size=\"sm\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ictxt__icon\" data-icon=\"sparkles\"></span><span class=\"diet-btn-ictxt__label\">Copilot</span></button></label></div>"
+    },
+    {
+      "description": "Icon-only segmented control",
+      "code": "<div class=\"diet-segmented-ic\" role=\"radiogroup\" data-size=\"sm\" aria-label=\"Theme\"><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"theme\" value=\"light\" checked><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"sun\"></span></button><span class=\"diet-segment__sr\">Light</span></label><label class=\"diet-segment\"><input class=\"diet-segment__input\" type=\"radio\" name=\"theme\" value=\"dark\"><span class=\"diet-segment__surface\"></span><button class=\"diet-btn-ic\" data-size=\"xs\" data-variant=\"neutral\" tabindex=\"-1\" type=\"button\"><span class=\"diet-btn-ic__icon\" data-icon=\"moon\"></span></button><span class=\"diet-segment__sr\">Dark</span></label></div>"
+    }
+  ]
+}

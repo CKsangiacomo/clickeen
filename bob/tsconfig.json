@@ -1,0 +1,34 @@
+{
+  "extends": "../tsconfig.app-base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@bob/*": [
+        "./*"
+      ],
+      "@venice/*": [
+        "../venice/*"
+      ],
+      "@venice/lib/*": [
+        "../venice/lib/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "incremental": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

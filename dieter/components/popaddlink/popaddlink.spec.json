@@ -1,0 +1,30 @@
+{
+  "component": "popaddlink",
+  "description": "Popover sheet for adding a single URL with validation.",
+  "syntax": "<div class='diet-popaddlink diet-popover'>…</div>",
+  "attributes": {
+    "href": {
+      "type": "string",
+      "required": false,
+      "description": "Initial URL value shown in the field."
+    }
+  },
+  "defaults": [
+    {
+      "id": "popaddlink-default",
+      "sizes": ["default"],
+      "spec": ["diet-popaddlink"],
+      "context": {
+        "size": "default",
+        "href": ""
+      },
+      "sizeContext": {
+        "default": {
+          "headerLabelClass": "label-xs",
+          "bodyClass": "body-s",
+          "fieldLabelClass": "label-s"
+        }
+      }
+    }
+  ]
+}

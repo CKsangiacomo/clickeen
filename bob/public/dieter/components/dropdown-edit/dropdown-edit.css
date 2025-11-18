@@ -1,0 +1,75 @@
+.diet-dropdown-edit {
+  position: relative;
+  display: inline-flex;
+  inline-size: 100%;
+  max-inline-size: 320px;
+}
+
+.diet-dropdown-edit__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--control-inline-gap-md);
+  inline-size: 100%;
+  min-block-size: var(--control-size-md);
+  padding-inline: var(--control-padding-inline);
+  padding-block: 0;
+  border-radius: var(--control-radius-md);
+  border: 0;
+  background: var(--role-surface-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--duration-base, 160ms) ease;
+}
+
+.diet-dropdown-edit[data-size='lg'] .diet-dropdown-edit__trigger {
+  min-block-size: var(--control-size-lg);
+  border-radius: var(--control-radius-lg);
+}
+
+.diet-dropdown-edit__trigger:hover {
+  background: color-mix(in oklab, var(--role-surface-bg), var(--color-text) 6%);
+}
+
+.diet-dropdown-edit__label {
+  flex: 0 0 auto;
+  min-inline-size: 0;
+}
+
+.diet-dropdown-edit__value {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diet-dropdown-edit__value.is-placeholder {
+  color: color-mix(in oklab, var(--color-text), transparent 45%);
+}
+
+.diet-dropdown-edit__icon {
+  flex: none;
+  inline-size: var(--icon-size-16);
+  block-size: var(--icon-size-16);
+  color: color-mix(in oklab, var(--color-text), transparent 50%);
+}
+
+.diet-dropdown-edit .diet-popover {
+  display: none;
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: calc(100% + var(--space-2));
+  z-index: 20;
+  inline-size: 100%;
+}
+
+.diet-dropdown-edit[data-state='open'] .diet-popover {
+  display: block;
+}
+
+.diet-dropdown-edit__content {
+  color: var(--color-text);
+}

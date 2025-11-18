@@ -1,0 +1,6 @@
+<div class="diet-textfield" data-size="{{size}}">
+  <label class="diet-textfield__control">
+    <span class="diet-textfield__display-label label{{#unless label}} is-hidden{{/unless}}">{{#if label}}{{label}}:{{/if}}</span>
+    <input id="{{id}}" type="text" class="diet-textfield__field body" aria-label="{{label}}" value="{{value}}" placeholder="{{placeholder}}"{{#if path}} data-path="{{path}}"{{/if}} />
+  </label>
+</div>

@@ -1,0 +1,11 @@
+packages:
+  - admin
+  - bob
+  - dieter
+  - paris
+  - venice
+  - pre-ship
+  - tooling/sf-symbols
+
+onlyBuiltDependencies:
+  - esbuild

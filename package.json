@@ -1,0 +1,39 @@
+{
+  "name": "clickeen",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.15.1",
+  "workspaces": [
+    "admin",
+    "bob",
+    "dieter",
+    "paris",
+    "venice",
+    "pre-ship"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "e2e": "turbo run e2e",
+    "verify:pre-ship": "pnpm --filter @clickeen/pre-ship verify",
+    "dev:bob": "pnpm --filter @clickeen/bob dev",
+    "dev:admin": "pnpm --filter @clickeen/devstudio dev",
+    "dev:paris": "pnpm --filter @clickeen/paris dev",
+    "dev:venice": "pnpm --filter @clickeen/venice dev",
+    "build:bob": "pnpm --filter @clickeen/bob build",
+    "build:admin": "pnpm --filter @clickeen/devstudio build",
+    "build:dieter": "pnpm --filter @ck/dieter build"
+  },
+  "devDependencies": {
+    "eslint": "^9.5.0",
+    "prettier": "^3.3.2",
+    "turbo": "^2.0.6",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

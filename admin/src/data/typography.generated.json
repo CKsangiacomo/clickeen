@@ -1,0 +1,120 @@
+{
+  "Headings": [
+    {
+      "className": "heading-1",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "heading-2",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "heading-3",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "heading-4",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "heading-5",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "heading-6",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    }
+  ],
+  "Body": [
+    {
+      "className": "body-xxs",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-xs",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-s",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-m",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-l",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-xl",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-xxl",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-small",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-large",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    }
+  ],
+  "Labels & Captions": [
+    {
+      "className": "label-xxs",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-xs",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-s",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-m",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-l",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-xl",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-xxl",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "label-small",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "caption",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "caption-small",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "overline",
+      "sample": "OVERLINE"
+    }
+  ]
+}

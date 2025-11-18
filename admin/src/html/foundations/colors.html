@@ -1,0 +1,992 @@
+<div class="dieter-preview colors-page">
+  <style>
+    /* local-only helpers for the color chips */
+    .chip { inline-size: 72px; block-size: 56px; border-radius: var(--radius-4, 0.5rem); }
+    .token-label { font: 600 var(--fs-11, 0.6875rem)/1.2 var(--font-ui); color: color-mix(in oklab, var(--color-text), transparent 30%); }
+    /* neutral contrast: light uses black mix, dark uses white mix */
+    .nc { background: color-mix(in oklab, black 25%, var(--neutral-base)); }
+    :root[data-theme="dark"] .nc { background: color-mix(in oklab, white 25%, var(--neutral-base)); }
+
+    /* Page-scoped overrides — fluid rows that never wrap blocks */
+    .colors-page .row {
+      display: flex;
+      flex-wrap: nowrap;                 /* never wrap blocks */
+      align-items: center;
+      column-gap: clamp(4px, 2vw, 32px); /* outer gutter shrinks first */
+      row-gap: 0;
+      width: 100%;
+      overflow-x: auto;                  /* fallback if still too narrow */
+      -webkit-overflow-scrolling: touch;
+    }
+    .colors-page .row-header { flex: 0 0 clamp(80px, 12vw, 160px); white-space: nowrap; }
+    /* Tight label+chip pair; allow overall pair to shrink */
+    .colors-page .specdpreview { display: inline-flex; align-items: center; gap: clamp(4px, 1vw, 12px); flex: 0 1 auto; min-width: 0; white-space: nowrap; }
+    .colors-page .preview-specs { width: clamp(56px, 14vw, 160px); text-align: right; overflow: hidden; text-overflow: ellipsis; }
+    .colors-page .componentpreview { justify-content: flex-start; }
+
+    /* Theme-driven visibility for derived steps */
+    :root[data-theme="dark"] .colors-page .step-light { display: none !important; }
+    :root:not([data-theme="dark"]) .colors-page .step-dark { display: none !important; }
+  </style>
+
+  <!-- System -->
+  <h3>System</h3>
+
+  <!-- Red -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Red</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-red</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-red);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">red-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-red-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">red.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">red.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">red.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">red.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">red.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), white 90%);"></div></div>
+    </div>
+    <!-- Dark steps (visible only in dark theme) -->
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">red.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">red.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">red.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">red.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">red.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-red), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Orange -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Orange</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-orange</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-orange);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">orange-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-orange-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">orange.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">orange.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">orange.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">orange.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">orange.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">orange.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">orange.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">orange.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">orange.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">orange.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-orange), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Yellow -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Yellow</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-yellow</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-yellow);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">yellow-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-yellow-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">yellow.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">yellow.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">yellow.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">yellow.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">yellow.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">yellow.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">yellow.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">yellow.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">yellow.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">yellow.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-yellow), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Green -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Green</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-green</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-green);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">green-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-green-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">green.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">green.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">green.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">green.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">green.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">green.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">green.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">green.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">green.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">green.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-green), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Mint -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Mint</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-mint</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-mint);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">mint-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-mint-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">mint.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">mint.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">mint.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">mint.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">mint.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">mint.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">mint.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">mint.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">mint.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">mint.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-mint), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Teal -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Teal</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-teal</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-teal);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">teal-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-teal-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">teal.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">teal.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">teal.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">teal.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">teal.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">teal.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">teal.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">teal.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">teal.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">teal.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-teal), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Cyan -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Cyan</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-cyan</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-cyan);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">cyan-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-cyan-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">cyan.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">cyan.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">cyan.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">cyan.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">cyan.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">cyan.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">cyan.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">cyan.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">cyan.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">cyan.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-cyan), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Blue -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Blue</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-blue</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-blue);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">blue-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-blue-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">blue.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">blue.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">blue.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">blue.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">blue.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">blue.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">blue.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">blue.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">blue.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">blue.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-blue), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Indigo -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Indigo</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-indigo</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-indigo);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">indigo-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-indigo-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">indigo.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">indigo.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">indigo.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">indigo.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">indigo.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">indigo.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">indigo.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">indigo.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">indigo.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">indigo.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-indigo), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Purple -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Purple</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-purple</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-purple);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">purple-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-purple-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">purple.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">purple.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">purple.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">purple.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">purple.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">purple.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">purple.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">purple.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">purple.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">purple.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-purple), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Pink -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Pink</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-pink</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-pink);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">pink-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-pink-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">pink.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">pink.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">pink.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">pink.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">pink.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">pink.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">pink.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">pink.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">pink.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">pink.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Brown -->
+  <div class="row" data-cols="2" data-kind="system">
+    <div class="row-header">Brown</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-brown</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-brown);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">brown-contrast</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-brown-contrast);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">brown.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">brown.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">brown.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">brown.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">brown.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">brown.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">brown.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">brown.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">brown.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">brown.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-brown), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Neutrals -->
+  <h3>Neutrals</h3>
+
+  <!-- Gray -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Gray 2 -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray 2</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray-2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray-2);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-2-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray-2);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-2.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-2.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-2.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-2.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-2.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-2.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-2.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-2.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-2.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-2.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-2), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Gray 3 -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray 3</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray-3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray-3);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-3-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray-3);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-3.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-3.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-3.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-3.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-3.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-3.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-3.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-3.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-3.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-3.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-3), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Gray 4 -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray 4</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray-4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray-4);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-4-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray-4);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-4.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-4.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-4.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-4.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-4.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-4.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-4.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-4.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-4.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-4.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-4), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Gray 5 -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray 5</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray-5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray-5);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-5-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray-5);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-5.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-5.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-5.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-5.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-5.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-5.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-5.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-5.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-5.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-5.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-5), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+
+  <!-- Gray 6 -->
+  <div class="row" data-cols="2">
+    <div class="row-header">Gray 6</div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">--color-system-gray-6</span></div>
+      <div class="componentpreview"><div class="chip" style="background:var(--color-system-gray-6);"></div></div>
+    </div>
+    <div class="specdpreview">
+      <div class="preview-specs"><span class="token-label">gray-6-contrast</span></div>
+      <div class="componentpreview"><div class="chip nc" style="--neutral-base: var(--color-system-gray-6);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-6.1</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), white 20%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-6.2</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), white 40%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-6.3</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), white 60%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-6.4</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), white 80%);"></div></div>
+    </div>
+    <div class="specdpreview step-light">
+      <div class="preview-specs"><span class="token-label">gray-6.5</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), white 90%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-6.1D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 10%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-6.2D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 27%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-6.3D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 44%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-6.4D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 58%);"></div></div>
+    </div>
+    <div class="specdpreview step-dark">
+      <div class="preview-specs"><span class="token-label">gray-6.5D</span></div>
+      <div class="componentpreview"><div class="chip" style="background:color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 76%);"></div></div>
+    </div>
+  </div>
+</div>

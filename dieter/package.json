@@ -1,0 +1,16 @@
+{
+  "name": "@ck/dieter",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "tldts": "^6.1.86"
+  },
+  "main": "index.html",
+  "scripts": {
+    "build": "node ../scripts/build-dieter.js",
+    "copy": "node ../scripts/copy-dieter-assets.js",
+    "prepare": "pnpm run build"
+  }
+}
+

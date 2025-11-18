@@ -1,0 +1,26 @@
+{
+  "component": "popover",
+  "syntax": "<div class='diet-popover'>…</div>",
+  "attributes": {
+    "headerLabel": { "optional": true },
+    "headerIcon": { "optional": true }
+  },
+  "defaults": [
+    {
+      "id": "popover",
+      "sizes": ["default"],
+      "spec": ["diet-popover"],
+      "context": {
+        "size": "default",
+        "headerLabel": "Delete",
+        "headerIcon": "trash"
+      },
+      "sizeContext": {
+        "default": {
+          "headerLabelClass": "label-s",
+          "bodyClass": "body-s"
+        }
+      }
+    }
+  ]
+}

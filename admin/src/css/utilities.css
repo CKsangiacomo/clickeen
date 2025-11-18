@@ -1,0 +1,78 @@
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.inline-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.grid-auto {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.grid-tight {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.anchor-list {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* Remove default gray background on inline code elements in some browsers */
+code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+pre {
+  background: color-mix(in oklab, var(--role-surface-bg), var(--color-text) 8%);
+  border-radius: var(--radius-4, 0.5rem);
+  padding: var(--space-4);
+  overflow-x: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

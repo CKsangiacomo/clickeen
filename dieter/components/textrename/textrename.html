@@ -1,0 +1,16 @@
+<div class="diet-textrename" data-size="{{size}}" data-state="view">
+  <div class="diet-textrename__view" role="button" aria-label="{{ariaLabel}}">
+    <span class="diet-textrename__label {{headingClass}}">{{value}}</span>
+  </div>
+  <div class="diet-textrename__edit">
+    <input
+      class="diet-textrename__input {{headingClass}}"
+      type="text"
+      id="{{id}}"
+      value="{{value}}"
+      placeholder="{{placeholder}}"
+      aria-label="{{ariaLabel}}"
+      {{#if path}}data-path="{{path}}"{{/if}}
+    />
+  </div>
+</div>

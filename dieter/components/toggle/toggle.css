@@ -1,0 +1,127 @@
+/* Dieter Toggle — token-first CSS-only switch (checkbox-based)
+   Contract:
+   - Root: .diet-toggle (inline-flex container)
+   - Size: data-size="sm|md|lg" → 20/24/28px rails via control tokens
+   - Label: .diet-toggle__label (leading text, may be visually hidden by .sr-only)
+   - Input: .diet-toggle__input.sr-only[type=checkbox][role=switch]
+   - Switch (visible control): .diet-toggle__switch[for]
+     • Knob: .diet-toggle__knob
+   - Alignment (component-level helpers):
+     • .diet-toggle--block → inline-size: 100%
+     • .diet-toggle--split → justify-content: space-between (label left, switch right)
+   Behaviour:
+   - :checked updates track color and translates knob; focus ring forwarded to visual switch.
+*/
+
+.diet-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--control-inline-gap-sm, 0.375rem);
+  justify-content: space-between;
+  inline-size: 100%;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--control-padding-inline);
+  box-sizing: border-box;
+  letter-spacing: var(--control-letter-spacing, 0);
+}
+
+/* Alignment helpers (component-scoped) */
+.diet-toggle--block {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.diet-toggle--split { justify-content: space-between; }
+
+/* Size mapping → derive rail height and local gaps */
+.diet-toggle[data-size="sm"] {
+  --tog-h: var(--control-size-sm, 1.25rem);
+  --tog-gap: var(--control-inline-gap-xs, 0.25rem);
+  min-block-size: var(--control-size-sm, 1.25rem);
+}
+.diet-toggle[data-size="md"] {
+  --tog-h: var(--control-size-md, 1.5rem);
+  --tog-gap: var(--control-inline-gap-sm, 0.375rem);
+  min-block-size: var(--control-size-md, 1.5rem);
+}
+.diet-toggle[data-size="lg"] {
+  --tog-h: var(--control-size-lg, 1.75rem);
+  --tog-gap: var(--control-inline-gap-sm, 0.375rem);
+  min-block-size: var(--control-size-lg, 1.75rem);
+}
+.diet-toggle { gap: var(--tog-gap, var(--control-inline-gap-sm, 0.375rem)); }
+
+/* Derived geometry (track width ~1.75× height; knob inset via pad) */
+.diet-toggle {
+  --tog-w: calc(var(--tog-h) * 1.75);
+  --tog-pad: 2px;
+  --knob-d: calc(var(--tog-h) - (var(--tog-pad) * 2));
+}
+
+/* Visible switch */
+.diet-toggle__switch {
+  inline-size: var(--tog-w);
+  block-size: var(--tog-h);
+  display: inline-block;
+  position: relative;
+  border-radius: calc(var(--tog-h) / 2);
+  background: var(--color-system-gray-5, #e5e5ea);
+  transition: background-color var(--duration-base, 160ms) ease;
+  cursor: pointer;
+  flex: 0 0 var(--tog-w);
+}
+
+/* Label typography comes from .label utility class in markup; color is muted when off */
+.diet-toggle__label {
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
+}
+
+.diet-toggle--block .diet-toggle__label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.diet-toggle--block .diet-toggle__switch {
+  margin-inline-start: var(--tog-gap, var(--control-inline-gap-sm, 0.375rem));
+}
+
+/* Knob */
+.diet-toggle__knob {
+  position: absolute;
+  inset-block-start: var(--tog-pad);
+  inset-inline-start: var(--tog-pad);
+  inline-size: var(--knob-d);
+  block-size: var(--knob-d);
+  border-radius: 999px;
+  background: var(--color-system-white, #ffffff);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 3px 1px rgba(0,0,0,0.06);
+  transition: transform var(--duration-base, 160ms) ease;
+  will-change: transform;
+}
+
+/* On state */
+.diet-toggle__input:checked + .diet-toggle__switch {
+  background: var(--color-system-green, #34c759);
+}
+.diet-toggle__input:checked + .diet-toggle__switch .diet-toggle__knob {
+  transform: translateX(calc(var(--tog-w) - var(--knob-d) - (var(--tog-pad) * 2)));
+}
+
+/* When active, make the label system black */
+.diet-toggle:has(.diet-toggle__input:checked) .diet-toggle__label {
+  color: var(--color-system-black);
+}
+
+/* Focus visuals removed per design */
+
+/* Disabled */
+.diet-toggle__input:disabled + .diet-toggle__switch {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+.diet-toggle__input:disabled + .diet-toggle__switch .diet-toggle__knob { box-shadow: none; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .diet-toggle__switch, .diet-toggle__knob { transition: none; }
+}

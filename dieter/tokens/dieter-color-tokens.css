@@ -1,0 +1,164 @@
+/* Dieter Color Tokens — AI READ THIS FIRST
+ * 1. Never invent colors. Always use these tokens or mix with the state helpers.
+ * 2. Surfaces & text: choose from the neutral ladder or tone ramps below; do not rely on browser defaults.
+ * 3. Accents/status colors: var(--color-system-{red|orange|…|brown}), add depth via -contrast or -1…-5 ramps.
+ * 4. Neutral UI chrome: var(--color-system-gray[-n]) and matching -step1…-step5 tones.
+ * 5. Hover/pressed/muted/inactive: color-mix(in oklab, var(--your-token),
+ *      var(--state-{hover|pressed|muted|inactive}-target) var(--state-*-mix)).
+ * 6. Do not edit anything below 
+
+/* Dieter Color Tokens */
+:root {
+  /* Global state mix controls */
+  --state-darken-target: black;
+  --state-lighten-target: white;
+  --state-hover-mix: 12%;       /* Use with --state-darken-target in light mode */
+  --state-pressed-mix: 24%;     /* Use with --state-darken-target in light mode */
+  --state-muted-mix: 40%;       /* Use with --state-lighten-target in light mode */
+  --state-inactive-mix: 60%;    /* Use with --state-lighten-target in light mode */
+
+  /* System palette (light) */
+  --color-system-red:    #ff3b30;
+  --color-system-red-contrast:    #bf4424;
+  --color-system-red-1: color-mix(in oklab, var(--color-system-red), white 20%);
+  --color-system-red-2: color-mix(in oklab, var(--color-system-red), white 40%);
+  --color-system-red-3: color-mix(in oklab, var(--color-system-red), white 60%);
+  --color-system-red-4: color-mix(in oklab, var(--color-system-red), white 80%);
+  --color-system-red-5: color-mix(in oklab, var(--color-system-red), white 90%);
+
+  --color-system-orange: #ff9500;
+  --color-system-orange-contrast: #bf7000;
+  --color-system-orange-1: color-mix(in oklab, var(--color-system-orange), white 20%);
+  --color-system-orange-2: color-mix(in oklab, var(--color-system-orange), white 40%);
+  --color-system-orange-3: color-mix(in oklab, var(--color-system-orange), white 60%);
+  --color-system-orange-4: color-mix(in oklab, var(--color-system-orange), white 80%);
+  --color-system-orange-5: color-mix(in oklab, var(--color-system-orange), white 90%);
+
+  --color-system-yellow: #ffcc00;
+  --color-system-yellow-contrast: #bf9900;
+  --color-system-yellow-1: color-mix(in oklab, var(--color-system-yellow), white 20%);
+  --color-system-yellow-2: color-mix(in oklab, var(--color-system-yellow), white 40%);
+  --color-system-yellow-3: color-mix(in oklab, var(--color-system-yellow), white 60%);
+  --color-system-yellow-4: color-mix(in oklab, var(--color-system-yellow), white 80%);
+  --color-system-yellow-5: color-mix(in oklab, var(--color-system-yellow), white 90%);
+
+  --color-system-green:  #34c759;
+  --color-system-green-contrast:  #279543;
+  --color-system-green-1: color-mix(in oklab, var(--color-system-green), white 20%);
+  --color-system-green-2: color-mix(in oklab, var(--color-system-green), white 40%);
+  --color-system-green-3: color-mix(in oklab, var(--color-system-green), white 60%);
+  --color-system-green-4: color-mix(in oklab, var(--color-system-green), white 80%);
+  --color-system-green-5: color-mix(in oklab, var(--color-system-green), white 90%);
+
+  --color-system-mint:   #00c7be;
+  --color-system-mint-contrast:   #00958f;
+  --color-system-mint-1: color-mix(in oklab, var(--color-system-mint), white 20%);
+  --color-system-mint-2: color-mix(in oklab, var(--color-system-mint), white 40%);
+  --color-system-mint-3: color-mix(in oklab, var(--color-system-mint), white 60%);
+  --color-system-mint-4: color-mix(in oklab, var(--color-system-mint), white 80%);
+  --color-system-mint-5: color-mix(in oklab, var(--color-system-mint), white 90%);
+
+  --color-system-teal:   #30b0c7;
+  --color-system-teal-contrast:   #248495;
+  --color-system-teal-1: color-mix(in oklab, var(--color-system-teal), white 20%);
+  --color-system-teal-2: color-mix(in oklab, var(--color-system-teal), white 40%);
+  --color-system-teal-3: color-mix(in oklab, var(--color-system-teal), white 60%);
+  --color-system-teal-4: color-mix(in oklab, var(--color-system-teal), white 80%);
+  --color-system-teal-5: color-mix(in oklab, var(--color-system-teal), white 90%);
+
+  --color-system-cyan:   #32ade6;
+  --color-system-cyan-contrast:   #2682ad;
+  --color-system-cyan-1: color-mix(in oklab, var(--color-system-cyan), white 20%);
+  --color-system-cyan-2: color-mix(in oklab, var(--color-system-cyan), white 40%);
+  --color-system-cyan-3: color-mix(in oklab, var(--color-system-cyan), white 60%);
+  --color-system-cyan-4: color-mix(in oklab, var(--color-system-cyan), white 80%);
+  --color-system-cyan-5: color-mix(in oklab, var(--color-system-cyan), white 90%);
+
+  --color-system-blue:   #007aff;
+  --color-system-blue-contrast:   #005cbf;
+  --color-system-blue-1: color-mix(in oklab, var(--color-system-blue), white 20%);
+  --color-system-blue-2: color-mix(in oklab, var(--color-system-blue), white 40%);
+  --color-system-blue-3: color-mix(in oklab, var(--color-system-blue), white 60%);
+  --color-system-blue-4: color-mix(in oklab, var(--color-system-blue), white 80%);
+  --color-system-blue-5: color-mix(in oklab, var(--color-system-blue), white 90%);
+
+  --color-system-indigo: #5856d6;
+  --color-system-indigo-contrast: #4241a1;
+  --color-system-indigo-1: color-mix(in oklab, var(--color-system-indigo), white 20%);
+  --color-system-indigo-2: color-mix(in oklab, var(--color-system-indigo), white 40%);
+  --color-system-indigo-3: color-mix(in oklab, var(--color-system-indigo), white 60%);
+  --color-system-indigo-4: color-mix(in oklab, var(--color-system-indigo), white 80%);
+  --color-system-indigo-5: color-mix(in oklab, var(--color-system-indigo), white 90%);
+
+  --color-system-purple: #af52de;
+  --color-system-purple-contrast: #833ea7;
+  --color-system-purple-1: color-mix(in oklab, var(--color-system-purple), white 20%);
+  --color-system-purple-2: color-mix(in oklab, var(--color-system-purple), white 40%);
+  --color-system-purple-3: color-mix(in oklab, var(--color-system-purple), white 60%);
+  --color-system-purple-4: color-mix(in oklab, var(--color-system-purple), white 80%);
+  --color-system-purple-5: color-mix(in oklab, var(--color-system-purple), white 90%);
+
+  --color-system-pink:   #ff2d55;
+  --color-system-pink-contrast:   #bf2240;
+  --color-system-pink-1: color-mix(in oklab, var(--color-system-pink), white 20%);
+  --color-system-pink-2: color-mix(in oklab, var(--color-system-pink), white 40%);
+  --color-system-pink-3: color-mix(in oklab, var(--color-system-pink), white 60%);
+  --color-system-pink-4: color-mix(in oklab, var(--color-system-pink), white 80%);
+  --color-system-pink-5: color-mix(in oklab, var(--color-system-pink), white 90%);
+
+  --color-system-brown:  #a2845e;
+  --color-system-brown-contrast:  #7a6347;
+  --color-system-brown-1: color-mix(in oklab, var(--color-system-brown), white 20%);
+  --color-system-brown-2: color-mix(in oklab, var(--color-system-brown), white 40%);
+  --color-system-brown-3: color-mix(in oklab, var(--color-system-brown), white 60%);
+  --color-system-brown-4: color-mix(in oklab, var(--color-system-brown), white 80%);
+  --color-system-brown-5: color-mix(in oklab, var(--color-system-brown), white 90%);
+
+  /* Neutral ladder (light) */
+  --color-system-white: #ffffff;
+  --color-system-black: #212121;
+  --color-system-gray: #8e8e93;
+  --color-system-gray-contrast: #636366;
+  --color-system-gray-2: #aeaeb2;
+  --color-system-gray-3: #c7c7cc;
+  --color-system-gray-4: #d1d1d6;
+  --color-system-gray-5: #e5e5ea;
+  --color-system-gray-6: #f2f2f7;
+
+  --color-system-gray-step1: color-mix(in oklab, var(--color-system-gray), white 20%);
+  --color-system-gray-step2: color-mix(in oklab, var(--color-system-gray), white 40%);
+  --color-system-gray-step3: color-mix(in oklab, var(--color-system-gray), white 60%);
+  --color-system-gray-step4: color-mix(in oklab, var(--color-system-gray), white 80%);
+  --color-system-gray-step5: color-mix(in oklab, var(--color-system-gray), white 90%);
+
+  --color-system-gray-2-step1: color-mix(in oklab, var(--color-system-gray-2), white 20%);
+  --color-system-gray-2-step2: color-mix(in oklab, var(--color-system-gray-2), white 40%);
+  --color-system-gray-2-step3: color-mix(in oklab, var(--color-system-gray-2), white 60%);
+  --color-system-gray-2-step4: color-mix(in oklab, var(--color-system-gray-2), white 80%);
+  --color-system-gray-2-step5: color-mix(in oklab, var(--color-system-gray-2), white 90%);
+
+  --color-system-gray-3-step1: color-mix(in oklab, var(--color-system-gray-3), white 20%);
+  --color-system-gray-3-step2: color-mix(in oklab, var(--color-system-gray-3), white 40%);
+  --color-system-gray-3-step3: color-mix(in oklab, var(--color-system-gray-3), white 60%);
+  --color-system-gray-3-step4: color-mix(in oklab, var(--color-system-gray-3), white 80%);
+  --color-system-gray-3-step5: color-mix(in oklab, var(--color-system-gray-3), white 90%);
+
+  --color-system-gray-4-step1: color-mix(in oklab, var(--color-system-gray-4), white 20%);
+  --color-system-gray-4-step2: color-mix(in oklab, var(--color-system-gray-4), white 40%);
+  --color-system-gray-4-step3: color-mix(in oklab, var(--color-system-gray-4), white 60%);
+  --color-system-gray-4-step4: color-mix(in oklab, var(--color-system-gray-4), white 80%);
+  --color-system-gray-4-step5: color-mix(in oklab, var(--color-system-gray-4), white 90%);
+
+  --color-system-gray-5-step1: color-mix(in oklab, var(--color-system-gray-5), white 20%);
+  --color-system-gray-5-step2: color-mix(in oklab, var(--color-system-gray-5), white 40%);
+  --color-system-gray-5-step3: color-mix(in oklab, var(--color-system-gray-5), white 60%);
+  --color-system-gray-5-step4: color-mix(in oklab, var(--color-system-gray-5), white 80%);
+  --color-system-gray-5-step5: color-mix(in oklab, var(--color-system-gray-5), white 90%);
+
+  --color-system-gray-6-step1: color-mix(in oklab, var(--color-system-gray-6), white 20%);
+  --color-system-gray-6-step2: color-mix(in oklab, var(--color-system-gray-6), white 40%);
+  --color-system-gray-6-step3: color-mix(in oklab, var(--color-system-gray-6), white 60%);
+  --color-system-gray-6-step4: color-mix(in oklab, var(--color-system-gray-6), white 80%);
+  --color-system-gray-6-step5: color-mix(in oklab, var(--color-system-gray-6), white 90%);
+
+}

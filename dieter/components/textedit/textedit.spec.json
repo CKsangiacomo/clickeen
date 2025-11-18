@@ -1,0 +1,69 @@
+{
+  "component": "textedit",
+  "description": "Prototype rich text editor with improved link workflow",
+  "syntax": "<tooldrawer-field type='textedit' label='{{LABEL}}' size='md' path='{{PATH}}' placeholder='Enter text...' />",
+  "attributes": {
+    "type": {
+      "value": "textedit",
+      "required": true,
+      "description": "Component type identifier"
+    },
+    "label": {
+      "type": "string",
+      "required": true,
+      "description": "Title shown in the editor popover header",
+      "example": "Heading"
+    },
+    "size": {
+      "type": "enum",
+      "values": ["md", "lg"],
+      "default": "md",
+      "required": false,
+      "description": "Editor size - md (24px height) or lg (32px height)"
+    },
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Data path in instanceData for binding (e.g., 'heading', 'description')"
+    },
+    "placeholder": {
+      "type": "string",
+      "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      "required": false,
+      "description": "Default text content shown in preview and editor"
+    },
+    "show-if": {
+      "type": "string",
+      "required": false,
+      "description": "Path to toggle/dropdown that controls visibility of this field. Field only shows when toggle is true or dropdown matches show-when value."
+    },
+    "show-when": {
+      "type": "string",
+      "required": false,
+      "description": "For dropdowns only: Value that dropdown must equal to show this field. Requires show-if attribute."
+    }
+  },
+  "features": {
+    "richTextFormatting": ["Bold", "Italic", "Underline", "Strikethrough"],
+    "linkPanel": "Add hyperlinks with URL validation, new tab option, and nofollow attribute",
+    "aiSuggestions": [
+      "Fix grammar",
+      "Shorten (keep meaning)",
+      "Expand (add detail)",
+      "Simplify reading",
+      "Make professional",
+      "Make friendly",
+      "Make persuasive"
+    ]
+  },
+  "examples": [
+    {
+      "description": "Prototype text editor",
+      "code": "<tooldrawer-field type='textedit' label='Rich text' size='md' path='bodyHtml' placeholder='Describe your offer…' />"
+    }
+  ],
+  "dataBinding": {
+    "automatic": true,
+    "description": "Editor content automatically syncs to instanceData[path] as HTML string with inline formatting"
+  }
+}

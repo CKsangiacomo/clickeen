@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+*.pack
+*.pack.gz
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups & archives
+*.zip
+*.tar
+*.tar.gz
+CurrentlyExecuting/
+BACKUP/
+
+# Font files
+*.otf
+*.ttf
+*.woff
+*.woff2
+
+# Large sources
+tooling/sf-symbols/sources/
+
+# Dependencies cache
+.pnpm-store/
+.npm/
+.yarn/
+
+# Misc
+.cache/
+artifacts/

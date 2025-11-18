@@ -1,0 +1,313 @@
+[
+  {
+    "var": "--fs-11",
+    "rem": 0.6875,
+    "count": 10,
+    "components": [
+      "button",
+      "dropdown",
+      "menuactions",
+      "slider",
+      "tabs",
+      "textedit",
+      "textfield"
+    ],
+    "occurrences": [
+      {
+        "component": "button",
+        "selector": ".diet-btn-ictxt[data-size=\"xs\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "button",
+        "selector": ".diet-btn-txt[data-size=\"xs\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"sm\"] .diet-dropdown__value-label",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"sm\"] .diet-dropdown__value-choice",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "menuactions",
+        "selector": ".diet-btn-menuactions[data-size=\"xs\"]",
+        "file": "menuactions/menuactions.css"
+      },
+      {
+        "component": "slider",
+        "selector": ".diet-slider[data-size=\"sm\"]",
+        "file": "slider/slider.css"
+      },
+      {
+        "component": "tabs",
+        "selector": ".diet-tabs[data-size=\"sm\"] .diet-tab__label",
+        "file": "tabs/tabs.css"
+      },
+      {
+        "component": "textedit",
+        "selector": ".diet-textedit[data-size=\"sm\"] .diet-textedit__previewin",
+        "file": "textedit/textedit.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"sm\"] .diet-textfield__display-label",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"sm\"] .diet-textfield__field",
+        "file": "textfield/textfield.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-12",
+    "rem": 0.75,
+    "count": 12,
+    "components": [
+      "button",
+      "dropdown",
+      "menuactions",
+      "slider",
+      "tabs",
+      "textedit",
+      "textfield",
+      "toggle"
+    ],
+    "occurrences": [
+      {
+        "component": "button",
+        "selector": ".diet-btn-ictxt[data-size=\"sm\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "button",
+        "selector": ".diet-btn-txt[data-size=\"sm\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"md\"] .diet-dropdown__value-label",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"md\"] .diet-dropdown__value-choice",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "menuactions",
+        "selector": ".diet-btn-menuactions[data-size=\"sm\"]",
+        "file": "menuactions/menuactions.css"
+      },
+      {
+        "component": "slider",
+        "selector": ".diet-slider",
+        "file": "slider/slider.css"
+      },
+      {
+        "component": "tabs",
+        "selector": ".diet-tab__label",
+        "file": "tabs/tabs.css"
+      },
+      {
+        "component": "textedit",
+        "selector": ".diet-textedit__previewin",
+        "file": "textedit/textedit.css"
+      },
+      {
+        "component": "textedit",
+        "selector": ".diet-textedit[data-size=\"md\"] .diet-textedit__previewin",
+        "file": "textedit/textedit.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"md\"] .diet-textfield__display-label",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"md\"] .diet-textfield__field",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "toggle",
+        "selector": ".diet-toggle[data-size=\"sm\"] .diet-toggle__label",
+        "file": "toggle/toggle.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-13",
+    "rem": 0.8125,
+    "count": 5,
+    "components": [
+      "button",
+      "menuactions",
+      "slider",
+      "tabs"
+    ],
+    "occurrences": [
+      {
+        "component": "button",
+        "selector": ".diet-btn-ictxt[data-size=\"md\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "button",
+        "selector": ".diet-btn-txt[data-size=\"md\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "menuactions",
+        "selector": ".diet-btn-menuactions[data-size=\"md\"]",
+        "file": "menuactions/menuactions.css"
+      },
+      {
+        "component": "slider",
+        "selector": ".diet-slider[data-size=\"lg\"]",
+        "file": "slider/slider.css"
+      },
+      {
+        "component": "tabs",
+        "selector": ".diet-tabs[data-size=\"lg\"] .diet-tab__label",
+        "file": "tabs/tabs.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-14",
+    "rem": 0.875,
+    "count": 12,
+    "components": [
+      "button",
+      "dropdown",
+      "textedit",
+      "textfield",
+      "toggle"
+    ],
+    "occurrences": [
+      {
+        "component": "button",
+        "selector": ".diet-btn-ictxt[data-size=\"lg\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "button",
+        "selector": ".diet-btn-txt[data-size=\"lg\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown__value-label",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown__value-choice",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"lg\"] .diet-dropdown__value-label",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "dropdown",
+        "selector": ".diet-dropdown[data-size=\"lg\"] .diet-dropdown__value-choice",
+        "file": "dropdown/dropdown.css"
+      },
+      {
+        "component": "textedit",
+        "selector": ".diet-textedit[data-size=\"lg\"] .diet-textedit__previewin",
+        "file": "textedit/textedit.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield__display-label",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield__field",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"lg\"] .diet-textfield__display-label",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "textfield",
+        "selector": ".diet-textfield[data-size=\"lg\"] .diet-textfield__field",
+        "file": "textfield/textfield.css"
+      },
+      {
+        "component": "toggle",
+        "selector": ".diet-toggle[data-size=\"md\"] .diet-toggle__label",
+        "file": "toggle/toggle.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-15",
+    "rem": 0.9375,
+    "count": 3,
+    "components": [
+      "button",
+      "textrename"
+    ],
+    "occurrences": [
+      {
+        "component": "button",
+        "selector": ".diet-btn-ictxt[data-size=\"xl\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "button",
+        "selector": ".diet-btn-txt[data-size=\"xl\"]",
+        "file": "button/button.css"
+      },
+      {
+        "component": "textrename",
+        "selector": ".diet-textrename__input",
+        "file": "textrename/textrename.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-16",
+    "rem": 1,
+    "count": 1,
+    "components": [
+      "toggle"
+    ],
+    "occurrences": [
+      {
+        "component": "toggle",
+        "selector": ".diet-toggle[data-size=\"lg\"] .diet-toggle__label",
+        "file": "toggle/toggle.css"
+      }
+    ]
+  },
+  {
+    "var": "--fs-18",
+    "rem": 1.125,
+    "count": 1,
+    "components": [
+      "textrename"
+    ],
+    "occurrences": [
+      {
+        "component": "textrename",
+        "selector": ".diet-textrename__label",
+        "file": "textrename/textrename.css"
+      }
+    ]
+  }
+]

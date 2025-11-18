@@ -1,0 +1,76 @@
+{
+  "component": "button",
+  "syntax": "<button class='{{CLASSNAME}}' data-size='{{SIZE}}' data-variant='{{VARIANT}}'>…</button>",
+  "attributes": {
+    "className": { "required": true },
+    "size": { "enum": ["xs", "sm", "md", "lg", "xl"], "required": true },
+    "variant": { "enum": ["primary", "secondary", "neutral", "line1", "line2"], "default": "primary" },
+    "ariaLabel": { "optional": true },
+    "label": { "optional": true },
+    "icon": { "optional": true },
+    "iconClass": { "optional": true },
+    "labelClass": { "optional": true },
+    "tabIndex": { "optional": true },
+    "disabled": { "optional": true },
+    "path": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "defaults": [
+    {
+      "id": "button-ictxt",
+      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "variants": ["primary", "secondary", "neutral", "line1", "line2"],
+      "spec": [
+        "diet-btn-ictxt",
+        "data-size='{{size}}'",
+        "data-variant='{{variant}}'"
+      ],
+      "context": {
+        "className": "diet-btn-ictxt",
+        "iconClass": "diet-btn-ictxt__icon",
+        "labelClass": "diet-btn-ictxt__label",
+        "size": "md",
+        "variant": "primary",
+        "label": "Button",
+        "icon": "sparkles"
+      }
+    },
+    {
+      "id": "button-ic",
+      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "variants": ["primary", "secondary", "neutral", "line1"],
+      "spec": [
+        "diet-btn-ic",
+        "data-size='{{size}}'",
+        "data-variant='{{variant}}'"
+      ],
+      "context": {
+        "className": "diet-btn-ic",
+        "iconClass": "diet-btn-ic__icon",
+        "labelClass": "",
+        "size": "md",
+        "variant": "neutral",
+        "icon": "gearshape",
+        "ariaLabel": "Icon button"
+      }
+    },
+    {
+      "id": "button-txt",
+      "sizes": ["xs", "sm", "md", "lg", "xl"],
+      "variants": ["primary", "secondary", "neutral", "line1", "line2"],
+      "spec": [
+        "diet-btn-txt",
+        "data-size='{{size}}'",
+        "data-variant='{{variant}}'"
+      ],
+      "context": {
+        "className": "diet-btn-txt",
+        "iconClass": "",
+        "labelClass": "diet-btn-txt__label",
+        "size": "md",
+        "variant": "primary",
+        "label": "Text button"
+      }
+    }
+  ]
+}

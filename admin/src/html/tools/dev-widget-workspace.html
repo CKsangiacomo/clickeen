@@ -1,0 +1,447 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  Widget Development Workspace (DevStudio Tools Page)
+  ═══════════════════════════════════════════════════════════════════════════
+
+  PURPOSE:
+  This DevStudio page provides a workspace for developing and testing widgets
+  with full integration across all Clickeen services.
+
+  WHAT IT DOES:
+  - Embeds Bob widget builder (service running at localhost:3000)
+  - Instance switcher to test different widget instances
+  - Full integration: Bob + Paris API + Venice SSR preview
+
+  ARCHITECTURE:
+  - Bob service code: /bob directory (Next.js app on port 3000)
+  - Paris service code: /paris directory (API on port 3001)
+  - Venice service code: /venice directory (SSR on port 3002)
+  - This file: DevStudio page that INTEGRATES those services
+
+  AI NOTE:
+  This is NOT Bob itself - it's a DevStudio page that embeds Bob in an iframe.
+  To modify Bob's actual functionality, edit files in /bob directory.
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+<div class="devstudio-page" style="display: flex; flex-direction: column; height: 100%; padding: 0; background: var(--color-system-white);">
+<style>
+  .docs-shell__main.devstudio-page-layout {
+    padding: 32px;
+  }
+
+  .dev-widget-workspace-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4) 0;
+    width: 100%;
+  }
+
+  .dev-widget-workspace-header > * {
+    margin: 0;
+  }
+
+  .dev-widget-workspace-header #instance-dropdown {
+    margin-left: auto;
+    min-inline-size: 240px;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown {
+    position: relative;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--control-inline-gap-md);
+    inline-size: 100%;
+    min-block-size: var(--control-size-lg);
+    padding-inline: var(--control-padding-inline);
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
+    background: var(--role-surface-bg);
+    box-shadow: var(--shadow-floating);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color var(--duration-base), box-shadow var(--duration-base);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__control:hover {
+    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 6%);
+    box-shadow: var(--shadow-floating);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__control:focus-visible {
+    outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
+    outline-offset: 2px;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-0);
+    min-inline-size: 0;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__value-label {
+    color: color-mix(in oklab, var(--color-text), transparent 40%);
+    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__value-choice {
+    font: 600 var(--fs-14)/var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in oklab, var(--color-text), transparent 40%);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__icon svg {
+    inline-size: var(--icon-size-16);
+    block-size: var(--icon-size-16);
+    transition: transform var(--duration-base);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-dropdown__icon svg {
+    transform: rotate(180deg);
+  }
+
+  .dev-widget-workspace-header .diet-popover {
+    display: none;
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: calc(100% + var(--space-2));
+    inline-size: 100%;
+    z-index: 10;
+    padding: var(--space-3);
+    border-radius: var(--radius-4);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: var(--color-system-white);
+    box-shadow: var(--shadow-floating-lg);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-popover {
+    display: block;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__options {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    inline-size: 100%;
+    border-radius: var(--control-radius-md);
+    padding-inline: var(--control-padding-inline);
+    min-block-size: var(--control-size-md);
+    transition: background-color var(--duration-base);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__option svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__option:not(.is-selected) .diet-btn-menuactions__icon {
+    opacity: 0;
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__option:hover {
+    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
+  }
+
+  .dev-widget-workspace-header .diet-dropdown__option.is-selected {
+    background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
+    color: var(--color-system-blue);
+  }
+</style>
+
+<header class="devstudio-page__header" style="flex-shrink: 0;">
+  <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
+  <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
+    <div
+      id="instance-dropdown-control"
+      class="diet-dropdown__control"
+      role="button"
+      tabindex="0"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+    >
+      <span class="diet-dropdown__value" data-label="Instance">
+        <span class="diet-dropdown__value-label label">Instance</span>
+        <span class="diet-dropdown__value-choice body" id="current-instance-label">Loading...</span>
+      </span>
+      <span class="diet-dropdown__icon" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </div>
+    <input id="instance-dropdown-value" type="hidden" value="" />
+    <div class="diet-popover" role="dialog" aria-label="Select widget instance">
+      <div class="diet-popover__body">
+        <div class="diet-dropdown__options" role="listbox" id="instance-dropdown-menu">
+          <!-- Instances will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
+  <iframe
+    id="bob-iframe"
+    src="http://localhost:3000/"
+    style="width: 100%; height: 100%; border: 0; display: block;"
+    title="Bob Widget Builder"
+  ></iframe>
+</div>
+
+<script type="module">
+const PARIS_ORIGIN = 'http://localhost:3001';
+let currentPublicId = null;
+let instances = [];
+let isOpen = false;
+
+const dropdown = document.getElementById('instance-dropdown');
+const control = document.getElementById('instance-dropdown-control');
+const valueField = document.getElementById('instance-dropdown-value');
+const menu = document.getElementById('instance-dropdown-menu');
+const iframe = document.getElementById('bob-iframe');
+const currentLabel = document.getElementById('current-instance-label');
+const widgetCache = new Map();
+
+window.addEventListener('message', (event) => {
+  const data = event.data;
+  if (data && data.type === 'bob:session-ready' && currentPublicId) {
+    console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
+    sendInstanceToIframe(currentPublicId);
+  }
+});
+
+function attachDropdown() {
+  const header = document.querySelector('.devstudio-page__header');
+  if (!header || !dropdown) {
+    requestAnimationFrame(attachDropdown);
+    return;
+  }
+  header.classList.add('dev-widget-workspace-header');
+  dropdown.style.display = 'inline-block';
+  header.appendChild(dropdown);
+}
+attachDropdown();
+
+function normalizeWidgetname(raw) {
+  if (!raw) return null;
+  if (/^[a-z0-9_]+$/.test(raw)) return raw;
+  const parts = String(raw).split(/[^a-z0-9_]+/i).filter(Boolean);
+  if (!parts.length) return null;
+  return parts[parts.length - 1].toLowerCase();
+}
+
+async function ensureWidgetJSON(widgetname) {
+  const slug = normalizeWidgetname(widgetname);
+  if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
+  if (widgetCache.has(slug)) return widgetCache.get(slug);
+  const res = await fetch(`${PARIS_ORIGIN}/api/widgets/${slug}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load widget ${widgetname} (${res.status})`);
+  const json = await res.json();
+  widgetCache.set(slug, json);
+  return json;
+}
+
+async function fetchInstances() {
+  console.log('[DevStudio] Fetching instances from Paris');
+  const res = await fetch(`${PARIS_ORIGIN}/api/instances?_t=${Date.now()}`, { cache: 'no-store' });
+  const data = await res.json();
+  const payload = Array.isArray(data.instances) ? data.instances : [];
+  instances = payload.map((inst) => ({
+    publicId: inst.publicId,
+    widgetname: inst.widgetname,
+    widgetSlug: normalizeWidgetname(inst.widgetname),
+    label: inst.displayName || inst.publicId,
+    config: inst.config || {},
+  }));
+
+  const uniqueWidgetnames = Array.from(new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)));
+  if (instances.length === 0) {
+    throw new Error('[DevStudio] Supabase returned zero instances for dev workspace');
+  }
+
+  await Promise.all(uniqueWidgetnames.map((widgetname) => ensureWidgetJSON(widgetname)));
+
+  currentPublicId = currentPublicId || instances[0].publicId;
+
+  console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
+  updateCurrentLabel();
+  renderInstances();
+  await sendInstanceToIframe(currentPublicId);
+}
+
+function updateCurrentLabel() {
+  const current = instances.find((inst) => inst.publicId === currentPublicId);
+  currentLabel.textContent = current?.label || currentPublicId;
+  valueField.value = currentPublicId;
+}
+
+function renderInstances() {
+  menu.innerHTML = instances
+    .map((inst) => {
+      const selected = inst.publicId === currentPublicId;
+      return `
+        <button
+          type="button"
+          class="diet-btn-menuactions diet-dropdown__option${selected ? ' is-selected' : ''}"
+          role="option"
+          data-public-id="${inst.publicId}"
+          aria-selected="${selected ? 'true' : 'false'}"
+        >
+          <span class="diet-btn-menuactions__label">${inst.label}</span>
+          <span class="diet-btn-menuactions__icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path d="M4 8l3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+      `;
+    })
+    .join('');
+
+  menu.querySelectorAll('[data-public-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const publicId = button.getAttribute('data-public-id');
+      if (!publicId) return;
+      switchInstance(publicId);
+    });
+  });
+}
+
+function switchInstance(publicId) {
+  currentPublicId = publicId;
+  isOpen = false;
+  dropdown.setAttribute('data-state', 'closed');
+  control.setAttribute('aria-expanded', 'false');
+  updateCurrentLabel();
+  renderInstances();
+  sendInstanceToIframe(publicId);
+}
+
+async function sendInstanceToIframe(publicId) {
+  if (!publicId) {
+    throw new Error('[DevStudio] Missing publicId for sendInstanceToIframe');
+  }
+
+  const target = iframe.contentWindow;
+  if (!target) {
+    throw new Error('[DevStudio] Bob iframe contentWindow unavailable');
+  }
+
+  const instance = instances.find((inst) => inst.publicId === publicId);
+  if (!instance) {
+    throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
+  }
+
+  const slug = instance.widgetSlug || normalizeWidgetname(instance.widgetname);
+  if (!slug) {
+    throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
+  }
+
+  let widgetJSON = widgetCache.get(slug);
+  if (!widgetJSON) {
+    widgetJSON = await ensureWidgetJSON(instance.widgetname);
+  }
+  console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
+  target.postMessage(
+    {
+      type: 'devstudio:load-instance',
+      publicId,
+      widgetname: slug,
+      widgetJSON,
+      instanceData: instance.config || {},
+    },
+    '*'
+  );
+}
+
+function setOpen(nextState) {
+  isOpen = nextState;
+  dropdown.setAttribute('data-state', isOpen ? 'open' : 'closed');
+  control.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+control.addEventListener('click', () => {
+  setOpen(!isOpen);
+});
+
+control.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    setOpen(!isOpen);
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    setOpen(true);
+    const firstOption = menu.querySelector('[data-public-id]');
+    firstOption?.focus();
+  } else if (event.key === 'Escape') {
+    setOpen(false);
+  }
+});
+
+menu.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    setOpen(false);
+    control.focus();
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const options = Array.from(menu.querySelectorAll('[data-public-id]'));
+    const currentIndex = options.indexOf(document.activeElement);
+    const nextIndex = event.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+    const next = options[nextIndex];
+    if (next) {
+      event.preventDefault();
+      next.focus();
+    }
+  } else if (event.key === 'Home') {
+    const first = menu.querySelector('[data-public-id]');
+    if (first) {
+      event.preventDefault();
+      first.focus();
+    }
+  } else if (event.key === 'End') {
+    const options = menu.querySelectorAll('[data-public-id]');
+    const last = options[options.length - 1];
+    if (last) {
+      event.preventDefault();
+      last.focus();
+    }
+  } else if (event.key === 'Tab') {
+    setOpen(false);
+  } else if (event.key === 'Enter' || event.key === ' ') {
+    const target = event.target.closest('[data-public-id]');
+    if (target) {
+      event.preventDefault();
+      target.click();
+    }
+  }
+});
+
+document.addEventListener('click', (event) => {
+  if (!dropdown.contains(event.target)) {
+    setOpen(false);
+  }
+});
+
+iframe.addEventListener('load', () => {
+  console.log('[DevStudio] Bob iframe loaded, re-sending instance');
+  sendInstanceToIframe(currentPublicId);
+});
+fetchInstances();
+</script>
+</div>

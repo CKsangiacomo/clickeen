@@ -1,0 +1,55 @@
+.diet-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--icon-size-20, 1.25rem);
+  block-size: var(--icon-size-20, 1.25rem);
+  line-height: 1;
+}
+
+.diet-icon svg,
+.diet-icon img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.diet-icon[data-size="xxs"] {
+  inline-size: var(--icon-size-12, 0.75rem);
+  block-size: var(--icon-size-12, 0.75rem);
+}
+
+.diet-icon[data-size="xs"] {
+  inline-size: var(--icon-size-16, 1rem);
+  block-size: var(--icon-size-16, 1rem);
+}
+
+.diet-icon[data-size="sm"] {
+  inline-size: var(--icon-size-16, 1rem);
+  block-size: var(--icon-size-16, 1rem);
+}
+
+.diet-icon[data-size="md"] {
+  inline-size: var(--icon-size-16, 1rem);
+  block-size: var(--icon-size-16, 1rem);
+}
+
+.diet-icon[data-size="lg"] {
+  inline-size: var(--icon-size-16, 1rem);
+  block-size: var(--icon-size-16, 1rem);
+}
+
+.diet-icon[data-size="xl"] {
+  inline-size: var(--icon-size-20, 1.25rem);
+  block-size: var(--icon-size-20, 1.25rem);
+}
+
+.diet-icon[data-size="2xl"] {
+  inline-size: var(--icon-size-36, 2.25rem);
+  block-size: var(--icon-size-36, 2.25rem);
+}
+
+.diet-icon[data-size="3xl"] {
+  inline-size: var(--icon-size-40, 2.5rem);
+  block-size: var(--icon-size-40, 2.5rem);
+}

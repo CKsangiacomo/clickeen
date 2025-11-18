@@ -1,0 +1,113 @@
+.instance-rename {
+  --rename-height: var(--control-size-xl, 2rem);
+  --rename-radius: var(--control-radius-xl, 0.5rem);
+  --rename-padding-inline: var(--control-padding-inline, var(--space-3, 0.75rem));
+  --rename-hover-bg: color-mix(in oklab, var(--color-text), transparent 88%);
+  --rename-active-bg: color-mix(in oklab, var(--color-text), transparent 75%);
+  --rename-color: var(--color-text);
+  display: inline-grid;
+  grid-template-areas: 'rename';
+  align-items: center;
+  justify-items: start;
+  color: var(--rename-color);
+}
+
+.instance-rename__view,
+.instance-rename__edit {
+  grid-area: rename;
+}
+
+.instance-rename__view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: var(--rename-height);
+  padding-inline: var(--rename-padding-inline);
+  padding-block: 0;
+  border: 0;
+  border-radius: var(--rename-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.instance-rename__label {
+  white-space: nowrap;
+  font: 600 var(--fs-18)/var(--lh-normal) var(--font-ui);
+  letter-spacing: -0.02em;
+}
+
+.instance-rename__view:hover {
+  background: var(--rename-hover-bg);
+}
+
+.instance-rename__view:active {
+  background: var(--rename-active-bg);
+  transform: translateY(1px);
+}
+
+.instance-rename__edit {
+  display: none;
+}
+
+.instance-rename[data-state='view'] .instance-rename__view {
+  display: inline-flex;
+}
+
+.instance-rename[data-state='view'] .instance-rename__edit {
+  display: none;
+}
+
+.instance-rename__input {
+  inline-size: 100%;
+  min-height: var(--rename-height);
+  padding-inline: var(--rename-padding-inline);
+  padding-block: 1px 0;
+  border-radius: var(--rename-radius);
+  border: 1px solid color-mix(in oklab, var(--role-border), transparent 35%);
+  background: var(--role-surface-bg);
+  color: var(--rename-color);
+  font: 300 var(--fs-15)/var(--lh-normal) var(--font-ui);
+  letter-spacing: -0.02em;
+  box-sizing: border-box;
+  outline: none;
+  caret-color: var(--rename-color);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.instance-rename__input::placeholder {
+  font: inherit;
+  color: color-mix(in oklab, var(--rename-color), transparent 50%);
+}
+
+.instance-rename__input:active,
+.instance-rename__input:focus {
+  border-color: var(--color-system-blue);
+  background: var(--color-system-white);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-system-blue), transparent 75%);
+}
+
+.instance-rename[data-state='editing'] .instance-rename__view {
+  display: none;
+}
+
+.instance-rename[data-state='editing'] .instance-rename__edit {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instance-rename__view,
+  .instance-rename__input {
+    transition: none;
+  }
+}

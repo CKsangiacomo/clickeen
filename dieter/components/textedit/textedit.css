@@ -1,0 +1,308 @@
+/* Baseline inherited from production textedit */
+.diet-textedit,
+.diet-textedit-ic {
+  display: grid;
+  gap: var(--hspace-2, 0.1rem);
+  color: var(--color-system-black);
+  position: relative;
+  inline-size: 100%;
+}
+
+.diet-textedit__control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--control-inline-gap-md);
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--control-padding-inline);
+  padding-block: 0;
+  border-radius: var(--control-radius-md, 0.375rem);
+  border: 0;
+  background: var(--color-system-gray-6);
+  color: inherit;
+  font: inherit;
+  box-sizing: border-box;
+  transition: background-color var(--duration-base, 160ms) ease, color var(--duration-base, 160ms) ease;
+  cursor: pointer;
+}
+
+.diet-textedit__control:hover {
+  background: color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 6%);
+}
+
+.diet-textedit[data-state="open"] .diet-textedit__control {
+  display: none;
+}
+
+.diet-textedit__preview {
+  flex: 1 1 auto;
+  inline-size: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.diet-textedit__previewin {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: left;
+  font: 300 var(--fs-12)/var(--lh-tight) var(--font-ui);
+}
+
+.diet-textedit[data-size="sm"] .diet-textedit__control {
+  min-block-size: var(--control-size-sm, 1.25rem);
+  border-radius: var(--control-radius-sm, 0.25rem);
+  gap: var(--control-inline-gap-sm, 0.375rem);
+}
+.diet-textedit[data-size="sm"] .diet-textedit__previewin {
+  font: 300 var(--fs-11)/var(--control-size-sm, 1.25rem) var(--font-ui);
+}
+.diet-textedit[data-size="sm"] .diet-textedit__icon {
+  inline-size: var(--control-icon-xs, 1rem);
+  block-size: var(--control-icon-xs, 1rem);
+}
+
+.diet-textedit[data-size="md"] .diet-textedit__previewin {
+  font: 300 var(--fs-12)/var(--control-size-md, 1.5rem) var(--font-ui);
+}
+.diet-textedit[data-size="lg"] .diet-textedit__control {
+  min-block-size: var(--control-size-lg, 1.75rem);
+  border-radius: var(--control-radius-lg, 0.3125rem);
+}
+.diet-textedit[data-size="lg"] .diet-textedit__previewin {
+  font: 300 var(--fs-14)/var(--control-size-lg, 1.75rem) var(--font-ui);
+}
+
+.diet-textedit__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: auto;
+  flex: none;
+  pointer-events: none;
+}
+
+.diet-textedit__icon .diet-btn-ic[data-size="sm"] {
+  inline-size: var(--control-icon-sm, 1.25rem);
+  block-size: var(--control-icon-sm, 1.25rem);
+}
+
+.diet-textedit__icon .diet-btn-ic[data-size="xs"] {
+  inline-size: var(--control-icon-xs, 1rem);
+  block-size: var(--control-icon-xs, 1rem);
+}
+
+.diet-textedit__icon .diet-btn-ic {
+  pointer-events: none;
+  opacity: 1;
+}
+
+.diet-textedit__icon .diet-btn-ic .diet-btn-ic__icon {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.diet-textedit > .diet-popover {
+  display: none;
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  inline-size: 100%;
+  z-index: 12;
+}
+
+.diet-textedit[data-state="open"] > .diet-popover {
+  display: block;
+}
+
+.diet-textedit__editor {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--control-radius-md);
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  resize: vertical;
+  overflow: auto;
+  outline: none;
+  line-height: 1.4;
+}
+
+.diet-textedit__editor a {
+  background: color-mix(in oklab, var(--color-system-blue), transparent 80%);
+  border-radius: 0.25rem;
+  padding: 0 var(--space-0);
+  color: var(--color-system-blue);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--color-system-blue), transparent 40%);
+}
+
+.diet-textedit__aipanel {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.diet-textedit__aipanel .diet-btn-menuactions {
+  justify-content: space-between;
+}
+
+/* Floating palette */
+.diet-textedit__palette {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: 4px;
+  background: var(--color-system-white);
+  box-shadow: var(--shadow-floating, 0 10px 18px rgba(12,16,24,0.12));
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.diet-textedit__palette.has-linkform {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.diet-textedit__toolbarrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.diet-textedit__group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.diet-textedit__palette.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.diet-textedit__palette .diet-btn-ic { margin: 0; }
+
+.diet-textedit__group--clear .diet-btn-ic {
+  color: color-mix(in oklab, var(--color-system-black), transparent 20%);
+}
+
+.diet-textedit__group--clear .diet-btn-ic:hover {
+  color: var(--color-system-black);
+}
+
+.diet-textedit__group--clear .is-hidden {
+  display: none !important;
+}
+
+.diet-textedit__divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: color-mix(in oklab, var(--color-system-black), transparent 85%);
+}
+
+.diet-textedit__divider.is-hidden {
+  display: none;
+}
+
+.diet-textedit__linkform {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  min-width: 240px;
+  padding: 0 var(--space-1) var(--space-2);
+}
+
+.diet-textedit__linkform.is-hidden {
+  display: none;
+}
+
+.diet-textedit__linkform:not(.has-anchor) .diet-textedit__linkremove {
+  display: none !important;
+}
+
+.diet-textedit__linkinner {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.diet-textedit__linkinner > * {
+  margin-inline: 0;
+}
+
+.diet-textedit__linkheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diet-textedit__linktitle { color: inherit; }
+.diet-textedit__linktitle.is-error { color: var(--color-system-red); }
+
+.diet-textedit__linkoptions {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.diet-textedit__linkoptions .is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.diet-textedit__linkform:not(.can-toggle) .diet-textedit__linkoptions {
+  opacity: 0;
+  transform: scaleY(0.8) translateY(-4px);
+  height: 0;
+  pointer-events: none;
+  margin: 0;
+}
+
+.diet-textedit__linkoptions {
+  transition: opacity var(--duration-base) ease, transform var(--duration-base) ease, height var(--duration-base) ease, margin var(--duration-base) ease;
+}
+
+.diet-textedit__linkapply[disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Link highlight */
+.diet-textedit__editor .diet-textedit-linktemp {
+  background: color-mix(in oklab, var(--color-system-orange), transparent 60%);
+}
+.diet-textedit__editor a.diet-textedit-link,
+.diet-textedit__previewin a[data-preview-link] {
+  background: color-mix(in oklab, var(--color-system-orange), transparent 70%);
+  border-radius: 0.25rem;
+  padding: 0 var(--space-0);
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Dark mode tweaks */
+@media (prefers-color-scheme: dark) {
+  .diet-textedit__control,
+  .diet-textedit__editor {
+    background: var(--color-system-gray-5);
+  }
+  .diet-textedit__palette .diet-btn-ic {
+    background: var(--color-system-gray-6);
+  }
+  .diet-textedit__linkpopover {
+    background: var(--color-system-gray-6);
+  }
+}
