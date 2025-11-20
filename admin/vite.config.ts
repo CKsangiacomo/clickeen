@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import path from 'node:path';
+import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 
 export default defineConfig({
@@ -16,9 +17,9 @@ export default defineConfig({
     },
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-      'Surrogate-Control': 'no-store'
+      Pragma: 'no-cache',
+      Expires: '0',
+      'Surrogate-Control': 'no-store',
     },
   },
   plugins: [
@@ -63,6 +64,39 @@ export default defineConfig({
           } else {
             next();
           }
+        });
+      },
+    },
+    {
+      name: 'denver-static-widgets',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          if (!url.startsWith('/denver/')) return next();
+
+          const cleanPath = url.split('?')[0];
+          const filePath = path.resolve(__dirname, '..', cleanPath.slice(1)); // strip leading "/"
+
+          fs.readFile(filePath, (err, data) => {
+            if (err) {
+              res.statusCode = 404;
+              res.end('Not found');
+              return;
+            }
+
+            const ext = path.extname(filePath);
+            if (ext === '.json') {
+              res.setHeader('Content-Type', 'application/json');
+            } else if (ext === '.html') {
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            } else if (ext === '.css') {
+              res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            } else if (ext === '.js') {
+              res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+            }
+
+            res.end(data);
+          });
         });
       },
     },

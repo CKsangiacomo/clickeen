@@ -199,7 +199,7 @@
 <div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
   <iframe
     id="bob-iframe"
-    src="http://localhost:3000/"
+    src="http://localhost:3000/bob"
     style="width: 100%; height: 100%; border: 0; display: block;"
     title="Bob Widget Builder"
   ></iframe>
@@ -207,6 +207,7 @@
 
 <script type="module">
 const PARIS_ORIGIN = 'http://localhost:3001';
+const DENVER_WIDGET_BASE = '/denver/widgets';
 let currentPublicId = null;
 let instances = [];
 let isOpen = false;
@@ -251,8 +252,8 @@ async function ensureWidgetJSON(widgetname) {
   const slug = normalizeWidgetname(widgetname);
   if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
   if (widgetCache.has(slug)) return widgetCache.get(slug);
-  const res = await fetch(`${PARIS_ORIGIN}/api/widgets/${slug}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Failed to load widget ${widgetname} (${res.status})`);
+  const res = await fetch(`${DENVER_WIDGET_BASE}/${slug}/spec.json`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load widget spec for ${widgetname} (${res.status})`);
   const json = await res.json();
   widgetCache.set(slug, json);
   return json;
@@ -432,16 +433,26 @@ menu.addEventListener('keydown', (event) => {
   }
 });
 
-document.addEventListener('click', (event) => {
-  if (!dropdown.contains(event.target)) {
-    setOpen(false);
-  }
-});
-
-iframe.addEventListener('load', () => {
-  console.log('[DevStudio] Bob iframe loaded, re-sending instance');
-  sendInstanceToIframe(currentPublicId);
-});
-fetchInstances();
+	document.addEventListener('click', (event) => {
+	  if (!dropdown.contains(event.target)) {
+	    setOpen(false);
+	  }
+	});
+	
+	iframe.addEventListener('load', () => {
+	  console.log('[DevStudio] Bob iframe loaded, re-sending instance');
+	  if (currentPublicId) {
+	    sendInstanceToIframe(currentPublicId);
+	  }
+	});
+	
+	(async () => {
+	  try {
+	    await fetchInstances();
+	  } catch (error) {
+	    console.error('[DevStudio] Failed to fetch instances', error);
+	    currentLabel.textContent = 'Error loading instances';
+	  }
+	})();
 </script>
 </div>

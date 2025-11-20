@@ -1,0 +1,27 @@
+{
+  "widgetname": "countdown",
+  "defaults": {
+    "heading": "Countdown heading",
+    "layoutNote": "Layout placeholder",
+    "typographyNote": "Typography placeholder",
+    "appearanceNote": "Appearance placeholder",
+    "settingsNote": "Settings placeholder"
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-field type='textfield' label='Countdown heading' size='md' path='heading' />",
+    "</bob-panel>",
+    "<bob-panel id='layout'>",
+    "  <tooldrawer-field type='textfield' label='Layout placeholder' size='md' path='layoutNote' />",
+    "</bob-panel>",
+    "<bob-panel id='typography'>",
+    "  <tooldrawer-field type='textfield' label='Typography placeholder' size='md' path='typographyNote' />",
+    "</bob-panel>",
+    "<bob-panel id='appearance'>",
+    "  <tooldrawer-field type='textfield' label='Appearance placeholder' size='md' path='appearanceNote' />",
+    "</bob-panel>",
+    "<bob-panel id='settings'>",
+    "  <tooldrawer-field type='textfield' label='Settings placeholder' size='md' path='settingsNote' />",
+    "</bob-panel>"
+  ]
+}

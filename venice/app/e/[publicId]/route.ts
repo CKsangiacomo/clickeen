@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { escapeHtml, stringify } from '@venice/lib/html';
-import { renderFormsContactPage } from '@venice/lib/renderers/formsContact';
-import { renderFaqPage } from '@venice/lib/renderers/faq';
-import { renderTestimonialsPage } from '@venice/lib/renderers/testimonials';
-import { renderAnnouncementPage } from '@venice/lib/renderers/announcement';
-import { renderNewsletterPage } from '@venice/lib/renderers/newsletter';
-import { renderSocialProofPage } from '@venice/lib/renderers/socialProof';
-import { renderTestButtonPage } from '@venice/lib/renderers/testButton';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -73,67 +66,7 @@ export async function GET(req: Request, { params }: { params: { publicId: string
   const branding = instance.branding ?? { hide: false, enforced: instance.status !== 'published' };
   const nonce = crypto.randomUUID();
   const backlink = (!branding.hide) || Boolean(branding.enforced);
-  let responseHtml: string;
-  const wtype = (instance.widgetType || '').toLowerCase();
-  if (wtype === 'forms.contact') {
-    responseHtml = renderFormsContactPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'content.faq') {
-    responseHtml = renderFaqPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'social.testimonials') {
-    responseHtml = renderTestimonialsPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'engagement.announcement') {
-    responseHtml = renderAnnouncementPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'engagement.newsletter') {
-    responseHtml = renderNewsletterPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'social.proof') {
-    responseHtml = renderSocialProofPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else if (wtype === 'testbutton') {
-    responseHtml = renderTestButtonPage({
-      instance: { publicId: instance.publicId, config: instance.config },
-      theme: theme as 'light' | 'dark',
-      device: device as 'desktop' | 'mobile',
-      backlink,
-      nonce,
-    });
-  } else {
-    responseHtml = renderInstancePage({ instance, theme, device, branding, nonce });
-  }
+  let responseHtml = renderInstancePage({ instance, theme, device, branding, nonce });
 
   // Conditional request handling
   let etag: string | undefined;

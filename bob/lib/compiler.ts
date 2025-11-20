@@ -1,7 +1,8 @@
 import { CompiledPanel, CompiledWidget, ControlDescriptor } from './types';
 
 type RawWidget = {
-  metadata?: Record<string, unknown>;
+  widgetname?: unknown;
+  displayName?: unknown;
   defaults?: Record<string, unknown>;
   html?: unknown;
 };
@@ -115,29 +116,38 @@ export function compileWidget(widgetJson: RawWidget): CompiledWidget {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }
 
-  const metadata = widgetJson.metadata ?? {};
   const defaults = (widgetJson.defaults ?? {}) as Record<string, unknown>;
 
-  const widgetname = typeof metadata.widgetname === 'string' && metadata.widgetname.trim()
-    ? metadata.widgetname
-    : null;
+  const rawWidgetName = widgetJson.widgetname;
+  const widgetname =
+    typeof rawWidgetName === 'string' && rawWidgetName.trim() ? rawWidgetName : null;
   if (!widgetname) {
-    throw new Error('[BobCompiler] widget JSON missing metadata.widgetname');
+    throw new Error('[BobCompiler] widget JSON missing widgetname');
   }
 
   const displayName =
-    typeof metadata.displayName === 'string' && metadata.displayName.trim()
-      ? metadata.displayName
-      : typeof metadata.name === 'string' && metadata.name.trim()
-        ? metadata.name
-        : widgetname;
+    (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) ||
+    widgetname;
 
   const panels = parsePanels(widgetJson.html, defaults);
+
+  const denverBase =
+    (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DENVER_URL) || '';
+  const assetBase = denverBase
+    ? `${denverBase.replace(/\/+$/, '')}/widgets/${widgetname}`
+    : `/widgets/${widgetname}`;
+
+  const assets = {
+    htmlUrl: `${assetBase}/widget.html`,
+    cssUrl: `${assetBase}/widget.css`,
+    jsUrl: `${assetBase}/widget.client.js`,
+  };
 
   return {
     widgetname,
     displayName,
     defaults,
     panels,
+    assets,
   };
 }

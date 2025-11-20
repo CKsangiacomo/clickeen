@@ -1,0 +1,79 @@
+.diet-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--control-inline-gap-md, 0.5rem);
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--control-padding-inline);
+  box-sizing: border-box;
+  color: var(--color-system-black);
+  --slider-track-height: calc(var(--control-size-md, 1.5rem) * 0.25);
+  --slider-thumb-size: calc(var(--control-size-md, 1.5rem) * 0.5);
+}
+
+.diet-slider[data-size="sm"] {
+  min-block-size: var(--control-size-sm, 1.25rem);
+  --slider-track-height: calc(var(--control-size-sm, 1.25rem) * 0.25);
+  --slider-thumb-size: calc(var(--control-size-sm, 1.25rem) * 0.5);
+}
+
+.diet-slider[data-size="lg"] {
+  min-block-size: var(--control-size-lg, 1.75rem);
+  --slider-track-height: calc(var(--control-size-lg, 1.75rem) * 0.25);
+  --slider-thumb-size: calc(var(--control-size-lg, 1.75rem) * 0.5);
+}
+
+.diet-slider__label {
+  white-space: nowrap;
+}
+
+.diet-slider__input {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  block-size: var(--slider-track-height);
+  height: var(--slider-track-height);
+  border-radius: 999px;
+  background: linear-gradient(
+      to right,
+      var(--color-system-blue) var(--slider-progress, 0%),
+      var(--color-system-gray-5) var(--slider-progress, 0%)
+    );
+  --min: 0;
+  --max: 100;
+  --value: 0;
+  --slider-progress: calc((var(--value) - var(--min)) / (var(--max) - var(--min)) * 100%);
+}
+
+.diet-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: var(--slider-thumb-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-system-white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid color-mix(in srgb, var(--color-system-gray-3), transparent 60%);
+}
+
+.diet-slider__input::-moz-range-thumb {
+  inline-size: var(--slider-thumb-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-system-white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid color-mix(in srgb, var(--color-system-gray-3), transparent 60%);
+}
+
+.diet-slider__input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-system-blue), transparent 40%);
+  outline-offset: 2px;
+}
+
+.diet-slider__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

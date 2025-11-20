@@ -8,8 +8,7 @@
     "bob",
     "dieter",
     "paris",
-    "venice",
-    "pre-ship"
+    "venice"
   ],
   "scripts": {
     "dev": "turbo dev",
@@ -18,7 +17,6 @@
     "test": "turbo test",
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
-    "verify:pre-ship": "pnpm --filter @clickeen/pre-ship verify",
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:paris": "pnpm --filter @clickeen/paris dev",

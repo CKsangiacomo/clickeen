@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { renderWidgetHtml } from '../lib/preview/renderWidgetHtml';
 
 export function Workspace() {
   const session = useWidgetSession();
@@ -13,44 +12,36 @@ export function Workspace() {
   const displayName =
     meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
 
-  const previewDocument = useMemo(() => {
-    if (!hasWidget) {
-      return `<!doctype html><html><head><meta charset="utf-8" /></head><body style="margin:0;background:#f8fafc;color:#0f172a;font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    if (!hasWidget || !compiled) {
+      iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8" /></head><body style="margin:0;background:#f8fafc;color:#0f172a;font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
         <div style="opacity:0.55;font-size:14px;">Load an instance to see the preview.</div>
       </body></html>`;
+      return;
     }
-    try {
-      return renderWidgetHtml({
-        widgetname: compiled!.widgetname,
-        widgetJSON: widgetJSON as Record<string, unknown>,
-        instanceData,
-        publicId: meta?.publicId ?? 'preview-instance',
-        device,
-        theme,
-        backlink: true,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const escaped = message
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-      return `<!doctype html><html><head><meta charset="utf-8" /></head><body style="margin:0;background:#fef2f2;color:#7f1d1d;font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <div style="padding:32px;max-width:420px;text-align:center;">
-          <strong>Preview renderer error</strong>
-          <div style="margin-top:12px;font-size:14px;">${escaped}</div>
-        </div>
-      </body></html>`;
-    }
-  }, [hasWidget, compiled, widgetJSON, instanceData, meta?.publicId, device, theme]);
+
+    iframe.srcdoc = '';
+    iframe.src = compiled.assets.htmlUrl;
+  }, [hasWidget, compiled, compiled?.assets.htmlUrl, widgetJSON]);
 
   useEffect(() => {
-    if (iframeRef.current) {
-      iframeRef.current.srcdoc = previewDocument;
-    }
-  }, [previewDocument]);
+    if (!hasWidget || !compiled) return;
+    const iframeWindow = iframeRef.current?.contentWindow;
+    if (!iframeWindow) return;
+
+    const message = {
+      type: 'ck:state-update',
+      widgetname: compiled.widgetname,
+      state: instanceData,
+      device,
+      theme,
+    };
+
+    iframeWindow.postMessage(message, '*');
+  }, [hasWidget, compiled, instanceData, device, theme]);
 
   return (
     <section className="workspace">

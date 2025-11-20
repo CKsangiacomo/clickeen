@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOKEN_FILE = path.resolve(__dirname, '../../bob/public/dieter/tokens.css');
+const TOKEN_FILE = path.resolve(__dirname, '../../dieter/dist/tokens.css');
 const OUTPUT_FILE = path.resolve(__dirname, '../src/data/typography.generated.json');
 
 const CATEGORY_MARKERS = [

@@ -1,54 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { PanelId } from '../lib/types';
-import { TdMenu, type Panel } from './TdMenu';
+import { useMemo, useState } from 'react';
+import type { CompiledPanel, PanelId } from '../lib/types';
+import { TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { CopilotPane } from './CopilotPane';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import type { CompiledPanel } from '../lib/types';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
-
-const PANEL_ICON_META: Record<PanelId, string> = {
-  content: 'square.and.pencil',
-  layout: 'circle.grid.2x2',
-  typography: 'character.circle',
-  appearance: 'circle.dotted',
-  settings: 'gearshape',
-  advanced: 'slider.vertical.3',
-  actions: 'bolt',
-};
 
 export function ToolDrawer() {
   const session = useWidgetSession();
-  const compiledPanels = session.compiled?.panels ?? [];
-  const hasWidget = Boolean(session.compiled);
+  const compiled = session.compiled;
+  const hasWidget = Boolean(compiled);
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
 
-  const navPanels: Panel[] = useMemo(() => {
-    if (!hasWidget) {
-      return [];
+  const panelsById = useMemo(() => {
+    const map: Record<string, CompiledPanel> = {};
+    if (compiled?.panels) {
+      for (const panel of compiled.panels) {
+        map[panel.id] = panel;
+      }
     }
+    return map;
+  }, [compiled]);
 
-    return compiledPanels.map((panel) => ({
-      id: panel.id,
-      label: panel.label,
-      icon: PANEL_ICON_META[panel.id] ?? 'circle.dotted',
-    }));
-  }, [compiledPanels, hasWidget]);
-
-  useEffect(() => {
-    if (!navPanels.length) return;
-    if (!navPanels.some((panel) => panel.id === activePanel)) {
-      setActivePanel(navPanels[0]?.id ?? 'content');
-    }
-  }, [navPanels, activePanel]);
-
-  const currentPanel: CompiledPanel | undefined = useMemo(
-    () => compiledPanels.find((panel) => panel.id === activePanel),
-    [compiledPanels, activePanel]
-  );
+  const activePanelConfig = activePanel ? panelsById[activePanel] ?? null : null;
 
   return (
     <aside className="tooldrawer">
@@ -67,7 +44,7 @@ export function ToolDrawer() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ictxt"
-              data-size="md"
+              data-size="sm"
               data-variant="neutral"
               tabIndex={-1}
               type="button"
@@ -78,7 +55,7 @@ export function ToolDrawer() {
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: getIcon('pencil') }}
               />
-              <span className="diet-btn-ictxt__label">Manual</span>
+              <span className="diet-btn-ictxt__label body-s">Manual</span>
             </button>
           </label>
           <label className="diet-segment">
@@ -93,7 +70,7 @@ export function ToolDrawer() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ictxt"
-              data-size="md"
+              data-size="sm"
               data-variant="neutral"
               tabIndex={-1}
               type="button"
@@ -104,7 +81,7 @@ export function ToolDrawer() {
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: getIcon('sparkles') }}
               />
-              <span className="diet-btn-ictxt__label">Copilot</span>
+              <span className="diet-btn-ictxt__label body-s">Copilot</span>
             </button>
           </label>
         </div>
@@ -113,18 +90,22 @@ export function ToolDrawer() {
       {/* Drawer body switches between Manual and Copilot */}
       <div className="tdcontent">
         {mode === 'manual' ? (
-          hasWidget ? (
-            <>
-              <TdMenu panels={navPanels} active={activePanel} onSelect={(id) => setActivePanel(id)} />
+          <>
+            <TdMenu active={activePanel} onSelect={(id) => setActivePanel(id)} />
+            {hasWidget ? (
               <TdMenuContent
-                panel={currentPanel ?? null}
+                panelId={activePanel}
+                controls={activePanelConfig?.controls ?? []}
                 instanceData={session.instanceData}
                 setValue={session.setValue}
               />
-            </>
-          ) : (
-            <div className="tdmenu-empty">Load an instance from DevStudio to begin editing.</div>
-          )
+            ) : (
+              <div className="tdmenucontent">
+                <div className="heading-3">Content</div>
+                <div className="label-s label-muted">Load an instance from DevStudio to begin editing.</div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="tooldrawer-copilot">
             <CopilotPane />

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "types": []
+  },
+  "include": ["components/index.ts"]
+}
+
+
+

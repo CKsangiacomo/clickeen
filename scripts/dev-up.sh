@@ -9,6 +9,11 @@ cd "$ROOT_DIR"
 
 mkdir -p CurrentlyExecuting
 
+echo "[dev-up] Syncing Dieter assets into Denver (local copy)"
+node "$ROOT_DIR/scripts/sync-dieter-to-denver.mjs" || {
+  echo "[dev-up] Failed to sync Dieter into Denver; continuing without CDN copy"
+}
+
 echo "[dev-up] Killing stale listeners on 3000,3001,4000,5173 (if any)"
 for p in 3000 3001 4000 5173; do
   PIDS=$(lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null || true)
@@ -18,9 +23,24 @@ for p in 3000 3001 4000 5173; do
   fi
 done
 
-echo "[dev-up] NOTE: Denver service code is not present in this standalone repo; skipping Denver dev server on 4000."
-
 DENVER_URL=${DENVER_URL:-http://localhost:4000}
+
+echo "[dev-up] Starting Denver CDN stub on 4000"
+(
+  cd "$ROOT_DIR/denver"
+  PORT=4000 nohup node dev-server.mjs > "$ROOT_DIR/CurrentlyExecuting/denver.dev.log" 2>&1 &
+  DENVER_PID=$!
+  echo "[dev-up] Denver PID: $DENVER_PID"
+)
+for i in {1..30}; do
+  if curl -sI "http://localhost:4000/healthz" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+if ! curl -sI "http://localhost:4000/healthz" >/dev/null 2>&1; then
+  echo "[dev-up] Timeout waiting for Denver @ http://localhost:4000/healthz"
+  exit 1
+fi
+
 echo "[dev-up] Starting DevStudio (5173) with DENVER_URL=$DENVER_URL"
 (
   cd "$ROOT_DIR/paris"
@@ -39,7 +59,7 @@ fi
 
 (
   cd "$ROOT_DIR/bob"
-  PORT=3000 PARIS_BASE_URL="http://localhost:3001" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+  PORT=3000 PARIS_BASE_URL="http://localhost:3001" NEXT_PUBLIC_DENVER_URL="$DENVER_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   BOB_PID=$!
   echo "[dev-up] Bob PID: $BOB_PID"
 )

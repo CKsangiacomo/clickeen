@@ -1,0 +1,45 @@
+{
+  "component": "tabs",
+  "syntax": "<div class='diet-tabs{{#if block}} diet-tabs--block{{/if}}' role='tablist' data-size='{{SIZE}}' aria-label='{{ARIA_LABEL}}'>…</div>",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "ariaLabel": { "required": true },
+    "groupName": { "required": true },
+    "block": { "optional": true },
+    "tab1Id": { "required": true },
+    "tab1Label": { "required": true },
+    "tab1CheckedAttr": { "optional": true },
+    "tab2Id": { "optional": true },
+    "tab2Label": { "optional": true },
+    "tab2CheckedAttr": { "optional": true },
+    "tab3Id": { "optional": true },
+    "tab3Label": { "optional": true },
+    "tab3CheckedAttr": { "optional": true }
+  },
+  "defaults": [
+    {
+      "id": "tabs",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-tabs", "data-size='{{size}}'"],
+      "context": {
+        "ariaLabel": "Widget tabs",
+        "groupName": "tabs-{{size}}",
+        "block": "true",
+        "tab1Id": "tabs-{{size}}-1",
+        "tab1Label": "Tab 1",
+        "tab1CheckedAttr": " checked",
+        "tab2Id": "tabs-{{size}}-2",
+        "tab2Label": "Tab 2",
+        "tab2CheckedAttr": "",
+        "tab3Id": "tabs-{{size}}-3",
+        "tab3Label": "Tab 3",
+        "tab3CheckedAttr": ""
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs" },
+        "md": { "labelClass": "label-s" },
+        "lg": { "labelClass": "label-m" }
+      }
+    }
+  ]
+}

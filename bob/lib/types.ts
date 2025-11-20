@@ -15,6 +15,10 @@ export interface ControlDescriptor {
   size?: 'sm' | 'md' | 'lg';
   placeholder?: string;
   showIf?: string;
+  min?: number;
+  max?: number;
+  unit?: string;
+  options?: string;
 }
 
 export interface CompiledPanel {
@@ -28,4 +32,9 @@ export interface CompiledWidget {
   displayName: string;
   defaults: Record<string, unknown>;
   panels: CompiledPanel[];
+  assets: {
+    htmlUrl: string;
+    cssUrl: string;
+    jsUrl: string;
+  };
 }

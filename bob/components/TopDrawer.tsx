@@ -82,7 +82,7 @@ export function TopDrawer() {
             onCancel={handleCancel}
           />
           {error ? (
-            <div className="label label-muted instance-rename__error">
+            <div className="label-s label-muted instance-rename__error">
               {error}
             </div>
           ) : null}

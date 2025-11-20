@@ -50,13 +50,10 @@ The catalog will evolve with demand. Each widget includes multiple professionall
 ## The PLG Motion
 
 Play without an account (marketing site)
-- Visitor browses widget gallery on clickeen.com (Prague)
-- Clicks on a widget card (e.g., "Contact Form", "FAQ", "Testimonials")
-- Prague creates draft instance via Paris `POST /api/instance/from-template` with chosen widget + default template
-- Prague opens MiniBob (Bob iframe with `?minibob=true&publicId=wgt_xxx`)
-- MiniBob loads widget JSON from Paris via `GET /api/widgets/:widgetType` and renders uiSchema controls
-- User can customize instanceData (text, colors, etc.) AND switch templates inside MiniBob
-- Preview iframe loads Venice SSR: `/e/:publicId?preview=1` and updates live as they edit
+- Visitor browses widgets on clickeen.com website (Prague)
+- Choose on a widget (e.g., "Contact Form", "FAQ", "Testimonials") and gets directed on the widget's landing page
+- in the widget's landing page users see minibob loaded with a public instance (instances always load in bob/minimbob via Paris `POST /api/instance/from-template`)
+- User can customize instanceData (text, colors, etc.) AND switch templates inside MiniBob (templates are widget instances as well)
 - No signup needed to experiment
 - **NO Save button** in MiniBob (claim persists on signup)
 - **NO "Copy Code" button** in MiniBob

@@ -11,6 +11,8 @@ import {
 import type { ReactNode } from 'react';
 import type { CompiledWidget } from '../types';
 import { compileWidget } from '../compiler';
+import { mergeDefaults } from '../utils/merge';
+import { setAt } from '../utils/paths';
 
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -44,58 +46,6 @@ const DEFAULT_PREVIEW: PreviewSettings = {
   theme: 'light',
 };
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function mergeDefaults(
-  base: Record<string, unknown>,
-  overrides: Record<string, unknown>
-): Record<string, unknown> {
-  const result: Record<string, unknown> = { ...base };
-  Object.keys(overrides).forEach((key) => {
-    const overrideValue = overrides[key];
-    const baseValue = result[key];
-
-    if (Array.isArray(overrideValue)) {
-      result[key] = overrideValue;
-      return;
-    }
-
-    if (isPlainObject(baseValue) && isPlainObject(overrideValue)) {
-      result[key] = mergeDefaults(baseValue as Record<string, unknown>, overrideValue);
-      return;
-    }
-
-    result[key] = overrideValue;
-  });
-  return result;
-}
-
-function setPathValue(source: Record<string, unknown>, path: string, value: unknown) {
-  const segments = path.split('.');
-  const next: Record<string, unknown> = { ...source };
-  let cursor: Record<string, unknown> = next;
-
-  segments.forEach((segment, index) => {
-    if (index === segments.length - 1) {
-      cursor[segment] = value;
-      return;
-    }
-
-    const current = cursor[segment];
-    if (typeof current === 'object' && current !== null && !Array.isArray(current)) {
-      cursor[segment] = { ...current };
-    } else {
-      cursor[segment] = {};
-    }
-
-    cursor = cursor[segment] as Record<string, unknown>;
-  });
-
-  return next;
-}
-
 function useWidgetSessionInternal() {
   const [state, setState] = useState<SessionState>(() => ({
     compiled: null,
@@ -118,7 +68,7 @@ function useWidgetSessionInternal() {
 
   const setValue = useCallback((path: string, value: unknown) => {
     setState((prev) => {
-      const nextData = setPathValue(prev.instanceData, path, value);
+      const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
       return { ...prev, instanceData: nextData, isDirty: true };
     });
   }, []);

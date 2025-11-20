@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>FAQ Widget</title>
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <div class="ck-widget ck-faq-widget" data-role="faq-widget">
+      <section class="ck-faq" data-role="faq" data-expanded-all="true">
+        <header class="ck-faq__header">
+          <h2 class="ck-faq__title">Frequently Asked Questions</h2>
+          <div class="ck-faq__search" hidden>
+            <input type="search" placeholder="Search" />
+          </div>
+        </header>
+        <ul class="ck-faq__list">
+          <li class="ck-faq__item">
+            <button class="ck-faq__q" type="button" aria-expanded="true">What is Clickeen?</button>
+            <div class="ck-faq__a" role="region" style="display:block">
+              Embeddable widgets with one line of code.
+            </div>
+          </li>
+          <li class="ck-faq__item">
+            <button class="ck-faq__q" type="button" aria-expanded="true">Is there a free plan?</button>
+            <div class="ck-faq__a" role="region" style="display:block">
+              Yes, one active widget with branding.
+            </div>
+          </li>
+          <li class="ck-faq__item">
+            <button class="ck-faq__q" type="button" aria-expanded="true">How do I install a widget?</button>
+            <div class="ck-faq__a" role="region" style="display:block">
+              Copy the embed code and paste it into your website HTML.
+            </div>
+          </li>
+        </ul>
+      </section>
+      <footer class="ck-faq__backlink">
+        <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
+      </footer>
+    </div>
+    <script src="./widget.client.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "widgetname": "faq",
+  "defaults": {
+    "title": "Frequently Asked Questions"
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-field type='textfield' label='FAQ title' size='md' path='title' />",
+    "</bob-panel>"
+  ]
+}

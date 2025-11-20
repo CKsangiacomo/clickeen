@@ -7,7 +7,6 @@ import type { PanelId } from '../lib/types';
 export type Panel = { id: PanelId; label: string; icon?: string };
 
 type TdMenuProps = {
-  panels?: Panel[];
   active?: PanelId;
   onSelect?: (id: PanelId) => void;
 };
@@ -21,9 +20,9 @@ export const DEFAULT_PANELS: Panel[] = [
   { id: 'settings', icon: 'gearshape', label: 'Settings' },
 ];
 
-export function TdMenu({ panels, active, onSelect }: TdMenuProps) {
+export function TdMenu({ active, onSelect }: TdMenuProps) {
   const navRef = useRef<HTMLElement>(null);
-  const items = useMemo(() => (panels && panels.length ? panels : DEFAULT_PANELS), [panels]);
+  const items = useMemo(() => DEFAULT_PANELS, []);
   const [internalActive, setInternalActive] = useState<PanelId>(active ?? items[0]?.id ?? 'appearance');
   const current = (active ?? internalActive) as PanelId;
 

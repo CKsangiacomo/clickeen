@@ -1,96 +1,45 @@
-import { useMemo } from 'react';
-import type { CompiledPanel, ControlDescriptor } from '../lib/types';
+import type { ControlDescriptor, PanelId } from '../lib/types';
+import { getAt } from '../lib/utils/paths';
 
 type TdMenuContentProps = {
-  panel: CompiledPanel | null;
+  panelId: PanelId | null;
+  controls: ControlDescriptor[];
   instanceData: Record<string, unknown>;
   setValue: (path: string, value: unknown) => void;
 };
 
-function getValueAtPath(data: Record<string, unknown>, path: string) {
-  return path.split('.').reduce<any>((acc, segment) => {
-    if (acc === undefined || acc === null) return undefined;
-    if (typeof acc !== 'object') return undefined;
-    return (acc as Record<string, unknown>)[segment];
-  }, data);
-}
+function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>): boolean {
+  if (!expr) return true;
 
-function shouldShowControl(control: ControlDescriptor, data: Record<string, unknown>) {
-  if (!control.showIf) return true;
-  const value = getValueAtPath(data, control.showIf);
-  return Boolean(value);
-}
-
-function renderControl(
-  control: ControlDescriptor,
-  data: Record<string, unknown>,
-  setValue: (path: string, value: unknown) => void
-) {
-  if (control.type === 'toggle') {
-    const size = control.size ?? 'sm';
-    const checked = Boolean(getValueAtPath(data, control.path));
-    const id = `control-${control.key}`;
-    return (
-      <div key={control.key} className="diet-toggle diet-toggle--block" data-size={size}>
-        <span className="diet-toggle__label label" id={`${id}-label`}>
-          {control.label}
-        </span>
-        <input
-          id={id}
-          className="diet-toggle__input sr-only"
-          type="checkbox"
-          role="switch"
-          aria-labelledby={`${id}-label`}
-          checked={checked}
-          onChange={(event) => setValue(control.path, event.target.checked)}
-        />
-        <label className="diet-toggle__switch" htmlFor={id} aria-hidden="true">
-          <span className="diet-toggle__knob" />
-        </label>
-      </div>
-    );
+  const trimmed = expr.trim();
+  // Minimal expression support: "path == 'literal'" or "path != 'literal'"
+  const eqMatch = trimmed.match(/^(.+?)(==|!=)\s*'([^']*)'$/);
+  if (!eqMatch) {
+    // If we can't parse the expression, fail open in dev but do not hide the control.
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.warn('[TdMenuContent] Unable to parse showIf expression', expr);
+    }
+    return true;
   }
 
-  if (control.type === 'textfield') {
-    const size = control.size ?? 'md';
-    const value = getValueAtPath(data, control.path);
-    const stringValue = typeof value === 'string' ? value : '';
-    const id = `control-${control.key}`;
-    const label = control.label ?? '';
-    const hasLabel = Boolean(label);
-    return (
-      <div key={control.key} className="diet-textfield" data-size={size}>
-        <label className="diet-textfield__control" htmlFor={id}>
-          <span
-            className={`diet-textfield__display-label label${hasLabel ? '' : ' is-hidden'}`}
-          >
-            {hasLabel ? `${label}:` : ''}
-          </span>
-          <input
-            id={id}
-            type="text"
-            className="diet-textfield__field body"
-            aria-label={label}
-            value={stringValue}
-            placeholder={control.placeholder ?? ''}
-            onChange={(event) => setValue(control.path, event.target.value)}
-          />
-        </label>
-      </div>
-    );
+  const [, rawPath, operator, literal] = eqMatch;
+  const path = rawPath.trim();
+  const value = getAt<unknown>(data, path);
+  const valueStr = value == null ? '' : String(value);
+
+  if (operator === '==') {
+    return valueStr === literal;
+  }
+  if (operator === '!=') {
+    return valueStr !== literal;
   }
 
-  return (
-    <div key={control.key} className="label label-muted">
-      Unsupported control type: {control.type}
-    </div>
-  );
+  return true;
 }
 
-export function TdMenuContent({ panel, instanceData, setValue }: TdMenuContentProps) {
-  const controls = useMemo(() => panel?.controls ?? [], [panel]);
-
-  if (!panel) {
+export function TdMenuContent({ panelId, controls, instanceData, setValue }: TdMenuContentProps) {
+  if (!panelId) {
     return (
       <div className="tdmenucontent">
         <div className="heading-3">No controls</div>
@@ -98,16 +47,81 @@ export function TdMenuContent({ panel, instanceData, setValue }: TdMenuContentPr
     );
   }
 
-  const visibleControls = controls.filter((control) => shouldShowControl(control, instanceData));
+  if (!controls.length) {
+    return (
+      <div className="tdmenucontent">
+        <div className="heading-3">Panel</div>
+        <div className="label-s label-muted">No controls in this panel.</div>
+      </div>
+    );
+  }
+
+  const visibleControls = controls.filter((control) => evaluateShowIf(control.showIf, instanceData));
+
+  if (!visibleControls.length) {
+    return (
+      <div className="tdmenucontent">
+        <div className="heading-3">{panelId}</div>
+        <div className="label-s label-muted">No controls in this panel.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="tdmenucontent">
-      <div className="heading-3">{panel.label}</div>
-      {visibleControls.length === 0 ? (
-        <div className="label label-muted">No controls available.</div>
-      ) : (
-        visibleControls.map((control) => renderControl(control, instanceData, setValue))
-      )}
+      <div className="heading-3">{panelId}</div>
+      <div className="tdmenucontent__fields">
+        {visibleControls.map((control) => {
+          const value = getAt(instanceData, control.path);
+          const size = control.size ?? 'md';
+
+          if (control.type === 'toggle') {
+            const isChecked = Boolean(value);
+            return (
+              <div key={control.key} className="diet-toggle diet-toggle--split" data-size={size}>
+                <label className="diet-toggle__label label-s">{control.label}</label>
+                <label className="diet-toggle__switch">
+                  <input
+                    className="diet-toggle__input sr-only"
+                    type="checkbox"
+                    role="switch"
+                    checked={isChecked}
+                    onChange={(e) => setValue(control.path, e.target.checked)}
+                    aria-label={control.label}
+                  />
+                  <span className="diet-toggle__knob" />
+                </label>
+              </div>
+            );
+          }
+
+          if (control.type === 'textfield') {
+            return (
+              <div key={control.key} className="diet-textfield" data-size={size}>
+                <div className="diet-textfield__control">
+                  {control.label && (
+                    <label className="diet-textfield__display-label label-s">{control.label}</label>
+                  )}
+                  <input
+                    className="diet-textfield__field"
+                    type="text"
+                    placeholder={control.placeholder ?? control.label}
+                    value={String(value ?? '')}
+                    onChange={(e) => setValue(control.path, e.target.value)}
+                    aria-label={control.label}
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={control.key} className="label-s label-muted">
+              {control.label || control.path}: {String(value ?? '')}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

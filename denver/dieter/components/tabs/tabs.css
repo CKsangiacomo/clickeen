@@ -1,0 +1,100 @@
+/* Dieter Tabs — token-first, CSS-only tabs
+   Contract:
+   - Root: .diet-tabs (inline flex row with continuous 2px baseline)
+   - Size: data-size="sm|md|lg" → 20/24/28 rails via control tokens
+   - Input: .diet-tab__input.sr-only[type=radio][name=<group>]
+   - Tab (visual): .diet-tab[for]
+   - Text wrapper: .diet-tab__label (inherits control typography)
+   Behaviour:
+   - :checked paints a 2px accent underline over the baseline; focus ring forwarded to visual tab.
+*/
+
+.diet-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  /* Row gap scales by size (default md → inline-gap-lg) */
+  gap: var(--control-inline-gap-lg, 0.5rem);
+  color: var(--color-system-black);
+}
+
+/* Full-width helper for containers (e.g., previews) */
+.diet-tabs--block { inline-size: 100%; }
+
+/* Row gap overrides per size */
+.diet-tabs[data-size="sm"] { gap: var(--control-inline-gap-lg, 0.5rem); }
+.diet-tabs[data-size="lg"] { gap: var(--control-inline-gap-xl, 0.75rem); }
+
+/* Continuous baseline under entire row */
+.diet-tabs::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 2px;
+  background: var(--color-system-gray-6);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Individual tab */
+.diet-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-size-md, 1.5rem);
+  /* Side padding scales by size (default md → --space-1) */
+  padding-inline: var(--space-1, 0.25rem);
+  /* Vertical breathing room to baseline (default md → --hspace-3) */
+  padding-block-end: var(--hspace-3, 0.2rem);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Size variants (rail + typography) */
+.diet-tabs[data-size="sm"] .diet-tab {
+  min-height: var(--control-size-sm, 1.25rem);
+  padding-inline: var(--space-1, 0.25rem);
+  padding-block-end: var(--hspace-3, 0.2rem);
+}
+.diet-tabs[data-size="lg"] .diet-tab {
+  min-height: var(--control-size-lg, 1.75rem);
+  padding-inline: var(--space-2, 0.5rem);
+  padding-block-end: var(--hspace-4, 0.3rem);
+}
+
+/* Tab label relies on global .label-* typography; only color + behavior here */
+.diet-tab__label {
+  color: var(--color-system-black);
+  white-space: nowrap;
+  transition: opacity var(--duration-base, 160ms) ease;
+}
+
+/* Hidden radio (sr-only utility provided by tokens.css) */
+/* .diet-tab__input should include .sr-only in markup */
+
+/* Selected indicator overlays the baseline */
+.diet-tab__input:checked + .diet-tab::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 2px;
+  background: var(--color-system-blue);
+  z-index: 1;
+}
+
+/* Focus visuals removed per design */
+
+/* Hover / active affordances */
+.diet-tab:hover .diet-tab__label { opacity: 0.8; }
+.diet-tab__input:active + .diet-tab .diet-tab__label { opacity: 0.6; }
+
+/* Disabled */
+.diet-tab__input:disabled + .diet-tab { opacity: 0.48; cursor: not-allowed; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .diet-tab__label { transition: none; }
+}

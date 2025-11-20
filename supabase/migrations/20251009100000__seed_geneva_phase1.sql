@@ -1,10 +1,9 @@
 -- Seed Geneva tables with Phase-1 widget schemas and templates
--- This migration provides the minimum data required for pre-ship tests and Phase-1 operation
+-- This migration provides the minimum data required for Phase-1 operation.
 --
 -- References:
 -- - documentation/systems/geneva.md (Schema Registry PRD)
 -- - documentation/CRITICAL-TECHPHASES/Techphases-Phase1Specs.md (Phase-1 contracts)
--- - tooling/pre-ship/src/cli.mjs (test fixture expectations)
 
 -- =============================================================================
 -- widget_schemas: JSON Schema definitions for widget config validation

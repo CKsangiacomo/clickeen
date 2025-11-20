@@ -1,0 +1,283 @@
+@import '../button/button.css';
+
+/* ========================================
+   DIETER SEGMENTED CONTROL
+   AI-first dedicated classes
+   Built on button primitives
+   ======================================== */
+
+/* Segmented Rail Container - Icon Only */
+.diet-segmented-ic {
+  --seg-rail-padding: 1px;
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+  --seg-gap: 2px;
+  --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+  --seg-surface-bg: var(--color-system-white);
+  --seg-transition: 180ms cubic-bezier(0.76, 0.05, 0.24, 0.95);
+  /* Height tokens: rail is canonical; surface is rail minus inset */
+  --seg-rail-height: 28px;
+  --seg-surface-height: calc(var(--seg-rail-height) - 2px);
+  --seg-surface-visual-height: var(--seg-surface-height);
+
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: stretch;
+  gap: var(--seg-gap);
+  padding: var(--seg-rail-padding);
+  border-radius: var(--seg-rail-radius);
+  background: var(--seg-rail-bg);
+  border: 0;
+}
+
+/* Active state tokens (themeable via CSS variables)
+   Default to system blue with white foreground. Override --seg-active-bg per theme. */
+.diet-segmented-ic,
+.diet-segmented-txt,
+.diet-segmented-ictxt {
+  /* Active foreground (icon/text) color — themeable */
+  --seg-active-fg: var(--color-system-blue);
+}
+
+.diet-segmented-ic[data-size="sm"] {
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+}
+
+.diet-segmented-ic[data-size="md"] {
+  --seg-rail-radius: 5px;
+  --seg-surface-radius: 4px;
+}
+
+.diet-segmented-ic[data-size="lg"] {
+  --seg-rail-radius: 6px;
+  --seg-surface-radius: 5px;
+}
+
+/* Segmented Rail Container - Text Only */
+.diet-segmented-txt {
+  --seg-rail-padding: 1px;
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+  --seg-gap: 2px;
+  --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+  --seg-surface-bg: var(--color-system-white);
+  --seg-transition: 180ms cubic-bezier(0.76, 0.05, 0.24, 0.95);
+  --seg-rail-height: 28px;
+  --seg-surface-height: calc(var(--seg-rail-height) - 2px);
+  --seg-surface-visual-height: var(--seg-surface-height);
+
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--seg-gap);
+  padding: var(--seg-rail-padding);
+  border-radius: var(--seg-rail-radius);
+  background: var(--seg-rail-bg);
+  border: 0;
+}
+
+.diet-segmented-txt[data-size="sm"] {
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+}
+
+.diet-segmented-txt[data-size="md"] {
+  --seg-rail-radius: 5px;
+  --seg-surface-radius: 4px;
+}
+
+.diet-segmented-txt[data-size="lg"] {
+  --seg-rail-radius: 6px;
+  --seg-surface-radius: 5px;
+}
+
+/* Segmented Rail Container - Icon + Text */
+.diet-segmented-ictxt {
+  --seg-rail-padding: 1px;
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+  --seg-gap: 2px;
+  --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+  --seg-surface-bg: var(--color-system-white);
+  --seg-transition: 180ms cubic-bezier(0.76, 0.05, 0.24, 0.95);
+  --seg-rail-height: 28px;
+  --seg-surface-height: calc(var(--seg-rail-height) - 2px);
+  --seg-surface-visual-height: var(--seg-surface-height);
+
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--seg-gap);
+  padding: var(--seg-rail-padding);
+  border-radius: var(--seg-rail-radius);
+  background: var(--seg-rail-bg);
+  border: 0;
+}
+
+.diet-segmented-ictxt[data-size="sm"] {
+  --seg-rail-radius: 4px;
+  --seg-surface-radius: 3px;
+}
+
+.diet-segmented-ictxt[data-size="md"] {
+  --seg-rail-radius: 5px;
+  --seg-surface-radius: 4px;
+}
+
+.diet-segmented-ictxt[data-size="lg"] {
+  --seg-rail-radius: 6px;
+  --seg-surface-radius: 5px;
+}
+
+/* Segment Wrapper (contains input + surface + button) */
+.diet-segment {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.diet-segmented-ic .diet-segment {
+  flex: 0 0 calc(var(--seg-surface-visual-height) + (var(--seg-rail-padding) * 2));
+  width: calc(var(--seg-surface-visual-height) + (var(--seg-rail-padding) * 2));
+}
+
+.diet-segmented-ic .diet-segment__surface {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: var(--seg-surface-visual-height);
+}
+
+/* Hidden radio input */
+.diet-segment__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  z-index: 3;
+  cursor: pointer;
+}
+
+/* Selection surface (shows when checked) */
+.diet-segment__surface {
+  position: absolute;
+  left: var(--seg-rail-padding);
+  right: var(--seg-rail-padding);
+  top: var(--seg-rail-padding);
+  bottom: var(--seg-rail-padding);
+  border-radius: var(--seg-surface-radius);
+  background: transparent;
+  transition: background var(--seg-transition), box-shadow var(--seg-transition);
+  box-shadow: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Surface heights match button sizes */
+.diet-segmented-ic[data-size="sm"],
+.diet-segmented-txt[data-size="sm"],
+.diet-segmented-ictxt[data-size="sm"] {
+  --seg-rail-height: 24px;
+}
+
+.diet-segmented-ic[data-size="md"],
+.diet-segmented-txt[data-size="md"],
+.diet-segmented-ictxt[data-size="md"] {
+  --seg-rail-height: 28px;
+}
+
+.diet-segmented-ic[data-size="lg"],
+.diet-segmented-txt[data-size="lg"],
+.diet-segmented-ictxt[data-size="lg"] {
+  --seg-rail-height: 32px;
+}
+
+/* Hover state */
+.diet-segment:hover .diet-segment__surface {
+  background: color-mix(in oklab, var(--seg-surface-bg), transparent 70%);
+}
+
+/* Checked state */
+.diet-segment__input:checked ~ .diet-segment__surface {
+  /* Active surface is always system white */
+  background: var(--color-system-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Ensure readable foreground atop active background */
+.diet-segment__input:checked ~ .diet-btn-ic,
+.diet-segment__input:checked ~ .diet-btn-txt,
+.diet-segment__input:checked ~ .diet-btn-ictxt {
+  --btn-color: var(--seg-active-fg);
+  color: var(--seg-active-fg);
+}
+
+/* Focus state removed per design: no focus visuals */
+
+/* Disabled state */
+.diet-segment__input:disabled ~ .diet-segment__surface {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.diet-segment:has(.diet-segment__input:disabled) {
+  cursor: default;
+}
+
+/* Button inside segment - set inactive color to gray */
+.diet-segment > .diet-btn-ic,
+.diet-segment > .diet-btn-txt,
+.diet-segment > .diet-btn-ictxt {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  --btn-color: var(--color-system-gray-contrast);
+}
+
+/* Screen reader only text */
+.diet-segment__sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .diet-segment__surface {
+    transition: none;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .diet-segmented-ic,
+  .diet-segmented-txt,
+  .diet-segmented-ictxt {
+    --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+    --seg-surface-bg: var(--color-system-white);
+  }
+}
+
+:root[data-theme="dark"] .diet-segmented-ic,
+:root[data-theme="dark"] .diet-segmented-txt,
+:root[data-theme="dark"] .diet-segmented-ictxt,
+[data-theme="dark"] .diet-segmented-ic,
+[data-theme="dark"] .diet-segmented-txt,
+[data-theme="dark"] .diet-segmented-ictxt {
+  --seg-rail-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+  --seg-surface-bg: var(--color-system-white);
+}

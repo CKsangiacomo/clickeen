@@ -1,0 +1,58 @@
+<div class="diet-textedit" data-size="{{size}}" data-state="closed">
+  <button class="diet-textedit__control" type="button" aria-haspopup="dialog" aria-expanded="false">
+    <span class="diet-textedit__preview">
+      <span class="diet-textedit__previewin">{{placeholder}}</span>
+    </span>
+    <span class="diet-textedit__icon" aria-hidden="true">
+      <span class="diet-btn-ic" data-size="xs" data-variant="neutral">
+        <span class="diet-btn-ic__icon" data-icon="pencil"></span>
+      </span>
+    </span>
+  </button>
+
+  <div class="diet-popover" role="dialog" aria-label="Edit text">
+    <div class="diet-popover__header">
+      <span class="diet-popover__title label-m">{{label}}</span>
+      <div class="diet-popover__actions">
+        <button class="diet-btn-ic" data-size="sm" data-variant="neutral" type="button" aria-label="Delete">
+          <span class="diet-btn-ic__icon" data-icon="trash"></span>
+        </button>
+      </div>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-textedit__editor body-xsmall" contenteditable="true">{{placeholder}}</div>
+      <div class="diet-textedit__linkform is-hidden" data-validity="empty">
+        <div class="diet-textedit__linkinner">
+          <div class="diet-textedit__linkheader">
+            <span class="diet-textedit__linktitle label-s">Link this text</span>
+            <button class="diet-btn-txt diet-textedit__linkapply" data-size="xs" data-variant="primary" type="button">
+              <span class="diet-btn-txt__label">Apply link</span>
+            </button>
+          </div>
+          <div class="diet-textfield" data-size="md">
+            <label class="diet-textfield__control">
+              <input type="text" class="diet-textfield__field diet-textedit__linkinput" placeholder="link url" />
+            </label>
+          </div>
+          <div class="diet-textedit__linkoptions">
+            <label class="diet-toggle diet-toggle--split" data-size="sm">
+              <span class="diet-toggle__label label-xs">Open link in a new tab</span>
+              <input class="diet-toggle__input sr-only diet-textedit__linknewtab" type="checkbox" />
+              <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
+            </label>
+            <label class="diet-toggle diet-toggle--split" data-size="sm">
+              <span class="diet-toggle__label label-xs">Add "no follow" to link</span>
+              <input class="diet-toggle__input sr-only diet-textedit__linknofollow" type="checkbox" />
+              <span class="diet-toggle__switch"><span class="diet-toggle__knob"></span></span>
+            </label>
+          </div>
+          <button class="diet-btn-txt diet-textedit__linkremove" data-size="xs" data-variant="secondary" type="button">
+            <span class="diet-btn-txt__label">Remove link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input id="{{id}}" type="hidden" class="diet-textedit__field" value="{{placeholder}}"{{#if path}} data-path="{{path}}"{{/if}} />
+</div>

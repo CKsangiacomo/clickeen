@@ -1,0 +1,82 @@
+@import '../button/button.css';
+@import '../textfield/textfield.css';
+
+.diet-popover-host {
+  position: relative;
+  inline-size: 100%;
+}
+
+.diet-popover-host > .diet-popover {
+  display: none;
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  margin-inline: auto;
+  top: 0;
+  z-index: 12;
+  opacity: 0;
+  transform: translateY(calc(-100% - var(--space-1, 0.5rem)));
+  transition: opacity var(--duration-base, 160ms) ease,
+    transform var(--duration-base, 160ms) ease;
+  pointer-events: none;
+}
+
+.diet-popover-host[data-state='open'] > .diet-popover {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.diet-popover {
+  --popover-padding: var(--space-1);
+  --popover-section-gap: var(--space-3);
+  inline-size: min(320px, 100%);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--popover-section-gap);
+  padding: var(--popover-padding);
+  background: var(--color-system-white);
+  color: var(--color-text);
+  border-radius: var(--radius-4);
+  box-shadow: var(--shadow-floating);
+}
+
+.diet-popover__header {
+  padding: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 0.5rem);
+}
+
+.diet-popover__header-label {
+  flex: 1 1 auto;
+}
+
+.diet-popover__header-trigger {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--color-system-black);
+}
+
+.diet-popover__content,
+.diet-popover__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.diet-popover__body {
+  padding: var(--space-1);
+}
+
+.diet-popover__content :where(p, ul, ol),
+.diet-popover__body :where(p, ul, ol) {
+  margin: 0;
+}
