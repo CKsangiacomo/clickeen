@@ -25,7 +25,7 @@ export function ToolDrawer() {
     return map;
   }, [compiled]);
 
-  const activePanelConfig = activePanel ? panelsById[activePanel] ?? null : null;
+  const activePanelHtml = activePanel ? panelsById[activePanel]?.html ?? null : null;
 
   return (
     <aside className="tooldrawer">
@@ -95,9 +95,11 @@ export function ToolDrawer() {
             {hasWidget ? (
               <TdMenuContent
                 panelId={activePanel}
-                controls={activePanelConfig?.controls ?? []}
+                panelHtml={activePanelHtml ?? ''}
                 instanceData={session.instanceData}
                 setValue={session.setValue}
+                defaults={compiled?.defaults}
+                dieterAssets={compiled?.assets.dieter}
               />
             ) : (
               <div className="tdmenucontent">

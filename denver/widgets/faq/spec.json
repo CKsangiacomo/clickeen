@@ -1,11 +1,44 @@
 {
   "widgetname": "faq",
   "defaults": {
-    "title": "Frequently Asked Questions"
+    "title": "Frequently Asked Questions",
+    "showTitle": true,
+    "stage": {
+      "background": "var(--color-system-gray-5)"
+    },
+    "pod": {
+      "background": "var(--color-system-white)"
+    }
   },
   "html": [
     "<bob-panel id='content'>",
-    "  <tooldrawer-field type='textfield' label='FAQ title' size='md' path='title' />",
+    "  <div class=\"diet-toggle diet-toggle--split\" data-size=\"md\">",
+    "    <input",
+      "      class=\"diet-toggle__input sr-only\"",
+    "      type=\"checkbox\"",
+    "      role=\"switch\"",
+      "      aria-label=\"Show title\"",
+      "      data-bob-path=\"showTitle\"",
+      "      id=\"faq-show-title\"",
+    "    />",
+    "    <label class=\"diet-toggle__switch\" for=\"faq-show-title\">",
+    "      <span class=\"diet-toggle__knob\"></span>",
+    "    </label>",
+    "    <label class=\"diet-toggle__label label-s\" for=\"faq-show-title\">Show title</label>",
+    "  </div>",
+    "  <div class=\"diet-textfield\" data-size=\"md\">",
+    "    <div class=\"diet-textfield__control\">",
+    "      <label class=\"diet-textfield__display-label label-s\">FAQ title</label>",
+    "      <input",
+      "        class=\"diet-textfield__field\"",
+      "        type=\"text\"",
+      "        aria-label=\"FAQ title\"",
+      "        placeholder=\"Frequently Asked Questions\"",
+      "        data-bob-path=\"title\"",
+      "        data-bob-showif=\"showTitle == 'true'\"",
+      "      />",
+    "    </div>",
+    "  </div>",
     "</bob-panel>"
   ]
 }

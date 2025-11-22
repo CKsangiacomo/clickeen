@@ -1,11 +1,84 @@
-import type { ControlDescriptor, PanelId } from '../lib/types';
+import { useEffect, useRef } from 'react';
+import type { PanelId } from '../lib/types';
 import { getAt } from '../lib/utils/paths';
+
+declare global {
+  interface Window {
+    Dieter?: {
+      hydrateAll?: (scope?: HTMLElement) => void;
+    };
+  }
+}
+
+const loadedStyles = new Set<string>();
+const loadedScripts = new Map<string, Promise<void>>();
+
+function ensureStyles(urls: string[] | undefined) {
+  if (!urls) return;
+  const head = document.head;
+  urls.forEach((href) => {
+    if (!href || loadedStyles.has(href)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    head.appendChild(link);
+    loadedStyles.add(href);
+  });
+}
+
+function ensureScripts(urls: string[] | undefined): Promise<void[]> {
+  if (!urls || urls.length === 0) return Promise.resolve([]);
+  const promises = urls.map((src) => {
+    if (!src) return Promise.resolve();
+    const existing = loadedScripts.get(src);
+    if (existing) return existing;
+    const p = new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn('[TdMenuContent] Failed to load script', src);
+        }
+        resolve(); // tolerate missing hydrators (e.g., CSS-only components)
+      };
+      document.head.appendChild(script);
+    });
+    loadedScripts.set(src, p);
+    return p;
+  });
+  return Promise.all(promises);
+}
+
+function runHydrators(scope: HTMLElement) {
+  if (typeof window === 'undefined' || !window.Dieter) return;
+  const entries = Object.entries(window.Dieter).filter(
+    ([name, fn]) => typeof fn === 'function' && name.toLowerCase().startsWith('hydrate'),
+  );
+  for (const [, fn] of entries) {
+    try {
+      (fn as (el?: HTMLElement) => void)(scope);
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('[TdMenuContent] Hydrator error', err);
+      }
+    }
+  }
+}
 
 type TdMenuContentProps = {
   panelId: PanelId | null;
-  controls: ControlDescriptor[];
+  panelHtml: string;
   instanceData: Record<string, unknown>;
   setValue: (path: string, value: unknown) => void;
+  defaults?: Record<string, unknown>;
+  dieterAssets?: {
+    styles: string[];
+    scripts: string[];
+  };
 };
 
 function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>): boolean {
@@ -38,7 +111,78 @@ function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>)
   return true;
 }
 
-export function TdMenuContent({ panelId, controls, instanceData, setValue }: TdMenuContentProps) {
+export function TdMenuContent({ panelId, panelHtml, instanceData, setValue, defaults, dieterAssets }: TdMenuContentProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Inject panel HTML when it changes
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.innerHTML = panelHtml || '';
+
+    ensureStyles(dieterAssets?.styles);
+    ensureScripts(dieterAssets?.scripts).finally(() => {
+      if (container) {
+        runHydrators(container);
+      }
+    });
+  }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts]);
+
+  // Bind controls: set values from instanceData, attach listeners, honor showIf
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const fields = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-bob-path]')
+    );
+
+    const cleanupFns: Array<() => void> = [];
+
+    fields.forEach((field) => {
+      const path = field.getAttribute('data-bob-path');
+      if (!path) return;
+
+      const showIfExpr = field.getAttribute('data-bob-showif') || undefined;
+      const isVisible = evaluateShowIf(showIfExpr, instanceData);
+      const hideTarget = field.closest('.diet-textfield, .diet-toggle, [data-bob-control]') || field;
+      hideTarget.toggleAttribute('hidden', !isVisible);
+      hideTarget.setAttribute('style', isVisible ? '' : 'display: none;');
+
+      const rawValue = getAt(instanceData, path);
+      const defaultValue = defaults ? getAt(defaults, path) : undefined;
+      const value = rawValue === undefined ? defaultValue : rawValue;
+
+      if (field instanceof HTMLInputElement && field.type === 'checkbox') {
+        field.checked = Boolean(value);
+      } else if ('value' in field) {
+        (field as HTMLInputElement).value = value == null ? '' : String(value);
+      }
+
+      const handler = (event: Event) => {
+        const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+        if (!target) return;
+
+        if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+          setValue(path, target.checked);
+          return;
+        }
+
+        if ('value' in target) {
+          setValue(path, (target as HTMLInputElement).value);
+        }
+      };
+
+      const effectiveEvent = field instanceof HTMLInputElement && field.type === 'checkbox' ? 'change' : 'input';
+      field.addEventListener(effectiveEvent, handler);
+      cleanupFns.push(() => field.removeEventListener(effectiveEvent, handler));
+    });
+
+    return () => {
+      cleanupFns.forEach((fn) => fn());
+    };
+  }, [instanceData, setValue, panelHtml]);
+
   if (!panelId) {
     return (
       <div className="tdmenucontent">
@@ -47,81 +191,10 @@ export function TdMenuContent({ panelId, controls, instanceData, setValue }: TdM
     );
   }
 
-  if (!controls.length) {
-    return (
-      <div className="tdmenucontent">
-        <div className="heading-3">Panel</div>
-        <div className="label-s label-muted">No controls in this panel.</div>
-      </div>
-    );
-  }
-
-  const visibleControls = controls.filter((control) => evaluateShowIf(control.showIf, instanceData));
-
-  if (!visibleControls.length) {
-    return (
-      <div className="tdmenucontent">
-        <div className="heading-3">{panelId}</div>
-        <div className="label-s label-muted">No controls in this panel.</div>
-      </div>
-    );
-  }
-
   return (
     <div className="tdmenucontent">
       <div className="heading-3">{panelId}</div>
-      <div className="tdmenucontent__fields">
-        {visibleControls.map((control) => {
-          const value = getAt(instanceData, control.path);
-          const size = control.size ?? 'md';
-
-          if (control.type === 'toggle') {
-            const isChecked = Boolean(value);
-            return (
-              <div key={control.key} className="diet-toggle diet-toggle--split" data-size={size}>
-                <label className="diet-toggle__label label-s">{control.label}</label>
-                <label className="diet-toggle__switch">
-                  <input
-                    className="diet-toggle__input sr-only"
-                    type="checkbox"
-                    role="switch"
-                    checked={isChecked}
-                    onChange={(e) => setValue(control.path, e.target.checked)}
-                    aria-label={control.label}
-                  />
-                  <span className="diet-toggle__knob" />
-                </label>
-              </div>
-            );
-          }
-
-          if (control.type === 'textfield') {
-            return (
-              <div key={control.key} className="diet-textfield" data-size={size}>
-                <div className="diet-textfield__control">
-                  {control.label && (
-                    <label className="diet-textfield__display-label label-s">{control.label}</label>
-                  )}
-                  <input
-                    className="diet-textfield__field"
-                    type="text"
-                    placeholder={control.placeholder ?? control.label}
-                    value={String(value ?? '')}
-                    onChange={(e) => setValue(control.path, e.target.value)}
-                    aria-label={control.label}
-                  />
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div key={control.key} className="label-s label-muted">
-              {control.label || control.path}: {String(value ?? '')}
-            </div>
-          );
-        })}
-      </div>
+      <div className="tdmenucontent__fields" ref={containerRef} />
     </div>
   );
 }

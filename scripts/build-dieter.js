@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /*
- Build @ck/dieter artifacts to dieter/dist using a deterministic, cross-platform flow:
+ Build @ck/dieter artifacts directly into denver/dieter:
  - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
  - Copy tokens/tokens.css -> dist/tokens.css
  - Copy icons/icons.json -> dist/icons/icons.json
  - Copy icons/svg/* -> dist/icons/svg/*
+ - Copy component/foundation CSS
+ - Bundle component JS per control + aggregate components.js
 */
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const esbuild = require('esbuild');
+const { glob } = require('glob');
 
 function copyRecursiveSync(source, destination) {
   const stat = fs.statSync(source);
@@ -61,7 +65,9 @@ function runNodeScript(scriptRelPath) {
 function main() {
   const repoRoot = path.resolve(__dirname, '..');
   const dieterRoot = path.resolve(repoRoot, 'dieter');
-  const dist = path.join(dieterRoot, 'dist');
+  const dist = path.join(repoRoot, 'denver', 'dieter');
+  const componentsSrc = path.join(dieterRoot, 'components');
+  const foundationsSrc = path.join(dieterRoot, 'foundations');
 
   // 1) Normalize and verify SVGs in-place under dieter/icons/svg
   // If a curated svg_new override folder exists, copy it over the base source first
@@ -80,18 +86,22 @@ function main() {
   runNodeScript('process-svgs.js');
   runNodeScript('verify-svgs.js');
 
-  // 2) Recreate dist
+  // 2) Recreate output
   fs.rmSync(dist, { recursive: true, force: true });
   fs.mkdirSync(dist, { recursive: true });
 
   // 3) Copy tokens
-  const tokensSrc = path.join(dieterRoot, 'tokens', 'tokens.css');
+  const tokensDirSrc = path.join(dieterRoot, 'tokens');
+  const tokensSrc = path.join(tokensDirSrc, 'tokens.css');
   const tokensDst = path.join(dist, 'tokens.css');
   if (!fs.existsSync(tokensSrc)) {
     console.error('[build-dieter] Missing tokens source:', tokensSrc);
     process.exit(1);
   }
   copyRecursiveSync(tokensSrc, tokensDst);
+  if (fs.existsSync(tokensDirSrc)) {
+    copyRecursiveSync(tokensDirSrc, path.join(dist, 'tokens'));
+  }
 
   // 4) Copy icons manifest and svgs
   const iconsJsonSrc = path.join(dieterRoot, 'icons', 'icons.json');
@@ -110,18 +120,43 @@ function main() {
     runNodeScript('generate-icons-showcase.js');
   } catch (_) {}
 
-  // 5) Copy component CSS (tokens refer to these in consumers)
-  const componentsSrc = path.join(dieterRoot, 'components');
+  // 5) Copy component and foundation CSS (for direct consumers)
   const componentsDst = path.join(dist, 'components');
   if (fs.existsSync(componentsSrc)) {
     copyCssOnly(componentsSrc, componentsDst);
   }
 
-  const foundationsSrc = path.join(dieterRoot, 'foundations');
   const foundationsDst = path.join(dist, 'foundations');
   if (fs.existsSync(foundationsSrc)) {
     copyCssOnly(foundationsSrc, foundationsDst);
   }
+
+  // 6) Bundle component JS per control and aggregate components.js
+  (async () => {
+    const tsFiles = await glob(path.join(componentsSrc, '**/*.ts').replace(/\\/g, '/'));
+    // Per-component bundles (exported on window.Dieter via globalName)
+    for (const tsFile of tsFiles) {
+      const parts = tsFile.split('/');
+      const name = parts[parts.length - 2]; // e.g., textfield/toggle
+      const outDir = path.join(dist, 'components', name);
+      const outFile = path.join(outDir, `${name}.js`);
+      const content = fs.readFileSync(tsFile, 'utf8');
+      const match = content.match(/export function (\w+)/);
+      if (!match) continue;
+      fs.mkdirSync(outDir, { recursive: true });
+      await esbuild.build({
+        entryPoints: [tsFile],
+        bundle: true,
+        format: 'iife',
+        globalName: 'Dieter',
+        target: ['es2020'],
+        outfile: outFile,
+      });
+    }
+  })().catch((err) => {
+    console.error('[build-dieter] Failed to bundle component JS', err);
+    process.exit(1);
+  });
 
   console.log(`[build-dieter] Built Dieter assets into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
 }

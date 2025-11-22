@@ -1,0 +1,109 @@
+<div class="diet-dropdown-fill diet-popover-host" data-size="{{size}}" data-state="closed">
+  <input
+    id="{{id}}"
+    type="hidden"
+    class="diet-dropdown-fill__value-field"
+    value="{{value}}"
+    {{#if path}}data-path="{{path}}"{{/if}}
+    data-placeholder="{{placeholder}}"
+  />
+
+  <div
+    class="diet-dropdown-header diet-dropdown-fill__control"
+    role="button"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
+  >
+    {{#if label}}
+      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
+    {{/if}}
+    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
+    <button
+      class="diet-dropdown-header-icon diet-btn-ic"
+      data-size="{{size}}"
+      data-variant="neutral"
+      type="button"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
+    </button>
+  </div>
+
+  <div
+    class="diet-popover diet-dropdown-fill__popover"
+    role="listbox"
+    aria-label="{{popoverLabel}}"
+    data-state="closed"
+  >
+    <div class="diet-popover__header">
+      <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
+        {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
+      </span>
+      <button
+        type="button"
+        class="diet-btn-ic diet-popover__header-trigger"
+        data-size="sm"
+        data-variant="neutral"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <span
+          class="diet-btn-ic__icon"
+          data-icon="{{#if headerIcon}}{{headerIcon}}{{else}}hand.point.up{{/if}}"
+        ></span>
+      </button>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-dropdown-fill__modes">
+        <button
+          type="button"
+          class="diet-btn-ic diet-dropdown-fill__mode-btn"
+          data-size="sm"
+          data-variant="secondary"
+          data-mode="color"
+          aria-pressed="true"
+        >
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="circle.lefthalf.filled"></span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ic diet-dropdown-fill__mode-btn"
+          data-size="sm"
+          data-variant="secondary"
+          data-mode="image"
+          aria-pressed="false"
+        >
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="photo"></span>
+        </button>
+      </div>
+
+      <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
+        <svg
+          class="diet-dropdown-fill__svg"
+          viewBox="0 0 800 600"
+          role="presentation"
+          focusable="false"
+          aria-hidden="true"
+          data-instance="{{id}}"
+        >
+          <defs>
+            <clipPath id="{{id}}-mask">
+              <rect x="0" y="0" width="800" height="400" fill="green" />
+            </clipPath>
+            <g class="colorTab">
+              <rect x="0" y="0" rx="20" width="130" height="320" fill="green" />
+              <text x="10" y="120" class="label"></text>
+            </g>
+          </defs>
+          <g class="colorTab-container" clip-path="url(#{{id}}-mask)"></g>
+        </svg>
+      </div>
+
+      <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image">
+        Upload photo will appear here.
+      </div>
+    </div>
+  </div>
+</div>

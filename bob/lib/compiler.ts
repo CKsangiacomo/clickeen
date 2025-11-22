@@ -1,4 +1,4 @@
-import { CompiledPanel, CompiledWidget, ControlDescriptor } from './types';
+import { CompiledPanel, CompiledWidget } from './types';
 
 type RawWidget = {
   widgetname?: unknown;
@@ -12,66 +12,7 @@ function formatPanelLabel(id: string): string {
   return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
-function parseControls(markup: string, defaults: Record<string, unknown>): ControlDescriptor[] {
-  const controls: ControlDescriptor[] = [];
-  const fieldRegex = /<tooldrawer-field\s+([^>]+?)\/>/gi;
-  let fieldMatch: RegExpExecArray | null;
-
-  while ((fieldMatch = fieldRegex.exec(markup)) !== null) {
-    const attrString = fieldMatch[1];
-    const attrs: Record<string, string> = {};
-    attrString.replace(/([a-zA-Z0-9_.-]+)='([^']*)'/g, (_full, key, value) => {
-      attrs[key] = value;
-      return '';
-    });
-
-    const rawType = attrs['type']?.trim();
-    if (!rawType) {
-      throw new Error('[BobCompiler] <tooldrawer-field> missing type attribute');
-    }
-
-    if (rawType !== 'toggle' && rawType !== 'textfield') {
-      throw new Error(`[BobCompiler] Unsupported control type: ${rawType}`);
-    }
-
-    const path = attrs['path']?.trim();
-    if (!path) {
-      throw new Error('[BobCompiler] <tooldrawer-field> missing path attribute');
-    }
-
-    const control: ControlDescriptor = {
-      key: path,
-      type: rawType as ControlDescriptor['type'],
-      label: attrs['label'] ?? '',
-      path,
-    };
-
-    if (attrs['size'] && ['sm', 'md', 'lg'].includes(attrs['size'])) {
-      control.size = attrs['size'] as ControlDescriptor['size'];
-    }
-
-    if (attrs['placeholder']) {
-      control.placeholder = attrs['placeholder'];
-    }
-
-    if (attrs['show-if']) {
-      control.showIf = attrs['show-if'];
-    }
-
-    if (!control.placeholder) {
-      const placeholder = getValueFromDefaults(defaults, path);
-      if (typeof placeholder === 'string') {
-        control.placeholder = placeholder;
-      }
-    }
-
-    controls.push(control);
-  }
-
-  return controls;
-}
-
-function parsePanels(htmlLines: unknown, defaults: Record<string, unknown>): CompiledPanel[] {
+function parsePanels(htmlLines: unknown): { panels: CompiledPanel[]; usages: Set<string> } {
   if (!Array.isArray(htmlLines)) {
     throw new Error('[BobCompiler] widget JSON missing html array');
   }
@@ -79,16 +20,27 @@ function parsePanels(htmlLines: unknown, defaults: Record<string, unknown>): Com
   const html = htmlLines.join('\n');
   const panelRegex = /<bob-panel\s+id='([^']+)'[^>]*>([\s\S]*?)<\/bob-panel>/gi;
   const panels: CompiledPanel[] = [];
+  const usages = new Set<string>();
   let match: RegExpExecArray | null;
 
   while ((match = panelRegex.exec(html)) !== null) {
     const id = match[1];
     const panelMarkup = match[2];
-    const controls = parseControls(panelMarkup, defaults);
+
+    // Detect Dieter components by class names in the markup (diet-<component>).
+    const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
+    let classMatch: RegExpExecArray | null;
+    while ((classMatch = classRegex.exec(panelMarkup)) !== null) {
+      // Normalize: drop modifiers/variants like --split or __control
+      const raw = classMatch[1];
+      const base = raw.replace(/(--|__).*/, '');
+      if (base) usages.add(base);
+    }
+
     panels.push({
       id,
       label: formatPanelLabel(id),
-      controls,
+      html: panelMarkup,
     });
   }
 
@@ -96,19 +48,7 @@ function parsePanels(htmlLines: unknown, defaults: Record<string, unknown>): Com
     throw new Error('[BobCompiler] No <bob-panel> definitions found in widget JSON');
   }
 
-  return panels;
-}
-
-function getValueFromDefaults(defaults: Record<string, unknown>, path: string): unknown {
-  const segments = path.split('.');
-  let current: unknown = defaults;
-  for (const segment of segments) {
-    if (typeof current !== 'object' || current === null) {
-      return undefined;
-    }
-    current = (current as Record<string, unknown>)[segment];
-  }
-  return current;
+  return { panels, usages };
 }
 
 export function compileWidget(widgetJson: RawWidget): CompiledWidget {
@@ -119,28 +59,33 @@ export function compileWidget(widgetJson: RawWidget): CompiledWidget {
   const defaults = (widgetJson.defaults ?? {}) as Record<string, unknown>;
 
   const rawWidgetName = widgetJson.widgetname;
-  const widgetname =
-    typeof rawWidgetName === 'string' && rawWidgetName.trim() ? rawWidgetName : null;
+  const widgetname = typeof rawWidgetName === 'string' && rawWidgetName.trim() ? rawWidgetName : null;
   if (!widgetname) {
     throw new Error('[BobCompiler] widget JSON missing widgetname');
   }
 
   const displayName =
-    (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) ||
-    widgetname;
+    (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) || widgetname;
 
-  const panels = parsePanels(widgetJson.html, defaults);
+  const { panels, usages } = parsePanels(widgetJson.html);
 
   const denverBase =
-    (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DENVER_URL) || '';
-  const assetBase = denverBase
-    ? `${denverBase.replace(/\/+$/, '')}/widgets/${widgetname}`
-    : `/widgets/${widgetname}`;
+    (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DENVER_URL) || 'http://localhost:4000';
+  const denverRoot = denverBase.replace(/\/+$/, '');
+  const dieterBase = `${denverRoot}/dieter`;
+  const assetBase = `${denverRoot}/widgets/${widgetname}`;
+
+  const controlTypes = Array.from(usages);
+  const dieterAssets = {
+    styles: controlTypes.map((t) => `${dieterBase}/components/${t}/${t}.css`),
+    scripts: controlTypes.map((t) => `${dieterBase}/components/${t}/${t}.js`),
+  };
 
   const assets = {
     htmlUrl: `${assetBase}/widget.html`,
     cssUrl: `${assetBase}/widget.css`,
     jsUrl: `${assetBase}/widget.client.js`,
+    dieter: dieterAssets,
   };
 
   return {

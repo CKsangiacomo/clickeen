@@ -1,0 +1,92 @@
+<div>
+  <h1 class="heading-2" style="margin:0">Dropdown Fill</h1>
+</div>
+<div class="devstudio-page-section">
+  <div class="dieter-component-row" style="margin-bottom:var(--space-4)">
+    <div class="dieter-component-preview-280-wrapper">
+      <div class="spec-wrapper dieter-spec-wrapper">
+        <span class="spec-line body-xsmall">diet-dropdown-fill</span><span class="spec-line body-xsmall">data-size='md'</span>
+      </div>
+      <div class="dieter-preview">
+        <div class="diet-dropdown-fill diet-popover-host" data-size="md" data-state="closed">
+          <input
+            id="dropdown-fill-demo"
+            type="hidden"
+            class="diet-dropdown-fill__value-field"
+            value=""
+            data-placeholder="Select a fill"
+          />
+
+          <div
+            class="diet-dropdown-header diet-dropdown-fill__control"
+            role="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-labelledby="dropdown-fill-demo-label"
+          >
+            <span class="diet-dropdown-header-label label-s" id="dropdown-fill-demo-label">Label:</span>
+            <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="Select a fill">Select a fill</span>
+            <button
+              class="diet-dropdown-header-icon diet-btn-ic"
+              data-size="md"
+              data-variant="neutral"
+              type="button"
+              aria-hidden="true"
+              tabindex="-1"
+            >
+              <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
+            </button>
+          </div>
+
+          <div class="diet-popover diet-dropdown-fill__popover" role="listbox" aria-label="Fill options" data-state="closed">
+            <div class="diet-popover__header">
+              <span class="diet-popover__header-label label-s">Label</span>
+              <button
+                type="button"
+                class="diet-btn-ic diet-popover__header-trigger"
+                data-size="sm"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="textformat.size.larger"></span>
+              </button>
+            </div>
+            <div class="diet-popover__body">
+              <div class="diet-dropdown-fill__modes">
+                <button
+                  type="button"
+                  class="diet-btn-ic diet-dropdown-fill__mode-btn"
+                  data-size="sm"
+                  data-variant="secondary"
+                  data-mode="color"
+                  aria-pressed="true"
+                >
+                  <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="circle.lefthalf.filled"></span>
+                </button>
+                <button
+                  type="button"
+                  class="diet-btn-ic diet-dropdown-fill__mode-btn"
+                  data-size="sm"
+                  data-variant="secondary"
+                  data-mode="image"
+                  aria-pressed="false"
+                >
+                  <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="photo"></span>
+                </button>
+              </div>
+
+              <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
+                <div class="diet-dropdown-fill__placeholder">Color panel</div>
+              </div>
+
+              <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image">
+                Upload photo will appear here.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

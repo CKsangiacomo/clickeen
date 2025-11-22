@@ -22,11 +22,16 @@
   function applyState(state) {
     if (!state || typeof state !== 'object') return;
     const title = typeof state.title === 'string' ? state.title : null;
+    const showTitle = state.showTitle !== false; // default true
+    const header = document.querySelector('.ck-faq__header');
     if (title) {
       const el = document.querySelector('.ck-faq__title');
       if (el && 'textContent' in el) {
         el.textContent = title;
       }
+    }
+    if (header instanceof HTMLElement) {
+      header.style.display = showTitle ? '' : 'none';
     }
   }
 

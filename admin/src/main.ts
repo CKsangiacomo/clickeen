@@ -5,6 +5,7 @@ import { generateBobNativeCatalog } from './BobNativeCatalog';
 import { getIcon } from './data/icons';
 import {
   hydrateDropdownActions,
+  hydrateDropdownFill,
   hydrateDropdownEdit,
   hydrateMenuactions,
   hydratePopAddLink,
@@ -114,6 +115,7 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateTextfield(scope);
   hydrateTextedit(scope);
   hydrateDropdownActions(scope);
+  hydrateDropdownFill(scope);
   hydrateDropdownEdit(scope);
   hydrateTabs(scope);
   hydrateMenuactions(scope);

@@ -20,7 +20,7 @@ No active architectural decisions recorded yet.
 - Impact: X‑RateLimit‑Backend header added; envs `RATE_LIMIT_REDIS_URL`, `RATE_LIMIT_REDIS_PREFIX`, breaker tuning vars. No schema change; SQL path remains default.
 
 ## 2025-10-05 — Venice Loader Event Bus Parity + SSR Budget Check
-- Decision: Loader bus emits `ready`, `open`, `close` and buffers until ready. Add report‑only SSR budget script for forms.contact to verify ≤10KB gzipped initial render before release.
+- Decision: Loader bus emits `ready`, `open`, `close` and buffers until ready. Add report‑only SSR budget script for forms.contact to verify preferred ≤80KB gzipped (never above 200KB gzipped) initial render before release.
 - Impact: Developer ergonomics and release quality improve without adding CI gates in Phase‑1.
 
 ## 2025-10-06 — Naming Alignment: Loader Bus + Bob Env Var

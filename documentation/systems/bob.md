@@ -219,129 +219,15 @@ Widget JSON runs identically in both environments. This allows:
 
 ## Tool Drawer Architecture (ToolDrawer)
 
-### 🚨 SUPERSEDED: Schema-Driven ToolDrawer (Legacy)
+ToolDrawer renders the HTML that each widget provides. There is no schema or control list inside Bob.
 
-**This section describes the OLD architecture and is being replaced by the new HTML-based approach.**
+**Current flow (canonical):**
+- The widget spec (`denver/widgets/{widget}/spec.json`) defines panels as HTML that already uses Dieter markup and carries `data-bob-path` (and optional `data-bob-showif`) for bindings.
+- `compileWidget` passes that HTML through unchanged, detects `diet-*` classes to know which Dieter assets to load per panel, and builds the asset URLs from Denver.
+- At runtime, ToolDrawer injects the active panel’s HTML, loads the required Dieter CSS/JS for the components it saw, calls `Dieter.hydrateAll`, and binds values via `data-bob-path`/`show-if` using `setValue`.
+- No widget-specific logic or hardcoded control lists live in Bob. Adding/changing controls = edit the widget spec; Bob just renders and binds.
 
-For the NEW architecture, see:
-- [Widget Architecture](../widgets/WidgetArchitecture.md) - Complete new architecture
-- "Editor API v1" section below - Bob's contract with widget JSON
-
-**The section below is kept for reference only and will be removed once migration is complete.**
-
----
-
-### ⚠️ LEGACY: ToolDrawer is Schema-Driven (Old Approach)
-
-**ToolDrawer is a DUMB RENDERER** — it does NOT contain widget-specific controls or logic.
-
-**How it actually works:**
-1. **Widget JSON defines controls** — Each widget's `/paris/lib/widgets/{widgetName}.json` contains a `uiSchema` section
-2. **ToolDrawer reads the schema** — Loads the widget JSON and interprets `uiSchema.tdmenucontent`
-3. **ToolDrawer renders controls dynamically** — Loops through control definitions and renders Dieter components
-4. **All 200 widgets work identically** — Same ToolDrawer code renders every widget
-
-**WRONG MENTAL MODEL:**
-```
-❌ "I need to add FAQ-specific controls to ToolDrawer.tsx"
-❌ "ToolDrawer has hardcoded controls for each widget"
-❌ "I should add a case statement for this widget"
-```
-
-**CORRECT MENTAL MODEL:**
-```
-✅ "I define controls in the widget's JSON uiSchema"
-✅ "ToolDrawer automatically renders whatever the JSON says"
-✅ "ToolDrawer is widget-agnostic - it just follows instructions"
-```
-
-**Example - FAQ Widget Controls:**
-
-**Widget JSON** (`paris/lib/widgets/faq.json`):
-```json
-{
-  "uiSchema": {
-    "tdmenu": [
-      { "id": "content", "icon": "scribble", "label": "Content" }
-    ],
-    "tdmenucontent": {
-      "content": {
-        "title": "Content",
-        "controls": [
-          { "type": "textfield", "configPath": "title", "label": "Widget Title" },
-          { "type": "toggle", "configPath": "showTitle", "label": "Show Title" }
-        ]
-      }
-    }
-  }
-}
-```
-
-**ToolDrawer Behavior:**
-- Reads FAQ widget JSON
-- Sees "content" tab defined in `tdmenu`
-- Sees textfield + toggle defined in `tdmenucontent.content.controls`
-- Renders those controls using Dieter components
-- NO FAQ-specific code in ToolDrawer
-
-**To add controls to a widget:**
-1. ❌ DO NOT edit `bob/app/bob/ToolDrawer.tsx`
-2. ✅ DO edit `paris/lib/widgets/{widgetName}.json` → `uiSchema.tdmenucontent`
-3. ToolDrawer will automatically render the new controls
-
-**🔑 CRITICAL: Widget Editing UI Flexibility**
-
-Every widget defines its own editing UI in Widget JSON (uiSchema section).
-
-**Different widgets = Different editing UIs:**
-- FAQ widget: category/question/answer editors with repeater controls
-- Countdown widget: date/time pickers
-- Logo Showcase widget: image uploaders with drag-drop reordering
-- Each widget's editing UI is completely custom to its functionality
-- Widget JSON defines the complete ToolDrawer UI and functionality
-
-**Maximum flexibility:**
-- Widget JSON can define ANY editing UI needed
-- No limitations on complexity or structure
-- Widget JSON IS the software - it defines ToolDrawer's UI and functionality
-
-**How we keep it consistent:**
-- Widget JSON uses Dieter components when defining the UI
-- Dieter components ensure the same look/feel across all widgets
-- Users get consistent UI patterns even though every widget's editor is unique
-- ToolDrawer is DUMB - just renders what Widget JSON tells it to render
-
-**This means:**
-- Widget JSON has complete freedom to define custom editing interfaces
-- Platform-wide design consistency through Dieter
-- ToolDrawer has NO widget-specific logic
-- Bob serves all 100 widgets with ONE codebase
-
-**Physical layout:**
-- Left side: **tdmenu** (48px wide) — vertical icon menu with LG-28 Dieter buttons
-- Right side: **tdmenucontent** — control panels that change based on which icon is active
-- Gap between columns: `var(--space-6)` (24px)
-
-**Spacing locked in stone (bob.module.css):**
-- `.tooldrawer` gap: `var(--space-1)` (4px) — between header and content
-- `.tdcontent` gap: `var(--space-6)` (24px) — between icon menu and control panel
-- `.tdmenu` padding: `var(--space-2)` (8px) — around icon buttons
-- `.tdmenu` gap: `var(--space-2)` (8px) — between icon buttons
-- `.tdmenucontent` padding-top: `var(--space-2)` (8px) — top padding
-- Heading marginBottom: `var(--space-2)` (8px) — space below title
-
-**Example pattern for new control panels:**
-```tsx
-{activeMenu === 'iconName' && widgetTypeState === 'widgetType' ? (
-  <>
-    <div className="heading-3" style={{...}}>Panel Name</div>
-    <div className="stack" style={{ display: 'grid', gap: '12px', padding: 'var(--space-2)' }}>
-      <div className="diet-input" data-size="lg">...</div>
-      <div className="diet-dropdown">...</div>
-    </div>
-  </>
-) : null}
-```
+**Why:** Single Bob for 100+ widgets; widget JSON is the software; Bob is the shell (state, layout, bindings, publish). Controls, structure, and behavior come from the widget + Dieter assets, not from Bob code.
 
 ---
 

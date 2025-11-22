@@ -161,7 +161,5 @@ body {
 .workspace-iframe {
   max-width: 100%;
   border: 0;
-  border-radius: var(--radius-4);
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
-  background: #f8fafc;
+  background: transparent;
 }

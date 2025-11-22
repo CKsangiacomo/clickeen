@@ -32,10 +32,15 @@ type SessionState = {
   } | null;
 };
 
-type DevStudioMessage = {
+type WidgetBootstrapMessage = {
   type: 'devstudio:load-instance';
   widgetname: string;
-  widgetJSON: any;
+  widgetJSON: {
+    widgetname?: string;
+    displayName?: string;
+    defaults?: Record<string, unknown>;
+    html?: unknown;
+  };
   instanceData?: Record<string, unknown>;
   publicId?: string;
   label?: string;
@@ -73,7 +78,7 @@ function useWidgetSessionInternal() {
     });
   }, []);
 
-  const loadInstance = useCallback((message: DevStudioMessage) => {
+  const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
     try {
       const compiled = compileWidget(message.widgetJSON);
       const mergedInstance = mergeDefaults(
@@ -161,7 +166,7 @@ function useWidgetSessionInternal() {
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      const data = event.data as DevStudioMessage | undefined;
+      const data = event.data as WidgetBootstrapMessage | undefined;
       if (!data || data.type !== 'devstudio:load-instance') return;
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console

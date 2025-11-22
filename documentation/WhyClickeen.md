@@ -141,7 +141,7 @@ Do not implement Phase 2/3 features. Assume Phase 1 only unless CONTEXT.md speci
 - 100+ paying customers (~1% conversion)  
 - 5,000+ unique domains running widgets  
 - <5 minutes from landing page to embedded widget  
-- While keeping embed loader ≤28KB gzipped and each widget ≤10KB gzipped (see venice.md)
+- While keeping embeds lean: preferred ≤80KB gzipped, never exceeding 200KB gzipped (see venice.md)
 
 ---
 

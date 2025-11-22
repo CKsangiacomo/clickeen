@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
+    "gsap": "^3.12.5",
     "tldts": "^6.1.86"
   },
   "main": "index.html",
@@ -13,4 +14,3 @@
     "prepare": "pnpm run build"
   }
 }
-

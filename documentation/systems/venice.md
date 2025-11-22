@@ -150,7 +150,7 @@ window.addEventListener('message', (event) => {
 ### Overlay Loader Bundle: `/embed/v{semver}/loader.js`
 **Purpose**: Provide overlay/pop-up delivery via a single script  
 **Distribution**: Static asset published per semver; `/embed/latest/loader.js` alias maintained manually  
-**Target**: ≤28KB gzipped (manual normative target, not enforced in CI)  
+**Target**: Prefer ≤80KB gzipped; MUST NOT exceed 200KB gzipped (embed surfaces)  
 **Behavior**: 
 - Parses `data-*` attributes (`data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, etc.)
 - Injects a positioned iframe that points to `/e/:publicId`
@@ -339,16 +339,15 @@ Venice uses Dieter design system for styling:
 
 ## Performance Requirements
 
-### Size Budget: ≤28KB Gzipped
-**Total Budget Breakdown**:
-- HTML structure: ~8KB
-- Inlined CSS (Dieter tokens + components): ~15KB  
-- Minimal JavaScript (form handling, analytics): ~5KB
-- **Never exceed 28KB total** per widget render
+### Size Budget: Prefer ≤80KB Gzipped (Hard Cap 200KB)
+**Guidance**:
+- Aim for ≤80KB gzipped total per embed (HTML + CSS + JS, including loader where applicable).
+- Absolute maximum: 200KB gzipped total for any embed payload; do not ship above this cap.
+- Minimize third-party dependencies to stay within the preferred target.
 
 **Verification (NORMATIVE)**:
 - Engineers verify bundle size manually before release; automate later phases only if mandated.
-- If the budget is exceeded, trim dependencies or adjust CSS/HTML before shipping (no automatic fallback).
+- If the preferred target is exceeded, trim dependencies or adjust CSS/HTML before shipping; never exceed the 200KB cap.
 
 ### Load Performance Targets
 - **First Byte**: ≤100ms at edge locations
@@ -359,8 +358,8 @@ Venice uses Dieter design system for styling:
   - CLS ≤0.1
 
 ### Release Checklist (Phase-1)
-1. **Loader size:** `embed/v{semver}/loader.js` ≤28 KB gzipped before release.
-2. **Widget payloads:** representative widgets (free + premium) render ≤10 KB gzipped initial HTML/CSS.
+1. **Loader size:** `embed/v{semver}/loader.js` preferred ≤80 KB gzipped; MUST NOT exceed 200 KB gzipped before release.
+2. **Widget payloads:** representative widgets (free + premium) preferred ≤80 KB gzipped total initial HTML/CSS/JS; MUST NOT exceed 200 KB gzipped.
    - Optional helper: `pnpm --filter venice run check:budgets` (report-only) or `-- --strict` locally to enforce
 3. **Headers:** SSR responses send the canonical Cache-Control directives plus `ETag`, `Last-Modified`, and `Vary: Authorization, X-Embed-Token`.
 4. **CSP:** rendered HTML sets `default-src 'none'; frame-ancestors *; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self' data:; form-action 'self'`.

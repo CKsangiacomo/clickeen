@@ -5,26 +5,10 @@
 
 export type PanelId = string;
 
-export type ControlType = 'toggle' | 'textfield';
-
-export interface ControlDescriptor {
-  key: string;
-  type: ControlType;
-  label: string;
-  path: string;
-  size?: 'sm' | 'md' | 'lg';
-  placeholder?: string;
-  showIf?: string;
-  min?: number;
-  max?: number;
-  unit?: string;
-  options?: string;
-}
-
 export interface CompiledPanel {
   id: PanelId;
   label: string;
-  controls: ControlDescriptor[];
+  html: string;
 }
 
 export interface CompiledWidget {
@@ -36,5 +20,9 @@ export interface CompiledWidget {
     htmlUrl: string;
     cssUrl: string;
     jsUrl: string;
+    dieter?: {
+      styles: string[];
+      scripts: string[];
+    };
   };
 }

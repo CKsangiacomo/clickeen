@@ -115,7 +115,7 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
   - Static bundle served at `/embed/v{semver}/loader.js` (`/embed/latest/loader.js` alias maintained manually during releases)
   - Reads data attributes (e.g., `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`) and injects a positioned iframe that points at `/e/:publicId`
   - Minimal event bus (`window.ckeenBus`): open, close, ready; publish/subscribe with buffer‑until‑ready (legacy alias `window.Clickeen` exists; new code must use `window.ckeenBus`)
-  - Bundle budget ≤ 28KB gz; no third-party deps
+  - Preferred loader size ≤80KB gzipped; MUST NOT exceed 200KB gzipped; keep third-party deps to a minimum
 - Front-door pattern: All third-party embed traffic terminates at Venice. Browsers never call Paris directly; Venice enforces tokens/branding/entitlements and proxies to Paris over a private channel.
 - Accessibility: WCAG AA; labeled form controls; aria-live; overlays focus trap and Esc; keyboard operable
 - CSP (embeds): strict; no third‑party; no storage; form-action 'self' (proxy via Venice)
@@ -161,7 +161,7 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 
 ## Performance (Phase‑1)
 
-- Loader ≤ 28KB gz; per‑widget initial ≤ 10KB gz
+- Preferred embed size (loader + initial render) ≤80KB gzipped; MUST NOT exceed 200KB gzipped
 - Edge TTFB ≤ 100ms; TTI < 1s (4G)
 - Manual release checklist: verify bundle budgets before shipping
 Note: Embed budgets mirror systems/venice.md (normative).

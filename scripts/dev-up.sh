@@ -9,9 +9,12 @@ cd "$ROOT_DIR"
 
 mkdir -p CurrentlyExecuting
 
-echo "[dev-up] Syncing Dieter assets into Denver (local copy)"
-node "$ROOT_DIR/scripts/sync-dieter-to-denver.mjs" || {
-  echo "[dev-up] Failed to sync Dieter into Denver; continuing without CDN copy"
+echo "[dev-up] Building Dieter directly into denver/dieter"
+(
+  cd "$ROOT_DIR"
+  pnpm --filter @ck/dieter build
+) || {
+  echo "[dev-up] Failed to build Dieter; continuing but styles/scripts may be missing"
 }
 
 echo "[dev-up] Killing stale listeners on 3000,3001,4000,5173 (if any)"

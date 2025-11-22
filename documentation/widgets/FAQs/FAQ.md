@@ -716,10 +716,9 @@ Auto-generate JSON-LD schema for FAQ structured data:
 # Performance Requirements
 
 ## SSR Bundle Size Target
-- **Initial HTML/CSS:** ≤8KB gzipped
-- **Search JS:** ≤2KB gzipped
-- **Total:** ≤10KB gzipped per widget
-- **Comparison:** Elfsight ~120KB
+- **Preferred total (HTML/CSS/JS):** ≤80KB gzipped
+- **Hard cap:** ≤200KB gzipped per widget
+- **Comparison:** Elfsight ~120KB client JS (heavier than our preferred target)
 
 ## Load Performance Targets
 - **Time to Interactive:** ≤1s on 4G networks

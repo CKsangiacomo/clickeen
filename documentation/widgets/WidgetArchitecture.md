@@ -114,55 +114,36 @@ Each widget type consists of **4 files in Denver**:
 
 **Location:** `denver/widgets/{widget}/spec.json`
 
-**Purpose:** Defines ToolDrawer panels and controls; parsed by compiler.ts.
+**Purpose:** Defines ToolDrawer panels as HTML using Dieter components; parsed by compiler.ts.
 
-**Structure:**
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<widget id="faq">
-  <defaults>
-    <!-- Default values for instanceData -->
-    <title>Frequently Asked Questions</title>
-    <openFirstByDefault>false</openFirstByDefault>
-  </defaults>
-
-  <bob-panel id="content" label="Content">
-    <tooldrawer-field
-      type="textfield"
-      size="md"
-      label="FAQ Title"
-      path="title"
-      placeholder="e.g., Frequently Asked Questions"
-    />
-    <tooldrawer-field
-      type="toggle"
-      label="Display Category Titles"
-      path="displayCategoryTitles"
-    />
-    <!-- More controls for this panel -->
-  </bob-panel>
-
-  <bob-panel id="layout" label="Layout">
-    <tooldrawer-field
-      type="segmented"
-      label="Layout Mode"
-      path="layoutMode"
-      options="accordion,list,multicolumn"
-    />
-    <tooldrawer-field
-      type="slider"
-      label="Item Spacing"
-      path="itemSpacing"
-      min="0"
-      max="48"
-      unit="px"
-    />
-    <!-- More controls -->
-  </bob-panel>
-
-  <!-- Panels 3, 4, 5 similarly structured -->
-</widget>
+**Structure (HTML snippet per panel):**
+```json
+{
+  "widgetname": "faq",
+  "defaults": { "title": "Frequently Asked Questions", "showTitle": true },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <div class=\"diet-toggle diet-toggle--split\" data-size=\"md\">",
+    "    <label class=\"diet-toggle__label label-s\">Show title</label>",
+    "    <label class=\"diet-toggle__switch\">",
+    "      <input class=\"diet-toggle__input sr-only\" type=\"checkbox\" role=\"switch\" aria-label=\"Show title\" data-bob-path=\"showTitle\" />",
+    "      <span class=\"diet-toggle__knob\"></span>",
+    "    </label>",
+    "  </div>",
+    "  <div class=\"diet-textfield\" data-size=\"md\">",
+    "    <div class=\"diet-textfield__control\">",
+    "      <label class=\"diet-textfield__display-label label-s\">FAQ title</label>",
+    "      <input class=\"diet-textfield__field\" type=\"text\" aria-label=\"FAQ title\" placeholder=\"Frequently Asked Questions\" data-bob-path=\"title\" data-bob-showif=\"showTitle == 'true'\" />",
+    "    </div>",
+    "  </div>",
+    "</bob-panel>"
+  ]
+}
 ```
+Rules:
+- Controls use Dieter markup and must include `data-bob-path` (and optional `data-bob-showif`) for binding.
+- Panels are segmented by `<bob-panel id='...'>` blocks; Bob handles layout/switching.
+- No control schemas or Bob-side rendering logic; the HTML is the source of truth.
 
 ### 2. widget.html — Widget Markup
 
@@ -385,7 +366,7 @@ interface Control {
 
 ## How ToolDrawer Works (Generic Rendering)
 
-ToolDrawer is a **generic control renderer** that doesn't know about specific widgets.
+ToolDrawer renders the exact HTML the widget spec provides; Bob only binds and hydrates.
 
 ### ToolDrawer Input
 
@@ -395,28 +376,17 @@ CompiledWidget {
   panels[]: {
     id: "content",
     label: "Content",
-    controls[]: [
-      {
-        type: "textfield",
-        label: "FAQ Title",
-        path: "title",
-        placeholder: "..."
-      },
-      {
-        type: "toggle",
-        label: "Display Category Titles",
-        path: "displayCategoryTitles"
-      },
-      // ... more controls
-    ]
+    html: "<div class='diet-toggle' ... data-bob-path='showTitle'>...</div><div class='diet-textfield' ... data-bob-path='title' data-bob-showif=\"showTitle == 'true'\"></div>"
   },
-  // ... other panels
+  assets: {
+    dieter: { styles: [...], scripts: [...] },
+    htmlUrl/cssUrl/jsUrl: ...
+  }
 }
 
 editingState = {
   title: "My FAQ",
-  displayCategoryTitles: true,
-  // ... other state
+  showTitle: true
 }
 ```
 
@@ -424,31 +394,17 @@ editingState = {
 
 For the active panel:
 
-1. Get `compiled.panels[activePanel].controls`
-2. For each control:
-   - **Evaluate showIf:** If `control.showIf` is set, evaluate against editingState. If falsy, skip.
-   - **Render control:** Use `control.type` to render the right Dieter component:
-     - `textfield` → Render `<input type="text">` with Dieter classes
-     - `toggle` → Render checkbox with Dieter classes
-     - `slider` → Render range slider with Dieter classes
-     - `dropdown` → Render select with Dieter classes
-     - `segmented` → Render button group with Dieter classes
-     - etc.
-   - **Bind value:** Get current value from `editingState[control.path]`
-   - **On change:** Call `setValue(control.path, newValue)` to update editingState
-
-3. Bob re-renders and sends postMessage to preview
+1. Inject the panel HTML (from the spec) into the drawer.
+2. Load Dieter CSS/JS for any `diet-*` components detected in that panel; call `Dieter.hydrateAll` after scripts load.
+3. Walk elements with `data-bob-path`:
+   - Apply `data-bob-showif` (hide if false against editingState).
+   - Set the field value from `editingState[path]`.
+   - Bind input/change to `setValue(path, nextValue)`.
+4. Bob re-renders and posts `{ type: 'ck:state-update', widgetname, state }` to the preview iframe.
 
 ### Key Insight
 
-**ToolDrawer has ZERO widget-specific logic.**
-
-It doesn't know about FAQ, Countdown, or any widget. It just:
-- Reads control descriptors
-- Renders generic Dieter controls
-- Binds to editingState
-
-Same ToolDrawer for all 100 widgets.
+No control schemas or hardcoded control lists exist in Bob. All control structure/markup lives in the widget spec; Bob just loads the needed Dieter assets, hydrates, and binds state for every widget. Same ToolDrawer for all 100+ widgets. 
 
 ---
 

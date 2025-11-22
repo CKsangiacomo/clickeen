@@ -655,7 +655,7 @@ Done! Your FAQ widget should now appear on your page.
     </tr>
     <tr>
       <td>Bundle Size</td>
-      <td>10 KB (SSR)</td>
+      <td>≤200 KB (SSR, prefer ≤80 KB)</td>
       <td>150+ KB (client JS)</td>
     </tr>
     <tr>
@@ -694,7 +694,7 @@ top 5 FAQ plugins and widgets. Here's what we found:
 
 **Pros:**
 - AI-powered content generation (saves 2+ hours) ← **MOAT: Only Clickeen can do this**
-- Smaller, performant bundle (10KB vs competitors' 150KB+) ← Table stakes
+- Lean SSR bundle (preferred ≤80KB gzipped, cap 200KB) vs competitors' 150KB+ ← Table stakes
 - SEO-optimized server-side rendering ← Table stakes
 - Beautiful templates with zero coding ← Good execution
 

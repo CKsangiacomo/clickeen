@@ -16,7 +16,6 @@ export default function RootLayout({
         <link rel="stylesheet" href={`${DIETER_BASE}/components/button/button.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/toggle/toggle.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/popover/popover.css`} />
-        <link rel="stylesheet" href={`${DIETER_BASE}/components/textfield/textfield.css`} />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
