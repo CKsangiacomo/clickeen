@@ -53,6 +53,24 @@ function copyCssOnly(source, destination) {
   fs.copyFileSync(source, destination);
 }
 
+function copyComponentStatics(source, destination) {
+  const stat = fs.statSync(source);
+  if (stat.isDirectory()) {
+    for (const entry of fs.readdirSync(source)) {
+      const src = path.join(source, entry);
+      const dst = path.join(destination, entry);
+      copyComponentStatics(src, dst);
+    }
+    return;
+  }
+
+  if (source.endsWith('.html') || source.endsWith('.spec.json')) {
+    const dir = path.dirname(destination);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.copyFileSync(source, destination);
+  }
+}
+
 function runNodeScript(scriptRelPath) {
   const p = path.resolve(__dirname, scriptRelPath);
   const res = spawnSync(process.execPath, [p], { stdio: 'inherit' });
@@ -124,6 +142,7 @@ function main() {
   const componentsDst = path.join(dist, 'components');
   if (fs.existsSync(componentsSrc)) {
     copyCssOnly(componentsSrc, componentsDst);
+    copyComponentStatics(componentsSrc, componentsDst);
   }
 
   const foundationsDst = path.join(dist, 'foundations');

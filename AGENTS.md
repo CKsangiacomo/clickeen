@@ -1,88 +1,39 @@
-# Agent Philosophy for Clickeen
+# Repository Guidelines
 
-This is an **AI-native company**. Agents (AI or human) write the code. We succeed or fail based on the quality of engineering decisions, not on shortcuts.
+## Project Structure & Module Organization
+- `bob/` – Next.js widget editor UI; reads Dieter assets from `denver/dieter`.
+- `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
+- `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
+- `paris/` – Next.js API/service workspace (Supabase/Redis dependencies).
+- `venice/` & `prague/` – Edge runtime and marketing placeholders.
+- `documentation/` stores product/architecture context; `scripts/` has build helpers; `denver/` serves built Dieter assets for local use.
 
-## Core Principles
+## Build, Test, and Development Commands
+- Install: `pnpm install` (workspace root).
+- Dev: `pnpm dev:bob`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
+- Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
+- Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
+- Tests: `pnpm test` (Turbo) or targeted `pnpm --filter @clickeen/devstudio test`.
 
-### 1. Understand the System First
-Clickeen is complex and interconnected. **Before touching code:**
-- Read `CONTEXT.md` (what we're building)
-- Read `WhyClickeen.md` (why it matters)
-- Read the relevant system PRD (how it works)
-- Understand the architecture, data flow, and constraints
+## Coding Style & Naming Conventions
+- TypeScript-first; React function components in PascalCase; hooks/utilities in camelCase.
+- Use 2-space indentation, Prettier defaults, and ESLint (`@typescript-eslint` in `admin`, `next lint` in Next apps); fix warnings before commit.
+- Dieter components use kebab-case folders and `diet-` CSS class prefixes; reuse tokens from `dieter/tokens` instead of ad-hoc styles.
+- Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_DENVER_URL` for Dieter assets).
 
-Don't edit in isolation. Every change affects the whole.
+## Testing Guidelines
+- Admin uses Vitest/Testing Library; co-locate `*.test.ts(x)` near sources and cover accessibility.
+- Dieter specs live in `dieter/components/*/*.spec.json`; update fixtures when components change.
+- For Next apps, add smoke or integration coverage around new logic; at minimum, exercise data fetchers and critical hooks.
+- Run `pnpm test` plus `pnpm lint && pnpm typecheck` before PRs; note any missing coverage.
 
-### 2. No Smoke and Mirrors
-- We care about the **integrity of the system**, not ad-hoc fixes that "work for now"
-- A change that makes something work but breaks another thing silently is worse than no change
-- If you don't understand the downstream impact, **stop and ask**
-- Technical debt compounds; elegant solutions scale
+## Commit & Pull Request Guidelines
+- Use conventional-style messages seen in history (`feat: ...`, `chore: ...`, `fix: ...`); include scope when helpful (e.g., `feat(bob): add widget toolbar`).
+- PRs need a concise summary, linked issue/PRD, screenshots or recordings for UI changes, and notes on env or migration steps.
+- Call out Dieter token changes and downstream impact (Bob/Admin/Paris) in the description.
+- Update relevant docs (`documentation/CONTEXT.md`, feature PRDs) when behavior shifts.
 
-### 3. Elegant Engineering Only
-Clickeen scales through **architectural elegance**, not brute force:
-- Widget JSON as data (not code) → AI-legible
-- Two-API-Call Pattern → infinite scalability
-- Dieter tokens → consistent, maintainable design
-- ToolDrawer widget-agnostic → one codebase, 100 widgets
-
-When tempted to add special cases, parameters, or workarounds—**don't**. Redesign to be elegant.
-
-### 4. Design & UX is the Moat
-**Dieter and design tokens are not optional.** They are the competitive advantage:
-- Every component must be beautiful and delightful
-- Every component must work consistently across all widgets
-- Tokens must be the source of truth (not overrides or exceptions)
-- No "good enough" components; design-led excellence applies to everything
-
-When building features:
-- Start with Dieter; use existing tokens
-- If a new component is needed, design it properly (not a quick patch)
-- Update Dieter showcase when adding components
-- Ensure it works across all contexts, not just the current widget
-
-### 5. Propose Before Executing
-- **Always** show your plan and get approval before making changes
-- Declare scope: which systems/files will change?
-- Explain trade-offs and alternatives
-- If the change is ambiguous, ask clarifying questions (yes/no only)
-
-### 6. Preserve What Works
-- No speculative refactors
-- No "modernizing" code that isn't broken
-- If it works and is well-designed, leave it alone
-- Change only what's necessary to solve the problem
-
-### 7. Documentation is Truth
-- Update docs when behavior changes
-- Documentation drift is a P0 incident
-- Code review must include doc review
-- If something is undocumented, document it before changing it
-
----
-
-## In Practice
-
-**Before touching code:**
-1. Read the relevant docs (not "I'll figure it out")
-2. Understand why the system is designed this way
-3. Propose your change (show the diff)
-4. Get approval
-
-**While coding:**
-1. Follow existing patterns (consistency matters)
-2. Use Dieter components and tokens (never reinvent)
-3. Write elegant code, not clever code
-4. Update docs simultaneously
-
-**When uncertain:**
-1. Ask a yes/no question
-2. Do not guess or proceed with assumptions
-3. Stop and clarify before continuing
-
----
-
-This is how we maintain a system that scales. Not through patches. Through design.
-
-The moats are **AI-Native, PLG, and Design-Led Excellence**. Protect them.
-
+## Security & Configuration Tips
+- Store secrets in per-app `.env.local` files; do not commit keys (Supabase/Redis, Edge Config, etc.).
+- Keep Dieter asset paths in sync with `denver/dieter`; avoid hard-coded absolute URLs.
+- When touching networked services, note rate limits and production endpoints; prefer feature flags or config toggles for risky changes.

@@ -49,13 +49,14 @@ async function forwardToParis(
       status: res.status,
       headers: {
         'Content-Type': contentType || 'application/json',
+        'Access-Control-Allow-Origin': '*',
       },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: 'PARIS_PROXY_ERROR', message },
-      { status: 502 }
+      { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } }
     );
   } finally {
     clearTimeout(timeout);

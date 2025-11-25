@@ -206,8 +206,8 @@
 </div>
 
 <script type="module">
-const PARIS_ORIGIN = 'http://localhost:3001';
-const DENVER_WIDGET_BASE = '/denver/widgets';
+const BOB_ORIGIN = 'http://localhost:3000';
+const PARIS_API = `${BOB_ORIGIN}/api/paris`;
 let currentPublicId = null;
 let instances = [];
 let isOpen = false;
@@ -218,7 +218,7 @@ const valueField = document.getElementById('instance-dropdown-value');
 const menu = document.getElementById('instance-dropdown-menu');
 const iframe = document.getElementById('bob-iframe');
 const currentLabel = document.getElementById('current-instance-label');
-const widgetCache = new Map();
+const compiledCache = new Map();
 
 window.addEventListener('message', (event) => {
   const data = event.data;
@@ -248,20 +248,20 @@ function normalizeWidgetname(raw) {
   return parts[parts.length - 1].toLowerCase();
 }
 
-async function ensureWidgetJSON(widgetname) {
+async function ensureCompiledWidget(widgetname) {
   const slug = normalizeWidgetname(widgetname);
   if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
-  if (widgetCache.has(slug)) return widgetCache.get(slug);
-  const res = await fetch(`${DENVER_WIDGET_BASE}/${slug}/spec.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Failed to load widget spec for ${widgetname} (${res.status})`);
+  if (compiledCache.has(slug)) return compiledCache.get(slug);
+  const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to compile widget ${widgetname} (${res.status})`);
   const json = await res.json();
-  widgetCache.set(slug, json);
+  compiledCache.set(slug, json);
   return json;
 }
 
 async function fetchInstances() {
   console.log('[DevStudio] Fetching instances from Paris');
-  const res = await fetch(`${PARIS_ORIGIN}/api/instances?_t=${Date.now()}`, { cache: 'no-store' });
+  const res = await fetch(`${PARIS_API}/instances?_t=${Date.now()}`, { cache: 'no-store' });
   const data = await res.json();
   const payload = Array.isArray(data.instances) ? data.instances : [];
   instances = payload.map((inst) => ({
@@ -277,7 +277,7 @@ async function fetchInstances() {
     throw new Error('[DevStudio] Supabase returned zero instances for dev workspace');
   }
 
-  await Promise.all(uniqueWidgetnames.map((widgetname) => ensureWidgetJSON(widgetname)));
+  await Promise.all(uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)));
 
   currentPublicId = currentPublicId || instances[0].publicId;
 
@@ -355,9 +355,9 @@ async function sendInstanceToIframe(publicId) {
     throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
   }
 
-  let widgetJSON = widgetCache.get(slug);
-  if (!widgetJSON) {
-    widgetJSON = await ensureWidgetJSON(instance.widgetname);
+  let compiled = compiledCache.get(slug);
+  if (!compiled) {
+    compiled = await ensureCompiledWidget(instance.widgetname);
   }
   console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
   target.postMessage(
@@ -365,7 +365,7 @@ async function sendInstanceToIframe(publicId) {
       type: 'devstudio:load-instance',
       publicId,
       widgetname: slug,
-      widgetJSON,
+      compiled,
       instanceData: instance.config || {},
     },
     '*'

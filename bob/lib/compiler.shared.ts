@@ -1,0 +1,73 @@
+import { CompiledPanel, CompiledWidget } from './types';
+
+export type RawWidget = {
+  widgetname?: unknown;
+  displayName?: unknown;
+  defaults?: Record<string, unknown>;
+  html?: unknown;
+};
+
+export type TooldrawerAttrs = Record<string, string>;
+
+export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
+  const attrs: TooldrawerAttrs = {};
+  const attrRegex = /(\w+)\s*=\s*['"]([^'"]*)['"]/g;
+  let m: RegExpExecArray | null;
+  while ((m = attrRegex.exec(tag)) !== null) {
+    attrs[m[1]] = m[2];
+  }
+  return attrs;
+}
+
+export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
+  const tdRegex = /<tooldrawer-field([^>]*)\/>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tdRegex.exec(markup)) !== null) {
+    const attrs = parseTooldrawerAttributes(m[1]);
+    if (attrs.type) usages.add(attrs.type);
+  }
+}
+
+export function formatPanelLabel(id: string): string {
+  if (!id) return 'Panel';
+  return id.charAt(0).toUpperCase() + id.slice(1);
+}
+
+export function parsePanels(htmlLines: unknown): { panels: CompiledPanel[]; usages: Set<string> } {
+  if (!Array.isArray(htmlLines)) {
+    throw new Error('[BobCompiler] widget JSON missing html array');
+  }
+
+  const html = htmlLines.join('\n');
+  const panelRegex = /<bob-panel\s+id='([^']+)'[^>]*>([\s\S]*?)<\/bob-panel>/gi;
+  const panels: CompiledPanel[] = [];
+  const usages = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = panelRegex.exec(html)) !== null) {
+    const id = match[1];
+    const panelMarkup = match[2];
+
+    collectTooldrawerTypes(panelMarkup, usages);
+
+    const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
+    let classMatch: RegExpExecArray | null;
+    while ((classMatch = classRegex.exec(panelMarkup)) !== null) {
+      const raw = classMatch[1];
+      const base = raw.replace(/(--|__).*/, '');
+      if (base) usages.add(base);
+    }
+
+    panels.push({
+      id,
+      label: formatPanelLabel(id),
+      html: panelMarkup,
+    });
+  }
+
+  if (panels.length === 0) {
+    throw new Error('[BobCompiler] No <bob-panel> definitions found in widget JSON');
+  }
+
+  return { panels, usages };
+}

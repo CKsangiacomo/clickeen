@@ -1,0 +1,37 @@
+{
+  "component": "slider",
+  "syntax": "<tooldrawer-field type='slider' label='{{LABEL}}' size='{{SIZE}}' path='{{PATH}}' min='{{MIN}}' max='{{MAX}}' value='{{VALUE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "block": { "optional": true },
+    "id": { "required": true },
+    "path": { "required": true },
+    "label": { "required": true },
+    "min": { "optional": true },
+    "max": { "optional": true },
+    "value": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "number" },
+  "defaults": [
+    {
+      "id": "slider",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-slider", "data-size='{{size}}'"],
+      "context": {
+        "block": "",
+        "size": "md",
+        "id": "slider-{{size}}",
+        "label": "Label",
+        "min": "0",
+        "max": "100",
+        "value": "50",
+        "path": ""
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs" },
+        "md": { "labelClass": "label-s" },
+        "lg": { "labelClass": "label-m" }
+      }
+    }
+  ]
+}

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { getAt } from '../lib/utils/paths';
 
 export function Workspace() {
   const session = useWidgetSession();
-  const { compiled, instanceData, preview, setPreview, meta, widgetJSON } = session;
+  const { compiled, instanceData, preview, setPreview, meta } = session;
   const device = preview.device;
   const theme = preview.theme;
-  const hasWidget = Boolean(compiled && widgetJSON);
+  const hasWidget = Boolean(compiled);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
   const displayName =
@@ -30,7 +31,7 @@ export function Workspace() {
     return () => {
       iframe.removeEventListener('load', handleLoad);
     };
-  }, [hasWidget, compiled, compiled?.assets.htmlUrl, widgetJSON]);
+  }, [hasWidget, compiled, compiled?.assets.htmlUrl]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;
@@ -48,6 +49,8 @@ export function Workspace() {
 
     iframeWindow.postMessage(message, '*');
   }, [hasWidget, compiled, instanceData, device, theme, iframeReady]);
+
+  const stageBg = getAt<string>(instanceData, 'stage.background') || undefined;
 
   return (
     <section className="workspace">
@@ -119,7 +122,7 @@ export function Workspace() {
         <div className="wsheader-right" />
       </header>
 
-      <div className="wscontent">
+      <div className="wscontent" style={stageBg ? { background: stageBg } : undefined}>
         <iframe
           ref={iframeRef}
           title="Widget preview"

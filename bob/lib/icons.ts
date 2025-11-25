@@ -1,7 +1,7 @@
 // Dieter icon registry adapter for Bob
-// Returns inline SVG strings built from the generated icons.json
+// Returns inline SVG strings built from the built icons.json served by Denver
 
-import registry from '../../dieter/dist/icons/icons.json';
+import registry from '../../denver/dieter/icons/icons.json';
 
 type Bounds = { x1: number; y1: number; x2: number; y2: number };
 

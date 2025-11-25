@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PanelId } from '../lib/types';
 import { getAt } from '../lib/utils/paths';
 
@@ -35,14 +35,14 @@ function ensureScripts(urls: string[] | undefined): Promise<void[]> {
     const p = new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
       script.src = src;
-      script.async = true;
+      script.async = false; // preserve order
       script.onload = () => resolve();
       script.onerror = () => {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.warn('[TdMenuContent] Failed to load script', src);
+          console.error('[TdMenuContent] Failed to load script', src);
         }
-        resolve(); // tolerate missing hydrators (e.g., CSS-only components)
+        reject(new Error(`Failed to load script ${src}`));
       };
       document.head.appendChild(script);
     });
@@ -72,6 +72,7 @@ function runHydrators(scope: HTMLElement) {
 type TdMenuContentProps = {
   panelId: PanelId | null;
   panelHtml: string;
+  widgetKey?: string;
   instanceData: Record<string, unknown>;
   setValue: (path: string, value: unknown) => void;
   defaults?: Record<string, unknown>;
@@ -111,8 +112,15 @@ function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>)
   return true;
 }
 
-export function TdMenuContent({ panelId, panelHtml, instanceData, setValue, defaults, dieterAssets }: TdMenuContentProps) {
+export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, setValue, defaults, dieterAssets }: TdMenuContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Reset caches when switching widgets
+  useEffect(() => {
+    loadedStyles.clear();
+    loadedScripts.clear();
+  }, [widgetKey]);
 
   // Inject panel HTML when it changes
   useEffect(() => {
@@ -121,11 +129,16 @@ export function TdMenuContent({ panelId, panelHtml, instanceData, setValue, defa
     container.innerHTML = panelHtml || '';
 
     ensureStyles(dieterAssets?.styles);
-    ensureScripts(dieterAssets?.scripts).finally(() => {
-      if (container) {
-        runHydrators(container);
-      }
-    });
+    ensureScripts(dieterAssets?.scripts)
+      .then(() => {
+        if (container) {
+          runHydrators(container);
+          setRenderKey((n) => n + 1);
+        }
+      })
+      .catch(() => {
+        // errors already logged in dev
+      });
   }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts]);
 
   // Bind controls: set values from instanceData, attach listeners, honor showIf
@@ -133,9 +146,7 @@ export function TdMenuContent({ panelId, panelHtml, instanceData, setValue, defa
     const container = containerRef.current;
     if (!container) return;
 
-    const fields = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-bob-path]')
-    );
+    const fields = Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
 
     const cleanupFns: Array<() => void> = [];
 
@@ -173,15 +184,23 @@ export function TdMenuContent({ panelId, panelHtml, instanceData, setValue, defa
         }
       };
 
-      const effectiveEvent = field instanceof HTMLInputElement && field.type === 'checkbox' ? 'change' : 'input';
-      field.addEventListener(effectiveEvent, handler);
-      cleanupFns.push(() => field.removeEventListener(effectiveEvent, handler));
+      if (field instanceof HTMLInputElement && field.type === 'checkbox') {
+        field.addEventListener('change', handler);
+        cleanupFns.push(() => field.removeEventListener('change', handler));
+      } else {
+        field.addEventListener('input', handler);
+        field.addEventListener('change', handler);
+        cleanupFns.push(() => {
+          field.removeEventListener('input', handler);
+          field.removeEventListener('change', handler);
+        });
+      }
     });
 
     return () => {
       cleanupFns.forEach((fn) => fn());
     };
-  }, [instanceData, setValue, panelHtml]);
+  }, [instanceData, setValue, panelHtml, renderKey, defaults]);
 
   if (!panelId) {
     return (

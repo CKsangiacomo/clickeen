@@ -20,6 +20,8 @@ const toTitle = (slug: string): string => slug.replace(/[-_]/g, ' ').replace(/\b
 
 const BUTTON_IMPORT_REGEX = /@import\s+['"]\.\.\/button\/button\.css['"];\s*/g;
 const MENUACTIONS_IMPORT_REGEX = /@import\s+['"]\.\.\/menuactions\/menuactions\.css['"];\s*/g;
+const SLIDER_IMPORT_REGEX = /@import\s+['"]\.\.\/slider\/slider\.css['"];\s*/g;
+const TEXTFIELD_IMPORT_REGEX = /@import\s+['"]\.\.\/textfield\/textfield\.css['"];\s*/g;
 
 const inlineCssImports = (css?: string): string | undefined => {
   if (!css) return css;
@@ -37,6 +39,16 @@ const inlineCssImports = (css?: string): string | undefined => {
   ) {
     const menuactionsCss = cssModules['../../../dieter/components/menuactions/menuactions.css'];
     result = result.replace(MENUACTIONS_IMPORT_REGEX, menuactionsCss ? `${menuactionsCss}\n` : '');
+  }
+
+  if (result.includes("@import '../slider/slider.css';") || result.includes('@import "../slider/slider.css";')) {
+    const sliderCss = cssModules['../../../dieter/components/slider/slider.css'];
+    result = result.replace(SLIDER_IMPORT_REGEX, sliderCss ? `${sliderCss}\n` : '');
+  }
+
+  if (result.includes("@import '../textfield/textfield.css';") || result.includes('@import "../textfield/textfield.css";')) {
+    const textfieldCss = cssModules['../../../dieter/components/textfield/textfield.css'];
+    result = result.replace(TEXTFIELD_IMPORT_REGEX, textfieldCss ? `${textfieldCss}\n` : '');
   }
 
   return result;

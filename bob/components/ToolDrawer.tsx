@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CompiledPanel, PanelId } from '../lib/types';
 import { TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
@@ -14,6 +14,13 @@ export function ToolDrawer() {
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
+
+  // Reset active panel when widget changes
+  useEffect(() => {
+    if (compiled?.panels && compiled.panels.length > 0) {
+      setActivePanel(compiled.panels[0].id as PanelId);
+    }
+  }, [compiled?.widgetname, compiled?.panels]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};
@@ -96,6 +103,7 @@ export function ToolDrawer() {
               <TdMenuContent
                 panelId={activePanel}
                 panelHtml={activePanelHtml ?? ''}
+                widgetKey={compiled?.widgetname}
                 instanceData={session.instanceData}
                 setValue={session.setValue}
                 defaults={compiled?.defaults}

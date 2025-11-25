@@ -10,7 +10,6 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import type { CompiledWidget } from '../types';
-import { compileWidget } from '../compiler';
 import { mergeDefaults } from '../utils/merge';
 import { setAt } from '../utils/paths';
 
@@ -24,7 +23,6 @@ type SessionState = {
   instanceData: Record<string, unknown>;
   isDirty: boolean;
   preview: PreviewSettings;
-  widgetJSON: Record<string, unknown> | null;
   meta: {
     publicId?: string;
     widgetname?: string;
@@ -35,12 +33,7 @@ type SessionState = {
 type WidgetBootstrapMessage = {
   type: 'devstudio:load-instance';
   widgetname: string;
-  widgetJSON: {
-    widgetname?: string;
-    displayName?: string;
-    defaults?: Record<string, unknown>;
-    html?: unknown;
-  };
+  compiled: CompiledWidget;
   instanceData?: Record<string, unknown>;
   publicId?: string;
   label?: string;
@@ -57,7 +50,6 @@ function useWidgetSessionInternal() {
     instanceData: {},
     isDirty: false,
     preview: DEFAULT_PREVIEW,
-    widgetJSON: null,
     meta: null,
   }));
 
@@ -80,10 +72,30 @@ function useWidgetSessionInternal() {
 
   const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
     try {
-      const compiled = compileWidget(message.widgetJSON);
+      const compiled = message.compiled;
+      if (!compiled) {
+        throw new Error('[useWidgetSession] Missing compiled widget payload');
+      }
+      const incoming = (message.instanceData ?? {}) as Record<string, unknown>;
+
+      // Normalize legacy fields into stage/pod so fills always work.
+      const normalized: Record<string, unknown> = { ...incoming };
+      const pod = (normalized.pod as Record<string, unknown>) || {};
+      const stage = (normalized.stage as Record<string, unknown>) || {};
+
+      if (!pod.background && typeof incoming.backgroundColor === 'string') {
+        pod.background = incoming.backgroundColor;
+      }
+      if (!stage.background && typeof incoming.stageBackground === 'string') {
+        stage.background = incoming.stageBackground;
+      }
+
+      if (!normalized.pod) normalized.pod = pod;
+      if (!normalized.stage) normalized.stage = stage;
+
       const mergedInstance = mergeDefaults(
         (compiled.defaults ?? {}) as Record<string, unknown>,
-        (message.instanceData ?? {}) as Record<string, unknown>
+        normalized
       );
 
       setState((prev) => ({
@@ -91,7 +103,6 @@ function useWidgetSessionInternal() {
         instanceData: mergedInstance,
         isDirty: false,
         preview: prev.preview,
-        widgetJSON: message.widgetJSON as Record<string, unknown>,
         meta: {
           publicId: message.publicId,
           widgetname: compiled.widgetname,
@@ -108,7 +119,6 @@ function useWidgetSessionInternal() {
         compiled: null,
         instanceData: {},
         isDirty: false,
-        widgetJSON: null,
         meta: null,
       }));
     }
@@ -188,7 +198,6 @@ function useWidgetSessionInternal() {
       instanceData: state.instanceData,
       isDirty: state.isDirty,
       preview: state.preview,
-      widgetJSON: state.widgetJSON,
       meta: state.meta,
       setInstanceData,
       setValue,

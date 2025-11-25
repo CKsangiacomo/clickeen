@@ -74,6 +74,17 @@ function serveStatic(req, res, prefix) {
 }
 
 const server = http.createServer((req, res) => {
+  // Allow local origins (Bob 3000, DevStudio 5173, etc.)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   const parsed = url.parse(req.url || '/');
   const pathname = parsed.pathname || '/';
 
@@ -97,4 +108,3 @@ server.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[denver-dev] Listening on http://localhost:${port}`);
 });
-

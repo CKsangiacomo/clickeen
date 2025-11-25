@@ -23,6 +23,18 @@
     if (!state || typeof state !== 'object') return;
     const title = typeof state.title === 'string' ? state.title : null;
     const showTitle = state.showTitle !== false; // default true
+    const stageBg = state.stage && typeof state.stage.background === 'string' ? state.stage.background : null;
+    const podBg = state.pod && typeof state.pod.background === 'string' ? state.pod.background : null;
+
+    if (stageBg) {
+      document.body.style.background = stageBg;
+    }
+
+    const wrapper = document.querySelector('.ck-widget.ck-faq-widget');
+    if (wrapper instanceof HTMLElement && podBg) {
+      wrapper.style.background = podBg;
+    }
+
     const header = document.querySelector('.ck-faq__header');
     if (title) {
       const el = document.querySelector('.ck-faq__title');
