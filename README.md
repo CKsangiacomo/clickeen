@@ -1,73 +1,50 @@
-# Bob + Dieter Standalone
+# Clickeen Widget Platform
 
-Extracted from Clickeen monorepo for reuse in other projects.
+This repo contains the full Clickeen widget platform:
 
-## What's Included
+- **bob/** — Widget editor (Next.js). Consumes precompiled widget panels and hydrates Dieter components.
+- **admin/** — DevStudio tooling and component showcase (Vite). Hosts the widget workspace page that embeds Bob.
+- **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **denver/**.
+- **denver/** — Local CDN stub serving Dieter assets and built widgets.
+- **paris/** — API service used by DevStudio for instances.
+- **documentation/** — Platform and architecture notes.
 
-- **bob/** - Widget editor UI (Next.js app)
-- **admin/** - Component showcase (Vite app)
-- **dieter/** - Design system (CSS + Web Components)
+## Architecture (high level)
 
-## Setup
+1) **Widgets live in Denver**
+   - Each widget has `denver/widgets/<name>/spec.json` and built assets (`widget.html/css/js`).
+   - Dieter component templates/specs live under `denver/dieter/components`.
+
+2) **Server-side expansion**
+   - Bob’s compile API (`/api/widgets/[widgetname]/compiled`) reads the widget spec and expands `<tooldrawer-field>` using Dieter templates/specs.
+   - Icons are inlined server-side; compiled panels include final HTML plus deterministic Dieter assets (CSS/JS).
+
+3) **DevStudio → Bob flow**
+   - DevStudio fetches instances from Paris, then fetches the compiled widget from Bob’s API.
+   - DevStudio posts the compiled payload to Bob via `postMessage`; Bob renders panels, loads Dieter assets, hydrates, and binds state.
+
+4) **Stage vs Pod fills**
+   - Appearance panel exposes two dropdown-fill controls: `stage.background` (workspace backdrop) and `pod.background` (widget surface). Both use Dieter dropdown-fill.
+
+## Development
 
 ```bash
-# 1. Run the setup script (copies files from clickeen)
-chmod +x SETUP.sh
-./SETUP.sh
-
-# 2. Install dependencies
 pnpm install
-
-# 3. Build Dieter first
-pnpm build:dieter
-
-# 4. Run dev servers
-pnpm dev:bob      # Bob on http://localhost:3000
-pnpm dev:admin    # Admin on http://localhost:5173
+pnpm build:dieter       # builds Dieter into denver/dieter
+./scripts/dev-up.sh     # starts Denver (4000), Paris (3001), Bob (3000), DevStudio (5173)
 ```
 
-## To Move to New Git Repo
+Useful scripts:
+- `pnpm dev:bob`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
+- `pnpm build` (after `pnpm build:dieter`)
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`
 
-```bash
-# 1. Copy this entire folder
-cp -r tools/website ~/Desktop/my-new-project
+## Notes
 
-# 2. Initialize new git repo
-cd ~/Desktop/my-new-project
-git init
-git add .
-git commit -m "Initial commit from Clickeen extraction"
-
-# 3. Delete Clickeen-specific code
-# - Remove Paris API calls in bob/lib/session/useWidgetSession.tsx
-# - Remove widget compilation logic
-# - Adapt for your use case
-```
-
-## What to Delete (Clickeen-specific)
-
-### In bob/:
-- `bob/lib/compiler.ts` - Widget compilation logic
-- `bob/lib/session/useWidgetSession.tsx:169-210` - renameInstance API call
-- `bob/lib/widgets/` - Widget JSON configs
-- `bob/app/api/` - Paris API routes
-
-### In admin/:
-- Keep everything - it's just a showcase
-
-### In dieter/:
-- Keep everything - it's a standalone design system
-
-## Structure After Cleanup
-
-```
-my-new-project/
-├── bob/          # UI framework (Next.js)
-├── admin/        # Component showcase
-├── dieter/       # Design system
-└── package.json  # Workspace root
-```
+- Bob runs fully client-side rendering of already-expanded panels; no runtime template fetching.
+- Icons must exist in `denver/dieter/icons/icons.json`; missing icons fail compilation.
+- Widget data paths: `stage.background` and `pod.background` are the canonical fill keys.
 
 ## License
 
-Extracted from Clickeen. Adapt as needed.
+Internal Clickeen codebase.
