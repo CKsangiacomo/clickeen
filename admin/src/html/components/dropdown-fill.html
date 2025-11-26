@@ -62,7 +62,7 @@
         aria-hidden="true"
         tabindex="-1"
       >
-        <span class="diet-btn-ic__icon" data-icon="scribble"></span>
+        <span class="diet-btn-ic__icon" data-icon="paintbrush"></span>
       </button>
     </div>
     <div class="diet-popover__body">
@@ -90,6 +90,9 @@
       </div>
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
+        <div class="diet-dropdown-fill__preview" aria-hidden="true">
+          <div class="diet-dropdown-fill__color-preview"></div>
+        </div>
         <div class="diet-dropdown-fill__sv" data-role="sv">
           <div class="diet-dropdown-fill__sv-canvas">
             <div class="diet-dropdown-fill__sv-thumb" aria-hidden="true"></div>
@@ -159,185 +162,80 @@
 
         <div class="diet-dropdown-fill__swatches" role="group" aria-label="Default colors">
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
+        </div>
+
+        <div class="diet-dropdown-fill__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-fill__remove-fill"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Remove fill</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -435,7 +333,7 @@
         aria-hidden="true"
         tabindex="-1"
       >
-        <span class="diet-btn-ic__icon" data-icon="scribble"></span>
+        <span class="diet-btn-ic__icon" data-icon="paintbrush"></span>
       </button>
     </div>
     <div class="diet-popover__body">
@@ -463,6 +361,9 @@
       </div>
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
+        <div class="diet-dropdown-fill__preview" aria-hidden="true">
+          <div class="diet-dropdown-fill__color-preview"></div>
+        </div>
         <div class="diet-dropdown-fill__sv" data-role="sv">
           <div class="diet-dropdown-fill__sv-canvas">
             <div class="diet-dropdown-fill__sv-thumb" aria-hidden="true"></div>
@@ -532,185 +433,80 @@
 
         <div class="diet-dropdown-fill__swatches" role="group" aria-label="Default colors">
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
+        </div>
+
+        <div class="diet-dropdown-fill__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-fill__remove-fill"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Remove fill</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -808,7 +604,7 @@
         aria-hidden="true"
         tabindex="-1"
       >
-        <span class="diet-btn-ic__icon" data-icon="scribble"></span>
+        <span class="diet-btn-ic__icon" data-icon="paintbrush"></span>
       </button>
     </div>
     <div class="diet-popover__body">
@@ -836,6 +632,9 @@
       </div>
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
+        <div class="diet-dropdown-fill__preview" aria-hidden="true">
+          <div class="diet-dropdown-fill__color-preview"></div>
+        </div>
         <div class="diet-dropdown-fill__sv" data-role="sv">
           <div class="diet-dropdown-fill__sv-canvas">
             <div class="diet-dropdown-fill__sv-thumb" aria-hidden="true"></div>
@@ -905,185 +704,80 @@
 
         <div class="diet-dropdown-fill__swatches" role="group" aria-label="Default colors">
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff3b30" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff9500" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffcc00" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#34c759" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#30b0c7" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-red-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-orange-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#007aff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#32ade6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#00c7be" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#5856d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#af52de" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ff2d55" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-yellow-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-green-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#a2845e" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#212121" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-1)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#aeaeb2" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-2)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#c7c7cc" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-3)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#d1d1d6" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-4)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#e5e5ea" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-teal-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-blue-5)" aria-pressed="false">
+            <button type="button" class="diet-dropdown-fill__swatch" data-color="#ffffff" aria-pressed="false">
               <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
             </button>
           </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-purple-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-pink-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="diet-dropdown-fill__swatch-row">
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-1)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-2)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-3)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-4)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-            <button type="button" class="diet-dropdown-fill__swatch" data-color="var(--color-system-brown-5)" aria-pressed="false">
-              <span class="diet-dropdown-fill__swatch-dot" aria-hidden="true"></span>
-            </button>
-          </div>
+        </div>
+
+        <div class="diet-dropdown-fill__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-fill__remove-fill"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Remove fill</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
         </div>
       </div>
 

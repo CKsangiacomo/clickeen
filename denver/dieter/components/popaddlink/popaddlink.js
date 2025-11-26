@@ -1,3 +1,4 @@
+var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 "use strict";
 var Dieter = (() => {
   var __defProp = Object.defineProperty;
@@ -110,3 +111,4 @@ var Dieter = (() => {
   }
   return __toCommonJS(popaddlink_exports);
 })();
+window.Dieter = { ...__prevDieter, ...Dieter };

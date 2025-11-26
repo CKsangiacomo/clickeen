@@ -7,38 +7,36 @@
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
-    <div class="ck-widget ck-faq-widget" data-role="faq-widget">
-      <section class="ck-faq" data-role="faq" data-expanded-all="true">
-        <header class="ck-faq__header">
-          <h2 class="ck-faq__title">Frequently Asked Questions</h2>
-          <div class="ck-faq__search" hidden>
-            <input type="search" placeholder="Search" />
-          </div>
-        </header>
-        <ul class="ck-faq__list">
-          <li class="ck-faq__item">
-            <button class="ck-faq__q" type="button" aria-expanded="true">What is Clickeen?</button>
-            <div class="ck-faq__a" role="region" style="display:block">
-              Embeddable widgets with one line of code.
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div class="ck-widget ck-faq-widget" data-role="faq-widget">
+          <section class="ck-faq" data-role="faq" data-expanded-all="true">
+            <header class="ck-faq__header">
+              <h2 class="ck-faq__title heading-4" data-role="faq-title">Frequently Asked Questions</h2>
+              <div class="ck-faq__search" data-role="faq-search" hidden>
+                <input type="search" class="body-s" placeholder="Search..." aria-label="Search questions" />
+                <div class="ck-faq__search-count label-s" data-role="faq-search-count" hidden></div>
+              </div>
+            </header>
+            <div class="ck-faq__category label-s" data-role="faq-category" hidden>All Questions</div>
+            <div class="ck-faq__controls">
+              <nav class="ck-faq__nav" aria-label="FAQ categories" data-role="faq-nav" hidden>
+                <!-- Filled dynamically -->
+              </nav>
+              <div class="ck-faq__actions" data-role="faq-actions">
+                <button type="button" class="ck-faq__action label-s" data-role="expand-all">Expand all</button>
+                <button type="button" class="ck-faq__action label-s" data-role="collapse-all">Collapse all</button>
+              </div>
             </div>
-          </li>
-          <li class="ck-faq__item">
-            <button class="ck-faq__q" type="button" aria-expanded="true">Is there a free plan?</button>
-            <div class="ck-faq__a" role="region" style="display:block">
-              Yes, one active widget with branding.
-            </div>
-          </li>
-          <li class="ck-faq__item">
-            <button class="ck-faq__q" type="button" aria-expanded="true">How do I install a widget?</button>
-            <div class="ck-faq__a" role="region" style="display:block">
-              Copy the embed code and paste it into your website HTML.
-            </div>
-          </li>
-        </ul>
-      </section>
-      <footer class="ck-faq__backlink">
-        <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
-      </footer>
+            <div class="ck-faq__empty body-s" data-role="faq-empty" hidden>No questions yet. Add your first FAQ.</div>
+            <div class="ck-faq__noresults body-s" data-role="faq-noresults" hidden>No questions match your search.</div>
+            <ul class="ck-faq__list" data-role="faq-list"></ul>
+          </section>
+          <footer class="ck-faq__backlink" data-role="faq-backlink">
+            <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
+          </footer>
+        </div>
+      </div>
     </div>
     <script src="./widget.client.js" defer></script>
   </body>

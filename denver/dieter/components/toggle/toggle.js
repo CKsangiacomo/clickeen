@@ -1,3 +1,4 @@
+var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 "use strict";
 var Dieter = (() => {
   var __defProp = Object.defineProperty;
@@ -41,3 +42,4 @@ var Dieter = (() => {
   }
   return __toCommonJS(toggle_exports);
 })();
+window.Dieter = { ...__prevDieter, ...Dieter };

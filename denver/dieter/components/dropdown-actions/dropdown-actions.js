@@ -1,3 +1,4 @@
+var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 "use strict";
 var Dieter = (() => {
   var __defProp = Object.defineProperty;
@@ -166,6 +167,8 @@ var Dieter = (() => {
         delete action.dataset.selected;
       }
     });
+    state.input.dispatchEvent(new Event("input", { bubbles: true }));
   }
   return __toCommonJS(dropdown_actions_exports);
 })();
+window.Dieter = { ...__prevDieter, ...Dieter };

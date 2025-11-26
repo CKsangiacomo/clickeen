@@ -1,0 +1,15 @@
+<div class="diet-repeatable-list" data-bob-component="repeatable-list" data-fields='{{optionsRaw}}' data-add-label="{{placeholder}}">
+  <div class="diet-repeatable-list__header">
+    <div class="diet-repeatable-list__title {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}">{{label}}</div>
+    <button class="diet-btn-ic" data-size="xs" data-variant="neutral" type="button" aria-label="Add item">
+      <span class="diet-btn-ic__icon" data-icon="plus"></span>
+    </button>
+  </div>
+  <div class="diet-repeatable-list__body" data-role="items"></div>
+  <input type="hidden" class="diet-repeatable-list__hidden" {{#if path}}data-bob-path="{{path}}"{{/if}} data-bob-json="true" />
+  <div class="diet-repeatable-list__footer">
+    <button class="diet-btn-txt" data-size="sm" data-variant="secondary" type="button">
+      <span class="diet-btn-txt__label">{{#if placeholder}}{{placeholder}}{{else}}Add item{{/if}}</span>
+    </button>
+  </div>
+</div>

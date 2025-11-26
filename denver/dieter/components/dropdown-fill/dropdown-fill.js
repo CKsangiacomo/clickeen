@@ -1,3 +1,4 @@
+var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 "use strict";
 var Dieter = (() => {
   var __defProp = Object.defineProperty;
@@ -102,10 +103,10 @@ var Dieter = (() => {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-fill"));
     if (!roots.length) return;
     roots.forEach((root) => {
-      wireModes(root);
       if (states.has(root)) return;
       const state = createState(root);
       if (!state) return;
+      wireModes(state);
       states.set(root, state);
       installHandlers(state);
       syncUI(state);
@@ -115,12 +116,16 @@ var Dieter = (() => {
   function createState(root) {
     const input = root.querySelector(".diet-dropdown-fill__value-field");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
+    const headerLabel = root.querySelector(".diet-popover__header-label");
     const hueInput = root.querySelector(".diet-dropdown-fill__hue");
     const alphaInput = root.querySelector(".diet-dropdown-fill__alpha");
     const hexField = root.querySelector(".diet-dropdown-fill__hex");
     const alphaField = root.querySelector(".diet-dropdown-fill__alpha-input");
     const svCanvas = root.querySelector(".diet-dropdown-fill__sv-canvas");
     const svThumb = root.querySelector(".diet-dropdown-fill__sv-thumb");
+    const colorPreview = root.querySelector(".diet-dropdown-fill__color-preview");
+    const removeFillAction = root.querySelector(".diet-dropdown-fill__remove-fill");
+    const removeFillLabel = removeFillAction?.querySelector(".diet-btn-menuactions__label") ?? null;
     const swatches = Array.from(root.querySelectorAll(".diet-dropdown-fill__swatch"));
     const imagePanel = root.querySelector(".diet-dropdown-fill__panel--image");
     const imagePreview = root.querySelector(".diet-dropdown-fill__image-preview");
@@ -135,14 +140,15 @@ var Dieter = (() => {
     swatches.forEach((swatch) => {
       const color = swatch.dataset.color || "";
       swatch.style.setProperty("--swatch-color", color);
-      const resolved = resolveSwatchHex(color, root);
-      if (resolved) swatch.dataset.resolvedHex = resolved;
-      else delete swatch.dataset.resolvedHex;
     });
     return {
       root,
       input,
       headerValue,
+      headerLabel,
+      colorPreview,
+      removeFillAction,
+      removeFillLabel,
       hueInput,
       alphaInput,
       hexField,
@@ -178,6 +184,14 @@ var Dieter = (() => {
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
     installImageHandlers(state);
+    if (state.removeFillAction) {
+      state.removeFillAction.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (state.removeFillAction?.disabled) return;
+        state.hsv.a = 0;
+        syncUI(state);
+      });
+    }
   }
   function installSvCanvasHandlers(state) {
     const move = (event) => {
@@ -238,6 +252,12 @@ var Dieter = (() => {
   }
   function setImageSrc(state, src) {
     state.imageSrc = src;
+    if (state.input) {
+      const cssValue = src ? `url("${src}") center center / cover no-repeat` : "";
+      state.input.value = cssValue;
+      state.input.dispatchEvent(new Event("input", { bubbles: true }));
+      state.input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
     if (state.imagePanel) {
       state.imagePanel.dataset.hasImage = src ? "true" : "false";
     }
@@ -262,9 +282,9 @@ var Dieter = (() => {
     state.swatches.forEach((swatch) => {
       swatch.addEventListener("click", (event) => {
         event.preventDefault();
-        const color = swatch.dataset.resolvedHex || swatch.dataset.color || "";
+        const color = swatch.dataset.color || "";
         const parsed = parseColor(color, state.root);
-        state.hsv = { ...parsed, a: state.hsv.a };
+        state.hsv = { ...parsed, a: 1 };
         syncUI(state);
       });
     });
@@ -296,7 +316,6 @@ var Dieter = (() => {
     const hex = formatHex({ h, s, v, a: 1 });
     const alphaPercent = Math.round(a * 100);
     const colorString = a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(a, 2)})` : hex;
-    const currentHex = resolveSwatchHex(colorString, state.root) ?? normalizeHex(hex);
     state.root.style.setProperty("--picker-hue", h.toString());
     state.root.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
     state.hueInput.value = h.toString();
@@ -319,16 +338,26 @@ var Dieter = (() => {
       state.headerValue.textContent = a < 1 ? `${hex} \xB7 ${alphaPercent}%` : hex;
       state.headerValue.dataset.muted = "false";
     }
+    if (state.colorPreview) {
+      state.colorPreview.style.backgroundColor = colorString;
+    }
+    if (state.removeFillAction) {
+      const isEmpty = alphaPercent === 0;
+      state.removeFillAction.disabled = isEmpty;
+      if (state.removeFillLabel) {
+        state.removeFillLabel.textContent = isEmpty ? "No fill to remove" : "Remove fill";
+      }
+    }
+    const normalizedCurrent = normalizeHex(hex);
     state.swatches.forEach((swatch) => {
-      const resolvedHex = swatch.dataset.resolvedHex || resolveSwatchHex(swatch.dataset.color || "", state.root);
-      const match = resolvedHex ? normalizeHex(resolvedHex) === normalizeHex(currentHex) : false;
-      if (resolvedHex) swatch.dataset.resolvedHex = resolvedHex;
-      else delete swatch.dataset.resolvedHex;
+      const swatchHex = normalizeHex(swatch.dataset.color || "");
+      const match = swatchHex === normalizedCurrent;
       swatch.classList.toggle("is-selected", match);
       swatch.setAttribute("aria-pressed", match ? "true" : "false");
     });
   }
-  function wireModes(root) {
+  function wireModes(state) {
+    const { root, headerLabel } = state;
     const buttons = Array.from(root.querySelectorAll(".diet-dropdown-fill__mode-btn"));
     if (!buttons.length) return;
     const setMode = (mode) => {
@@ -338,6 +367,9 @@ var Dieter = (() => {
         btn.classList.toggle("is-active", isActive);
         btn.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
+      if (headerLabel) {
+        headerLabel.textContent = mode === "image" ? "Photo/Video fill" : "Color fill";
+      }
     };
     buttons.forEach((btn) => {
       btn.addEventListener("click", (event) => {
@@ -404,33 +436,10 @@ var Dieter = (() => {
     if (value.trim().startsWith("#")) {
       return hexToRgba(value);
     }
-    const temp = document.createElement("div");
-    temp.style.color = value;
-    temp.style.display = "none";
-    root.appendChild(temp);
-    const computed = getComputedStyle(temp).color;
-    root.removeChild(temp);
+    const computed = getComputedColor(value, root);
     const parsed = parseCssColor(computed);
     if (parsed) return parsed;
     return hexToRgba("#6b6bff");
-  }
-  function resolveSwatchHex(value, root) {
-    const rgba = colorStringToRgbaOrNull(value, root);
-    if (!rgba) return null;
-    const hex = `#${toHex(rgba.r)}${toHex(rgba.g)}${toHex(rgba.b)}`;
-    return hex;
-  }
-  function colorStringToRgbaOrNull(value, root) {
-    if (value.trim().startsWith("#")) {
-      return hexToRgba(value);
-    }
-    const temp = document.createElement("div");
-    temp.style.color = value;
-    temp.style.display = "none";
-    root.appendChild(temp);
-    const computed = getComputedStyle(temp).color;
-    root.removeChild(temp);
-    return parseCssColor(computed);
   }
   function hsvToRgb(h, s, v) {
     const c = v * s;
@@ -486,6 +495,10 @@ var Dieter = (() => {
     return Math.round(value * factor) / factor;
   }
   function parseCssColor(computed) {
+    const hexMatch = computed.trim().match(/^#([0-9a-f]{3,8})$/i);
+    if (hexMatch) {
+      return hexToRgba(`#${hexMatch[1]}`);
+    }
     const rgbSpace = computed.match(/rgba?\(\s*(\d+)\s+(\d+)\s+(\d+)(?:\s*\/\s*([\d.]+))?\s*\)/i);
     if (rgbSpace) {
       const r = Number(rgbSpace[1]);
@@ -504,5 +517,15 @@ var Dieter = (() => {
     }
     return null;
   }
+  function getComputedColor(value, root) {
+    const temp = document.createElement("div");
+    temp.style.color = value;
+    temp.style.display = "none";
+    root.appendChild(temp);
+    const computed = getComputedStyle(temp).color;
+    root.removeChild(temp);
+    return computed;
+  }
   return __toCommonJS(dropdown_fill_exports);
 })();
+window.Dieter = { ...__prevDieter, ...Dieter };

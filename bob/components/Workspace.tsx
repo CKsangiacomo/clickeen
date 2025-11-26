@@ -50,89 +50,75 @@ export function Workspace() {
     iframeWindow.postMessage(message, '*');
   }, [hasWidget, compiled, instanceData, device, theme, iframeReady]);
 
-  const stageBg = getAt<string>(instanceData, 'stage.background') || undefined;
-
   return (
     <section className="workspace">
-      <header className="wsheader">
-        <div className="wsheader-left" />
+      <iframe
+        ref={iframeRef}
+        title="Widget preview"
+        className="workspace-iframe"
+        sandbox="allow-scripts allow-same-origin"
+      />
 
-        <div className="wsheader-center">
-          <div
-            className="diet-segmented-ic"
-            role="radiogroup"
-            aria-label="Device"
-            data-size="md"
-          >
-            <label className="diet-segment">
-              <input
-                className="diet-segment__input"
-                type="radio"
-                name="workspace-device"
-                value="desktop"
-                checked={device === 'desktop'}
-                onChange={() => setPreview({ device: 'desktop' })}
+      <div className="workspace-overlay" aria-hidden={!hasWidget}>
+        <div
+          className="workspace-device-toggle diet-segmented-ic"
+          role="radiogroup"
+          aria-label="Device"
+          data-size="md"
+        >
+          <label className="diet-segment">
+            <input
+              className="diet-segment__input"
+              type="radio"
+              name="workspace-device"
+              value="desktop"
+              checked={device === 'desktop'}
+              onChange={() => setPreview({ device: 'desktop' })}
+            />
+            <span className="diet-segment__surface" />
+            <button
+              className="diet-btn-ic"
+              data-size="md"
+              data-variant="neutral"
+              tabIndex={-1}
+              type="button"
+              aria-pressed={device === 'desktop'}
+            >
+              <span
+                className="diet-btn-ic__icon"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: getIcon('desktopcomputer') }}
               />
-              <span className="diet-segment__surface" />
-              <button
-                className="diet-btn-ic"
-                data-size="md"
-                data-variant="neutral"
-                tabIndex={-1}
-                type="button"
-                aria-pressed={device === 'desktop'}
-              >
-                <span
-                  className="diet-btn-ic__icon"
-                  aria-hidden="true"
-                  dangerouslySetInnerHTML={{ __html: getIcon('desktopcomputer') }}
-                />
-              </button>
-              <span className="diet-segment__sr">Desktop</span>
-            </label>
-            <label className="diet-segment">
-              <input
-                className="diet-segment__input"
-                type="radio"
-                name="workspace-device"
-                value="mobile"
-                checked={device === 'mobile'}
-                onChange={() => setPreview({ device: 'mobile' })}
+            </button>
+            <span className="diet-segment__sr">Desktop</span>
+          </label>
+          <label className="diet-segment">
+            <input
+              className="diet-segment__input"
+              type="radio"
+              name="workspace-device"
+              value="mobile"
+              checked={device === 'mobile'}
+              onChange={() => setPreview({ device: 'mobile' })}
+            />
+            <span className="diet-segment__surface" />
+            <button
+              className="diet-btn-ic"
+              data-size="md"
+              data-variant="neutral"
+              tabIndex={-1}
+              type="button"
+              aria-pressed={device === 'mobile'}
+            >
+              <span
+                className="diet-btn-ic__icon"
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: getIcon('iphone') }}
               />
-              <span className="diet-segment__surface" />
-              <button
-                className="diet-btn-ic"
-                data-size="md"
-                data-variant="neutral"
-                tabIndex={-1}
-                type="button"
-                aria-pressed={device === 'mobile'}
-              >
-                <span
-                  className="diet-btn-ic__icon"
-                  aria-hidden="true"
-                  dangerouslySetInnerHTML={{ __html: getIcon('iphone') }}
-                />
-              </button>
-              <span className="diet-segment__sr">Mobile</span>
-            </label>
-          </div>
+            </button>
+            <span className="diet-segment__sr">Mobile</span>
+          </label>
         </div>
-
-        <div className="wsheader-right" />
-      </header>
-
-      <div className="wscontent" style={stageBg ? { background: stageBg } : undefined}>
-        <iframe
-          ref={iframeRef}
-          title="Widget preview"
-          className="workspace-iframe"
-          style={{
-            width: device === 'mobile' ? '360px' : '640px',
-            height: device === 'mobile' ? '640px' : '480px',
-          }}
-          sandbox="allow-scripts allow-same-origin"
-        />
       </div>
     </section>
   );

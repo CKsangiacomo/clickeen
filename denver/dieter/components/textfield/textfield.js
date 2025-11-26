@@ -1,3 +1,4 @@
+var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 "use strict";
 var Dieter = (() => {
   var __defProp = Object.defineProperty;
@@ -54,3 +55,4 @@ var Dieter = (() => {
   }
   return __toCommonJS(textfield_exports);
 })();
+window.Dieter = { ...__prevDieter, ...Dieter };

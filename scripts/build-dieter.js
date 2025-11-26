@@ -170,6 +170,12 @@ function main() {
         globalName: 'Dieter',
         target: ['es2020'],
         outfile: outFile,
+        banner: {
+          js: 'var __prevDieter = window.Dieter ? { ...window.Dieter } : {};',
+        },
+        footer: {
+          js: 'window.Dieter = { ...__prevDieter, ...Dieter };',
+        },
       });
     }
   })().catch((err) => {

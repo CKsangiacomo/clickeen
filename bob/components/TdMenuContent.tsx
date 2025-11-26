@@ -167,7 +167,15 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         field.checked = Boolean(value);
       } else if ('value' in field) {
-        (field as HTMLInputElement).value = value == null ? '' : String(value);
+        if (field instanceof HTMLInputElement && field.dataset.bobJson != null) {
+          try {
+            (field as HTMLInputElement).value = JSON.stringify(value ?? defaultValue ?? []);
+          } catch {
+            (field as HTMLInputElement).value = '';
+          }
+        } else {
+          (field as HTMLInputElement).value = value == null ? '' : String(value);
+        }
       }
 
       const handler = (event: Event) => {
@@ -180,7 +188,17 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
         }
 
         if ('value' in target) {
-          setValue(path, (target as HTMLInputElement).value);
+          const rawValue = (target as HTMLInputElement).value;
+          if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+            try {
+              const parsed = rawValue ? JSON.parse(rawValue) : [];
+              setValue(path, parsed);
+            } catch {
+              setValue(path, rawValue);
+            }
+          } else {
+            setValue(path, rawValue);
+          }
         }
       };
 
@@ -196,6 +214,7 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
         });
       }
     });
+
 
     return () => {
       cleanupFns.forEach((fn) => fn());

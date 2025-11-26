@@ -98,4 +98,5 @@ function setSelection(state: DropdownActionsState, value: string, label: string 
       delete action.dataset.selected;
     }
   });
+  state.input.dispatchEvent(new Event('input', { bubbles: true }));
 }

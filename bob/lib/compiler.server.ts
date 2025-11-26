@@ -18,6 +18,15 @@ type ComponentSpec = {
   }>;
 };
 
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 function loadComponentTemplate(type: string): { template: string; spec?: ComponentSpec } {
   const base = resolveRepoPath('denver', 'dieter', 'components', type);
   const htmlPath = path.join(base, `${type}.html`);
@@ -35,6 +44,21 @@ function loadComponentTemplate(type: string): { template: string; spec?: Compone
 }
 
 function renderTemplate(raw: string, context: Record<string, unknown>): string {
+  const eachRegex = /{{#each\s+([\w.]+)}}([\s\S]*?){{\/each}}/g;
+  raw = raw.replace(eachRegex, (_, key: string, block: string) => {
+    const value = context[key];
+    if (!Array.isArray(value)) return '';
+    return value
+      .map((item: any) =>
+        block.replace(/{{\s*([\w.]+)\s*}}/g, (_match, innerKey: string) => {
+          if (innerKey === 'this') return item == null ? '' : String(item);
+          const val = innerKey in item ? item[innerKey] : context[innerKey];
+          return val == null ? '' : String(val);
+        }),
+      )
+      .join('');
+  });
+
   const ifElseRegex = /{{#if\s+([\w.]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
   let rendered = raw.replace(ifElseRegex, (_, key: string, truthy: string, falsy: string | undefined) => {
     const value = context[key];
@@ -80,11 +104,23 @@ function buildContext(component: string, attrs: TooldrawerAttrs, spec?: Componen
   const label = attrs.label || (merged.label as string) || 'Label';
   const placeholder = attrs.placeholder || (merged.placeholder as string) || 'Select a fill';
   const pathAttr = attrs.path || '';
-  const value = attrs.value || '';
+  // When a path is provided, let the runtime binding populate the value to avoid leaking template
+  // handlebars (e.g., {{title}}) into the initial render.
+  const value = pathAttr ? '' : attrs.value || '';
+  const optionsRaw = attrs.options ? decodeHtmlEntities(attrs.options) : '';
   const headerLabel = attrs.headerLabel || '';
   const headerIcon = attrs.headerIcon || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
+  const defaultOptions = (defaults?.context as any)?.options;
+  let options = defaultOptions;
+  if (attrs.options) {
+    const decoded = decodeHtmlEntities(attrs.options);
+    const parsed = JSON.parse(decoded);
+    if (Array.isArray(parsed)) {
+      options = parsed;
+    }
+  }
 
   Object.assign(merged, {
     label,
@@ -94,6 +130,8 @@ function buildContext(component: string, attrs: TooldrawerAttrs, spec?: Componen
     headerLabel,
     headerIcon,
     id,
+    options,
+    optionsRaw,
   });
 
   if (merged.labelClass == null) merged.labelClass = 'label-s';
@@ -134,11 +172,14 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
       const context = buildContext(type, attrs, spec);
       let rendered = renderTemplate(template, context);
       if (context.path) {
-        rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
-        if (!/data-bob-path="/.test(rendered)) {
-          rendered = rendered.replace(/<input([^>]*?)>/, `<input$1 data-bob-path="${context.path}">`);
-        }
+      rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
+      if (!/data-bob-path="/.test(rendered)) {
+        rendered = rendered.replace(
+          /<input([^>]*?)(\/?)>/,
+          `<input$1 data-bob-path="${context.path}"$2>`,
+        );
       }
+    }
       usages.add(type);
       return rendered;
     });
@@ -166,11 +207,17 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
   const denverRoot = denverBase.replace(/\/+$/, '');
   const dieterBase = `${denverRoot}/dieter`;
   const assetBase = `${denverRoot}/widgets/${widgetname}`;
+  const componentAssetPath = (name: string, ext: 'css' | 'js') =>
+    resolveRepoPath('denver', 'dieter', 'components', name, `${name}.${ext}`);
 
   const controlTypes = Array.from(parsed.usages);
   const dieterAssets = {
-    styles: controlTypes.map((t) => `${dieterBase}/components/${t}/${t}.css`),
-    scripts: controlTypes.map((t) => `${dieterBase}/components/${t}/${t}.js`),
+    styles: controlTypes
+      .filter((t) => fs.existsSync(componentAssetPath(t, 'css')))
+      .map((t) => `${dieterBase}/components/${t}/${t}.css`),
+    scripts: controlTypes
+      .filter((t) => fs.existsSync(componentAssetPath(t, 'js')))
+      .map((t) => `${dieterBase}/components/${t}/${t}.js`),
   };
 
   const assets = {
