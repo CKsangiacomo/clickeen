@@ -40,6 +40,12 @@
       "padding": 24,
       "gap": 16
     },
+    "stage": {
+      "background": "transparent"
+    },
+    "pod": {
+      "background": "transparent"
+    },
     "theme": {
       "preset": "custom",
       "background": "#6B21A8",
@@ -120,6 +126,8 @@
     "",
     "<bob-panel id='appearance'>",
     "  <tooldrawer-field type='dropdown-actions' size='md' path='theme.preset' label='Theme preset' placeholder='Choose preset' value='{{theme.preset}}' options='[{&quot;label&quot;:&quot;Custom&quot;,&quot;value&quot;:&quot;custom&quot;},{&quot;label&quot;:&quot;Light&quot;,&quot;value&quot;:&quot;light&quot;},{&quot;label&quot;:&quot;Dark&quot;,&quot;value&quot;:&quot;dark&quot;},{&quot;label&quot;:&quot;Gradient&quot;,&quot;value&quot;:&quot;gradient&quot;}]' />",
+    "  <tooldrawer-field type='dropdown-fill' size='md' path='stage.background' label='Stage background' value='{{stage.background}}' />",
+    "  <tooldrawer-field type='dropdown-fill' size='md' path='pod.background' label='Section background' value='{{pod.background}}' />",
     "  <tooldrawer-field type='dropdown-fill' size='md' path='theme.background' label='Background' value='{{theme.background}}' />",
     "  <tooldrawer-field type='dropdown-fill' size='md' path='theme.headingColor' label='Heading color' value='{{theme.headingColor}}' />",
     "  <tooldrawer-field type='dropdown-fill' size='md' path='theme.timerColor' label='Timer color' value='{{theme.timerColor}}' />",

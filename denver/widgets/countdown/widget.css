@@ -25,12 +25,9 @@ body {
 }
 
 .stage {
-  min-height: 100vh;
   width: 100%;
   background: var(--stage-bg, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
 }
 
 .pod {
@@ -202,6 +199,18 @@ body {
   background: var(--ck-button-color);
   color: var(--ck-button-text-color);
   transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.ck-countdown__button[data-variant='secondary'] {
+  background: transparent;
+  color: var(--ck-heading-color);
+  border: 1px solid color-mix(in oklab, var(--ck-heading-color), transparent 60%);
+}
+
+.ck-countdown__button[data-variant='ghost'] {
+  background: transparent;
+  color: var(--ck-heading-color);
+  opacity: 0.9;
 }
 
 .ck-countdown__button:hover {

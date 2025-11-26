@@ -48,6 +48,12 @@
       padding: 24,
       gap: 16,
     },
+    stage: {
+      background: 'transparent',
+    },
+    pod: {
+      background: 'transparent',
+    },
     theme: {
       preset: 'custom',
       background: '#6B21A8',
@@ -159,16 +165,17 @@
     const { position = {}, theme = {} } = state;
     const root = widget;
     if (!root) return;
+    const palette = resolvePalette(theme);
     root.style.setProperty('--content-width', `${position.contentWidth || 960}px`);
     root.style.setProperty('--padding', `${position.padding || 24}px`);
     root.style.setProperty('--gap', `${position.gap || 16}px`);
-    if (theme.background) root.style.setProperty('--ck-bg', theme.background);
-    if (theme.headingColor) root.style.setProperty('--ck-heading-color', theme.headingColor);
-    if (theme.timerColor) root.style.setProperty('--ck-timer-color', theme.timerColor);
-    if (theme.labelsColor) root.style.setProperty('--ck-labels-color', theme.labelsColor);
-    if (theme.separatorColor) root.style.setProperty('--ck-separator-color', theme.separatorColor);
-    if (theme.buttonColor) root.style.setProperty('--ck-button-color', theme.buttonColor);
-    if (theme.buttonTextColor) root.style.setProperty('--ck-button-text-color', theme.buttonTextColor);
+    root.style.setProperty('--ck-bg', palette.background);
+    root.style.setProperty('--ck-heading-color', palette.headingColor);
+    root.style.setProperty('--ck-timer-color', palette.timerColor);
+    root.style.setProperty('--ck-labels-color', palette.labelsColor);
+    root.style.setProperty('--ck-separator-color', palette.separatorColor);
+    root.style.setProperty('--ck-button-color', palette.buttonColor);
+    root.style.setProperty('--ck-button-text-color', palette.buttonTextColor);
     root.style.setProperty('--heading-size', `${theme.headingSize || 22}px`);
     root.style.setProperty('--timer-size', `${theme.timerSize || 100}`);
     root.style.setProperty('--label-size', `${theme.labelSize || 14}px`);
@@ -179,6 +186,10 @@
     const { position = {} } = state;
     widget.setAttribute('data-layout', position.layout || 'full-width');
     widget.setAttribute('data-alignment', position.alignment || 'center');
+    widget.setAttribute('data-theme', state.theme?.preset || 'custom');
+    widget.setAttribute('data-timer-style', state.theme?.timerStyle || 'separated');
+    widget.setAttribute('data-animation', state.theme?.animation || 'none');
+    widget.setAttribute('data-mode', state.timer?.mode || 'personal');
   }
 
   function applyContent() {
@@ -188,6 +199,17 @@
     }
     if (document.documentElement) {
       document.documentElement.lang = state.settings?.language || 'en';
+    }
+  }
+
+  function applyBackdrop() {
+    const stageEl = document.querySelector('.stage');
+    const podEl = document.querySelector('.pod');
+    if (stageEl) {
+      stageEl.style.setProperty('--stage-bg', state.stage?.background || 'transparent');
+    }
+    if (podEl) {
+      podEl.style.setProperty('--pod-bg', state.pod?.background || 'transparent');
     }
   }
 
@@ -204,6 +226,7 @@
     if (duringCta) {
       duringCta.textContent = actions.buttonText || 'Purchase now';
       duringCta.setAttribute('href', actions.buttonUrl || '#');
+      duringCta.setAttribute('data-variant', actions.buttonStyle || 'primary');
       if (toBool(actions.openInNewTab, true)) {
         duringCta.setAttribute('target', '_blank');
         duringCta.setAttribute('rel', 'noreferrer');
@@ -217,6 +240,7 @@
     if (afterCta) {
       afterCta.textContent = actions.afterButtonText || 'Shop now';
       afterCta.setAttribute('href', actions.afterButtonUrl || '#');
+      afterCta.setAttribute('data-variant', actions.buttonStyle || 'primary');
       afterCta.setAttribute('target', '_blank');
       afterCta.setAttribute('rel', 'noreferrer');
     }
@@ -245,6 +269,15 @@
     seps.forEach((sepEl) => {
       sepEl.setAttribute('data-separator', sep);
       sepEl.style.display = sep === 'none' ? 'none' : '';
+    });
+
+    // Hide separators that would sit next to hidden units
+    const units = Array.from(widget.querySelectorAll('.ck-timer-unit'));
+    const visibleUnits = units.filter((u) => u.style.display !== 'none');
+    seps.forEach((sepEl, idx) => {
+      const leftVisible = visibleUnits[idx] != null;
+      const rightVisible = visibleUnits[idx + 1] != null;
+      sepEl.style.display = leftVisible && rightVisible && sep !== 'none' ? '' : 'none';
     });
 
     const showLabels = toBool(theme.showLabels, true);
@@ -330,10 +363,8 @@
       const dateStr = countdownToDate.targetDate;
       const timeStr = countdownToDate.targetTime || '00:00';
       if (!dateStr) return null;
-      const iso = `${dateStr}T${timeStr}`;
-      const d = new Date(iso);
-      if (Number.isNaN(d.getTime())) return null;
-      return d.getTime();
+      const tz = countdownToDate.timezone || 'browser';
+      return resolveDateWithTimezone(dateStr, timeStr, tz);
     }
     if (state.timer?.mode === 'personal') {
       const storageKey = `ck-countdown-${state.widgetname || 'countdown'}-${location.pathname}`;
@@ -363,6 +394,45 @@
         return n * 24 * 60 * 60 * 1000;
       default:
         return n * 1000;
+    }
+  }
+
+  function resolveDateWithTimezone(dateStr, timeStr, tz) {
+    const safeTime = timeStr.includes(':') ? timeStr : `${timeStr}:00`;
+    const base = new Date(`${dateStr}T${safeTime}`);
+    if (Number.isNaN(base.getTime())) return null;
+    if (tz === 'browser') return base.getTime();
+
+    // Approximate conversion using Intl to compute the timezone offset
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+        .formatToParts(base)
+        .reduce((acc, part) => {
+          if (part.type !== 'literal') acc[part.type] = part.value;
+          return acc;
+        }, {});
+
+      const year = Number(parts.year);
+      const month = Number(parts.month) - 1;
+      const day = Number(parts.day);
+      const hour = Number(parts.hour);
+      const minute = Number(parts.minute);
+      const second = Number(parts.second);
+      const tzDate = Date.UTC(year, month, day, hour, minute, second);
+      const localDate = new Date(Date.UTC(year, month, day, hour, minute, second));
+      const offset = localDate.getTime() - tzDate;
+      return tzDate + offset;
+    } catch (_err) {
+      return base.getTime();
     }
   }
 
@@ -410,6 +480,7 @@
     setCssVars();
     applyLayout();
     applyContent();
+    applyBackdrop();
     applyActionsVisibility();
     applyTimerVisibility();
     applyCustomCss(state.settings?.customCSS || '');
@@ -449,6 +520,50 @@
     }
     numberStartTs = null;
     start();
+  }
+
+  function resolvePalette(theme = {}) {
+    const preset = theme.preset || 'custom';
+    const presets = {
+      light: {
+        background: '#FFFFFF',
+        headingColor: '#0F172A',
+        timerColor: '#0F172A',
+        labelsColor: '#334155',
+        separatorColor: '#CBD5E1',
+        buttonColor: '#0F172A',
+        buttonTextColor: '#FFFFFF',
+      },
+      dark: {
+        background: '#0F172A',
+        headingColor: '#E2E8F0',
+        timerColor: '#E2E8F0',
+        labelsColor: '#94A3B8',
+        separatorColor: '#475569',
+        buttonColor: '#38BDF8',
+        buttonTextColor: '#0F172A',
+      },
+      gradient: {
+        background: 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 50%, #2563EB 100%)',
+        headingColor: '#FFFFFF',
+        timerColor: '#FFFFFF',
+        labelsColor: '#E2E8F0',
+        separatorColor: '#C4B5FD',
+        buttonColor: '#FBBF24',
+        buttonTextColor: '#1F2937',
+      },
+      custom: {},
+    };
+    const palette = presets[preset] || presets.custom;
+    return {
+      background: theme.background || palette.background || '#6B21A8',
+      headingColor: theme.headingColor || palette.headingColor || '#FFFFFF',
+      timerColor: theme.timerColor || palette.timerColor || '#FFFFFF',
+      labelsColor: theme.labelsColor || palette.labelsColor || '#FFFFFF',
+      separatorColor: theme.separatorColor || palette.separatorColor || '#FFFFFF',
+      buttonColor: theme.buttonColor || palette.buttonColor || '#84CC16',
+      buttonTextColor: theme.buttonTextColor || palette.buttonTextColor || '#000000',
+    };
   }
 
   window.addEventListener('message', (event) => {
