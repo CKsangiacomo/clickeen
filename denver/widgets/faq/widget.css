@@ -1,5 +1,11 @@
 @import url('/dieter/tokens/tokens.css');
 
+:root,
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -15,28 +21,42 @@ body {
 }
 
 .stage {
-  min-height: 100vh;
-  min-width: 100%;
+  width: 100%;
   background: var(--stage-bg, transparent);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-start;
+  min-height: 100%;
   box-sizing: border-box;
-  padding: 0;
+  padding: var(--stage-padding-y, 0) var(--stage-padding-x, 0);
 }
 
 .pod {
+  width: auto;
   background: var(--pod-bg, transparent);
-  display: inline-block;
+  padding: var(--pod-padding-y, 0) var(--pod-padding-x, 0);
+  border-radius: var(--pod-radius, var(--control-radius-lg));
   box-sizing: border-box;
+  margin: 0;
+}
+.pod[data-width-mode='wrap'] {
+  width: auto;
+  max-width: var(--content-width, 960px);
+}
+.pod[data-width-mode='fixed'] {
+  width: 100%;
+  max-width: var(--content-width, 960px);
+}
+.pod[data-width-mode='full'] {
+  width: 100%;
 }
 
 .ck-widget.ck-faq-widget {
   width: 100%;
-  max-width: 72rem;
+  max-width: var(--content-width, 960px);
   margin: 0 auto;
   padding: var(--layout-padding, var(--space-4));
-  border-radius: var(--control-radius-xl);
+  border-radius: var(--pod-radius, var(--control-radius-lg));
   background: var(--pod-bg, var(--color-system-white));
   box-shadow: none;
   border: 1px solid transparent;
@@ -155,7 +175,9 @@ body {
   border-radius: var(--control-radius-lg);
   background: var(--color-system-gray-6-step5);
   padding: var(--space-1) var(--space-3);
-  font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui);
+  font-size: var(--fs-13);
+  font-weight: 500;
+  line-height: var(--lh-tight);
   cursor: pointer;
 }
 
@@ -192,7 +214,9 @@ body {
   background: none;
   border: 0;
   cursor: pointer;
-  font: 500 var(--faq-question-size, var(--fs-14))/var(--lh-tight) var(--font-ui);
+  font-size: var(--faq-question-size, var(--fs-14));
+  font-weight: 500;
+  line-height: var(--lh-tight);
   color: var(--faq-question-color, var(--color-system-black));
   display: flex;
   align-items: center;
@@ -325,7 +349,9 @@ body {
   padding: 0 var(--space-4) var(--space-3);
   color: var(--faq-answer-color, color-mix(in oklab, var(--color-system-black), transparent 45%));
   display: none;
-  font: 400 var(--faq-answer-size, var(--fs-13))/var(--lh-body) var(--font-ui);
+  font-size: var(--faq-answer-size, var(--fs-13));
+  font-weight: 400;
+  line-height: var(--lh-body);
   display: none;
 }
 

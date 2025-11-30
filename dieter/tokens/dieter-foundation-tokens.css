@@ -40,6 +40,7 @@
   --control-inline-gap-xl: 0.75rem;   /* 12px */
 
   /* Control radii */
+  --control-radius-none: 0;        /* 0px */
   --control-radius-2xs: 0.125rem;  /* 2px */
   --control-radius-xs: 0.1875rem;  /* 3px */
   --control-radius-sm: 0.25rem;    /* 4px */
@@ -48,6 +49,13 @@
   --control-radius-xl: 0.75rem;    /* 12px */
   --control-radius-2xl: 1rem;      /* 16px */
   --control-radius-3xl: 1.25rem;   /* 20px */
+  --control-radius-4xl: 1.75rem;   /* 28px */
+  --control-radius-5xl: 2.25rem;   /* 36px */
+  --control-radius-6xl: 2.75rem;   /* 44px */
+  --control-radius-7xl: 3.25rem;   /* 52px */
+  --control-radius-8xl: 3.75rem;   /* 60px */
+  --control-radius-9xl: 4.25rem;   /* 68px */
+  --control-radius-10xl: 4.75rem;  /* 76px */
 
   /* Icon sizing */
   --icon-size-12: 0.75rem;

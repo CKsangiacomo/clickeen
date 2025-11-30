@@ -1,6 +1,6 @@
 <div class="diet-textfield" data-size="{{size}}">
   <label class="diet-textfield__control">
-    <span class="diet-textfield__display-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}{{#unless label}} is-hidden{{/unless}}">{{#if label}}{{label}}:{{/if}}</span>
+    <span class="diet-textfield__display-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}{{#if label}}{{else}} is-hidden{{/if}}">{{#if label}}{{label}}:{{/if}}</span>
     <input
       id="{{id}}"
       type="text"

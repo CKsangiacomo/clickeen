@@ -18,20 +18,7 @@
       "gap": 16,
       "padding": 24
     },
-    "appearance": {
-      "template": "background",
-      "cardBorder": true,
-      "cardShadow": true,
-      "cardRadius": "lg",
-      "iconStyle": "plus",
-      "iconSize": "md",
-      "iconColor": "#3f3f46",
-      "itemBackground": "#f9f9fb",
-      "questionColor": "#0f0f10",
-      "answerColor": "#3f3f46",
-      "questionSize": "md",
-      "answerSize": "sm"
-    },
+    "appearance": {},
     "behavior": {
       "expandFirst": false,
       "expandAll": false,
@@ -42,46 +29,65 @@
       "showBacklink": true,
       "customJs": ""
     },
-    "stage": { "background": "var(--color-system-gray-5)" },
-    "pod": { "background": "var(--color-system-white)" },
+    "stage": {
+      "background": "var(--color-system-gray-5)",
+      "alignment": "center",
+      "paddingLinked": false,
+      "padding": 0,
+      "paddingTop": 0,
+      "paddingRight": 0,
+      "paddingBottom": 0,
+      "paddingLeft": 0
+    },
+    "pod": {
+      "background": "var(--color-system-white)",
+      "paddingLinked": false,
+      "padding": 0,
+      "paddingTop": 0,
+      "paddingRight": 0,
+      "paddingBottom": 0,
+      "paddingLeft": 0,
+      "widthMode": "wrap",
+      "contentWidth": 960,
+      "radiusLinked": false,
+      "radius": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "radiusBR": "4xl",
+      "radiusBL": "4xl"
+    },
     "customCss": "",
-    "items": [
-      {
-        "id": "q1",
-        "question": "Can I cancel my subscription at anytime?",
-        "answer": "Sure. Your paid subscription can be cancelled anytime by shifting to Lite plan.",
-        "category": "All Questions",
-        "defaultOpen": false
-      },
-      {
-        "id": "q2",
-        "question": "Can I change my plan later on?",
-        "answer": "You can switch plans anytime from your billing page. Changes prorate automatically.",
-        "category": "All Questions",
-        "defaultOpen": false
-      },
-      {
-        "id": "q3",
-        "question": "Will you renew my subscription automatically?",
-        "answer": "Yes, renewals are automatic. You can cancel before the renewal date to avoid charges.",
-        "category": "All Questions",
-        "defaultOpen": false
-      },
-      {
-        "id": "q4",
-        "question": "Do you offer any discounts?",
-        "answer": "Annual plans come with a discount. Contact support for volume pricing.",
-        "category": "All Questions",
-        "defaultOpen": false
-      },
-      {
-        "id": "q5",
-        "question": "Can I request a refund?",
-        "answer": "Eligible refunds are handled within 14 days of purchase. Reach out via support.",
-        "category": "All Questions",
-        "defaultOpen": false
-      }
-    ]
+    "objects": {
+      "objects": [
+        {
+          "id": "q1",
+          "type": "faq-qa",
+          "payload": {
+            "question": "What is Clickeen?",
+            "answer": "Embeddable widgets with conversions built in.",
+            "defaultOpen": false
+          }
+        },
+        {
+          "id": "q2",
+          "type": "faq-qa",
+          "payload": {
+            "question": "Is there a free plan?",
+            "answer": "Yes, one active widget with core features.",
+            "defaultOpen": false
+          }
+        },
+        {
+          "id": "q3",
+          "type": "faq-qa",
+          "payload": {
+            "question": "How do I install a widget?",
+            "answer": "Copy the embed code and paste it before </body> on your site.",
+            "defaultOpen": false
+          }
+        }
+      ]
+    }
   },
   "html": [
     "<bob-panel id='content'>",
@@ -89,36 +95,37 @@
     "  <tooldrawer-field type='textfield' size='lg' databinding='title' path='title' label='FAQ title' hint='Frequently Asked Questions' value='{{title}}' show-if=\"showTitle == 'true'\" />",
     "  <tooldrawer-field type='toggle' size='md' path='search.enabled' label='Show search bar' />",
     "  <tooldrawer-field type='textfield' size='lg' databinding='search.placeholder' path='search.placeholder' label='Search placeholder' hint='Search...' value='{{search.placeholder}}' show-if=\"search.enabled == 'true'\" />",
-    "  <tooldrawer-field type='toggle' size='md' path='displayCategoryTitles' label='Display category titles' />",
-    "  <tooldrawer-field type='textfield' size='lg' databinding='categoryTitle' path='categoryTitle' label='Category title' hint='All Questions' value='{{categoryTitle}}' show-if=\"displayCategoryTitles == 'true'\" />",
-    "  <tooldrawer-field type='repeatable-list' size='md' path='items' label='Questions' placeholder='Add question' options='[{&quot;key&quot;:&quot;question&quot;,&quot;label&quot;:&quot;Question&quot;,&quot;type&quot;:&quot;text&quot;},{&quot;key&quot;:&quot;answer&quot;,&quot;label&quot;:&quot;Answer&quot;,&quot;type&quot;:&quot;textarea&quot;},{&quot;key&quot;:&quot;category&quot;,&quot;label&quot;:&quot;Category&quot;,&quot;type&quot;:&quot;text&quot;},{&quot;key&quot;:&quot;defaultOpen&quot;,&quot;label&quot;:&quot;Open by default&quot;,&quot;type&quot;:&quot;toggle&quot;},{&quot;key&quot;:&quot;ctaText&quot;,&quot;label&quot;:&quot;CTA text&quot;,&quot;type&quot;:&quot;text&quot;},{&quot;key&quot;:&quot;ctaHref&quot;,&quot;label&quot;:&quot;CTA link&quot;,&quot;type&quot;:&quot;text&quot;},{&quot;key&quot;:&quot;mediaUrl&quot;,&quot;label&quot;:&quot;Media URL&quot;,&quot;type&quot;:&quot;text&quot;}]' />",
+    "  <tooldrawer-field type='repeater' path='objects.objects' label='Questions' add-label='Add question' labelPath='categoryTitle' labelInputLabel='Category title' labelPlaceholder='All Questions' toggleLabel='Show category title' togglePath='displayCategoryTitles' template='<div class=\"diet-repeater__item-body\"><div class=\"diet-dropdown-edit diet-popover-host\" data-size=\"md\" data-state=\"closed\"><div class=\"diet-dropdown-header diet-dropdown-edit__control\" role=\"button\" aria-haspopup=\"dialog\" aria-expanded=\"false\"><span class=\"diet-dropdown-header-label label-s\">Q:</span><span class=\"diet-dropdown-header-value body-s\" data-muted=\"true\" data-placeholder=\"Enter question\">Enter question</span><button class=\"diet-dropdown-header-icon diet-btn-ic\" data-size=\"md\" data-variant=\"neutral\" type=\"button\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"hand.point.up\"></span></button></div><div class=\"diet-popover\" role=\"dialog\" aria-label=\"Question\"><div class=\"diet-popover__header\"><span class=\"diet-popover__header-label label-s\">Q:</span><button type=\"button\" class=\"diet-btn-ic diet-popover__header-trigger\" data-size=\"sm\" data-variant=\"neutral\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"textformat.size.larger\"></span></button></div><div class=\"diet-popover__body diet-dropdown-edit__body\"><div class=\"diet-dropdown-edit__main\"><div class=\"diet-dropdown-edit__editor body-xsmall\" contenteditable=\"true\">Enter question</div><div class=\"diet-dropdown-edit__palette\"><div class=\"diet-dropdown-edit__toolbarrow\"><div class=\"diet-dropdown-edit__group diet-dropdown-edit__group--format\"><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"bold\"><span class=\"diet-btn-ic__icon\" data-icon=\"bold\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"italic\"><span class=\"diet-btn-ic__icon\" data-icon=\"italic\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"underline\"><span class=\"diet-btn-ic__icon\" data-icon=\"underline\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"strike\"><span class=\"diet-btn-ic__icon\" data-icon=\"strikethrough\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"link\"><span class=\"diet-btn-ic__icon\" data-icon=\"link\"></span></button></div><span class=\"diet-dropdown-edit__divider is-hidden\"></span><div class=\"diet-dropdown-edit__group diet-dropdown-edit__group--clear\"><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"clear-format\"><span class=\"diet-btn-ic__icon\" data-icon=\"arrow.counterclockwise\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"clear-links\"><span class=\"diet-btn-ic__icon\" data-icon=\"personalhotspot.slash\"></span></button></div></div></div></div></div><div class=\"diet-dropdown-edit__linksheet\" aria-hidden=\"true\"><div class=\"diet-popaddlink diet-popover\" data-state=\"empty\"><div class=\"diet-popover__header\"><span class=\"diet-popover__header-label label-s\">Add URL</span><button type=\"button\" class=\"diet-btn-ic diet-popover__header-trigger diet-popaddlink__close\" data-size=\"xs\" data-variant=\"neutral\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"multiply\"></span></button></div><div class=\"diet-popover__body\"><div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">URL:</span><input type=\"text\" class=\"diet-textfield__field body-s diet-popaddlink__input\" aria-label=\"URL\" placeholder=\"https://example.com\" /></label><span class=\"diet-textfield__helper caption diet-popaddlink__helper\"></span></div><div class=\"diet-popaddlink__actions\"><button type=\"button\" class=\"diet-btn-txt diet-popaddlink__apply\" data-size=\"md\" data-variant=\"primary\"><span class=\"diet-btn-txt__label\">Apply</span></button></div></div></div></div><input type=\"hidden\" class=\"diet-dropdown-edit__field\" value=\"Enter question\" data-bob-path=\"objects.objects.__INDEX__.payload.question\" /></div><div class=\"diet-dropdown-edit diet-popover-host\" data-size=\"md\" data-state=\"closed\"><div class=\"diet-dropdown-header diet-dropdown-edit__control\" role=\"button\" aria-haspopup=\"dialog\" aria-expanded=\"false\"><span class=\"diet-dropdown-header-label label-s\">A:</span><span class=\"diet-dropdown-header-value body-s\" data-muted=\"true\" data-placeholder=\"Enter answer\">Enter answer</span><button class=\"diet-dropdown-header-icon diet-btn-ic\" data-size=\"md\" data-variant=\"neutral\" type=\"button\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"hand.point.up\"></span></button></div><div class=\"diet-popover\" role=\"dialog\" aria-label=\"Answer\"><div class=\"diet-popover__header\"><span class=\"diet-popover__header-label label-s\">A:</span><button type=\"button\" class=\"diet-btn-ic diet-popover__header-trigger\" data-size=\"sm\" data-variant=\"neutral\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"textformat.size.larger\"></span></button></div><div class=\"diet-popover__body diet-dropdown-edit__body\"><div class=\"diet-dropdown-edit__main\"><div class=\"diet-dropdown-edit__editor body-xsmall\" contenteditable=\"true\">Enter answer</div><div class=\"diet-dropdown-edit__palette\"><div class=\"diet-dropdown-edit__toolbarrow\"><div class=\"diet-dropdown-edit__group diet-dropdown-edit__group--format\"><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"bold\"><span class=\"diet-btn-ic__icon\" data-icon=\"bold\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"italic\"><span class=\"diet-btn-ic__icon\" data-icon=\"italic\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"underline\"><span class=\"diet-btn-ic__icon\" data-icon=\"underline\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"strike\"><span class=\"diet-btn-ic__icon\" data-icon=\"strikethrough\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"link\"><span class=\"diet-btn-ic__icon\" data-icon=\"link\"></span></button></div><span class=\"diet-dropdown-edit__divider is-hidden\"></span><div class=\"diet-dropdown-edit__group diet-dropdown-edit__group--clear\"><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"clear-format\"><span class=\"diet-btn-ic__icon\" data-icon=\"arrow.counterclockwise\"></span></button><button type=\"button\" class=\"diet-btn-ic\" data-size=\"sm\" data-variant=\"neutral\" data-command=\"clear-links\"><span class=\"diet-btn-ic__icon\" data-icon=\"personalhotspot.slash\"></span></button></div></div></div></div></div><div class=\"diet-dropdown-edit__linksheet\" aria-hidden=\"true\"><div class=\"diet-popaddlink diet-popover\" data-state=\"empty\"><div class=\"diet-popover__header\"><span class=\"diet-popover__header-label label-s\">Add URL</span><button type=\"button\" class=\"diet-btn-ic diet-popover__header-trigger diet-popaddlink__close\" data-size=\"xs\" data-variant=\"neutral\" aria-hidden=\"true\" tabindex=\"-1\"><span class=\"diet-btn-ic__icon\" data-icon=\"multiply\"></span></button></div><div class=\"diet-popover__body\"><div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">URL:</span><input type=\"text\" class=\"diet-textfield__field body-s diet-popaddlink__input\" aria-label=\"URL\" placeholder=\"https://example.com\" /></label><span class=\"diet-textfield__helper caption diet-popaddlink__helper\"></span></div><div class=\"diet-popaddlink__actions\"><button type=\"button\" class=\"diet-btn-txt diet-popaddlink__apply\" data-size=\"md\" data-variant=\"primary\"><span class=\"diet-btn-txt__label\">Apply</span></button></div></div></div></div><input type=\"hidden\" class=\"diet-dropdown-edit__field\" value=\"Enter answer\" data-bob-path=\"objects.objects.__INDEX__.payload.answer\" /></div></div>' />",
     "</bob-panel>",
-    "<bob-panel id='layout'>",
-    "  <tooldrawer-field type='dropdown-actions' size='lg' path='layout.type' label='Layout' placeholder='Choose layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;},{&quot;label&quot;:&quot;Multicolumn&quot;,&quot;value&quot;:&quot;multicolumn&quot;},{&quot;label&quot;:&quot;Side nav&quot;,&quot;value&quot;:&quot;side-nav&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-actions' size='lg' path='layout.searchPlacement' label='Search placement' placeholder='Choose placement' value='{{layout.searchPlacement}}' options='[{&quot;label&quot;:&quot;Near title&quot;,&quot;value&quot;:&quot;title&quot;},{&quot;label&quot;:&quot;Below title&quot;,&quot;value&quot;:&quot;below&quot;}]' />",
-    "  <tooldrawer-field type='toggle' size='md' path='layout.showCategories' label='Show categories' />",
-    "  <tooldrawer-field type='toggle' size='md' path='layout.stickyNav' label='Sticky category navigation' show-if=\"layout.showCategories == 'true'\" />",
-    "  <tooldrawer-field type='slider' size='md' path='layout.columns.desktop' label='Columns (Desktop)' min='1' max='4' value='{{layout.columns.desktop}}' />",
-    "  <tooldrawer-field type='slider' size='md' path='layout.columns.tablet' label='Columns (Tablet)' min='1' max='3' value='{{layout.columns.tablet}}' />",
-    "  <tooldrawer-field type='slider' size='md' path='layout.columns.mobile' label='Columns (Mobile)' min='1' max='2' value='{{layout.columns.mobile}}' />",
-    "  <tooldrawer-field type='slider' size='md' path='layout.gap' label='Item gap (px)' min='0' max='64' value='{{layout.gap}}' />",
-    "  <tooldrawer-field type='slider' size='md' path='layout.padding' label='Padding (px)' min='0' max='64' value='{{layout.padding}}' />",
-    "</bob-panel>",
-    "<bob-panel id='appearance'>",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='stage.background' label='Stage fill' placeholder='var(--color-system-gray-5)' value='{{stage.background}}' />",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='pod.background' label='Widget fill' placeholder='var(--color-system-white)' value='{{pod.background}}' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.template' label='Template' placeholder='Choose template' value='{{appearance.template}}' options='[{&quot;label&quot;:&quot;Clear&quot;,&quot;value&quot;:&quot;clear&quot;},{&quot;label&quot;:&quot;Background&quot;,&quot;value&quot;:&quot;background&quot;},{&quot;label&quot;:&quot;Background &amp; Shadow&quot;,&quot;value&quot;:&quot;background-shadow&quot;},{&quot;label&quot;:&quot;Background &amp; Border&quot;,&quot;value&quot;:&quot;background-border&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='appearance.itemBackground' label='Item background' placeholder='#f9f9fb' value='{{appearance.itemBackground}}' />",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='appearance.questionColor' label='Question color' placeholder='#0f0f10' value='{{appearance.questionColor}}' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.questionSize' label='Question size' placeholder='md' value='{{appearance.questionSize}}' options='[{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='appearance.answerColor' label='Answer color' placeholder='#3f3f46' value='{{appearance.answerColor}}' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.answerSize' label='Answer size' placeholder='sm' value='{{appearance.answerSize}}' options='[{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Arrow&quot;,&quot;value&quot;:&quot;arrow&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconSize' label='Icon size' placeholder='md' value='{{appearance.iconSize}}' options='[{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;}]' />",
-    "  <tooldrawer-field type='dropdown-fill' size='lg' path='appearance.iconColor' label='Icon color' placeholder='#3f3f46' value='{{appearance.iconColor}}' />",
-    "  <tooldrawer-field type='toggle' size='md' path='appearance.cardBorder' label='Card border' />",
-    "  <tooldrawer-field type='toggle' size='md' path='appearance.cardShadow' label='Card shadow' />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='appearance.cardRadius' label='Card radius' placeholder='lg' value='{{appearance.cardRadius}}' options='[{&quot;label&quot;:&quot;Sm&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Md&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Lg&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;Xl&quot;,&quot;value&quot;:&quot;xl&quot;}]' />",
+"<bob-panel id='layout'>",
+    "  <tooldrawer-eyebrow text='Stage/Pod layout' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' placeholder='Choose width' value='{{pod.widthMode}}' options='[{&quot;label&quot;:&quot;Wrap pod to widget&quot;,&quot;value&quot;:&quot;wrap&quot;},{&quot;label&quot;:&quot;Full width&quot;,&quot;value&quot;:&quot;full&quot;},{&quot;label&quot;:&quot;Fixed width&quot;,&quot;value&quot;:&quot;fixed&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.contentWidth' label='Width in pixels' show-if=\"pod.widthMode == 'fixed'\" />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='[{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Align left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Align right&quot;,&quot;value&quot;:&quot;right&quot;},{&quot;label&quot;:&quot;Align top&quot;,&quot;value&quot;:&quot;top&quot;},{&quot;label&quot;:&quot;Align bottom&quot;,&quot;value&quot;:&quot;bottom&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='false' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == 'true' || pod.radiusLinked == '' || pod.radiusLinked == undefined\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.paddingLinked' label='Link pod padding' value='{{pod.paddingLinked}}' default='false' />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.padding' label='Pod padding (px)' show-if=\"pod.paddingLinked == 'true' || pod.paddingLinked == '' || pod.paddingLinked == undefined\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingTop' label='Pod top padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingRight' label='Pod right padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingBottom' label='Pod bottom padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingLeft' label='Pod left padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='stage.paddingLinked' label='Link stage padding' value='{{stage.paddingLinked}}' default='false' />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.padding' label='Stage padding (px)' show-if=\"stage.paddingLinked == 'true' || stage.paddingLinked == '' || stage.paddingLinked == undefined\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingTop' label='Stage top padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingRight' label='Stage right padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingBottom' label='Stage bottom padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingLeft' label='Stage left padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
+"</bob-panel>",
+"<bob-panel id='appearance'>",
+    "  <tooldrawer-eyebrow text='Widget appearance' />",
+    "  <tooldrawer-eyebrow text='Stage/Pod layout appearance' />",
+    "  <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "  <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Widget background' value='{{pod.background}}' />",
     "</bob-panel>",
     "<bob-panel id='behavior'>",
     "  <tooldrawer-field type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",

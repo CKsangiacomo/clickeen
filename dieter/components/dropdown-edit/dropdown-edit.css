@@ -47,8 +47,7 @@
 .diet-dropdown-header-value {
   flex: 1 1 auto;
   min-inline-size: 0;
-  display: inline-flex;
-  align-items: center;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

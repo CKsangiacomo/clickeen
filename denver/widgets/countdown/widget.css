@@ -1,7 +1,13 @@
 @import url('/dieter/tokens/tokens.css');
 
+:root,
+html,
+body {
+  height: 100%;
+}
+
 :root {
-  --ck-bg: var(--color-system-black);
+  --ck-bg: var(--pod-bg, var(--color-system-white));
   --ck-heading-color: var(--color-system-white);
   --ck-timer-color: var(--color-system-white);
   --ck-labels-color: var(--color-system-white);
@@ -27,27 +33,44 @@ body {
 .stage {
   width: 100%;
   background: var(--stage-bg, transparent);
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100%;
+  padding: var(--stage-padding-y, 0) var(--stage-padding-x, 0);
 }
 
 .pod {
-  width: 100%;
+  width: auto;
   background: var(--pod-bg, transparent);
+  padding: var(--pod-padding-y, 0) var(--pod-padding-x, 0);
+  border-radius: var(--pod-radius, var(--control-radius-lg));
+  box-sizing: border-box;
+  margin: 0;
+}
+.pod[data-width-mode='wrap'] {
+  width: auto;
+  max-width: var(--content-width, 960px);
+}
+.pod[data-width-mode='fixed'] {
+  width: 100%;
+  max-width: var(--content-width, 960px);
+}
+.pod[data-width-mode='full'] {
+  width: 100%;
 }
 
 .ck-countdown {
-  background: var(--ck-bg);
+  background: var(--pod-bg, var(--ck-bg));
   color: var(--ck-timer-color);
-  width: 100%;
-}
-
-.ck-countdown__inner {
+  width: auto;
   max-width: var(--content-width, 960px);
   margin: 0 auto;
   padding: calc(var(--padding, 24px));
   display: grid;
   gap: var(--gap, 16px);
   text-align: center;
+  border-radius: var(--pod-radius, var(--control-radius-lg));
 }
 
 .ck-countdown[data-alignment='left'] .ck-countdown__inner {
@@ -136,7 +159,6 @@ body {
 .ck-timer-label {
   display: block;
   font-size: var(--label-size, 14px);
-  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ck-labels-color);
@@ -239,6 +261,23 @@ body {
 
 .ck-countdown[data-state='expired'][data-after-action='show-button'] .ck-countdown__after {
   display: flex;
+}
+
+.ck-countdown__backlink {
+  border-top: 1px solid color-mix(in oklab, var(--ck-heading-color), transparent 70%);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.ck-countdown__backlink a {
+  font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
+  color: color-mix(in oklab, var(--ck-heading-color), transparent 40%);
+  text-decoration: none;
+}
+
+.ck-countdown__backlink a:hover {
+  text-decoration: underline;
 }
 
 @keyframes ck-fade {

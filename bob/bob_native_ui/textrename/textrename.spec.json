@@ -1,0 +1,9 @@
+{
+  "component": "textrename",
+  "defaults": {
+    "size": "md",
+    "ariaLabel": "Rename",
+    "value": "Category title",
+    "headingClass": "heading-6"
+  }
+}

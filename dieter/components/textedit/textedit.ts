@@ -76,6 +76,15 @@ export function hydrateTextedit(scope: Element | DocumentFragment): void {
     states.set(root, state);
     installHandlers(state);
     syncFromInstanceData(state);
+    state.hiddenInput.addEventListener('external-sync', (ev: Event) => {
+      const custom = ev as CustomEvent<{ value?: string }>;
+      const value =
+        (custom.detail && typeof custom.detail.value === 'string' && custom.detail.value) ||
+        state.hiddenInput.value ||
+        state.hiddenInput.getAttribute('value') ||
+        '';
+      applyExternalValue(state, value);
+    });
   });
 
   if (!globalBindings) {
@@ -811,6 +820,21 @@ function syncFromInstanceData(state: TexteditState) {
   const value = state.hiddenInput.value || state.hiddenInput.getAttribute('value') || '';
   state.editor.innerHTML = value || state.previewText.textContent || '';
   syncPreview(state);
+  updateClearButtons(state);
+}
+
+function applyExternalValue(state: TexteditState, raw: string) {
+  const value = raw || '';
+  state.editor.innerHTML = value;
+  const sanitized = sanitizeInline(value);
+  const span = document.createElement('span');
+  span.className = 'diet-textedit__previewin';
+  if (sanitized) span.innerHTML = sanitized;
+  else span.textContent = state.editor.textContent ?? '';
+  state.previewText.replaceWith(span);
+  state.previewText = span;
+  highlightPreviewLinks(span);
+  state.hiddenInput.value = value;
   updateClearButtons(state);
 }
 

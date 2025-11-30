@@ -64,7 +64,7 @@ function copyComponentStatics(source, destination) {
     return;
   }
 
-  if (source.endsWith('.html') || source.endsWith('.spec.json')) {
+  if (source.endsWith('.html') || source.endsWith('.spec.json') || source.endsWith('.js')) {
     const dir = path.dirname(destination);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.copyFileSync(source, destination);

@@ -471,6 +471,11 @@ var Dieter = (() => {
       states.set(root, state);
       installHandlers(state);
       syncFromInstanceData(state);
+      state.hiddenInput.addEventListener("external-sync", (ev) => {
+        const custom = ev;
+        const value = custom.detail && typeof custom.detail.value === "string" && custom.detail.value || state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
+        applyExternalValue(state, value);
+      });
     });
     if (!globalBindings) {
       globalBindings = true;
@@ -1131,6 +1136,20 @@ var Dieter = (() => {
     const value = state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
     state.editor.innerHTML = value || state.previewText.textContent || "";
     syncPreview(state);
+    updateClearButtons(state);
+  }
+  function applyExternalValue(state, raw) {
+    const value = raw || "";
+    state.editor.innerHTML = value;
+    const sanitized = sanitizeInline(value);
+    const span = document.createElement("span");
+    span.className = "diet-textedit__previewin";
+    if (sanitized) span.innerHTML = sanitized;
+    else span.textContent = state.editor.textContent ?? "";
+    state.previewText.replaceWith(span);
+    state.previewText = span;
+    highlightPreviewLinks(span);
+    state.hiddenInput.value = value;
     updateClearButtons(state);
   }
   function syncPreview(state) {

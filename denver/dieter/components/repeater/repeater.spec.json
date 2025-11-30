@@ -1,0 +1,18 @@
+{
+  "defaults": [
+    {
+      "context": {
+        "label": "Items",
+        "addLabel": "Add item",
+        "size": "md",
+        "labelSize": "md",
+        "labelInputLabel": "Title",
+        "labelPlaceholder": "",
+        "labelPath": "",
+        "toggleLabel": "Show",
+        "togglePath": "",
+        "template": "<div class=\\\"diet-repeater__item-body\\\"><div class=\\\"diet-textfield\\\" data-size=\\\"md\\\"><label class=\\\"diet-textfield__control\\\"><span class=\\\"diet-textfield__display-label label-s\\\">Item</span><input class=\\\"diet-textfield__field\\\" type=\\\"text\\\" data-path=\\\"items.__INDEX__\\\" placeholder=\\\"Item\\\" /></label></div></div>"
+      }
+    }
+  ]
+}

@@ -13,6 +13,12 @@ import type { CompiledWidget } from '../types';
 import { mergeDefaults } from '../utils/merge';
 import { setAt } from '../utils/paths';
 
+type UpdateMeta = {
+  source: 'field' | 'load' | 'external' | 'unknown';
+  path: string;
+  ts: number;
+};
+
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
@@ -23,6 +29,7 @@ type SessionState = {
   instanceData: Record<string, unknown>;
   isDirty: boolean;
   preview: PreviewSettings;
+  lastUpdate: UpdateMeta | null;
   meta: {
     publicId?: string;
     widgetname?: string;
@@ -50,25 +57,42 @@ function useWidgetSessionInternal() {
     instanceData: {},
     isDirty: false,
     preview: DEFAULT_PREVIEW,
+    lastUpdate: null,
     meta: null,
   }));
 
-  const setInstanceData = useCallback((updater: Record<string, unknown> | ((prev: Record<string, unknown>) => Record<string, unknown>)) => {
-    setState((prev) => {
-      const nextData =
-        typeof updater === 'function'
-          ? (updater as (prev: Record<string, unknown>) => Record<string, unknown>)(prev.instanceData)
-          : updater;
-      return { ...prev, instanceData: nextData, isDirty: true };
-    });
-  }, []);
+  const setInstanceData = useCallback(
+    (updater: Record<string, unknown> | ((prev: Record<string, unknown>) => Record<string, unknown>)) => {
+      setState((prev) => {
+        const nextData =
+          typeof updater === 'function'
+            ? (updater as (prev: Record<string, unknown>) => Record<string, unknown>)(prev.instanceData)
+            : updater;
+        return {
+          ...prev,
+          instanceData: nextData,
+          isDirty: true,
+          lastUpdate: prev.lastUpdate,
+        };
+      });
+    },
+    []
+  );
 
-  const setValue = useCallback((path: string, value: unknown) => {
-    setState((prev) => {
-      const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
-      return { ...prev, instanceData: nextData, isDirty: true };
-    });
-  }, []);
+  const setValue = useCallback(
+    (path: string, value: unknown, meta?: Partial<UpdateMeta>) => {
+      setState((prev) => {
+        const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
+        const nextMeta: UpdateMeta = {
+          source: meta?.source ?? 'unknown',
+          path: meta?.path ?? path,
+          ts: meta?.ts ?? Date.now(),
+        };
+        return { ...prev, instanceData: nextData, isDirty: true, lastUpdate: nextMeta };
+      });
+    },
+    []
+  );
 
   const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
     try {
@@ -103,6 +127,11 @@ function useWidgetSessionInternal() {
         instanceData: mergedInstance,
         isDirty: false,
         preview: prev.preview,
+        lastUpdate: {
+          source: 'load',
+          path: '',
+          ts: Date.now(),
+        },
         meta: {
           publicId: message.publicId,
           widgetname: compiled.widgetname,
@@ -198,6 +227,7 @@ function useWidgetSessionInternal() {
       instanceData: state.instanceData,
       isDirty: state.isDirty,
       preview: state.preview,
+      lastUpdate: state.lastUpdate,
       meta: state.meta,
       setInstanceData,
       setValue,

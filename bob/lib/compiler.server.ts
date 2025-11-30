@@ -18,6 +18,16 @@ type ComponentSpec = {
   }>;
 };
 
+function groupKeyToLabel(key: string): string {
+  const map: Record<string, string> = {
+    wgtappearance: 'Widget appearance',
+    wgtlayout: 'Widget layout',
+    podstageappearance: 'Stage/Pod appearance',
+    podstagelayout: 'Stage/Pod layout',
+  };
+  return map[key] || key.replace(/-/g, ' ');
+}
+
 function decodeHtmlEntities(value: string): string {
   return value
     .replace(/&quot;/g, '"')
@@ -104,6 +114,7 @@ function buildContext(component: string, attrs: TooldrawerAttrs, spec?: Componen
   const label = attrs.label || (merged.label as string) || 'Label';
   const placeholder = attrs.placeholder || (merged.placeholder as string) || 'Select a fill';
   const pathAttr = attrs.path || '';
+  const objectType = attrs.objectType || attrs['object-type'] || '';
   // When a path is provided, let the runtime binding populate the value to avoid leaking template
   // handlebars (e.g., {{title}}) into the initial render.
   const value = pathAttr ? '' : attrs.value || '';
@@ -122,6 +133,23 @@ function buildContext(component: string, attrs: TooldrawerAttrs, spec?: Componen
     }
   }
 
+  // Process template value to inject icons before it becomes part of context
+  let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
+  if (templateValue) {
+    templateValue = templateValue.replace(
+      /<([a-z0-9-]+)([^>]*?)\sdata-icon="([^"]+)"([^>]*)>([\s\S]*?)<\/\1>/gi,
+      (match, tag, before, iconName, after, inner) => {
+        const svg = getIcon(iconName);
+        if (!svg) {
+          console.warn(`[BobCompiler] Missing Dieter icon "${iconName}" in template attribute`);
+          return match; // Return original if icon not found
+        }
+        const attrs = `${before}${after}`.replace(/\sdata-icon="[^"]*"/i, '');
+        return `<${tag}${attrs}>${svg}</${tag}>`;
+      },
+    );
+  }
+
   Object.assign(merged, {
     label,
     placeholder,
@@ -132,6 +160,15 @@ function buildContext(component: string, attrs: TooldrawerAttrs, spec?: Componen
     id,
     options,
     optionsRaw,
+    objectType,
+    addLabel: attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item',
+    labelPath: attrs.labelPath || (merged.labelPath as string) || '',
+    labelInputLabel: attrs.labelInputLabel || (merged.labelInputLabel as string) || label || 'Title',
+    labelPlaceholder: attrs.labelPlaceholder || (merged.labelPlaceholder as string) || '',
+    labelSize: attrs.labelSize || (merged.labelSize as string) || size,
+    toggleLabel: attrs.toggleLabel || (merged.toggleLabel as string) || '',
+    togglePath: attrs.togglePath || (merged.togglePath as string) || '',
+    template: templateValue,
   });
 
   if (merged.labelClass == null) merged.labelClass = 'label-s';
@@ -163,8 +200,20 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
     const usages = new Set<string>();
     let html = panel.html;
 
-    const tdRegex = /<tooldrawer-field([^>]*)\/>/gi;
-    html = html.replace(tdRegex, (fullMatch: string, attrsRaw: string) => {
+    // Expand simple divider tag to a neutral separator
+    html = html.replace(/<tooldrawer-divider\s*\/>/gi, '<div aria-hidden="true"></div>');
+
+    // Expand simple eyebrow tag to overline text
+    html = html.replace(/<tooldrawer-eyebrow([^>]*)\/>/gi, (_full, attrsRaw: string) => {
+      const attrs = parseTooldrawerAttributes(attrsRaw || '');
+      const text = attrs.text || '';
+      return `<div class="overline" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
+    });
+
+    // Allow '>' inside quoted values and handle both self-closing and open/close forms.
+    const tdRegex =
+      /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
+    html = html.replace(tdRegex, (fullMatch: string, groupKey: string | undefined, attrsRaw: string) => {
       const attrs = parseTooldrawerAttributes(attrsRaw);
       const type = attrs.type;
       if (!type) return fullMatch;
@@ -181,6 +230,19 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
       }
     }
       usages.add(type);
+      const showIf = attrs['show-if'];
+      const wrappers: string[] = [];
+      const shouldWrapGroup = groupKey && !['podstagelayout', 'podstageappearance'].includes(groupKey);
+      if (shouldWrapGroup && groupKey) {
+        const label = groupKeyToLabel(groupKey);
+        wrappers.push(`data-bob-group="${groupKey}"`, `data-bob-group-label="${label}"`);
+      }
+      if (showIf) {
+        wrappers.push(`data-bob-showif="${showIf}"`);
+      }
+      if (wrappers.length > 0) {
+        return `<div ${wrappers.join(' ')}>${rendered}</div>`;
+      }
       return rendered;
     });
 

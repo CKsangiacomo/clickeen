@@ -106,6 +106,7 @@ export function ToolDrawer() {
                 widgetKey={compiled?.widgetname}
                 instanceData={session.instanceData}
                 setValue={session.setValue}
+                lastUpdate={session.lastUpdate}
                 defaults={compiled?.defaults}
                 dieterAssets={compiled?.assets.dieter}
               />

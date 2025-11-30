@@ -1,0 +1,56 @@
+<div class="diet-repeater" data-size="{{size}}" data-reorder="off">
+  <div class="diet-repeater__header {{#if labelPath}}has-editable-label{{/if}}">
+    <div class="diet-repeater__header-main">
+      {{#if labelPath}}
+        <div class="diet-textfield diet-repeater__label-input" data-size="{{labelSize}}">
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label label-s">{{labelInputLabel}}</span>
+            <input
+              class="diet-textfield__field"
+              type="text"
+              aria-label="{{labelInputLabel}}"
+              placeholder="{{labelPlaceholder}}"
+              data-bob-path="{{labelPath}}"
+            />
+          </label>
+        </div>
+      {{else}}
+        <span class="diet-repeater__label label-s">{{label}}</span>
+      {{/if}}
+
+      <div class="diet-repeater__actions">
+        <button class="diet-btn-ic diet-repeater__reorder" type="button" data-size="sm" data-variant="neutral" aria-pressed="false">
+          <span class="diet-btn-ic__icon" data-icon="bolt"></span>
+        </button>
+      </div>
+    </div>
+
+    {{#if togglePath}}
+      <div class="diet-repeater__toggle-row">
+        <label class="diet-toggle diet-repeater__toggle" data-size="sm">
+          <span class="diet-toggle__label label-s">{{toggleLabel}}</span>
+          <span class="diet-toggle__switch">
+            <input
+              class="diet-toggle__input sr-only"
+              type="checkbox"
+              role="switch"
+              aria-label="{{toggleLabel}}"
+              data-bob-path="{{togglePath}}"
+            />
+            <span class="diet-toggle__knob"></span>
+          </span>
+        </label>
+      </div>
+    {{/if}}
+  </div>
+
+  <div class="diet-repeater__list" data-repeater-list></div>
+
+  <button class="diet-btn-txt diet-repeater__add" type="button" data-size="md" data-variant="primary">
+    <span class="diet-btn-txt__label">{{addLabel}}</span>
+  </button>
+
+  <input type="hidden" class="diet-repeater__field" value="[]"{{#if path}} data-path="{{path}}"{{/if}} data-bob-json />
+
+  <template data-repeater-item>{{template}}</template>
+</div>

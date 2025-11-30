@@ -5,7 +5,7 @@
  */
 
 (function () {
- if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const defaultState = {
     widgetname: 'countdown',
@@ -41,22 +41,41 @@
       afterButtonUrl: '',
       expiredMessage: 'Offer ended',
     },
-    position: {
-      layout: 'full-width',
-      contentWidth: 960,
+    layout: {
+      type: 'full-width',
       alignment: 'center',
       padding: 24,
       gap: 16,
     },
     stage: {
-      background: 'transparent',
+      background: 'var(--color-system-gray-5)',
+      alignment: 'center',
+      paddingLinked: true,
+      padding: 0,
+      paddingTop: 0,
+      paddingRight: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
     },
     pod: {
-      background: 'transparent',
+      background: 'var(--color-system-white)',
+      paddingLinked: true,
+      padding: 0,
+      paddingTop: 0,
+      paddingRight: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+      widthMode: 'wrap',
+      contentWidth: 960,
+      radiusLinked: true,
+      radius: '6xl',
+      radiusTL: '6xl',
+      radiusTR: '6xl',
+      radiusBR: '6xl',
+      radiusBL: '6xl',
     },
     theme: {
       preset: 'custom',
-      background: '#6B21A8',
       headingColor: '#FFFFFF',
       timerColor: '#FFFFFF',
       labelsColor: '#FFFFFF',
@@ -82,10 +101,13 @@
       customCSS: '',
       customJS: '',
     },
+    behavior: {
+      showBacklink: true,
+    },
   };
 
-  const data = window.CK_WIDGET?.state || window.ckeenInstanceData || {};
-  let state = mergeState(defaultState, data);
+  const initial = window.CK_WIDGET?.state || {};
+  let state = mergeState(defaultState, initial);
   const widget = document.querySelector('.ck-countdown');
   if (!widget) return;
 
@@ -93,6 +115,7 @@
   let numberRAF = null;
   let numberStartTs = null;
   let customCssEl = null;
+  let personalTarget = null;
 
   function toBool(v, fallback) {
     if (v === undefined || v === null) return fallback;
@@ -129,9 +152,9 @@
       ...(next?.theme || {}),
     };
 
-    const mergedPosition = {
-      ...(base.position || {}),
-      ...(next?.position || {}),
+    const mergedLayout = {
+      ...(base.layout || {}),
+      ...(next?.layout || {}),
     };
 
     const mergedActions = {
@@ -139,9 +162,24 @@
       ...(next?.actions || {}),
     };
 
+    const mergedStage = {
+      ...(base.stage || {}),
+      ...(next?.stage || {}),
+    };
+
+    const mergedPod = {
+      ...(base.pod || {}),
+      ...(next?.pod || {}),
+    };
+
     const mergedSettings = {
       ...(base.settings || {}),
       ...(next?.settings || {}),
+    };
+
+    const mergedBehavior = {
+      ...(base.behavior || {}),
+      ...(next?.behavior || {}),
     };
 
     return {
@@ -149,9 +187,12 @@
       ...next,
       timer: mergedTimer,
       actions: mergedActions,
-      position: mergedPosition,
+      layout: mergedLayout,
       theme: mergedTheme,
+      stage: mergedStage,
+      pod: mergedPod,
       settings: mergedSettings,
+      behavior: mergedBehavior,
     };
   }
 
@@ -162,13 +203,18 @@
   }
 
   function setCssVars() {
-    const { position = {}, theme = {} } = state;
+    const { layout = {}, pod = {}, theme = {} } = state;
     const root = widget;
     if (!root) return;
-    const palette = resolvePalette(theme);
-    root.style.setProperty('--content-width', `${position.contentWidth || 960}px`);
-    root.style.setProperty('--padding', `${position.padding || 24}px`);
-    root.style.setProperty('--gap', `${position.gap || 16}px`);
+    const palette = resolvePalette(pod, theme);
+    const layoutPadding =
+      typeof layout.padding === 'number'
+        ? layout.padding
+        : Number(layout.padding ?? defaultState.layout?.padding ?? 24);
+    const layoutGap =
+      typeof layout.gap === 'number' ? layout.gap : Number(layout.gap ?? defaultState.layout?.gap ?? 16);
+    root.style.setProperty('--padding', `${Number.isFinite(layoutPadding) ? layoutPadding : 24}px`);
+    root.style.setProperty('--gap', `${Number.isFinite(layoutGap) ? layoutGap : 16}px`);
     root.style.setProperty('--ck-bg', palette.background);
     root.style.setProperty('--ck-heading-color', palette.headingColor);
     root.style.setProperty('--ck-timer-color', palette.timerColor);
@@ -176,16 +222,16 @@
     root.style.setProperty('--ck-separator-color', palette.separatorColor);
     root.style.setProperty('--ck-button-color', palette.buttonColor);
     root.style.setProperty('--ck-button-text-color', palette.buttonTextColor);
-    root.style.setProperty('--heading-size', `${theme.headingSize || 22}px`);
-    root.style.setProperty('--timer-size', `${theme.timerSize || 100}`);
-    root.style.setProperty('--label-size', `${theme.labelSize || 14}px`);
-    root.style.setProperty('--button-size', `${theme.buttonSize || 100}`);
+    root.style.setProperty('--heading-size', `${state.theme?.headingSize || 22}px`);
+    root.style.setProperty('--timer-size', `${state.theme?.timerSize || 100}`);
+    root.style.setProperty('--label-size', `${state.theme?.labelSize || 14}px`);
+    root.style.setProperty('--button-size', `${state.theme?.buttonSize || 100}`);
   }
 
   function applyLayout() {
-    const { position = {} } = state;
-    widget.setAttribute('data-layout', position.layout || 'full-width');
-    widget.setAttribute('data-alignment', position.alignment || 'center');
+    const { layout = {} } = state;
+    widget.setAttribute('data-layout', layout.type || 'full-width');
+    widget.setAttribute('data-alignment', layout.alignment || 'center');
     widget.setAttribute('data-theme', state.theme?.preset || 'custom');
     widget.setAttribute('data-timer-style', state.theme?.timerStyle || 'separated');
     widget.setAttribute('data-animation', state.theme?.animation || 'none');
@@ -205,11 +251,65 @@
   function applyBackdrop() {
     const stageEl = document.querySelector('.stage');
     const podEl = document.querySelector('.pod');
+    const stageCfg = state.stage || {};
+    const podCfg = state.pod || {};
     if (stageEl) {
-      stageEl.style.setProperty('--stage-bg', state.stage?.background || 'transparent');
+      const stageBg = stageCfg.background || defaultState.stage.background;
+      stageEl.style.setProperty('--stage-bg', stageBg);
+      const stageLinked = toBool(stageCfg.paddingLinked, true);
+      if (stageLinked) {
+        const pad = stageCfg.padding ?? defaultState.stage.padding ?? 0;
+        stageEl.style.padding = `${pad}px`;
+      } else {
+        const top = stageCfg.paddingTop ?? defaultState.stage.paddingTop ?? stageCfg.padding ?? 0;
+        const right = stageCfg.paddingRight ?? defaultState.stage.paddingRight ?? stageCfg.padding ?? 0;
+        const bottom = stageCfg.paddingBottom ?? defaultState.stage.paddingBottom ?? stageCfg.padding ?? 0;
+        const left = stageCfg.paddingLeft ?? defaultState.stage.paddingLeft ?? stageCfg.padding ?? 0;
+        stageEl.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
+      }
+      const align = stageCfg.alignment || 'center';
+      const { justify, alignItems } = resolveStageAlignment(align);
+      stageEl.style.justifyContent = justify;
+      stageEl.style.alignItems = alignItems;
     }
     if (podEl) {
-      podEl.style.setProperty('--pod-bg', state.pod?.background || 'transparent');
+      const podBg = podCfg.background || defaultState.pod.background;
+      podEl.style.setProperty('--pod-bg', podBg);
+      const padLinked = toBool(podCfg.paddingLinked, true);
+      if (padLinked) {
+        const pad = podCfg.padding ?? defaultState.pod.padding ?? 0;
+        podEl.style.padding = `${pad}px`;
+      } else {
+        const top = podCfg.paddingTop ?? defaultState.pod.paddingTop ?? podCfg.padding ?? 0;
+        const right = podCfg.paddingRight ?? defaultState.pod.paddingRight ?? podCfg.padding ?? 0;
+        const bottom = podCfg.paddingBottom ?? defaultState.pod.paddingBottom ?? podCfg.padding ?? 0;
+        const left = podCfg.paddingLeft ?? defaultState.pod.paddingLeft ?? podCfg.padding ?? 0;
+        podEl.style.padding = `${top}px ${right}px ${bottom}px ${left}px`;
+      }
+      const linked = toBool(podCfg.radiusLinked, true);
+      const resolveRadiusToken = (value, fallback) => {
+        if (value === 'none') return '0';
+        const v = value || fallback;
+        return v ? `var(--control-radius-${v})` : `var(--control-radius-${fallback})`;
+      };
+      if (linked) {
+        podEl.style.setProperty('--pod-radius', resolveRadiusToken(podCfg.radius, defaultState.pod.radius || '6xl'));
+      } else {
+        const tl = resolveRadiusToken(podCfg.radiusTL, defaultState.pod.radiusTL || defaultState.pod.radius || '6xl');
+        const tr = resolveRadiusToken(podCfg.radiusTR, defaultState.pod.radiusTR || defaultState.pod.radius || '6xl');
+        const br = resolveRadiusToken(podCfg.radiusBR, defaultState.pod.radiusBR || defaultState.pod.radius || '6xl');
+        const bl = resolveRadiusToken(podCfg.radiusBL, defaultState.pod.radiusBL || defaultState.pod.radius || '6xl');
+        podEl.style.setProperty('--pod-radius', `${tl} ${tr} ${br} ${bl}`);
+      }
+      const pPadX = podCfg.paddingX ?? podCfg.padding;
+      const pPadY = podCfg.paddingY ?? podCfg.padding;
+      if (pPadX != null) podEl.style.setProperty('--pod-padding-x', `${pPadX}px`);
+      if (pPadY != null) podEl.style.setProperty('--pod-padding-y', `${pPadY}px`);
+      const widthMode = podCfg.widthMode || 'wrap';
+      podEl.setAttribute('data-width-mode', widthMode);
+      const cw = podCfg.contentWidth;
+      if (cw != null && cw !== '') podEl.style.setProperty('--content-width', `${cw}px`);
+      else podEl.style.removeProperty('--content-width');
     }
   }
 
@@ -367,18 +467,14 @@
       return resolveDateWithTimezone(dateStr, timeStr, tz);
     }
     if (state.timer?.mode === 'personal') {
-      const storageKey = `ck-countdown-${state.widgetname || 'countdown'}-${location.pathname}`;
-      const stored = localStorage.getItem(storageKey);
       const now = Date.now();
-      let target = stored ? Number(stored) : null;
-      if (!target || Number.isNaN(target) || target <= now) {
+      if (!personalTarget) {
         const amount = Number(state.timer.personalCountdown?.timeAmount || 1);
         const unit = state.timer.personalCountdown?.timeUnit || 'hours';
         const duration = toMs(amount, unit);
-        target = now + duration;
-        localStorage.setItem(storageKey, String(target));
+        personalTarget = now + duration;
       }
-      return target;
+      return personalTarget;
     }
     return null;
   }
@@ -439,12 +535,10 @@
   function handleExpire() {
     const { actions = {}, timer = {} } = state;
     if (timer.mode === 'personal' && toBool(timer.personalCountdown?.repeatEnabled, false)) {
-      const storageKey = `ck-countdown-${state.widgetname || 'countdown'}-${location.pathname}`;
       const amount = Number(timer.personalCountdown?.repeatAmount || 1);
       const unit = timer.personalCountdown?.repeatUnit || 'minutes';
       const duration = toMs(amount, unit);
-      const nextTarget = Date.now() + duration;
-      localStorage.setItem(storageKey, String(nextTarget));
+      personalTarget = Date.now() + duration;
       return;
     }
 
@@ -485,6 +579,12 @@
     applyTimerVisibility();
     applyCustomCss(state.settings?.customCSS || '');
     applyCustomJs(state.settings?.customJS || '');
+    const backlink = widget.querySelector('[data-role="backlink"]');
+    if (backlink instanceof HTMLElement) {
+      const show = toBool(state.behavior?.showBacklink, true);
+      backlink.style.display = show ? '' : 'none';
+      backlink.hidden = !show;
+    }
 
     if (state.timer?.mode === 'number') {
       const timerEl = widget.querySelector('[data-role="units"]');
@@ -519,51 +619,38 @@
       numberRAF = null;
     }
     numberStartTs = null;
+    personalTarget = null;
     start();
   }
 
-  function resolvePalette(theme = {}) {
-    const preset = theme.preset || 'custom';
-    const presets = {
-      light: {
-        background: '#FFFFFF',
-        headingColor: '#0F172A',
-        timerColor: '#0F172A',
-        labelsColor: '#334155',
-        separatorColor: '#CBD5E1',
-        buttonColor: '#0F172A',
-        buttonTextColor: '#FFFFFF',
-      },
-      dark: {
-        background: '#0F172A',
-        headingColor: '#E2E8F0',
-        timerColor: '#E2E8F0',
-        labelsColor: '#94A3B8',
-        separatorColor: '#475569',
-        buttonColor: '#38BDF8',
-        buttonTextColor: '#0F172A',
-      },
-      gradient: {
-        background: 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 50%, #2563EB 100%)',
-        headingColor: '#FFFFFF',
-        timerColor: '#FFFFFF',
-        labelsColor: '#E2E8F0',
-        separatorColor: '#C4B5FD',
-        buttonColor: '#FBBF24',
-        buttonTextColor: '#1F2937',
-      },
-      custom: {},
-    };
-    const palette = presets[preset] || presets.custom;
+  function resolvePalette(pod = {}, theme = {}) {
+    const defaults = defaultState.theme || {};
+    const mergedTheme = { ...defaults, ...theme };
     return {
-      background: theme.background || palette.background || '#6B21A8',
-      headingColor: theme.headingColor || palette.headingColor || '#FFFFFF',
-      timerColor: theme.timerColor || palette.timerColor || '#FFFFFF',
-      labelsColor: theme.labelsColor || palette.labelsColor || '#FFFFFF',
-      separatorColor: theme.separatorColor || palette.separatorColor || '#FFFFFF',
-      buttonColor: theme.buttonColor || palette.buttonColor || '#84CC16',
-      buttonTextColor: theme.buttonTextColor || palette.buttonTextColor || '#000000',
+      background: pod.background || defaultState.pod.background,
+      headingColor: mergedTheme.headingColor || defaults.headingColor,
+      timerColor: mergedTheme.timerColor || defaults.timerColor,
+      labelsColor: mergedTheme.labelsColor || defaults.labelsColor,
+      separatorColor: mergedTheme.separatorColor || defaults.separatorColor,
+      buttonColor: mergedTheme.buttonColor || defaults.buttonColor,
+      buttonTextColor: mergedTheme.buttonTextColor || defaults.buttonTextColor,
     };
+  }
+
+  function resolveStageAlignment(value) {
+    switch (value) {
+      case 'left':
+        return { justify: 'flex-start', alignItems: 'center' };
+      case 'right':
+        return { justify: 'flex-end', alignItems: 'center' };
+      case 'top':
+        return { justify: 'center', alignItems: 'flex-start' };
+      case 'bottom':
+        return { justify: 'center', alignItems: 'flex-end' };
+      case 'center':
+      default:
+        return { justify: 'center', alignItems: 'center' };
+    }
   }
 
   window.addEventListener('message', (event) => {

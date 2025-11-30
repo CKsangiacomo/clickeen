@@ -11,16 +11,19 @@ export type TooldrawerAttrs = Record<string, string>;
 
 export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   const attrs: TooldrawerAttrs = {};
-  const attrRegex = /(\w+)\s*=\s*['"]([^'"]*)['"]/g;
+  // Allow hyphenated names (show-if) and properly capture quoted values that may contain the other quote type.
+  const attrRegex = /([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
   let m: RegExpExecArray | null;
   while ((m = attrRegex.exec(tag)) !== null) {
-    attrs[m[1]] = m[2];
+    attrs[m[1]] = m[2] ?? m[3] ?? '';
   }
   return attrs;
 }
 
 export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
-  const tdRegex = /<tooldrawer-field([^>]*)\/>/gi;
+  // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
+  const tdRegex =
+    /<tooldrawer-field(?:-[a-z0-9-]+)?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
   let m: RegExpExecArray | null;
   while ((m = tdRegex.exec(markup)) !== null) {
     const attrs = parseTooldrawerAttributes(m[1]);

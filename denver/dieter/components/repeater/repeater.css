@@ -1,0 +1,91 @@
+.diet-repeater {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3);
+  background: var(--color-surface-primary);
+}
+
+.diet-repeater__header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.diet-repeater__header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.diet-repeater__header.has-editable-label .diet-repeater__header-main {
+  align-items: flex-start;
+}
+
+.diet-repeater__label-input {
+  flex: 1;
+}
+
+.diet-repeater__label {
+  color: var(--color-text-secondary);
+}
+
+.diet-repeater__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.diet-repeater__toggle .diet-toggle__label {
+  white-space: nowrap;
+}
+
+.diet-repeater__toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diet-repeater__list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.diet-repeater__item {
+  position: relative;
+  padding: var(--space-1) 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-3);
+  background: var(--color-surface-secondary);
+}
+
+.diet-repeater__item.is-dragging {
+  opacity: 0.65;
+}
+
+.diet-repeater__item-handle {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: none;
+}
+
+.diet-repeater[data-reorder="on"] .diet-repeater__item-handle {
+  display: inline-flex;
+}
+
+.diet-repeater__item-remove {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+}
+
+.diet-repeater__item-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.diet-repeater__add {
+  justify-self: start;
+}

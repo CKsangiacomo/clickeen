@@ -7,75 +7,67 @@
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
-  <body>
-    <div class="stage" data-role="stage">
-      <div class="pod" data-role="pod">
-        <div
-          class="ck-countdown"
-          data-layout="full-width"
-          data-alignment="center"
-          data-theme="custom"
-          data-timer-style="separated"
-          data-animation="none"
-          data-mode="personal"
-          data-state="active"
+<body>
+  <div class="stage" data-role="stage">
+    <div class="pod" data-role="pod">
+      <div class="ck-countdown" data-role="container">
+        <header class="ck-countdown__header">
+          <h2 class="ck-countdown__heading heading-4" data-role="heading">Get 50% off before it's too late ⏰</h2>
+        </header>
+
+        <section
+          class="ck-countdown__timer"
+          data-format="DHMS"
+          data-separator="colon"
+          data-show-labels="true"
+          role="timer"
+          aria-live="polite"
+          aria-atomic="true"
         >
-          <div class="ck-countdown__inner" data-role="container">
-            <header class="ck-countdown__header">
-              <h2 class="ck-countdown__heading" data-role="heading">Get 50% off before it's too late ⏰</h2>
-            </header>
-
-            <section
-              class="ck-countdown__timer"
-              data-format="DHMS"
-              data-separator="colon"
-              data-show-labels="true"
-              role="timer"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <div class="ck-timer-units" data-role="units">
-                <div class="ck-timer-unit" data-unit="days">
-                  <span class="ck-timer-value">00</span>
-                  <span class="ck-timer-label">Days</span>
-                </div>
-                <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
-                <div class="ck-timer-unit" data-unit="hours">
-                  <span class="ck-timer-value">00</span>
-                  <span class="ck-timer-label">Hours</span>
-                </div>
-                <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
-                <div class="ck-timer-unit" data-unit="minutes">
-                  <span class="ck-timer-value">00</span>
-                  <span class="ck-timer-label">Minutes</span>
-                </div>
-                <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
-                <div class="ck-timer-unit" data-unit="seconds">
-                  <span class="ck-timer-value">00</span>
-                  <span class="ck-timer-label">Seconds</span>
-                </div>
-              </div>
-              <div class="ck-countdown__number" data-mode="number" hidden>
-                <span class="ck-countdown__number-value" data-role="number-value">0</span>
-              </div>
-            </section>
-
-            <div class="ck-countdown__actions" data-role="actions-during">
-              <a class="ck-countdown__button" data-role="cta-during" href="#" target="_blank" rel="noreferrer">
-                Purchase now
-              </a>
+          <div class="ck-timer-units" data-role="units">
+            <div class="ck-timer-unit" data-unit="days">
+              <span class="ck-timer-value heading-2">00</span>
+              <span class="ck-timer-label label-s">Days</span>
             </div>
-
-            <div class="ck-countdown__after" data-role="actions-after" hidden>
-              <div class="ck-countdown__expired" data-role="expired-message">Offer ended</div>
-              <a class="ck-countdown__button" data-role="cta-after" href="#" target="_blank" rel="noreferrer">
-                Shop now
-              </a>
+            <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
+            <div class="ck-timer-unit" data-unit="hours">
+              <span class="ck-timer-value heading-2">00</span>
+              <span class="ck-timer-label label-s">Hours</span>
+            </div>
+            <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
+            <div class="ck-timer-unit" data-unit="minutes">
+              <span class="ck-timer-value heading-2">00</span>
+              <span class="ck-timer-label label-s">Minutes</span>
+            </div>
+            <span class="ck-timer-sep" data-separator="colon" aria-hidden="true"></span>
+            <div class="ck-timer-unit" data-unit="seconds">
+              <span class="ck-timer-value heading-2">00</span>
+              <span class="ck-timer-label label-s">Seconds</span>
             </div>
           </div>
+          <div class="ck-countdown__number" data-mode="number" hidden>
+            <span class="ck-countdown__number-value heading-2" data-role="number-value">0</span>
+          </div>
+        </section>
+
+        <div class="ck-countdown__actions" data-role="actions-during">
+          <a class="ck-countdown__button body-m" data-role="cta-during" href="#" target="_blank" rel="noreferrer">
+            Purchase now
+          </a>
         </div>
+
+        <div class="ck-countdown__after" data-role="actions-after" hidden>
+          <div class="ck-countdown__expired body-s" data-role="expired-message">Offer ended</div>
+          <a class="ck-countdown__button body-m" data-role="cta-after" href="#" target="_blank" rel="noreferrer">
+            Shop now
+          </a>
+        </div>
+        <footer class="ck-countdown__backlink" data-role="backlink">
+          <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
+        </footer>
       </div>
     </div>
+  </div>
     <script src="./widget.client.js" defer></script>
   </body>
 </html>

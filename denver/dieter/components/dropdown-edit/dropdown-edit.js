@@ -208,6 +208,15 @@ var Dieter = (() => {
       states.set(root, state);
       installHandlers(state);
       syncFromInstanceData(state);
+      state.hiddenInput.addEventListener("external-sync", (ev) => {
+        const custom = ev;
+        const value = custom.detail && typeof custom.detail.value === "string" && custom.detail.value || state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
+        if (state.isActive) {
+          state.pendingExternal = value;
+          return;
+        }
+        applyExternalValue(state, value);
+      });
     });
     hydrateHost(scope);
   }
@@ -259,7 +268,8 @@ var Dieter = (() => {
       clearLinksButton,
       toolbarDivider,
       selection: null,
-      activeAnchor: null
+      activeAnchor: null,
+      isActive: false
     };
   }
   function installHandlers(state) {
@@ -279,8 +289,12 @@ var Dieter = (() => {
       clearAllLinks(state);
     });
     editor.addEventListener("input", () => {
+      state.isActive = true;
       syncPreview(state);
       updateSelectionFromEditor(state);
+    });
+    editor.addEventListener("focus", () => {
+      state.isActive = true;
     });
     editor.addEventListener("mouseup", () => {
       if (!state.root.classList.contains("has-linksheet")) {
@@ -293,6 +307,11 @@ var Dieter = (() => {
       }
     });
     editor.addEventListener("blur", () => {
+      state.isActive = false;
+      if (state.pendingExternal !== void 0) {
+        applyExternalValue(state, state.pendingExternal);
+        state.pendingExternal = void 0;
+      }
       if (!state.root.classList.contains("has-linksheet")) {
         state.selection = null;
         updatePaletteActiveStates(state);
@@ -587,6 +606,22 @@ var Dieter = (() => {
     syncPreview(state);
     updateClearButtons(state);
   }
+  function applyExternalValue(state, raw) {
+    const value = raw || "";
+    const sanitized = sanitizeInline(value);
+    state.editor.innerHTML = sanitized;
+    const target = state.headerValue;
+    if (sanitized) {
+      target.innerHTML = sanitized;
+      target.dataset.muted = "false";
+    } else {
+      target.textContent = target.dataset.placeholder ?? "";
+      target.dataset.muted = "true";
+    }
+    highlightPreviewLinks(target);
+    state.hiddenInput.value = sanitized;
+    updateClearButtons(state);
+  }
   function syncPreview(state) {
     const raw = state.editor.innerHTML.trim();
     const sanitized = sanitizeInline(raw);
@@ -602,7 +637,7 @@ var Dieter = (() => {
     if (!hasValue) {
       target.textContent = target.dataset.placeholder ?? "";
     }
-    state.hiddenInput.value = raw;
+    state.hiddenInput.value = sanitized;
     state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
   }
   function highlightPreviewLinks(span) {
@@ -613,41 +648,81 @@ var Dieter = (() => {
   function sanitizeInline(html) {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html;
-    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S", "A"]);
-    wrapper.querySelectorAll("*").forEach((node) => {
-      const el = node;
-      const tag = el.tagName;
+    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S", "A", "BR"]);
+    const sanitizeNode = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return { type: "text", value: node.textContent || "" };
+      }
+      if (!(node instanceof HTMLElement)) return null;
+      const tag = node.tagName.toUpperCase();
       if (!allowed.has(tag)) {
-        const parent = el.parentNode;
-        if (!parent) return;
-        while (el.firstChild) parent.insertBefore(el.firstChild, el);
-        parent.removeChild(el);
+        return Array.from(node.childNodes).map((child) => sanitizeNode(child)).flat().filter(Boolean);
+      }
+      if (tag === "BR") return { type: "br" };
+      const attrs = {};
+      if (tag === "A") {
+        const href = node.getAttribute("href") || "";
+        if (/^https?:\/\//i.test(href)) {
+          attrs.href = href;
+          if (node.getAttribute("target") === "_blank") {
+            attrs.target = "_blank";
+            attrs.rel = "noopener";
+          }
+        }
+        const cls = node.getAttribute("class") || "";
+        if (/\bdiet-dropdown-edit-link\b/.test(cls)) {
+          attrs.class = "diet-dropdown-edit-link";
+        }
+      }
+      const children = Array.from(node.childNodes).map((child) => sanitizeNode(child)).flat().filter(Boolean);
+      return { type: "tag", tag: tag.toLowerCase(), attrs, children };
+    };
+    const sanitizedChildren = Array.from(wrapper.childNodes).map((child) => sanitizeNode(child)).flat().filter(Boolean);
+    const parts = [];
+    const startsWithNonSpace = (node) => {
+      if (!node) return false;
+      if (node.type === "text") return /^\S/.test(node.value);
+      if (node.type === "br") return false;
+      return node.children.some((child) => startsWithNonSpace(child));
+    };
+    const endsWithNonSpace = (node) => {
+      if (!node) return false;
+      if (node.type === "text") return /\S$/.test(node.value);
+      if (node.type === "br") return false;
+      for (let i = node.children.length - 1; i >= 0; i--) {
+        if (endsWithNonSpace(node.children[i])) return true;
+      }
+      return false;
+    };
+    const appendWithSpace = (node, prev2) => {
+      const needSpace = prev2 && prev2.type !== "br" && node.type !== "br" && endsWithNonSpace(prev2) && startsWithNonSpace(node);
+      if (needSpace) parts.push(" ");
+      if (node.type === "text") {
+        parts.push(node.value);
         return;
       }
-      if (tag === "A") {
-        const href = el.getAttribute("href") || "";
-        if (!/^https?:\/\//i.test(href)) {
-          el.removeAttribute("href");
-          el.removeAttribute("target");
-          el.removeAttribute("rel");
-        } else {
-          if (el.getAttribute("target") === "_blank") el.setAttribute("rel", "noopener");
-          else el.removeAttribute("rel");
-        }
-        Array.from(el.attributes).forEach((attr) => {
-          if (["href", "target", "rel", "data-preview-link"].includes(attr.name)) {
-            return;
-          }
-          if (attr.name === "class") {
-            if (/\bdiet-dropdown-edit-link\b/.test(attr.value)) return;
-          }
-          el.removeAttribute(attr.name);
-        });
-      } else {
-        Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
+      if (node.type === "br") {
+        parts.push("<br>");
+        return;
       }
+      if (node.type === "tag") {
+        const attrs = Object.entries(node.attrs).map(([k, v]) => `${k}="${v.replace(/"/g, "&quot;")}"`).join(" ");
+        const open = attrs ? `<${node.tag} ${attrs}>` : `<${node.tag}>`;
+        parts.push(open);
+        let prevChild = null;
+        node.children.forEach((child) => {
+          appendWithSpace(child, prevChild);
+          prevChild = child;
+        });
+        parts.push(`</${node.tag}>`);
+      }
+    };
+    let prev = null;
+    sanitizedChildren.forEach((child) => {
+      appendWithSpace(child, prev);
+      prev = child;
     });
-    return wrapper.innerHTML;
+    return parts.join("");
   }
   return __toCommonJS(dropdown_edit_exports);
 })();
