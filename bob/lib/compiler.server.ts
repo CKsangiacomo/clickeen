@@ -274,9 +274,12 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
 
   const controlTypes = Array.from(parsed.usages);
   const dieterAssets = {
-    styles: controlTypes
-      .filter((t) => fs.existsSync(componentAssetPath(t, 'css')))
-      .map((t) => `${dieterBase}/components/${t}/${t}.css`),
+    styles: [
+      `${dieterBase}/tokens/tokens.css`,
+      ...controlTypes
+        .filter((t) => fs.existsSync(componentAssetPath(t, 'css')))
+        .map((t) => `${dieterBase}/components/${t}/${t}.css`),
+    ],
     scripts: controlTypes
       .filter((t) => fs.existsSync(componentAssetPath(t, 'js')))
       .map((t) => `${dieterBase}/components/${t}/${t}.js`),

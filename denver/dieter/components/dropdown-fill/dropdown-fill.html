@@ -18,7 +18,10 @@
     {{#if label}}
       <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
     {{/if}}
-    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
+    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
+      <span class="diet-dropdown-fill__chip" aria-hidden="true"></span>
+      <span class="diet-dropdown-fill__label">{{placeholder}}</span>
+    </span>
     <button
       class="diet-dropdown-header-icon diet-btn-ic"
       data-size="{{size}}"

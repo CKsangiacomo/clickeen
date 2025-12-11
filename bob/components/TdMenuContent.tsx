@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PanelId } from '../lib/types';
 import { getAt } from '../lib/utils/paths';
 
@@ -310,34 +310,39 @@ function normalizeValue(val: unknown): string | number | boolean | null | undefi
   return val as any;
 }
 
-function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
-  if (node.type === 'path') return getAt<unknown>(data, node.value);
+function resolveValue(node: ShowIfAst, data: Record<string, unknown>, defaults?: Record<string, unknown>): unknown {
+  if (node.type === 'path') {
+    const val = getAt<unknown>(data, node.value);
+    if (val !== undefined) return val;
+    if (defaults) return getAt<unknown>(defaults, node.value);
+    return val;
+  }
   if (node.type === 'literal') return node.value;
-  return evalAst(node, data);
+  return evalAst(node, data, defaults);
 }
 
-function evalAst(node: ShowIfAst, data: Record<string, unknown>): boolean {
+function evalAst(node: ShowIfAst, data: Record<string, unknown>, defaults?: Record<string, unknown>): boolean {
   switch (node.type) {
     case 'path': {
-      const value = getAt<unknown>(data, node.value);
+      const value = resolveValue(node, data, defaults);
       return Boolean(value);
     }
     case 'literal':
       return Boolean(node.value);
     case 'not':
-      return !evalAst(node.child, data);
+      return !evalAst(node.child, data, defaults);
     case 'and':
-      return evalAst(node.left, data) && evalAst(node.right, data);
+      return evalAst(node.left, data, defaults) && evalAst(node.right, data, defaults);
     case 'or':
-      return evalAst(node.left, data) || evalAst(node.right, data);
+      return evalAst(node.left, data, defaults) || evalAst(node.right, data, defaults);
     case 'eq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data));
-      const rightVal = normalizeValue(resolveValue(node.right, data));
+      const leftVal = normalizeValue(resolveValue(node.left, data, defaults));
+      const rightVal = normalizeValue(resolveValue(node.right, data, defaults));
       return leftVal === rightVal;
     }
     case 'neq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data));
-      const rightVal = normalizeValue(resolveValue(node.right, data));
+      const leftVal = normalizeValue(resolveValue(node.left, data, defaults));
+      const rightVal = normalizeValue(resolveValue(node.right, data, defaults));
       return leftVal !== rightVal;
     }
     default:
@@ -364,12 +369,12 @@ function buildShowIfEntries(container: HTMLElement): ShowIfEntry[] {
   return entries;
 }
 
-function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unknown>) {
+function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unknown>, defaults?: Record<string, unknown>) {
   entries.forEach((entry) => {
     let isVisible = true;
     if (entry.ast) {
       try {
-        isVisible = evalAst(entry.ast, data);
+        isVisible = evalAst(entry.ast, data, defaults);
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
@@ -424,12 +429,12 @@ function applyGroupHeaders(scope: HTMLElement) {
   scope.appendChild(rebuilt);
 }
 
-function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>): boolean {
+function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>, defaults?: Record<string, unknown>): boolean {
   if (!expr) return true;
   try {
     const ast = parseShowIf(expr);
     if (!ast) return true;
-    return evalAst(ast, data);
+    return evalAst(ast, data, defaults);
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
@@ -501,10 +506,53 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
       });
   }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts]);
 
-  // Bind controls: set values from instanceData, attach listeners, honor showIf
+  // Bind controls: set values from instanceData (with defaults fallback), attach listeners, honor showIf
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    const handleContainerChange = (event: Event) => {
+      const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (!target) return;
+      const path = resolvePathFromTarget(target);
+      if (!path) return;
+
+      if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+        if (path === 'pod.radiusLinked' && target.checked) {
+          const source =
+            (getAt(instanceData, 'pod.radiusTL') ??
+              getAt(instanceData, 'pod.radiusTR') ??
+              getAt(instanceData, 'pod.radiusBR') ??
+              getAt(instanceData, 'pod.radiusBL') ??
+              getAt(instanceData, 'pod.radius') ??
+              (defaults ? getAt(defaults, 'pod.radius') : undefined) ??
+              '') as unknown;
+          setValue(path, true, { source: 'field', path, ts: Date.now() });
+          ['pod.radius', 'pod.radiusTL', 'pod.radiusTR', 'pod.radiusBR', 'pod.radiusBL'].forEach((p) => {
+            setValue(p, source, { source: 'field', path: p, ts: Date.now() });
+          });
+          return;
+        }
+        setValue(path, target.checked, { source: 'field', path, ts: Date.now() });
+        return;
+      }
+
+      if ('value' in target) {
+        const rawValue = (target as HTMLInputElement).value;
+        if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+          try {
+            const parsed = rawValue ? JSON.parse(rawValue) : [];
+            setValue(path, parsed, { source: 'field', path, ts: Date.now() });
+          } catch {
+            setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
+          }
+        } else {
+          setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
+        }
+      }
+    };
+
+    container.addEventListener('change', handleContainerChange, true);
 
     const fields = Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
 
@@ -573,6 +621,10 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
         if (!target) return;
 
         if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.log('[checkbox change]', { path, checked: target.checked });
+          }
           setValue(path, target.checked, { source: 'field', path, ts: Date.now() });
           return;
         }
@@ -608,16 +660,17 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
 
     return () => {
       cleanupFns.forEach((fn) => fn());
+      container.removeEventListener('change', handleContainerChange, true);
     };
   }, [instanceData, setValue, panelHtml, renderKey, defaults]);
 
   // Re-apply show-if visibility when data changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    if (!showIfEntriesRef.current.length) return;
-    applyShowIfVisibility(showIfEntriesRef.current, instanceData);
-  }, [instanceData, renderKey]);
+    showIfEntriesRef.current = buildShowIfEntries(container);
+    applyShowIfVisibility(showIfEntriesRef.current, instanceData, defaults || undefined);
+  });
 
   if (!panelId) {
     return (

@@ -1,41 +1,17 @@
 var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
-"use strict";
-var Dieter = (() => {
-  var __defProp = Object.defineProperty;
-  var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __export = (target, all) => {
-    for (var name in all)
-      __defProp(target, name, { get: all[name], enumerable: true });
-  };
-  var __copyProps = (to, from, except, desc) => {
-    if (from && typeof from === "object" || typeof from === "function") {
-      for (let key of __getOwnPropNames(from))
-        if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = Object.getOwnPropertyDescriptor(from, key)) || desc.enumerable });
-    }
-    return to;
-  };
-  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+(function () {
+  const registry = new WeakMap();
 
-  // components/repeater/repeater.ts
-  var repeater_exports = {};
-  __export(repeater_exports, {
-    hydrateRepeater: () => hydrateRepeater
-  });
-
-  // components/repeater/repeater.ts
-  var registry = /* @__PURE__ */ new WeakMap();
-function parseJson(value, fallback) {
+  function parseJson(value, fallback) {
     if (!value) return fallback;
     try {
-      // Decode common HTML entities that may survive attribute parsing
       const decoded = value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
       return JSON.parse(decoded);
     } catch {
       return fallback;
     }
   }
+
   function stringify(value) {
     try {
       return JSON.stringify(value);
@@ -43,6 +19,7 @@ function parseJson(value, fallback) {
       return "[]";
     }
   }
+
   function diffArrays(prev, next) {
     if (!Array.isArray(prev) || !Array.isArray(next)) {
       return { structuralChange: true, valueChanges: [] };
@@ -59,14 +36,13 @@ function parseJson(value, fallback) {
       if ((prevId || nextId) && prevId !== nextId) {
         return { structuralChange: true, valueChanges: [] };
       }
-      const prevString = JSON.stringify(prevItem);
-      const nextString = JSON.stringify(nextItem);
-      if (prevString !== nextString) {
+      if (JSON.stringify(prevItem) !== JSON.stringify(nextItem)) {
         valueChanges.push({ index: i, nextItem });
       }
     }
     return { structuralChange: false, valueChanges };
   }
+
   function hydrateRepeater(scope) {
     const roots = scope.querySelectorAll(".diet-repeater");
     roots.forEach((root) => {
@@ -76,8 +52,8 @@ function parseJson(value, fallback) {
       const templateEl = root.querySelector("template[data-repeater-item]");
       const addBtn = root.querySelector(".diet-repeater__add");
       const reorderBtn = root.querySelector(".diet-repeater__reorder");
-      if (!hidden || !list || !templateEl || !addBtn || !reorderBtn)
-        return;
+      if (!hidden || !list || !templateEl || !addBtn || !reorderBtn) return;
+
       const state = {
         root,
         hidden,
@@ -86,23 +62,34 @@ function parseJson(value, fallback) {
         addBtn,
         reorderBtn,
         reorder: false,
-        value: parseJson(hidden.value, [])
+        value: parseJson(hidden.value, []),
       };
       registry.set(root, state);
       render(state);
+
       addBtn.addEventListener("click", () => {
         state.value = Array.isArray(state.value) ? [...state.value, {}] : [{}];
         commit(state);
       });
+
       reorderBtn.addEventListener("click", () => {
         state.reorder = !state.reorder;
         root.dataset.reorder = state.reorder ? "on" : "off";
         reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
         render(state);
       });
+
       const handleExternal = (ev) => {
-        const payload = ev && ev.type === "external-sync" && ev.detail && typeof ev.detail.value !== "undefined" ? ev.detail.value : hidden.value;
-        const next = typeof payload === "string" ? parseJson(payload, []) : Array.isArray(payload) ? payload : parseJson(stringify(payload), []);
+        const payload =
+          ev && ev.type === "external-sync" && ev.detail && typeof ev.detail.value !== "undefined"
+            ? ev.detail.value
+            : hidden.value;
+        const next =
+          typeof payload === "string"
+            ? parseJson(payload, [])
+            : Array.isArray(payload)
+              ? payload
+              : parseJson(stringify(payload), []);
         const diff = diffArrays(state.value, next);
         if (diff.structuralChange) {
           state.value = Array.isArray(next) ? next : [];
@@ -114,41 +101,47 @@ function parseJson(value, fallback) {
           syncChangedItems(state, diff.valueChanges);
         }
       };
+
       hidden.addEventListener("input", handleExternal);
       hidden.addEventListener("change", handleExternal);
       hidden.addEventListener("external-sync", handleExternal);
     });
   }
+
   function render(state) {
     const { list, template, value, reorder, hidden, root } = state;
     list.innerHTML = "";
     if (!Array.isArray(value)) return;
+
     value.forEach((_item, index) => {
       const item = document.createElement("div");
       item.className = "diet-repeater__item";
       item.dataset.index = String(index);
+
       const handle = document.createElement("button");
       handle.type = "button";
       handle.className = "diet-btn-ic diet-repeater__item-handle";
       handle.setAttribute("data-size", "sm");
       handle.setAttribute("data-variant", "neutral");
       handle.innerHTML = '<span class="diet-btn-ic__icon" data-icon="line.3.horizontal"></span>';
+
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "diet-btn-ic diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
       remove.innerHTML = '<span class="diet-btn-ic__icon" data-icon="trash"></span>';
+
       const body = document.createElement("div");
       body.className = "diet-repeater__item-body";
       body.innerHTML = template.replace(/__INDEX__/g, String(index));
-      // Pre-fill child controls with current item values before hydration
+
       const itemValue = Array.isArray(value) ? value[index] : void 0;
       const arrayPath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
       const prefix = arrayPath ? `${arrayPath}.${index}.` : "";
-      const getAt = (obj, path2) => {
-        if (!obj || !path2) return void 0;
-        const parts = path2.split(".");
+      const getAt = (obj, path) => {
+        if (!obj || !path) return void 0;
+        const parts = path.split(".");
         let cur = obj;
         for (const p of parts) {
           if (cur == null) return void 0;
@@ -172,34 +165,50 @@ function parseJson(value, fallback) {
           el.value = String(val);
         }
       });
+
       item.appendChild(handle);
       item.appendChild(remove);
       item.appendChild(body);
+
       if (reorder) {
-        item.draggable = true;
-        handle.draggable = true;
-        installDragHandlers(item, state);
+        attachReorderVisuals(item);
+        installPointerReorder(item, state, index);
       }
+
       remove.addEventListener("click", () => {
         const next = [...state.value];
         next.splice(index, 1);
         state.value = next;
         commit(state);
       });
+
       list.appendChild(item);
     });
+
     runChildHydrators(list);
     if (root) {
       runChildHydrators(root);
     }
+
+    if (!reorder) {
+      list.querySelectorAll(".diet-repeater__item").forEach((el) => {
+        el.style.borderColor = "";
+        el.style.backgroundColor = "";
+        el.style.borderWidth = "";
+        el.style.borderStyle = "";
+        el.style.boxShadow = "";
+        el.style.transform = "";
+      });
+    }
   }
+
   function updateItemFields(state, itemEl, itemValue, index) {
     const hidden = state.hidden;
     const arrayPath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
     const prefix = arrayPath ? `${arrayPath}.${index}.` : "";
-    const getAt = (obj, path2) => {
-      if (!obj || !path2) return void 0;
-      const parts = path2.split(".");
+    const getAt = (obj, path) => {
+      if (!obj || !path) return void 0;
+      const parts = path.split(".");
       let cur = obj;
       for (const p of parts) {
         if (cur == null) return void 0;
@@ -233,6 +242,7 @@ function parseJson(value, fallback) {
       }
     });
   }
+
   function syncChangedItems(state, changes) {
     const { list } = state;
     changes.forEach(({ index, nextItem }) => {
@@ -242,41 +252,174 @@ function parseJson(value, fallback) {
       updateItemFields(state, itemEl, nextItem, index);
     });
   }
+
   function commit(state) {
     state.hidden.value = stringify(state.value);
     const evt = new Event("input", { bubbles: true });
     state.hidden.dispatchEvent(evt);
     render(state);
   }
-  function installDragHandlers(item, state) {
-    item.addEventListener("dragstart", (ev) => {
-      item.classList.add("is-dragging");
-      ev.dataTransfer?.setData("text/plain", item.dataset.index || "0");
-      ev.dataTransfer?.setDragImage(item, 10, 10);
-    });
-    item.addEventListener("dragend", () => {
-      item.classList.remove("is-dragging");
-    });
-    item.addEventListener("dragover", (ev) => {
-      ev.preventDefault();
-    });
-    item.addEventListener("drop", (ev) => {
-      ev.preventDefault();
-      const fromIndex = Number(ev.dataTransfer?.getData("text/plain") || -1);
-      const toIndex = Number(item.dataset.index || -1);
-      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
-        return;
-      const next = Array.isArray(state.value) ? [...state.value] : [];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      state.value = next;
-      commit(state);
-    });
+
+  function isInteractive(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    if (
+      target.matches(
+        'input, textarea, select, button, [role="button"], label, .diet-toggle__switch, [contenteditable="true"]'
+      )
+    ) {
+      return true;
+    }
+    return Boolean(
+      target.closest(
+        'input, textarea, select, button, [role="button"], .diet-toggle__switch, label, [contenteditable="true"]'
+      )
+    );
   }
+
+  function setItemVisual(item, mode) {
+    item.style.borderStyle = "solid";
+    item.style.borderWidth = "2px";
+    item.style.boxShadow = "none";
+    item.style.transition = "border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease";
+    if (mode === "drag") {
+      item.style.borderColor = "var(--color-system-green, #2ecc71)";
+      item.style.backgroundColor = "#c7efd8";
+      item.style.boxShadow = "0 10px 24px rgba(0,0,0,0.12), 0 0 0 2px rgba(46, 204, 113, 0.35)";
+      return;
+    }
+    if (mode === "hover") {
+      item.style.borderColor = "var(--color-system-blue, #2f6bff)";
+      item.style.backgroundColor = "#cedcff";
+      item.style.boxShadow = "none";
+      return;
+    }
+    item.style.borderColor = "#2f6bff";
+    item.style.backgroundColor = "#e4ebff";
+    item.style.boxShadow = "none";
+  }
+
+  function attachReorderVisuals(item) {
+    setItemVisual(item, "base");
+    item.addEventListener("mouseenter", () => setItemVisual(item, "hover"));
+    item.addEventListener("mouseleave", () => setItemVisual(item, "base"));
+  }
+
+  function installPointerReorder(item, state, index) {
+    const list = state.list;
+    const onPointerDown = (startEvent) => {
+      if (startEvent.button !== 0) return;
+      if (isInteractive(startEvent.target)) return;
+      startEvent.preventDefault();
+
+      const rect = item.getBoundingClientRect();
+      const listRect = list.getBoundingClientRect();
+      const startLeft = rect.left - listRect.left + list.scrollLeft;
+      const startTop = rect.top - listRect.top + list.scrollTop;
+      let placeholder = null;
+      const items = () => Array.from(list.children).filter((el) => el.classList.contains("diet-repeater__item") || el.classList.contains("diet-repeater__placeholder"));
+      const originalPosition = list.style.position;
+      if (!originalPosition) {
+        list.style.position = "relative";
+      }
+
+      const startY = startEvent.clientY;
+      let currentIndex = index;
+      let hasLifted = false;
+      setItemVisual(item, "hover");
+
+      const move = (ev) => {
+        ev.preventDefault();
+        const deltaY = ev.clientY - startY;
+
+        if (!hasLifted && Math.abs(deltaY) > 4) {
+          hasLifted = true;
+          placeholder = document.createElement("div");
+          placeholder.className = "diet-repeater__placeholder";
+          placeholder.style.height = `${rect.height}px`;
+          placeholder.style.width = "100%";
+          list.insertBefore(placeholder, item);
+
+          setItemVisual(item, "drag");
+          item.classList.add("is-dragging");
+          item.style.position = "absolute";
+          item.style.pointerEvents = "none";
+          item.style.width = `${rect.width}px`;
+          item.style.left = `${startLeft}px`;
+          item.style.top = `${startTop}px`;
+          item.style.zIndex = "2";
+          item.style.transition = "transform 80ms ease";
+          list.appendChild(item);
+        }
+
+        if (!placeholder) return;
+
+        const nextTop = startTop + deltaY;
+        item.style.transform = `translateY(${nextTop - startTop}px)`;
+
+        const pointerY = ev.clientY;
+        let target = placeholder;
+        for (const sibling of items()) {
+          if (sibling === item || sibling === placeholder) continue;
+          const r = sibling.getBoundingClientRect();
+          const mid = r.top + r.height / 2;
+          if (pointerY < mid) {
+            target = sibling;
+            break;
+          }
+        }
+        if (target && target !== placeholder) {
+          list.insertBefore(placeholder, target);
+        } else {
+          list.appendChild(placeholder);
+        }
+        currentIndex = items().indexOf(placeholder);
+      };
+
+      const up = (ev) => {
+        ev.preventDefault();
+        window.removeEventListener("pointermove", move, true);
+        window.removeEventListener("pointerup", up, true);
+        if (hasLifted && placeholder) {
+          item.classList.remove("is-dragging");
+          setItemVisual(item, "base");
+          item.style.transform = "";
+          item.style.position = "";
+          item.style.pointerEvents = "";
+          item.style.width = "";
+          item.style.left = "";
+          item.style.top = "";
+          item.style.zIndex = "";
+          item.style.transition = "";
+          const newIndex = currentIndex;
+          placeholder.remove();
+          if (newIndex !== index && newIndex !== -1) {
+            const next = Array.isArray(state.value) ? [...state.value] : [];
+            const [moved] = next.splice(index, 1);
+            next.splice(newIndex, 0, moved);
+            state.value = next;
+            commit(state);
+          }
+        }
+        if (!originalPosition) {
+          list.style.position = "";
+        }
+      };
+
+      window.addEventListener("pointermove", move, true);
+      window.addEventListener("pointerup", up, true);
+    };
+
+    item.addEventListener("pointerdown", onPointerDown);
+  }
+
   function runChildHydrators(scope) {
     if (typeof window === "undefined" || !window.Dieter) return;
     const entries = Object.entries(window.Dieter).filter(
-      ([name, fn]) => typeof fn === "function" && name.toLowerCase().startsWith("hydrate") && name.toLowerCase() !== "hydrateall" && name.toLowerCase() !== "hydraterepeater"
+      ([name, fn]) =>
+        typeof fn === "function" &&
+        name.toLowerCase().startsWith("hydrate") &&
+        name.toLowerCase() !== "hydrateall" &&
+        name.toLowerCase() !== "hydraterepeater"
     );
     entries.forEach(([, fn]) => {
       try {
@@ -288,9 +431,9 @@ function parseJson(value, fallback) {
       }
     });
   }
-  return __toCommonJS(repeater_exports);
+
+  window.Dieter = {
+    ...__prevDieter,
+    hydrateRepeater,
+  };
 })();
-window.Dieter = {
-  ...__prevDieter,
-  hydrateRepeater: Dieter.hydrateRepeater
-};

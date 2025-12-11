@@ -4,104 +4,10 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  let currentQuery = '';
-  let searchInputWired = false;
   let lastItems = [];
-  const fallbackItems = [
-    {
-      id: 'q1',
-      question: 'What is Clickeen?',
-      answer: 'Embeddable widgets with conversions built in.',
-    },
-    {
-      id: 'q2',
-      question: 'Is there a free plan?',
-      answer: 'Yes, one active widget with core features.',
-    },
-    {
-      id: 'q3',
-      question: 'How do I install a widget?',
-      answer: 'Copy the embed code and paste it before </body> on your site.',
-    },
-  ];
-
-  const defaultState = {
-    title: 'Frequently Asked Questions',
-    showTitle: true,
-    categoryTitle: 'All Questions',
-    displayCategoryTitles: true,
-    search: { enabled: true, placeholder: 'Search...' },
-    layout: {
-      type: 'accordion',
-      searchPlacement: 'title',
-      stickyNav: false,
-      columns: { desktop: 2, tablet: 2, mobile: 1 },
-      gap: 16,
-      padding: 24,
-    },
-    appearance: {
-      template: 'background',
-      cardBorder: true,
-      cardShadow: true,
-      cardRadius: 'lg',
-      iconStyle: 'plus',
-      itemBackground: '#f9f9fb',
-      questionColor: '#0f0f10',
-      answerColor: '#3f3f46',
-    },
-    behavior: {
-      expandFirst: false,
-      expandAll: false,
-      multiOpen: false,
-      shuffle: false,
-      displayVideos: true,
-      displayImages: true,
-      showBacklink: true,
-      customJs: '',
-    },
-    stage: {
-      background: 'var(--color-system-gray-5)',
-      alignment: 'center',
-      paddingLinked: true,
-      padding: 0,
-      paddingTop: 0,
-      paddingRight: 0,
-      paddingBottom: 0,
-      paddingLeft: 0,
-    },
-    pod: {
-      background: 'var(--color-system-white)',
-      paddingLinked: true,
-      padding: 0,
-      paddingTop: 0,
-      paddingRight: 0,
-      paddingBottom: 0,
-      paddingLeft: 0,
-      widthMode: 'wrap',
-      contentWidth: 960,
-      radiusLinked: true,
-      radius: '6xl',
-      radiusTL: '6xl',
-      radiusTR: '6xl',
-      radiusBR: '6xl',
-      radiusBL: '6xl',
-    },
-    customCss: '',
-    objects: {
-      objects: fallbackItems.map((item, idx) => ({
-        id: item.id || `q${idx + 1}`,
-        type: 'faq-qa',
-        payload: {
-          question: item.question,
-          answer: item.answer,
-          defaultOpen: false,
-        },
-      })),
-    },
-  };
 
   const initial = window.CK_WIDGET?.state || {};
-  let state = mergeState(defaultState, initial);
+  let state = structuredClone(initial);
 
   function sanitizeString(value) {
     return typeof value === 'string' ? value : '';
@@ -183,7 +89,6 @@
     return {
       ...base,
       ...next,
-      search: { ...(base.search || {}), ...(next?.search || {}) },
       layout: mergedLayout,
       appearance: { ...(base.appearance || {}), ...(next?.appearance || {}) },
       behavior: { ...(base.behavior || {}), ...(next?.behavior || {}) },
@@ -252,8 +157,10 @@
     lastItems = items;
     listEl.innerHTML = items
       .map((item) => {
-        const qText = sanitizeInlineHtml(item.question);
-        const answerHtml = renderAnswerHtml(item.answer, behavior);
+        const questionRaw = item.question || 'Type your question';
+        const answerRaw = item.answer || 'Type your answer';
+        const qText = sanitizeInlineHtml(questionRaw);
+        const answerHtml = renderAnswerHtml(answerRaw, behavior);
         return `
           <li class="ck-faq__item">
             <button class="ck-faq__q" type="button" aria-expanded="false">
@@ -265,41 +172,6 @@
         `;
       })
       .join('');
-  }
-
-  function applySearchFilter(query) {
-    const listEl = document.querySelector('.ck-faq__list');
-    if (!listEl) return;
-    const q = (query || '').trim().toLowerCase();
-    currentQuery = q;
-    const items = listEl.querySelectorAll('.ck-faq__item');
-    let visibleCount = 0;
-    items.forEach((item) => {
-      const text = (item.textContent || '').toLowerCase();
-      const match = !q || text.includes(q);
-      item.style.display = match ? '' : 'none';
-      if (match) visibleCount += 1;
-    });
-    const countEl = document.querySelector('[data-role="faq-search-count"]');
-    if (countEl instanceof HTMLElement) {
-      countEl.hidden = false;
-      countEl.textContent = visibleCount === 1 ? '1 result' : `${visibleCount} results`;
-    }
-    const noResults = document.querySelector('[data-role="faq-noresults"]');
-    if (noResults instanceof HTMLElement) {
-      noResults.hidden = visibleCount !== 0 || !q;
-      noResults.style.display = noResults.hidden ? 'none' : '';
-    }
-  }
-
-  function wireSearchInput() {
-    if (searchInputWired) return;
-    const input = document.querySelector('.ck-faq__search input[type="search"]');
-    if (!(input instanceof HTMLInputElement)) return;
-    input.addEventListener('input', (e) => {
-      applySearchFilter((e.target && e.target.value) || '');
-    });
-    searchInputWired = true;
   }
 
   function wireAccordion(multiOpen, defaultOpen) {
@@ -326,40 +198,56 @@
   }
 
   function applyTemplate(widget, appearance) {
-    const template = sanitizeString(appearance.template) || 'background';
-    widget.setAttribute('data-template', template);
-    const cardBorder = appearance.cardBorder !== false;
-    const cardShadow = appearance.cardShadow !== false;
-    const cardRadius = typeof appearance.cardRadius === 'string' ? appearance.cardRadius : 'lg';
-    const radiusVar = `var(--control-radius-${cardRadius})`;
-    widget.style.setProperty('--faq-card-border', cardBorder ? '1px solid var(--color-system-gray-5)' : '1px solid transparent');
-    widget.style.setProperty('--faq-card-shadow', cardShadow ? 'var(--shadow-floating)' : 'none');
-    widget.style.setProperty('--faq-card-radius', radiusVar);
-    if (appearance.itemBackground) {
-      widget.style.setProperty('--faq-item-bg', appearance.itemBackground);
+    const template = sanitizeString(appearance.template);
+    if (template) widget.setAttribute('data-template', template);
+    else widget.removeAttribute('data-template');
+
+    widget.style.setProperty('--faq-card-border', appearance.cardBorder === true ? '1px solid var(--color-system-gray-5)' : '1px solid transparent');
+    widget.style.setProperty('--faq-card-shadow', appearance.cardShadow === true ? 'var(--shadow-floating)' : 'none');
+    if (typeof appearance.cardRadius === 'string') {
+      widget.style.setProperty('--faq-card-radius', `var(--control-radius-${appearance.cardRadius})`);
+    } else {
+      widget.style.removeProperty('--faq-card-radius');
     }
-    if (appearance.questionColor) {
-      widget.style.setProperty('--faq-question-color', appearance.questionColor);
-    }
-    if (appearance.answerColor) {
-      widget.style.setProperty('--faq-answer-color', appearance.answerColor);
-    }
-    const iconSize = appearance.iconSize === 'lg' ? '1.6rem' : appearance.iconSize === 'sm' ? '1.1rem' : '1.3rem';
-    if (iconSize) {
-      widget.style.setProperty('--faq-icon-size', iconSize);
-    }
+
+    widget.style.setProperty('--faq-card-bg', appearance.cardBackground || 'transparent');
+    if (appearance.itemBackground) widget.style.setProperty('--faq-item-bg', appearance.itemBackground);
+    else widget.style.removeProperty('--faq-item-bg');
+    if (appearance.questionColor) widget.style.setProperty('--faq-question-color', appearance.questionColor);
+    else widget.style.removeProperty('--faq-question-color');
+    if (appearance.answerColor) widget.style.setProperty('--faq-answer-color', appearance.answerColor);
+    else widget.style.removeProperty('--faq-answer-color');
+
+    const iconSize =
+      appearance.iconSize === 'lg'
+        ? '1.6rem'
+        : appearance.iconSize === 'sm'
+          ? '1.1rem'
+          : appearance.iconSize === 'md'
+            ? '1.3rem'
+            : null;
+    if (iconSize) widget.style.setProperty('--faq-icon-size', iconSize);
+    else widget.style.removeProperty('--faq-icon-size');
+
     if (appearance.iconColor) {
       widget.style.setProperty('--faq-icon-color', appearance.iconColor);
+    } else {
+      widget.style.removeProperty('--faq-icon-color');
     }
+
     const questionSize =
       appearance.questionSize === 'lg'
         ? 'var(--fs-18)'
         : appearance.questionSize === 'sm'
           ? 'var(--fs-14)'
-          : 'var(--fs-16)';
-    const answerSize = appearance.answerSize === 'md' ? 'var(--fs-14)' : 'var(--fs-13)';
-    widget.style.setProperty('--faq-question-size', questionSize);
-    widget.style.setProperty('--faq-answer-size', answerSize);
+          : appearance.questionSize === 'md'
+            ? 'var(--fs-16)'
+            : null;
+    const answerSize = appearance.answerSize === 'md' ? 'var(--fs-14)' : appearance.answerSize === 'sm' ? 'var(--fs-13)' : null;
+    if (questionSize) widget.style.setProperty('--faq-question-size', questionSize);
+    else widget.style.removeProperty('--faq-question-size');
+    if (answerSize) widget.style.setProperty('--faq-answer-size', answerSize);
+    else widget.style.removeProperty('--faq-answer-size');
   }
 
   function applyCustomCss(cssText) {
@@ -392,18 +280,10 @@
 
   function applyState(current) {
     if (!current || typeof current !== 'object') return;
-    const title = typeof current.title === 'string' ? current.title : null;
-    const showTitle = toBool(current.showTitle, true);
-    const displayCategoryTitles = toBool(current.displayCategoryTitles, true);
-    const categoryTitle = sanitizeString(current.categoryTitle) || 'All Questions';
-    const searchEnabled =
-      current.search && Object.prototype.hasOwnProperty.call(current.search, 'enabled')
-        ? toBool(current.search.enabled, true)
-        : true;
-    const searchPlaceholder =
-      current.search && typeof current.search.placeholder === 'string'
-        ? current.search.placeholder
-        : 'Search...';
+    const title = sanitizeString(current.title);
+    const showTitle = toBool(current.showTitle, false);
+    const displayCategoryTitles = toBool(current.displayCategoryTitles, false);
+    const categoryTitle = sanitizeString(current.categoryTitle);
     const behavior = current.behavior || {};
     const multiOpen = toBool(behavior.multiOpen, false);
     const expandFirst = toBool(behavior.expandFirst, false);
@@ -418,7 +298,6 @@
         : true;
     const layout = current.layout || {};
     const layoutType = typeof layout.type === 'string' ? layout.type : 'accordion';
-    const searchPlacement = layout.searchPlacement === 'below' ? 'below' : 'title';
     const stageCfg = current.stage || {};
     const podCfg = current.pod || {};
     const stageBg = typeof stageCfg.background === 'string' ? stageCfg.background : null;
@@ -426,85 +305,125 @@
     const appearance = current.appearance || {};
     const iconStyle = appearance.iconStyle || (appearance.useChevron ? 'arrow' : 'plus');
     const objectsList =
-      current.objects && Array.isArray(current.objects.objects) && current.objects.objects.length
-        ? current.objects.objects
-        : defaultState.objects.objects;
+      current.objects && Array.isArray(current.objects.objects) ? current.objects.objects : [];
 
     const stage = document.querySelector('.stage');
     const pod = document.querySelector('.pod');
     if (stage instanceof HTMLElement) {
-      stage.style.setProperty('--stage-bg', stageBg || defaultState.stage.background);
-      const stageLinked = toBool(stageCfg.paddingLinked, true);
-      if (stageLinked) {
-        const pad = stageCfg.padding ?? defaultState.stage.padding ?? 0;
-        stage.style.padding = `${pad || 0}px`;
+      if (stageBg) {
+        stage.style.setProperty('--stage-bg', stageBg);
+        stage.style.background = stageBg;
       } else {
-        const top = stageCfg.paddingTop ?? defaultState.stage.paddingTop ?? stageCfg.padding ?? 0;
-        const right = stageCfg.paddingRight ?? defaultState.stage.paddingRight ?? stageCfg.padding ?? 0;
-        const bottom = stageCfg.paddingBottom ?? defaultState.stage.paddingBottom ?? stageCfg.padding ?? 0;
-        const left = stageCfg.paddingLeft ?? defaultState.stage.paddingLeft ?? stageCfg.padding ?? 0;
-        stage.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
+        stage.style.removeProperty('--stage-bg');
+        stage.style.background = 'none';
       }
-      const align = stageCfg.alignment || defaultState.stage.alignment || 'center';
-      const { justify, alignItems } = resolveStageAlignment(align);
-      stage.style.justifyContent = justify;
-      stage.style.alignItems = alignItems;
+
+      const stageLinked = typeof stageCfg.paddingLinked === 'boolean' ? stageCfg.paddingLinked : null;
+      const hasStagePadding =
+        stageCfg.padding !== undefined ||
+        stageCfg.paddingTop !== undefined ||
+        stageCfg.paddingRight !== undefined ||
+        stageCfg.paddingBottom !== undefined ||
+        stageCfg.paddingLeft !== undefined;
+      if (hasStagePadding) {
+        if (stageLinked === false) {
+          const top = stageCfg.paddingTop ?? stageCfg.padding;
+          const right = stageCfg.paddingRight ?? stageCfg.padding;
+          const bottom = stageCfg.paddingBottom ?? stageCfg.padding;
+          const left = stageCfg.paddingLeft ?? stageCfg.padding;
+          stage.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
+        } else {
+          const pad = stageCfg.padding;
+          stage.style.padding = pad !== undefined ? `${pad || 0}px` : '';
+        }
+      } else {
+        stage.style.padding = '';
+      }
+      const align = stageCfg.alignment;
+      if (align) {
+        const { justify, alignItems } = resolveStageAlignment(align);
+        stage.style.justifyContent = justify;
+        stage.style.alignItems = alignItems;
+      }
     }
     if (pod instanceof HTMLElement) {
-      pod.style.setProperty('--pod-bg', podBg || defaultState.pod.background);
-      const padLinked = toBool(podCfg.paddingLinked, true);
-      if (padLinked) {
-        const pad = podCfg.padding ?? defaultState.pod.padding ?? 0;
-        pod.style.padding = `${pad || 0}px`;
+      if (podBg) {
+        pod.style.setProperty('--pod-bg', podBg);
+        pod.style.background = podBg;
       } else {
-        const top = podCfg.paddingTop ?? defaultState.pod.paddingTop ?? podCfg.padding ?? 0;
-        const right = podCfg.paddingRight ?? defaultState.pod.paddingRight ?? podCfg.padding ?? 0;
-        const bottom = podCfg.paddingBottom ?? defaultState.pod.paddingBottom ?? podCfg.padding ?? 0;
-        const left = podCfg.paddingLeft ?? defaultState.pod.paddingLeft ?? podCfg.padding ?? 0;
-        pod.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
+        pod.style.removeProperty('--pod-bg');
+        pod.style.background = 'none';
       }
-      const linked = toBool(podCfg.radiusLinked, true);
-      const resolveRadiusToken = (value, fallback) => {
+
+      const padLinked = typeof podCfg.paddingLinked === 'boolean' ? podCfg.paddingLinked : null;
+      const hasPodPadding =
+        podCfg.padding !== undefined ||
+        podCfg.paddingTop !== undefined ||
+        podCfg.paddingRight !== undefined ||
+        podCfg.paddingBottom !== undefined ||
+        podCfg.paddingLeft !== undefined;
+      if (hasPodPadding) {
+        if (padLinked === false) {
+          const top = podCfg.paddingTop ?? podCfg.padding;
+          const right = podCfg.paddingRight ?? podCfg.padding;
+          const bottom = podCfg.paddingBottom ?? podCfg.padding;
+          const left = podCfg.paddingLeft ?? podCfg.padding;
+          pod.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
+        } else {
+          const pad = podCfg.padding;
+          pod.style.padding = pad !== undefined ? `${pad || 0}px` : '';
+        }
+      } else {
+        pod.style.padding = '';
+      }
+
+      const resolveRadiusToken = (value) => {
         if (value === 'none') return '0';
-        const v = value || fallback;
-        return v ? `var(--control-radius-${v})` : `var(--control-radius-${fallback})`;
+        return value ? `var(--control-radius-${value})` : '';
       };
-      if (linked) {
-        pod.style.setProperty('--pod-radius', resolveRadiusToken(podCfg.radius, defaultState.pod.radius || '6xl'));
+      const radiusLinked = typeof podCfg.radiusLinked === 'boolean' ? podCfg.radiusLinked : null;
+      if (
+        podCfg.radius !== undefined ||
+        podCfg.radiusTL !== undefined ||
+        podCfg.radiusTR !== undefined ||
+        podCfg.radiusBR !== undefined ||
+        podCfg.radiusBL !== undefined
+      ) {
+        if (radiusLinked === false) {
+          const tl = resolveRadiusToken(podCfg.radiusTL ?? podCfg.radius);
+          const tr = resolveRadiusToken(podCfg.radiusTR ?? podCfg.radius);
+          const br = resolveRadiusToken(podCfg.radiusBR ?? podCfg.radius);
+          const bl = resolveRadiusToken(podCfg.radiusBL ?? podCfg.radius);
+          pod.style.setProperty('--pod-radius', `${tl} ${tr} ${br} ${bl}`.trim());
+        } else {
+          pod.style.setProperty('--pod-radius', resolveRadiusToken(podCfg.radius));
+        }
       } else {
-        const tl = resolveRadiusToken(podCfg.radiusTL, defaultState.pod.radiusTL || defaultState.pod.radius || '6xl');
-        const tr = resolveRadiusToken(podCfg.radiusTR, defaultState.pod.radiusTR || defaultState.pod.radius || '6xl');
-        const br = resolveRadiusToken(podCfg.radiusBR, defaultState.pod.radiusBR || defaultState.pod.radius || '6xl');
-        const bl = resolveRadiusToken(podCfg.radiusBL, defaultState.pod.radiusBL || defaultState.pod.radius || '6xl');
-        pod.style.setProperty('--pod-radius', `${tl} ${tr} ${br} ${bl}`);
+        pod.style.removeProperty('--pod-radius');
       }
-      const widthMode = typeof podCfg.widthMode === 'string' ? podCfg.widthMode : defaultState.pod.widthMode || 'wrap';
-      pod.setAttribute('data-width-mode', widthMode);
-      const cw = podCfg.contentWidth ?? defaultState.pod.contentWidth;
-      if (cw != null && cw !== '') pod.style.setProperty('--content-width', `${cw}px`);
-      else pod.style.removeProperty('--content-width');
+
+      if (typeof podCfg.widthMode === 'string') {
+        pod.setAttribute('data-width-mode', podCfg.widthMode);
+      } else {
+        pod.removeAttribute('data-width-mode');
+      }
+      if (podCfg.contentWidth !== undefined && podCfg.contentWidth !== null && podCfg.contentWidth !== '') {
+        pod.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
+      } else {
+        pod.style.removeProperty('--content-width');
+      }
     }
 
     const titleEl = document.querySelector('.ck-faq__title');
     const header = document.querySelector('.ck-faq__header');
-    if (titleEl) titleEl.textContent = title || 'Frequently Asked Questions';
-    if (header instanceof HTMLElement) header.style.display = showTitle ? '' : 'none';
-
-    const searchWrapper = document.querySelector('.ck-faq__search');
-    if (searchWrapper instanceof HTMLElement) {
-      searchWrapper.hidden = !searchEnabled;
-      searchWrapper.style.display = searchEnabled ? '' : 'none';
-      const input = searchWrapper.querySelector('input[type="search"]');
-      if (input instanceof HTMLInputElement) {
-        input.placeholder = searchPlaceholder || '';
-        if (!currentQuery) {
-          input.value = '';
-        }
-        if (!searchEnabled) {
-          input.value = '';
-          applySearchFilter('');
-        }
-      }
+    if (titleEl) {
+      titleEl.textContent = title;
+      titleEl.style.display = showTitle ? '' : 'none';
+      titleEl.hidden = !showTitle;
+    }
+    if (header instanceof HTMLElement) {
+      header.style.display = '';
+      header.hidden = false;
     }
 
     const categoryLabel = document.querySelector('.ck-faq__category');
@@ -513,7 +432,7 @@
       categoryLabel.textContent = categoryTitle;
     }
 
-    const widget = document.querySelector('.ck-faq-widget');
+    const widget = document.querySelector('.ck-faq');
     if (widget instanceof HTMLElement) {
       applyTemplate(widget, appearance);
       const gapPx =
@@ -521,21 +440,23 @@
           ? layout.gap
           : Number.isFinite(Number(layout.gap))
           ? Number(layout.gap)
-          : 16;
+          : null;
       const paddingPx =
         typeof layout.padding === 'number'
           ? layout.padding
           : Number.isFinite(Number(layout.padding))
           ? Number(layout.padding)
-          : 24;
-      widget.style.setProperty('--layout-gap', `${gapPx}px`);
-      widget.style.setProperty('--layout-padding', `${paddingPx}px`);
-      const colDesktop = layout.columns && layout.columns.desktop ? Number(layout.columns.desktop) : 2;
-      const colTablet = layout.columns && layout.columns.tablet ? Number(layout.columns.tablet) : 2;
-      const colMobile = layout.columns && layout.columns.mobile ? Number(layout.columns.mobile) : 1;
-      widget.style.setProperty('--faq-columns-desktop', Math.max(1, colDesktop));
-      widget.style.setProperty('--faq-columns-tablet', Math.max(1, colTablet));
-      widget.style.setProperty('--faq-columns-mobile', Math.max(1, colMobile));
+          : null;
+      if (gapPx !== null) widget.style.setProperty('--layout-gap', `${gapPx}px`);
+      else widget.style.removeProperty('--layout-gap');
+      if (paddingPx !== null) widget.style.setProperty('--layout-padding', `${paddingPx}px`);
+      else widget.style.removeProperty('--layout-padding');
+      const colDesktop = layout.columns && layout.columns.desktop ? Number(layout.columns.desktop) : null;
+      const colTablet = layout.columns && layout.columns.tablet ? Number(layout.columns.tablet) : null;
+      const colMobile = layout.columns && layout.columns.mobile ? Number(layout.columns.mobile) : null;
+      if (colDesktop) widget.style.setProperty('--faq-columns-desktop', Math.max(1, colDesktop));
+      if (colTablet) widget.style.setProperty('--faq-columns-tablet', Math.max(1, colTablet));
+      if (colMobile) widget.style.setProperty('--faq-columns-mobile', Math.max(1, colMobile));
     }
 
     const faqRoot = document.querySelector('.ck-faq');
@@ -543,7 +464,6 @@
       const iconMode = iconStyle === 'arrow' ? 'chevron' : 'plus';
       faqRoot.setAttribute('data-icon-style', iconMode);
       faqRoot.setAttribute('data-layout', layoutType);
-      faqRoot.setAttribute('data-search-placement', searchPlacement);
       faqRoot.setAttribute('data-expanded-all', layoutType === 'accordion' ? 'false' : 'true');
     }
 
@@ -560,8 +480,6 @@
       emptyEl.hidden = flatItems.length > 0;
       emptyEl.style.display = flatItems.length > 0 ? 'none' : '';
     }
-    wireSearchInput();
-
 
     const anyDefaultOpen = flatItems.some((item) => toBool(item.defaultOpen, false));
 
@@ -596,7 +514,6 @@
       }
     }
 
-    applySearchFilter(currentQuery);
     applyCustomCss(current.customCss);
 
     if (behavior.customJs) {

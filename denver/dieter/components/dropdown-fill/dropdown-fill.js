@@ -116,6 +116,8 @@ var Dieter = (() => {
   function createState(root) {
     const input = root.querySelector(".diet-dropdown-fill__value-field");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
+    const headerValueLabel = root.querySelector(".diet-dropdown-fill__label");
+    const headerValueChip = root.querySelector(".diet-dropdown-fill__chip");
     const headerLabel = root.querySelector(".diet-popover__header-label");
     const hueInput = root.querySelector(".diet-dropdown-fill__hue");
     const alphaInput = root.querySelector(".diet-dropdown-fill__alpha");
@@ -145,6 +147,8 @@ var Dieter = (() => {
       root,
       input,
       headerValue,
+      headerValueLabel,
+      headerValueChip,
       headerLabel,
       colorPreview,
       removeFillAction,
@@ -163,6 +167,7 @@ var Dieter = (() => {
       removeButton,
       fileInput,
       imageSrc: null,
+      imageName: null,
       hsv: initial
     };
   }
@@ -241,6 +246,7 @@ var Dieter = (() => {
       fileInput.addEventListener("change", () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
+        state.imageName = file.name || null;
         const reader = new FileReader();
         reader.onload = () => {
           const result = typeof reader.result === "string" ? reader.result : null;
@@ -268,14 +274,13 @@ var Dieter = (() => {
         state.imagePreview.style.backgroundImage = "none";
       }
     }
-    if (state.headerValue) {
-      if (src) {
-        state.headerValue.textContent = "Image selected";
-        state.headerValue.dataset.muted = "false";
-      } else if (!state.input.value) {
-        state.headerValue.textContent = state.headerValue.dataset.placeholder ?? "";
-        state.headerValue.dataset.muted = "true";
-      }
+    const placeholder = state.headerValue?.dataset.placeholder ?? "";
+    if (src) {
+      const label = state.imageName || extractFileName(state.input.value) || "Image selected";
+      updateHeader(state, { text: label, muted: false, chipColor: null });
+    } else {
+      state.imageName = null;
+      updateHeader(state, { text: placeholder, muted: true, chipColor: null });
     }
   }
   function installSwatchHandlers(state) {
@@ -316,6 +321,7 @@ var Dieter = (() => {
     const hex = formatHex({ h, s, v, a: 1 });
     const alphaPercent = Math.round(a * 100);
     const colorString = a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(a, 2)})` : hex;
+    const placeholder = state.headerValue?.dataset.placeholder ?? "";
     state.root.style.setProperty("--picker-hue", h.toString());
     state.root.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
     state.hueInput.value = h.toString();
@@ -334,9 +340,10 @@ var Dieter = (() => {
     state.svThumb.style.top = top;
     state.input.value = colorString;
     state.input.dispatchEvent(new Event("change", { bubbles: true }));
-    if (state.headerValue) {
-      state.headerValue.textContent = a < 1 ? `${hex} \xB7 ${alphaPercent}%` : hex;
-      state.headerValue.dataset.muted = "false";
+    if (alphaPercent === 0) {
+      updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+    } else {
+      updateHeader(state, { text: "", muted: false, chipColor: colorString });
     }
     if (state.colorPreview) {
       state.colorPreview.style.backgroundColor = colorString;
@@ -355,6 +362,23 @@ var Dieter = (() => {
       swatch.classList.toggle("is-selected", match);
       swatch.setAttribute("aria-pressed", match ? "true" : "false");
     });
+  }
+  function updateHeader(state, opts) {
+    const { headerValue, headerValueLabel, headerValueChip } = state;
+    if (headerValueLabel) headerValueLabel.textContent = opts.text;
+    if (headerValue) {
+      headerValue.dataset.muted = opts.muted ? "true" : "false";
+      headerValue.classList.toggle("has-chip", !!opts.chipColor);
+    }
+    if (headerValueChip) {
+      if (opts.chipColor) {
+        headerValueChip.style.background = opts.chipColor;
+        headerValueChip.hidden = false;
+      } else {
+        headerValueChip.style.background = "transparent";
+        headerValueChip.hidden = true;
+      }
+    }
   }
   function wireModes(state) {
     const { root, headerLabel } = state;
@@ -394,6 +418,16 @@ var Dieter = (() => {
       return `#${hex}`;
     }
     return "#6b6bff";
+  }
+  function extractFileName(value) {
+    const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
+    if (urlMatch && urlMatch[1]) {
+      const raw = urlMatch[1];
+      const parts = raw.split("/").filter(Boolean);
+      const last = parts[parts.length - 1];
+      if (last) return last.split("?")[0];
+    }
+    return null;
   }
   function hexToRgba(value) {
     const hex = normalizeHex(value).replace("#", "");

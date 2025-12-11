@@ -79,20 +79,17 @@ function useWidgetSessionInternal() {
     []
   );
 
-  const setValue = useCallback(
-    (path: string, value: unknown, meta?: Partial<UpdateMeta>) => {
-      setState((prev) => {
-        const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
-        const nextMeta: UpdateMeta = {
-          source: meta?.source ?? 'unknown',
-          path: meta?.path ?? path,
-          ts: meta?.ts ?? Date.now(),
-        };
-        return { ...prev, instanceData: nextData, isDirty: true, lastUpdate: nextMeta };
-      });
-    },
-    []
-  );
+  const setValue = useCallback((path: string, value: unknown, meta?: Partial<UpdateMeta>) => {
+    setState((prev) => {
+      const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
+      const nextMeta: UpdateMeta = {
+        source: meta?.source ?? 'unknown',
+        path: meta?.path ?? path,
+        ts: meta?.ts ?? Date.now(),
+      };
+      return { ...prev, instanceData: nextData, isDirty: true, lastUpdate: nextMeta };
+    });
+  }, []);
 
   const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
     try {

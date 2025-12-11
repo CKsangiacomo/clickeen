@@ -163,15 +163,6 @@ Rules:
 <div class="ck-widget ck-faq-widget" data-widget-id="{{publicId}}">
   <h1 class="ck-faq-title" data-field="title">FAQ Title</h1>
 
-  <div class="ck-faq-search-container" data-field="search">
-    <input
-      type="search"
-      class="ck-faq-search"
-      placeholder="Search questions..."
-      data-field="search-input"
-    />
-  </div>
-
   <div class="ck-faq-categories" data-field="categories">
     <details class="ck-faq-question" data-question-id="q1">
       <summary class="ck-faq-question-trigger">
@@ -283,14 +274,8 @@ function applyState(state) {
      const titleEl = document.querySelector('[data-field="title"]');
      if (titleEl) titleEl.textContent = state.title;
 
-     // Update search visibility
-     const searchContainer = document.querySelector('[data-field="search"]');
-     if (searchContainer) {
-       searchContainer.style.display = state.showSearchBar ? 'block' : 'none';
-     }
-
-     // Rebuild questions list
-     const categoriesEl = document.querySelector('[data-field="categories"]');
+    // Rebuild questions list
+    const categoriesEl = document.querySelector('[data-field="categories"]');
      if (categoriesEl) {
        categoriesEl.innerHTML = state.categories.map((cat) => `
          <h2>${cat.title}</h2>

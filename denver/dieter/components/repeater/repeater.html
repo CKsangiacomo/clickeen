@@ -4,9 +4,9 @@
       {{#if labelPath}}
         <div class="diet-textfield diet-repeater__label-input" data-size="{{labelSize}}">
           <label class="diet-textfield__control">
-            <span class="diet-textfield__display-label label-s">{{labelInputLabel}}</span>
+            <span class="diet-textfield__display-label {{labelInputLabelClass}}">{{labelInputLabel}}</span>
             <input
-              class="diet-textfield__field"
+              class="diet-textfield__field {{labelInputBodyClass}}"
               type="text"
               aria-label="{{labelInputLabel}}"
               placeholder="{{labelPlaceholder}}"

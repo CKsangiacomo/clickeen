@@ -433,18 +433,11 @@ menu.addEventListener('keydown', (event) => {
   }
 });
 
-	document.addEventListener('click', (event) => {
-	  if (!dropdown.contains(event.target)) {
-	    setOpen(false);
-	  }
-	});
-	
-	iframe.addEventListener('load', () => {
-	  console.log('[DevStudio] Bob iframe loaded, re-sending instance');
-	  if (currentPublicId) {
-	    sendInstanceToIframe(currentPublicId);
-	  }
-	});
+document.addEventListener('click', (event) => {
+  if (!dropdown.contains(event.target)) {
+    setOpen(false);
+  }
+});
 	
 	(async () => {
 	  try {

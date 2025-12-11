@@ -6,6 +6,8 @@ type DropdownFillState = {
   root: HTMLElement;
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
+  headerValueLabel: HTMLElement | null;
+  headerValueChip: HTMLElement | null;
   headerLabel: HTMLElement | null;
   colorPreview: HTMLElement | null;
   removeFillAction: HTMLButtonElement | null;
@@ -25,6 +27,7 @@ type DropdownFillState = {
   removeButton: HTMLButtonElement | null;
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
+  imageName: string | null;
 };
 
 const states = new Map<HTMLElement, DropdownFillState>();
@@ -54,6 +57,8 @@ export function hydrateDropdownFill(scope: Element | DocumentFragment): void {
 function createState(root: HTMLElement): DropdownFillState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__value-field');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
+  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-fill__label');
+  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-fill__chip');
   const headerLabel = root.querySelector<HTMLElement>('.diet-popover__header-label');
   const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hue');
   const alphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha');
@@ -86,6 +91,8 @@ function createState(root: HTMLElement): DropdownFillState | null {
     root,
     input,
     headerValue,
+    headerValueLabel,
+    headerValueChip,
     headerLabel,
     colorPreview,
     removeFillAction,
@@ -104,6 +111,7 @@ function createState(root: HTMLElement): DropdownFillState | null {
     removeButton,
     fileInput,
     imageSrc: null,
+    imageName: null,
     hsv: initial,
   };
 }
@@ -192,6 +200,7 @@ function installImageHandlers(state: DropdownFillState) {
     fileInput.addEventListener('change', () => {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
+      state.imageName = file.name || null;
       const reader = new FileReader();
       reader.onload = () => {
         const result = typeof reader.result === 'string' ? reader.result : null;
@@ -220,14 +229,13 @@ function setImageSrc(state: DropdownFillState, src: string | null) {
       state.imagePreview.style.backgroundImage = 'none';
     }
   }
-  if (state.headerValue) {
-    if (src) {
-      state.headerValue.textContent = 'Image selected';
-      state.headerValue.dataset.muted = 'false';
-    } else if (!state.input.value) {
-      state.headerValue.textContent = state.headerValue.dataset.placeholder ?? '';
-      state.headerValue.dataset.muted = 'true';
-    }
+  const placeholder = state.headerValue?.dataset.placeholder ?? '';
+  if (src) {
+    const label = state.imageName || extractFileName(state.input.value) || 'Image selected';
+    updateHeader(state, { text: label, muted: false, chipColor: null });
+  } else {
+    state.imageName = null;
+    updateHeader(state, { text: placeholder, muted: true, chipColor: null });
   }
 }
 
@@ -273,6 +281,7 @@ function syncUI(state: DropdownFillState) {
   const hex = formatHex({ h, s, v, a: 1 });
   const alphaPercent = Math.round(a * 100);
   const colorString = a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(a, 2)})` : hex;
+  const placeholder = state.headerValue?.dataset.placeholder ?? '';
 
   state.root.style.setProperty('--picker-hue', h.toString());
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
@@ -298,9 +307,10 @@ function syncUI(state: DropdownFillState) {
   state.input.value = colorString;
   state.input.dispatchEvent(new Event('change', { bubbles: true }));
 
-  if (state.headerValue) {
-    state.headerValue.textContent = a < 1 ? `${hex} · ${alphaPercent}%` : hex;
-    state.headerValue.dataset.muted = 'false';
+  if (alphaPercent === 0) {
+    updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+  } else {
+    updateHeader(state, { text: '', muted: false, chipColor: colorString });
   }
 
   if (state.colorPreview) {
@@ -322,6 +332,27 @@ function syncUI(state: DropdownFillState) {
     swatch.classList.toggle('is-selected', match);
     swatch.setAttribute('aria-pressed', match ? 'true' : 'false');
   });
+}
+
+function updateHeader(
+  state: DropdownFillState,
+  opts: { text: string; muted: boolean; chipColor: string | null },
+): void {
+  const { headerValue, headerValueLabel, headerValueChip } = state;
+  if (headerValueLabel) headerValueLabel.textContent = opts.text;
+  if (headerValue) {
+    headerValue.dataset.muted = opts.muted ? 'true' : 'false';
+    headerValue.classList.toggle('has-chip', !!opts.chipColor);
+  }
+  if (headerValueChip) {
+    if (opts.chipColor) {
+      headerValueChip.style.background = opts.chipColor;
+      headerValueChip.hidden = false;
+    } else {
+      headerValueChip.style.background = 'transparent';
+      headerValueChip.hidden = true;
+    }
+  }
 }
 
 function wireModes(state: DropdownFillState) {
@@ -367,6 +398,17 @@ function normalizeHex(value: string): string {
     return `#${hex}`;
   }
   return '#6b6bff';
+}
+
+function extractFileName(value: string): string | null {
+  const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
+  if (urlMatch && urlMatch[1]) {
+    const raw = urlMatch[1];
+    const parts = raw.split('/').filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last.split('?')[0];
+  }
+  return null;
 }
 
 function hexToRgba(value: string): { r: number; g: number; b: number; a: number } {
