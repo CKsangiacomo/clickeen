@@ -73,8 +73,8 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item {
-  border-color: #c8defd !important;
-  background: #f1f6ff !important;
+  border-color: var(--color-system-green-5) !important;
+  background: var(--color-system-green-5) !important;
   cursor: grab;
   user-select: none;
   position: relative;
@@ -85,13 +85,13 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item:hover {
-  border-color: var(--color-system-blue, #2f6bff) !important;
-  background: #e0ebff !important;
+  border-color: var(--color-system-green-5) !important;
+  background: var(--color-system-green-5) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragging {
-  border-color: var(--color-system-green, #2ecc71) !important;
-  background: #e5f7ee !important;
+  border-color: var(--color-system-green-5) !important;
+  background: var(--color-system-green-5) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before,
@@ -101,7 +101,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--color-system-blue);
+  background: var(--color-system-green-5);
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before {
