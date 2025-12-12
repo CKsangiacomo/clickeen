@@ -7,6 +7,10 @@
   background: var(--color-system-teal-5);
 }
 
+.diet-repeater[data-reorder="on"] {
+  background: var(--color-system-green-5);
+}
+
 .diet-repeater__header {
   display: grid;
   gap: var(--space-2);
