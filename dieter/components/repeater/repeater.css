@@ -1,7 +1,7 @@
 .diet-repeater {
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border: none;
   border-radius: var(--control-radius-sm, 0.25rem);
   background: var(--color-system-gray-6-step1, color-mix(in oklab, var(--color-system-gray-6, #f2f2f7), white 20%));
