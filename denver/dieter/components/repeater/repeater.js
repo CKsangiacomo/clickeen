@@ -123,7 +123,8 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       handle.className = "diet-btn-ic diet-repeater__item-handle";
       handle.setAttribute("data-size", "sm");
       handle.setAttribute("data-variant", "neutral");
-      handle.innerHTML = '<span class="diet-btn-ic__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 11h14v2H5z"/></svg></span>';
+      handle.innerHTML =
+        '<span class="diet-btn-ic__icon" data-icon="arrow.up.arrow.down"></span>';
 
       const body = document.createElement("div");
       body.className = "diet-repeater__item-body";
@@ -134,8 +135,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       remove.className = "diet-btn-ic diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
-      remove.innerHTML =
-        '<span class="diet-btn-ic__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 4h6l.83 2H20v2H4V6h4.17L9 4Zm-1 6h8v10H8V10Zm2 2v6h2v-6h-2Z"/></svg></span>';
+      remove.innerHTML = '<span class="diet-btn-ic__icon" data-icon="trash"></span>';
       remove.addEventListener("click", () => {
         const next = [...state.value];
         next.splice(index, 1);
