@@ -55,9 +55,9 @@
 .diet-repeater__item {
   position: relative;
   padding: var(--space-1) 0;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-system-green-5, var(--color-border-strong));
   border-radius: var(--radius-3);
-  background: var(--color-surface-secondary);
+  background: var(--color-system-green-6, var(--color-surface-secondary));
   transition:
     border-color var(--duration-base, 160ms) ease,
     background-color var(--duration-base, 160ms) ease,
