@@ -8,7 +8,7 @@
 }
 
 .diet-repeater[data-reorder="on"] {
-  background: var(--color-system-green-5);
+  background: var(--color-system-purple-5);
 }
 
 .diet-repeater__header {
