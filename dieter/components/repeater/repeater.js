@@ -134,7 +134,8 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       remove.className = "diet-btn-ic diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
-      remove.innerHTML = '<span class="diet-btn-ic__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox=\"2.447265625 0.505859375 24.14 29.37\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M14.52 29.87C21.19 29.87 26.59 24.47 26.59 17.80C26.59 11.13 21.19 5.73 14.52 5.73C13.74 5.73 12.99 5.81 12.25 5.95L15.80 2.42C16.01 2.21 16.11 1.91 16.11 1.63C16.11 1.01 15.64 0.51 15.03 0.51C14.70 0.51 14.44 0.64 14.23 0.85L8.60 6.56C8.38 6.78 8.26 7.08 8.26 7.38C8.26 7.68 8.35 7.96 8.60 8.20L14.23 13.86C14.44 14.05 14.68 14.18 15.03 14.18C15.64 14.18 16.11 13.70 16.11 13.07C16.11 12.78 16.01 12.51 15.79 12.30L11.76 8.31C12.63 8.05 13.56 7.92 14.52 7.92C19.97 7.92 24.39 12.33 24.39 17.79C24.39 23.24 19.97 27.66 14.52 27.66C9.06 27.66 4.65 23.24 4.65 17.79C4.65 17.19 4.16 16.69 3.54 16.69C2.94 16.69 2.45 17.19 2.45 17.79C2.45 24.47 7.85 29.87 14.52 29.87Z\"/></svg></span>';
+      remove.innerHTML =
+        '<span class="diet-btn-ic__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6l1 2h5v2H3V5h5l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-1.99 1.8H8.79a2 2 0 0 1-1.99-1.8L6 9Z"/></svg></span>';
       remove.addEventListener("click", () => {
         const next = [...state.value];
         next.splice(index, 1);
