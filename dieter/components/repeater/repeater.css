@@ -120,10 +120,20 @@
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
+  display: none;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item-remove {
+  justify-content: center;
+  align-items: center;
+  inline-size: var(--control-size-sm);
+  block-size: var(--control-size-sm);
+  background: var(--color-system-white);
+  border-radius: var(--control-radius-sm);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--color-system-black), transparent 85%);
+  color: var(--color-system-black);
   display: inline-flex !important;
+  z-index: 1;
 }
 
 .diet-repeater__item-body {
