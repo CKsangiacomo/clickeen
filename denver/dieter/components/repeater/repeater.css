@@ -57,7 +57,7 @@
   padding: var(--space-1) 0;
   border: 1px solid var(--color-system-green-5);
   border-radius: var(--radius-3);
-  background: var(--color-system-green-6);
+  background: var(--color-system-green-5);
   transition:
     border-color var(--duration-base, 160ms) ease,
     background-color var(--duration-base, 160ms) ease,
