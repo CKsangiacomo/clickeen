@@ -125,13 +125,6 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       handle.setAttribute("data-variant", "neutral");
       handle.innerHTML = '<span class="diet-btn-ic__icon" data-icon="line.3.horizontal"></span>';
 
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "diet-btn-ic diet-repeater__item-remove";
-      remove.setAttribute("data-size", "sm");
-      remove.setAttribute("data-variant", "neutral");
-      remove.innerHTML = '<span class="diet-btn-ic__icon" data-icon="trash"></span>';
-
       const body = document.createElement("div");
       body.className = "diet-repeater__item-body";
       body.innerHTML = template.replace(/__INDEX__/g, String(index));
@@ -167,20 +160,12 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       });
 
       item.appendChild(handle);
-      item.appendChild(remove);
       item.appendChild(body);
 
       if (reorder) {
         attachReorderVisuals(item);
         installPointerReorder(item, state, index);
       }
-
-      remove.addEventListener("click", () => {
-        const next = [...state.value];
-        next.splice(index, 1);
-        state.value = next;
-        commit(state);
-      });
 
       list.appendChild(item);
     });
