@@ -1,21 +1,34 @@
-// FAQ widget client-side behavior
-// Expand/collapse + live title updates from Bob editing state + appearance controls.
+// FAQ widget runtime (strict, deterministic).
+// Assumes canonical, typed state from the editor; no runtime fallbacks/merges.
 
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  let lastItems = [];
+  const scriptEl = document.currentScript;
+  if (!(scriptEl instanceof HTMLElement)) return;
 
-  const initial = window.CK_WIDGET?.state || {};
-  let state = structuredClone(initial);
+  const widgetRoot = scriptEl.closest('[data-ck-widget="faq"]');
+  if (!(widgetRoot instanceof HTMLElement)) {
+    throw new Error('[FAQ] widget.client.js must be rendered inside [data-ck-widget="faq"]');
+  }
 
-  function sanitizeString(value) {
-    return typeof value === 'string' ? value : '';
+  const faqRoot = widgetRoot.querySelector('[data-role="faq"]');
+  if (!(faqRoot instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing [data-role="faq"] root');
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function sanitizeInlineHtml(html) {
     const wrapper = document.createElement('div');
-    wrapper.innerHTML = sanitizeString(html);
+    wrapper.innerHTML = String(html);
     const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
     wrapper.querySelectorAll('*').forEach((node) => {
       const el = node;
@@ -26,15 +39,22 @@
         const before = el.previousSibling;
         const after = el.nextSibling;
         const needsSpaceBefore =
-          before && before.nodeType === Node.TEXT_NODE && before.textContent && !/\s$/.test(before.textContent);
+          before &&
+          before.nodeType === Node.TEXT_NODE &&
+          before.textContent &&
+          !/\s$/.test(before.textContent);
         const needsSpaceAfter =
-          after && after.nodeType === Node.TEXT_NODE && after.textContent && !/^\s/.test(after.textContent);
+          after &&
+          after.nodeType === Node.TEXT_NODE &&
+          after.textContent &&
+          !/^\s/.test(after.textContent);
         if (needsSpaceBefore) parent.insertBefore(document.createTextNode(' '), el);
         while (el.firstChild) parent.insertBefore(el.firstChild, el);
         if (needsSpaceAfter) parent.insertBefore(document.createTextNode(' '), el.nextSibling);
         parent.removeChild(el);
         return;
       }
+
       if (tag === 'A') {
         const href = el.getAttribute('href') || '';
         if (!/^https?:\/\//i.test(href)) {
@@ -57,89 +77,27 @@
     return wrapper.innerHTML;
   }
 
-  function escapeHtml(value) {
-    return sanitizeString(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+  function renderAnswerHtml(text, behavior) {
+    if (!text) return '';
 
-  function toBool(value, fallback = false) {
-    if (value === undefined || value === null) return fallback;
-    if (typeof value === 'string') {
-      const lower = value.toLowerCase().trim();
-      if (lower === 'true') return true;
-      if (lower === 'false') return false;
-    }
-    return Boolean(value);
-  }
-
-  function mergeState(base, next) {
-    const mergedLayout = {
-      ...(base.layout || {}),
-      ...(next?.layout || {}),
-      columns: {
-        ...(base.layout?.columns || {}),
-        ...((next?.layout && next.layout.columns) || {}),
-      },
-    };
-
-    return {
-      ...base,
-      ...next,
-      layout: mergedLayout,
-      appearance: { ...(base.appearance || {}), ...(next?.appearance || {}) },
-      behavior: { ...(base.behavior || {}), ...(next?.behavior || {}) },
-      stage: { ...(base.stage || {}), ...(next?.stage || {}) },
-      pod: { ...(base.pod || {}), ...(next?.pod || {}) },
-      objects: next?.objects && Array.isArray(next.objects.objects)
-        ? { objects: next.objects.objects }
-        : base.objects,
-    };
-  }
-
-  function collapseAll(listEl) {
-    listEl.querySelectorAll('.ck-faq__q').forEach((btn) => {
-      btn.setAttribute('aria-expanded', 'false');
-      const ans = btn.nextElementSibling;
-      if (ans && ans.classList.contains('ck-faq__a')) {
-        ans.style.display = 'none';
-      }
-    });
-  }
-
-  function setExpanded(button, expanded) {
-    button.setAttribute('aria-expanded', String(expanded));
-    const answer = button.nextElementSibling;
-    if (answer && answer.classList.contains('ck-faq__a')) {
-      answer.style.display = expanded ? 'block' : 'none';
-    }
-  }
-
-  function renderAnswerHtml(raw, opts) {
-    const sanitized = sanitizeInlineHtml(raw);
-    if (sanitized) return sanitized;
-    const text = sanitizeString(raw);
-    const displayImages = !!opts.displayImages;
-    const displayVideos = !!opts.displayVideos;
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
+    const parts = String(text).split(urlRegex);
     return parts
       .map((part) => {
         const url = part.trim();
         if (!/^https?:\/\/\S+$/i.test(url)) return escapeHtml(part);
+
         const lower = url.toLowerCase();
         const isImage = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(lower);
         const isYouTube =
           /youtube\.com\/watch\?v=|youtu\.be\//i.test(lower) || /youtube\.com\/embed\//i.test(lower);
         const isVimeo = /vimeo\.com\//i.test(lower);
         const safeUrl = escapeHtml(url);
-        if (isImage && displayImages) {
+
+        if (isImage && behavior.displayImages === true) {
           return `<img src="${safeUrl}" alt="" class="ck-faq__a-img" />`;
         }
-        if (displayVideos && (isYouTube || isVimeo)) {
+        if (behavior.displayVideos === true && (isYouTube || isVimeo)) {
           const src = isYouTube
             ? url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
             : url;
@@ -151,406 +109,172 @@
       .join('');
   }
 
-  function renderItems(items, behavior) {
-    const listEl = document.querySelector('[data-role="faq-list"]');
-    if (!listEl) return;
-    lastItems = items;
-    listEl.innerHTML = items
-      .map((item) => {
-        const questionRaw = item.question || 'Type your question';
-        const answerRaw = item.answer || 'Type your answer';
-        const qText = sanitizeInlineHtml(questionRaw);
-        const answerHtml = renderAnswerHtml(answerRaw, behavior);
-        return `
-          <li class="ck-faq__item">
-            <button class="ck-faq__q" type="button" aria-expanded="false">
-              <span class="ck-faq__q-text body-m">${qText}</span>
-              <span class="ck-faq__q-icon" aria-hidden="true"></span>
-            </button>
-            <div class="ck-faq__a body-s" role="region">${answerHtml || ''}</div>
-          </li>
-        `;
-      })
-      .join('');
+  function collapseAll(listEl) {
+    listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
+      button.setAttribute('aria-expanded', 'false');
+      const ans = button.nextElementSibling;
+      if (ans && ans.classList.contains('ck-faq__a')) ans.style.display = 'none';
+    });
   }
 
-  function wireAccordion(multiOpen, defaultOpen) {
-    const listEl = document.querySelector('.ck-faq__list');
-    if (!listEl) return;
+  function setExpanded(button, expanded) {
+    button.setAttribute('aria-expanded', String(expanded));
+    const ans = button.nextElementSibling;
+    if (ans && ans.classList.contains('ck-faq__a')) {
+      ans.style.display = expanded ? '' : 'none';
+    }
+  }
+
+  function wireAccordion(listEl, multiOpen) {
     const buttons = listEl.querySelectorAll('.ck-faq__q');
     buttons.forEach((button) => {
       button.addEventListener('click', () => {
-        const current = button.getAttribute('aria-expanded') === 'true';
-        const next = !current;
+        const isOpen = button.getAttribute('aria-expanded') === 'true';
+        const next = !isOpen;
         if (!multiOpen) collapseAll(listEl);
         setExpanded(button, next);
       });
     });
-    if (defaultOpen === 'first') {
-      const first = buttons[0];
-      if (first) {
-        if (!multiOpen) collapseAll(listEl);
-        setExpanded(first, true);
-      }
-    } else if (defaultOpen === 'none') {
-      collapseAll(listEl);
-    }
   }
 
-  function applyTemplate(widget, appearance) {
-    const template = sanitizeString(appearance.template);
-    if (template) widget.setAttribute('data-template', template);
-    else widget.removeAttribute('data-template');
+  function renderItems(sections, behavior, displayCategoryTitles) {
+    const listEl = faqRoot.querySelector('[data-role="faq-list"]');
+    if (!(listEl instanceof HTMLElement)) return;
 
-    widget.style.setProperty('--faq-card-border', appearance.cardBorder === true ? '1px solid var(--color-system-gray-5)' : '1px solid transparent');
-    widget.style.setProperty('--faq-card-shadow', appearance.cardShadow === true ? 'var(--shadow-floating)' : 'none');
-    if (typeof appearance.cardRadius === 'string') {
-      widget.style.setProperty('--faq-card-radius', `var(--control-radius-${appearance.cardRadius})`);
-    } else {
-      widget.style.removeProperty('--faq-card-radius');
-    }
+    const markup = sections
+      .map((section) => {
+        const header = displayCategoryTitles
+          ? `<li class="ck-faq__category" data-role="faq-section-title" role="presentation">${escapeHtml(
+              section.title,
+            )}</li>`
+          : '';
 
-    widget.style.setProperty('--faq-card-bg', appearance.cardBackground || 'transparent');
-    if (appearance.itemBackground) widget.style.setProperty('--faq-item-bg', appearance.itemBackground);
-    else widget.style.removeProperty('--faq-item-bg');
-    if (appearance.questionColor) widget.style.setProperty('--faq-question-color', appearance.questionColor);
-    else widget.style.removeProperty('--faq-question-color');
-    if (appearance.answerColor) widget.style.setProperty('--faq-answer-color', appearance.answerColor);
-    else widget.style.removeProperty('--faq-answer-color');
+        const items = section.faqs
+          .map((item) => {
+            const qText = sanitizeInlineHtml(item.question);
+            const answerHtml = renderAnswerHtml(item.answer, behavior);
+            return `
+              <li class="ck-faq__item" data-role="faq-item">
+                <button class="ck-faq__q" data-role="faq-question" type="button" aria-expanded="false">
+                  <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
+                  <span class="ck-faq__q-icon diet-btn-ic" data-size="md" data-variant="neutral" aria-hidden="true">
+                    <span class="diet-btn-ic__icon"></span>
+                  </span>
+                </button>
+                <div class="ck-faq__a" data-role="faq-answer" role="region">${answerHtml}</div>
+              </li>
+            `;
+          })
+          .join('');
 
-    const iconSize =
-      appearance.iconSize === 'lg'
-        ? '1.6rem'
-        : appearance.iconSize === 'sm'
-          ? '1.1rem'
-          : appearance.iconSize === 'md'
-            ? '1.3rem'
-            : null;
-    if (iconSize) widget.style.setProperty('--faq-icon-size', iconSize);
-    else widget.style.removeProperty('--faq-icon-size');
+        return header + items;
+      })
+      .join('');
 
-    if (appearance.iconColor) {
-      widget.style.setProperty('--faq-icon-color', appearance.iconColor);
-    } else {
-      widget.style.removeProperty('--faq-icon-color');
-    }
-
-    const questionSize =
-      appearance.questionSize === 'lg'
-        ? 'var(--fs-18)'
-        : appearance.questionSize === 'sm'
-          ? 'var(--fs-14)'
-          : appearance.questionSize === 'md'
-            ? 'var(--fs-16)'
-            : null;
-    const answerSize = appearance.answerSize === 'md' ? 'var(--fs-14)' : appearance.answerSize === 'sm' ? 'var(--fs-13)' : null;
-    if (questionSize) widget.style.setProperty('--faq-question-size', questionSize);
-    else widget.style.removeProperty('--faq-question-size');
-    if (answerSize) widget.style.setProperty('--faq-answer-size', answerSize);
-    else widget.style.removeProperty('--faq-answer-size');
+    listEl.innerHTML = markup;
   }
 
-  function applyCustomCss(cssText) {
-    const id = 'ck-faq-custom-css';
-    let styleEl = document.getElementById(id);
-    const css = sanitizeString(cssText);
-    if (!css) {
-      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+  function applyAppearance(appearance) {
+    faqRoot.style.setProperty('--faq-item-bg', appearance.itemBackground);
+    faqRoot.style.setProperty('--faq-question-color', appearance.questionColor);
+    faqRoot.style.setProperty('--faq-answer-color', appearance.answerColor);
+  }
+
+  function applyLayout(layout) {
+    faqRoot.style.setProperty('--layout-gap', `${layout.gap}px`);
+    faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
+    faqRoot.style.setProperty('--faq-columns-tablet', String(layout.columns.tablet));
+    faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
+    faqRoot.setAttribute('data-layout', layout.type);
+  }
+
+  const ICON_PAIRS = {
+    plus: { expand: 'plus', collapse: 'minus' },
+    chevron: { expand: 'chevron.down', collapse: 'chevron.up' },
+    arrow: { expand: 'arrow.down', collapse: 'arrow.up' },
+    arrowshape: { expand: 'arrowshape.down', collapse: 'arrowshape.up' },
+  };
+
+  function applyAccordionIcons(iconStyle) {
+    const pair = ICON_PAIRS[iconStyle];
+    if (!pair) {
+      throw new Error(`[FAQ] Unknown accordion icon style "${iconStyle}"`);
+    }
+    faqRoot.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
+    faqRoot.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
+    faqRoot.setAttribute('data-icon-style', iconStyle);
+  }
+
+  function applyState(state) {
+    if (window.CKStagePod?.applyStagePod) {
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+    }
+
+    if (window.CKTypography?.applyTypography) {
+      window.CKTypography.applyTypography(state.typography, faqRoot, {
+        title: { varKey: 'title' },
+        section: { varKey: 'section' },
+        question: { varKey: 'question' },
+        answer: { varKey: 'answer' },
+      });
+    }
+
+    const titleEl = faqRoot.querySelector('[data-role="faq-title"]');
+    if (titleEl instanceof HTMLElement) {
+      titleEl.textContent = state.title;
+      titleEl.hidden = state.showTitle !== true;
+      titleEl.style.display = state.showTitle === true ? '' : 'none';
+    }
+
+    applyAccordionIcons(state.appearance.iconStyle);
+
+    applyAppearance(state.appearance);
+    applyLayout(state.layout);
+    renderItems(state.sections, state.behavior, state.displayCategoryTitles === true);
+
+    const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
+    const hasAny = state.sections.some((section) => section.faqs.length > 0);
+    faqRoot.setAttribute('data-state', hasAny ? 'ready' : 'empty');
+    if (emptyEl instanceof HTMLElement) emptyEl.hidden = hasAny;
+
+    const listEl = faqRoot.querySelector('.ck-faq__list');
+    if (!(listEl instanceof HTMLElement)) return;
+
+    if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
+      listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
+        setExpanded(button, true);
+        button.style.cursor = 'default';
+        button.setAttribute('tabindex', '-1');
+      });
       return;
     }
-    if (!styleEl) {
-      styleEl = document.createElement('style');
-      styleEl.id = id;
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = css;
-  }
 
-  function applyCustomJs(jsText, state) {
-    const code = sanitizeString(jsText).trim();
-    if (!code) return;
-    try {
-      const fn = new Function('state', code);
-      fn(state);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('[FAQ widget] custom JS error', err);
-    }
-  }
+    const buttons = listEl.querySelectorAll('.ck-faq__q');
+    collapseAll(listEl);
 
-  function applyState(current) {
-    if (!current || typeof current !== 'object') return;
-    const title = sanitizeString(current.title);
-    const showTitle = toBool(current.showTitle, false);
-    const displayCategoryTitles = toBool(current.displayCategoryTitles, false);
-    const categoryTitle = sanitizeString(current.categoryTitle);
-    const behavior = current.behavior || {};
-    const multiOpen = toBool(behavior.multiOpen, false);
-    const expandFirst = toBool(behavior.expandFirst, false);
-    const expandAll = toBool(behavior.expandAll, false);
-    const displayVideos =
-      Object.prototype.hasOwnProperty.call(behavior, 'displayVideos') && behavior.displayVideos === false
-        ? false
-        : true;
-    const displayImages =
-      Object.prototype.hasOwnProperty.call(behavior, 'displayImages') && behavior.displayImages === false
-        ? false
-        : true;
-    const layout = current.layout || {};
-    const layoutType = typeof layout.type === 'string' ? layout.type : 'accordion';
-    const stageCfg = current.stage || {};
-    const podCfg = current.pod || {};
-    const stageBg = typeof stageCfg.background === 'string' ? stageCfg.background : null;
-    const podBg = typeof podCfg.background === 'string' ? podCfg.background : null;
-    const appearance = current.appearance || {};
-    const iconStyle = appearance.iconStyle || (appearance.useChevron ? 'arrow' : 'plus');
-    const objectsList =
-      current.objects && Array.isArray(current.objects.objects) ? current.objects.objects : [];
-
-    const stage = document.querySelector('.stage');
-    const pod = document.querySelector('.pod');
-    if (stage instanceof HTMLElement) {
-      if (stageBg) {
-        stage.style.setProperty('--stage-bg', stageBg);
-        stage.style.background = stageBg;
-      } else {
-        stage.style.removeProperty('--stage-bg');
-        stage.style.background = 'none';
-      }
-
-      const stageLinked = typeof stageCfg.paddingLinked === 'boolean' ? stageCfg.paddingLinked : null;
-      const hasStagePadding =
-        stageCfg.padding !== undefined ||
-        stageCfg.paddingTop !== undefined ||
-        stageCfg.paddingRight !== undefined ||
-        stageCfg.paddingBottom !== undefined ||
-        stageCfg.paddingLeft !== undefined;
-      if (hasStagePadding) {
-        if (stageLinked === false) {
-          const top = stageCfg.paddingTop ?? stageCfg.padding;
-          const right = stageCfg.paddingRight ?? stageCfg.padding;
-          const bottom = stageCfg.paddingBottom ?? stageCfg.padding;
-          const left = stageCfg.paddingLeft ?? stageCfg.padding;
-          stage.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
-        } else {
-          const pad = stageCfg.padding;
-          stage.style.padding = pad !== undefined ? `${pad || 0}px` : '';
-        }
-      } else {
-        stage.style.padding = '';
-      }
-      const align = stageCfg.alignment;
-      if (align) {
-        const { justify, alignItems } = resolveStageAlignment(align);
-        stage.style.justifyContent = justify;
-        stage.style.alignItems = alignItems;
-      }
-    }
-    if (pod instanceof HTMLElement) {
-      if (podBg) {
-        pod.style.setProperty('--pod-bg', podBg);
-        pod.style.background = podBg;
-      } else {
-        pod.style.removeProperty('--pod-bg');
-        pod.style.background = 'none';
-      }
-
-      const padLinked = typeof podCfg.paddingLinked === 'boolean' ? podCfg.paddingLinked : null;
-      const hasPodPadding =
-        podCfg.padding !== undefined ||
-        podCfg.paddingTop !== undefined ||
-        podCfg.paddingRight !== undefined ||
-        podCfg.paddingBottom !== undefined ||
-        podCfg.paddingLeft !== undefined;
-      if (hasPodPadding) {
-        if (padLinked === false) {
-          const top = podCfg.paddingTop ?? podCfg.padding;
-          const right = podCfg.paddingRight ?? podCfg.padding;
-          const bottom = podCfg.paddingBottom ?? podCfg.padding;
-          const left = podCfg.paddingLeft ?? podCfg.padding;
-          pod.style.padding = `${top || 0}px ${right || 0}px ${bottom || 0}px ${left || 0}px`;
-        } else {
-          const pad = podCfg.padding;
-          pod.style.padding = pad !== undefined ? `${pad || 0}px` : '';
-        }
-      } else {
-        pod.style.padding = '';
-      }
-
-      const resolveRadiusToken = (value) => {
-        if (value === 'none') return '0';
-        return value ? `var(--control-radius-${value})` : '';
-      };
-      const radiusLinked = typeof podCfg.radiusLinked === 'boolean' ? podCfg.radiusLinked : null;
-      if (
-        podCfg.radius !== undefined ||
-        podCfg.radiusTL !== undefined ||
-        podCfg.radiusTR !== undefined ||
-        podCfg.radiusBR !== undefined ||
-        podCfg.radiusBL !== undefined
-      ) {
-        if (radiusLinked === false) {
-          const tl = resolveRadiusToken(podCfg.radiusTL ?? podCfg.radius);
-          const tr = resolveRadiusToken(podCfg.radiusTR ?? podCfg.radius);
-          const br = resolveRadiusToken(podCfg.radiusBR ?? podCfg.radius);
-          const bl = resolveRadiusToken(podCfg.radiusBL ?? podCfg.radius);
-          pod.style.setProperty('--pod-radius', `${tl} ${tr} ${br} ${bl}`.trim());
-        } else {
-          pod.style.setProperty('--pod-radius', resolveRadiusToken(podCfg.radius));
-        }
-      } else {
-        pod.style.removeProperty('--pod-radius');
-      }
-
-      if (typeof podCfg.widthMode === 'string') {
-        pod.setAttribute('data-width-mode', podCfg.widthMode);
-      } else {
-        pod.removeAttribute('data-width-mode');
-      }
-      if (podCfg.contentWidth !== undefined && podCfg.contentWidth !== null && podCfg.contentWidth !== '') {
-        pod.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
-      } else {
-        pod.style.removeProperty('--content-width');
-      }
+    if (state.behavior.expandAll === true) {
+      buttons.forEach((button) => setExpanded(button, true));
+    } else if (state.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
+      const flat = state.sections.flatMap((section) => section.faqs);
+      buttons.forEach((button, idx) => {
+        if (flat[idx]?.defaultOpen === true) setExpanded(button, true);
+      });
+    } else if (state.behavior.expandFirst === true) {
+      const first = buttons[0];
+      if (first) setExpanded(first, true);
     }
 
-    const titleEl = document.querySelector('.ck-faq__title');
-    const header = document.querySelector('.ck-faq__header');
-    if (titleEl) {
-      titleEl.textContent = title;
-      titleEl.style.display = showTitle ? '' : 'none';
-      titleEl.hidden = !showTitle;
-    }
-    if (header instanceof HTMLElement) {
-      header.style.display = '';
-      header.hidden = false;
-    }
-
-    const categoryLabel = document.querySelector('.ck-faq__category');
-    if (categoryLabel instanceof HTMLElement) {
-      categoryLabel.hidden = !displayCategoryTitles;
-      categoryLabel.textContent = categoryTitle;
-    }
-
-    const widget = document.querySelector('.ck-faq');
-    if (widget instanceof HTMLElement) {
-      applyTemplate(widget, appearance);
-      const gapPx =
-        typeof layout.gap === 'number'
-          ? layout.gap
-          : Number.isFinite(Number(layout.gap))
-          ? Number(layout.gap)
-          : null;
-      const paddingPx =
-        typeof layout.padding === 'number'
-          ? layout.padding
-          : Number.isFinite(Number(layout.padding))
-          ? Number(layout.padding)
-          : null;
-      if (gapPx !== null) widget.style.setProperty('--layout-gap', `${gapPx}px`);
-      else widget.style.removeProperty('--layout-gap');
-      if (paddingPx !== null) widget.style.setProperty('--layout-padding', `${paddingPx}px`);
-      else widget.style.removeProperty('--layout-padding');
-      const colDesktop = layout.columns && layout.columns.desktop ? Number(layout.columns.desktop) : null;
-      const colTablet = layout.columns && layout.columns.tablet ? Number(layout.columns.tablet) : null;
-      const colMobile = layout.columns && layout.columns.mobile ? Number(layout.columns.mobile) : null;
-      if (colDesktop) widget.style.setProperty('--faq-columns-desktop', Math.max(1, colDesktop));
-      if (colTablet) widget.style.setProperty('--faq-columns-tablet', Math.max(1, colTablet));
-      if (colMobile) widget.style.setProperty('--faq-columns-mobile', Math.max(1, colMobile));
-    }
-
-    const faqRoot = document.querySelector('.ck-faq');
-    if (faqRoot instanceof HTMLElement) {
-      const iconMode = iconStyle === 'arrow' ? 'chevron' : 'plus';
-      faqRoot.setAttribute('data-icon-style', iconMode);
-      faqRoot.setAttribute('data-layout', layoutType);
-      faqRoot.setAttribute('data-expanded-all', layoutType === 'accordion' ? 'false' : 'true');
-    }
-
-    const flatItems = objectsList.map((obj) => ({
-      id: obj.id || `item_${Math.random().toString(16).slice(2)}`,
-      question: obj.payload?.question,
-      answer: obj.payload?.answer,
-      defaultOpen: toBool(obj.payload?.defaultOpen, false),
-    }));
-
-    renderItems(flatItems, { displayVideos, displayImages });
-    const emptyEl = document.querySelector('[data-role="faq-empty"]');
-    if (emptyEl instanceof HTMLElement) {
-      emptyEl.hidden = flatItems.length > 0;
-      emptyEl.style.display = flatItems.length > 0 ? 'none' : '';
-    }
-
-    const anyDefaultOpen = flatItems.some((item) => toBool(item.defaultOpen, false));
-
-    if (layoutType === 'list' || layoutType === 'multicolumn') {
-      const listEl = document.querySelector('.ck-faq__list');
-      if (listEl) {
-        const buttons = listEl.querySelectorAll('.ck-faq__q');
-        buttons.forEach((button) => {
-          setExpanded(button, true);
-          button.style.cursor = 'default';
-          button.setAttribute('tabindex', '-1');
-        });
-      }
-    } else {
-      const defaultOpen = anyDefaultOpen ? 'none' : expandFirst ? 'first' : 'none';
-      const listEl = document.querySelector('.ck-faq__list');
-      if (listEl) {
-        const buttons = listEl.querySelectorAll('.ck-faq__q');
-        buttons.forEach((button, idx) => {
-          const shouldOpen = toBool(flatItems[idx]?.defaultOpen, false);
-          if (shouldOpen) setExpanded(button, true);
-        });
-      }
-      wireAccordion(multiOpen, defaultOpen);
-    }
-
-    if (expandAll && layoutType === 'accordion') {
-      const listEl = document.querySelector('.ck-faq__list');
-      if (listEl) {
-        const buttons = listEl.querySelectorAll('.ck-faq__q');
-        buttons.forEach((btn) => setExpanded(btn, true));
-      }
-    }
-
-    applyCustomCss(current.customCss);
-
-    if (behavior.customJs) {
-      applyCustomJs(behavior.customJs, current);
-    }
-
-    const backlink = document.querySelector('[data-role="faq-backlink"]');
-    if (backlink instanceof HTMLElement) {
-      backlink.hidden = !toBool(behavior.showBacklink, true);
-      backlink.style.display = toBool(behavior.showBacklink, true) ? '' : 'none';
-    }
+    wireAccordion(listEl, state.behavior.multiOpen === true);
 
   }
 
-  window.addEventListener('message', function (event) {
+  window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data || data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'faq') return;
-    state = mergeState(state, data.state || {});
-    applyState(state);
+    applyState(data.state);
   });
 
-  applyState(state);
+  const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
+  if (initialState) applyState(initialState);
 })();
-
-  function resolveStageAlignment(value) {
-    switch (value) {
-      case 'left':
-        return { justify: 'flex-start', alignItems: 'center' };
-      case 'right':
-        return { justify: 'flex-end', alignItems: 'center' };
-      case 'top':
-        return { justify: 'center', alignItems: 'flex-start' };
-      case 'bottom':
-        return { justify: 'center', alignItems: 'flex-end' };
-      case 'center':
-      default:
-        return { justify: 'center', alignItems: 'center' };
-    }
-  }

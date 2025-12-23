@@ -602,9 +602,7 @@ var Dieter = (() => {
   }
   function syncFromInstanceData(state) {
     const value = state.hiddenInput.value || state.hiddenInput.getAttribute("value") || "";
-    state.editor.innerHTML = value || state.headerValue.textContent || "";
-    syncPreview(state);
-    updateClearButtons(state);
+    applyExternalValue(state, value);
   }
   function applyExternalValue(state, raw) {
     const value = raw || "";

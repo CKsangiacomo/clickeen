@@ -1,4 +1,4 @@
-<div class="diet-dropdown-fill diet-popover-host" data-size="{{size}}" data-state="closed">
+<div class="diet-dropdown-fill diet-popover-host" data-size="{{size}}" data-state="closed" data-allow-image="{{allowImage}}">
   <input
     id="{{id}}"
     type="hidden"
@@ -56,28 +56,30 @@
       </button>
     </div>
     <div class="diet-popover__body">
-      <div class="diet-dropdown-fill__modes">
-        <button
-          type="button"
-          class="diet-btn-ic diet-dropdown-fill__mode-btn"
-          data-size="sm"
-          data-variant="secondary"
-          data-mode="color"
-          aria-pressed="true"
-        >
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="circle.lefthalf.filled"></span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ic diet-dropdown-fill__mode-btn"
-          data-size="sm"
-          data-variant="secondary"
-          data-mode="image"
-          aria-pressed="false"
-        >
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="photo"></span>
-        </button>
-      </div>
+      {{#if allowImage}}
+        <div class="diet-dropdown-fill__modes">
+          <button
+            type="button"
+            class="diet-btn-ic diet-dropdown-fill__mode-btn"
+            data-size="sm"
+            data-variant="secondary"
+            data-mode="color"
+            aria-pressed="true"
+          >
+            <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="circle.lefthalf.filled"></span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ic diet-dropdown-fill__mode-btn"
+            data-size="sm"
+            data-variant="secondary"
+            data-mode="image"
+            aria-pressed="false"
+          >
+            <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="photo"></span>
+          </button>
+        </div>
+      {{/if}}
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--color body-xs" data-panel="color">
         <div class="diet-dropdown-fill__preview" aria-hidden="true">
@@ -229,38 +231,44 @@
         </div>
       </div>
 
-      <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true"></div>
-        <div class="diet-dropdown-fill__image-actions">
-          <button
-            type="button"
-            class="diet-btn-txt diet-dropdown-fill__upload-btn"
-            data-size="lg"
-            data-variant="line1"
-          >
-            <span class="diet-btn-txt__label">Upload</span>
-          </button>
-          <div class="diet-dropdown-fill__image-controls">
+      {{#if allowImage}}
+        <div
+          class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs"
+          data-panel="image"
+          data-has-image="false"
+        >
+          <div class="diet-dropdown-fill__image-preview" aria-hidden="true"></div>
+          <div class="diet-dropdown-fill__image-actions">
             <button
               type="button"
-              class="diet-btn-txt diet-dropdown-fill__replace-btn"
+              class="diet-btn-txt diet-dropdown-fill__upload-btn"
               data-size="lg"
               data-variant="line1"
             >
-              <span class="diet-btn-txt__label">Replace</span>
+              <span class="diet-btn-txt__label">Upload</span>
             </button>
-            <button
-              type="button"
-              class="diet-btn-txt diet-dropdown-fill__remove-btn"
-              data-size="lg"
-              data-variant="neutral"
-            >
-              <span class="diet-btn-txt__label">Remove</span>
-            </button>
+            <div class="diet-dropdown-fill__image-controls">
+              <button
+                type="button"
+                class="diet-btn-txt diet-dropdown-fill__replace-btn"
+                data-size="lg"
+                data-variant="line1"
+              >
+                <span class="diet-btn-txt__label">Replace</span>
+              </button>
+              <button
+                type="button"
+                class="diet-btn-txt diet-dropdown-fill__remove-btn"
+                data-size="lg"
+                data-variant="neutral"
+              >
+                <span class="diet-btn-txt__label">Remove</span>
+              </button>
+            </div>
           </div>
+          <input type="file" accept="image/*" class="diet-dropdown-fill__file-input" aria-hidden="true" tabindex="-1" />
         </div>
-        <input type="file" accept="image/*" class="diet-dropdown-fill__file-input" aria-hidden="true" tabindex="-1" />
-      </div>
+      {{/if}}
     </div>
   </div>
 </div>

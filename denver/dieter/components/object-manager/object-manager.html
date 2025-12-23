@@ -1,0 +1,60 @@
+<div
+  class="diet-object-manager"
+  data-size="md"
+  data-label-path="{{labelPath}}"
+  data-index-token="{{indexToken}}"
+  {{#if defaultItem}} data-default-item="{{defaultItem}}"{{/if}}
+>
+  <div class="diet-object-manager__list" data-objects-list></div>
+
+  <div class="diet-object-manager__footer">
+    <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" data-objects-add>
+      <span class="diet-btn-txt__label">{{addLabel}}</span>
+    </button>
+    <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" data-objects-manage hidden>
+      <span class="diet-btn-txt__label">{{reorderLabel}}</span>
+    </button>
+  </div>
+
+  <input
+    type="hidden"
+    class="diet-object-manager__field"
+    value="[]"
+    {{#if path}} data-bob-path="{{path}}"{{/if}}
+    data-bob-json
+  />
+
+  <template data-objects-item>{{template}}</template>
+
+  <div class="diet-object-manager__modal" hidden>
+    <div class="diet-object-manager__modal-body">
+      <div class="diet-object-manager__modal-title">{{reorderTitle}}</div>
+      <div class="diet-object-manager__modal-list" data-objects-modal-list></div>
+      <div class="diet-object-manager__modal-actions">
+        <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" data-objects-cancel>
+          <span class="diet-btn-txt__label">Cancel</span>
+        </button>
+        <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" data-objects-save>
+          <span class="diet-btn-txt__label">Save</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <template data-objects-row>
+    <div class="diet-object-manager__modal-row">
+      <div class="diet-object-manager__modal-label" data-objects-label></div>
+      <div class="diet-object-manager__modal-controls">
+        <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-up>
+          <span class="diet-btn-ic__icon" data-icon="chevron.up"></span>
+        </button>
+        <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-down>
+          <span class="diet-btn-ic__icon" data-icon="chevron.down"></span>
+        </button>
+        <button type="button" class="diet-btn-ic" data-size="sm" data-variant="neutral" data-objects-delete>
+          <span class="diet-btn-ic__icon" data-icon="trash"></span>
+        </button>
+      </div>
+    </div>
+  </template>
+</div>

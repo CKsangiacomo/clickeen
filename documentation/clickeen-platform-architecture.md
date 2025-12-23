@@ -15,23 +15,23 @@ This document is the canonical Phase‑1 architecture snapshot: what’s in scop
 
 ## Canonical Concepts (Phase‑1)
 
-- **Widget JSON** — THE SOFTWARE; complete functional software for a widget type (e.g., FAQ, testimonials); lives in `/paris/lib/widgets/{widgetName}.json`
-- **Widget Instance** — THE DATA; user's specific widget with their custom instanceData; stored in database with publicId, widgetName, instanceData
-- **widgetName** — string identifier for widget type (e.g., "faq"); stored in instances to identify which Widget JSON to use
-- **instanceData** — user's custom values for their widget instance
-- **Template** — predefined instanceData configuration in Widget JSON providing default layout/styling
-- **uiSchema** — section of Widget JSON that defines ToolDrawer UI and functionality
+- **Widget Definition** (a.k.a. “Widget JSON”) — THE SOFTWARE; complete functional software for a widget type (e.g., FAQ, testimonials); lives in **Denver/CDN** (in-repo: `denver/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only))
+- **Widget Instance** — THE DATA; user’s specific widget configuration; stored in **Michael (database)** as `{ publicId, widgetType, config }`
+- **widgetType** — string identifier for widget type (e.g., `"faq"`); stored in `widgets.type` and surfaced via APIs
+- **config** — user’s custom values for their widget instance (stored in `widget_instances.config`)
+- **Template** — predefined config baseline (data) applied to an instance (not separate code)
+- **ToolDrawer spec** — widget definition markup in `spec.json.html[]` (`<bob-panel>` + `<tooldrawer-field>`), compiled by Bob into ToolDrawer panel HTML (and optional `controls[]` for safe AI ops)
 - **Single tag** — inline = iframe; overlays/popups = script that injects an iframe; both load Venice SSR HTML
-- **Templates are instanceData** — switching templates merges instanceData, not code
-- **JSON casing** — API payloads are camelCase (publicId, widgetName, instanceData); DB casing follows the schema in supabase/migrations/
+- **Templates are data** — switching templates transforms/merges config, not code
+- **JSON casing** — API payloads are camelCase (publicId, widgetType, config); DB casing follows the schema in supabase/migrations/
 
 ### 🔑 NEW: Bob's Two-API-Call Architecture
 
-**Major architectural change: Bob owns instanceData in React state during editing. Only saves to Paris on publish.**
+**Major architectural change: Bob owns instance config in React state during editing. Only saves via Paris on publish (persisted in Michael).**
 
 **The Two-Place Rule:**
-instanceData exists in EXACTLY 2 places:
-1. **Paris (database)** - Published version (production source of truth)
+Config exists in EXACTLY 2 places:
+1. **Michael (database)** - Published version (production source of truth; accessed via Paris)
 2. **Bob's React state** - Working copy (during editing session)
 
 **The Two-API-Call Pattern:**
@@ -45,9 +45,9 @@ Bob makes EXACTLY 2 calls to Paris per editing session:
 - ZERO database writes
 
 **Impact on Systems:**
-- **Bob:** Holds instanceData in state, only saves on publish
-- **Paris:** Expects GET once on mount, PUT once on publish (no intermediate saves)
-- **Venice:** Serves public embeds at `/e/:publicId` (SSR only); Bob renders previews locally via `renderWidgetHtml` and Venice renderer functions and does **not** call the Venice service during editing
+- **Bob:** Holds config in state, only saves on publish
+- **Paris:** Expects GET once on mount, PUT once on publish (no intermediate saves; persists to Michael)
+- **Venice:** Serves public embeds at `/e/:publicId` (SSR only); editing previews are local (Bob loads Denver widget HTML in an iframe and streams config via postMessage to `widget.client.js`)
 - **Database:** Only stores published widgets (no abandoned edits, no drafts during editing)
 
 **Operational Benefits:**
@@ -95,7 +95,7 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 ## Widget Docs (Phase‑1)
 
 - Widget system architecture: `documentation/widgets/WidgetArchitecture.md` (NORMATIVE - authoritative for widget system)
-- Widget JSON files: `/paris/lib/widgets/{widgetName}.json` (the complete software for each widget)
+- Widget definitions (source in-repo): `denver/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - Per‑widget PRDs: `documentation/widgets/*.md` (one file per widget)
 
 ---
@@ -126,13 +126,15 @@ Phase‑2/3 systems (e.g., Copenhagen, Helsinki, Lisbon, Robert, Tokyo) are plac
 
 ## Template & Render Model
 
-- Widget JSON IS the software (defines rendering logic, ToolDrawer UI, templates, defaults)
-- Venice renderer executes Widget JSON to generate HTML string (pure function; no inline handlers)
-- Template = predefined instanceData configuration in Widget JSON
-- Composition precedence: instance.instanceData → template instanceData → Widget JSON defaults
-- Validation: JSON Schema per widgetName; invalid → 422 with [{ path, message }]
+- Widget Definition (“Widget JSON”) IS the software (controls UI structure + defaults and points to runtime assets)
+- Venice renders HTML using widget runtime assets + instance config
+- Template = predefined config baseline
+- Composition precedence: instance.config → template defaults → widget defaults
+- Validation: JSON Schema per widgetType; invalid → 422 with [{ path, message }]
 - Authorities:
-  - Paris — serves Widget JSON via `GET /api/widgets/:widgetType`, stores instances with instanceData
+  - Denver — serves widget definitions/assets (CDN)
+  - Michael — stores widget instances/config
+  - Paris — stateless gateway API for instances/config (no widget definition hosting)
   - Geneva — schemas/catalog
   - Atlas — cache/mirror only; never authoritative
 

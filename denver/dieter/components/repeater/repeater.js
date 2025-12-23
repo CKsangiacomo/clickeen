@@ -2,22 +2,55 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 (function () {
   const registry = new WeakMap();
 
-  function parseJson(value, fallback) {
-    if (!value) return fallback;
+  function createId() {
+    if (typeof crypto === "undefined" || !crypto) {
+      throw new Error("[diet-repeater] crypto unavailable");
+    }
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    if (typeof crypto.getRandomValues !== "function") {
+      throw new Error("[diet-repeater] crypto.getRandomValues unavailable");
+    }
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
+  function decodeHtmlEntities(value) {
+    return String(value || "")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&amp;/g, "&");
+  }
+
+  function deepClone(value) {
+    if (typeof structuredClone === "function") return structuredClone(value);
     try {
-      const decoded = value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
-      return JSON.parse(decoded);
+      return JSON.parse(JSON.stringify(value));
     } catch {
-      return fallback;
+      return value;
     }
   }
 
-  function stringify(value) {
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return "[]";
+  function parseJsonArray(value) {
+    const decoded = decodeHtmlEntities(value);
+    if (!decoded) {
+      throw new Error("[diet-repeater] Missing JSON array value");
     }
+    const parsed = JSON.parse(decoded);
+    if (!Array.isArray(parsed)) {
+      throw new Error("[diet-repeater] Expected JSON array");
+    }
+    return parsed;
+  }
+
+  function stringify(value) {
+    return JSON.stringify(value);
   }
 
   function diffArrays(prev, next) {
@@ -40,7 +73,124 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         valueChanges.push({ index: i, nextItem });
       }
     }
+    if (valueChanges.length === 0) {
+      return { structuralChange: false, valueChanges };
+    }
+    const signature = (item) => `${typeof item}:${stringify(item)}`;
+    const sameCounts = (a, b) => {
+      if (a.length !== b.length) return false;
+      const counts = new Map();
+      a.forEach((sig) => {
+        counts.set(sig, (counts.get(sig) || 0) + 1);
+      });
+      for (const sig of b) {
+        const nextCount = (counts.get(sig) || 0) - 1;
+        if (nextCount < 0) return false;
+        counts.set(sig, nextCount);
+      }
+      return Array.from(counts.values()).every((v) => v === 0);
+    };
+    const prevSignatures = prev.map(signature);
+    const nextSignatures = next.map(signature);
+    if (!valueChanges.length) {
+      return { structuralChange: false, valueChanges };
+    }
+    if (sameCounts(prevSignatures, nextSignatures)) {
+      return { structuralChange: true, valueChanges: [] };
+    }
     return { structuralChange: false, valueChanges };
+  }
+
+  function inferItemKind(state) {
+    const arr = Array.isArray(state.value) ? state.value : [];
+    const first = arr[0];
+    if (first && typeof first === "object" && !Array.isArray(first)) return "object";
+    if (typeof first === "string" || typeof first === "number" || typeof first === "boolean") return "primitive";
+
+    const arrayPath = state.hidden.getAttribute("data-bob-path") || state.hidden.getAttribute("data-path") || "";
+    if (!arrayPath) return "object";
+    const token = "__INDEX__";
+    if (typeof state.template === "string") {
+      if (state.template.includes(`${arrayPath}.${token}.`)) return "object";
+      if (state.template.includes(`${arrayPath}.${token}`)) return "primitive";
+    }
+    return "object";
+  }
+
+  function setAt(obj, path, value) {
+    const parts = String(path || "")
+      .split(".")
+      .filter(Boolean);
+    let cur = obj;
+    for (let i = 0; i < parts.length; i += 1) {
+      const key = parts[i];
+      const last = i === parts.length - 1;
+      if (last) {
+        cur[key] = value;
+      } else {
+        const next = cur[key];
+        const nextObj = next && typeof next === "object" && !Array.isArray(next) ? next : {};
+        cur[key] = nextObj;
+        cur = nextObj;
+      }
+    }
+    return obj;
+  }
+
+  function deriveDefaultObjectFromPrototype(proto) {
+    const out = {};
+    Object.keys(proto || {}).forEach((key) => {
+      if (key === "id") return;
+      const val = proto[key];
+      if (typeof val === "boolean") out[key] = false;
+      else if (typeof val === "number") out[key] = 0;
+      else if (Array.isArray(val)) out[key] = [];
+      else if (val && typeof val === "object") out[key] = {};
+      else out[key] = "";
+    });
+    return out;
+  }
+
+  function deriveDefaultObjectFromTemplate(state) {
+    const arrayPath = state.hidden.getAttribute("data-bob-path") || state.hidden.getAttribute("data-path") || "";
+    if (!arrayPath || typeof state.template !== "string") return {};
+    const html = state.template.replace(/__INDEX__/g, "0");
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const prefix = `${arrayPath}.0.`;
+    const out = {};
+    wrapper.querySelectorAll("[data-bob-path]").forEach((node) => {
+      const nodePath = node.getAttribute("data-bob-path") || "";
+      if (!nodePath.startsWith(prefix)) return;
+      const rel = nodePath.slice(prefix.length);
+      if (!rel) return;
+      if (node instanceof HTMLInputElement && node.type === "checkbox") {
+        setAt(out, rel, false);
+        return;
+      }
+      if (node instanceof HTMLInputElement && node.dataset.bobJson != null) {
+        setAt(out, rel, []);
+        return;
+      }
+      setAt(out, rel, "");
+    });
+    return out;
+  }
+
+  function buildDefaultObjectItem(state) {
+    if (state.defaultItem && typeof state.defaultItem === "object" && !Array.isArray(state.defaultItem)) {
+      return deepClone(state.defaultItem);
+    }
+    const proto =
+      Array.isArray(state.value) &&
+      state.value.find((item) => item && typeof item === "object" && !Array.isArray(item));
+    if (proto) return deriveDefaultObjectFromPrototype(proto);
+    return deriveDefaultObjectFromTemplate(state);
+  }
+
+  function cloneIcon(root, selector) {
+    const icon = root.querySelector(selector);
+    return icon ? icon.cloneNode(true) : null;
   }
 
   function hydrateRepeater(scope) {
@@ -53,6 +203,11 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       const addBtn = root.querySelector(".diet-repeater__add");
       const reorderBtn = root.querySelector(".diet-repeater__reorder");
       if (!hidden || !list || !templateEl || !addBtn || !reorderBtn) return;
+      const syncReorderControls = () => {
+        root.dataset.reorder = state.reorder ? "on" : "off";
+        reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
+        reorderBtn.setAttribute("data-variant", state.reorder ? "secondary" : "neutral");
+      };
 
       const state = {
         root,
@@ -61,21 +216,38 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         template: templateEl.innerHTML || "",
         addBtn,
         reorderBtn,
-        reorder: false,
-        value: parseJson(hidden.value, []),
+        reorder: root.dataset.reorder === "on",
+        value: parseJsonArray(hidden.value),
+        defaultItem: null,
+        iconHandle: cloneIcon(root, ".diet-repeater__icon-handle"),
+        iconTrash: cloneIcon(root, ".diet-repeater__icon-trash"),
       };
+
+      const defaultItemAttr = root.getAttribute("data-default-item") || "";
+      if (defaultItemAttr) {
+        state.defaultItem = JSON.parse(decodeHtmlEntities(defaultItemAttr));
+      }
       registry.set(root, state);
+      syncReorderControls();
       render(state);
 
       addBtn.addEventListener("click", () => {
-        state.value = Array.isArray(state.value) ? [...state.value, {}] : [{}];
+        const next = Array.isArray(state.value) ? [...state.value] : [];
+        const kind = inferItemKind(state);
+        if (kind === "primitive") {
+          next.push(typeof state.defaultItem === "string" ? state.defaultItem : "");
+        } else {
+          const base = buildDefaultObjectItem(state);
+          base.id = createId();
+          next.push(base);
+        }
+        state.value = next;
         commit(state);
       });
 
       reorderBtn.addEventListener("click", () => {
         state.reorder = !state.reorder;
-        root.dataset.reorder = state.reorder ? "on" : "off";
-        reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
+        syncReorderControls();
         render(state);
       });
 
@@ -86,13 +258,13 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
             : hidden.value;
         const next =
           typeof payload === "string"
-            ? parseJson(payload, [])
+            ? parseJsonArray(payload)
             : Array.isArray(payload)
               ? payload
-              : parseJson(stringify(payload), []);
+              : parseJsonArray(stringify(payload));
         const diff = diffArrays(state.value, next);
         if (diff.structuralChange) {
-          state.value = Array.isArray(next) ? next : [];
+          state.value = next;
           render(state);
           return;
         }
@@ -123,8 +295,10 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       handle.className = "diet-btn-ic diet-repeater__item-handle";
       handle.setAttribute("data-size", "sm");
       handle.setAttribute("data-variant", "neutral");
-      handle.innerHTML =
-        '<span class="diet-btn-ic__icon" data-icon="arrow.up.arrow.down"></span>';
+      const handleIcon = state.iconHandle ? state.iconHandle.cloneNode(true) : null;
+      if (handleIcon) {
+        handle.appendChild(handleIcon);
+      }
 
       const body = document.createElement("div");
       body.className = "diet-repeater__item-body";
@@ -135,7 +309,10 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       remove.className = "diet-btn-ic diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
-      remove.innerHTML = '<span class="diet-btn-ic__icon" data-icon="trash"></span>';
+      const removeIcon = state.iconTrash ? state.iconTrash.cloneNode(true) : null;
+      if (removeIcon) {
+        remove.appendChild(removeIcon);
+      }
       remove.addEventListener("click", () => {
         const next = [...state.value];
         next.splice(index, 1);

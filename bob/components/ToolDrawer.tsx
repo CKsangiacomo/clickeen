@@ -10,7 +10,7 @@ import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 export function ToolDrawer() {
   const session = useWidgetSession();
   const compiled = session.compiled;
-  const hasWidget = Boolean(compiled);
+  const sessionError = session.error;
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
@@ -38,7 +38,7 @@ export function ToolDrawer() {
     <aside className="tooldrawer">
       {/* Segmented control in the header */}
       <TdHeader>
-        <div className="diet-segmented-ictxt tdheader-mode-switch" role="radiogroup" aria-label="Assist mode" data-size="md">
+        <div className="diet-segmented diet-segmented-ictxt tdheader-mode-switch" role="radiogroup" aria-label="Assist mode" data-size="lg">
           <label className="diet-segment">
             <input
               className="diet-segment__input"
@@ -51,7 +51,7 @@ export function ToolDrawer() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ictxt"
-              data-size="sm"
+              data-size="lg"
               data-variant="neutral"
               tabIndex={-1}
               type="button"
@@ -77,7 +77,7 @@ export function ToolDrawer() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ictxt"
-              data-size="sm"
+              data-size="lg"
               data-variant="neutral"
               tabIndex={-1}
               type="button"
@@ -99,16 +99,38 @@ export function ToolDrawer() {
         {mode === 'manual' ? (
           <>
             <TdMenu active={activePanel} onSelect={(id) => setActivePanel(id)} />
-            {hasWidget ? (
+            {sessionError ? (
+              <div
+                role="alert"
+                style={{
+                  margin: 'var(--space-2)',
+                  padding: 'var(--space-2)',
+                  borderRadius: 'var(--control-radius-md)',
+                  border: '1px solid color-mix(in oklab, var(--color-system-red, #ff3b30), transparent 55%)',
+                  background: 'color-mix(in oklab, var(--color-system-red-5, #ff3b30), transparent 85%)',
+                }}
+              >
+                <div className="label-s" style={{ color: 'var(--color-system-red, #ff3b30)' }}>
+                  {sessionError.source === 'load' ? 'Instance load error' : 'Edit rejected'}
+                </div>
+                <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>
+                  {sessionError.source === 'load'
+                    ? sessionError.message
+                    : sessionError.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n')}
+                </pre>
+              </div>
+            ) : null}
+            {compiled ? (
               <TdMenuContent
                 panelId={activePanel}
                 panelHtml={activePanelHtml ?? ''}
-                widgetKey={compiled?.widgetname}
+                widgetKey={compiled.widgetname}
                 instanceData={session.instanceData}
-                setValue={session.setValue}
+                applyOps={session.applyOps}
+                undoLastOps={session.undoLastOps}
+                canUndo={session.canUndo}
                 lastUpdate={session.lastUpdate}
-                defaults={compiled?.defaults}
-                dieterAssets={compiled?.assets.dieter}
+                dieterAssets={compiled.assets.dieter}
               />
             ) : (
               <div className="tdmenucontent">

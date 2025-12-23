@@ -26,6 +26,9 @@ for p in 3000 3001 4000 5173; do
   fi
 done
 
+echo "[dev-up] Cleaning Bob build artifacts (.next) to avoid stale chunk mismatches"
+rm -rf "$ROOT_DIR/bob/.next" || true
+
 DENVER_URL=${DENVER_URL:-http://localhost:4000}
 
 echo "[dev-up] Starting Denver CDN stub on 4000"

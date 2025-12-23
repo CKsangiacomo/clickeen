@@ -11,11 +11,44 @@ export interface CompiledPanel {
   html: string;
 }
 
+export interface CompiledControlOption {
+  label: string;
+  value: string;
+}
+
+export type ControlKind =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'enum'
+  | 'color'
+  | 'json'
+  | 'array'
+  | 'object'
+  | 'unknown';
+
+export interface CompiledControl {
+  panelId: PanelId;
+  groupId?: string;
+  groupLabel?: string;
+  type: string;
+  path: string;
+  label?: string;
+  showIf?: string;
+  options?: CompiledControlOption[];
+  kind?: ControlKind;
+  enumValues?: string[];
+  itemIdPath?: string;
+  min?: number;
+  max?: number;
+}
+
 export interface CompiledWidget {
   widgetname: string;
   displayName: string;
   defaults: Record<string, unknown>;
   panels: CompiledPanel[];
+  controls: CompiledControl[];
   assets: {
     htmlUrl: string;
     cssUrl: string;

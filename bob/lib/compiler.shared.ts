@@ -21,6 +21,14 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
 }
 
 export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
+  const decodeHtmlEntities = (value: string) =>
+    value
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+
   // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
   const tdRegex =
     /<tooldrawer-field(?:-[a-z0-9-]+)?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
@@ -28,6 +36,18 @@ export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
   while ((m = tdRegex.exec(markup)) !== null) {
     const attrs = parseTooldrawerAttributes(m[1]);
     if (attrs.type) usages.add(attrs.type);
+    if (attrs.template) {
+      const decoded = decodeHtmlEntities(attrs.template);
+      collectTooldrawerTypes(decoded, usages);
+      // Also pull in class-based components referenced inside templates
+      const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
+      let classMatch: RegExpExecArray | null;
+      while ((classMatch = classRegex.exec(decoded)) !== null) {
+        const raw = classMatch[1];
+        const base = raw.replace(/(--|__).*/, '');
+        if (base) usages.add(base);
+      }
+    }
   }
 }
 

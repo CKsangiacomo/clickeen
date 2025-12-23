@@ -23,11 +23,6 @@
         "hint": "Hint text",
         "value": "",
         "databinding": ""
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
-        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
-        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
       }
     }
   ]

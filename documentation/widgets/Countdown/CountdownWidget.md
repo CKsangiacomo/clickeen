@@ -98,7 +98,7 @@ The Countdown Widget is a highly customizable timer widget that creates urgency 
 - Server-side rendering (better SEO)
 - Progressive enhancement (works without JS)
 - CSS-first theming (no runtime overhead)
-- Widget JSON pattern (AI-understandable)
+- Widget Definition pattern (AI-understandable)
 
 **Developer Experience:**
 - Open component system

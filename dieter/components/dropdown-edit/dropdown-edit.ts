@@ -529,9 +529,8 @@ function clearTempMarker(state: DropdownEditState): void {
 
 function syncFromInstanceData(state: DropdownEditState) {
   const value = state.hiddenInput.value || state.hiddenInput.getAttribute('value') || '';
-  state.editor.innerHTML = value || state.headerValue.textContent || '';
-  syncPreview(state);
-  updateClearButtons(state);
+  // Initial hydration should never emit editor change events. Only user edits should.
+  applyExternalValue(state, value);
 }
 
 function applyExternalValue(state: DropdownEditState, raw: string) {

@@ -146,12 +146,6 @@
   display: none;
 }
 
-.diet-dropdown-edit__linksheet .diet-popaddlink.diet-popover {
-  /* Match standalone PopAddLink card spacing and size */
-  max-width: 360px;
-  --popover-padding: var(--space-3, 0.75rem);
-}
-
 /* Ensure URL validation strokes carry through when PopAddLink
    is hosted by Dropdown Edit. This mirrors the component's own
    state styles but scoped to the embedded instance. */

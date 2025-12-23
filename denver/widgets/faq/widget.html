@@ -9,21 +9,27 @@
   <body>
     <div class="stage" data-role="stage">
       <div class="pod" data-role="pod">
-        <div class="ck-widget ck-faq-widget" data-role="faq-widget">
-          <section class="ck-faq" data-role="faq" data-expanded-all="true">
+        <div class="ck-widget ck-faq-widget" data-ck-widget="faq" data-role="faq-widget">
+          <section
+            class="ck-faq"
+            data-role="faq"
+            data-layout="accordion"
+            data-icon="plus"
+            data-variant="default"
+            data-state="ready"
+          >
             <header class="ck-faq__header">
               <h2 class="ck-faq__title heading-4" data-role="faq-title">Frequently Asked Questions</h2>
             </header>
-            <div class="ck-faq__category label-s" data-role="faq-category" hidden>All Questions</div>
             <div class="ck-faq__empty body-s" data-role="faq-empty" hidden>No questions yet. Add your first FAQ.</div>
             <ul class="ck-faq__list" data-role="faq-list"></ul>
-            <div class="ck-faq__backlink" data-role="faq-backlink">
-              <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
-            </div>
           </section>
+          <script src="../shared/typography.js" defer></script>
+          <script src="../shared/stagePod.js" defer></script>
+          <script src="../shared/branding.js" defer></script>
+          <script src="./widget.client.js" defer></script>
         </div>
       </div>
     </div>
-    <script src="./widget.client.js" defer></script>
   </body>
 </html>

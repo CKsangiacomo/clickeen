@@ -36,7 +36,6 @@
     "layout": {
       "type": "full-width",
       "alignment": "center",
-      "padding": 24,
       "gap": 16
     },
     "stage": {
@@ -51,12 +50,12 @@
     },
     "pod": {
       "background": "transparent",
-      "paddingLinked": false,
-      "padding": 0,
-      "paddingTop": 0,
-      "paddingRight": 0,
-      "paddingBottom": 0,
-      "paddingLeft": 0,
+      "paddingLinked": true,
+      "padding": 24,
+      "paddingTop": 24,
+      "paddingRight": 24,
+      "paddingBottom": 24,
+      "paddingLeft": 24,
       "widthMode": "wrap",
       "contentWidth": 960,
       "radiusLinked": false,
@@ -88,6 +87,31 @@
       "labelSize": 14,
       "buttonSize": 100
     },
+    "typography": {
+      "globalFamily": "Inter",
+      "roles": {
+        "heading": {
+          "family": "Inter",
+          "sizePreset": "l",
+          "weight": "600"
+        },
+        "timer": {
+          "family": "Inter",
+          "sizePreset": "l",
+          "weight": "700"
+        },
+        "label": {
+          "family": "Inter",
+          "sizePreset": "s",
+          "weight": "600"
+        },
+        "button": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "weight": "600"
+        }
+      }
+    },
     "settings": {
       "language": "en-US",
       "customCSS": "",
@@ -107,8 +131,8 @@
     "  <tooldrawer-field type='textfield' size='md' path='timer.personalCountdown.timeAmount' label='Duration amount' show-if=\"timer.mode == 'personal'\" />",
     "  <tooldrawer-field type='dropdown-actions' size='md' path='timer.personalCountdown.timeUnit' label='Duration unit' placeholder='Choose unit' value='{{timer.personalCountdown.timeUnit}}' options='[{&quot;label&quot;:&quot;Minutes&quot;,&quot;value&quot;:&quot;minutes&quot;},{&quot;label&quot;:&quot;Hours&quot;,&quot;value&quot;:&quot;hours&quot;},{&quot;label&quot;:&quot;Days&quot;,&quot;value&quot;:&quot;days&quot;}]' show-if=\"timer.mode == 'personal'\" />",
     "  <tooldrawer-field type='toggle' size='md' path='timer.personalCountdown.repeatEnabled' label='Repeat countdown' show-if=\"timer.mode == 'personal'\" />",
-    "  <tooldrawer-field type='textfield' size='md' path='timer.personalCountdown.repeatAmount' label='Repeat after' show-if=\"timer.mode == 'personal' && timer.personalCountdown.repeatEnabled == 'true'\" />",
-    "  <tooldrawer-field type='dropdown-actions' size='md' path='timer.personalCountdown.repeatUnit' label='Repeat unit' placeholder='Choose unit' value='{{timer.personalCountdown.repeatUnit}}' options='[{&quot;label&quot;:&quot;Minutes&quot;,&quot;value&quot;:&quot;minutes&quot;},{&quot;label&quot;:&quot;Hours&quot;,&quot;value&quot;:&quot;hours&quot;},{&quot;label&quot;:&quot;Days&quot;,&quot;value&quot;:&quot;days&quot;}]' show-if=\"timer.mode == 'personal' && timer.personalCountdown.repeatEnabled == 'true'\" />",
+    "  <tooldrawer-field type='textfield' size='md' path='timer.personalCountdown.repeatAmount' label='Repeat after' show-if=\"timer.mode == 'personal' && timer.personalCountdown.repeatEnabled == true\" />",
+    "  <tooldrawer-field type='dropdown-actions' size='md' path='timer.personalCountdown.repeatUnit' label='Repeat unit' placeholder='Choose unit' value='{{timer.personalCountdown.repeatUnit}}' options='[{&quot;label&quot;:&quot;Minutes&quot;,&quot;value&quot;:&quot;minutes&quot;},{&quot;label&quot;:&quot;Hours&quot;,&quot;value&quot;:&quot;hours&quot;},{&quot;label&quot;:&quot;Days&quot;,&quot;value&quot;:&quot;days&quot;}]' show-if=\"timer.mode == 'personal' && timer.personalCountdown.repeatEnabled == true\" />",
     "  <tooldrawer-field type='textfield' size='md' path='timer.numberCounter.targetNumber' label='Target number' show-if=\"timer.mode == 'number'\" />",
     "  <tooldrawer-field type='textfield' size='md' path='timer.numberCounter.startingNumber' label='Starting number' show-if=\"timer.mode == 'number'\" />",
     "  <tooldrawer-field type='textfield' size='md' path='timer.numberCounter.duration' label='Duration (seconds)' show-if=\"timer.mode == 'number'\" />",
@@ -124,23 +148,23 @@
     "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.contentWidth' label='Width in pixels' show-if=\"pod.widthMode == 'fixed'\" />",
     "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='[{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Align left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Align right&quot;,&quot;value&quot;:&quot;right&quot;},{&quot;label&quot;:&quot;Align top&quot;,&quot;value&quot;:&quot;top&quot;},{&quot;label&quot;:&quot;Align bottom&quot;,&quot;value&quot;:&quot;bottom&quot;}]' />",
     "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='false' />",
-    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == 'true' || pod.radiusLinked == '' || pod.radiusLinked == undefined\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == 'false'\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "  <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.paddingLinked' label='Link pod padding' value='{{pod.paddingLinked}}' default='false' />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.padding' label='Pod padding (px)' show-if=\"pod.paddingLinked == 'true' || pod.paddingLinked == '' || pod.paddingLinked == undefined\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingTop' label='Pod top padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingRight' label='Pod right padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingBottom' label='Pod bottom padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingLeft' label='Pod left padding (px)' show-if=\"pod.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.padding' label='Pod padding (px)' show-if=\"pod.paddingLinked == true\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingTop' label='Pod top padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingRight' label='Pod right padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingBottom' label='Pod bottom padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingLeft' label='Pod left padding (px)' show-if=\"pod.paddingLinked == false\" />",
     "  <tooldrawer-field-podstagelayout type='toggle' size='md' path='stage.paddingLinked' label='Link stage padding' value='{{stage.paddingLinked}}' default='false' />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.padding' label='Stage padding (px)' show-if=\"stage.paddingLinked == 'true' || stage.paddingLinked == '' || stage.paddingLinked == undefined\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingTop' label='Stage top padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingRight' label='Stage right padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingBottom' label='Stage bottom padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
-    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingLeft' label='Stage left padding (px)' show-if=\"stage.paddingLinked == 'false'\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.padding' label='Stage padding (px)' show-if=\"stage.paddingLinked == true\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingTop' label='Stage top padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingRight' label='Stage right padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingBottom' label='Stage bottom padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "  <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingLeft' label='Stage left padding (px)' show-if=\"stage.paddingLinked == false\" />",
     "</bob-panel>",
     "",
 "<bob-panel id='appearance'>",
@@ -167,7 +191,7 @@
 "</bob-panel>",
     "<bob-panel id='behavior'>",
     "  <tooldrawer-field type='toggle' size='md' path='actions.showButtonDuring' label='Show button' />",
-    "  <div data-bob-showif=\"actions.showButtonDuring == 'true'\">",
+    "  <div data-bob-showif=\"actions.showButtonDuring == true\">",
     "    <tooldrawer-field type='textfield' size='md' path='actions.buttonText' label='Button text' />",
     "    <tooldrawer-field type='textfield' size='md' path='actions.buttonUrl' label='Button URL' />",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='actions.buttonStyle' label='Button style' placeholder='Choose style' value='{{actions.buttonStyle}}' options='[{&quot;label&quot;:&quot;Primary&quot;,&quot;value&quot;:&quot;primary&quot;},{&quot;label&quot;:&quot;Secondary&quot;,&quot;value&quot;:&quot;secondary&quot;},{&quot;label&quot;:&quot;Ghost&quot;,&quot;value&quot;:&quot;ghost&quot;}]' />",

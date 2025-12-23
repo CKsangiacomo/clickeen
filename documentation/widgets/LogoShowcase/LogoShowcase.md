@@ -10,7 +10,7 @@ STATUS: NORMATIVE — Complete Elfsight Feature Parity (70%+ Coverage) + SSR Per
 - **Category:** Content Display / Social Proof
 - **Competitive Target:** Complete Elfsight Logo Showcase feature set (70%+ coverage)
 - **Performance Target:** <8KB SSR (vs Elfsight 120KB+ client JS)
-- **Renderer:** `venice/lib/renderers/logoshowcase.ts`
+- **Renderer:** Planned Venice SSR renderer (this repo snapshot has no `venice/lib/renderers/*`; Venice currently serves a safe debug shell)
 - **Dieter Components:** Custom carousel/ticker/grid (new components needed)
 
 ### 🎯 Feature Coverage Goal: 70%+ of Elfsight
@@ -1302,7 +1302,7 @@ Vertical stack of three Dieter icon buttons:
 - [ ] CTA button configuration (text, link, show/hide)
 
 ### Phase 2: Layout Modes (4-5 days)
-- [ ] Venice renderer base structure (`venice/lib/renderers/logoshowcase.ts`)
+- [ ] Venice SSR renderer base structure (TBD; current Venice is debug shell in this repo snapshot)
 - [ ] Ticker layout with CSS animation
   - Duplicate logo list for seamless loop
   - Speed control (animation-duration)

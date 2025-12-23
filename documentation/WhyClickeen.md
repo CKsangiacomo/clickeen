@@ -27,12 +27,14 @@ Clickeen is different:
 Clickeen provides embeddable widgets that businesses add to their websites with one line of code.
 
 Core definitions
-- **Widget JSON**: complete software definition (the Widget) - ONE file per widget type
-- **Widget Instance**: the data the program processes - database row with instanceData 
-- **Template**: predefined instanceData configuration within widget JSON (not separate code)
+- **Widget Definition** (Denver widget folder): complete software definition (the widget software) — `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, plus `agent.md` for AI editing
+- **Widget Spec** (`spec.json`): defaults + ToolDrawer markup (`<bob-panel>` + `<tooldrawer-field>`) compiled by Bob
+- **Widget Instance**: the data the software processes — database row with published `config` (Bob holds a working copy in memory as `instanceData`)
+- **Template**: predefined config baseline (data) applied to an instance (not separate code)
 - **publicId**: instance unique identifier in DB
-- **widgetName**: unique widget identifier referencing the widget JSON definition
-- **instanceData**: specific instance's custom values (user's data)
+- **widgetType**: unique widget identifier referencing the widget definition
+- **config**: published instance values (stored in DB; served by Paris)
+- **instanceData**: working copy of config in Bob during editing
 - Single tag: inline = iframe; overlays/popups = script; both load Venice SSR HTML
 - Templates are data: switching templates merges instanceData configurations, same renderer handles all
 
@@ -52,8 +54,8 @@ The catalog will evolve with demand. Each widget includes multiple professionall
 Play without an account (marketing site)
 - Visitor browses widgets on clickeen.com website (Prague)
 - Choose on a widget (e.g., "Contact Form", "FAQ", "Testimonials") and gets directed on the widget's landing page
-- in the widget's landing page users see minibob loaded with a public instance (instances always load in bob/minimbob via Paris `POST /api/instance/from-template`)
-- User can customize instanceData (text, colors, etc.) AND switch templates inside MiniBob (templates are widget instances as well)
+- in the widget's landing page users see MiniBob loaded with a draft instance created upstream (stored in Michael; fetched via Paris `GET /api/instance/:publicId`)
+- User can customize config (text, colors, etc.) AND switch templates inside MiniBob (planned)
 - No signup needed to experiment
 - **NO Save button** in MiniBob (claim persists on signup)
 - **NO "Copy Code" button** in MiniBob
@@ -168,9 +170,9 @@ Without both, AI is useless. With both, it's magic.
 **Clickeen:**
 - Built from scratch with AI in mind
 - Every system has normative documentation
-- Widget JSON is source of truth - complete software definitions in ONE file per widget type
-- Templates are predefined instanceData configurations within widget JSON (not separate code)
-- Bob is DUMB renderer - reads widget JSON uiSchema and displays whatever controls are defined
+- Widget definition (Denver folder) is the source of truth — spec + runtime assets (and an `agent.md` AI contract when AI editing is enabled)
+- Templates are predefined config baselines (data) applied to an instance (not separate code)
+- Bob is a “dumb” shell — compiles `spec.json` into ToolDrawer panels and binds config paths; no per-widget React forms
 - Attributes-only contracts (`data-variant="primary"` not `class="btn-blue-500"`)
 - Single source of truth (Dieter showcase HTML is canonical)
 - Structured JSON schemas for every widget type
@@ -178,12 +180,12 @@ Without both, AI is useless. With both, it's magic.
 - Migration history capturing every decision
 
 **Result:** AI can actually work:
-- Read widget JSON defaults → know what's editable
-- Read widget JSON uiSchema → know how to edit it
+- Read widget defaults → understand starting state
+- Read compiled `controls[]` + `agent.md` → know what it can edit and what it means
 - Read Dieter showcase → generate correct UI components
 - Read Paris API docs → make correct calls
-- Read user's instanceData → understand current state
-- Map "make button red" → update instanceData → Venice renders with change
+- Read user's config → understand current state
+- Output deterministic ops (`{ op, path, value }`) → Bob validates fail-closed → preview updates instantly → publish is separate
 
 ### Why This Is Unfair
 
@@ -200,8 +202,8 @@ AI: "Done!" (narrator: it didn't work)
 ```
 User: "Add email field to my form"
 AI: *reads widget JSON* "contact widget has fields array in defaults"
-AI: *reads Paris docs* "PUT /api/instance/:id with instanceData.fields[]"
-AI: *makes API call* { instanceData: { fields: [...existing, {type: "email"}] } }
+AI: *reads Paris docs* "PUT /api/instance/:publicId with config.fields[]"
+AI: *makes API call* { config: { fields: [...existing, {type: "email"}] } }
 AI: "Added email field"
 User: *sees it working immediately in Venice SSR preview*
 ```
@@ -247,14 +249,14 @@ This isn't just an AI feature. **This is the business model.**
 
 ### Architectural Enabler: Widget-Agnostic Design
 
-**Key insight:** Bob is completely widget-agnostic.
+**Key insight:** Bob is (mostly) widget-agnostic by design.
 
-- **ONE Bob codebase serves ALL 100 widgets**
-- Bob reads widget JSON's `uiSchema` and renders whatever controls are defined
-- Adding a new widget = add ONE JSON file, Bob automatically works
-- Bob has NO widget-specific code - no `if (widgetName === 'faq')` statements
-- ToolDrawer is a dumb renderer using Dieter components
-- Same renderer architecture: Venice has pure function per widget type
+- **ONE Bob codebase serves ALL widgets**
+- Bob compiles each widget’s Denver `spec.json` into ToolDrawer `panels[]` (and optional `controls[]`) and renders/binds them
+- Adding a new widget = add a Denver widget definition folder (`spec.json` + runtime assets; `agent.md` when AI editing is enabled)
+- Target: no widget-specific editor logic; this repo snapshot has some FAQ-only AI helpers while the contract is generalized
+- ToolDrawer is a renderer/binder on top of Dieter components (HTML + `data-bob-path`/`data-bob-showif`)
+- Same separation planned for embeds: Venice renders instances using widget definitions + instance config
 
 **Why this matters:** This architecture is what makes AI-Native design possible. By eliminating widget-specific code and treating all widgets as data configurations, we create a system AI can understand and modify. This is a consequence of AI-first thinking, not a competitive advantage in itself—any competent architecture team could design similarly. What matters is that we designed this way *from day one*, giving us the structural advantage of complete AI legibility.
 

@@ -29,7 +29,7 @@
 }
 
 .diet-popover {
-  --popover-padding: var(--space-1);
+  --popover-padding: var(--space-2);
   --popover-section-gap: var(--space-3);
   inline-size: min(320px, 100%);
   box-sizing: border-box;
@@ -45,19 +45,30 @@
 
 .diet-popover__header {
   padding: 0;
+  padding-inline: var(--control-padding-inline);
   background: transparent;
   border: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2, 0.5rem);
+  inline-size: 100%;
 }
 
 .diet-popover__header-label {
   flex: 1 1 auto;
+  min-inline-size: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+  text-align: start;
 }
 
 .diet-popover__header-trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -73,7 +84,7 @@
 }
 
 .diet-popover__body {
-  padding: var(--space-1);
+  padding: 0;
 }
 
 .diet-popover__content :where(p, ul, ol),

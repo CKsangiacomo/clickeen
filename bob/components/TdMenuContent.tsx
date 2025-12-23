@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PanelId } from '../lib/types';
+import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
 
 declare global {
@@ -92,9 +93,10 @@ type TdMenuContentProps = {
   panelHtml: string;
   widgetKey?: string;
   instanceData: Record<string, unknown>;
-  setValue: (path: string, value: unknown, meta?: { source?: 'field' | 'load' | 'external' | 'unknown'; path?: string; ts?: number }) => void;
-  lastUpdate?: { source: 'field' | 'load' | 'external' | 'unknown'; path: string; ts: number } | null;
-  defaults?: Record<string, unknown>;
+  applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
+  canUndo?: boolean;
+  undoLastOps?: () => void;
+  lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
   dieterAssets?: {
     styles: string[];
     scripts: string[];
@@ -295,54 +297,41 @@ function parseShowIf(raw: string): ShowIfAst | null {
   return parseOr();
 }
 
-function normalizeValue(val: unknown): string | number | boolean | null | undefined {
-  if (val === null || val === undefined) return val;
-  if (typeof val === 'boolean') return val;
-  if (typeof val === 'number') return val;
-  if (typeof val === 'string') {
-    const trimmed = val.trim();
-    if (trimmed === 'true') return true;
-    if (trimmed === 'false') return false;
-    const num = Number(trimmed);
-    if (!Number.isNaN(num) && trimmed !== '') return num;
-    return trimmed;
-  }
-  return val as any;
+function normalizeValue(val: unknown): unknown {
+  return val;
 }
 
-function resolveValue(node: ShowIfAst, data: Record<string, unknown>, defaults?: Record<string, unknown>): unknown {
+function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
   if (node.type === 'path') {
     const val = getAt<unknown>(data, node.value);
-    if (val !== undefined) return val;
-    if (defaults) return getAt<unknown>(defaults, node.value);
     return val;
   }
   if (node.type === 'literal') return node.value;
-  return evalAst(node, data, defaults);
+  return evalAst(node, data);
 }
 
-function evalAst(node: ShowIfAst, data: Record<string, unknown>, defaults?: Record<string, unknown>): boolean {
+function evalAst(node: ShowIfAst, data: Record<string, unknown>): boolean {
   switch (node.type) {
     case 'path': {
-      const value = resolveValue(node, data, defaults);
+      const value = resolveValue(node, data);
       return Boolean(value);
     }
     case 'literal':
       return Boolean(node.value);
     case 'not':
-      return !evalAst(node.child, data, defaults);
+      return !evalAst(node.child, data);
     case 'and':
-      return evalAst(node.left, data, defaults) && evalAst(node.right, data, defaults);
+      return evalAst(node.left, data) && evalAst(node.right, data);
     case 'or':
-      return evalAst(node.left, data, defaults) || evalAst(node.right, data, defaults);
+      return evalAst(node.left, data) || evalAst(node.right, data);
     case 'eq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data, defaults));
-      const rightVal = normalizeValue(resolveValue(node.right, data, defaults));
+      const leftVal = normalizeValue(resolveValue(node.left, data));
+      const rightVal = normalizeValue(resolveValue(node.right, data));
       return leftVal === rightVal;
     }
     case 'neq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data, defaults));
-      const rightVal = normalizeValue(resolveValue(node.right, data, defaults));
+      const leftVal = normalizeValue(resolveValue(node.left, data));
+      const rightVal = normalizeValue(resolveValue(node.right, data));
       return leftVal !== rightVal;
     }
     default:
@@ -369,12 +358,12 @@ function buildShowIfEntries(container: HTMLElement): ShowIfEntry[] {
   return entries;
 }
 
-function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unknown>, defaults?: Record<string, unknown>) {
+function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unknown>) {
   entries.forEach((entry) => {
     let isVisible = true;
     if (entry.ast) {
       try {
-        isVisible = evalAst(entry.ast, data, defaults);
+        isVisible = evalAst(entry.ast, data);
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
@@ -429,27 +418,27 @@ function applyGroupHeaders(scope: HTMLElement) {
   scope.appendChild(rebuilt);
 }
 
-function evaluateShowIf(expr: string | undefined, data: Record<string, unknown>, defaults?: Record<string, unknown>): boolean {
-  if (!expr) return true;
-  try {
-    const ast = parseShowIf(expr);
-    if (!ast) return true;
-    return evalAst(ast, data, defaults);
-  } catch (err) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.warn('[TdMenuContent] Unable to parse showIf expression', expr, err);
-    }
-    return true;
-  }
-}
-
-export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, setValue, defaults, dieterAssets, lastUpdate }: TdMenuContentProps) {
+export function TdMenuContent({
+  panelId,
+  panelHtml,
+  widgetKey,
+  instanceData,
+  applyOps,
+  canUndo,
+  undoLastOps,
+  dieterAssets,
+  lastUpdate,
+}: TdMenuContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderKey, setRenderKey] = useState(0);
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
   const activePathRef = useRef<string | null>(null);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const lastUpdateRef = useRef<TdMenuContentProps['lastUpdate']>();
+  const [aiInstruction, setAiInstruction] = useState('Make it concise, friendly, and helpful.');
+  const [aiStatus, setAiStatus] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiLastAppliedPath, setAiLastAppliedPath] = useState<string | null>(null);
 
   useEffect(() => {
     lastUpdateRef.current = lastUpdate ?? null;
@@ -466,7 +455,9 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
     if (!container) return;
 
     const handleFocusIn = (event: FocusEvent) => {
-      activePathRef.current = resolvePathFromTarget(event.target);
+      const path = resolvePathFromTarget(event.target);
+      activePathRef.current = path;
+      if (path) setSelectedPath(path);
     };
     const handleFocusOut = (event: FocusEvent) => {
       const next = event.relatedTarget as HTMLElement | null;
@@ -482,6 +473,94 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
       container.removeEventListener('focusout', handleFocusOut);
     };
   }, [panelHtml]);
+
+  useEffect(() => {
+    setAiError(null);
+    setAiStatus('idle');
+    setAiLastAppliedPath(null);
+  }, [selectedPath]);
+
+  const faqAnswerContext = useMemo(() => {
+    if (widgetKey !== 'faq') return null;
+    if (!selectedPath) return null;
+
+    const match = selectedPath.match(/^sections\.(\d+)\.faqs\.(\d+)\.answer$/);
+    if (!match) return null;
+
+    const sectionIndex = Number(match[1]);
+    const faqIndex = Number(match[2]);
+    const questionPath = `sections.${sectionIndex}.faqs.${faqIndex}.question`;
+    const sectionTitlePath = `sections.${sectionIndex}.title`;
+
+    const question = getAt<unknown>(instanceData, questionPath);
+    const sectionTitle = getAt<unknown>(instanceData, sectionTitlePath);
+    const existingAnswer = getAt<unknown>(instanceData, selectedPath);
+
+    return {
+      path: selectedPath,
+      question: typeof question === 'string' ? question : String(question ?? ''),
+      existingAnswer: typeof existingAnswer === 'string' ? existingAnswer : String(existingAnswer ?? ''),
+      sectionTitle: typeof sectionTitle === 'string' ? sectionTitle : String(sectionTitle ?? ''),
+    };
+  }, [widgetKey, selectedPath, instanceData]);
+
+  const handleGenerateFaqAnswer = async () => {
+    if (!faqAnswerContext) return;
+    setAiError(null);
+    setAiStatus('loading');
+
+    try {
+      const res = await fetch('/api/ai/faq-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: faqAnswerContext.path,
+          question: faqAnswerContext.question,
+          existingAnswer: faqAnswerContext.existingAnswer,
+          instruction: aiInstruction,
+        }),
+      });
+
+      const text = await res.text();
+      let payload: any = null;
+      try {
+        payload = text ? JSON.parse(text) : null;
+      } catch {
+        payload = null;
+      }
+
+      if (!res.ok) {
+        const issueMessage = Array.isArray(payload?.issues)
+          ? (payload.issues as any[]).map((i) => (i && typeof i.message === 'string' ? i.message : '')).filter(Boolean)
+          : Array.isArray(payload)
+            ? (payload as any[]).map((i) => (i && typeof i.message === 'string' ? i.message : '')).filter(Boolean)
+            : [];
+        const message =
+          typeof payload?.message === 'string'
+            ? payload.message
+            : issueMessage.length
+              ? issueMessage.join('\n')
+            : typeof payload?.error === 'string'
+              ? payload.error
+              : text || `AI request failed (${res.status})`;
+        throw new Error(message);
+      }
+
+      const ops = Array.isArray(payload?.ops) ? (payload.ops as WidgetOp[]) : null;
+      if (!ops || ops.length === 0) throw new Error('AI returned no ops');
+
+      const applied = applyOps(ops);
+      if (!applied.ok) {
+        throw new Error(applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n'));
+      }
+
+      setAiLastAppliedPath(faqAnswerContext.path);
+      setAiStatus('done');
+    } catch (err) {
+      setAiStatus('idle');
+      setAiError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   // Inject panel HTML when it changes
   useEffect(() => {
@@ -506,12 +585,20 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
       });
   }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts]);
 
-  // Bind controls: set values from instanceData (with defaults fallback), attach listeners, honor showIf
+  // Bind controls: render values from instanceData, emit strict ops, honor showIf
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleContainerChange = (event: Event) => {
+    const applySet = (path: string, rawValue: unknown) => {
+      const applied = applyOps([{ op: 'set', path, value: rawValue }]);
+      if (!applied.ok && process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('[TdMenuContent] Failed to apply set op', applied.errors);
+      }
+    };
+
+    const handleContainerEvent = (event: Event) => {
       const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
       if (!target) return;
       const path = resolvePathFromTarget(target);
@@ -519,58 +606,45 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         if (path === 'pod.radiusLinked' && target.checked) {
-          const source =
-            (getAt(instanceData, 'pod.radiusTL') ??
-              getAt(instanceData, 'pod.radiusTR') ??
-              getAt(instanceData, 'pod.radiusBR') ??
-              getAt(instanceData, 'pod.radiusBL') ??
-              getAt(instanceData, 'pod.radius') ??
-              (defaults ? getAt(defaults, 'pod.radius') : undefined) ??
-              '') as unknown;
-          setValue(path, true, { source: 'field', path, ts: Date.now() });
-          ['pod.radius', 'pod.radiusTL', 'pod.radiusTR', 'pod.radiusBR', 'pod.radiusBL'].forEach((p) => {
-            setValue(p, source, { source: 'field', path: p, ts: Date.now() });
-          });
+          const source = getAt<unknown>(instanceData, 'pod.radiusTL');
+          const ops: WidgetOp[] = [
+            { op: 'set', path: 'pod.radiusLinked', value: true },
+            { op: 'set', path: 'pod.radius', value: source },
+            { op: 'set', path: 'pod.radiusTL', value: source },
+            { op: 'set', path: 'pod.radiusTR', value: source },
+            { op: 'set', path: 'pod.radiusBR', value: source },
+            { op: 'set', path: 'pod.radiusBL', value: source },
+          ];
+          applyOps(ops);
           return;
         }
-        setValue(path, target.checked, { source: 'field', path, ts: Date.now() });
+        applySet(path, target.checked);
         return;
       }
 
       if ('value' in target) {
         const rawValue = (target as HTMLInputElement).value;
-        if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
-          try {
-            const parsed = rawValue ? JSON.parse(rawValue) : [];
-            setValue(path, parsed, { source: 'field', path, ts: Date.now() });
-          } catch {
-            setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
-          }
-        } else {
-          setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
-        }
+        applySet(path, rawValue);
       }
     };
 
-    container.addEventListener('change', handleContainerChange, true);
+    container.addEventListener('input', handleContainerEvent, true);
+    container.addEventListener('change', handleContainerEvent, true);
 
     const fields = Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
-
-    const cleanupFns: Array<() => void> = [];
 
     fields.forEach((field) => {
       const path = field.getAttribute('data-bob-path');
       if (!path) return;
 
       const rawValue = getAt(instanceData, path);
-      const defaultValue = defaults ? getAt(defaults, path) : undefined;
-      const value = rawValue === undefined ? defaultValue : rawValue;
+      const value = rawValue;
 
       const isActive = activePathRef.current === path;
       const lastUpdate = lastUpdateRef.current;
 
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
-        const nextChecked = Boolean(value);
+        const nextChecked = value === true;
         if (isActive) return;
         if (field.checked !== nextChecked) {
           field.checked = nextChecked;
@@ -580,7 +654,7 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
           field instanceof HTMLInputElement && field.dataset.bobJson != null
             ? (() => {
                 try {
-                  return JSON.stringify(value ?? defaultValue ?? []);
+                  return JSON.stringify(value ?? []);
                 } catch {
                   return '';
                 }
@@ -591,7 +665,7 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
 
         const currentValue = (field as HTMLInputElement).value;
         const unchanged = currentValue === nextValue;
-        const isEcho = lastUpdate && lastUpdate.source === 'field' && lastUpdate.path === path;
+        const isEcho = lastUpdate && lastUpdate.source === 'ops' && lastUpdate.path === path;
         if (isActive || unchanged) {
           // Skip if user is typing here or nothing changed.
         } else if (!isEcho) {
@@ -615,61 +689,20 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
           }
         }
       }
-
-      const handler = (event: Event) => {
-        const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
-        if (!target) return;
-
-        if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.log('[checkbox change]', { path, checked: target.checked });
-          }
-          setValue(path, target.checked, { source: 'field', path, ts: Date.now() });
-          return;
-        }
-
-        if ('value' in target) {
-          const rawValue = (target as HTMLInputElement).value;
-          if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
-            try {
-              const parsed = rawValue ? JSON.parse(rawValue) : [];
-              setValue(path, parsed, { source: 'field', path, ts: Date.now() });
-            } catch {
-              setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
-            }
-          } else {
-            setValue(path, rawValue, { source: 'field', path, ts: Date.now() });
-          }
-        }
-      };
-
-      if (field instanceof HTMLInputElement && field.type === 'checkbox') {
-        field.addEventListener('change', handler);
-        cleanupFns.push(() => field.removeEventListener('change', handler));
-      } else {
-        field.addEventListener('input', handler);
-        field.addEventListener('change', handler);
-        cleanupFns.push(() => {
-          field.removeEventListener('input', handler);
-          field.removeEventListener('change', handler);
-        });
-      }
     });
 
-
     return () => {
-      cleanupFns.forEach((fn) => fn());
-      container.removeEventListener('change', handleContainerChange, true);
+      container.removeEventListener('input', handleContainerEvent, true);
+      container.removeEventListener('change', handleContainerEvent, true);
     };
-  }, [instanceData, setValue, panelHtml, renderKey, defaults]);
+  }, [instanceData, applyOps, panelHtml, renderKey]);
 
   // Re-apply show-if visibility when data changes
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     showIfEntriesRef.current = buildShowIfEntries(container);
-    applyShowIfVisibility(showIfEntriesRef.current, instanceData, defaults || undefined);
+    applyShowIfVisibility(showIfEntriesRef.current, instanceData);
   });
 
   if (!panelId) {
@@ -683,6 +716,77 @@ export function TdMenuContent({ panelId, panelHtml, widgetKey, instanceData, set
   return (
     <div className="tdmenucontent">
       <div className="heading-3">{panelId}</div>
+      {faqAnswerContext ? (
+        <section
+          style={{
+            marginTop: 'var(--space-2)',
+            padding: 'var(--space-2)',
+            border: '1px solid var(--color-system-gray-5)',
+            borderRadius: 'var(--control-radius-md)',
+            background: 'var(--color-system-gray-6-step5)',
+          }}
+          aria-label="AI generate"
+        >
+          <div className="label-s">Generate answer with AI</div>
+          <div className="caption" style={{ opacity: 0.7, marginTop: 'var(--space-1)' }}>
+            {faqAnswerContext.sectionTitle ? `Section: ${faqAnswerContext.sectionTitle}` : null}
+            {faqAnswerContext.sectionTitle ? ' • ' : null}
+            {faqAnswerContext.question ? `Q: ${faqAnswerContext.question}` : 'Select an answer field to generate.'}
+          </div>
+
+          <textarea
+            className="body-s"
+            value={aiInstruction}
+            onChange={(e) => setAiInstruction(e.target.value)}
+            rows={2}
+            style={{
+              width: '100%',
+              marginTop: 'var(--space-2)',
+              padding: 'var(--space-2)',
+              borderRadius: 'var(--control-radius-md)',
+              border: '1px solid var(--color-system-gray-5)',
+            }}
+            placeholder="Optional instruction (tone, length, etc.)"
+          />
+
+          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="primary"
+              type="button"
+              onClick={handleGenerateFaqAnswer}
+              disabled={aiStatus === 'loading' || !faqAnswerContext.question}
+            >
+              <span className="diet-btn-txt__label">{aiStatus === 'loading' ? 'Generating…' : 'Generate'}</span>
+            </button>
+            {undoLastOps ? (
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="neutral"
+                type="button"
+                onClick={undoLastOps}
+                disabled={!canUndo}
+              >
+                <span className="diet-btn-txt__label">Undo</span>
+              </button>
+            ) : null}
+          </div>
+
+          {aiLastAppliedPath ? (
+            <div className="caption" style={{ opacity: 0.7, marginTop: 'var(--space-2)' }}>
+              Applied to: {aiLastAppliedPath}
+            </div>
+          ) : null}
+
+          {aiError ? (
+            <pre className="caption" style={{ whiteSpace: 'pre-wrap', marginTop: 'var(--space-2)' }}>
+              {aiError}
+            </pre>
+          ) : null}
+        </section>
+      ) : null}
       <div className="tdmenucontent__fields" ref={containerRef} />
     </div>
   );

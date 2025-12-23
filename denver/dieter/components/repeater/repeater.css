@@ -4,11 +4,15 @@
   padding: var(--space-2);
   border: none;
   border-radius: var(--control-radius-sm, 0.25rem);
-  background: var(--color-system-teal-5);
+  background: var(--color-system-gray-6);
+}
+
+.diet-repeater__icon-stash {
+  display: none;
 }
 
 .diet-repeater[data-reorder="on"] {
-  background: var(--color-system-purple-5);
+  background: var(--color-system-gray-6);
 }
 
 .diet-repeater__header {
@@ -41,6 +45,18 @@
   gap: var(--space-2);
 }
 
+.diet-repeater__reorder-icon--active {
+  display: none !important;
+}
+
+.diet-repeater[data-reorder="on"] .diet-repeater__reorder-icon {
+  display: none !important;
+}
+
+.diet-repeater[data-reorder="on"] .diet-repeater__reorder-icon--active {
+  display: inline-flex !important;
+}
+
 .diet-repeater__toggle .diet-toggle__label {
   white-space: nowrap;
 }
@@ -60,9 +76,9 @@
   position: relative;
   padding: var(--space-1);
   display: block;
-  border: 1px solid var(--color-system-teal-5);
+  border: 1px solid var(--color-system-gray-6);
   border-radius: var(--radius-3);
-  background: var(--color-system-teal-5);
+  background: var(--color-system-gray-6);
   transition:
     border-color var(--duration-base, 160ms) ease,
     background-color var(--duration-base, 160ms) ease,
@@ -78,13 +94,13 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item {
-  border-color: var(--color-system-blue-4) !important;
-  background: var(--color-system-blue-4) !important;
+  border-color: var(--color-system-gray-6) !important;
+  background: var(--color-system-gray-6) !important;
   cursor: grab;
   user-select: none;
   position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-1);
 }
 
@@ -93,13 +109,13 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item:hover {
-  border-color: var(--color-system-blue-4) !important;
-  background: var(--color-system-blue-4) !important;
+  border-color: var(--color-system-gray-6) !important;
+  background: var(--color-system-gray-6) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragging {
-  border-color: var(--color-system-blue-4) !important;
-  background: var(--color-system-blue-4) !important;
+  border-color: var(--color-system-gray-6) !important;
+  background: var(--color-system-gray-6) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before,
@@ -109,7 +125,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--color-system-blue-4);
+  background: var(--color-system-gray-6);
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before {
@@ -123,6 +139,8 @@
 .diet-repeater__item-body {
   display: grid;
   gap: var(--space-2);
+  flex: 1 1 auto;
+  min-inline-size: 0;
 }
 
 .diet-repeater__item-remove {

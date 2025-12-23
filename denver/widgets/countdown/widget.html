@@ -10,7 +10,7 @@
 <body>
   <div class="stage" data-role="stage">
     <div class="pod" data-role="pod">
-      <div class="ck-countdown" data-role="container">
+      <div class="ck-countdown" data-ck-widget="countdown" data-role="container">
         <header class="ck-countdown__header">
           <h2 class="ck-countdown__heading heading-4" data-role="heading">Get 50% off before it's too late ⏰</h2>
         </header>
@@ -62,12 +62,12 @@
             Shop now
           </a>
         </div>
-        <footer class="ck-countdown__backlink" data-role="backlink">
-          <a href="https://clickeen.com" target="_blank" rel="noreferrer">Made with Clickeen</a>
-        </footer>
+        <script src="../shared/typography.js" defer></script>
+        <script src="../shared/stagePod.js" defer></script>
+        <script src="../shared/branding.js" defer></script>
+        <script src="./widget.client.js" defer></script>
       </div>
     </div>
   </div>
-    <script src="./widget.client.js" defer></script>
   </body>
 </html>

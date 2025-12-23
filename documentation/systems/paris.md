@@ -10,7 +10,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 **Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).
 **Owner:** Vercel project `c-keen-api`.
 **Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).
-**Phase-1 Endpoints:** `POST /api/instance (disabled)`, `POST /api/instance/from-template`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`.
+**Phase-1 Endpoints:** `POST /api/instance (disabled)`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`. (`GET /api/instances` exists for dev tooling only.)
 **Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.
 **Common mistakes:** Treating PUT as upsert, calling Paris directly from browser surfaces, skipping idempotency key handling.
 
@@ -18,12 +18,12 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **Bob makes EXACTLY 2 calls to Paris per editing session:**
 
-1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets published instanceData
+1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets published config
 2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish → saves working copy
 
 **Between load and publish:**
 - User edits in ToolDrawer → Bob updates React state (NO API calls to Paris)
-- Bob sends updated instanceData to preview via postMessage (NO API calls to Paris)
+- Bob sends updated config to preview via postMessage (NO API calls to Paris)
 - Preview updates in real-time (NO API calls to Paris)
 - ZERO database writes
 
@@ -39,45 +39,37 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details.
 
-### 🔒 CRITICAL: Widget JSON vs Instance
+### 🔒 CRITICAL: Widget Definition vs Instance
 
 **Paris manages INSTANCES, NOT widget definitions.**
 
-**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/faq.json`):
-- Complete functional software for a widget type
-- Lives in CODEBASE (paris/lib/widgets/)
-- **NOT STORED in database**
-- **NOT EDITABLE by users**
-- Contains: metadata, defaults, templates, uiSchema (defines ToolDrawer UI and functionality)
-- Served via `GET /api/widgets/:widgetType` API endpoint
-- This IS the widget - the complete functional software
+**Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Denver/CDN):
+- Platform-controlled widget spec + runtime assets
+- In-repo source: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- **NOT stored in Michael**
+- **NOT served by Paris**
 
-**Widget Instance = THE DATA** (database table: `widget_instances`):
-- ONE user's specific widget instance with their custom instanceData
-- Stored in database
-- **EDITABLE by users** (via Bob → Paris PUT)
-- Contains: `publicId`, `widgetName` (string identifier like "faq"), `instanceData` (user's actual values)
-- All instances of the same widget type have the same widgetName but different instanceData
+**Widget Instance config = THE DATA** (Michael tables: `widget_instances`, `widgets`):
+- ONE user’s specific instance config (`widget_instances.config`)
+- Associated widget type is `widgets.type` (surfaced as `widgetType`)
+- **EDITABLE by users** (via Bob → Paris `PUT /api/instance/:publicId`)
 
-**What Paris stores:**
+**What Paris returns for an instance:**
 ```json
 {
   "publicId": "wgt_abc123",
-  "widgetName": "faq",
-  "instanceData": {
-    "title": "My Customer FAQs",
-    "categories": [...]
+  "status": "draft",
+  "widgetType": "faq",
+  "config": {
+    "title": "My Customer FAQs"
   }
 }
 ```
 
-**Paris endpoints:**
-- `GET /api/widgets/:widgetType` — Returns complete Widget JSON (the software)
-- `POST /api/instance/from-template` — Creates instance from widget JSON template
-- `GET /api/instance/:publicId` — Loads instance + merges with widget JSON defaults
-- `PUT /api/instance/:publicId` — Updates instance instanceData (user's data only)
-
-**Paris NEVER modifies widget JSON files. Users edit instances, Paris stores instance data.**
+**Paris endpoints (instance data only):**
+- `GET /api/instance/:publicId` — Loads the instance snapshot (config + metadata)
+- `PUT /api/instance/:publicId` — Updates instance `config`/`status`/`templateId` (workspace-auth)
+- `POST /api/instance` — Disabled in this repo snapshot (returns 422)
 
 # Paris — HTTP API Service (Phase-1)
 
@@ -102,49 +94,19 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 
 ## Phase-1 API Endpoints
 
-### Widget JSON API (Phase-1)
+### Widget Definitions (Non-Paris)
 
-- `GET /api/widgets/:widgetType`
-  - Returns complete Widget JSON (the software) for a widget type
-  - Public endpoint (no authentication required)
-  - Widget JSON files live in `/paris/lib/widgets/{widgetName}.json`
-  - Bob fetches this to render ToolDrawer UI defined in uiSchema
-  - Venice fetches this to execute rendering logic
-  - _Example request:_
-    ```http
-    GET /api/widgets/faq
-    ```
-  - _Example response (200):_
-    ```json
-    {
-      "widgetName": "faq",
-      "version": "1.0.0",
-      "metadata": {
-        "displayName": "FAQ",
-        "description": "Frequently Asked Questions widget"
-      },
-      "defaults": {
-        "title": "Frequently Asked Questions",
-        "categories": []
-      },
-      "templates": [...],
-      "uiSchema": {
-        "tdmenu": [...],
-        "tdmenucontent": {...}
-      }
-    }
-    ```
-  - Returns 404 if widget type not found
-  - Response cached with `Cache-Control: public, max-age=300, s-maxage=600`
+Paris does **not** serve widget definitions. Widget definitions (“Widget JSON”) live in **Denver/CDN**.
+
+- Source in-repo: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
+- Venice embed rendering should load widget runtime assets from Denver; Paris only provides instance config via `/api/instance/:publicId`
 
 ### Instance Management (Phase-1)
-`publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`.
+`publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`. Widget type is `widgets.type` (surfaced as `widgetType`).
 
 - `POST /api/instance` (Phase‑1 status: disabled)
-  - In Phase‑1, instance creation must use `POST /api/instance/from-template` (workspace‑scoped). The plain create endpoint returns 422 with guidance.
-- `POST /api/instance/from-template`
-  - Workspace flow for creating from a catalog template. Body includes `{ widgetName, templateId, publicId?, overrides? }`.
-  - Returns 201 instance payload plus `{ draftToken }`. Paris stores the token in `widget_instances.draft_token`; Venice MUST receive it via Authorization header until claim.
+  - Returns 422 with guidance in this repo snapshot. Instance creation is intentionally out of Paris scope.
 - `GET /api/instance/:publicId`
   - Loads the latest instance snapshot (service role or authorized workspace member). Returns 200 payload or 404 `NOT_FOUND`.
   - _Example response (200):_
@@ -152,9 +114,10 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     {
       "publicId": "wgt_42yx31",
       "status": "draft",
-      "widgetName": "faq",
+      "widgetType": "faq",
+      "templateId": null,
       "schemaVersion": "2025-09-01",
-      "instanceData": {
+      "config": {
         "title": "Frequently Asked Questions",
         "categories": [...]
       },
@@ -163,26 +126,27 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     }
     ```
 - `PUT /api/instance/:publicId`
-  - Updates instanceData/status/template. Unknown instanceData fields reset to target template defaults. Returns 200 payload, 404 if missing, 422 on validation errors.
-  - _Example validation error (CONFIG_INVALID, 422):_
+  - Updates `config` and/or `status` and/or `templateId` (workspace-authenticated). Returns 200 payload, 404 if missing, 422 on validation errors.
+  - _Example validation error (422):_
     ```http
     PUT /api/instance/wgt_42yx31
     Authorization: Bearer <workspace JWT>
     Content-Type: application/json
 
-    { "instanceData": { "categories": [{ "title": "" }] } }
+    { "config": { "categories": [{ "title": "" }] } }
     ```
     ```json
-    [ { "path": "instanceData.categories.0.title", "message": "Title is required" } ]
+    [ { "path": "categories.0.title", "message": "Title is required" } ]
     ```
   - _Example response (200):_
     ```json
     {
       "publicId": "wgt_42yx31",
       "status": "draft",
-      "widgetName": "faq",
+      "widgetType": "faq",
+      "templateId": null,
       "schemaVersion": "2025-09-01",
-      "instanceData": {
+      "config": {
         "title": "Frequently Asked Questions",
         "categories": [...]
       },
@@ -191,25 +155,26 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     }
     ```
   - Template switch safety (Phase‑1): Two‑phase, non‑destructive flow.
-    - Dry‑run preview (no write): `PUT /api/instance/:publicId?dryRun=true` or body `{ "dryRun": true }` returns 200 with:
+    - Dry‑run preview (no write): `PUT /api/instance/:publicId?dryRun=true` returns 200 with:
       ```json
       {
         "action": "template-switch-preview",
         "target": { "templateId": "…", "schemaVersion": "…" },
-        "diff": { "dropped": ["instanceData.oldField"], "added": ["instanceData.newDefault"] },
-        "proposedInstanceData": { /* transformed instanceData */ },
-        "errors": [ { "path": "instanceData.categories.0.title", "message": "Required field" } ]
+        "diff": { "dropped": ["oldField"], "added": ["newDefault"] },
+        "proposedConfig": { /* transformed config */ },
+        "errors": [ { "path": "categories.0.title", "message": "Required field" } ]
       }
       ```
-    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed instanceData + target template/schema after validation.
+    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed config + target template/schema after validation.
     - If `templateId` is provided without `confirm`, returns `409 CONFIRM_REQUIRED` and a `diff` payload; nothing is persisted.
-    - Validation order: transform (drop unknowns) → apply target defaults → validate via Geneva (422 on failure) → persist on confirm.
+    - Validation order: transform (drop unknowns) → apply schema defaults → validate via Geneva (422 on failure) → persist on confirm.
 - `POST /api/claim`
-  - `{ draftToken }` → 200 instance payload. Invalid/expired tokens return 401/410.
+  - Requires workspace-authenticated request. Body includes `{ draftToken, workspaceId? }`.
+  - Invalid/expired tokens return 410 `TOKEN_REVOKED`.
   - **On success (200):** Paris MUST
     - Set `widget_instances.draft_token = NULL`
     - Set `widget_instances.claimed_at = now()`
-    - Issue workspace-scoped embed tokens; prior draft tokens become invalid (`TOKEN_REVOKED`).
+    - Issue an embed token; prior draft tokens become invalid (`TOKEN_REVOKED`).
   - _Example request:_
     ```http
     POST /api/claim
@@ -221,16 +186,23 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     _Example response (200):_
     ```json
     {
-      "publicId": "wgt_42yx31",
-      "status": "published",
-      "widgetName": "faq",
-      "schemaVersion": "2025-09-01",
-      "instanceData": {
-        "title": "Frequently Asked Questions",
-        "categories": [...]
+      "instance": {
+        "publicId": "wgt_42yx31",
+        "status": "published",
+        "widgetType": "faq",
+        "templateId": null,
+        "schemaVersion": "2025-09-01",
+        "config": {
+          "title": "Frequently Asked Questions",
+          "categories": []
+        },
+        "branding": { "hide": false, "enforced": true },
+        "updatedAt": "2025-09-28T19:20:11.000Z"
       },
-      "branding": { "hide": true, "enforced": false },
-      "updatedAt": "2025-09-28T19:20:11.000Z"
+      "embedToken": {
+        "token": "cket_9c0b5e57d7b1",
+        "expiresAt": "2025-10-28T19:20:11.000Z"
+      }
     }
     ```
     _Example 410 response:_
@@ -239,14 +211,15 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
     { "error": "TOKEN_REVOKED" }
     ```
 
-**Canonical instance payload**
+**Canonical instance payload (GET/PUT `/api/instance/:publicId`)**
 ```json
 {
   "publicId": "wgt_42yx31",
   "status": "draft",
-  "widgetName": "faq",
+  "widgetType": "faq",
+  "templateId": null,
   "schemaVersion": "2025-09-01",
-  "instanceData": {
+  "config": {
     "title": "Frequently Asked Questions",
     "categories": [...]
   },
@@ -259,26 +232,25 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 | API field | DB column/property |
 | --- | --- |
 | `publicId` | `widget_instances.public_id` |
-| `widgetName` | `widget_instances.widget_name` (string identifier like "faq") |
+| `status` | `widget_instances.status` |
+| `widgetType` | `widgets.type` (via `widget_instances.widget_id → widgets.id`) |
+| `templateId` | `widget_instances.template_id` |
 | `schemaVersion` | `widget_instances.schema_version` |
-| `instanceData` | `widget_instances.config` (JSONB column with user's custom values) |
+| `config` | `widget_instances.config` (JSONB column with user's custom values) |
 | `branding.hide` | Derived from entitlements (not persisted; Venice/Paris enforce based on plan) |
 | `updatedAt` | `widget_instances.updated_at` |
 
 > Branding fields (`branding.hide`, `branding.enforced`) are derived from entitlements and are never persisted in the database.
 
 **publicId generation (Phase-1)**
-- Paris generates publicIds as `wgt_{base36_6}` (e.g., `wgt_f3k9qz`) when creating an instance. This prefix is reserved for widgets in Phase-1 to keep analytics and Venice contracts consistent.
+- In this repo snapshot, Paris does not create instances. `publicId` generation happens upstream (outside Paris) and is persisted in Michael.
 
 ### Token Management
 Embed tokens live in `embed_tokens` and are scoped per instance/workspace.
 
-- `POST /api/token` with `{ publicId, action: "issue" }` → 201 `{ token, publicId }`.
+- `POST /api/token` with `{ publicId, action: "issue" }` → 201 `{ token, publicId, expiresAt }`.
 - `POST /api/token` with `{ publicId, action: "revoke" }` → 204.
 - `POST /api/token` with `{ publicId, action: "list" }` → 200 `{ tokens: [...] }`.
-- `GET /api/widgets` → Public catalog of widget types (id, name, description, defaults).
-- `GET /api/templates?widgetName=…` → List templates for the given widget type (id, name, premium flag, schemaVersion, descriptor, preview URL).
-  - Enforcement: free plan may preview premium templates but cannot select them; selection attempts return 403 FORBIDDEN.
 
 _Example token issue request/response_
 ```http
@@ -289,7 +261,7 @@ Content-Type: application/json
 { "publicId": "wgt_42yx31", "action": "issue" }
 ```
 ```json
-{ "token": "cket_9c0b5e57d7b1", "publicId": "wgt_42yx31" }
+{ "token": "cket_9c0b5e57d7b1", "publicId": "wgt_42yx31", "expiresAt": "2025-10-01T00:00:00.000Z" }
 ```
 _Example list response (200):_
 ```json
@@ -297,8 +269,9 @@ _Example list response (200):_
   "tokens": [
     {
       "token": "cket_9c0b5e57d7b1",
-      "createdAt": "2025-09-28T19:25:30.000Z",
-      "expiresAt": "2025-10-01T00:00:00.000Z"
+      "expires_at": "2025-10-01T00:00:00.000Z",
+      "revoked_at": null,
+      "created_at": "2025-09-28T19:25:30.000Z"
     }
   ]
 }
@@ -325,7 +298,7 @@ Authorization: Bearer <workspace JWT>
 - `GET /api/entitlements`
   - Computes `{ plan, limits, features }` by joining `plan_features` (capabilities) and `plan_limits` (hard quotas).
   - Free plan enforcement: publishing a second active widget returns 403 `PLAN_LIMIT` (any auto-deactivate behavior requires explicit CEO approval).
-  - Premium gating: if `features.premiumTemplates=false`, saving/publishing a premium template returns 403 `PREMIUM_REQUIRED`.
+  - `features.premiumTemplates` is returned for future gating but is not enforced by the current instance update flow in this repo snapshot.
 
 ### Usage, Submissions & Attribution
 - `POST /api/usage`
@@ -412,12 +385,13 @@ const supabase = createClient(
 ```
 
 ### Key Tables Used
-- `widget_instances`: CRUD operations for widget instances (`public_id` aligns with API `publicId`, `widget_name` stores widget type identifier, `instance_data` stores user's custom values, `draft_token` invalidated on claim)
+- `widget_instances`: Instance snapshots (`public_id`, `status`, `config`, `template_id`, `schema_version`, `draft_token`, `claimed_at`, `updated_at`)
+- `widgets`: Parent widget records (`type` is surfaced as `widgetType` for instances)
 - `embed_tokens`: Token lifecycle management  
 - `workspaces`: Tenant isolation and plan enforcement
 - `workspace_members`: Authorization and role checking
 - `plan_features` + `plan_limits`: Combined to compute entitlements
-- `widget_submissions`: Submission storage (anonymous rows pruned after 30 days by backend job)
+- `widget_submissions`: Submission storage
 - `usage_events`: Usage tracking and audit trail for load/view/interact/submit events
 - `events`: Attribution (`event_type = 'user_attribution'`) and other audit records
 
@@ -432,42 +406,32 @@ Supabase row-level security remains enabled on all tables (see policies defined 
 
 ### Venice (Embed Service)
 Paris provides widget instance data to Venice:
-- Venice calls `GET /api/instance/:publicId` to load instanceData
-- Venice calls `GET /api/widgets/:widgetType` to load Widget JSON (the software)
+- Venice calls `GET /api/instance/:publicId` to load instance `config` + metadata
 - Paris validates embed tokens before serving data
 - Response cached by Venice with TTL based on status
-- Venice executes Widget JSON to render HTML using instanceData
+- Widget definitions/assets are loaded from Denver/CDN (outside Paris)
 
 ### Bob (Builder App)
 Bob manages widgets through Paris APIs:
-- Fetches Widget JSON via `GET /api/widgets/:widgetType` to render ToolDrawer UI
-- Fetches Widget Instance via `GET /api/instance/:publicId` to get user's current instanceData
-- User edits → updates instanceData only
-- Saves instanceData changes via `PUT /api/instance/:publicId`
+- Fetches Widget Instance via `GET /api/instance/:publicId` to get the user’s current config
+- User edits → updates config only
+- Saves config changes via `PUT /api/instance/:publicId`
 - Token management for embed code generation
 - Entitlements checking for feature gating
 
 ### Site (Marketing)
 Site creates anonymous widgets via Paris:
-- Anonymous widget creation through builder flow
-- `POST /api/instance/from-template` issues `draftToken`; Venice uses it while the visitor edits without an account.
+- Anonymous widget creation/from-template is not implemented in this repo snapshot.
 - Claim flow converts drafts to owned widgets and triggers draft token invalidation (`TOKEN_REVOKED`).
 - Demo widget configs for marketing pages
 
 ## Error Handling Standards
 
 ### Error Response Format
-```json
-{
-  "error": "ERROR_CODE",
-  "message": "Human readable message", 
-  "details": "Additional context (optional)",
-  "field_errors": [
-    { "path": "instanceData.title", "message": "Required field" }
-  ]
-}
-```
-`CONFIG_INVALID` responses return the raw `[{ path, message }]` array defined in Phase-1 Specs; all other errors use the envelope above.
+Paris uses two response shapes:
+
+1) **Validation errors**: `422` with `[{ path, message }]` (e.g., invalid `config`, unknown `templateId`)
+2) **Error codes**: `{ "error": "ERROR_CODE", "details"?: "..." }`
 
 ### Standard Error Codes
 
@@ -477,39 +441,25 @@ _API error code mapping (Phase-1)_
 | `AUTH_REQUIRED` | Missing or invalid authentication | S9 APIs |
 | `FORBIDDEN` | Valid auth but insufficient permissions | S9 APIs |
 | `NOT_FOUND` | Resource does not exist | S2 Rendering Contracts |
-| `ALREADY_EXISTS` | Conflict with existing resource | S9 APIs |
-| `CONFIG_INVALID` | 422 with `[ { path, message } ]` | S3/S9 JSON validation |
 | `RATE_LIMITED` | Too many requests (per limits above) | S2/S9 rate limits |
 | `PLAN_LIMIT` | Free plan exceeded (publish) | S9 APIs |
-| `PREMIUM_REQUIRED` | Premium-only capability requested | S9 APIs |
 | `DB_ERROR` | Database operation failed | N/A |
 | `SERVER_ERROR` | Unexpected internal error | N/A |
 
 > Embed-surface error keys (`TOKEN_INVALID`, `TOKEN_REVOKED`, etc.) are documented in `documentation/systems/venice.md`; do not mix them with API error codes.
 
-- `AUTH_REQUIRED`: Missing or invalid authentication
-- `FORBIDDEN`: Valid auth but insufficient permissions  
-- `NOT_FOUND`: Resource does not exist
-- `ALREADY_EXISTS`: Conflict with existing resource
-- `CONFIG_INVALID`: Invalid request payload (returns 422 with `[ { path, message } ]`)
-- `RATE_LIMITED`: Too many requests
-- `PLAN_LIMIT`: Feature not available on current plan (free tier attempting >1 active widget)
-- `PREMIUM_REQUIRED`: Premium template or capability gated by plan
-- `DB_ERROR`: Database operation failed
-- `SERVER_ERROR`: Unexpected internal error
-
 ### Error Scenario Matrix (Phase-1)
 | Scenario | Endpoint(s) | Status / Error | Response Body | Client guidance |
 | --- | --- | --- | --- | --- |
-| Duplicate `publicId` on create | `POST /api/instance/from-template` | 409 `ALREADY_EXISTS` | `{ "error": "ALREADY_EXISTS", "message": "Instance already exists" }` | Retry with different `publicId` |
-| Validation failure | `PUT /api/instance`, `POST /api/instance/from-template` | 422 `CONFIG_INVALID` | `[{ "path": "instanceData.categories.0.title", "message": "Required field" }]` | Surface field-level errors; block retry until corrected |
+| Instance creation disabled | `POST /api/instance` | 422 | `[{ "path": "endpoint", "message": "Instance creation is disabled in this environment" }]` | Do not retry; creation happens outside Paris |
+| Validation failure | `PUT /api/instance/:publicId` | 422 | `[{ "path": "categories.0.title", "message": "Required field" }]` | Surface field-level errors; block retry until corrected |
 | Draft token revoked | `POST /api/claim` | 410 `TOKEN_REVOKED` | `{ "error": "TOKEN_REVOKED" }` | Remove cached draft token and prompt user to refresh |
-| Missing auth | Any authenticated endpoint | 401 `AUTH_REQUIRED` | `{ "error": "AUTH_REQUIRED", "message": "Authentication required" }` | Redirect to login / refresh workspace session |
-| Plan limit exceeded | `PUT /api/instance` (publish), `POST /api/token` (issue) | 403 `PLAN_LIMIT` | `{ "error": "PLAN_LIMIT", "message": "Upgrade required" }` | Show upgrade CTA; retry only after plan change |
-| Premium template without entitlement | `PUT /api/instance`, `POST /api/instance/from-template` | 403 `PREMIUM_REQUIRED` | `{ "error": "PREMIUM_REQUIRED" }` | Prevent selection; prompt upgrade |
-| Rate limit triggered | `POST /api/usage`, `POST /api/submit`, token ops | 429 `RATE_LIMITED` | `{ "error": "RATE_LIMITED", "retryAfter": 60 }` | Back off; obey `Retry-After` header |
-| Idempotency replay | `POST /api/usage`, `POST /api/submit` | 202 | `{ "recorded": false }` | Treat as success; do not re-send same key |
-| Database constraint violation | Any mutation | 500 `DB_ERROR` | `{ "error": "DB_ERROR" }` | Log and show generic retry (internal follow-up required) |
+| Missing auth | Any authenticated endpoint | 401 `AUTH_REQUIRED` | `{ "error": "AUTH_REQUIRED" }` | Redirect to login / refresh workspace session |
+| Plan limit exceeded | `PUT /api/instance/:publicId` (publish) | 403 `PLAN_LIMIT` | `{ "error": "PLAN_LIMIT" }` | Show upgrade CTA; retry only after plan change |
+| Rate limit triggered | `POST /api/usage`, `POST /api/submit/:publicId` | 429 `RATE_LIMITED` | `{ "error": "RATE_LIMITED" }` | Back off; obey `Retry-After` header |
+| Idempotency replay | `POST /api/usage` | 202 | `{ "recorded": false }` | Treat as success; do not re-send same key |
+| Submission dedupe | `POST /api/submit/:publicId` | 202 | `{ "status": "accepted", "deduped": true }` | Treat as success |
+| Database error | Any endpoint | 500 `DB_ERROR` | `{ "error": "DB_ERROR", "details": "..." }` | Log and show generic retry (internal follow-up required) |
 
 ## Security Requirements
 
@@ -540,15 +490,14 @@ _API error code mapping (Phase-1)_
 - SQL injection prevention via parameterized queries
 - XSS prevention via input sanitization
 - File upload restrictions (if applicable)
-- Submission retention: backend job prunes anonymous rows in `widget_submissions` after 30 days (no database TTL).
 
 ### Handler Checklist (Phase-1)
 Before shipping or modifying a Paris endpoint, verify:
 1. **Auth:** Validate Supabase JWT (unless route is explicitly public) and reject expired/invalid tokens with `401 AUTH_REQUIRED`.
-2. **Workspace scope:** Resolve workspace/member via service-role query or RLS-friendly SQL and enforce permissions/plan state (return `PLAN_LIMIT` / `PREMIUM_REQUIRED` when appropriate).
+2. **Workspace scope:** Resolve workspace/member via service-role query or RLS-friendly SQL and enforce permissions/plan state (return `PLAN_LIMIT` when appropriate).
 3. **Idempotency & rate limits:** Require `idempotencyKey` for write surfaces (`/api/usage`, `/api/submit`, etc.) and invoke the documented rate-limit helper before executing mutations.
 4. **Canonical SQL:** Use the queries listed in `documentation/systems/michael.md` (“Canonical SQL Queries”) or utilities that wrap them—no ad-hoc SQL that could drift from DB Truth.
-5. **Error mapping:** Catch Postgres error codes (`23505`, `23514`, `23503`, etc.) and map to the Phase-1 API error taxonomy (`ALREADY_EXISTS`, `CONFIG_INVALID`, `DB_ERROR`, ...). Never emit raw database errors.
+5. **Error mapping:** Never emit raw database errors. Return `422` validation arrays for user-correctable input issues and `{ "error": "DB_ERROR" }`/`{ "error": "SERVER_ERROR" }` for unexpected failures.
 6. **Telemetry:** Emit Berlin logs with `X-Request-ID`, endpoint identifier, latency, and result (success/error) while avoiding PII/secret leakage.
 
 ## Monitoring & Observability

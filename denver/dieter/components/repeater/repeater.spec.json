@@ -7,6 +7,7 @@
     "label": { "optional": true },
     "labelPath": { "optional": true },
     "labelPlaceholder": { "optional": true },
+    "default-item": { "optional": true },
     "toggleLabel": { "optional": true },
     "togglePath": { "optional": true }
   },
@@ -19,44 +20,18 @@
         "label": "Items",
         "addLabel": "Add item",
         "size": "md",
-        "labelSize": "md",
-        "itemSize": "md",
-        "labelInputLabelClass": "label-s",
-        "labelInputBodyClass": "body-s",
-        "itemLabelClass": "label-s",
-        "itemBodyClass": "body-s",
         "labelInputLabel": "Title",
         "labelPlaceholder": "",
         "labelPath": "",
+        "defaultItem": "",
         "toggleLabel": "Show",
         "togglePath": "",
-        "template": "<div class=\\\"diet-repeater__item-body\\\"><div class=\\\"diet-textfield\\\" data-size=\\\"{{itemSize}}\\\"><label class=\\\"diet-textfield__control\\\"><span class=\\\"diet-textfield__display-label {{itemLabelClass}}\\\">Item</span><input class=\\\"diet-textfield__field {{itemBodyClass}}\\\" type=\\\"text\\\" data-path=\\\"items.__INDEX__\\\" placeholder=\\\"Item\\\" /></label></div></div>"
+        "template": "<div class=\\\"diet-repeater__item-body\\\"><div class=\\\"diet-textfield\\\" data-size=\\\"md\\\"><label class=\\\"diet-textfield__control\\\"><span class=\\\"diet-textfield__display-label\\\">Item</span><input class=\\\"diet-textfield__field\\\" type=\\\"text\\\" data-path=\\\"items.__INDEX__\\\" placeholder=\\\"Item\\\" /></label></div></div>"
       },
       "sizeContext": {
-        "sm": {
-          "itemSize": "sm",
-          "labelSize": "sm",
-          "labelInputLabelClass": "label-xs",
-          "labelInputBodyClass": "body-xs",
-          "itemLabelClass": "label-xs",
-          "itemBodyClass": "body-xs"
-        },
-        "md": {
-          "itemSize": "md",
-          "labelSize": "md",
-          "labelInputLabelClass": "label-s",
-          "labelInputBodyClass": "body-s",
-          "itemLabelClass": "label-s",
-          "itemBodyClass": "body-s"
-        },
-        "lg": {
-          "itemSize": "lg",
-          "labelSize": "lg",
-          "labelInputLabelClass": "label-m",
-          "labelInputBodyClass": "body-m",
-          "itemLabelClass": "label-m",
-          "itemBodyClass": "body-m"
-        }
+        "sm": { "size": "sm" },
+        "md": { "size": "md" },
+        "lg": { "size": "lg" }
       }
     }
   ]

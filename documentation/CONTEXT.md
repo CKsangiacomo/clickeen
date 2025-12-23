@@ -10,11 +10,11 @@
 
 ## Canonical Concepts
 
-**Widget JSON** — Complete functional software for a widget type (e.g., FAQ, countdown, logo showcase). Lives in `/paris/lib/widgets/{widgetName}.json`. Contains HTML, uiSchema (ToolDrawer controls), rendering logic, defaults, and templates.
+**Widget Definition** (Denver widget folder; previously called “Widget JSON”) — Complete functional software for a widget type (e.g., FAQ, countdown, logo showcase). Lives in **Denver/CDN** (in-repo source: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, and `agent.md` for AI editing). Platform-controlled; **not stored in Michael** and **not served from Paris**.
 
-**Widget Instance** — User's specific widget with custom `instanceData`. Stored in database as `{ publicId, widgetName, instanceData }`. Millions of instances can share the same Widget JSON but have different data.
+**Widget Instance** — User’s specific widget configuration. Stored in **Michael (Supabase/Postgres)** in `widget_instances.config` and linked to `widgets.type` (widget type). Paris exposes this over HTTP as `{ publicId, widgetType, config }`. (Older docs may call these `widgetName` / `instanceData`.)
 
-**The Two-API-Call Pattern** — Bob loads instanceData once (`GET /api/instance/:publicId`), edits entirely in React state (zero server calls), and publishes once (`PUT /api/instance/:publicId`). This enables infinite scalability and zero database pollution during editing.
+**The Two-API-Call Pattern** — Bob loads config once via Paris (`GET /api/instance/:publicId`), edits entirely in React state (zero server calls), and publishes once via Paris (`PUT /api/instance/:publicId`). Paris is the gateway; persistence is in Michael.
 
 **The Three Moats:**
 1. **AI-Native Architecture** — Structural advantage; competitors would need to rewrite everything from scratch
@@ -64,14 +64,16 @@ Everything else (performance, architecture patterns, code splitting) is table st
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), components (button, input, expander), icons. Output is CSS + HTML.
 
-**Bob** — Widget builder. React app that loads Widget JSON, holds instanceData in state, renders controls in ToolDrawer, syncs preview via postMessage, publishes to Paris.
+**Bob** — Widget builder. React app that loads widget definitions from Denver (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, publishes via Paris (writes to Michael).
 
-**Venice** — SSR widget runtime. Server-side renders Widget JSON with instanceData, handles entitlements, cache policies, security.
+**Venice** — SSR embed runtime. Fetches instance config via Paris and serves embeddable HTML. (In this repo snapshot, Venice renders a safe debug shell; full “render widget definition → HTML” is planned.)
 
-**Paris** — HTTP API. Instance management, token validation, submissions, usage tracking. Enforces entitlements. Browsers never call Paris directly (Venice is the front door).
+**Paris** — HTTP API gateway (Node.js). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. **Paris stores no widget definitions and no instance JSON**; it is a stateless API layer. Browsers never call Paris directly (Venice is the embed front door).
 
 **Michael** — Supabase. PostgreSQL database. Stores widget instances, schemas, templates, submissions, users, usage events.
 
-**Denver** — Asset storage and CDN. Signed URLs for user-uploaded images. Dieter tokens/components published here.
+**Denver** — Asset storage and CDN (local stub in this repo). Hosts Dieter build artifacts and widget definitions/assets; also used for signed URLs for user-uploaded images.
+
+**agent.md** — Per-widget, AI-facing contract. Documents editable paths, parts/roles, enums, and safe list operations so Copilot/agents don’t have to infer meaning from raw HTML/CSS/JS. (Currently used for FAQ; will become standard as AI editing expands.)
 
 **Atlas** — Vercel Edge Config. Read-only runtime. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.

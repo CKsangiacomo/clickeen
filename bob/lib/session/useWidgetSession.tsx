@@ -10,14 +10,18 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import type { CompiledWidget } from '../types';
-import { mergeDefaults } from '../utils/merge';
-import { setAt } from '../utils/paths';
+import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
+import { applyWidgetOps, validateWidgetData } from '../ops';
 
 type UpdateMeta = {
-  source: 'field' | 'load' | 'external' | 'unknown';
+  source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
   path: string;
   ts: number;
 };
+
+type SessionError =
+  | { source: 'load'; message: string }
+  | { source: 'ops'; errors: WidgetOpError[] };
 
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -30,6 +34,8 @@ type SessionState = {
   isDirty: boolean;
   preview: PreviewSettings;
   lastUpdate: UpdateMeta | null;
+  undoSnapshot: Record<string, unknown> | null;
+  error: SessionError | null;
   meta: {
     publicId?: string;
     widgetname?: string;
@@ -41,7 +47,7 @@ type WidgetBootstrapMessage = {
   type: 'devstudio:load-instance';
   widgetname: string;
   compiled: CompiledWidget;
-  instanceData?: Record<string, unknown>;
+  instanceData?: Record<string, unknown> | null;
   publicId?: string;
   label?: string;
 };
@@ -58,36 +64,66 @@ function useWidgetSessionInternal() {
     isDirty: false,
     preview: DEFAULT_PREVIEW,
     lastUpdate: null,
+    undoSnapshot: null,
+    error: null,
     meta: null,
   }));
 
-  const setInstanceData = useCallback(
-    (updater: Record<string, unknown> | ((prev: Record<string, unknown>) => Record<string, unknown>)) => {
-      setState((prev) => {
-        const nextData =
-          typeof updater === 'function'
-            ? (updater as (prev: Record<string, unknown>) => Record<string, unknown>)(prev.instanceData)
-            : updater;
-        return {
-          ...prev,
-          instanceData: nextData,
-          isDirty: true,
-          lastUpdate: prev.lastUpdate,
+  const applyOps = useCallback(
+    (ops: WidgetOp[]): ApplyWidgetOpsResult => {
+      const compiled = state.compiled;
+      if (!compiled || compiled.controls.length === 0) {
+        const result: ApplyWidgetOpsResult = {
+          ok: false,
+          errors: [{ opIndex: 0, message: 'This widget did not compile with controls[]' }],
         };
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+        return result;
+      }
+
+      const applied = applyWidgetOps({
+        data: state.instanceData,
+        ops,
+        controls: compiled.controls,
       });
+
+      if (!applied.ok) {
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors: applied.errors } }));
+        return applied;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        undoSnapshot: prev.instanceData,
+        instanceData: applied.data,
+        isDirty: true,
+        error: null,
+        lastUpdate: {
+          source: 'ops',
+          path: ops[0]?.path || '',
+          ts: Date.now(),
+        },
+      }));
+
+      return applied;
     },
-    []
+    [state.compiled, state.instanceData]
   );
 
-  const setValue = useCallback((path: string, value: unknown, meta?: Partial<UpdateMeta>) => {
+  const undoLastOps = useCallback(() => {
     setState((prev) => {
-      const nextData = setAt(prev.instanceData, path, value) as Record<string, unknown>;
-      const nextMeta: UpdateMeta = {
-        source: meta?.source ?? 'unknown',
-        path: meta?.path ?? path,
-        ts: meta?.ts ?? Date.now(),
+      if (!prev.undoSnapshot) return prev;
+      return {
+        ...prev,
+        instanceData: prev.undoSnapshot,
+        undoSnapshot: null,
+        isDirty: true,
+        lastUpdate: {
+          source: 'ops',
+          path: '',
+          ts: Date.now(),
+        },
       };
-      return { ...prev, instanceData: nextData, isDirty: true, lastUpdate: nextMeta };
     });
   }, []);
 
@@ -97,38 +133,43 @@ function useWidgetSessionInternal() {
       if (!compiled) {
         throw new Error('[useWidgetSession] Missing compiled widget payload');
       }
-      const incoming = (message.instanceData ?? {}) as Record<string, unknown>;
-
-      // Normalize legacy fields into stage/pod so fills always work.
-      const normalized: Record<string, unknown> = { ...incoming };
-      const pod = (normalized.pod as Record<string, unknown>) || {};
-      const stage = (normalized.stage as Record<string, unknown>) || {};
-
-      if (!pod.background && typeof incoming.backgroundColor === 'string') {
-        pod.background = incoming.backgroundColor;
-      }
-      if (!stage.background && typeof incoming.stageBackground === 'string') {
-        stage.background = incoming.stageBackground;
+      if (compiled.controls.length === 0) {
+        throw new Error('[useWidgetSession] Widget compiled without controls[]');
       }
 
-      if (!normalized.pod) normalized.pod = pod;
-      if (!normalized.stage) normalized.stage = stage;
+      const incoming = message.instanceData as Record<string, unknown> | null | undefined;
+      if (incoming == null) {
+        if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) {
+          throw new Error('[useWidgetSession] compiled.defaults must be an object');
+        }
+      }
+      const resolved = incoming == null ? structuredClone(compiled.defaults) : incoming;
 
-      const mergedInstance = mergeDefaults(
-        (compiled.defaults ?? {}) as Record<string, unknown>,
-        normalized
-      );
+      if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) {
+        throw new Error('[useWidgetSession] instanceData must be an object');
+      }
+
+      const issues = validateWidgetData({
+        data: resolved,
+        controls: compiled.controls,
+      });
+      if (issues.length > 0) {
+        const details = issues.map((issue) => `${issue.path}: ${issue.message}`).join('\n');
+        throw new Error(`[useWidgetSession] Invalid instanceData\n${details}`);
+      }
 
       setState((prev) => ({
         compiled,
-        instanceData: mergedInstance,
+        instanceData: resolved,
         isDirty: false,
         preview: prev.preview,
+        error: null,
         lastUpdate: {
           source: 'load',
           path: '',
           ts: Date.now(),
         },
+        undoSnapshot: null,
         meta: {
           publicId: message.publicId,
           widgetname: compiled.widgetname,
@@ -140,11 +181,13 @@ function useWidgetSessionInternal() {
         // eslint-disable-next-line no-console
         console.error('[useWidgetSession] Failed to load instance', err, message);
       }
+      const messageText = err instanceof Error ? err.message : String(err);
       setState((prev) => ({
         ...prev,
         compiled: null,
         instanceData: {},
         isDirty: false,
+        error: { source: 'load', message: messageText },
         meta: null,
       }));
     }
@@ -225,14 +268,16 @@ function useWidgetSessionInternal() {
       isDirty: state.isDirty,
       preview: state.preview,
       lastUpdate: state.lastUpdate,
+      error: state.error,
       meta: state.meta,
-      setInstanceData,
-      setValue,
+      canUndo: Boolean(state.undoSnapshot),
+      applyOps,
+      undoLastOps,
       setPreview,
       renameInstance,
       loadInstance,
     }),
-    [state, setInstanceData, setValue, loadInstance, setPreview, renameInstance]
+    [state, applyOps, undoLastOps, loadInstance, setPreview, renameInstance]
   );
 
   return value;

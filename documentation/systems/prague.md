@@ -15,15 +15,14 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 
 ## 1) Scope (Phase-1)
 - Static-first marketing pages (home, pricing outline, FAQ) rendered via Next.js SSG. Dynamic user data is out of scope.
-- Gallery (`/gallery`, `/gallery/[widgetSlug]`) fetched from Paris public catalog endpoints (`GET /api/widgets`, `GET /api/templates`) and cached edge-side for 10 minutes.
+- Gallery (`/gallery`, `/gallery/[widgetSlug]`) is static-first and sourced from Denver/CDN widget definitions (Paris does not host a widget catalog in this repo snapshot).
 - **Widget selection flow (CRITICAL):**
   1. User browses gallery, clicks widget card (e.g., "Contact Form")
-  2. Prague calls Paris `POST /api/instance/from-template` with `{widgetType: "forms.contact", templateId: "default-template"}`
-  3. Paris returns `{publicId, draftToken}`
-  4. Prague opens MiniBob: `<iframe src="https://c-keen-app.vercel.app/bob?minibob=true&publicId={publicId}">`
-  5. Bob loads with that specific widget already instantiated with default template applied
-  6. User edits config (text, colors) and/or switches templates inside Bob
-  7. Click "Publish" → signup → claim widget to workspace
+  2. Prague creates (or selects) a draft instance upstream (outside Paris) and obtains a `publicId`
+  3. Prague opens MiniBob: `<iframe src="https://c-keen-app.vercel.app/bob?minibob=true&publicId={publicId}">` (planned flow)
+  4. Bob loads with that specific widget already instantiated with default template applied
+  5. User edits config (text, colors) and/or switches templates inside Bob
+  6. Click "Publish" → signup → claim widget to workspace
 - **MiniBob UI (conditional rendering in Bob):**
   - Bob detects `?minibob=true` and conditionally hides UI (no Save button, no SecondaryDrawer)
   - Only "Publish" button visible in MiniBob mode
@@ -33,13 +32,13 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 ## 2) Integrations & Data Flow
 | Action | Source | Notes |
 | --- | --- | --- |
-| Fetch gallery data | Paris `GET /api/widgets`, `GET /api/templates` | Use `fetch()` with ISR revalidation 600 s; fallback spinner + retry. |
-| Create draft instance | Paris `POST /api/instance/from-template` | User clicks widget card → Prague calls this → returns `{publicId, draftToken}` |
+| Fetch gallery data | Denver/CDN | Static catalog built from widget definitions; keep marketing pages fast and cacheable. |
+| Create draft instance | Outside Paris | Instance creation is not implemented in this repo snapshot; Paris `POST /api/instance` is disabled. |
 | Open MiniBob | Bob (c-keen-app) | Prague iframes Bob with `?minibob=true&publicId={publicId}` |
 | Generate embed snippet | Venice | Embed code uses `https://c-keen-embed.vercel.app/e/{publicId}`; Prague never calls Paris with secrets. |
 | Capture attribution | Berlin (if enabled) | Only anonymous page analytics; no PII. |
 
-Environment variables: `NEXT_PUBLIC_PARIS_URL`, `NEXT_PUBLIC_VENICE_URL`, `NEXT_PUBLIC_BOB_URL` for building links to API/embeds/Bob. No secrets allowed.
+Environment variables: `NEXT_PUBLIC_BOB_URL`, `NEXT_PUBLIC_VENICE_URL`, `NEXT_PUBLIC_DENVER_URL` for building links to Bob/embeds/widget catalog assets. No secrets allowed.
 
 ## 3) Performance & SEO
 - All pages must meet Core Web Vitals targets (LCP ≤2.5 s, CLS <0.1). Use static generation + image optimisation.

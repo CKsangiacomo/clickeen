@@ -24,5 +24,5 @@ No active architectural decisions recorded yet.
 - Impact: Developer ergonomics and release quality improve without adding CI gates in Phase‑1.
 
 ## 2025-10-06 — Naming Alignment: Loader Bus + Bob Env Var
-- Decision: Canonical loader event bus global is `window.ckeenBus`. A backward‑compatible alias `window.Clickeen` is exposed by the loader for existing snippets. Bob’s canonical env var for the embed base is `NEXT_PUBLIC_VENICE_URL`; the legacy `NEXT_PUBLIC_EMBED_BASE` remains a fallback.
-- Impact: Reduces naming drift. New integrations and docs must use `window.ckeenBus` and `NEXT_PUBLIC_VENICE_URL`.
+- Decision: Canonical loader event bus global is `window.ckeenBus`. A backward‑compatible alias `window.Clickeen` is exposed by the loader for existing snippets. Bob’s canonical env var for loading Dieter/widget assets is `NEXT_PUBLIC_DENVER_URL`.
+- Impact: Reduces naming drift. New integrations and docs must use `window.ckeenBus` and `NEXT_PUBLIC_DENVER_URL` (Bob).

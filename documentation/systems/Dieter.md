@@ -71,8 +71,8 @@ dieter/components/
   bob-basetooldrawer.css
 ```
 
-**For Widget JSON:**
-Widget JSON files contain HTML using Dieter components. They only load the specific CSS files they need. This keeps each widget's footprint tiny while allowing Dieter to grow infinitely.
+**For widget definitions:**
+Widget definitions (via `spec.json` and compiled ToolDrawer panels) contain HTML using Dieter components. They only load the specific Dieter assets they need. This keeps each widget's footprint tiny while allowing Dieter to grow infinitely.
 
 See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details on how widgets use Dieter components.
 

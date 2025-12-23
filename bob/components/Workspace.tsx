@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { getAt } from '../lib/utils/paths';
 
 export function Workspace() {
   const session = useWidgetSession();
@@ -61,10 +60,10 @@ export function Workspace() {
 
       <div className="workspace-overlay" aria-hidden={!hasWidget}>
         <div
-          className="workspace-device-toggle diet-segmented-ic"
+          className="workspace-device-toggle diet-segmented diet-segmented-ic"
           role="radiogroup"
           aria-label="Device"
-          data-size="md"
+          data-size="lg"
         >
           <label className="diet-segment">
             <input
@@ -78,7 +77,7 @@ export function Workspace() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ic"
-              data-size="md"
+              data-size="lg"
               data-variant="neutral"
               tabIndex={-1}
               type="button"
@@ -104,7 +103,7 @@ export function Workspace() {
             <span className="diet-segment__surface" />
             <button
               className="diet-btn-ic"
-              data-size="md"
+              data-size="lg"
               data-variant="neutral"
               tabIndex={-1}
               type="button"

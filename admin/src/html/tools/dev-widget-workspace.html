@@ -269,7 +269,7 @@ async function fetchInstances() {
     widgetname: inst.widgetname,
     widgetSlug: normalizeWidgetname(inst.widgetname),
     label: inst.displayName || inst.publicId,
-    config: inst.config || {},
+    config: inst.config ?? null,
   }));
 
   const uniqueWidgetnames = Array.from(new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)));
@@ -366,7 +366,7 @@ async function sendInstanceToIframe(publicId) {
       publicId,
       widgetname: slug,
       compiled,
-      instanceData: instance.config || {},
+      instanceData: instance.config ?? null,
     },
     '*'
   );

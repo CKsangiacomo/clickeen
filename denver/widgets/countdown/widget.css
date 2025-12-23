@@ -66,7 +66,7 @@ body {
   width: auto;
   max-width: var(--content-width, 960px);
   margin: 0 auto;
-  padding: calc(var(--padding, 24px));
+  padding: 0;
   display: grid;
   gap: var(--gap, 16px);
   text-align: center;
@@ -99,8 +99,9 @@ body {
 .ck-countdown__heading {
   margin: 0;
   color: var(--ck-heading-color);
-  font-weight: 600;
-  font-size: var(--heading-size, 22px);
+  font-family: var(--typo-heading-family, var(--font-ui));
+  font-weight: var(--typo-heading-weight, 600);
+  font-size: var(--typo-heading-size, var(--heading-size, 22px));
   line-height: var(--lh-tight);
 }
 
@@ -108,7 +109,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 700;
+  font-family: var(--typo-timer-family, var(--font-ui));
+  font-weight: var(--typo-timer-weight, 700);
   font-variant-numeric: tabular-nums;
   color: var(--ck-timer-color);
 }
@@ -152,20 +154,25 @@ body {
   display: block;
   min-width: 2ch;
   text-align: center;
-  font-size: calc(var(--timer-size, 100) * 1%);
+  font-size: calc(var(--typo-timer-size, var(--timer-size, 100)) * 1%);
+  font-family: var(--typo-timer-family, var(--font-ui));
+  font-weight: var(--typo-timer-weight, 700);
   color: var(--ck-timer-color);
 }
 
 .ck-timer-label {
   display: block;
-  font-size: var(--label-size, 14px);
+  font-size: var(--typo-label-size, var(--label-size, 14px));
+  font-family: var(--typo-label-family, var(--font-ui));
+  font-weight: var(--typo-label-weight, 600);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ck-labels-color);
 }
 
 .ck-timer-sep {
-  font-size: calc(var(--timer-size, 100) * 0.6%);
+  font-size: calc(var(--typo-timer-size, var(--timer-size, 100)) * 0.6%);
+  font-family: var(--typo-timer-family, var(--font-ui));
   color: var(--ck-separator-color);
   opacity: 0.7;
   user-select: none;
@@ -184,8 +191,9 @@ body {
 }
 
 .ck-countdown__number {
-  font-size: calc(var(--timer-size, 100) * 1%);
-  font-weight: 700;
+  font-size: calc(var(--typo-timer-size, var(--timer-size, 100)) * 1%);
+  font-family: var(--typo-timer-family, var(--font-ui));
+  font-weight: var(--typo-timer-weight, 700);
   color: var(--ck-timer-color);
 }
 
@@ -212,8 +220,9 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0.75em 2em;
-  font-weight: 600;
-  font-size: calc(var(--button-size, 100) * 0.01 * 16px);
+  font-family: var(--typo-button-family, var(--font-ui));
+  font-weight: var(--typo-button-weight, 600);
+  font-size: var(--typo-button-size, calc(var(--button-size, 100) * 0.01 * 16px));
   text-decoration: none;
   border-radius: var(--control-radius-lg);
   border: none;
@@ -263,23 +272,6 @@ body {
   display: flex;
 }
 
-.ck-countdown__backlink {
-  border-top: 1px solid color-mix(in oklab, var(--ck-heading-color), transparent 70%);
-  padding-top: 0.5rem;
-  margin-top: 0.5rem;
-  text-align: right;
-}
-
-.ck-countdown__backlink a {
-  font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
-  color: color-mix(in oklab, var(--ck-heading-color), transparent 40%);
-  text-decoration: none;
-}
-
-.ck-countdown__backlink a:hover {
-  text-decoration: underline;
-}
-
 @keyframes ck-fade {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
@@ -304,16 +296,7 @@ body {
   }
 }
 
-@media (max-width: 900px) {
-  .ck-countdown__inner {
-    padding: calc(var(--padding, 24px) * 0.8);
-  }
-}
-
 @media (max-width: 640px) {
-  .ck-countdown__inner {
-    padding: calc(var(--padding, 24px) * 0.6);
-  }
   .ck-timer-unit {
     min-width: 64px;
   }

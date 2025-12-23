@@ -19,16 +19,6 @@
       <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
-    <button
-      class="diet-dropdown-header-icon diet-btn-ic"
-      data-size="{{size}}"
-      data-variant="neutral"
-      type="button"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
-    </button>
   </div>
 
   <div
@@ -41,19 +31,6 @@
       <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
         {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
       </span>
-      <button
-        type="button"
-        class="diet-btn-ic diet-popover__header-trigger"
-        data-size="sm"
-        data-variant="neutral"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span
-          class="diet-btn-ic__icon"
-          data-icon="{{#if headerIcon}}{{headerIcon}}{{else}}hand.point.up{{/if}}"
-        ></span>
-      </button>
     </div>
     <div class="diet-popover__body diet-dropdown-actions__menu">
       {{#each options}}
@@ -69,7 +46,14 @@
       >
         <span class="diet-btn-menuactions__label {{bodyClass}}">{{label}}</span>
         <span class="diet-btn-menuactions__icon" aria-hidden="true">
-          <span class="diet-dropdown-actions__check diet-btn-menuactions__icon-layer" data-icon="checkmark"></span>
+          <span
+            class="diet-dropdown-actions__check diet-btn-ic"
+            data-size="xs"
+            data-variant="neutral"
+            aria-hidden="true"
+          >
+            <span class="diet-btn-ic__icon" data-icon="checkmark"></span>
+          </span>
         </span>
       </button>
       {{/each}}

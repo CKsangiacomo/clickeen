@@ -2,15 +2,15 @@
 
 ## 🔑 CRITICAL: New Architecture (Read This First!)
 
-**Bob is the temporary owner of instanceData during editing.**
+**Bob is the temporary owner of instance config during editing.** (In Bob code, this working copy is stored in React state as `instanceData`.)
 
 This is a fundamental architectural change that enables massive scalability and eliminates database pollution.
 
 ### The Two-Place Rule
 
-**instanceData exists in EXACTLY 2 places:**
+**config exists in EXACTLY 2 places:**
 
-1. **Paris (database)** - Published version (production source of truth)
+1. **Michael (database)** - Published version (production source of truth; accessed via Paris)
 2. **Bob's React state** - Working copy (during editing session)
 
 **NOT in:**
@@ -20,25 +20,24 @@ This is a fundamental architectural change that enables massive scalability and 
 - ToolDrawer state ❌
 - Some intermediate cache ❌
 
-### The Two-API-Call Pattern
+### The Two-API-Call Pattern (Target)
 
 Bob makes EXACTLY 2 calls to Paris per editing session:
 
-1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets published instanceData
-2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish → saves working copy
+1. **Load** - `GET /api/instance/:publicId` → gets published config
+2. **Publish** - `PUT /api/instance/:publicId` → saves working copy
 
 **Between load and publish:**
 - User edits in ToolDrawer → Bob updates React state
-- Bob sends updated instanceData to preview via postMessage
+- Bob sends updated config to preview via postMessage
 - Preview updates in real-time
 - ZERO API calls to Paris
 - ZERO database writes
 
-**AI NOTE — Preview Implementation (This Workspace Snapshot)**
-- The 2‑API‑call pattern above is **strict**: Bob only talks to Paris (`GET` on mount, `PUT` on Publish); do not add any extra Paris calls during editing.
-- Bob renders the live preview **locally** via `renderWidgetHtml` (see `bob/lib/preview/renderWidgetHtml.ts`), which imports Venice renderer functions as a library (e.g. `venice/lib/renderers/faq`).
+**AI NOTE — This Workspace Snapshot (DevStudio harness)**
+- DevStudio fetches the instance snapshot (via Bob’s `/api/paris/*` proxy to Paris) and posts `{ compiled, instanceData }` into Bob via `postMessage` (`devstudio:load-instance`).
+- Bob’s live preview is a sandboxed iframe loading widget HTML from Denver; Bob streams config updates via `postMessage` (`ck:state-update`) which are applied by `denver/widgets/{widget}/widget.client.js`.
 - The **Venice service** (`venice/` → `c-keen-embed`) is **embed-only** in this architecture; it is **not** called from Bob for previews and is **not** part of the edit loop.
-- Do **not** reintroduce a Bob → Venice HTTP preview iframe; keep editing+preview entirely in Bob’s process with instanceData held in React state.
 
 ### Operational Benefits
 
@@ -62,25 +61,25 @@ Bob makes EXACTLY 2 calls to Paris per editing session:
 
 **Why this is good engineering, not moat:** Any competent online editor (Google Docs, Figma, etc.) works this way. Storing intermediate edits would be wasteful. This is table stakes for modern products.
 
-### Widget JSON Architecture
+### Widget Definition Architecture
 
-**Widget JSON = 50% of the software**
+**Widget Definition (a.k.a. “Widget JSON”) = 50% of the software**
 
-Each widget type provides a JSON file that contains:
-1. **HTML** - Dieter markup for controls (the actual UI)
-2. **Data binding** - How controls map to instanceData paths
-3. **Helper functions** - JavaScript for complex operations (add/delete/reorder)
+Each widget type provides a widget definition folder in Denver/CDN that contains:
+1. `spec.json` — defaults + ToolDrawer spec (`html[]` with `<bob-panel>` + `<tooldrawer-field>`) compiled by Bob into `panels[]` (and optional `controls[]` for safe AI ops; FAQ-only in this repo snapshot)
+2. `widget.html` / `widget.css` / `widget.client.js` — runtime assets loaded in a sandboxed preview iframe
+3. (Optional) `agent.md` — AI-facing contract for safe edits (used when AI editing is enabled)
 
 **Bob = the other 50% of the software**
 
 Bob provides:
 - Container and layout (ToolDrawer, Workspace, TopDrawer)
-- instanceData state management (React state + updates)
-- Data binding layer (wires HTML controls to instanceData)
+- `instanceData` state management (React state + updates)
+- Data binding layer (`data-bob-path`, `data-bob-showif`)
 - Preview sync (postMessage to iframe)
 - Save to Paris (on publish only)
 
-Together, **Bob + Widget JSON = complete widget instance editor**.
+Together, **Bob + Widget Definition = complete widget instance editor**.
 
 ### Dieter Strategy
 
@@ -109,111 +108,40 @@ For complete architecture details, see [WidgetArchitecture.md](../widgets/Widget
 
 ---
 
-## Editor API v1 (Bob ↔ Widget JSON Contract)
+## Runtime & AI Contracts (Bob ↔ Widget Definition)
 
-**Bob exposes a minimal, frozen API surface for widget JSON to interact with instanceData.**
+Bob interacts with widget definitions via explicit, stable contracts (not ad-hoc parsing or “click the UI” instructions).
 
-### API Methods
+### 1) Preview Messaging Contract (Bob → widget.client.js)
 
-```typescript
-// Update a value in instanceData at a specific path
-updateInstanceData(path: string, value: any): void
+Bob streams the working config to the widget preview iframe via `postMessage`:
 
-// Get current instanceData (read-only)
-getInstanceData(): Readonly<InstanceData>
+- `type`: `ck:state-update`
+- `widgetname`: widget type (e.g. `"faq"`)
+- `state`: working config object (Bob code calls this `instanceData`)
+- `device` / `theme`: preview hints
 
-// Get current instanceData at a specific path
-getInstanceDataValue(path: string): any
-```
+Widget runtimes MUST:
+- Resolve the widget root (e.g. via `data-ck-widget="..."`) and query within it (root-scoped; avoid global selectors for internals).
+- Listen for `ck:state-update` and call `applyState(state)` to mutate DOM in-place.
+- Treat `window.CK_WIDGET.state` as optional (Venice may set it for SSR-first paint; Bob preview may not).
 
-### Lifecycle Hooks (Optional)
+### 2) Compiled `controls[]` + Ops Contract (Bob ↔ AI/automation)
 
-Widget JSON can optionally define lifecycle functions:
+To make AI editing safe and deterministic, Bob uses:
+- `compiled.controls[]`: a machine-readable allowlist of editable paths (FAQ-only in this repo snapshot).
+- Ops protocol: `{ op, path, ... }` (set/unset/insert/remove/move) applied preview-first to in-memory `instanceData`.
+- Fail-closed validation: ops are rejected unless they match `controls[]` and satisfy type/enum rules; Undo is supported.
 
-```javascript
-// Called when widget editor loads
-function onEditorMount(api) {
-  // api.updateInstanceData, api.getInstanceData available
-}
+Per-widget AI guidance lives in `denver/widgets/{widget}/agent.md` (AI-only contract; not used by runtime).
 
-// Called when widget editor unloads
-function onEditorUnmount() {
-  // Cleanup if needed
-}
+### DevStudio Bootstrap (Repo Snapshot)
 
-// Called after instanceData changes (debounced)
-function onInstanceDataChange(newData, previousData) {
-  // React to changes if needed
-}
-```
+DevStudio loads an instance and posts it into Bob:
+- `type`: `devstudio:load-instance`
+- payload: `{ compiled, instanceData }`
 
-### Rules & Constraints
-
-1. **No Network Calls** - Widget scripts MUST NOT make network requests (fetch, XMLHttpRequest, etc.)
-2. **Script Size Budget** - Widget editor scripts ≤ 50KB total per widget
-3. **Sandboxed Execution** - Scripts run in isolated scope, no access to window globals except approved APIs
-4. **Synchronous Only** - No async/await, no Promises (except in lifecycle hooks)
-5. **No DOM Manipulation** - Scripts only update instanceData; Bob handles rendering
-
-### Data Path Format
-
-Paths use dot notation with array indices:
-
-```javascript
-// Simple property
-updateInstanceData('title', 'New Title')
-
-// Nested property
-updateInstanceData('typography.selectedFont', 'Roboto')
-
-// Array item
-updateInstanceData('categories.0.title', 'Category 1')
-
-// Deep nested
-updateInstanceData('categories.0.items.2.question', 'What is this?')
-```
-
-### Helper Function Pattern
-
-Widget JSON can include helper functions for complex operations:
-
-```javascript
-// In widget JSON
-{
-  "scripts": {
-    "addCategory": `function(title) {
-      const data = getInstanceData();
-      const newCategory = { title, items: [] };
-      updateInstanceData('categories', [...data.categories, newCategory]);
-    }`,
-
-    "deleteCategory": `function(index) {
-      const data = getInstanceData();
-      const updated = data.categories.filter((_, i) => i !== index);
-      updateInstanceData('categories', updated);
-    }`
-  }
-}
-```
-
-### Admin Parity
-
-**Dieter Admin and Bob expose identical Editor API.**
-
-Widget JSON runs identically in both environments. This allows:
-- Testing widgets in Admin before deploying to Bob
-- Consistent behavior across development and production
-- Single widget JSON works everywhere
-
-### Security
-
-- Scripts execute in sandboxed environment
-- No access to localStorage, sessionStorage, cookies
-- No access to window, document (except via approved APIs)
-- Content Security Policy enforced
-- All user input sanitized before rendering
-
-**This API surface is frozen for v1. Changes require CEO approval and version bump.**
+Bob does not create instances in this harness; it edits the provided working copy and streams preview updates.
 
 ---
 
@@ -222,9 +150,9 @@ Widget JSON runs identically in both environments. This allows:
 ToolDrawer renders the HTML that each widget provides. There is no schema or control list inside Bob.
 
 **Current flow (canonical):**
-- The widget spec (`denver/widgets/{widget}/spec.json`) defines panels as HTML that already uses Dieter markup and carries `data-bob-path` (and optional `data-bob-showif`) for bindings.
-- `compileWidget` passes that HTML through unchanged, detects `diet-*` classes to know which Dieter assets to load per panel, and builds the asset URLs from Denver.
-- At runtime, ToolDrawer injects the active panel’s HTML, loads the required Dieter CSS/JS for the components it saw, calls `Dieter.hydrateAll`, and binds values via `data-bob-path`/`show-if` using `setValue`.
+- The widget spec (`denver/widgets/{widget}/spec.json`) defines panels using a small markup DSL (e.g., `<bob-panel>` blocks and `<tooldrawer-field>` macros).
+- `compileWidget` expands `<tooldrawer-field>` into Dieter component markup, detects which Dieter assets are needed, builds Denver asset URLs, and (optionally) emits `controls[]` for fail-closed ops/AI editing.
+- At runtime, ToolDrawer injects the active panel’s compiled HTML, loads the required Dieter CSS/JS, runs Dieter hydrators, and binds values via `data-bob-path` + `data-bob-showif` using `setValue` (with defaults fallback).
 - No widget-specific logic or hardcoded control lists live in Bob. Adding/changing controls = edit the widget spec; Bob just renders and binds.
 
 **Why:** Single Bob for 100+ widgets; widget JSON is the software; Bob is the shell (state, layout, bindings, publish). Controls, structure, and behavior come from the widget + Dieter assets, not from Bob code.
@@ -237,36 +165,34 @@ Bob is Clickeen's **widget builder** for registered users. It's where customers 
 
 **Simple version:** Bob is a web app where users customize widgets and see them update live before embedding them on their site.
 
-### 🔒 CRITICAL: Widget JSON vs Widget Instance
+### 🔒 CRITICAL: Widget Definition vs Widget Instance
 
-**Bob edits INSTANCES (instanceData), NOT Widget JSON.**
+**Bob edits instances (config), NOT widget definitions.** (Bob’s working copy is stored as `instanceData` in React state.)
 
-**Widget JSON = THE SOFTWARE** (`/paris/lib/widgets/faq.json`):
+**Widget Definition (a.k.a. “Widget JSON”) = THE SOFTWARE** (Denver/CDN):
 - Complete functional software for a widget type
-- Lives in codebase (git-controlled, versioned)
+- In-repo source: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
 - **NOT EDITABLE by users**
-- Defines ToolDrawer UI and functionality (uiSchema section)
-- Contains: metadata, defaults, templates, uiSchema
-- ONE file shared by all instances of that type
+- Shared by all instances of that type
 
 **Widget Instance = THE DATA** (database row):
-- User's specific widget with their custom instanceData
-- Lives in database (`widget_instances` table)
+- User’s specific widget with custom `config`
+- Lives in Michael (Supabase/Postgres): `widget_instances.config` + `widgets.type`
 - **EDITABLE by users in Bob**
-- Contains: publicId, widgetName (string like "faq"), instanceData (user's actual values)
-- Millions of instances have the same widgetName but different instanceData
+- Contains: `publicId`, `widgetType` (string like `"faq"`), `config` (user’s actual values)
+- Millions of instances share the same `widgetType` but have different `config`
 
 **When user edits in Bob:**
-- Bob fetches Widget JSON via `GET /api/widgets/:widgetType` to render ToolDrawer UI
-- Bob fetches Widget Instance via `GET /api/instance/:publicId` to get user's current instanceData
-- User edits → updates instanceData only
-- Widget JSON remains unchanged
-- Bob saves instanceData changes via `PUT /api/instance/:publicId`
+- DevStudio/Bob loads the widget definition from Denver (compiled for the editor via Bob `GET /api/widgets/[widgetname]/compiled`)
+- DevStudio/Bob loads the instance snapshot via Paris `GET /api/instance/:publicId`
+- User edits → updates config only (in React state)
+- Widget definition remains unchanged
+- Publish (planned) saves config via Paris `PUT /api/instance/:publicId`
 
 **The separation:**
-- Widget JSON = THE SOFTWARE (platform-controlled)
-- Widget Instance instanceData = THE DATA (user-controlled)
-- Bob provides the UI to edit user's data within platform rules
+- Widget definition = THE SOFTWARE (platform-controlled; Denver/CDN)
+- Instance `config` = THE DATA (user-controlled; Michael via Paris)
+- Bob provides the UI to edit user data within platform rules
 
 ---
 
@@ -274,7 +200,7 @@ Bob is Clickeen's **widget builder** for registered users. It's where customers 
 
 - **Route:** `/bob`
 - **Codebase:** `bob/` directory (Next.js App Router)
-- **Entry point:** `bob/app/bob/bob.tsx`
+- **Entry point:** `bob/app/bob/page.tsx`
 - **Deployed to:** Vercel project `c-keen-app`
 
 ---
@@ -297,6 +223,8 @@ Bob is Clickeen's **widget builder** for registered users. It's where customers 
 ---
 
 ## Bob vs MiniBob
+
+**Status (this repo snapshot):** MiniBob/Prague gallery flows are not implemented. Bob is bootstrapped by DevStudio `postMessage` and does not currently read `publicId`/`minibob` query params.
 
 **MiniBob:**
 - Bob embedded in Prague (marketing site) via iframe with `?minibob=true` query param
@@ -336,14 +264,14 @@ Bob is Clickeen's **widget builder** for registered users. It's where customers 
 
 Bob provides a single workspace where users can:
 
-1. **Edit widget instanceData** — Modify content, colors, settings (widgetName already set when instance created)
-2. **Switch templates** — Change widget layout/style without losing instanceData
+1. **Edit widget config** — Modify content, colors, settings (widget type chosen upstream)
+2. **Switch templates** — Change widget layout/style without losing config (planned)
 3. **Preview live** — See real-time preview as they edit (same HTML that will appear on their site)
-4. **Publish & get code** — Publish widget (saves to Paris) and copy embed snippet
+4. **Publish & get code** — Publish widget (save via Paris) and copy embed snippet (planned)
 
-**CRITICAL:** Bob does NOT have widget selection. User picks widget on marketing site, Prague creates instance with widgetName, then opens Bob with that instance loaded.
+**CRITICAL:** Bob does NOT have widget selection. User picks widget on marketing site, Prague creates an instance with a widget type, then opens Bob with that instance loaded.
 
-**NEW ARCHITECTURE:** Bob holds instanceData in React state during editing. All edits happen in memory. Only when user clicks "Publish" does Bob send instanceData to Paris. No auto-save. No intermediate database writes. See "New Architecture" section above for details.
+**NEW ARCHITECTURE:** Bob holds config in React state during editing. All edits happen in memory. Only when user clicks "Publish" does Bob save via Paris (persisted in Michael). No auto-save. No intermediate database writes. See "New Architecture" section above for details.
 
 ---
 
@@ -377,11 +305,10 @@ Users work in **one screen** with three areas:
 
 ### 1. Live Preview with World-Class UX
 - Center of the screen, always visible
-- Shows **real widget** rendered by Venice (not a mockup)
-- **Instant typing feedback**: postMessage patches update CSS variables while typing (no reload lag)
-- **Smooth Save**: Cross-fade between iframe states (no white flash)
+- Shows the **real widget runtime** (Denver `widget.html` + `widget.client.js`) in a sandboxed iframe
+- **Instant feedback**: Bob streams `instanceData` via `postMessage` (no iframe reload on each change)
 - Shows exactly what will appear on their website
-- Preview system requires tokenized widgets (CSS variables for patchable fields)
+- Prefer tokenized widgets (CSS vars) for patchable fields, but DOM rebuilds are allowed where appropriate (e.g., lists)
 
 ### 2. Publish UX Model (NEW ARCHITECTURE)
 
@@ -419,19 +346,11 @@ Users work in **one screen** with three areas:
 - Right top: Switch between Light/Dark theme
 - Changes are instant (postMessage patches in preview iframe)
 
-### 5. Assist Mode (AI Copilot)
-- Left drawer header: Toggle between "Manual" and "AI Copilot"
-- **Manual mode**: User edits instanceData via form controls (text fields, dropdowns, etc.)
-- **AI Copilot mode**: User edits instanceData via natural language conversation
-  - Agent reads Widget JSON and instanceData from Paris
-  - User types: "Make the button red" or "Change text to 'Click here'"
-  - Agent maps intent to instanceData changes and calls Paris PUT
-  - Agent explains what changed
-  - Uses same Paris API endpoints as manual controls
-- **LLM Providers**:
-  - Free tier: Uses DeepSeek (cost-effective)
-  - Paid tier: Uses OpenAI or Anthropic (premium quality)
-  - Provider configurable via environment variable
+### 5. Assist Mode (Manual + Copilot)
+- Left drawer header: Toggle between "Manual" and "Copilot"
+- **Manual mode**: User edits `instanceData` via ToolDrawer controls; FAQ answers include “Generate with AI” (returns ops, applied preview-first, Undo supported)
+- **Copilot mode (this repo snapshot)**: Ops Sandbox for pasting ops JSON and applying/undoing (chat Copilot is Milestone 5)
+- **AI is always fail-closed**: AI returns structured ops; Bob validates against compiled `controls[]` before applying
 
 ---
 
@@ -476,16 +395,18 @@ Done (exactly 2 API calls total)
 
 ### Dependencies
 
-**Paris (API):**
-- Bob fetches Widget JSON via `GET /api/widgets/:widgetType`
-- Bob loads/saves widget instanceData via instance endpoints
-- All data operations go through Paris
-- Bob never touches database directly
+**Paris (API gateway to Michael):**
+- `GET /api/instance/:publicId` returns the instance snapshot (`widgetType`, `config`, branding, etc.)
+- `PUT /api/instance/:publicId` persists `config` (publish/save wiring is planned in Bob UI)
+- Bob never touches the database directly; persistence goes through Paris
 
-**Venice (Preview):**
-- Bob embeds Venice in an iframe for preview
-- Venice renders widgets server-side (SSR)
-- Same HTML that will appear on customer's site
+**Denver (CDN):**
+- Source of widget definitions/assets (`denver/widgets/{widget}/…`)
+- Bob’s preview iframe loads widget HTML from `compiled.assets.htmlUrl` (a Denver URL)
+- Bob’s compile API reads `denver/widgets/{widget}/spec.json` and expands Dieter markup
+
+**Venice (Embed runtime):**
+- Not part of the edit loop; embed-only front door for third-party pages
 
 **Dieter (Design System):**
 - Bob UI uses Dieter components (buttons, toggles, etc.)
@@ -500,16 +421,16 @@ Done (exactly 2 API calls total)
 bob/
 ├── app/
 │   ├── bob/
-│   │   ├── bob.tsx           # Main Bob component
-│   │   ├── bob.module.css    # Bob-specific styles
-│   │   └── page.tsx          # Next.js page wrapper
+│   │   └── page.tsx          # Bob route
 │   ├── layout.tsx            # App layout
 │   ├── page.tsx              # Root page
 │   └── api/
-│       └── healthz/          # Health check endpoint
+│       ├── widgets/[widgetname]/compiled/route.ts  # Compiles Denver widget spec for editor UI
+│       └── paris/            # DevStudio-friendly proxy to Paris API
 ├── lib/
 │   ├── icons.ts              # Dieter icon helper
-│   └── venice.ts             # Venice URL resolver
+│   ├── compiler.server.ts    # Expands widget specs using Dieter assets
+│   └── session/              # Editing session state + postMessage bootstrap
 ├── public/
 │   └── dieter/               # Dieter assets (synced from dieter/)
 └── package.json
@@ -553,180 +474,50 @@ Bob layout uses CSS Grid with these classes:
 
 ## Preview Iframe Integration
 
-### World-Class Preview UX (Phase-1)
+### Preview UX (Phase-1)
 
-Bob implements a **double-buffered preview system** with instant typing feedback:
+**Current preview implementation (this repo snapshot):**
+- Bob’s preview is a sandboxed iframe that loads widget HTML from Denver (via `compiled.assets.htmlUrl`).
+- Bob streams config updates via `postMessage` (`ck:state-update`); the widget runtime (`widget.client.js`) applies changes in-place.
+- Venice is not used for editing previews, and there is no Bob `/api/preview/*` proxy in this codebase.
 
-**Preview Architecture:**
-- **A/B Double-Buffer**: Two iframes (A and B), load next state in hidden iframe, cross-fade swap on load
-- **postMessage Patches**: Instant preview updates while typing via CSS variable updates (no reload)
-- **Explicit Save**: No auto-save, user clicks Save to persist to Paris
-- **Smooth Transitions**: Cross-fade between iframe states (no white flash)
-
-**Tokenization Prerequisite:**
-- Widgets MUST be tokenized (use CSS variables for patchable fields)
-- Example: `border-radius: var(--btn-radius, 12px)` not `border-radius: 999px`
-- postMessage patches update CSS variables directly in preview iframe
- 
-
-**Preview-Only Features:**
-- Gated by `?preview=1` query param in Venice
-- Venice injects patch script ONLY when preview=1
-- Production embeds (`?preview=1` absent) never include preview features
-- Draft tokens passed server-side via preview proxy (browser never sees them)
-
-### Iframe URL Patterns
-
-**Standard Preview (Save triggers reload):**
-```
-{veniceBase}/e/{publicId}?ts={timestamp}&theme={theme}&device={device}
-```
-
-**Preview with Patch Support (Phase-1+):**
-```
-/api/preview/e/{publicId}?preview=1&theme={theme}&device={device}
-```
-
-**Parameters:**
-- `publicId` — Widget instance ID
-- `ts` — Timestamp for cache busting (forces full reload)
-- `preview=1` — Enables preview-only features (patch script, draft tokens)
-- `theme` — `light` or `dark`
-- `device` — `desktop` or `mobile`
-
-### Preview Proxy Route
-
-**Location:** `bob/app/api/preview/e/[publicId]/route.ts`
-
-**Purpose:** Server-side proxy that injects draft tokens for preview
-
-**Flow:**
-1. Bob calls `/api/preview/e/:publicId?preview=1` (server route)
-2. Proxy fetches from Venice with `preview=1` query param
-3. Proxy injects `X-Draft-Token` header server-side (tokens never exposed to browser)
-4. Venice receives header, loads draft config, injects patch script
-5. Returns HTML with `Cache-Control: no-store`
-
-**Why needed:** Draft tokens MUST stay server-side for security
-
-### Venice Base URL
-Resolved by `bob/lib/venice.ts` → `getVeniceBase()`:
-- **Local dev:** `http://localhost:3002`
-- **Production:** `https://c-keen-embed.vercel.app`
-
-**Environment variable:** `NEXT_PUBLIC_VENICE_URL`
+**Tokenization (recommended, not required):**
+- Prefer CSS variables for patchable style fields so `applyState` can update styles without expensive DOM rebuilds.
+- Example: `border-radius: var(--btn-radius, 12px)` rather than baking values into many selectors.
 
 ---
 
 ## Paris API Integration
 
-### Endpoints Bob Uses
+Paris is the persistence API for instance `config` (stored in Michael). Paris does not host widget definitions.
 
-**Instance Management:**
-- `GET /api/instance/:publicId` — Load widget config
-- `PUT /api/instance/:publicId` — Save changes
-- `POST /api/instance/from-template` — Create new widget
+**Current repo snapshot (DevStudio harness):**
+- DevStudio fetches instances via Bob proxy `GET /api/paris/instances` and posts `{ compiled, instanceData }` into Bob via `postMessage` (`devstudio:load-instance`).
+- Bob’s Publish button is present but not wired to a Paris `PUT` yet.
 
-**Other:**
-- `GET /api/entitlements` — Check plan limits (free vs paid)
-- `GET /api/templates?widgetType=` — Get available templates
-- `POST /api/claim` — Claim draft widget into account
+**Planned (Bob UI wiring):**
+- Load: `GET /api/paris/instance/:publicId` (→ Paris `GET /api/instance/:publicId`)
+- Publish: `PUT /api/paris/instance/:publicId` with `{ config }` (→ Paris `PUT /api/instance/:publicId`)
 
-### Canonical Save Flow (IMPORTANT)
-
-Bob MUST follow this pattern when saving:
-
-```typescript
-// 1. Check if instance exists
-const res = await fetch(`/api/instance/${publicId}`);
-
-// 2. If exists, update it
-if (res.status === 200) {
-  await fetch(`/api/instance/${publicId}`, {
-    method: 'PUT',
-    body: JSON.stringify(changes)
-  });
-}
-
-// 3. If doesn't exist, prompt user before creating
-if (res.status === 404) {
-  if (confirm("Create new widget?")) {
-    await fetch('/api/instance/from-template', {
-      method: 'POST',
-      body: JSON.stringify(newWidget)
-    });
-  }
-}
-```
-
-**Why?** Never silently create new widgets. Always check first, prompt user if creating new.
-
----
-
-## Common Mistakes (for AIs)
-
-### ❌ WRONG: Treating PUT as upsert
-```typescript
-// This creates widgets without user consent if they don't exist
-await fetch(`/api/instance/${publicId}`, {
-  method: 'PUT',
-  body: JSON.stringify(config)
-});
-```
-
-### ✅ RIGHT: Check first, prompt before create
-```typescript
-const existing = await fetch(`/api/instance/${publicId}`);
-if (existing.ok) {
-  // Update existing
-  await fetch(`/api/instance/${publicId}`, { method: 'PUT', ... });
-} else if (existing.status === 404) {
-  // Prompt user before creating new
-  if (userConfirmed) {
-    await fetch('/api/instance/from-template', { method: 'POST', ... });
-  }
-}
-```
-
-### ❌ WRONG: Iframe without cache-bust
-```typescript
-// CDN will serve stale HTML
-iframe.src = `/e/${publicId}`;
-```
-
-### ✅ RIGHT: Always include timestamp
-```typescript
-iframe.src = `/e/${publicId}?ts=${Date.now()}&theme=${theme}&device=${device}`;
-```
-
----
-
-## Error Handling
-
-Bob must handle these error states from Venice/Paris:
-
-| Error | What it means | What Bob should do |
-|-------|---------------|-------------------|
-| `TOKEN_INVALID` | Auth token is bad | Show warning, prompt re-login |
-| `TOKEN_REVOKED` | Token was cancelled | Drop token, refresh preview |
-| `NOT_FOUND` | Widget doesn't exist | Offer to create new one |
-| `CONFIG_INVALID` | Bad configuration | Show field-level errors inline |
-| `RATE_LIMITED` | Too many requests | Throttle UI, show retry message |
-| `SSR_ERROR` | Venice render failed | Show fallback, offer retry |
-
----
+**Not available in this repo snapshot:**
+- `/api/instance/from-template`, `/api/templates` (not implemented)
+- Instance creation in Paris is disabled (`POST /api/instance` returns 422)
 
 ## Environment Configuration
 
 ### Required Variables
-- `NEXT_PUBLIC_VENICE_URL` — Venice base URL for preview iframe
-  - Dev: `http://localhost:3002`
-  - Prod: `https://c-keen-embed.vercel.app`
-- `NEXT_PUBLIC_PARIS_URL` — Paris API base URL
+- `NEXT_PUBLIC_DENVER_URL` — Denver base URL (required; used to load Dieter + widget preview assets)
+  - Dev: `http://localhost:4000`
+- `PARIS_BASE_URL` — Paris API base URL for Bob’s server-side proxy (`/api/paris/*`)
   - Dev: `http://localhost:3001`
-  - Prod: `https://c-keen-api.vercel.app`
-- `PARIS_DEV_JWT` — Server-side dev JWT (for Bob's Paris proxy, dev only)
-  - Optional in dev; if not set, proxy expects client to send Authorization header
+  - Fallback: `NEXT_PUBLIC_PARIS_URL`
+- `PARIS_DEV_JWT` — Optional server-side dev JWT (for Bob’s Paris proxy); if set, Bob injects `Authorization: Bearer …` when forwarding.
+
+### Optional Variables (AI Assist)
+- `OPENAI_API_KEY` — Enables FAQ “Generate with AI” (server-side in Bob)
+- `OPENAI_MODEL` — Defaults to `gpt-4o-mini`
+- `OPENAI_BASE_URL` — Defaults to `https://api.openai.com/v1`
+- `AI_RATE_LIMIT_WINDOW_MS` / `AI_RATE_LIMIT_MAX` — In-memory rate limiting for AI endpoints (dev guardrail)
 
 ### Feature Flags
 - `enableSecondaryDrawer` — Toggle right drawer (default: `false`)
@@ -735,226 +526,24 @@ Bob must handle these error states from Venice/Paris:
 
 ---
 
-## Dev Setup & Common Issues
+## Dev Setup (This Repo Snapshot)
 
 ### Quick Start (Local Dev)
 
-**Prerequisites:**
-1. Supabase local running on ports 54321 (API) / 54322 (DB)
-2. Paris running on 3001
-3. Venice running on 3002
-4. Bob running on 3000
-
-**Start Services:**
-```bash
-# Terminal 1 - Paris
-cd paris
-SUPABASE_URL=http://127.0.0.1:54321 \
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU \
-PORT=3001 pnpm dev
-
-# Terminal 2 - Venice
-cd venice
-NEXT_PUBLIC_PARIS_URL=http://localhost:3001 \
-PORT=3002 pnpm dev
-
-# Terminal 3 - Bob
-cd bob
-NEXT_PUBLIC_VENICE_URL=http://localhost:3002 \
-NEXT_PUBLIC_PARIS_URL=http://localhost:3001 \
-PORT=3000 pnpm dev
-```
-
-**Open Bob:**
-```
-http://localhost:3000/bob?publicId=wgt_xxxxxx
-```
-
-**Important:** Replace `wgt_xxxxxx` with a real widget publicId from your database.
-
----
-
-### Creating a Test Widget
-
-Bob requires a valid widget instance to preview. Create one via Paris API:
+Use the repo’s dev-up helper:
 
 ```bash
-# 1. Get a JWT token
-JWT=$(curl -s -X POST "http://127.0.0.1:54321/auth/v1/token?grant_type=password" \
-  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"test123456"}' \
-  | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
-
-# 2. Create a test button widget
-curl -X POST "http://localhost:3001/api/instance/from-template" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $JWT" \
-  -d '{
-    "widgetType": "content.faq",
-    "templateId": "faq-list",
-    "schemaVersion": "2025-09-01"
-  }'
-
-# Response will include publicId like wgt_xxxxxx
-# Save that publicId and use it in Bob URL
+./scripts/dev-up.sh
 ```
 
-**For published preview (no auth required):**
-```bash
-# 3. Publish the widget (so Venice doesn't require tokens)
-PUBLIC_ID="wgt_xxxxxx"  # from step 2
-curl -X PUT "http://localhost:3001/api/instance/$PUBLIC_ID" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $JWT" \
-  -d '{"status":"published"}'
-```
+Then open:
+- DevStudio widget workspace: `http://localhost:5173/src/html/tools/dev-widget-workspace.html`
+- Bob (standalone, will be blank until bootstrapped): `http://localhost:3000/bob`
 
-**Or via direct DB update (bypass validation):**
-```bash
-docker exec supabase_db_clickeen psql -U postgres \
-  -c "UPDATE widget_instances SET status = 'published' WHERE public_id = 'wgt_xxxxxx';"
-```
-
----
-
-### Common Issues & Fixes
-
-#### Issue 1: "Preview unavailable" message shown
-
-**Symptoms:** Bob loads but shows gray placeholder with "Provide a valid publicId"
-
-**Root causes:**
-1. **No publicId in URL** - Bob defaults to "demo" which doesn't exist
-2. **`force-static` in page.tsx** - searchParams not read at runtime
-3. **publicId state not syncing** - URL param not passed to component
-
-**Fix:**
-1. Check URL has `?publicId=wgt_xxxxxx`
-2. Verify `bob/app/bob/page.tsx` has `export const dynamic = 'force-dynamic';` (NOT `force-static`)
-3. Verify page.tsx passes `searchParams.publicId` to `<Bob publicId={...} />`
-
-**Code check:**
-```typescript
-// bob/app/bob/page.tsx - MUST be force-dynamic
-export const dynamic = 'force-dynamic';  // ✅ Correct
-// NOT: export const dynamic = 'force-static';  // ❌ Breaks query params
-```
-
----
-
-#### Issue 2: "Widget unavailable - AUTH_REQUIRED" (403 error)
-
-**Symptoms:** Bob loads, shows widget ID in error, but Venice returns 403
-
-**Root cause:** Widget is in `draft` status and Venice requires authentication token for draft widgets
-
-**Fix:** Bob uses a preview proxy route (`/api/preview/e/:publicId`) that forwards auth headers server-side. If this doesn't work, publish the widget (see "Creating a Test Widget" above, step 3)
-
-**Why this happens:**
-- Draft widgets require `X-Embed-Token` or `Authorization` header
-- Iframe `src` cannot send custom headers directly
-- Bob's preview proxy at `/api/preview/e/[publicId]/route.ts` solves this by forwarding headers server-side
-
-**If proxy fails:** Publish the widget as a workaround
-
----
-
-#### Issue 3: Port mismatch - Venice not found
-
-**Symptoms:** Preview iframe shows "could not connect" or times out
-
-**Root cause:** Venice running on wrong port (e.g., 3032 instead of 3002)
-
-**Fix:**
-```bash
-# Check what port Venice is actually on
-lsof -i :3002  # Should show node process
-# If empty, check Venice logs for actual port
-
-# Restart Venice on correct port
-cd venice
-PORT=3002 pnpm dev
-```
-
-**Why this happens:** Next.js auto-assigns ports if default is taken. Always explicitly set `PORT=3002` when starting Venice.
-
----
-
-#### Issue 4: Bob's Paris proxy returns 404
-
-**Symptoms:** Tool drawer edits don't save, console shows 404 from `/api/paris/instance/...`
-
-**Root cause:** Bob's proxy route expects Paris at `NEXT_PUBLIC_PARIS_URL` or `http://localhost:3001`
-
-**Fix:**
-```bash
-# Check Paris is running
-curl http://localhost:3001/api/healthz
-# Should return: {"ok":true}
-
-# If not running, start Paris
-cd paris
-SUPABASE_URL=http://127.0.0.1:54321 \
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU \
-PORT=3001 pnpm dev
-```
-
----
-
-#### Issue 5: Schema validation error on Publish
-
-**Symptoms:** Clicking Publish button shows error: "unknown schema version"
-
-**Root cause:** Widget's schema doesn't exist in `widget_schemas` table (ALIGN-1 issue)
-
-**Temporary fix:** Publish via direct DB update (see "Creating a Test Widget" above)
-
-**Permanent fix (TODO):** Seed schemas in DB or add Geneva fallback to static catalog for `lab.*` types
-
----
-
-### Debugging Checklist
-
-When Bob isn't working, check in this order:
-
-1. **Services running?**
-   ```bash
-   lsof -i :3001  # Paris
-   lsof -i :3002  # Venice
-   lsof -i :3000  # Bob
-   ```
-
-2. **Valid publicId?**
-   ```bash
-   # Check widget exists
-   curl http://localhost:3001/api/instance/wgt_xxxxxx
-   # Should return 200 with widget JSON
-   ```
-
-3. **Widget published?**
-   ```bash
-   # Check status in DB
-   docker exec supabase_db_clickeen psql -U postgres \
-     -c "SELECT public_id, status FROM widget_instances WHERE public_id = 'wgt_xxxxxx';"
-   # Should show: published
-   ```
-
-4. **Venice renders widget?**
-   ```bash
-   curl -s http://localhost:3002/e/wgt_xxxxxx | head -20
-   # Should return HTML with <title>
-   ```
-
-5. **Bob page dynamic?**
-   ```bash
-   grep "force-dynamic" bob/app/bob/page.tsx
-   # Should return: export const dynamic = 'force-dynamic';
-   ```
-
-If all checks pass and Bob still doesn't work, check browser console for errors.
-
----
+### Common Issues
+- Bob crashes on startup: set `NEXT_PUBLIC_DENVER_URL` (Bob requires it to load Dieter assets).
+- DevStudio says “Supabase returned zero instances”: seed at least one `widgets` + `widget_instances` row in Michael (see `supabase/migrations/` for schema).
+- DevStudio can't reach Paris: check `PARIS_BASE_URL` and `curl http://localhost:3001/api/healthz`.
 
 ## Using Dieter Components in Bob
 
@@ -1218,52 +807,20 @@ PARIS_DEV_JWT=$(cat /tmp/jwt.txt) PORT=3000 pnpm dev
 
 ---
 
-## AI Copilot Architecture
+## AI Assist / Copilot Architecture
 
-Bob's AI Copilot feature allows users to edit widgets via natural language instead of manual form controls.
+Bob’s AI editing is built on the same contracts as Manual editing so it stays safe and scalable.
 
-### How It Works
+### Current (this repo snapshot)
+- Compiler emits `controls[]` (FAQ-only) so machines know exactly what’s editable.
+- Ops engine applies `{ op, path, ... }` to in-memory `instanceData`, validates fail-closed against `controls[]`, and supports Undo.
+- Field-level AI: FAQ answers can be generated via a Bob API route that returns ops (preview-first; no persistence).
+- Copilot pane is an “Ops Sandbox” for testing ops payloads (chat Copilot is Milestone 5).
 
-**Agent context:**
-- Widget config (GET from Paris `/api/instance/:publicId`)
-- Widget schema (what fields are editable, types, enums)
-- Current user's plan (free vs paid)
-
-**User flow:**
-1. User toggles to "AI Copilot" mode in tool drawer
-2. If free tier: Show paywall ("Upgrade to use AI Copilot")
-3. If paid tier: Chat interface appears in tool drawer
-4. User types natural language: "Make the button red"
-5. Agent maps intent to config change: `{ color: "red" }`
-6. Agent calls Paris PUT `/api/paris/instance/:publicId` (via Bob proxy)
-7. Agent responds: "Changed button color to red"
-8. Preview iframe updates automatically (cache-bust timestamp)
-
-### Implementation Notes
-
-**Keep it simple:**
-- Agent LLM provider varies by user plan (see below)
-- Agent gets widget config/schema as system context
-- Agent has tool to call Paris PUT with config changes
-- Chat UI replaces form controls in tool drawer when AI Copilot mode active
-
-**LLM Provider Strategy:**
-- Free tier: DeepSeek (cost-effective, ~$0.14/1M tokens)
-- Paid tier: OpenAI or Anthropic (premium quality)
-- Provider selected based on user's plan from entitlements API
-- All providers use same agent architecture/tools
-
-**Don't overcomplicate:**
-- No special APIs needed - uses same Paris endpoints as manual mode
-- No complex prompt engineering - schema provides structure
-- No streaming initially - simple request/response
-- Same agent code works with all LLM providers
-
-**Environment:**
-- `DEEPSEEK_API_KEY` - Required for free tier AI Copilot
-- `OPENAI_API_KEY` - Optional, for paid tier (alternative to Anthropic)
-- `ANTHROPIC_API_KEY` - Optional, for paid tier (alternative to OpenAI)
-- If no keys set, AI Copilot mode shows error: "AI Copilot not configured"
+### Planned (Milestone 5)
+- Chat Copilot that sees `compiled.controls[]`, `denver/widgets/{widget}/agent.md`, and current `instanceData`.
+- Copilot outputs ops; Bob validates/applies them via the same fail-closed engine.
+- Publish remains an explicit user action; Copilot must not write to Paris directly.
 
 ---
 
@@ -1272,7 +829,7 @@ Bob's AI Copilot feature allows users to edit widgets via natural language inste
 **Key principles:**
 1. Bob is a **builder app** for registered users (not the marketing playground)
 2. Bob **never touches the database directly** — all data through Paris API
-3. Preview iframe shows **real Venice HTML** (not mocks)
+3. Preview iframe shows the **real widget runtime** from Denver (not mocks)
 4. **Always check before creating** — never silently POST new widgets
 5. **Always include `?ts=` param** on iframe refreshes
 6. **Use pure Dieter component patterns** — don't wrap components in inappropriate containers
