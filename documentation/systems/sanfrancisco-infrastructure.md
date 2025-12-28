@@ -168,7 +168,7 @@ San Francisco uses Cloudflare-native primitives for learning jobs:
 - **Cron Triggers**: periodic scoring + example bank refresh + prompt improvement suggestions
 
 Minimal Phase‑1 job surface:
-- `sanfrancisco_events_*` queue: write payload → R2, write index row → D1 (must never block the request path)
+- `sanfrancisco-events-*` queue: write payload → R2, write index row → D1 (must never block the request path)
 
 Skeleton (conceptual):
 ```ts

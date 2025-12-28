@@ -7,12 +7,12 @@ ENVIRONMENT = "dev"
 
 [[kv_namespaces]]
 binding = "SF_KV"
-id = "REPLACE_ME"
+id = "f1abe003b9a8434699175b0c1ccd2603"
 
 [[d1_databases]]
 binding = "SF_D1"
 database_name = "sanfrancisco_d1_dev"
-database_id = "REPLACE_ME"
+database_id = "9ee059a3-538f-4b71-b2ea-f04b33e4897a"
 
 [[r2_buckets]]
 binding = "SF_R2"
@@ -20,10 +20,10 @@ bucket_name = "sanfrancisco-logs-dev"
 
 [[queues.producers]]
 binding = "SF_EVENTS"
-queue = "sanfrancisco_events_dev"
+queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
-queue = "sanfrancisco_events_dev"
+queue = "sanfrancisco-events-dev"
 
 [env.prod]
 name = "sanfrancisco-prod"
@@ -46,8 +46,7 @@ bucket_name = "sanfrancisco-logs-prod"
 
 [[env.prod.queues.producers]]
 binding = "SF_EVENTS"
-queue = "sanfrancisco_events_prod"
+queue = "sanfrancisco-events-prod"
 
 [[env.prod.queues.consumers]]
-queue = "sanfrancisco_events_prod"
-
+queue = "sanfrancisco-events-prod"
