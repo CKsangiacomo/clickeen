@@ -63,7 +63,7 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   return filtered;
 }
 
-export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
+export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidget> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }
@@ -86,66 +86,90 @@ export function compileWidgetServer(widgetJson: RawWidget): CompiledWidget {
   const controls = compileControlsFromPanels({ panels: parsed.panels, defaults });
 
   const panels: CompiledPanel[] = parsed.panels.map((panel) => {
-    let html = panel.html;
-
-    if (/<tooldrawer-divider\b/i.test(html)) {
-      throw new Error('[BobCompiler] <tooldrawer-divider /> is not supported; use <tooldrawer-cluster> only');
-    }
-
-    // Expand simple eyebrow tag to overline text.
-    html = html.replace(/<tooldrawer-eyebrow([^>]*)\/>/gi, (_full, attrsRaw: string) => {
-      const attrs = parseTooldrawerAttributes(attrsRaw || '');
-      const text = attrs.text || '';
-      return `<div class="overline" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
-    });
-
-    // Expand spacing-only clusters (grouping controls for better rhythm).
-    html = expandTooldrawerClusters(html);
-
-    // Allow '>' inside quoted values and handle both self-closing and open/close forms.
-    const tdRegex =
-      /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
-    html = html.replace(tdRegex, (fullMatch: string, groupKey: string | undefined, attrsRaw: string) => {
-      const attrs = parseTooldrawerAttributes(attrsRaw);
-      const type = attrs.type;
-      if (!type) return fullMatch;
-
-      const { stencil, spec } = loadComponentStencil(type);
-      const context = buildContext(type, attrs, spec);
-      let rendered = renderComponentStencil(stencil, context);
-      if (context.path) {
-        rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
-        if (!/data-bob-path="/.test(rendered)) {
-          rendered = rendered.replace(/<input([^>]*?)(\/?)>/, `<input$1 data-bob-path="${context.path}"$2>`);
-        }
-      }
-
-      const showIf = attrs['show-if'];
-      const wrappers: string[] = [];
-      const shouldWrapGroup = groupKey && !['podstagelayout', 'podstageappearance'].includes(groupKey);
-      if (shouldWrapGroup && groupKey) {
-        const label = groupKeyToLabel(groupKey);
-        wrappers.push(`data-bob-group="${groupKey}"`, `data-bob-group-label="${label}"`);
-      }
-      if (showIf) wrappers.push(`data-bob-showif="${showIf}"`);
-
-      return wrappers.length > 0 ? `<div ${wrappers.join(' ')}>${rendered}</div>` : rendered;
-    });
-
-    return {
-      id: panel.id,
-      label: panel.label,
-      html,
-    };
+    return panel;
   });
 
-  const assets = buildWidgetAssets({ widgetname, usages: parsed.usages });
+  const renderedPanels: CompiledPanel[] = await Promise.all(
+    panels.map(async (panel) => {
+      let html = panel.html;
+
+      if (/<tooldrawer-divider\b/i.test(html)) {
+        throw new Error('[BobCompiler] <tooldrawer-divider /> is not supported; use <tooldrawer-cluster> only');
+      }
+
+      // Expand simple eyebrow tag to overline text.
+      html = html.replace(/<tooldrawer-eyebrow([^>]*)\/>/gi, (_full, attrsRaw: string) => {
+        const attrs = parseTooldrawerAttributes(attrsRaw || '');
+        const text = attrs.text || '';
+        return `<div class="overline" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
+      });
+
+      // Expand spacing-only clusters (grouping controls for better rhythm).
+      html = expandTooldrawerClusters(html);
+
+      // Allow '>' inside quoted values and handle both self-closing and open/close forms.
+      const tdRegex =
+        /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
+
+      let out = '';
+      let cursor = 0;
+      tdRegex.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = tdRegex.exec(html)) !== null) {
+        const index = match.index ?? 0;
+        out += html.slice(cursor, index);
+
+        const fullMatch = match[0];
+        const groupKey = match[1];
+        const attrsRaw = match[2] || '';
+        const attrs = parseTooldrawerAttributes(attrsRaw);
+        const type = attrs.type;
+        if (!type) {
+          out += fullMatch;
+          cursor = tdRegex.lastIndex;
+          continue;
+        }
+
+        const { stencil, spec } = await loadComponentStencil(type);
+        const context = await buildContext(type, attrs, spec);
+        let rendered = renderComponentStencil(stencil, context);
+        if (context.path) {
+          rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
+          if (!/data-bob-path="/.test(rendered)) {
+            rendered = rendered.replace(/<input([^>]*?)(\/?)>/, `<input$1 data-bob-path="${context.path}"$2>`);
+          }
+        }
+
+        const showIf = attrs['show-if'];
+        const wrappers: string[] = [];
+        const shouldWrapGroup = groupKey && !['podstagelayout', 'podstageappearance'].includes(groupKey);
+        if (shouldWrapGroup && groupKey) {
+          const label = groupKeyToLabel(groupKey);
+          wrappers.push(`data-bob-group="${groupKey}"`, `data-bob-group-label="${label}"`);
+        }
+        if (showIf) wrappers.push(`data-bob-showif="${showIf}"`);
+
+        out += wrappers.length > 0 ? `<div ${wrappers.join(' ')}>${rendered}</div>` : rendered;
+        cursor = tdRegex.lastIndex;
+      }
+      out += html.slice(cursor);
+      html = out;
+
+      return {
+        id: panel.id,
+        label: panel.label,
+        html,
+      };
+    }),
+  );
+
+  const assets = await buildWidgetAssets({ widgetname, usages: parsed.usages });
 
   return {
     widgetname,
     displayName,
     defaults,
-    panels,
+    panels: renderedPanels,
     controls,
     assets,
   };

@@ -8,14 +8,14 @@
   with full integration across all Clickeen services.
 
   WHAT IT DOES:
-  - Embeds Bob widget builder (service running at localhost:3000)
+  - Embeds Bob widget builder (remote by default; configurable via ?bob=...)
   - Instance switcher to test different widget instances
   - Full integration: Bob + Paris API + Venice SSR preview
 
   ARCHITECTURE:
-  - Bob service code: /bob directory (Next.js app on port 3000)
-  - Paris service code: /paris directory (API on port 3001)
-  - Venice service code: /venice directory (SSR on port 3002)
+  - Bob service code: /bob directory (Next.js app)
+  - Paris service code: /paris directory (API)
+  - Venice service code: /venice directory (SSR)
   - This file: DevStudio page that INTEGRATES those services
 
   AI NOTE:
@@ -199,14 +199,24 @@
 <div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
   <iframe
     id="bob-iframe"
-    src="http://localhost:3000/bob"
+    src="about:blank"
     style="width: 100%; height: 100%; border: 0; display: block;"
     title="Bob Widget Builder"
   ></iframe>
 </div>
 
 <script type="module">
-const BOB_ORIGIN = 'http://localhost:3000';
+function requireBobOrigin() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = (params.get('bob') || 'https://bob.dev.clickeen.com').trim();
+  try {
+    return new URL(raw).origin;
+  } catch {
+    throw new Error(`Invalid ?bob= origin: "${raw}"`);
+  }
+}
+
+const BOB_ORIGIN = requireBobOrigin();
 const PARIS_API = `${BOB_ORIGIN}/api/paris`;
 let currentPublicId = null;
 let instances = [];
@@ -220,7 +230,10 @@ const iframe = document.getElementById('bob-iframe');
 const currentLabel = document.getElementById('current-instance-label');
 const compiledCache = new Map();
 
+iframe.src = `${BOB_ORIGIN}/bob`;
+
 window.addEventListener('message', (event) => {
+  if (event.origin !== BOB_ORIGIN) return;
   const data = event.data;
   if (data && data.type === 'bob:session-ready' && currentPublicId) {
     console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
@@ -368,7 +381,7 @@ async function sendInstanceToIframe(publicId) {
       compiled,
       instanceData: instance.config ?? null,
     },
-    '*'
+    BOB_ORIGIN
   );
 }
 

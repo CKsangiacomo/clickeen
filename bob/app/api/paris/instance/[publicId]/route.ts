@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 const PARIS_BASE_URL =
   process.env.PARIS_BASE_URL ||

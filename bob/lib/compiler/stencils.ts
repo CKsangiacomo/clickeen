@@ -1,16 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
+import { requireTokyoUrl } from './assets';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
-
-function resolveRepoPath(...segments: string[]) {
-  const cwd = process.cwd();
-  const direct = path.join(cwd, ...segments);
-  if (fs.existsSync(direct)) return direct;
-  return path.join(cwd, '..', ...segments);
-}
 
 type ComponentSpec = {
   defaults?: Array<{
@@ -37,20 +29,42 @@ function parseBooleanAttr(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
-export function loadComponentStencil(type: string): { stencil: string; spec?: ComponentSpec } {
-  const base = resolveRepoPath('tokyo', 'dieter', 'components', type);
-  const htmlPath = path.join(base, `${type}.html`);
-  const specPath = path.join(base, `${type}.spec.json`);
+const stencilCache = new Map<string, Promise<{ stencil: string; spec?: ComponentSpec }>>();
 
-  if (!fs.existsSync(htmlPath)) {
-    throw new Error(`[BobCompiler] Missing stencil for component ${type} at ${htmlPath}`);
-  }
-  const stencil = fs.readFileSync(htmlPath, 'utf8');
-  let spec: ComponentSpec | undefined;
-  if (fs.existsSync(specPath)) {
-    spec = JSON.parse(fs.readFileSync(specPath, 'utf8')) as ComponentSpec;
-  }
-  return { stencil, spec };
+export async function loadComponentStencil(type: string): Promise<{ stencil: string; spec?: ComponentSpec }> {
+  const name = type.trim();
+  if (!name) throw new Error('[BobCompiler] Missing component type for stencil load');
+
+  const cached = stencilCache.get(name);
+  if (cached) return cached;
+
+  const promise = (async () => {
+    const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
+    const base = `${tokyoRoot}/dieter/components/${encodeURIComponent(name)}`;
+    const htmlUrl = `${base}/${encodeURIComponent(name)}.html`;
+    const specUrl = `${base}/${encodeURIComponent(name)}.spec.json`;
+
+    const stencilRes = await fetch(htmlUrl, { cache: 'no-store' });
+    if (!stencilRes.ok) {
+      throw new Error(`[BobCompiler] Missing stencil for component "${name}" (${stencilRes.status} ${stencilRes.statusText})`);
+    }
+    const stencil = await stencilRes.text();
+
+    let spec: ComponentSpec | undefined;
+    const specRes = await fetch(specUrl, { cache: 'no-store' });
+    if (specRes.ok) {
+      spec = (await specRes.json()) as ComponentSpec;
+    } else if (specRes.status !== 404) {
+      throw new Error(
+        `[BobCompiler] Failed to load component spec "${name}" (${specRes.status} ${specRes.statusText})`,
+      );
+    }
+
+    return { stencil, spec };
+  })();
+
+  stencilCache.set(name, promise);
+  return promise;
 }
 
 function inlineDieterIcons(html: string): string {
@@ -72,7 +86,51 @@ function sanitizeId(input: string): string {
   return input.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 }
 
-export function buildContext(component: string, attrs: TooldrawerAttrs, spec?: ComponentSpec): Record<string, unknown> {
+async function renderNestedTooldrawerFields(markup: string): Promise<string> {
+  // Allow '>' inside quoted values and handle both self-closing and open/close forms.
+  const tdRegex =
+    /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
+
+  let out = '';
+  let cursor = 0;
+  tdRegex.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tdRegex.exec(markup)) !== null) {
+    const index = match.index ?? 0;
+    out += markup.slice(cursor, index);
+
+    const fullMatch = match[0];
+    const attrsRaw = match[2] || '';
+    const attrsInner = parseTooldrawerAttributes(attrsRaw);
+    const typeInner = attrsInner.type;
+    if (!typeInner) {
+      out += fullMatch;
+      cursor = tdRegex.lastIndex;
+      continue;
+    }
+
+    const { stencil: nestedStencil, spec: nestedSpec } = await loadComponentStencil(typeInner);
+    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec);
+    let rendered = renderComponentStencil(nestedStencil, nestedContext);
+    if (attrsInner.template) {
+      const decodedNested = decodeHtmlEntities(attrsInner.template);
+      rendered = rendered.replace(/{{\s*template\s*}}/g, decodedNested);
+    }
+
+    out += rendered;
+    cursor = tdRegex.lastIndex;
+  }
+
+  out += markup.slice(cursor);
+  return out;
+}
+
+export async function buildContext(
+  component: string,
+  attrs: TooldrawerAttrs,
+  spec?: ComponentSpec,
+): Promise<Record<string, unknown>> {
   const defaults = spec?.defaults?.[0];
   const size = attrs.size || (defaults?.context?.size as string) || 'md';
   const indexToken = attrs.indexToken || attrs['index-token'] || attrs['data-index-token'] || '__INDEX__';
@@ -139,21 +197,7 @@ export function buildContext(component: string, attrs: TooldrawerAttrs, spec?: C
       },
     );
 
-    const tdRegex =
-      /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
-    templateValue = templateValue.replace(tdRegex, (fullMatch: string, _groupKey: string | undefined, attrsRaw: string) => {
-      const attrsInner = parseTooldrawerAttributes(attrsRaw);
-      const typeInner = attrsInner.type;
-      if (!typeInner) return fullMatch;
-      const { stencil: nestedStencil, spec: nestedSpec } = loadComponentStencil(typeInner);
-      const nestedContext = buildContext(typeInner, attrsInner, nestedSpec);
-      let rendered = renderComponentStencil(nestedStencil, nestedContext);
-      if (attrsInner.template) {
-        const decodedNested = decodeHtmlEntities(attrsInner.template);
-        rendered = rendered.replace(/{{\s*template\s*}}/g, decodedNested);
-      }
-      return rendered;
-    });
+    templateValue = await renderNestedTooldrawerFields(templateValue);
   }
 
   Object.assign(merged, {

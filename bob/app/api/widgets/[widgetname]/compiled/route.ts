@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { compileWidgetServer } from '../../../../../lib/compiler.server';
+import type { RawWidget } from '../../../../../lib/compiler.shared';
 
 export async function GET(_req: Request, { params }: { params: { widgetname: string } }) {
   const widgetname = params.widgetname;
@@ -29,8 +30,8 @@ export async function GET(_req: Request, { params }: { params: { widgetname: str
       );
     }
 
-    const widgetJson = (await res.json()) as unknown;
-    const compiled = compileWidgetServer(widgetJson);
+    const widgetJson = (await res.json()) as RawWidget;
+    const compiled = await compileWidgetServer(widgetJson);
     return NextResponse.json(compiled, { headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
