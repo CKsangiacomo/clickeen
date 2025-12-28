@@ -9,3 +9,4 @@ export { hydrateMenuactions } from './menuactions/menuactions';
 export { hydrateTabs } from './tabs/tabs';
 export { hydrateSegmented } from './segmented/segmented';
 export { hydratePopAddLink } from './popaddlink/popaddlink';
+export { hydrateChoiceTiles } from './choice-tiles/choice-tiles';

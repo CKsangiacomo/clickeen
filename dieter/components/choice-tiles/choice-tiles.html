@@ -1,0 +1,28 @@
+<div class="diet-choice-tiles" data-size="{{size}}">
+  <input
+    id="{{id}}"
+    type="hidden"
+    class="diet-choice-tiles__field"
+    value="{{value}}"
+    {{#if path}}data-path="{{path}}"{{/if}}
+  />
+
+  <div class="diet-choice-tiles__row" role="radiogroup" aria-label="{{label}}">
+    {{#each options}}
+      <button
+        type="button"
+        class="diet-btn-ictxt diet-choice-tiles__option{{#if selected}} is-selected{{/if}}"
+        data-size="{{../size}}"
+        data-variant="neutral"
+        data-value="{{value}}"
+        role="radio"
+        {{#if selected}}aria-checked="true"{{else}}aria-checked="false"{{/if}}
+      >
+        {{#if icon}}
+          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="{{icon}}"></span>
+        {{/if}}
+        <span class="diet-btn-ictxt__label {{bodyClass}}">{{label}}</span>
+      </button>
+    {{/each}}
+  </div>
+</div>

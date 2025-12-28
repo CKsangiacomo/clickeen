@@ -1,10 +1,10 @@
 import './bob_app.css';
 
-const DENVER_BASE = process.env.NEXT_PUBLIC_DENVER_URL;
-if (!DENVER_BASE) {
-  throw new Error('NEXT_PUBLIC_DENVER_URL is required to load Dieter assets');
+const TOKYO_BASE = process.env.NEXT_PUBLIC_TOKYO_URL;
+if (!TOKYO_BASE) {
+  throw new Error('NEXT_PUBLIC_TOKYO_URL is required to load Dieter assets');
 }
-const DIETER_BASE = `${DENVER_BASE}/dieter`;
+const DIETER_BASE = `${TOKYO_BASE}/dieter`;
 
 export default function RootLayout({
   children,

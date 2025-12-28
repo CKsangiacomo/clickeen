@@ -37,6 +37,7 @@ export interface CompiledControl {
   showIf?: string;
   options?: CompiledControlOption[];
   kind?: ControlKind;
+  allowImage?: boolean;
   enumValues?: string[];
   itemIdPath?: string;
   min?: number;

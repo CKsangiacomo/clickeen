@@ -1,0 +1,227 @@
+{
+  "widgetname": "faq",
+  "defaults": {
+    "title": "Frequently Asked Questions",
+    "showTitle": true,
+    "categoryTitle": "All Questions",
+    "displayCategoryTitles": true,
+    "layout": {
+      "type": "accordion",
+      "columns": {
+        "desktop": 2,
+      "tablet": 2,
+      "mobile": 1
+      },
+      "gap": 16
+    },
+    "appearance": {
+      "itemBackground": "var(--color-system-white)",
+      "iconStyle": "plus",
+      "questionColor": "var(--color-system-black)",
+      "answerColor": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
+    },
+    "behavior": {
+      "expandFirst": false,
+      "expandAll": false,
+      "multiOpen": false,
+      "displayVideos": true,
+      "displayImages": true,
+      "showBacklink": true
+    },
+    "stage": {
+      "background": "var(--color-system-gray-5)",
+      "alignment": "center",
+      "paddingLinked": true,
+      "padding": 80,
+      "paddingTop": 80,
+      "paddingRight": 80,
+      "paddingBottom": 80,
+      "paddingLeft": 80
+    },
+    "pod": {
+      "background": "var(--color-system-white)",
+      "paddingLinked": true,
+      "padding": 40,
+      "paddingTop": 40,
+      "paddingRight": 40,
+      "paddingBottom": 40,
+      "paddingLeft": 40,
+      "widthMode": "full",
+      "contentWidth": 960,
+      "radiusLinked": true,
+      "radius": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "radiusBR": "4xl",
+      "radiusBL": "4xl"
+    },
+    "typography": {
+      "globalFamily": "Inter",
+      "roleScales": {
+        "title": {
+          "xs": "18px",
+          "s": "20px",
+          "m": "24px",
+          "l": "28px",
+          "xl": "32px"
+        },
+        "section": {
+          "xs": "12px",
+          "s": "13px",
+          "m": "14px",
+          "l": "16px",
+          "xl": "18px"
+        },
+        "question": {
+          "xs": "14px",
+          "s": "15px",
+          "m": "16px",
+          "l": "18px",
+          "xl": "20px"
+        },
+        "answer": {
+          "xs": "13px",
+          "s": "14px",
+          "m": "15px",
+          "l": "17px",
+          "xl": "19px"
+        }
+      },
+      "roles": {
+        "title": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "24px",
+          "fontStyle": "normal",
+          "weight": "600"
+        },
+        "section": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "14px",
+          "fontStyle": "normal",
+          "weight": "600"
+        },
+        "question": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "16px",
+          "fontStyle": "normal",
+          "weight": "600"
+        },
+        "answer": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "15px",
+          "fontStyle": "normal",
+          "weight": "400"
+        }
+      }
+    },
+    "objects": {
+      "objects": [
+        {
+          "id": "q1",
+          "type": "faq-qa",
+          "payload": {
+            "question": "What is Clickeen?",
+            "answer": "Embeddable widgets with conversions built in.",
+            "defaultOpen": false
+          }
+        },
+        {
+          "id": "q2",
+          "type": "faq-qa",
+          "payload": {
+            "question": "Is there a free plan?",
+            "answer": "Yes, one active widget with core features.",
+            "defaultOpen": false
+          }
+        },
+        {
+          "id": "q3",
+          "type": "faq-qa",
+          "payload": {
+            "question": "How do I install a widget?",
+            "answer": "Copy the embed code and paste it before </body> on your site.",
+            "defaultOpen": false
+          }
+        }
+      ]
+    },
+    "sections": [
+      {
+        "id": "s1",
+        "title": "All Questions",
+        "faqs": [
+          {
+            "id": "q1",
+            "question": "What is Clickeen?",
+            "answer": "Embeddable widgets with conversions built in.",
+            "defaultOpen": false
+          },
+          {
+            "id": "q2",
+            "question": "Is there a free plan?",
+            "answer": "Yes, one active widget with core features.",
+            "defaultOpen": false
+          },
+          {
+            "id": "q3",
+            "question": "How do I install a widget?",
+            "answer": "Copy the embed code and paste it before </body> on your site.",
+            "defaultOpen": false
+          }
+        ]
+      }
+    ]
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-cluster>",
+    "  <tooldrawer-field class='diet-object-manager' type='object-manager' path='sections' add-label='Add section' reorder-label='Manage sections' reorder-title='Manage sections' label-path='title' index-token='__SECTION__' default-item='{&quot;title&quot;:&quot;All Questions&quot;,&quot;faqs&quot;:[{&quot;question&quot;:&quot;New question&quot;,&quot;answer&quot;:&quot;New answer&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; path=&quot;sections.__SECTION__.faqs&quot; label=&quot;Questions&quot; add-label=&quot;Add question&quot; labelPath=&quot;sections.__SECTION__.title&quot; labelInputLabel=&quot;Section&quot; labelPlaceholder=&quot;All Questions&quot; labelSize=&quot;lg&quot; default-item=&quot;{&amp;quot;question&amp;quot;:&amp;quot;New question&amp;quot;,&amp;quot;answer&amp;quot;:&amp;quot;New answer&amp;quot;}&quot; template=&apos;&lt;div class=&quot;diet-repeater__item-body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your question&quot;&gt;Type your question&lt;/span&gt;&lt;button class=&quot;diet-dropdown-header-icon diet-btn-ic&quot; data-size=&quot;md&quot; data-variant=&quot;neutral&quot; type=&quot;button&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;hand.point.up&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Question&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your question&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt diet-popaddlink__apply&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your question&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.question&quot; /&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your answer&quot;&gt;Type your answer&lt;/span&gt;&lt;button class=&quot;diet-dropdown-header-icon diet-btn-ic&quot; data-size=&quot;md&quot; data-variant=&quot;neutral&quot; type=&quot;button&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;hand.point.up&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Answer&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your answer&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger diet-popaddlink__close&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your answer&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.answer&quot; /&gt;&lt;/div&gt;&lt;/div&gt;&apos; /&gt;' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field type='toggle' size='md' path='showTitle' label='Show title' />",
+    "    <tooldrawer-field type='textfield' size='lg' databinding='title' path='title' label='FAQ title' hint='Frequently Asked Questions' value='{{title}}' show-if=\"showTitle == true\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='displayCategoryTitles' label='Show section title' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='layout'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Widget layout' />",
+    "    <tooldrawer-field type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
+    "    <tooldrawer-field type='textfield' size='md' path='layout.gap' label='Gap (px)' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.multiOpen' label='Allow multiple open' show-if=\"layout.type == 'accordion'\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.expandAll' label='Expand all questions' show-if=\"layout.type == 'accordion'\" />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"layout.type == 'multicolumn'\">",
+    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.tablet' label='Columns (tablet)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.mobile' label='Columns (mobile)' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='appearance'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Widget appearance' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.itemBackground' label='Item background' value='{{appearance.itemBackground}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.questionColor' label='Question text color' value='{{appearance.questionColor}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.answerColor' label='Answer text color' value='{{appearance.answerColor}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Widget background' value='{{pod.background}}' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='settings'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.displayVideos' label='Display videos' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.displayImages' label='Display images' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.showBacklink' label='Show backlink' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>"
+  ]
+}

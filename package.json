@@ -8,6 +8,7 @@
     "bob",
     "dieter",
     "paris",
+    "sanfrancisco",
     "venice"
   ],
   "scripts": {
@@ -20,6 +21,7 @@
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:paris": "pnpm --filter @clickeen/paris dev",
+    "dev:sanfrancisco": "pnpm --filter @clickeen/sanfrancisco dev",
     "dev:venice": "pnpm --filter @clickeen/venice dev",
     "build:bob": "pnpm --filter @clickeen/bob build",
     "build:admin": "pnpm --filter @clickeen/devstudio build",

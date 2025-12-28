@@ -33,8 +33,6 @@ CREATE TABLE IF NOT EXISTS widgets (
   public_key TEXT UNIQUE NOT NULL,
   status TEXT DEFAULT 'active',
   config JSONB DEFAULT '{}',
-  template_id TEXT,
-  schema_version TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -45,8 +43,6 @@ CREATE TABLE IF NOT EXISTS widget_instances (
   public_id TEXT UNIQUE NOT NULL,
   status TEXT DEFAULT 'draft' CHECK (status IN ('draft','published','inactive')),
   config JSONB NOT NULL DEFAULT '{}',
-  template_id TEXT,
-  schema_version TEXT,
   draft_token UUID,
   claimed_at TIMESTAMPTZ,
   expires_at TIMESTAMPTZ,

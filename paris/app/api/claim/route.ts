@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         claimed_at: new Date().toISOString(),
       })
       .eq('id', claimed.id)
-      .select('public_id,status,template_id,schema_version,config,updated_at')
+      .select('public_id,status,config,updated_at')
       .single();
 
     if (update.error) {

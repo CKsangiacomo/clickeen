@@ -418,6 +418,70 @@ function applyGroupHeaders(scope: HTMLElement) {
   scope.appendChild(rebuilt);
 }
 
+function collectShowIfPaths(raw: string): string[] {
+  if (!raw.trim()) return [];
+  try {
+    return tokenizeShowIf(raw)
+      .filter((tok): tok is { t: 'path'; v: string } => tok.t === 'path')
+      .map((tok) => tok.v);
+  } catch {
+    return [];
+  }
+}
+
+function autoNestShowIfDependentClusters(scope: HTMLElement) {
+  const topLevelClusters = Array.from(
+    scope.querySelectorAll<HTMLElement>(':scope > .tdmenucontent__cluster'),
+  );
+  if (topLevelClusters.length < 2) return;
+
+  const clusterOrder = new Map<HTMLElement, number>();
+  const pathOwner = new Map<string, HTMLElement>();
+
+  const registerClusterPaths = (cluster: HTMLElement) => {
+    const paths = Array.from(cluster.querySelectorAll<HTMLElement>('[data-bob-path]'))
+      .map((el) => el.getAttribute('data-bob-path'))
+      .filter((p): p is string => Boolean(p && p.trim()));
+    paths.forEach((p) => pathOwner.set(p, cluster));
+  };
+
+  const findControllingCluster = (cluster: HTMLElement): HTMLElement | null => {
+    const showIfNodes = [
+      ...(cluster.hasAttribute('data-bob-showif') ? [cluster] : []),
+      ...Array.from(cluster.querySelectorAll<HTMLElement>('[data-bob-showif]')),
+    ];
+
+    let controller: HTMLElement | null = null;
+    let bestOrder = -1;
+
+    showIfNodes.forEach((node) => {
+      const raw = node.getAttribute('data-bob-showif') || '';
+      collectShowIfPaths(raw).forEach((path) => {
+        const owner = pathOwner.get(path);
+        if (!owner) return;
+        const order = clusterOrder.get(owner);
+        if (order == null) return;
+        if (order > bestOrder) {
+          bestOrder = order;
+          controller = owner;
+        }
+      });
+    });
+
+    return controller;
+  };
+
+  topLevelClusters.forEach((cluster, idx) => {
+    const controller = findControllingCluster(cluster);
+    if (controller && controller !== cluster && !controller.contains(cluster)) {
+      controller.appendChild(cluster);
+    }
+
+    clusterOrder.set(cluster, idx);
+    registerClusterPaths(cluster);
+  });
+}
+
 export function TdMenuContent({
   panelId,
   panelHtml,
@@ -567,6 +631,7 @@ export function TdMenuContent({
     const container = containerRef.current;
     if (!container) return;
     container.innerHTML = panelHtml || '';
+    autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
 
     ensureAssets(dieterAssets)
@@ -590,6 +655,19 @@ export function TdMenuContent({
     const container = containerRef.current;
     if (!container) return;
 
+    const handleBobOpsEvent = (event: Event) => {
+      // Dieter controls may emit an explicit ops bundle (e.g. typography family -> {family,weight,style}).
+      const detail = (event as any).detail;
+      const ops = detail?.ops as WidgetOp[] | undefined;
+      if (!Array.isArray(ops) || ops.length === 0) return;
+      event.stopPropagation();
+      const applied = applyOps(ops);
+      if (!applied.ok && process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('[TdMenuContent] Failed to apply ops event', applied.errors);
+      }
+    };
+
     const applySet = (path: string, rawValue: unknown) => {
       const applied = applyOps([{ op: 'set', path, value: rawValue }]);
       if (!applied.ok && process.env.NODE_ENV === 'development') {
@@ -599,6 +677,9 @@ export function TdMenuContent({
     };
 
     const handleContainerEvent = (event: Event) => {
+      const detail = (event as any).detail;
+      if (detail?.bobIgnore === true) return;
+
       const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
       if (!target) return;
       const path = resolvePathFromTarget(target);
@@ -624,10 +705,33 @@ export function TdMenuContent({
 
       if ('value' in target) {
         const rawValue = (target as HTMLInputElement).value;
+
+        // Typography: switching to "custom" should prefill sizeCustom with the current preset size.
+        const sizePresetMatch = path.match(/^typography\.roles\.([^.]+)\.sizePreset$/);
+        if (sizePresetMatch && rawValue === 'custom') {
+          const roleKey = sizePresetMatch[1];
+          const currentPreset = getAt<unknown>(instanceData, path);
+          if (typeof currentPreset === 'string' && currentPreset.trim() && currentPreset !== 'custom') {
+            const scaleValue = getAt<unknown>(instanceData, `typography.roleScales.${roleKey}.${currentPreset}`);
+            if (typeof scaleValue === 'string' && scaleValue.trim()) {
+              const applied = applyOps([
+                { op: 'set', path: `typography.roles.${roleKey}.sizeCustom`, value: scaleValue },
+                { op: 'set', path, value: rawValue },
+              ]);
+              if (!applied.ok && process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.warn('[TdMenuContent] Failed to apply typography sizePreset ops', applied.errors);
+              }
+              return;
+            }
+          }
+        }
+
         applySet(path, rawValue);
       }
     };
 
+    container.addEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
 
@@ -692,6 +796,7 @@ export function TdMenuContent({
     });
 
     return () => {
+      container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
     };

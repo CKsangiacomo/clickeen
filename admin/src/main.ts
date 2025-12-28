@@ -4,6 +4,7 @@ import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { generateBobNativeCatalog } from './BobNativeCatalog';
 import { getIcon } from './data/icons';
 import {
+  hydrateChoiceTiles,
   hydrateDropdownActions,
   hydrateDropdownFill,
   hydrateDropdownEdit,
@@ -112,6 +113,7 @@ function hydrateIcons(scope: ParentNode) {
 }
 
 function hydrateDieterComponents(scope: Element | DocumentFragment): void {
+  hydrateChoiceTiles(scope);
   hydrateTextfield(scope);
   hydrateTextedit(scope);
   hydrateDropdownActions(scope);

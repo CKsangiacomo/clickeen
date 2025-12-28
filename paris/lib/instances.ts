@@ -8,8 +8,6 @@ export interface InstanceRecord {
   widgetId: string;
   draftToken: string | null;
   widgetType: string | null;
-  templateId: string | null;
-  schemaVersion: string | null;
   config: Record<string, unknown>;
   updatedAt: string;
   workspaceId: string;
@@ -25,7 +23,7 @@ export class TokenError extends Error {
 export async function loadInstance(client: AdminClient, publicId: string): Promise<InstanceRecord | null> {
   const { data: instance, error: instanceError } = await client
     .from('widget_instances')
-    .select('id, public_id, status, widget_id, draft_token, template_id, schema_version, config, updated_at')
+    .select('id, public_id, status, widget_id, draft_token, config, updated_at')
     .eq('public_id', publicId)
     .maybeSingle();
 
@@ -58,8 +56,6 @@ export async function loadInstance(client: AdminClient, publicId: string): Promi
     widgetId: instance.widget_id,
     draftToken: instance.draft_token,
     widgetType: (widget as any)?.type ?? null,
-    templateId: instance.template_id ?? null,
-    schemaVersion: instance.schema_version ?? null,
     config: instance.config ?? {},
     updatedAt: instance.updated_at,
     workspaceId: widget.workspace_id,
@@ -69,7 +65,7 @@ export async function loadInstance(client: AdminClient, publicId: string): Promi
 export async function loadInstanceByDraftToken(client: AdminClient, draftToken: string) {
   const { data: instance, error } = await client
     .from('widget_instances')
-    .select('id, public_id, status, widget_id, draft_token, template_id, schema_version, config, updated_at')
+    .select('id, public_id, status, widget_id, draft_token, config, updated_at')
     .eq('draft_token', draftToken)
     .maybeSingle();
 
@@ -92,8 +88,6 @@ export async function loadInstanceByDraftToken(client: AdminClient, draftToken: 
     widgetId: instance.widget_id,
     draftToken: instance.draft_token,
     widgetType: (widget as any)?.type ?? null,
-    templateId: instance.template_id ?? null,
-    schemaVersion: instance.schema_version ?? null,
     config: instance.config ?? {},
     updatedAt: instance.updated_at,
     workspaceId: widget.workspace_id,
@@ -107,8 +101,6 @@ export function shapeInstanceResponse(record: InstanceRecord, branding?: Brandin
     publicId: record.publicId,
     status: record.status,
     widgetType: record.widgetType,
-    templateId: record.templateId,
-    schemaVersion: record.schemaVersion,
     config: record.config,
     // Default to safe, enforced branding unless a plan-based branding is provided
     branding: branding ?? { hide: false, enforced: true },

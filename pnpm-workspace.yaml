@@ -3,8 +3,10 @@ packages:
   - bob
   - dieter
   - paris
+  - sanfrancisco
   - venice
   - tooling/sf-symbols
 
 onlyBuiltDependencies:
   - esbuild
+  - workerd

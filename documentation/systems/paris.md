@@ -9,7 +9,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).
 **Owner:** Vercel project `c-keen-api`.
-**Dependencies:** Michael (Postgres), Geneva (schemas), Atlas (read-only config).
+**Dependencies:** Michael (Postgres), Atlas (read-only config).
 **Phase-1 Endpoints:** `POST /api/instance (disabled)`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`. (`GET /api/instances` exists for dev tooling only.)
 **Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.
 **Common mistakes:** Treating PUT as upsert, calling Paris directly from browser surfaces, skipping idempotency key handling.
@@ -43,9 +43,9 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 **Paris manages INSTANCES, NOT widget definitions.**
 
-**Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Denver/CDN):
+**Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Tokyo/CDN):
 - Platform-controlled widget spec + runtime assets
-- In-repo source: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- In-repo source: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - **NOT stored in Michael**
 - **NOT served by Paris**
 
@@ -68,7 +68,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 **Paris endpoints (instance data only):**
 - `GET /api/instance/:publicId` — Loads the instance snapshot (config + metadata)
-- `PUT /api/instance/:publicId` — Updates instance `config`/`status`/`templateId` (workspace-auth)
+- `PUT /api/instance/:publicId` — Updates instance `config`/`status` (workspace-auth)
 - `POST /api/instance` — Disabled in this repo snapshot (returns 422)
 
 # Paris — HTTP API Service (Phase-1)
@@ -96,11 +96,11 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 
 ### Widget Definitions (Non-Paris)
 
-Paris does **not** serve widget definitions. Widget definitions (“Widget JSON”) live in **Denver/CDN**.
+Paris does **not** serve widget definitions. Widget definitions (“Widget JSON”) live in **Tokyo/CDN**.
 
-- Source in-repo: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- Source in-repo: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
-- Venice embed rendering should load widget runtime assets from Denver; Paris only provides instance config via `/api/instance/:publicId`
+- Venice embed rendering should load widget runtime assets from Tokyo; Paris only provides instance config via `/api/instance/:publicId`
 
 ### Instance Management (Phase-1)
 `publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`. Widget type is `widgets.type` (surfaced as `widgetType`).
@@ -115,8 +115,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
       "publicId": "wgt_42yx31",
       "status": "draft",
       "widgetType": "faq",
-      "templateId": null,
-      "schemaVersion": "2025-09-01",
       "config": {
         "title": "Frequently Asked Questions",
         "categories": [...]
@@ -126,7 +124,7 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
     }
     ```
 - `PUT /api/instance/:publicId`
-  - Updates `config` and/or `status` and/or `templateId` (workspace-authenticated). Returns 200 payload, 404 if missing, 422 on validation errors.
+  - Updates `config` and/or `status` (workspace-authenticated). Returns 200 payload, 404 if missing, 422 on validation errors.
   - _Example validation error (422):_
     ```http
     PUT /api/instance/wgt_42yx31
@@ -144,8 +142,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
       "publicId": "wgt_42yx31",
       "status": "draft",
       "widgetType": "faq",
-      "templateId": null,
-      "schemaVersion": "2025-09-01",
       "config": {
         "title": "Frequently Asked Questions",
         "categories": [...]
@@ -154,20 +150,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
       "updatedAt": "2025-09-28T19:16:44.000Z"
     }
     ```
-  - Template switch safety (Phase‑1): Two‑phase, non‑destructive flow.
-    - Dry‑run preview (no write): `PUT /api/instance/:publicId?dryRun=true` returns 200 with:
-      ```json
-      {
-        "action": "template-switch-preview",
-        "target": { "templateId": "…", "schemaVersion": "…" },
-        "diff": { "dropped": ["oldField"], "added": ["newDefault"] },
-        "proposedConfig": { /* transformed config */ },
-        "errors": [ { "path": "categories.0.title", "message": "Required field" } ]
-      }
-      ```
-    - Confirm apply: resend with `?confirm=true` (or body `{ "confirm": true }`) to persist transformed config + target template/schema after validation.
-    - If `templateId` is provided without `confirm`, returns `409 CONFIRM_REQUIRED` and a `diff` payload; nothing is persisted.
-    - Validation order: transform (drop unknowns) → apply schema defaults → validate via Geneva (422 on failure) → persist on confirm.
 - `POST /api/claim`
   - Requires workspace-authenticated request. Body includes `{ draftToken, workspaceId? }`.
   - Invalid/expired tokens return 410 `TOKEN_REVOKED`.
@@ -190,8 +172,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
         "publicId": "wgt_42yx31",
         "status": "published",
         "widgetType": "faq",
-        "templateId": null,
-        "schemaVersion": "2025-09-01",
         "config": {
           "title": "Frequently Asked Questions",
           "categories": []
@@ -217,8 +197,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
   "publicId": "wgt_42yx31",
   "status": "draft",
   "widgetType": "faq",
-  "templateId": null,
-  "schemaVersion": "2025-09-01",
   "config": {
     "title": "Frequently Asked Questions",
     "categories": [...]
@@ -234,8 +212,6 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
 | `publicId` | `widget_instances.public_id` |
 | `status` | `widget_instances.status` |
 | `widgetType` | `widgets.type` (via `widget_instances.widget_id → widgets.id`) |
-| `templateId` | `widget_instances.template_id` |
-| `schemaVersion` | `widget_instances.schema_version` |
 | `config` | `widget_instances.config` (JSONB column with user's custom values) |
 | `branding.hide` | Derived from entitlements (not persisted; Venice/Paris enforce based on plan) |
 | `updatedAt` | `widget_instances.updated_at` |
@@ -385,7 +361,7 @@ const supabase = createClient(
 ```
 
 ### Key Tables Used
-- `widget_instances`: Instance snapshots (`public_id`, `status`, `config`, `template_id`, `schema_version`, `draft_token`, `claimed_at`, `updated_at`)
+- `widget_instances`: Instance snapshots (`public_id`, `status`, `config`, `draft_token`, `claimed_at`, `updated_at`)
 - `widgets`: Parent widget records (`type` is surfaced as `widgetType` for instances)
 - `embed_tokens`: Token lifecycle management  
 - `workspaces`: Tenant isolation and plan enforcement
@@ -409,7 +385,7 @@ Paris provides widget instance data to Venice:
 - Venice calls `GET /api/instance/:publicId` to load instance `config` + metadata
 - Paris validates embed tokens before serving data
 - Response cached by Venice with TTL based on status
-- Widget definitions/assets are loaded from Denver/CDN (outside Paris)
+- Widget definitions/assets are loaded from Tokyo/CDN (outside Paris)
 
 ### Bob (Builder App)
 Bob manages widgets through Paris APIs:
@@ -421,7 +397,7 @@ Bob manages widgets through Paris APIs:
 
 ### Site (Marketing)
 Site creates anonymous widgets via Paris:
-- Anonymous widget creation/from-template is not implemented in this repo snapshot.
+- Anonymous widget creation/from-starter is not implemented in this repo snapshot.
 - Claim flow converts drafts to owned widgets and triggers draft token invalidation (`TOKEN_REVOKED`).
 - Demo widget configs for marketing pages
 
@@ -430,7 +406,7 @@ Site creates anonymous widgets via Paris:
 ### Error Response Format
 Paris uses two response shapes:
 
-1) **Validation errors**: `422` with `[{ path, message }]` (e.g., invalid `config`, unknown `templateId`)
+1) **Validation errors**: `422` with `[{ path, message }]` (e.g., invalid `config`)
 2) **Error codes**: `{ "error": "ERROR_CODE", "details"?: "..." }`
 
 ### Standard Error Codes

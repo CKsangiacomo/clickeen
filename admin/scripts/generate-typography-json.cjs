@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOKEN_FILE = path.resolve(__dirname, '../../dieter/dist/tokens.css');
+// DevStudio needs the actual class rules (not @import stubs). Source-of-truth is Dieter typography tokens.
+const TOKEN_FILE = path.resolve(__dirname, '../../dieter/tokens/dieter-typography.css');
 const OUTPUT_FILE = path.resolve(__dirname, '../src/data/typography.generated.json');
 
 const CATEGORY_MARKERS = [

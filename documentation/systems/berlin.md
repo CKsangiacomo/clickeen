@@ -15,7 +15,7 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 ## 1) Responsibilities
 - Collect structured logs (request ID, user/workspace, route, latency) and ship to the central sink defined by ops.
 - Emit metrics for app/site traffic (request/sec, error rates, API proxy status when Bob calls Paris).
-- Enforce Next.js middleware based rate limits for sensitive routes (login, claim, template save) using Supabase user context when available.
+- Enforce Next.js middleware based rate limits for sensitive routes (login, claim, publish) using Supabase user context when available.
 - Gate sanctioned analytics (PostHog/Sentry) to app/site only with project tokens stored in `c-keen-app` / `c-keen-site` env.
 
 ## 2) Forbidden

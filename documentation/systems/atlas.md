@@ -9,7 +9,7 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 
 ## 0) Quick Facts
 - **Surface:** Vercel Edge Config (`ATLAS_EDGE_CONFIG`) read via `c-keen-embed`
-- **Purpose:** Provide a low-latency cache of schema + template metadata so Venice can render without hitting Supabase on every request
+- **Purpose:** Provide a low-latency cache of published instance snapshots so Venice can render without hitting Supabase on every request
 - **Dependencies:**
   - Sources data from Michael (via Paris service-role sync jobs)
   - Consumed exclusively by Venice during SSR
@@ -20,8 +20,7 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 ## 1) Phase-1 Behaviour (NORMATIVE)
 - Atlas is **read-only at runtime.** Venice may only issue GET lookups using the Edge Config ID. Any write requires an authenticated Paris admin job guarded by `INTERNAL_ADMIN_KEY` (see operational notes below).
 - Cached payloads include:
-  - Template descriptors (`widget_templates` projection)
-  - Schema metadata (`widget_schemas` projection)
+  - Published instance snapshots (publicId → `{ status, widgetType, config, updatedAt, branding }`)
   - Branding + entitlement hints required for Venice SSR bootstrap
 - Update flow: Paris background job fetches authoritative data from Michael → writes to Atlas via Vercel Edge Config API → logs version + checksum. Failures must leave the previous snapshot intact.
 - Cache policy: Venice treats Atlas as an optimisation only. If a key is missing or stale, Venice falls back to fetching from Paris/Michael directly and logs a warning.
@@ -32,11 +31,11 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 | Venice | `GET /edge-config/:key` | Pulled via Vercel `@vercel/edge-config` SDK. 50 ms timeout with fallback to Paris. |
 | Paris Jobs | `PUT /edge-config` (internal) | Runs on deploy + hourly sync. Requires `ATLAS_EDGE_CONFIG_TOKEN` and `INTERNAL_ADMIN_KEY`. |
 
-Keys follow the convention `atlas:v1:widgetTemplates` and `atlas:v1:widgetSchemas`. Any new key requires updating both the sync job and Venice lookup list.
+Keys follow the convention `atlas:v1:instance:<publicId>` (published only). Any new key requires updating both the sync job and Venice lookup list.
 
 ## 3) Failure Handling
 - **Atlas unavailable / timeout**: Venice must log `atlas_unavailable`, skip cache usage, and continue with direct Paris fetch (5 s overall budget still applies).
-- **Stale data detection**: Paris stamps each entry with `updatedAt` + checksum. Venice compares with instance `schemaVersion`; mismatch triggers a Paris fetch + cache refresh hint.
+- **Stale data detection**: Paris stamps each entry with `updatedAt` + checksum. Venice treats Atlas entries as an optimisation and revalidates via Paris when `updatedAt` is missing or older than the cache TTL.
 - **Security**: No runtime writes or deletions are permitted from Venice or Bob. Attempting to mutate Atlas outside the sanctioned Paris jobs is a P0 violation.
 
 ## 4) Operational Notes

@@ -61,8 +61,8 @@ async function main() {
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 
   const widgetSpecs = new Map([
-    ['faq', path.resolve(__dirname, '..', '..', 'denver', 'widgets', 'faq', 'spec.json')],
-    ['countdown', path.resolve(__dirname, '..', '..', 'denver', 'widgets', 'countdown', 'spec.json')],
+    ['faq', path.resolve(__dirname, '..', '..', 'tokyo', 'widgets', 'faq', 'spec.json')],
+    ['countdown', path.resolve(__dirname, '..', '..', 'tokyo', 'widgets', 'countdown', 'spec.json')],
   ]);
 
   const { data: rows, error } = await supabase

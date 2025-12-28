@@ -1,15 +1,15 @@
 // Immutable path helpers for dot-notation paths like "a.b.0.c".
 
-export function getAt<T = any>(obj: any, path: string, fallback?: T): T | undefined {
+export function getAt<T = any>(obj: any, path: string): T | undefined {
   if (!path) return obj as T;
   const parts = path.split('.');
   let cur: any = obj;
   for (const p of parts) {
-    if (cur == null) return fallback;
+    if (cur == null) return undefined;
     const key = isIndex(p) ? Number(p) : p;
     cur = cur[key as any];
   }
-  return (cur === undefined ? fallback : cur) as T | undefined;
+  return cur as T | undefined;
 }
 
 export function setAt<T = any>(obj: any, path: string, value: T): any {
@@ -63,4 +63,3 @@ export function deleteAt(obj: any, path: string): any {
 function isIndex(s: string): boolean {
   return /^\d+$/.test(s);
 }
-

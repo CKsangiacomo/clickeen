@@ -9,7 +9,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **Purpose:** Edge-deployed SSR embed runtime for widgets.
 **Owner:** Vercel project `c-keen-embed`.
-**Dependencies:** Paris (API), Denver (CDN assets), Atlas (read-only config), Dieter (CSS tokens).
+**Dependencies:** Paris (API), Tokyo (CDN assets), Atlas (read-only config), Dieter (CSS tokens).
 **Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.
 **Database Tables:** None directly (reads via Paris/Michael).
 **Common mistakes:** Letting browsers call Paris directly, skipping 5s timeout/`X-Request-ID`, ignoring branding fail-closed rules.
@@ -18,8 +18,8 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **Venice renders INSTANCES using widget definitions (the software) + instance config (the data).**
 
-**Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Denver/CDN):
-- In-repo source: `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+**Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Tokyo/CDN):
+- In-repo source: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
 **Widget Instance = THE DATA** (database):
@@ -30,16 +30,16 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **When Venice renders `/e/:publicId`:**
 1. Fetches **Widget Instance** from Paris → gets user's `config` + `widgetType`
-2. (Planned) Loads widget runtime assets from Denver based on `widgetType`
+2. (Planned) Loads widget runtime assets from Tokyo based on `widgetType`
 3. (Planned) Renders HTML from widget definition + `config`
 4. Returns server-rendered HTML
 
-**Current repo snapshot:** Venice returns a safe debug shell (shows `config`) while the full “Denver widget → SSR HTML” pipeline is built.
+**Current repo snapshot:** Venice returns a safe debug shell (shows `config`) while the full “Tokyo widget → SSR HTML” pipeline is built.
 
 # Venice — Edge SSR Widget Renderer (Phase-1)
 
 ## Purpose
-Venice is Clickeen's edge-deployed embed service that delivers server-rendered HTML to external websites via a single script tag. It is the public-facing front door for embeds and proxies to Paris for instance data. (In this repo snapshot, HTML rendering is a safe debug shell; widget rendering from Denver assets is planned.)
+Venice is Clickeen's edge-deployed embed service that delivers server-rendered HTML to external websites via a single script tag. It is the public-facing front door for embeds and proxies to Paris for instance data. (In this repo snapshot, HTML rendering is a safe debug shell; widget rendering from Tokyo assets is planned.)
 
 ## Deployment & Runtime
 - **Vercel Project**: `c-keen-embed`
@@ -71,7 +71,7 @@ Venice is Clickeen's edge-deployed embed service that delivers server-rendered H
 1. Extract `publicId` from URL path
 2. Load widget instance from Paris: `GET /api/instance/:publicId` → gets user's `config` + `widgetType`
 3. Apply theme/device hints (if applicable)
-4. Render HTML (currently a safe debug shell; planned: render from Denver widget assets)
+4. Render HTML (currently a safe debug shell; planned: render from Tokyo widget assets)
 5. **If `?preview=1` present:** Inject postMessage patch script (preview-only feature)
 6. Inject "Made with Clickeen" backlink (Phase-1 requirement)
 7. Return HTML with appropriate cache headers
@@ -207,7 +207,7 @@ Naming clarifier (Phase‑1): The canonical global is `window.ckeenBus`. The loa
 ## Paris Integration
 
 ### Configuration Loading
-Venice fetches widget instances from Paris on each render. Widget definitions/assets are loaded from Denver/CDN (outside Paris).
+Venice fetches widget instances from Paris on each render. Widget definitions/assets are loaded from Tokyo/CDN (outside Paris).
 
 ```typescript
 // Fetch instance snapshot from Paris API (user's data)
@@ -277,7 +277,7 @@ async function parisFetch(path: string, headers: Record<string, string> = {}) {
 ## Widget Rendering System
 
 ### Server-Side Rendering (SSR)
-Planned: Venice renders HTML by combining the widget definition (Denver/CDN assets) with instance `config` (from Paris/Michael).  
+Planned: Venice renders HTML by combining the widget definition (Tokyo/CDN assets) with instance `config` (from Paris/Michael).  
 Current repo snapshot: `venice/app/e/[publicId]/route.ts` renders a safe debug shell (it does not execute widget definitions yet).
 
 ```html
@@ -381,13 +381,13 @@ Per‑widget docs live under `documentation/widgets/*.md` (one file per widget; 
 > The authoritative list of Phase-1 widgets lives in `documentation/CONTEXT.md` (Phase-1 Widget List section).
 
 Each widget has:
-- **Widget definition/assets** (Denver/CDN): `denver/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- **Widget definition/assets** (Tokyo/CDN): `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - **Widget Instance** (Michael database) — User's custom `config`
-- **Venice route** — `venice/app/e/[publicId]/route.ts` (current: safe debug shell; planned: widget SSR from Denver assets)
+- **Venice route** — `venice/app/e/[publicId]/route.ts` (current: safe debug shell; planned: widget SSR from Tokyo assets)
 
 **How Venice renders:**
 1. Fetch Widget Instance from Paris → get user's `config` + `widgetType`
-2. Render HTML (current: debug shell; planned: SSR using Denver widget assets)
+2. Render HTML (current: debug shell; planned: SSR using Tokyo widget assets)
 
 ### Widget State Management
 Each widget handles multiple states:
@@ -458,7 +458,7 @@ new Image().src = `/embed/pixel?widget=${widgetId}&event=load&ts=${Date.now()}`;
 ### Graceful Degradation
 When Venice cannot render a widget properly:
 1. **Config validation error (Paris 422)**: Render a safe error state (dedicated UX planned).
-2. **Upstream Failure (Paris/Geneva/Atlas unavailable)**: Return a 503 response with branded HTML (see below) and appropriate cache headers.
+2. **Upstream Failure (Paris/Atlas unavailable)**: Return a 503 response with branded HTML (see below) and appropriate cache headers.
 3. **Timeout**: Show loading state with manual retry option while logging the failure for follow-up.
 
 ### Error State Templates
@@ -524,7 +524,7 @@ Current repo snapshot: `venice/app/e/[publicId]/route.ts` renders a generic erro
 | Instance not found | Paris returns 404 | 404 | `NOT_FOUND` | Render not-found fallback | `not_found` |
 | config fails validation | Paris returns 422 with `[ { path, message } ]` | 422 | 422 validation array | Render config-invalid fallback with inline message | `config_invalid` + validation summary |
 | Rate limit exceeded | Paris returns 429 | 429 | `RATE_LIMITED` | Render rate-limited fallback and set retry-after | `rate_limited` with window metadata |
-| Paris/Geneva/Atlas outage | Upstream dependency unavailable / timeout | 503 | `SSR_ERROR` | Render branded 503 fallback; retry with backoff | `ssr_error` including dependency + latency |
+| Paris/Atlas outage | Upstream dependency unavailable / timeout | 503 | `SSR_ERROR` | Render branded 503 fallback; retry with backoff | `ssr_error` including dependency + latency |
 | Atlas miss/timeout | Edge Config unavailable but Paris succeeds | 200 | n/a (serves data) | Normal render | `atlas_unavailable` warning (once per window) |
 
 Implementers MUST log using Berlin helpers with the provided keys and include `X-Request-ID`, `publicId`, and dependency timing (when relevant). Repeated failures trigger the release checklist step that verifies fallbacks before shipping.

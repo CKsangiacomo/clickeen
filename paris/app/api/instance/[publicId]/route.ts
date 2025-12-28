@@ -4,7 +4,6 @@ import { assertInstanceAccess } from '@paris/lib/access';
 import { loadInstance, shapeInstanceResponse, TokenError } from '@paris/lib/instances';
 import { AuthError, requireUser, assertWorkspaceMember } from '@paris/lib/auth';
 import type { AdminClient } from '@paris/lib/supabaseAdmin';
-import { validateConfig, getTemplateDescriptor, transformConfig } from '@paris/lib/geneva';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,7 +13,6 @@ type Params = { params: { publicId: string } };
 type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'draft' | 'published' | 'inactive';
-  templateId?: string;
 };
 
 class ValidationError extends Error {
@@ -94,9 +92,9 @@ export async function PUT(req: Request, { params }: Params) {
     await assertWorkspaceMember(client, instance.workspaceId, user.id);
 
     // Reject empty update payloads to avoid no-op UPDATEs
-    if (config === undefined && !status && !payload.templateId) {
+    if (config === undefined && !status) {
       return NextResponse.json([
-        { path: 'body', message: 'At least one field (config, status, templateId) required' },
+        { path: 'body', message: 'At least one field (config, status) required' },
       ], { status: 422 });
     }
 
@@ -114,56 +112,6 @@ export async function PUT(req: Request, { params }: Params) {
     const update: Record<string, unknown> = {};
     if (config !== undefined) update.config = config;
     if (status) update.status = status;
-
-    // Template switch handling with dry-run/confirm
-    const url = new URL(req.url);
-    const dryRun = url.searchParams.get('dryRun') === 'true';
-    const confirm = url.searchParams.get('confirm') === 'true' || (payload as any)?.confirm === true;
-
-    let targetTemplateId = instance.templateId ?? undefined;
-    let targetSchemaVersion = instance.schemaVersion ?? undefined;
-
-    if (payload.templateId && payload.templateId !== instance.templateId) {
-      const tpl = await getTemplateDescriptor(client, payload.templateId);
-      if (!tpl) {
-        return NextResponse.json([{ path: 'templateId', message: 'unknown templateId' }], { status: 422 });
-      }
-      targetTemplateId = payload.templateId;
-      targetSchemaVersion = tpl.schemaVersion;
-    }
-
-    // Validate or transform based on target schema
-    if (instance.widgetType && (targetSchemaVersion || instance.schemaVersion)) {
-      const version = targetSchemaVersion || instance.schemaVersion!;
-      const baseConfig = (config !== undefined ? config : (instance.config as any));
-      const transformed = await transformConfig(client, instance.widgetType, version, baseConfig);
-
-      if (dryRun) {
-        return NextResponse.json({
-          action: 'template-switch-preview',
-          target: { templateId: targetTemplateId, schemaVersion: version },
-          diff: { dropped: transformed.dropped, added: transformed.added },
-          proposedConfig: transformed.config,
-          errors: transformed.errors ?? [],
-        }, { status: 200 });
-      }
-
-      if (payload.templateId && payload.templateId !== instance.templateId && !confirm) {
-        return NextResponse.json({
-          error: 'CONFIRM_REQUIRED',
-          diff: { dropped: transformed.dropped, added: transformed.added },
-        }, { status: 409 });
-      }
-
-      if (transformed.errors && transformed.errors.length > 0) {
-        return NextResponse.json(transformed.errors, { status: 422 });
-      }
-
-      // Apply transformed config and target schema/template
-      update.config = transformed.config;
-      if (targetTemplateId) update.template_id = targetTemplateId;
-      if (targetSchemaVersion) update.schema_version = targetSchemaVersion;
-    }
 
     const { error } = await client
       .from('widget_instances')

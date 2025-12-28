@@ -68,11 +68,11 @@ export default defineConfig({
       },
     },
     {
-      name: 'denver-static-widgets',
+      name: 'tokyo-static-widgets',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = req.url || '';
-          if (!url.startsWith('/denver/')) return next();
+          if (!url.startsWith('/tokyo/')) return next();
 
           const cleanPath = url.split('?')[0];
           const filePath = path.resolve(__dirname, '..', cleanPath.slice(1)); // strip leading "/"

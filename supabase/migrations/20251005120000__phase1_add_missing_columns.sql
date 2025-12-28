@@ -1,8 +1,4 @@
 -- Phase-1: add missing columns per documentation/systems/michael.md
-ALTER TABLE widget_instances ADD COLUMN IF NOT EXISTS template_id TEXT;
-ALTER TABLE widget_instances ADD COLUMN IF NOT EXISTS schema_version TEXT;
-ALTER TABLE widgets ADD COLUMN IF NOT EXISTS template_id TEXT;
-ALTER TABLE widgets ADD COLUMN IF NOT EXISTS schema_version TEXT;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS idempotency_hash TEXT;
 
 -- Ensure idempotency hash can dedupe when provided
@@ -12,4 +8,3 @@ EXCEPTION WHEN duplicate_table THEN
   -- index exists
   NULL;
 END $$;
-

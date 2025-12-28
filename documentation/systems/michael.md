@@ -11,7 +11,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 
 **Purpose:** Supabase Postgres layer enforcing workspace isolation.  
 **Owner:** Supabase project `ebmqwqdexmemhrdhkmwn`.  
-**Dependencies:** Paris (service role access), Venice (read-only via Paris), Geneva (schemas).  
+**Dependencies:** Paris (service role access), Venice (read-only via Paris).  
 **Phase-1 Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.  
 **Common mistakes:** Exposing internal UUIDs, letting clients write to protected tables, ignoring `23505` unique-violation handling.
 
@@ -33,8 +33,6 @@ Michael is Clickeen's PostgreSQL database layer hosted on Supabase, providing th
 | `widgetId` | `widgets.id` | Links instances to parent widget |
 | `draftToken` | `widget_instances.draft_token` | UUID issued on instance create; invalidated on claim |
 | `workspaceId` | `workspaces.id` | Provided via auth context; used for RLS |
-| `templateId` | `widget_instances.template_id` | Mirrors `templates.id` data-only identifiers |
-| `schemaVersion` | `widget_instances.schema_version` | Validated against Geneva schemas |
 | `embedToken` | `embed_tokens.token` | Returned only via Paris `/api/token` issue flow |
 | `submissionId` | `widget_submissions.id` | Returned when viewing submissions in Bob |
 | `widgetInstancePublicId` (submissions/events) | `widget_submissions.widget_instance_id` (TEXT) | Stores the **publicId** to avoid exposing internal UUIDs |
@@ -62,8 +60,6 @@ widget_id       UUID NOT NULL REFERENCES widgets(id)
 public_id       TEXT UNIQUE NOT NULL -- maps to API publicId
 status          TEXT DEFAULT 'draft' CHECK (status IN ('draft','published','inactive'))
 config          JSONB DEFAULT '{}' NOT NULL
-template_id     TEXT -- added per Phase-1 specs
-schema_version  TEXT -- added per Phase-1 specs
 draft_token     UUID -- temporary until claim
 claimed_at      TIMESTAMPTZ
 expires_at      TIMESTAMPTZ
@@ -114,8 +110,6 @@ type            TEXT NOT NULL -- widget type identifier
 public_key      TEXT UNIQUE NOT NULL
 status          TEXT DEFAULT 'active'
 config          JSONB DEFAULT '{}' -- default config
-template_id     TEXT -- default template
-schema_version  TEXT -- current schema version
 created_at      TIMESTAMPTZ DEFAULT now()
 ```
 
@@ -407,15 +401,14 @@ EXECUTE FUNCTION set_ts_second();
 ### Phase-1 Required Migrations
 ```sql
 -- 001_add_missing_columns.sql
-ALTER TABLE widget_instances ADD COLUMN IF NOT EXISTS template_id TEXT;
-ALTER TABLE widget_instances ADD COLUMN IF NOT EXISTS schema_version TEXT;
-ALTER TABLE widgets ADD COLUMN IF NOT EXISTS template_id TEXT;
-ALTER TABLE widgets ADD COLUMN IF NOT EXISTS schema_version TEXT;
-ALTER TABLE events ADD COLUMN IF NOT EXISTS idempotency_hash TEXT UNIQUE;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS idempotency_hash TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS events_idempotency_hash_key
+  ON events(idempotency_hash) WHERE idempotency_hash IS NOT NULL;
 
 -- 002_enable_rls.sql
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE widget_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE widgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE widget_instances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE usage_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE plan_limits ENABLE ROW LEVEL SECURITY;
 
@@ -423,43 +416,16 @@ ALTER TABLE plan_limits ENABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_events_idempotency ON events(idempotency_hash);
 CREATE INDEX IF NOT EXISTS idx_usage_events_idempotency ON usage_events(idempotency_hash);
 CREATE INDEX IF NOT EXISTS idx_widget_submissions_ts ON widget_submissions(ts_second);
-
--- 004_create_template_tables.sql
-CREATE TABLE IF NOT EXISTS widget_templates (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  widget_type TEXT NOT NULL,
-  template_id TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  layout TEXT CHECK (layout IN ('LIST','GRID','CAROUSEL','CARD','ACCORDION','MARQUEE','STACKED','INLINE')),
-  skin TEXT CHECK (skin IN ('MINIMAL','SOFT','SHARP','GLASS')),
-  density TEXT CHECK (density IN ('COZY','COMPACT')),
-  accents TEXT[],
-  premium BOOLEAN DEFAULT false,
-  schema_version TEXT NOT NULL,
-  defaults JSONB DEFAULT '{}',
-  descriptor JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS widget_schemas (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  widget_type TEXT NOT NULL,
-  schema_version TEXT NOT NULL,
-  schema JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(widget_type, schema_version)
-);
 ```
 
 ### Migration Execution Order
 1. Add missing columns (non-breaking)
 2. Enable RLS on unprotected tables
 3. Create performance indexes
-4. Add template/schema tables
-5. Deploy RLS policies
-6. Add helper functions
-7. Create triggers
-8. Verify with health checks
+4. Deploy RLS policies
+5. Add helper functions
+6. Create triggers
+7. Verify with health checks
 
 ## Performance Optimization
 
@@ -491,7 +457,6 @@ ON usage_events(idempotency_hash);
 SELECT wi.public_id,
        wi.status,
        wi.config,
-       wi.schema_version,
        wi.updated_at,
        w.workspace_id,
        w.type AS widget_type

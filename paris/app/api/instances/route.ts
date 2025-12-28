@@ -5,11 +5,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type InstanceRow = {
-  inst_public_id: string;
-  inst_instancedata: Record<string, unknown> | null;
-  inst_status: string | null;
-  inst_widget_name: string | null;
-  inst_display_name: string | null;
+  public_id: string;
+  status: string;
+  config: Record<string, unknown> | null;
+  created_at: string;
+  widget_id: string | null;
 };
 
 export async function GET() {
@@ -18,9 +18,9 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('widget_instances')
-      .select('inst_public_id, inst_instancedata, inst_status, inst_widget_name, inst_display_name')
-      .neq('inst_status', 'inactive')
-      .order('inst_created_at', { ascending: false })
+      .select('public_id, status, config, created_at, widget_id')
+      .neq('status', 'inactive')
+      .order('created_at', { ascending: false })
       .limit(50);
 
     if (error) {
@@ -28,14 +28,48 @@ export async function GET() {
       return NextResponse.json({ error: 'DB_ERROR', details: 'Unable to load instances' }, { status: 500 });
     }
 
-    const instances = (Array.isArray(data) ? data : [])
-      .filter((row): row is InstanceRow => Boolean(row && row.inst_public_id))
-      .map((row) => ({
-        publicId: row.inst_public_id,
-        widgetname: row.inst_widget_name ?? 'unknown',
-        displayName: row.inst_display_name ?? row.inst_public_id,
-        config: row.inst_instancedata ?? {},
-      }));
+    const rows = (Array.isArray(data) ? data : []).filter((row): row is InstanceRow => {
+      return (
+        Boolean(row) &&
+        typeof (row as any).public_id === 'string' &&
+        typeof (row as any).status === 'string' &&
+        typeof (row as any).created_at === 'string'
+      );
+    });
+
+    const widgetIds = Array.from(
+      new Set(
+        rows
+          .map((row) => row.widget_id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    );
+
+    const widgetLookup = new Map<string, { type: string | null; name: string | null }>();
+    if (widgetIds.length > 0) {
+      const { data: widgetData, error: widgetError } = await supabase
+        .from('widgets')
+        .select('id, type, name')
+        .in('id', widgetIds);
+      if (widgetError) {
+        console.error('[Paris] Failed to fetch widgets for instances', widgetError);
+        return NextResponse.json({ error: 'DB_ERROR', details: 'Unable to load instances' }, { status: 500 });
+      }
+      (Array.isArray(widgetData) ? widgetData : []).forEach((widget: any) => {
+        if (!widget?.id) return;
+        widgetLookup.set(String(widget.id), { type: widget.type ?? null, name: widget.name ?? null });
+      });
+    }
+
+    const instances = rows.map((row) => {
+      const widget = row.widget_id ? widgetLookup.get(row.widget_id) : undefined;
+      return {
+        publicId: row.public_id,
+        widgetname: widget?.type ?? 'unknown',
+        displayName: widget?.name ?? row.public_id,
+        config: row.config ?? {},
+      };
+    });
 
     return NextResponse.json({ instances });
   } catch (error) {

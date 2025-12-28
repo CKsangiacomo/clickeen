@@ -28,6 +28,8 @@ type DropdownFillState = {
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
   imageName: string | null;
+  nativeValue?: { get: () => string; set: (next: string) => void };
+  internalWrite: boolean;
 };
 
 const states = new Map<HTMLElement, DropdownFillState>();
@@ -48,7 +50,8 @@ export function hydrateDropdownFill(scope: Element | DocumentFragment): void {
     wireModes(state);
     states.set(root, state);
     installHandlers(state);
-    syncUI(state);
+    const initialValue = state.input.value || state.input.getAttribute('value') || '';
+    syncFromValue(state, initialValue);
   });
 
   hydrateHost(scope);
@@ -81,7 +84,7 @@ function createState(root: HTMLElement): DropdownFillState | null {
     return null;
   }
 
-  const initial = parseColor(input.value || input.getAttribute('value') || '#6B6BFF', root);
+  const nativeValue = captureNativeValue(input);
   swatches.forEach((swatch) => {
     const color = swatch.dataset.color || '';
     swatch.style.setProperty('--swatch-color', color);
@@ -112,21 +115,37 @@ function createState(root: HTMLElement): DropdownFillState | null {
     fileInput,
     imageSrc: null,
     imageName: null,
-    hsv: initial,
+    nativeValue,
+    internalWrite: false,
+    hsv: { h: 0, s: 0, v: 0, a: 0 },
   };
 }
 
 function installHandlers(state: DropdownFillState) {
+  if (state.nativeValue) {
+    Object.defineProperty(state.input, 'value', {
+      configurable: true,
+      get: () => state.nativeValue?.get() ?? '',
+      set: (next: string) => {
+        state.nativeValue?.set(String(next ?? ''));
+        if (!state.internalWrite) syncFromValue(state, String(next ?? ''));
+      },
+    });
+  }
+
+  state.input.addEventListener('external-sync', () => syncFromValue(state, state.input.value));
+  state.input.addEventListener('input', () => syncFromValue(state, state.input.value));
+
   state.hueInput.addEventListener('input', () => {
     const hue = clampNumber(Number(state.hueInput.value), 0, 360);
     state.hsv.h = hue;
-    syncUI(state);
+    syncUI(state, { commit: true });
   });
 
   state.alphaInput.addEventListener('input', () => {
     const alpha = clampNumber(Number(state.alphaInput.value) / 100, 0, 1);
     state.hsv.a = alpha;
-    syncUI(state);
+    syncUI(state, { commit: true });
   });
 
   state.hexField.addEventListener('change', () => handleHexInput(state));
@@ -144,7 +163,7 @@ function installHandlers(state: DropdownFillState) {
       event.preventDefault();
       if (state.removeFillAction?.disabled) return;
       state.hsv.a = 0;
-      syncUI(state);
+      syncUI(state, { commit: true });
     });
   }
 }
@@ -158,7 +177,7 @@ function installSvCanvasHandlers(state: DropdownFillState) {
     const v = rect.height ? 1 - y / rect.height : 0;
     state.hsv.s = clampNumber(s, 0, 1);
     state.hsv.v = clampNumber(v, 0, 1);
-    syncUI(state);
+    syncUI(state, { commit: true });
   };
 
   const handlePointerDown = (event: PointerEvent) => {
@@ -193,7 +212,7 @@ function installImageHandlers(state: DropdownFillState) {
   if (removeButton) {
     removeButton.addEventListener('click', (event) => {
       event.preventDefault();
-      setImageSrc(state, null);
+      setImageSrc(state, null, { commit: true });
     });
   }
   if (fileInput) {
@@ -204,20 +223,27 @@ function installImageHandlers(state: DropdownFillState) {
       const reader = new FileReader();
       reader.onload = () => {
         const result = typeof reader.result === 'string' ? reader.result : null;
-        setImageSrc(state, result);
+        setImageSrc(state, result, { commit: true });
       };
       reader.readAsDataURL(file);
     });
   }
 }
 
-function setImageSrc(state: DropdownFillState, src: string | null) {
-  state.imageSrc = src;
-  if (state.input) {
-    const cssValue = src ? `url("${src}") center center / cover no-repeat` : '';
-    state.input.value = cssValue;
+function setInputValue(state: DropdownFillState, value: string, emit: boolean) {
+  state.internalWrite = true;
+  state.input.value = value;
+  state.internalWrite = false;
+  if (emit) {
     state.input.dispatchEvent(new Event('input', { bubbles: true }));
-    state.input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+function setImageSrc(state: DropdownFillState, src: string | null, opts: { commit: boolean }) {
+  state.imageSrc = src;
+  if (opts.commit) {
+    const cssValue = src ? `url("${src}") center center / cover no-repeat` : 'transparent';
+    setInputValue(state, cssValue, true);
   }
   if (state.imagePanel) {
     state.imagePanel.dataset.hasImage = src ? 'true' : 'false';
@@ -245,9 +271,10 @@ function installSwatchHandlers(state: DropdownFillState) {
       event.preventDefault();
       const color = swatch.dataset.color || '';
       const parsed = parseColor(color, state.root);
+      if (!parsed) return;
       // Swatches set a solid color with full opacity.
       state.hsv = { ...parsed, a: 1 };
-      syncUI(state);
+      syncUI(state, { commit: true });
     });
   });
 }
@@ -255,13 +282,17 @@ function installSwatchHandlers(state: DropdownFillState) {
 function handleHexInput(state: DropdownFillState) {
   const raw = state.hexField.value.trim();
   if (!raw) {
-    state.hexField.value = formatHex(state.hsv);
+    state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
     return;
   }
   const normalized = raw.startsWith('#') ? raw : `#${raw}`;
-  const parsed = parseColor(normalized);
-  state.hsv = { ...parsed, a: state.hsv.a };
-  syncUI(state);
+  const rgba = hexToRgba(normalized);
+  if (!rgba) {
+    state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
+    return;
+  }
+  state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a };
+  syncUI(state, { commit: true });
 }
 
 function handleAlphaField(state: DropdownFillState) {
@@ -270,12 +301,51 @@ function handleAlphaField(state: DropdownFillState) {
     state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
     return;
   }
-  const percent = clampNumber(Number(raw), 0, 100);
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    state.alphaField.value = `${Math.round(state.hsv.a * 100)}%`;
+    return;
+  }
+  const percent = clampNumber(parsed, 0, 100);
   state.hsv.a = percent / 100;
-  syncUI(state);
+  syncUI(state, { commit: true });
 }
 
-function syncUI(state: DropdownFillState) {
+function syncFromValue(state: DropdownFillState, raw: string) {
+  const value = String(raw ?? '').trim();
+
+  const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
+  if (urlMatch && urlMatch[1]) {
+    setImageSrc(state, urlMatch[1], { commit: false });
+    return;
+  }
+
+  if (!value) {
+    state.imageSrc = null;
+    state.imageName = null;
+    state.hsv = { h: 0, s: 0, v: 0, a: 0 };
+    syncUI(state, { commit: false });
+    return;
+  }
+
+  const parsed = parseColor(value, state.root);
+  if (!parsed) {
+    state.imageSrc = null;
+    state.imageName = null;
+    state.hsv = { h: 0, s: 0, v: 0, a: 0 };
+    state.root.dataset.invalid = 'true';
+    syncUI(state, { commit: false });
+    return;
+  }
+
+  delete state.root.dataset.invalid;
+  state.imageSrc = null;
+  state.imageName = null;
+  state.hsv = parsed;
+  syncUI(state, { commit: false });
+}
+
+function syncUI(state: DropdownFillState, opts: { commit: boolean }) {
   const { h, s, v, a } = state.hsv;
   const rgb = hsvToRgb(h, s, v);
   const hex = formatHex({ h, s, v, a: 1 });
@@ -304,8 +374,9 @@ function syncUI(state: DropdownFillState) {
   state.svThumb.style.left = left;
   state.svThumb.style.top = top;
 
-  state.input.value = colorString;
-  state.input.dispatchEvent(new Event('change', { bubbles: true }));
+  if (opts.commit) {
+    setInputValue(state, colorString, true);
+  }
 
   if (alphaPercent === 0) {
     updateHeader(state, { text: placeholder, muted: true, chipColor: null });
@@ -328,7 +399,7 @@ function syncUI(state: DropdownFillState) {
   const normalizedCurrent = normalizeHex(hex);
   state.swatches.forEach((swatch) => {
     const swatchHex = normalizeHex(swatch.dataset.color || '');
-    const match = swatchHex === normalizedCurrent;
+    const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
     swatch.classList.toggle('is-selected', match);
     swatch.setAttribute('aria-pressed', match ? 'true' : 'false');
   });
@@ -348,9 +419,13 @@ function updateHeader(
     if (opts.chipColor) {
       headerValueChip.style.background = opts.chipColor;
       headerValueChip.hidden = false;
+      const parsed = parseCssColor(opts.chipColor.trim());
+      const isWhite = Boolean(parsed && parsed.r === 255 && parsed.g === 255 && parsed.b === 255);
+      headerValueChip.classList.toggle('is-white', isWhite);
     } else {
       headerValueChip.style.background = 'transparent';
       headerValueChip.hidden = true;
+      headerValueChip.classList.remove('is-white');
     }
   }
 }
@@ -381,23 +456,30 @@ function wireModes(state: DropdownFillState) {
   setMode(initial);
 }
 
-function parseColor(value: string, root: HTMLElement): { h: number; s: number; v: number; a: number } {
+function parseColor(value: string, root: HTMLElement): { h: number; s: number; v: number; a: number } | null {
   const rgba = colorStringToRgba(value, root);
+  if (!rgba) return null;
   return rgbToHsv(rgba.r, rgba.g, rgba.b, rgba.a);
 }
 
-function normalizeHex(value: string): string {
-  const hex = value.trim().replace(/^#/, '').slice(0, 8).toLowerCase();
-  if (hex.length === 3) {
+function normalizeHex(value: string): string | null {
+  const hex = value.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{3}$/.test(hex)) {
     return `#${hex
       .split('')
       .map((c) => c + c)
       .join('')}`;
   }
-  if (hex.length === 6 || hex.length === 8) {
-    return `#${hex}`;
+  if (/^[0-9a-f]{4}$/.test(hex)) {
+    const expanded = hex
+      .split('')
+      .map((c) => c + c)
+      .join('');
+    return `#${expanded.slice(0, 6)}`;
   }
-  return '#6b6bff';
+  if (/^[0-9a-f]{6}$/.test(hex)) return `#${hex}`;
+  if (/^[0-9a-f]{8}$/.test(hex)) return `#${hex.slice(0, 6)}`;
+  return null;
 }
 
 function extractFileName(value: string): string | null {
@@ -411,14 +493,30 @@ function extractFileName(value: string): string | null {
   return null;
 }
 
-function hexToRgba(value: string): { r: number; g: number; b: number; a: number } {
-  const hex = normalizeHex(value).replace('#', '');
-  const hasAlpha = hex.length === 8;
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  const a = hasAlpha ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
-  return { r, g, b, a };
+function hexToRgba(value: string): { r: number; g: number; b: number; a: number } | null {
+  const raw = value.trim().replace(/^#/, '');
+  if (!/^[0-9a-f]+$/i.test(raw)) return null;
+  if (raw.length === 3) {
+    const r = parseInt(raw[0] + raw[0], 16);
+    const g = parseInt(raw[1] + raw[1], 16);
+    const b = parseInt(raw[2] + raw[2], 16);
+    return { r, g, b, a: 1 };
+  }
+  if (raw.length === 4) {
+    const r = parseInt(raw[0] + raw[0], 16);
+    const g = parseInt(raw[1] + raw[1], 16);
+    const b = parseInt(raw[2] + raw[2], 16);
+    const a = parseInt(raw[3] + raw[3], 16) / 255;
+    return { r, g, b, a };
+  }
+  if (raw.length === 6 || raw.length === 8) {
+    const r = parseInt(raw.slice(0, 2), 16);
+    const g = parseInt(raw.slice(2, 4), 16);
+    const b = parseInt(raw.slice(4, 6), 16);
+    const a = raw.length === 8 ? parseInt(raw.slice(6, 8), 16) / 255 : 1;
+    return { r, g, b, a };
+  }
+  return null;
 }
 
 function rgbToHsv(r: number, g: number, b: number, alpha = 1): { h: number; s: number; v: number; a: number } {
@@ -453,16 +551,35 @@ function rgbToHsv(r: number, g: number, b: number, alpha = 1): { h: number; s: n
   return { h, s, v, a: clampNumber(alpha, 0, 1) };
 }
 
-function colorStringToRgba(value: string, root: HTMLElement): { r: number; g: number; b: number; a: number } {
-  if (value.trim().startsWith('#')) {
-    return hexToRgba(value);
+function colorStringToRgba(
+  value: string,
+  root: HTMLElement,
+): { r: number; g: number; b: number; a: number } | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('#')) {
+    return hexToRgba(trimmed);
   }
 
-  const computed = getComputedColor(value, root);
-  const parsed = parseCssColor(computed);
-  if (parsed) return parsed;
+  if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+    if (!CSS.supports('color', trimmed)) return null;
+  }
 
-  return hexToRgba('#6b6bff');
+  const computed = getComputedColor(trimmed, root);
+  return parseCssColor(computed);
+}
+
+function captureNativeValue(input: HTMLInputElement): DropdownFillState['nativeValue'] {
+  const proto = Object.getPrototypeOf(input) as typeof HTMLInputElement.prototype;
+  const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+  if (!desc?.get || !desc?.set) return undefined;
+  return {
+    get: () => String(desc.get?.call(input) ?? ''),
+    set: (next: string) => {
+      desc.set?.call(input, next);
+    },
+  };
 }
 
 function hsvToRgb(h: number, s: number, v: number): { r: number; g: number; b: number } {
@@ -527,28 +644,89 @@ function roundTo(value: number, precision: number): number {
 }
 
 function parseCssColor(computed: string): { r: number; g: number; b: number; a: number } | null {
-  const hexMatch = computed.trim().match(/^#([0-9a-f]{3,8})$/i);
-  if (hexMatch) {
-    return hexToRgba(`#${hexMatch[1]}`);
+  const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
+  const clamp255 = (value: number) => Math.min(Math.max(value, 0), 255);
+
+  const parseAlpha = (token: string | null | undefined): number => {
+    if (!token) return 1;
+    const raw = token.trim();
+    if (!raw) return 1;
+    if (raw.endsWith('%')) {
+      const pct = Number.parseFloat(raw.slice(0, -1));
+      return Number.isFinite(pct) ? clamp01(pct / 100) : 1;
+    }
+    const num = Number.parseFloat(raw);
+    return Number.isFinite(num) ? clamp01(num) : 1;
+  };
+
+  const parseRgb255 = (token: string): number | null => {
+    const raw = token.trim();
+    if (!raw) return null;
+    if (raw.endsWith('%')) {
+      const pct = Number.parseFloat(raw.slice(0, -1));
+      if (!Number.isFinite(pct)) return null;
+      return clamp255(Math.round((pct / 100) * 255));
+    }
+    const num = Number.parseFloat(raw);
+    if (!Number.isFinite(num)) return null;
+    return clamp255(Math.round(num));
+  };
+
+  const parseSrgbChannel = (token: string): number | null => {
+    const raw = token.trim();
+    if (!raw) return null;
+    if (raw.endsWith('%')) {
+      const pct = Number.parseFloat(raw.slice(0, -1));
+      if (!Number.isFinite(pct)) return null;
+      return clamp255(Math.round((pct / 100) * 255));
+    }
+    const num = Number.parseFloat(raw);
+    if (!Number.isFinite(num)) return null;
+    // Spec uses 0..1 for srgb; tolerate 0..255 too.
+    const normalized = num > 1 ? num / 255 : num;
+    return clamp255(Math.round(clamp01(normalized) * 255));
+  };
+
+  const trimmed = computed.trim();
+  const hexMatch = trimmed.match(/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+  if (hexMatch) return hexToRgba(trimmed);
+
+  // Modern browsers may return `color(srgb r g b / a)` for computed colors.
+  const srgbMatch = trimmed.match(/^color\(\s*srgb\s+(.+)\)$/i);
+  if (srgbMatch) {
+    const body = srgbMatch[1].trim().replace(/\)\s*$/, '');
+    const [channelsPart, alphaPart] = body.split(/\s*\/\s*/);
+    const channels = channelsPart.split(/\s+/).filter(Boolean);
+    if (channels.length >= 3) {
+      const r = parseSrgbChannel(channels[0]);
+      const g = parseSrgbChannel(channels[1]);
+      const b = parseSrgbChannel(channels[2]);
+      if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaPart) };
+    }
   }
 
-  // Handle rgb/rgba (comma or space)
-  const rgbSpace = computed.match(/rgba?\(\s*(\d+)\s+(\d+)\s+(\d+)(?:\s*\/\s*([\d.]+))?\s*\)/i);
-  if (rgbSpace) {
-    const r = Number(rgbSpace[1]);
-    const g = Number(rgbSpace[2]);
-    const b = Number(rgbSpace[3]);
-    const a = rgbSpace[4] !== undefined ? Number(rgbSpace[4]) : 1;
-    return { r, g, b, a };
-  }
+  // Handle rgb()/rgba() with commas or spaces and optional `/<alpha>` or 4th argument.
+  const rgbMatch = trimmed.match(/^rgba?\(\s*(.+)\s*\)$/i);
+  if (rgbMatch) {
+    const body = rgbMatch[1];
+    const hasSlash = body.includes('/');
+    const [channelsPartRaw, alphaPartRaw] = hasSlash ? body.split(/\s*\/\s*/) : [body, null];
+    const tokens = channelsPartRaw
+      .split(/[\s,]+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
 
-  const rgbComma = computed.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)/i);
-  if (rgbComma) {
-    const r = Number(rgbComma[1]);
-    const g = Number(rgbComma[2]);
-    const b = Number(rgbComma[3]);
-    const a = rgbComma[4] !== undefined ? Number(rgbComma[4]) : 1;
-    return { r, g, b, a };
+    let alphaToken: string | null = alphaPartRaw ? alphaPartRaw.trim() : null;
+    if (!alphaToken && tokens.length >= 4) {
+      alphaToken = tokens[3];
+    }
+
+    if (tokens.length >= 3) {
+      const r = parseRgb255(tokens[0]);
+      const g = parseRgb255(tokens[1]);
+      const b = parseRgb255(tokens[2]);
+      if (r != null && g != null && b != null) return { r, g, b, a: parseAlpha(alphaToken) };
+    }
   }
 
   return null;

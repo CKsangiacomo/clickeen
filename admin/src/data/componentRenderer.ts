@@ -1,4 +1,5 @@
 import type { ComponentSource } from './componentTypes';
+import { interpolateStencilContext, renderStencil } from '../../../bob/lib/compiler/stencil-renderer';
 
 export interface ComponentDoc {
   id: string;
@@ -9,103 +10,28 @@ export interface ComponentDoc {
   css?: string[];
 }
 
-type TemplateContext = Record<string, unknown>;
-
-interface RuntimeContext extends Record<string, unknown> {
-  __parent?: RuntimeContext;
-}
+type StencilContext = Record<string, unknown>;
 
 type Preview = {
   id: string;
   spec?: string[];
-  context?: TemplateContext;
+  context?: StencilContext;
   html?: string;
   title?: string;
   sizes?: string[];
   variants?: string[];
-  sizeContext?: Record<string, TemplateContext>;
+  sizeContext?: Record<string, StencilContext>;
 };
 
 const wrapPreviewComponents = new Set<string>(['button']);
 
-const withParent = (context: RuntimeContext, parent?: RuntimeContext): RuntimeContext => ({
-  ...context,
-  __parent: parent,
-});
-
-const resolveValue = (key: string, context?: RuntimeContext): unknown => {
-  if (!context) return undefined;
-  if (key.startsWith('../')) {
-    return resolveValue(key.slice(3), context.__parent);
-  }
-  if (Object.prototype.hasOwnProperty.call(context, key)) {
-    return context[key];
-  }
-  return resolveValue(key, context.__parent);
-};
-
-const renderTemplate = (template: string, context: RuntimeContext): string => {
-  let output = template;
-
-  output = output.replace(/{{#each (\w+)}}([\s\S]*?){{\/each}}/g, (_match, key, block) => {
-    const value = resolveValue(key, context);
-    if (!Array.isArray(value)) return '';
-    return value
-      .map((item) => {
-        const childContext =
-          typeof item === 'object' && item !== null
-            ? (item as RuntimeContext)
-            : ({ this: item } as RuntimeContext);
-        return renderTemplate(block, withParent(childContext, context));
-      })
-      .join('');
-  });
-
-  output = output.replace(/{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g, (_match, key, truthy, falsy) => {
-    const value = resolveValue(key, context);
-    if (value && value !== 'false' && value !== '0') {
-      return renderTemplate(truthy, context);
-    }
-    return falsy ? renderTemplate(falsy, context) : '';
-  });
-
-  output = output.replace(/{{#unless ([^}]+)}}([\s\S]*?){{\/unless}}/g, (_match, key, block) => {
-    const value = resolveValue(key, context);
-    if (value) return '';
-    return renderTemplate(block, context);
-  });
-
-  output = output.replace(/{{([^}]+)}}/g, (_match, key) => {
-    const value = resolveValue(key, context);
-    if (value === undefined || value === null) return '';
-    return String(value);
-  });
-
-  // Clean up unmatched moustache helpers that may remain after rendering
-  output = output
-    .replace(/{{\/(?:if|unless)}}/g, '')
-    .replace(/{{#if [^}]+}}/g, '');
-
-  return output;
-};
-
-const resolveContext = (base: TemplateContext, overrides: TemplateContext): TemplateContext => {
-  const merged: TemplateContext = { ...base, ...overrides };
-  const placeholderRegex = /{{(\w+)}}/g;
-  Object.entries(merged).forEach(([key, value]) => {
-    if (typeof value !== 'string') return;
-    merged[key] = value.replace(placeholderRegex, (_match, token) => {
-      const replacement = merged[token];
-      return typeof replacement === 'string' ? replacement : '';
-    });
-  });
-  return merged;
-};
+const resolveContext = (base: StencilContext, overrides: StencilContext): StencilContext =>
+  interpolateStencilContext({ ...base, ...overrides });
 
 const renderVariantTiles = (
   componentName: string,
   preview: Preview,
-  template?: string,
+  stencil?: string,
 ): string | null => {
   const sizeVariants = Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes : [undefined];
 
@@ -152,17 +78,14 @@ const renderVariantTiles = (
             ...(sizeOverrides ?? {}),
           });
 
-
-          const runtimeContext = withParent(context as RuntimeContext);
-
           const specLines = Array.isArray(preview.spec)
-            ? preview.spec.map((line) => renderTemplate(line, runtimeContext))
+            ? preview.spec.map((line) => renderStencil(line, context))
             : [];
 
           let rendered = preview.html ?? '';
 
-          if (!rendered && template) {
-            rendered = renderTemplate(template, runtimeContext);
+          if (!rendered && stencil) {
+            rendered = renderStencil(stencil, context);
           }
 
           if (!rendered) return null;

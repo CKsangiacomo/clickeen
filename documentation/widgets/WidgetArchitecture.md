@@ -14,10 +14,10 @@ We need a different approach.
 
 **Core insight**: A widget editor isn't one piece of software. It's THREE pieces working together:
 
-**Denver = Widget Definitions** (the source of truth)
+**Tokyo = Widget Definitions** (the source of truth)
 - Owns widget structure, UI, styles, and runtime
-- For each widget {widget}: `denver/widgets/{widget}/spec.json`, `widget.html`, `widget.css`, `widget.client.js` (and `agent.md` when AI editing is enabled)
-- DevStudio fetches specs from Denver and posts into Bob
+- For each widget {widget}: `tokyo/widgets/{widget}/spec.json`, `widget.html`, `widget.css`, `widget.client.js` (and `agent.md` when AI editing is enabled)
+- DevStudio fetches specs from Tokyo and posts into Bob
 - Never changes during a session
 
 **Bob = 50% of the software** (the generic editor shell)
@@ -31,16 +31,25 @@ We need a different approach.
 - `widget.client.js`: Applies config to DOM in real-time
 - `widget.html`: Semantic markup for the widget
 - `widget.css`: Styles for the widget
-- Lives in Denver; loaded by Bob's preview and Venice's SSR
+- Lives in Tokyo; loaded by Bob's preview and Venice's SSR
 
-Together, **Denver + Bob + widget.client.js = a complete widget editing and rendering system**.
+Together, **Tokyo + Bob + widget.client.js = a complete widget editing and rendering system**.
+
+## Widget Documentation Convention (for building new widgets)
+
+Each widget has a folder under `documentation/widgets/{WidgetName}/` with:
+- `CompetitorAnalysis/` — screenshots + saved competitor pages (reference material)
+- `{WidgetName}_competitoranalysis.md` — competitor behavior inventory (what the market ships)
+- `{WidgetName}_PRD.md` — Clickeen PRD (what we will build, mapped to the Clickeen system)
+
+This keeps “competitor research” and “our spec” separate and prevents documentation drift.
 
 ## The Data Flow
 
 ```
 1. User opens widget instance
    ↓
-2. Bob fetches spec.json from Denver (defines ToolDrawer structure)
+2. Bob fetches spec.json from Tokyo (defines ToolDrawer structure)
    ↓
 3. Bob compiler parses spec.json → CompiledWidget (panels[], asset URLs, optional controls[] allowlist)
    ↓
@@ -104,15 +113,15 @@ Together, **Denver + Bob + widget.client.js = a complete widget editing and rend
 
 **Live preview without reload** - postMessage + applyState = instant visual feedback on every keystroke.
 
-**Separation of concerns** - Denver owns widget logic; Bob owns editing flow; Paris owns published data.
+**Separation of concerns** - Tokyo owns widget logic; Bob owns editing flow; Paris owns published data.
 
-## How Widget Definitions Work (Denver)
+## How Widget Definitions Work (Tokyo)
 
-Each widget type consists of a **Denver widget folder** with **4 runtime files** plus an **AI contract** file:
+Each widget type consists of a **Tokyo widget folder** with **4 runtime files** plus an **AI contract** file:
 
 ### 1. spec.json — Widget Structure & ToolDrawer Definition
 
-**Location:** `denver/widgets/{widget}/spec.json`
+**Location:** `tokyo/widgets/{widget}/spec.json`
 
 **Purpose:** Defines ToolDrawer panels and defaults; compiled by Bob into panel HTML and (optionally) a machine-readable `controls[]` allowlist for safe ops/AI edits.
 
@@ -131,18 +140,18 @@ Each widget type consists of a **Denver widget folder** with **4 runtime files**
 ```
 Rules:
 - `spec.json.html[]` is a tiny markup DSL. Bob expands `<tooldrawer-field>` into Dieter component markup and binds via `data-bob-path` (and wrappers like `data-bob-showif`).
-- Complex controls (repeaters/templates) may embed additional `data-bob-path` inside templates; the compiler must treat these as editable paths too.
+- Complex controls (repeaters / nested item blocks) may embed additional `data-bob-path` inside the repeated item markup; the compiler must treat these as editable paths too.
 - Panels are segmented by `<bob-panel id='...'>` blocks; Bob handles layout/switching.
 - No control schemas or Bob-side rendering logic; the HTML is the source of truth.
 
 ### 2. widget.html — Widget Markup
 
-**Location:** `denver/widgets/{widget}/widget.html`
+**Location:** `tokyo/widgets/{widget}/widget.html`
 
 **Purpose:** Semantic HTML structure that widget.client.js will update.
 
 **Rules:**
-- Pure HTML (no template syntax, no JSX)
+- Pure HTML (no placeholder/stencil syntax, no JSX)
 - Add stable `data-role` attributes for JS selectors
 - Use semantic elements (`<details>`, `<summary>`, `<form>`, etc.)
 - Self-contained within the standard wrappers: `.stage` → `.pod` → widget root (`data-ck-widget="..."`)
@@ -163,7 +172,7 @@ Rules:
 
 ### 3. widget.css — Widget Styles
 
-**Location:** `denver/widgets/{widget}/widget.css`
+**Location:** `tokyo/widgets/{widget}/widget.css`
 
 **Purpose:** All CSS needed for the widget (inlined in Venice SSR, linked in Bob preview).
 
@@ -214,7 +223,7 @@ Rules:
 
 ### 4. widget.client.js — Live Update Logic
 
-**Location:** `denver/widgets/{widget}/widget.client.js`
+**Location:** `tokyo/widgets/{widget}/widget.client.js`
 
 **Purpose:** Applies state/config changes to DOM in real-time (Bob preview + Venice SSR).
 
@@ -273,7 +282,7 @@ function applyState(state) {
 
 ### 5. agent.md — AI Contract (Recommended; required for AI editing)
 
-**Location:** `denver/widgets/{widget}/agent.md`
+**Location:** `tokyo/widgets/{widget}/agent.md`
 
 **Purpose:** A short, widget-specific contract for agents/Copilot that makes intent and structure explicit without parsing arbitrary HTML/CSS/JS.
 
@@ -290,7 +299,7 @@ Include:
 
 ### Compiler: spec.json → CompiledWidget
 
-**Input:** spec.json (fetched from Denver)
+**Input:** spec.json (fetched from Tokyo)
 
 **Output:** CompiledWidget object
 
@@ -322,7 +331,7 @@ interface CompiledWidget {
 2. Parse `html[]` markup: `<bob-panel>` blocks → `panels[]`
 3. Expand `<tooldrawer-field>` macros into Dieter markup (adds `data-bob-path`, wrappers for `show-if`, etc.)
 4. Collect editable paths into `controls[]` (FAQ-only for now)
-5. Generate asset URLs (DENVER base URL + widget name)
+5. Generate asset URLs (Tokyo base URL + widget name)
 6. Return CompiledWidget
 
 **Compiler output is contract-level:** it powers ToolDrawer rendering and (when present) powers fail-closed ops/AI editing.
@@ -380,9 +389,9 @@ Workspace is Bob's preview iframe host.
 From Bob:
 ```
 compiled.assets = {
-  htmlUrl: "https://denver.clickeen.com/widgets/faq/widget.html",
-  cssUrl: "https://denver.clickeen.com/widgets/faq/widget.css",
-  jsUrl: "https://denver.clickeen.com/widgets/faq/widget.client.js"
+  htmlUrl: "https://tokyo.clickeen.com/widgets/faq/widget.html",
+  cssUrl: "https://tokyo.clickeen.com/widgets/faq/widget.css",
+  jsUrl: "https://tokyo.clickeen.com/widgets/faq/widget.client.js"
 }
 
 instanceData = {
@@ -487,15 +496,15 @@ No bloat. No performance penalty. Infinite scalability.
 This architecture is foundational to Clickeen's competitive advantages, especially AI-Native design:
 
 ### 1. Simple to Build
-Engineers write a small Denver widget folder (runtime: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`) plus `agent.md` when AI editing is enabled. No React expertise required; `spec.json` is JSON with a tiny markup DSL; `widget.client.js` is straightforward DOM updates.
+Engineers write a small Tokyo widget folder (runtime: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`) plus `agent.md` when AI editing is enabled. No React expertise required; `spec.json` is JSON with a tiny markup DSL; `widget.client.js` is straightforward DOM updates.
 
 ### 2. Simple to Use
-"Need to build a new widget? Go to Denver, find something similar, copy the widget folder, customize it."
+"Need to build a new widget? Go to Tokyo, find something similar, copy the widget folder, customize it."
 
 One place to look. One pattern to follow. Hard to mess up.
 
 ### 3. Scales to Hundreds of Widgets
-Each widget is self-contained (Denver folder). No shared widget code in Bob. Add more widgets by adding more folders.
+Each widget is self-contained (Tokyo folder). No shared widget code in Bob. Add more widgets by adding more folders.
 
 ### 4. Operational Efficiency
 All editing happens client-side in memory. No database hits until publish. No server load from editing sessions. 10,000 simultaneous editors = 10,000 in-memory working states, zero DB load.
@@ -517,12 +526,35 @@ Want to generate new widgets? AI can read `spec.json` + `agent.md` patterns and 
 - Generate new widgets by copying and modifying examples
 - All without touching widget-specific code (it's just data)
 
-The generic 50% (Bob + compiler) keeps getting better. The widget-specific 50% (Denver widget folders) stays simple and AI-understandable.
+The generic 50% (Bob + compiler) keeps getting better. The widget-specific 50% (Tokyo widget folders) stays simple and AI-understandable.
+
+### 7. No Separate Starter System
+
+Starter designs are implemented as **widget instances**, not a separate system.
+
+Competitors maintain two parallel systems:
+- Gallery presets (separate CRUD, versioning, copy logic)
+- Widget instances (user’s widgets)
+
+Clickeen has one system:
+- Widget instances (some created by Clickeen as starters, others created by users)
+
+**How starter designs work:**
+1. Clickeen team creates widget instances using Bob Editor (via DevStudio)
+2. Instances named with `ck-` prefix: `ck-faq-christmas`, `ck-countdown-blackfriday`
+3. These are flagged as available for users to clone
+4. User clones → gets their own copy → customizes freely
+
+**Benefits:**
+- One system to maintain
+- Clickeen dog-foods the same editor users use
+- Any instance can become a shareable starter (future: user marketplace)
+- Full customization (starters are not locked-down)
 
 ## The Complete Picture
 
 ```
-Denver (Widget Definitions)
+Tokyo (Widget Definitions)
 ├── widgets/faq/
 │   ├── spec.json          (ToolDrawer spec + defaults)
 │   ├── widget.html        (semantic markup)
@@ -534,7 +566,7 @@ Denver (Widget Definitions)
 └── (100+ more widgets)
 
 Bob (Generic Editor)
-├── Fetches spec.json from Denver
+├── Fetches spec.json from Tokyo
 ├── Compiler builds → CompiledWidget (panels + assets + optional controls[])
 ├── Holds working config in React state (`instanceData`)
 ├── Generic ToolDrawer renders controls from CompiledWidget
@@ -543,7 +575,7 @@ Bob (Generic Editor)
 └── Publishes instanceData to Paris on user click (as `config`)
 
 Workspace (Preview Host)
-├── Loads widget.html from Denver (which loads widget.css + widget.client.js)
+├── Loads widget.html from Tokyo (which loads widget.css + widget.client.js)
 ├── Receives postMessage: widget.client.js calls applyState(instanceData)
 └── NO iframe reloads, NO re-renders
 
@@ -565,7 +597,7 @@ Paris (Database)
 1. User opens widget instance
 	   ↓ Bob calls GET /api/instance/:publicId to Paris
 2. Paris returns published config
-	   ↓ Bob fetches spec.json from Denver
+	   ↓ Bob fetches spec.json from Tokyo
 3. Compiler parses spec.json → CompiledWidget
 	   ↓ Bob creates instanceData = merge(spec.defaults, config)
 4. ToolDrawer renders from CompiledWidget (panels[])
@@ -583,12 +615,12 @@ Paris (Database)
 
 ## How Venice Uses The Same Files
 
-Venice (embed renderer) uses the same widget files from Denver:
+Venice (embed renderer) uses the same widget files from Tokyo:
 
 ```
 1. User embeds widget via <script src="...">
 2. Venice loads published config from Paris (or fetches if not cached)
-3. Venice fetches widget files from Denver:
+3. Venice fetches widget files from Tokyo:
 	   - widget.html (renders as-is)
 	   - widget.css (inlines in <style> tag)
 	   - widget.client.js (includes in <script> tag)
@@ -714,9 +746,9 @@ Encode UI state with explicit, low-cardinality enums so CSS + agents can reason 
 
 ## For Engineers: How to Build a Widget
 
-### Step 1: Create Denver Directory Structure
+### Step 1: Create Tokyo Directory Structure
 ```
-denver/widgets/{widgetname}/
+tokyo/widgets/{widgetname}/
 ├── spec.json
 ├── widget.html
 ├── widget.css
@@ -817,7 +849,7 @@ If the widget supports AI editing, add `agent.md` describing:
 
 ### Step 7: Test in Bob
 
-1. Bob fetches your spec.json from Denver
+1. Bob fetches your spec.json from Tokyo
 2. Compiler builds it → CompiledWidget
 3. ToolDrawer renders controls
 4. Edit in preview

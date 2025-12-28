@@ -6,7 +6,7 @@ Phase-1 excludes Lisbon. Do **not** implement without explicit CEO approval. Thi
 - Tier: Supporting
 - Purpose: Transactional emails and notifications
 ## Interfaces
-- Email send API, templates
+- Email send API, email layouts
 ## Dependencies
 - Used by: Robert, Tokyo, Bob
 ## Deployment

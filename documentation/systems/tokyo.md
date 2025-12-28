@@ -1,18 +1,21 @@
-STATUS: INFORMATIVE — FUTURE (NOT PHASE-1)
-Phase-1 excludes Tokyo. Future billing/upsell work requires explicit CEO approval before implementation.
+# System: Tokyo — Asset Storage & CDN
 
-# System: Tokyo — Billing & Upsell (Future)
 ## Identity
-- Tier: Core
-- Purpose: Stripe billing, entitlements
+- Tier: Supporting
+- Purpose: File and asset storage with CDN delivery
+
 ## Interfaces
-- Webhooks, customer portal
+- Upload APIs, signed URLs
+- Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
+
 ## Dependencies
-- Depends on: Robert
-- Used by: Bob
+- Used by: Venice, Bob, Site
+
 ## Deployment
-- Supabase functions + c-keen-app UI
+- Cloudflare R2 (zero egress)
+
 ## Rules
-- Entitlements cached at edge via Atlas
+- Public assets cacheable; private assets signed, time-limited
+
 ## Links
 - Back: ../../CONTEXT.md

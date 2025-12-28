@@ -1,0 +1,53 @@
+name = "sanfrancisco-dev"
+main = "src/index.ts"
+compatibility_date = "2025-12-28"
+
+[vars]
+ENVIRONMENT = "dev"
+
+[[kv_namespaces]]
+binding = "SF_KV"
+id = "REPLACE_ME"
+
+[[d1_databases]]
+binding = "SF_D1"
+database_name = "sanfrancisco_d1_dev"
+database_id = "REPLACE_ME"
+
+[[r2_buckets]]
+binding = "SF_R2"
+bucket_name = "sanfrancisco-logs-dev"
+
+[[queues.producers]]
+binding = "SF_EVENTS"
+queue = "sanfrancisco_events_dev"
+
+[[queues.consumers]]
+queue = "sanfrancisco_events_dev"
+
+[env.prod]
+name = "sanfrancisco-prod"
+
+[env.prod.vars]
+ENVIRONMENT = "prod"
+
+[[env.prod.kv_namespaces]]
+binding = "SF_KV"
+id = "REPLACE_ME"
+
+[[env.prod.d1_databases]]
+binding = "SF_D1"
+database_name = "sanfrancisco_d1_prod"
+database_id = "REPLACE_ME"
+
+[[env.prod.r2_buckets]]
+binding = "SF_R2"
+bucket_name = "sanfrancisco-logs-prod"
+
+[[env.prod.queues.producers]]
+binding = "SF_EVENTS"
+queue = "sanfrancisco_events_prod"
+
+[[env.prod.queues.consumers]]
+queue = "sanfrancisco_events_prod"
+

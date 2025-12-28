@@ -9,8 +9,6 @@ interface InstanceResponse {
   publicId: string;
   status: 'draft' | 'published' | 'inactive';
   widgetType?: string | null;
-  templateId?: string | null;
-  schemaVersion?: string | null;
   config: Record<string, unknown>;
   branding?: { hide?: boolean; enforced?: boolean };
   updatedAt?: string;

@@ -4,16 +4,16 @@ This repo contains the full Clickeen widget platform:
 
 - **bob/** — Widget editor (Next.js). Consumes precompiled widget panels and hydrates Dieter components.
 - **admin/** — DevStudio tooling and component showcase (Vite). Hosts the widget workspace page that embeds Bob.
-- **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **denver/**.
-- **denver/** — Local CDN stub serving Dieter assets and built widgets.
+- **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **tokyo/**.
+- **tokyo/** — Local CDN stub serving Dieter assets and built widgets.
 - **paris/** — API service used by DevStudio for instances.
 - **documentation/** — Platform and architecture notes.
 
 ## Architecture (high level)
 
-1) **Widgets live in Denver**
-   - Each widget has `denver/widgets/<name>/spec.json` and built assets (`widget.html/css/js`).
-   - Dieter component templates/specs live under `denver/dieter/components`.
+1) **Widgets live in Tokyo**
+   - Each widget has `tokyo/widgets/<name>/spec.json` and built assets (`widget.html/css/js`).
+   - Dieter component stencils/specs live under `tokyo/dieter/components`.
 
 2) **Server-side expansion**
    - Bob’s compile API (`/api/widgets/[widgetname]/compiled`) reads the widget spec and expands `<tooldrawer-field>` using Dieter templates/specs.
@@ -30,8 +30,8 @@ This repo contains the full Clickeen widget platform:
 
 ```bash
 pnpm install
-pnpm build:dieter       # builds Dieter into denver/dieter
-./scripts/dev-up.sh     # starts Denver (4000), Paris (3001), Bob (3000), DevStudio (5173)
+pnpm build:dieter       # builds Dieter into tokyo/dieter
+./scripts/dev-up.sh     # starts Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
 ```
 
 Useful scripts:
@@ -42,7 +42,7 @@ Useful scripts:
 ## Notes
 
 - Bob runs fully client-side rendering of already-expanded panels; no runtime template fetching.
-- Icons must exist in `denver/dieter/icons/icons.json`; missing icons fail compilation.
+- Icons must exist in `tokyo/dieter/icons/icons.json`; missing icons fail compilation.
 - Widget data paths: `stage.background` and `pod.background` are the canonical fill keys.
 
 ## License

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- Build @ck/dieter artifacts directly into denver/dieter:
+ Build @ck/dieter artifacts directly into tokyo/dieter:
  - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
  - Copy tokens/tokens.css -> dist/tokens.css
@@ -80,10 +80,46 @@ function runNodeScript(scriptRelPath) {
   }
 }
 
-function main() {
+async function bundleComponentScripts({ componentsSrc, dist }) {
+  const tsFiles = (await glob(path.join(componentsSrc, '**/*.ts').replace(/\\/g, '/'))).sort();
+
+  for (const tsFile of tsFiles) {
+    const parts = tsFile.split('/');
+    const name = parts[parts.length - 2]; // e.g., textfield/toggle
+    const outDir = path.join(dist, 'components', name);
+    const outFile = path.join(outDir, `${name}.js`);
+    const content = fs.readFileSync(tsFile, 'utf8');
+    const match = content.match(/export function (\w+)/);
+    if (!match) continue;
+    fs.mkdirSync(outDir, { recursive: true });
+    await esbuild.build({
+      entryPoints: [tsFile],
+      bundle: true,
+      format: 'iife',
+      globalName: 'Dieter',
+      target: ['es2020'],
+      outfile: outFile,
+      banner: {
+        js: 'var __prevDieter = window.Dieter ? { ...window.Dieter } : {};',
+      },
+      footer: {
+        js: 'window.Dieter = { ...__prevDieter, ...Dieter };',
+      },
+    });
+  }
+}
+
+function assertExists(label, filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`[build-dieter] Missing expected output (${label}): ${filePath}`);
+    process.exit(1);
+  }
+}
+
+async function main() {
   const repoRoot = path.resolve(__dirname, '..');
   const dieterRoot = path.resolve(repoRoot, 'dieter');
-  const dist = path.join(repoRoot, 'denver', 'dieter');
+  const dist = path.join(repoRoot, 'tokyo', 'dieter');
   const componentsSrc = path.join(dieterRoot, 'components');
   const foundationsSrc = path.join(dieterRoot, 'foundations');
 
@@ -151,39 +187,17 @@ function main() {
   }
 
   // 6) Bundle component JS per control and aggregate components.js
-  (async () => {
-    const tsFiles = await glob(path.join(componentsSrc, '**/*.ts').replace(/\\/g, '/'));
-    // Per-component bundles (exported on window.Dieter via globalName)
-    for (const tsFile of tsFiles) {
-      const parts = tsFile.split('/');
-      const name = parts[parts.length - 2]; // e.g., textfield/toggle
-      const outDir = path.join(dist, 'components', name);
-      const outFile = path.join(outDir, `${name}.js`);
-      const content = fs.readFileSync(tsFile, 'utf8');
-      const match = content.match(/export function (\w+)/);
-      if (!match) continue;
-      fs.mkdirSync(outDir, { recursive: true });
-      await esbuild.build({
-        entryPoints: [tsFile],
-        bundle: true,
-        format: 'iife',
-        globalName: 'Dieter',
-        target: ['es2020'],
-        outfile: outFile,
-        banner: {
-          js: 'var __prevDieter = window.Dieter ? { ...window.Dieter } : {};',
-        },
-        footer: {
-          js: 'window.Dieter = { ...__prevDieter, ...Dieter };',
-        },
-      });
-    }
-  })().catch((err) => {
-    console.error('[build-dieter] Failed to bundle component JS', err);
-    process.exit(1);
-  });
+  await bundleComponentScripts({ componentsSrc, dist });
+
+  // 7) Build verification (fail fast if outputs are missing)
+  assertExists('tokens.css', path.join(dist, 'tokens.css'));
+  assertExists('icons.json', path.join(dist, 'icons', 'icons.json'));
+  assertExists('icons/svg', path.join(dist, 'icons', 'svg'));
 
   console.log(`[build-dieter] Built Dieter assets into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
 }
 
-main();
+main().catch((err) => {
+  console.error('[build-dieter] Build failed', err);
+  process.exit(1);
+});

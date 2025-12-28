@@ -1,12 +1,12 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `bob/` – Next.js widget editor UI; reads Dieter assets from `denver/dieter`.
+- `bob/` – Next.js widget editor UI; reads Dieter assets from `tokyo/dieter`.
 - `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
 - `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
 - `paris/` – Next.js API/service workspace (Supabase/Redis dependencies).
 - `venice/` & `prague/` – Edge runtime and marketing placeholders.
-- `documentation/` stores product/architecture context; `scripts/` has build helpers; `denver/` serves built Dieter assets for local use.
+- `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` serves built Dieter assets for local use.
 
 ## Build, Test, and Development Commands
 - Install: `pnpm install` (workspace root).
@@ -19,7 +19,7 @@
 - TypeScript-first; React function components in PascalCase; hooks/utilities in camelCase.
 - Use 2-space indentation, Prettier defaults, and ESLint (`@typescript-eslint` in `admin`, `next lint` in Next apps); fix warnings before commit.
 - Dieter components use kebab-case folders and `diet-` CSS class prefixes; reuse tokens from `dieter/tokens` instead of ad-hoc styles.
-- Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_DENVER_URL` for Dieter assets).
+- Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_TOKYO_URL` for Dieter assets).
 
 ## Testing Guidelines
 - Admin uses Vitest/Testing Library; co-locate `*.test.ts(x)` near sources and cover accessibility.
@@ -35,5 +35,5 @@
 
 ## Security & Configuration Tips
 - Store secrets in per-app `.env.local` files; do not commit keys (Supabase/Redis, Edge Config, etc.).
-- Keep Dieter asset paths in sync with `denver/dieter`; avoid hard-coded absolute URLs.
+- Keep Dieter asset paths in sync with `tokyo/dieter`; avoid hard-coded absolute URLs.
 - When touching networked services, note rate limits and production endpoints; prefer feature flags or config toggles for risky changes.
