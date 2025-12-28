@@ -45,10 +45,10 @@ if ! curl -sI "http://localhost:4000/healthz" >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "[dev-up] Starting DevStudio (5173) with TOKYO_URL=$TOKYO_URL"
+echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
-  PORT=3001 nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
+  nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
   PARIS_PID=$!
   echo "[dev-up] Paris PID: $PARIS_PID"
 )

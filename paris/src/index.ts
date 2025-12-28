@@ -70,12 +70,10 @@ async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: Request
   headers.set('Authorization', `Bearer ${key}`);
   if (!headers.has('Content-Type') && init?.body) headers.set('Content-Type', 'application/json');
 
-  const res = await fetch(`${baseUrl}${pathnameWithQuery}`, {
+  return fetch(`${baseUrl}${pathnameWithQuery}`, {
     ...init,
     headers,
   });
-
-  return res;
 }
 
 async function readJson(res: Response) {
@@ -88,7 +86,7 @@ async function readJson(res: Response) {
   }
 }
 
-async function handleHealthz(_req: Request, _env: Env) {
+async function handleHealthz() {
   return json({ up: true });
 }
 
@@ -231,7 +229,8 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
 
   const issues: Array<{ path: string; message: string }> = [];
 
-  const configResult = payload.config !== undefined ? assertConfig(payload.config) : { ok: true as const, value: undefined };
+  const configResult =
+    payload.config !== undefined ? assertConfig(payload.config) : { ok: true as const, value: undefined };
   if (!configResult.ok) issues.push(...configResult.issues);
 
   const statusResult = assertStatus(payload.status);
@@ -247,7 +246,9 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
   const displayName = displayNameResult.value;
 
   if (config === undefined && status === undefined && displayName === undefined) {
-    return json([{ path: 'body', message: 'At least one field (config, status, displayName) required' }], { status: 422 });
+    return json([{ path: 'body', message: 'At least one field (config, status, displayName) required' }], {
+      status: 422,
+    });
   }
 
   const instance = await loadInstanceByPublicId(env, publicId);
@@ -260,13 +261,17 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
     if (config !== undefined) update.config = config;
     if (status !== undefined) update.status = status;
 
-    const patchRes = await supabaseFetch(env, `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}`, {
-      method: 'PATCH',
-      headers: {
-        Prefer: 'return=representation',
+    const patchRes = await supabaseFetch(
+      env,
+      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify(update),
       },
-      body: JSON.stringify(update),
-    });
+    );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
@@ -296,7 +301,8 @@ export default {
       const url = new URL(req.url);
       const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
-      if (pathname === '/api/healthz') return handleHealthz(req, env);
+      if (pathname === '/api/healthz') return handleHealthz();
+
       if (pathname === '/api/instances') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleInstances(req, env);

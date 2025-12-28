@@ -3,23 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "wrangler dev --local --port 3001",
+    "deploy": "wrangler deploy"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.3",
-    "@vercel/edge-config": "^1.1.1",
-    "redis": "^4.6.14",
-    "next": "^14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
+  "type": "module",
   "devDependencies": {
-    "@types/node": "^20.16.5",
-    "typescript": "^5.4.5"
-  },
-  "engines": {
-    "node": "20.x"
+    "@cloudflare/workers-types": "^4.20251228.0",
+    "wrangler": "^4.54.0"
   }
 }

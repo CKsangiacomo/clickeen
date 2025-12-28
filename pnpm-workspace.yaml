@@ -3,7 +3,6 @@ packages:
   - bob
   - dieter
   - paris
-  - paris-worker
   - sanfrancisco
   - venice
   - tooling/sf-symbols
