@@ -54,6 +54,24 @@ type CopilotSession = {
 
 type GlobalDictionary = typeof globalDictionary;
 
+function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: string } | null {
+  const s = text.toLowerCase();
+  if (!s) return null;
+
+  // Common Cloudflare 5xx HTML markers.
+  const hasCfWrapper = s.includes('id="cf-wrapper"') || s.includes("id='cf-wrapper'");
+  const hasCfDetails = s.includes('id="cf-error-details"') || s.includes("id='cf-error-details'");
+  const hasCdnCgi = s.includes('/cdn-cgi/') || s.includes('cdn-cgi/styles/main.css');
+  const hasLandingLink = s.includes('cloudflare.com/5xx-error-landing');
+
+  if (!(hasCfWrapper || hasCfDetails || hasCdnCgi || hasLandingLink)) return null;
+
+  // Try to extract the numeric status code if present.
+  const m = s.match(/error code\s*(\d{3})/);
+  const code = m ? Number(m[1]) : undefined;
+  return { status: Number.isFinite(code) ? code : undefined, reason: 'cloudflare_error_page' };
+}
+
 function parseJsonFromModel(raw: string): unknown {
   const trimmed = raw.trim();
   let cleaned = trimmed;
@@ -238,6 +256,29 @@ function systemPrompt(): string {
 
 export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: unknown }, env: Env): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
   const input = parseWidgetCopilotInput(params.input);
+
+  const cfError = looksLikeCloudflareErrorPage(input.prompt);
+  if (cfError) {
+    const session = await getSession(env, input.sessionId);
+    session.lastActiveAtMs = Date.now();
+    const msg =
+      'That looks like a Cloudflare error page' +
+      (cfError.status ? ` (HTTP ${cfError.status})` : '') +
+      ". I can't use it to update FAQs because it doesn't contain your site's content. " +
+      'Please share a working URL (that loads the real page) or paste the page text you want me to base the FAQs on.';
+
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: msg },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+
+    return {
+      result: { message: msg },
+      usage: { provider: 'local', model: 'cloudflare_error_detector', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
+  }
 
   const clarification = maybeClarify(globalDictionary, input);
   if (clarification) {
