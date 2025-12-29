@@ -1,0 +1,76 @@
+{
+  "v": 1,
+  "gitSha": "6063c4890874d5d94246b92950d8ab57341a7f8b",
+  "components": [
+    "button",
+    "choice-tiles",
+    "dropdown-actions",
+    "dropdown-edit",
+    "dropdown-fill",
+    "icon",
+    "menuactions",
+    "object-manager",
+    "popaddlink",
+    "popover",
+    "repeater",
+    "segmented",
+    "slider",
+    "tabs",
+    "textedit",
+    "textfield",
+    "textrename",
+    "toggle"
+  ],
+  "componentsWithJs": [
+    "button",
+    "choice-tiles",
+    "dropdown-actions",
+    "dropdown-edit",
+    "dropdown-fill",
+    "menuactions",
+    "object-manager",
+    "popaddlink",
+    "repeater",
+    "segmented",
+    "tabs",
+    "textedit",
+    "textfield",
+    "toggle"
+  ],
+  "aliases": {
+    "btn": "button",
+    "btn-ic": "button",
+    "btn-txt": "button",
+    "btn-ictxt": "button",
+    "btn-menuactions": "menuactions",
+    "popover-host": "popover"
+  },
+  "helpers": [
+    "dropdown-header",
+    "dropdown-header-label",
+    "dropdown-header-value",
+    "dropdown-header-icon"
+  ],
+  "deps": {
+    "dropdown-actions": [
+      "popover",
+      "button"
+    ],
+    "dropdown-edit": [
+      "popover",
+      "button",
+      "popaddlink",
+      "textfield"
+    ],
+    "dropdown-fill": [
+      "popover",
+      "button",
+      "textfield"
+    ],
+    "popaddlink": [
+      "popover",
+      "button",
+      "textfield"
+    ]
+  }
+}

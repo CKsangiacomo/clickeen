@@ -16,6 +16,88 @@ const { spawnSync } = require('node:child_process');
 const esbuild = require('esbuild');
 const { glob } = require('glob');
 
+function tryGetGitSha(repoRoot) {
+  const fromEnv =
+    process.env.CF_PAGES_COMMIT_SHA ||
+    process.env.GITHUB_SHA ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.COMMIT_SHA;
+  if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
+
+  try {
+    const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
+    if (res.status === 0) {
+      const sha = String(res.stdout || '').trim();
+      if (sha) return sha;
+    }
+  } catch (_) {}
+  return 'unknown';
+}
+
+function listComponentBundles(dist) {
+  const componentsDir = path.join(dist, 'components');
+  if (!fs.existsSync(componentsDir)) return [];
+  return fs
+    .readdirSync(componentsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .filter((name) => fs.existsSync(path.join(componentsDir, name, `${name}.css`)))
+    .sort();
+}
+
+function listComponentBundlesWithJs(dist, componentNames) {
+  const componentsDir = path.join(dist, 'components');
+  return componentNames.filter((name) => fs.existsSync(path.join(componentsDir, name, `${name}.js`)));
+}
+
+function writeDieterManifest({ dist, repoRoot }) {
+  const components = listComponentBundles(dist);
+  const componentsWithJs = listComponentBundlesWithJs(dist, components);
+
+  const aliases = {
+    btn: 'button',
+    'btn-ic': 'button',
+    'btn-txt': 'button',
+    'btn-ictxt': 'button',
+    'btn-menuactions': 'menuactions',
+    'popover-host': 'popover',
+  };
+
+  const helpers = ['dropdown-header', 'dropdown-header-label', 'dropdown-header-value', 'dropdown-header-icon'];
+
+  // Explicit dependencies between Dieter bundles (keeps Bob compilation deterministic).
+  // Keep this list small and expand only when a component truly depends on others.
+  const deps = {
+    'dropdown-actions': ['popover', 'button'],
+    'dropdown-edit': ['popover', 'button', 'popaddlink', 'textfield'],
+    'dropdown-fill': ['popover', 'button', 'textfield'],
+    popaddlink: ['popover', 'button', 'textfield'],
+  };
+
+  const validateName = (name) => typeof name === 'string' && name.length > 0 && components.includes(name);
+  for (const [name, list] of Object.entries(deps)) {
+    if (!validateName(name)) {
+      console.warn(`[build-dieter] manifest deps references unknown component "${name}"`);
+      continue;
+    }
+    if (!Array.isArray(list) || list.some((d) => !validateName(d))) {
+      console.warn(`[build-dieter] manifest deps for "${name}" contains unknown component(s): ${JSON.stringify(list)}`);
+    }
+  }
+
+  const manifest = {
+    v: 1,
+    gitSha: tryGetGitSha(repoRoot),
+    components,
+    componentsWithJs,
+    aliases,
+    helpers,
+    deps,
+  };
+
+  fs.writeFileSync(path.join(dist, 'manifest.json'), JSON.stringify(manifest, null, 2));
+}
+
 function copyRecursiveSync(source, destination) {
   const stat = fs.statSync(source);
   if (stat.isDirectory()) {
@@ -193,6 +275,10 @@ async function main() {
   assertExists('tokens.css', path.join(dist, 'tokens.css'));
   assertExists('icons.json', path.join(dist, 'icons', 'icons.json'));
   assertExists('icons/svg', path.join(dist, 'icons', 'svg'));
+
+  // 8) Emit bundling manifest consumed by Bob/compiler.
+  writeDieterManifest({ dist, repoRoot });
+  assertExists('manifest.json', path.join(dist, 'manifest.json'));
 
   console.log(`[build-dieter] Built Dieter assets into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
 }
