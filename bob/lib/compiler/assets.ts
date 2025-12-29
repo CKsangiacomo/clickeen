@@ -51,17 +51,16 @@ export async function buildWidgetAssets(args: {
     ),
   );
 
-  // Filter to only include components that actually exist (class extraction may pick up
-  // sub-element classes like "dropdown-header-label" which are not standalone components)
-  const componentStyles = (
-    await Promise.all(
-      componentNames.map(async (name) => {
-        const url = `${dieterBase}/components/${name}/${name}.css`;
-        const exists = await remoteFileExists(url);
-        return exists ? url : null;
-      }),
-    )
-  ).filter((url): url is string => Boolean(url));
+  const componentStyles = await Promise.all(
+    componentNames.map(async (name) => {
+      const url = `${dieterBase}/components/${name}/${name}.css`;
+      const exists = await remoteFileExists(url);
+      if (!exists) {
+        throw new Error(`[BobCompiler] Missing Dieter CSS for component "${name}" (${url})`);
+      }
+      return url;
+    }),
+  );
 
   const componentScripts = (
     await Promise.all(
