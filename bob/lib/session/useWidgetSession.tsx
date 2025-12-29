@@ -12,6 +12,7 @@ import type { ReactNode } from 'react';
 import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps, validateWidgetData } from '../ops';
+import type { CopilotThread } from '../copilot/types';
 
 type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -37,6 +38,7 @@ type SessionState = {
   lastUpdate: UpdateMeta | null;
   undoSnapshot: Record<string, unknown> | null;
   error: SessionError | null;
+  copilotThreads: Record<string, CopilotThread>;
   meta: {
     publicId?: string;
     widgetname?: string;
@@ -68,6 +70,7 @@ function useWidgetSessionInternal() {
     lastUpdate: null,
     undoSnapshot: null,
     error: null,
+    copilotThreads: {},
     meta: null,
   }));
 
@@ -168,10 +171,10 @@ function useWidgetSessionInternal() {
       }
 
       setState((prev) => ({
+        ...prev,
         compiled,
         instanceData: resolved,
         isDirty: false,
-        preview: prev.preview,
         selectedPath: null,
         error: null,
         lastUpdate: {
@@ -202,6 +205,28 @@ function useWidgetSessionInternal() {
       }));
     }
   }, []);
+
+  const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
+    const trimmed = key.trim();
+    if (!trimmed) return;
+    setState((prev) => ({
+      ...prev,
+      copilotThreads: { ...prev.copilotThreads, [trimmed]: next },
+    }));
+  }, []);
+
+  const updateCopilotThread = useCallback(
+    (key: string, updater: (current: CopilotThread | null) => CopilotThread) => {
+      const trimmed = key.trim();
+      if (!trimmed) return;
+      setState((prev) => {
+        const current = prev.copilotThreads[trimmed] ?? null;
+        const next = updater(current);
+        return { ...prev, copilotThreads: { ...prev.copilotThreads, [trimmed]: next } };
+      });
+    },
+    []
+  );
 
   const setPreview = useCallback((updates: Partial<PreviewSettings>) => {
     setState((prev) => ({
@@ -289,6 +314,7 @@ function useWidgetSessionInternal() {
       error: state.error,
       meta: state.meta,
       canUndo: Boolean(state.undoSnapshot),
+      copilotThreads: state.copilotThreads,
       applyOps,
       undoLastOps,
       commitLastOps,
@@ -296,8 +322,21 @@ function useWidgetSessionInternal() {
       setPreview,
       renameInstance,
       loadInstance,
+      setCopilotThread,
+      updateCopilotThread,
     }),
-    [state, applyOps, undoLastOps, commitLastOps, loadInstance, setPreview, renameInstance, setSelectedPath]
+    [
+      state,
+      applyOps,
+      undoLastOps,
+      commitLastOps,
+      loadInstance,
+      setPreview,
+      renameInstance,
+      setSelectedPath,
+      setCopilotThread,
+      updateCopilotThread,
+    ]
   );
 
   return value;

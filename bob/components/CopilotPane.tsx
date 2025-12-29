@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
+import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-
-type CopilotMessage = {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  ts: number;
-  cta?: { text: string; action: 'signup' | 'upgrade' | 'learn-more'; url?: string };
-  hasPendingDecision?: boolean;
-};
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -80,30 +72,32 @@ export function CopilotPane() {
   const widgetType = compiled?.widgetname ?? null;
   const instancePublicId = session.meta?.publicId ?? null;
 
-  const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [copilotSessionId, setCopilotSessionId] = useState<string>(() => crypto.randomUUID());
 
   const pendingDecisionRef = useRef(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const convoKeyRef = useRef<string | null>(null);
 
+  const threadKey = useMemo(() => {
+    if (!widgetType) return null;
+    return `${widgetType}:${instancePublicId ?? 'local'}`;
+  }, [widgetType, instancePublicId]);
+
+  const thread = threadKey ? session.copilotThreads?.[threadKey] ?? null : null;
+  const messages = thread?.messages ?? [];
+  const copilotSessionId = thread?.sessionId ?? '';
+
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const key = 'ck:copilot:sessionId';
-    try {
-      const existing = window.localStorage.getItem(key);
-      if (existing && existing.trim()) {
-        setCopilotSessionId(existing.trim());
-        return;
-      }
-      window.localStorage.setItem(key, copilotSessionId);
-    } catch {
-      // Some browsers block storage access in iframes; fall back to an in-memory sessionId.
-    }
-  }, []);
+    if (!threadKey || !compiled || !canApplyOps || !widgetType) return;
+    if (thread && thread.messages.length > 0) return;
+
+    session.setCopilotThread(threadKey, {
+      sessionId: crypto.randomUUID(),
+      messages: [{ id: newId(), role: 'assistant', text: initialCopilotMessage({ widgetType, config: session.instanceData }), ts: Date.now() }],
+    });
+  }, [threadKey, compiled, canApplyOps, widgetType, thread, session]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -112,19 +106,10 @@ export function CopilotPane() {
   }, [messages.length]);
 
   useEffect(() => {
-    if (!compiled || !canApplyOps || !widgetType) return;
-    const key = `${widgetType}:${instancePublicId ?? 'local'}`;
-    if (convoKeyRef.current === key && messages.length > 0) return;
-
-    convoKeyRef.current = key;
-    pendingDecisionRef.current = false;
-    setError(null);
-    setStatus('idle');
-    setDraft('');
-
-    const greeting = initialCopilotMessage({ widgetType, config: session.instanceData });
-    setMessages([{ id: newId(), role: 'assistant', text: greeting, ts: Date.now() }]);
-  }, [compiled, canApplyOps, widgetType, instancePublicId]);
+    if (!threadKey) return;
+    convoKeyRef.current = threadKey;
+    pendingDecisionRef.current = messages.some((m) => Boolean(m.hasPendingDecision));
+  }, [threadKey, messages]);
 
   const uiDisabledReason = useMemo(() => {
     if (!compiled) return 'Load an instance to begin.';
@@ -151,12 +136,23 @@ export function CopilotPane() {
   }, [compiled]);
 
   const pushMessage = (msg: Omit<CopilotMessage, 'id' | 'ts'>) => {
-    setMessages((prev) => [...prev, { ...msg, id: newId(), ts: Date.now() }]);
+    if (!threadKey) return;
+    session.updateCopilotThread(threadKey, (current) => {
+      const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
+      return { ...base, messages: [...base.messages, { ...msg, id: newId(), ts: Date.now() }] };
+    });
   };
 
   const clearPendingDecision = () => {
     pendingDecisionRef.current = false;
-    setMessages((prev) => prev.map((m) => (m.hasPendingDecision ? { ...m, hasPendingDecision: false } : m)));
+    if (!threadKey) return;
+    session.updateCopilotThread(threadKey, (current) => {
+      const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
+      return {
+        ...base,
+        messages: base.messages.map((m) => (m.hasPendingDecision ? { ...m, hasPendingDecision: false } : m)),
+      };
+    });
   };
 
   const handleSend = async () => {
@@ -176,6 +172,10 @@ export function CopilotPane() {
     pushMessage({ role: 'user', text: prompt });
 
     try {
+      if (!copilotSessionId) {
+        throw new Error('Copilot session not ready.');
+      }
+
       const res = await fetch('/api/ai/sdr-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
