@@ -1,5 +1,5 @@
 import type { ComponentSource } from './componentTypes';
-import { interpolateStencilContext, renderStencil } from '../../../bob/lib/compiler/stencil-renderer';
+import { interpolateStencilContext, renderStencil } from './stencilRenderer';
 
 export interface ComponentDoc {
   id: string;
