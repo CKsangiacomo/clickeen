@@ -35,7 +35,7 @@ Clickeen is designed from the ground up to be **built by AI** and **run by AI**:
 
 **All agents learn automatically** — outcomes feed back into the system, improving prompts and examples over time.
 
-See: `systems/sanfrancisco.md`
+See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
 
 ---
 
@@ -110,18 +110,17 @@ Examples:
 
 ## Systems
 
-All systems deploy to **Cloudflare** (except Michael which is Supabase):
-
 | System | Purpose | Runtime | Repo Path |
 |--------|---------|---------|-----------|
-| **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
-| **Bob** | Widget builder app | Cloudflare Pages + Workers | `bob/` |
-| **Venice** | SSR embed runtime | Cloudflare Workers | `venice/` |
-| **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
-| **San Francisco** | AI Workforce OS | Cloudflare Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
+| **Prague** | Marketing site + gallery | Edge | `prague/` |
+| **Bob** | Widget builder app | Node.js | `bob/` |
+| **Venice** | SSR embed runtime | Edge | `venice/` |
+| **Paris** | HTTP API gateway | Node.js | `paris/` |
+| **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
 | **Michael** | Database | Supabase Postgres | `supabase/` |
 | **Dieter** | Design system | — | `dieter/` |
-| **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
+| **Tokyo** | Asset storage & CDN | — | `tokyo/` |
+| **Atlas** | Edge config cache (read-only) | Vercel Edge Config | — |
 
 ---
 
@@ -133,36 +132,17 @@ All systems deploy to **Cloudflare** (except Michael which is Supabase):
 
 **Paris** — HTTP API gateway (Node.js). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco.
 
-**San Francisco** — AI Workforce Operating System (Cloudflare Workers). Phase 1 complete: SDR Copilot running on DeepSeek, HMAC grant verification, KV session management, async R2 logging via Queues. See `systems/sanfrancisco.md`.
+**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `systems/sanfrancisco.md`, `sanfrancisco-learning.md`, `sanfrancisco-infrastructure.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
-**Tokyo** — Asset storage and CDN (Cloudflare R2). Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images. Zero egress costs.
+**Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images.
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 
+**Atlas** — Vercel Edge Config. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.
+
 **agent.md** — Per-widget AI contract. Documents editable paths, parts/roles, enums, and safe list operations. Required for AI editing.
-
----
-
-## Security & Privacy Rules
-
-**PII Logging (NEVER do):**
-- ❌ Never log tokens, emails, or IP addresses in clear text
-- ❌ Never log secrets or API keys
-- ✅ Hash sensitive identifiers before logging (SHA-256 with salt)
-- ✅ Always include `X-Request-ID` for tracing
-
-**Embed Surfaces (Venice, widgets):**
-- ❌ No third-party scripts (no analytics, no tracking pixels)
-- ❌ No cookies or localStorage
-- ❌ No observability vendors (Sentry, PostHog, etc.)
-- ✅ Fire-and-forget usage pixel only (no PII)
-
-**App Surfaces (Bob, Prague, DevStudio):**
-- ✅ Analytics allowed (internal only)
-- ✅ Error tracking allowed
-- ❌ No PII in logs/errors
 
 ---
 
@@ -233,13 +213,12 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 | System | Status | Notes |
 |--------|--------|-------|
-| Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine. Lib cleanup complete (compiler/, edit/, session/ structure) |
+| Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
 | Tokyo | ✅ Active | FAQ + Countdown widgets with shared modules |
-| Paris | ✅ Active | Cloudflare Workers. Instance API aligned with migrations |
-| San Francisco | ✅ Phase 1 | Cloudflare Workers. SDR Copilot live, grant verification, KV sessions, R2 logging |
+| Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
 | Venice | ⚠️ Partial | Debug shell (full SSR rendering planned) |
-| Dieter | ✅ Active | 16+ components, tokens, typography. Deterministic build pipeline |
-| Michael | ✅ Active | Supabase Postgres with RLS. Canonical schema in migrations |
+| Dieter | ✅ Active | 16+ components, tokens, typography |
+| Michael | ✅ Active | Supabase Postgres with RLS |
 
 ### Widgets
 

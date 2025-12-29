@@ -8,8 +8,8 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 ## AIs Quick Scan
 
 **Purpose:** Edge-deployed SSR embed runtime for widgets.
-**Owner:** Cloudflare Workers `venice`.
-**Dependencies:** Paris (API), Tokyo (CDN assets), Dieter (CSS tokens).
+**Owner:** Vercel project `c-keen-embed`.
+**Dependencies:** Paris (API), Tokyo (CDN assets), Atlas (read-only config), Dieter (CSS tokens).
 **Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.
 **Database Tables:** None directly (reads via Paris/Michael).
 **Common mistakes:** Letting browsers call Paris directly, skipping 5s timeout/`X-Request-ID`, ignoring branding fail-closed rules.
@@ -42,10 +42,11 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 Venice is Clickeen's edge-deployed embed service that delivers server-rendered HTML to external websites via a single script tag. It is the public-facing front door for embeds and proxies to Paris for instance data. (In this repo snapshot, HTML rendering is a safe debug shell; widget rendering from Tokyo assets is planned.)
 
 ## Deployment & Runtime
-- **Platform**: Cloudflare Workers
+- **Vercel Project**: `c-keen-embed`
 - **Source Directory**: `venice`  
-- **Runtime**: Edge (V8 isolates)
-- **Domain**: `embed.clickeen.com`
+- **Runtime**: Edge (NOT Node.js)
+- **Build Command**: `pnpm build`
+- **URL Pattern**: `https://c-keen-embed.vercel.app`
 
 ## Core Contracts (Phase-1)
 
@@ -155,7 +156,7 @@ window.addEventListener('message', (event) => {
 Inline (iframe) example:
 ```html
 <iframe
-  src="https://embed.clickeen.com/e/wgt_42yx31?ref=widget&id=wgt_42yx31"
+  src="https://c-keen-embed.vercel.app/e/wgt_42yx31?ref=widget&id=wgt_42yx31"
   loading="lazy"
   title="Clickeen widget"
   sandbox="allow-scripts allow-same-origin"
@@ -167,7 +168,7 @@ Inline (iframe) example:
 Overlay (loader) example:
 ```html
 <script
-  src="https://embed.clickeen.com/embed/v1.0.0/loader.js"
+  src="https://c-keen-embed.vercel.app/embed/v1.0.0/loader.js"
   data-public-id="wgt_42yx31"
   data-trigger="click"
   data-clickselector="#launchWidget"
@@ -405,7 +406,7 @@ Content-Security-Policy:
   default-src 'none';
   frame-ancestors *;
   script-src 'self' 'nonce-{{nonce}}' 'strict-dynamic';
-  connect-src 'self' https://api.clickeen.com https://embed.clickeen.com;
+  connect-src 'self' https://c-keen-api.vercel.app https://c-keen-embed.vercel.app;
   style-src 'self' 'nonce-{{nonce}}';
   img-src 'self' data:;
   form-action 'self';
@@ -551,7 +552,7 @@ curl "http://localhost:3002/e/demo-widget?theme=light&device=desktop"
 1. Build and bundle widget rendering code
 2. Run performance budget checks  
 3. Test against staging Paris API
-4. Deploy to Cloudflare Workers
+4. Deploy to Vercel Edge locations
 5. Validate cache behavior and TTLs
 6. Monitor error rates and performance metrics
 
