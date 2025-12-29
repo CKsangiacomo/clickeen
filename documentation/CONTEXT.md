@@ -112,14 +112,14 @@ Examples:
 
 | System | Purpose | Runtime | Repo Path |
 |--------|---------|---------|-----------|
-| **Prague** | Marketing site + gallery | Edge | `prague/` |
-| **Bob** | Widget builder app | Node.js | `bob/` |
-| **Venice** | SSR embed runtime | Edge | `venice/` |
-| **Paris** | HTTP API gateway | Node.js | `paris/` |
+| **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
+| **Bob** | Widget builder app | Cloudflare Pages (Next.js) | `bob/` |
+| **Venice** | SSR embed runtime | Cloudflare Workers | `venice/` |
+| **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
 | **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
 | **Michael** | Database | Supabase Postgres | `supabase/` |
-| **Dieter** | Design system | — | `dieter/` |
-| **Tokyo** | Asset storage & CDN | — | `tokyo/` |
+| **Dieter** | Design system | Build artifacts in Tokyo | `dieter/` |
+| **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
 | **Atlas** | Edge config cache (read-only) | Cloudflare KV | — |
 
 ---
@@ -130,9 +130,9 @@ Examples:
 
 **Venice** — SSR embed runtime. Fetches instance config via Paris and serves embeddable HTML. Third-party pages only ever talk to Venice; Paris is private.
 
-**Paris** — HTTP API gateway (Node.js). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco.
+**Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco.
 
-**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `systems/sanfrancisco.md`, `sanfrancisco-learning.md`, `sanfrancisco-infrastructure.md`.
+**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
@@ -255,7 +255,28 @@ pnpm dev:admin                  # DevStudio only
 # Quality
 pnpm lint && pnpm typecheck
 pnpm test
+
+# Compilation safety (deterministic)
+node scripts/compile-all-widgets.mjs
 ```
+
+### Environments (Canonical)
+
+| Environment | Bob | Paris | Tokyo | San Francisco | DevStudio |
+|---|---|---|---|---|---|
+| **Local** | `http://localhost:3000` | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:8787` | `http://localhost:5173` |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
+| **UAT** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| **Limited GA** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+| **GA** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
+
+UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
+
+### Deterministic compilation contract (anti-drift)
+
+- **Dieter bundling manifest (authoritative)**: `tokyo/dieter/manifest.json`
+- **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
+- **Compile-all gate**: `node scripts/compile-all-widgets.mjs` must stay green.
 
 **Key Discipline:**
 - Documentation is the source of truth. Update docs when behavior changes.

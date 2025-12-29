@@ -20,7 +20,7 @@ export function json(value: unknown, init: ResponseInit = {}): Response {
 export function noStore(res: Response): Response {
   const headers = new Headers(res.headers);
   headers.set('cache-control', 'no-store');
-  return new Response(res.body, { ...res, headers });
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
 export async function readJson(request: Request): Promise<unknown> {
@@ -44,4 +44,3 @@ export function asString(value: unknown): string | null {
 export function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
-

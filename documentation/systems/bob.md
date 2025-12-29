@@ -225,6 +225,9 @@ The proxy currently supports:
 Optional:
 - `PARIS_DEV_JWT` (dev auth passthrough)
 
+**Security rule (executed):**
+- `PARIS_DEV_JWT` is **local/dev-worker-only**. It must never be set in Cloudflare Pages production env vars.
+
 ### Dev-up
 Run:
 ```bash
@@ -234,6 +237,19 @@ It:
 - Builds Dieter into `tokyo/dieter`
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
+
+### Deterministic compilation gate (executed)
+
+Bob compilation must remain deterministic (no classname heuristics). Run:
+```bash
+node scripts/compile-all-widgets.mjs
+```
+
+This compiles every widget under `tokyo/widgets/*` via Bob’s compile endpoint and asserts `compiled.assets.dieter.styles[]` and `compiled.assets.dieter.scripts[]` are present.
+
+**Bundling contract (executed):**
+- Dieter emits `tokyo/dieter/manifest.json` with `components[]`, `helpers[]`, `aliases{}`, and `deps{}`.
+- Bob compiler consumes this manifest to build Dieter asset lists.
 
 ---
 

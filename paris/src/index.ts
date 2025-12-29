@@ -2,6 +2,7 @@ type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   PARIS_DEV_JWT: string;
+  AI_GRANT_HMAC_SECRET?: string;
 };
 
 type InstanceRow = {
@@ -22,6 +23,30 @@ type WidgetRow = {
 type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'published' | 'unpublished';
+};
+
+type GrantSubject =
+  | { kind: 'anon'; sessionId: string }
+  | { kind: 'user'; userId: string; workspaceId: string }
+  | { kind: 'service'; serviceId: string };
+
+type AIGrant = {
+  v: 1;
+  iss: 'paris';
+  sub: GrantSubject;
+  exp: number; // epoch seconds
+  caps: string[];
+  budgets: {
+    maxTokens: number;
+    timeoutMs?: number;
+    maxCostUsd?: number;
+    maxRequests?: number;
+  };
+  mode: 'editor' | 'ops';
+  trace?: {
+    sessionId?: string;
+    instancePublicId?: string;
+  };
 };
 
 function json(body: unknown, init?: ResponseInit) {
@@ -59,6 +84,30 @@ function assertDevAuth(req: Request, env: Env) {
   return { ok: true as const };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return new Uint8Array(sig);
+}
+
+async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
+  const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(grant)));
+  const sigBytes = await hmacSha256(secret, `v1.${payloadB64}`);
+  const sigB64 = base64UrlEncodeBytes(sigBytes);
+  return `v1.${payloadB64}.${sigB64}`;
+}
+
 async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: RequestInit) {
   const baseUrl = requireEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
   const key = requireEnv(env, 'SUPABASE_SERVICE_ROLE_KEY');
@@ -86,6 +135,82 @@ async function readJson(res: Response) {
 
 async function handleHealthz() {
   return json({ up: true });
+}
+
+async function handleAiGrant(req: Request, env: Env) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+
+  if (!isRecord(body)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const agentId = typeof body.agentId === 'string' ? body.agentId.trim() : '';
+  const mode = body.mode === 'ops' ? 'ops' : 'editor';
+
+  const allowedAgentIds = new Set(['editor.faq.answer.v1', 'sdr.copilot', 'sdr.widget.copilot.v1', 'debug.grantProbe']);
+  if (!agentId || !allowedAgentIds.has(agentId)) {
+    return json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 });
+  }
+
+  const traceRaw = isRecord(body.trace) ? body.trace : null;
+  const trace: AIGrant['trace'] | undefined = traceRaw
+    ? {
+        sessionId: typeof traceRaw.sessionId === 'string' ? traceRaw.sessionId : undefined,
+        instancePublicId: typeof traceRaw.instancePublicId === 'string' ? traceRaw.instancePublicId : undefined,
+      }
+    : undefined;
+
+  const budgetsRaw = isRecord(body.budgets) ? body.budgets : null;
+  const requestedMaxTokens = budgetsRaw && typeof budgetsRaw.maxTokens === 'number' ? budgetsRaw.maxTokens : null;
+  const requestedTimeoutMs = budgetsRaw && typeof budgetsRaw.timeoutMs === 'number' ? budgetsRaw.timeoutMs : null;
+  const requestedMaxRequests = budgetsRaw && typeof budgetsRaw.maxRequests === 'number' ? budgetsRaw.maxRequests : null;
+
+  const MAX_TOKENS_CAP = 1200;
+  const TIMEOUT_MS_CAP = 25_000;
+  const MAX_REQUESTS_CAP = 3;
+
+  const maxTokens =
+    requestedMaxTokens && Number.isFinite(requestedMaxTokens) && requestedMaxTokens > 0
+      ? Math.min(MAX_TOKENS_CAP, Math.floor(requestedMaxTokens))
+      : 280;
+  const timeoutMs =
+    requestedTimeoutMs && Number.isFinite(requestedTimeoutMs) && requestedTimeoutMs > 0
+      ? Math.min(TIMEOUT_MS_CAP, Math.floor(requestedTimeoutMs))
+      : 15_000;
+  const maxRequests =
+    requestedMaxRequests && Number.isFinite(requestedMaxRequests) && requestedMaxRequests > 0
+      ? Math.min(MAX_REQUESTS_CAP, Math.floor(requestedMaxRequests))
+      : 1;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const exp = nowSec + 60; // short-lived grant for a single interaction
+
+  const grantPayload: AIGrant = {
+    v: 1,
+    iss: 'paris',
+    sub: { kind: 'anon', sessionId: trace?.sessionId || crypto.randomUUID() },
+    exp,
+    caps: [`agent:${agentId}`],
+    budgets: { maxTokens, timeoutMs, maxRequests },
+    mode,
+    ...(trace ? { trace } : {}),
+  };
+
+  const secret = env.AI_GRANT_HMAC_SECRET?.trim();
+  if (!secret) {
+    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+  }
+
+  const grant = await mintGrant(grantPayload, secret);
+  return json({ grant, exp, agentId });
 }
 
 async function handleInstances(req: Request, env: Env) {
@@ -273,6 +398,11 @@ export default {
       const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
       if (pathname === '/api/healthz') return handleHealthz();
+
+      if (pathname === '/api/ai/grant') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleAiGrant(req, env);
+      }
 
       if (pathname === '/api/instances') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });

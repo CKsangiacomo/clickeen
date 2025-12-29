@@ -19,6 +19,7 @@
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
     "compile:widgets": "node scripts/compile-all-widgets.mjs",
+    "smoke:ai": "node scripts/smoke-ai.mjs",
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:paris": "pnpm --filter @clickeen/paris dev",

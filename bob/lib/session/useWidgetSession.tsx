@@ -33,6 +33,7 @@ type SessionState = {
   instanceData: Record<string, unknown>;
   isDirty: boolean;
   preview: PreviewSettings;
+  selectedPath: string | null;
   lastUpdate: UpdateMeta | null;
   undoSnapshot: Record<string, unknown> | null;
   error: SessionError | null;
@@ -63,6 +64,7 @@ function useWidgetSessionInternal() {
     instanceData: {},
     isDirty: false,
     preview: DEFAULT_PREVIEW,
+    selectedPath: null,
     lastUpdate: null,
     undoSnapshot: null,
     error: null,
@@ -127,6 +129,13 @@ function useWidgetSessionInternal() {
     });
   }, []);
 
+  const commitLastOps = useCallback(() => {
+    setState((prev) => {
+      if (!prev.undoSnapshot) return prev;
+      return { ...prev, undoSnapshot: null };
+    });
+  }, []);
+
   const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
     try {
       const compiled = message.compiled;
@@ -163,6 +172,7 @@ function useWidgetSessionInternal() {
         instanceData: resolved,
         isDirty: false,
         preview: prev.preview,
+        selectedPath: null,
         error: null,
         lastUpdate: {
           source: 'load',
@@ -197,6 +207,13 @@ function useWidgetSessionInternal() {
     setState((prev) => ({
       ...prev,
       preview: { ...prev.preview, ...updates },
+    }));
+  }, []);
+
+  const setSelectedPath = useCallback((path: string | null) => {
+    setState((prev) => ({
+      ...prev,
+      selectedPath: typeof path === 'string' && path.trim() ? path.trim() : null,
     }));
   }, []);
 
@@ -267,17 +284,20 @@ function useWidgetSessionInternal() {
       instanceData: state.instanceData,
       isDirty: state.isDirty,
       preview: state.preview,
+      selectedPath: state.selectedPath,
       lastUpdate: state.lastUpdate,
       error: state.error,
       meta: state.meta,
       canUndo: Boolean(state.undoSnapshot),
       applyOps,
       undoLastOps,
+      commitLastOps,
+      setSelectedPath,
       setPreview,
       renameInstance,
       loadInstance,
     }),
-    [state, applyOps, undoLastOps, loadInstance, setPreview, renameInstance]
+    [state, applyOps, undoLastOps, commitLastOps, loadInstance, setPreview, renameInstance, setSelectedPath]
   );
 
   return value;

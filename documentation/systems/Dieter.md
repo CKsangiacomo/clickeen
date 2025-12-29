@@ -13,6 +13,29 @@ This document is the canonical reference for Clickeen’s design system and its 
 
 Dieter is Clickeen's shared design system: a token-first, CSS-only library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
 
+### Bundling manifest (executed)
+
+Dieter’s build produces an explicit bundling contract at:
+- `tokyo/dieter/manifest.json`
+
+This exists to keep compilation deterministic (no heuristics based on incidental CSS classnames).
+
+**Manifest fields (as implemented today):**
+- `v`: schema version
+- `gitSha`: build fingerprint
+- `components[]`: valid component bundles
+- `componentsWithJs[]`: bundles that ship JS (others are CSS-only)
+- `aliases{}`: optional hint mapping (temporary bridge)
+- `helpers[]`: classnames that must never be treated as bundles
+- `deps{}`: explicit component dependencies (transitive closure allowed)
+
+**Non‑negotiable rules:**
+- ToolDrawer `type="..."` drives required bundles.
+- CSS classnames never add bundles.
+- Helpers are never treated as bundles.
+
+If you add a new component or a new dependency, you must update the manifest emitter in `scripts/build-dieter.js` accordingly.
+
 ### 🔑 CRITICAL: Dieter is the Mama Library (NEW ARCHITECTURE)
 
 **Dieter is the mama of all HTML/CSS** — it contains both primitives AND widget-specific composed components.

@@ -51,11 +51,14 @@ This keeps “competitor research” and “our spec” separate and prevents do
    ↓
 2. Bob fetches spec.json from Tokyo (defines ToolDrawer structure)
    ↓
-3. Bob compiler parses spec.json → CompiledWidget (panels[], asset URLs, optional controls[] allowlist)
+3. Bob compiler parses spec.json → CompiledWidget (panels[], asset URLs, **controls[] allowlist**)
    ↓
 4. Bob loads instance `config` from Paris (published configuration)
    ↓
-5. Bob seeds working state = merge(widget defaults, instance config)
+5. Bob seeds working state (strict, no silent merges):
+   - If `instanceData` is missing/null → uses `compiled.defaults`
+   - Else → uses `instanceData` as-is (must already be a valid full state tree)
+   - If invalid → fail fast (explicit load error)
    ↓
 6. User edits in ToolDrawer
    ↓
@@ -123,7 +126,7 @@ Each widget type consists of a **Tokyo widget folder** with **4 runtime files** 
 
 **Location:** `tokyo/widgets/{widget}/spec.json`
 
-**Purpose:** Defines ToolDrawer panels and defaults; compiled by Bob into panel HTML and (optionally) a machine-readable `controls[]` allowlist for safe ops/AI edits.
+**Purpose:** Defines ToolDrawer panels and defaults; compiled by Bob into panel HTML and a machine-readable `controls[]` allowlist for strict ops/AI edits.
 
 **Structure (snippet):**
 ```json
@@ -180,7 +183,7 @@ Rules:
 - Scoped to `.ck-widget` or `.ck-{widgetname}` class
 - Use Dieter design tokens (CSS custom properties)
 - Include responsive rules
-- Import Dieter components if needed
+- Do **not** import Dieter component bundles from widget CSS; the editor loads Dieter bundles from `compiled.assets.dieter.*`
 
 **Example:**
 ```css
@@ -309,9 +312,9 @@ interface CompiledWidget {
   displayName: string;
   defaults: Record<string, unknown>;
   panels: Array<{ id: string; label: string; html: string }>;
-  controls?: Array<{
+  controls: Array<{
     panelId: string;
-    type: string;
+    kind: string;
     path: string;
     label?: string;
     showIf?: string;
@@ -321,7 +324,7 @@ interface CompiledWidget {
     htmlUrl: string;
     cssUrl: string;
     jsUrl: string;
-    dieter?: { styles: string[]; scripts: string[] };
+    dieter: { styles: string[]; scripts: string[] };
   };
 }
 ```
@@ -330,11 +333,11 @@ interface CompiledWidget {
 1. Parse `spec.json` as JSON
 2. Parse `html[]` markup: `<bob-panel>` blocks → `panels[]`
 3. Expand `<tooldrawer-field>` macros into Dieter markup (adds `data-bob-path`, wrappers for `show-if`, etc.)
-4. Collect editable paths into `controls[]` (FAQ-only for now)
+4. Collect editable paths into `controls[]` (all widgets; strict allowlist)
 5. Generate asset URLs (Tokyo base URL + widget name)
 6. Return CompiledWidget
 
-**Compiler output is contract-level:** it powers ToolDrawer rendering and (when present) powers fail-closed ops/AI editing.
+**Compiler output is contract-level:** it powers ToolDrawer rendering and powers fail-closed ops/AI editing.
 
 ## How ToolDrawer Works (Generic Rendering)
 
@@ -367,7 +370,10 @@ instanceData = {
 For the active panel:
 
 1. Inject the panel HTML (from the spec) into the drawer.
-2. Load Dieter CSS/JS for any `diet-*` components detected in that panel; call `Dieter.hydrateAll` after scripts load.
+2. Load Dieter CSS/JS declared by the compiler:
+   - `compiled.assets.dieter.styles[]`
+   - `compiled.assets.dieter.scripts[]`
+   Then call `Dieter.hydrateAll(...)` after scripts load.
 3. Walk elements with `data-bob-path`:
    - Apply `data-bob-showif` (hide if false against `instanceData` with defaults fallback).
    - Set the field value from `instanceData[path]`.
@@ -377,6 +383,25 @@ For the active panel:
 ### Key Insight
 
 No control schemas or hardcoded control lists exist in Bob. All control structure/markup lives in the widget spec; Bob just loads the needed Dieter assets, hydrates, and binds state for every widget. Same ToolDrawer for all 100+ widgets. 
+
+---
+
+## Deterministic Dieter Bundling (Executed)
+
+Historically, inferring Dieter bundles from incidental `diet-*` classnames was brittle (helper classes vs real component bundles).
+The platform now uses an explicit bundling contract:
+
+- **Manifest:** `tokyo/dieter/manifest.json`
+- **Rule:** ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles (classnames are not a dependency graph).
+- **Dependencies:** `deps{}` in the manifest defines transitive Dieter component dependencies (e.g. `dropdown-fill` requires `popover` + `button` + `textfield`).
+
+### Compile-all gate (Executed)
+
+Run this to ensure every widget compiles:
+
+```bash
+node scripts/compile-all-widgets.mjs
+```
 
 ---
 
@@ -567,7 +592,7 @@ Tokyo (Widget Definitions)
 
 Bob (Generic Editor)
 ├── Fetches spec.json from Tokyo
-├── Compiler builds → CompiledWidget (panels + assets + optional controls[])
+├── Compiler builds → CompiledWidget (panels + assets + controls[] allowlist)
 ├── Holds working config in React state (`instanceData`)
 ├── Generic ToolDrawer renders controls from CompiledWidget
 ├── Syncs instanceData to preview iframe via postMessage
@@ -599,7 +624,8 @@ Paris (Database)
 2. Paris returns published config
 	   ↓ Bob fetches spec.json from Tokyo
 3. Compiler parses spec.json → CompiledWidget
-	   ↓ Bob creates instanceData = merge(spec.defaults, config)
+	   ↓ Bob sets instanceData strictly (no silent merges):
+	     - instanceData = config (must already be valid), else compiled.defaults
 4. ToolDrawer renders from CompiledWidget (panels[])
 5. User types in a control
 	   ↓ setValue(path, value) updates instanceData
@@ -684,7 +710,7 @@ Most widgets allow color customization via Dieter color pickers.
 **In spec.json:**
 ```html
 <tooldrawer-field
-  type="color-picker"
+  type="dropdown-fill"
   label="Item Background Color"
   path="itemBackgroundColor"
 />

@@ -74,7 +74,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 # Paris — HTTP API Service (Phase-1)
 
 ## Purpose
-Paris is Clickeen's server-side HTTP API service that handles all privileged operations requiring service-role access to Supabase. It runs on Node.js runtime and serves as the secure backend for Bob (builder app), authentication flows, widget instance management, and data operations that cannot run on the edge.
+Paris is Clickeen's server-side HTTP API service that handles all privileged operations requiring service-role access to Supabase. It runs on **Cloudflare Workers** and serves as the secure backend for Bob (builder app), authentication flows, widget instance management, and data operations.
 
 ## Deployment & Runtime
 - **Platform**: Cloudflare Workers

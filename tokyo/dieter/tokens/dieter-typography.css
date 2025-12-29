@@ -25,20 +25,21 @@
   --lh-tight: 1.15;
   --lh-normal: 1.4;
   --lh-loose: 1.5;
+  --lh-body-ui: 1.35;
 }
 
 /* Body text */
 .body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
 .body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
-.body-s { font: 400 var(--fs-13)/var(--lh-tight) var(--font-ui); }
-.body-m { font: 400 var(--fs-14)/var(--lh-tight) var(--font-ui); }
-.body-l { font: 400 var(--fs-15)/var(--lh-tight) var(--font-ui); }
-.body-xl { font: 400 var(--fs-16)/var(--lh-tight) var(--font-ui); }
-.body-xxl { font: 400 var(--fs-18)/var(--lh-tight) var(--font-ui); }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
 
-p, .body, .body-xl { font: 400 var(--fs-16)/var(--lh-tight) var(--font-ui); }
-.body-small, .body-m { font: 400 var(--fs-14)/var(--lh-tight) var(--font-ui); }
-.body-large, .body-xxl { font: 400 var(--fs-18)/var(--lh-tight) var(--font-ui); }
+p, .body, .body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body-small, .body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
+.body-large, .body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
 
 /* Headings */
 h1, .heading-1 {

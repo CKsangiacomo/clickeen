@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
+import { useWidgetSession } from '../lib/session/useWidgetSession';
 
 declare global {
   interface Window {
@@ -493,6 +494,7 @@ export function TdMenuContent({
   dieterAssets,
   lastUpdate,
 }: TdMenuContentProps) {
+  const session = useWidgetSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderKey, setRenderKey] = useState(0);
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
@@ -522,11 +524,13 @@ export function TdMenuContent({
       const path = resolvePathFromTarget(event.target);
       activePathRef.current = path;
       if (path) setSelectedPath(path);
+      session.setSelectedPath(path);
     };
     const handleFocusOut = (event: FocusEvent) => {
       const next = event.relatedTarget as HTMLElement | null;
       if (!next || !container.contains(next)) {
         activePathRef.current = null;
+        session.setSelectedPath(null);
       }
     };
 

@@ -208,7 +208,9 @@
 <script type="module">
 function requireBobOrigin() {
   const params = new URLSearchParams(window.location.search);
-  const raw = (params.get('bob') || 'https://bob.dev.clickeen.com').trim();
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+  const raw = (params.get('bob') || defaultBob).trim();
   try {
     return new URL(raw).origin;
   } catch {

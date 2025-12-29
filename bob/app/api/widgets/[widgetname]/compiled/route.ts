@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { compileWidgetServer } from '../../../../../lib/compiler.server';
 import type { RawWidget } from '../../../../../lib/compiler.shared';
+import { requireTokyoUrl } from '../../../../../lib/compiler/assets';
 
 export const runtime = 'edge';
 
@@ -13,15 +14,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
     );
   }
 
-  const tokyoBase = process.env.NEXT_PUBLIC_TOKYO_URL;
-  if (!tokyoBase) {
-    return NextResponse.json(
-      { error: '[Bob] NEXT_PUBLIC_TOKYO_URL is required' },
-      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } },
-    );
-  }
-
-  const tokyoRoot = tokyoBase.replace(/\/+$/, '');
+  const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
   const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
   try {
     const res = await fetch(specUrl, { cache: 'no-store' });

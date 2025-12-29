@@ -47,7 +47,7 @@ Clickeen is not a company that "uses AI." It's a **company designed to be run by
 
 **The San Francisco system is not a feature—it's the operating system for the company's workforce.**
 
-See: `documentation/systems/sanfrancisco.md`, `sanfrancisco-learning.md`, `sanfrancisco-infrastructure.md`
+See: `documentation/systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
 
 ### The AI Workforce Economics (Why This Is Pure Gold)
 

@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
+const PARIS_BASE_URL =
+  process.env.PARIS_BASE_URL ||
+  process.env.NEXT_PUBLIC_PARIS_URL ||
+  'http://localhost:3001';
+
+const SANFRANCISCO_BASE_URL =
+  process.env.SANFRANCISCO_BASE_URL ||
+  process.env.NEXT_PUBLIC_SANFRANCISCO_URL ||
+  '';
+
+const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
+
 type FaqAnswerRequest = {
   path: unknown;
   question: unknown;
@@ -17,6 +29,15 @@ const rateLimit = new Map<string, RateLimitEntry>();
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function safeJsonParse(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 function getClientKey(req: Request) {
@@ -47,73 +68,95 @@ function checkRateLimit(req: Request) {
   return null;
 }
 
-async function generateFaqAnswer(args: { question: string; existingAnswer: string; instruction: string }) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+async function getAiGrant(args: { trace?: { instancePublicId?: string } }) {
+  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/ai/grant`;
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        agentId: 'editor.faq.answer.v1',
+        mode: 'editor',
+        ...(args.trace ? { trace: args.trace } : {}),
+      }),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       ok: false as const,
-      error: 'AI_NOT_CONFIGURED',
-      message: 'Missing OPENAI_API_KEY',
+      error: 'AI_UPSTREAM_ERROR',
+      message: `Grant request failed: ${message}`,
     };
   }
-
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-  const baseUrl = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '');
-
-  const system = [
-    'You write concise FAQ answers for an embeddable website FAQ widget.',
-    'Output must be a single string suitable for direct insertion into the widget config.',
-    'Allowed inline HTML tags: <strong>, <b>, <em>, <i>, <u>, <s>, <a>, <br>.',
-    'Do not use any other HTML tags.',
-    'If you include links, they must be absolute and start with https://.',
-    'Keep it helpful, simple, and scannable (1–3 short sentences).',
-  ].join('\n');
-
-  const user = [
-    `Question: ${args.question}`,
-    args.existingAnswer ? `Existing answer: ${args.existingAnswer}` : '',
-    args.instruction ? `Instruction: ${args.instruction}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.5,
-      max_tokens: 220,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
-  });
 
   if (!res.ok) {
     const details = await res.text().catch(() => '');
     return {
       ok: false as const,
       error: 'AI_UPSTREAM_ERROR',
-      message: details || `Upstream error (${res.status})`,
+      message: details || `Grant request failed (${res.status})`,
     };
   }
 
-  const data = (await res.json()) as any;
-  const content = asTrimmedString(data?.choices?.[0]?.message?.content);
-  if (!content) {
+  const data = (await res.json().catch(() => null)) as any;
+  const grant = asTrimmedString(data?.grant);
+  if (!grant) {
     return {
       ok: false as const,
-      error: 'AI_EMPTY_RESPONSE',
-      message: 'Model returned an empty response',
+      error: 'AI_UPSTREAM_ERROR',
+      message: 'Grant service returned an invalid response',
     };
   }
 
-  return { ok: true as const, value: content };
+  return { ok: true as const, value: grant };
+}
+
+async function executeFaqAnswer(args: { grant: string; path: string; question: string; existingAnswer: string; instruction: string }) {
+  const url = `${SANFRANCISCO_BASE_URL.replace(/\/$/, '')}/v1/execute`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant: args.grant,
+        agentId: 'editor.faq.answer.v1',
+        input: {
+          path: args.path,
+          question: args.question,
+          existingAnswer: args.existingAnswer,
+          instruction: args.instruction,
+        },
+        trace: { client: 'bob' },
+      }),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `SanFrancisco request failed: ${message}` };
+  }
+
+  const text = await res.text().catch(() => '');
+  const payload = safeJsonParse(text) as any;
+  if (!res.ok) {
+    const message =
+      typeof payload?.error?.message === 'string'
+        ? payload.error.message
+        : typeof payload?.message === 'string'
+          ? payload.message
+          : text || `SanFrancisco error (${res.status})`;
+    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
+  }
+
+  const ops = Array.isArray(payload?.result?.ops) ? payload.result.ops : null;
+  if (!ops || ops.length === 0) {
+    return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'AI returned no ops' };
+  }
+
+  return { ok: true as const, value: ops };
 }
 
 export async function POST(req: Request) {
@@ -146,17 +189,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 });
     }
 
-    const generated = await generateFaqAnswer({ question, existingAnswer, instruction });
-    if (!generated.ok) {
+    if (!SANFRANCISCO_BASE_URL) {
       return NextResponse.json(
-        { error: generated.error, message: generated.message },
-        { status: generated.error === 'AI_NOT_CONFIGURED' ? 503 : 502 }
+        { error: 'AI_NOT_CONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' },
+        { status: 503 }
       );
     }
 
-    return NextResponse.json({
-      ops: [{ op: 'set', path, value: generated.value }],
-    });
+    const grantRes = await getAiGrant({ trace: undefined });
+    if (!grantRes.ok) {
+      return NextResponse.json({ error: grantRes.error, message: grantRes.message }, { status: 502 });
+    }
+
+    const executed = await executeFaqAnswer({ grant: grantRes.value, path, question, existingAnswer, instruction });
+    if (!executed.ok) {
+      return NextResponse.json({ error: executed.error, message: executed.message }, { status: 502 });
+    }
+
+    return NextResponse.json({ ops: executed.value });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: 'BAD_REQUEST', message }, { status: 400 });

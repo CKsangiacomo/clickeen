@@ -127,6 +127,8 @@ body {
 
 .tooldrawer-copilot {
   grid-column: 1 / span 2;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .workspace {

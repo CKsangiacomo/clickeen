@@ -1,9 +1,10 @@
 import './bob_app.css';
 
-const TOKYO_BASE = process.env.NEXT_PUBLIC_TOKYO_URL;
-if (!TOKYO_BASE) {
-  throw new Error('NEXT_PUBLIC_TOKYO_URL is required to load Dieter assets');
-}
+const TOKYO_BASE =
+  process.env.NEXT_PUBLIC_TOKYO_URL ??
+  process.env.TOKYO_URL ??
+  (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:4000');
+if (!TOKYO_BASE) throw new Error('NEXT_PUBLIC_TOKYO_URL is required to load Dieter assets');
 const DIETER_BASE = `${TOKYO_BASE}/dieter`;
 
 export default function RootLayout({

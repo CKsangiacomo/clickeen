@@ -2,6 +2,9 @@ import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent } 
 import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
 import { executeSdrCopilot } from './agents/sdrCopilot';
+import { executeEditorFaqAnswer } from './agents/editorFaqAnswer';
+import { executeDebugGrantProbe } from './agents/debugGrantProbe';
+import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 
 const MAX_INFLIGHT_PER_ISOLATE = 8;
 let inflight = 0;
@@ -40,11 +43,20 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     const requestId = asString(body.trace?.requestId) ?? crypto.randomUUID();
     const occurredAtMs = Date.now();
 
-    if (body.agentId !== 'sdr.copilot') {
+    const executed =
+      body.agentId === 'sdr.copilot'
+        ? await executeSdrCopilot({ grant, input: body.input }, env)
+        : body.agentId === 'sdr.widget.copilot.v1'
+          ? await executeSdrWidgetCopilot({ grant, input: body.input }, env)
+        : body.agentId === 'editor.faq.answer.v1'
+          ? await executeEditorFaqAnswer({ grant, input: body.input }, env)
+          : body.agentId === 'debug.grantProbe'
+            ? await executeDebugGrantProbe({ grant, input: body.input }, env)
+          : null;
+
+    if (!executed) {
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
     }
-
-    const { result, usage } = await executeSdrCopilot({ grant, input: body.input }, env);
 
     const event: InteractionEvent = {
       v: 1,
@@ -54,8 +66,8 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       subject: grant.sub,
       trace: grant.trace,
       input: body.input,
-      result,
-      usage,
+      result: executed.result,
+      usage: executed.usage,
     };
 
     ctx.waitUntil(
@@ -64,7 +76,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       }),
     );
 
-    const response: ExecuteResponse = { requestId, agentId: body.agentId, result, usage };
+    const response: ExecuteResponse = { requestId, agentId: body.agentId, result: executed.result, usage: executed.usage };
     return noStore(json(response));
   } finally {
     inflight--;
@@ -96,4 +108,3 @@ export default {
     }
   },
 };
-

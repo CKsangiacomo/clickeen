@@ -41,6 +41,149 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 
 ---
 
+## Cloudflare Environments (Detailed Spec)
+
+This section specifies the **Cloudflare environment model** and the **canonical runtime surfaces** for Phase 1.
+
+### Environments
+
+There is no “pre‑GA” environment. We use **5 layers**:
+
+| Environment | Purpose | Code source | Exposure model |
+|---|---|---|---|
+| **Local** | Fast iteration + deterministic debugging | local working tree | developer machine only |
+| **Cloud-dev** | End-to-end HTTPS integration & shared debugging | `main` | internal/dev (can break) |
+| **UAT** | QA/UAT on real infra | release build | allowlist: Clickeen-owned demo accounts |
+| **Limited GA** | Global, limited rollout | release build | ~10% of accounts (mix of countries/ICPs), observe for X days |
+| **GA** | Full rollout | release build | 100% of accounts |
+
+### Release process (simple, enforced)
+
+Each release proceeds in 3 steps:
+1) **UAT**: release to X Clickeen-owned demo accounts for testing/QA/UAT
+2) **Limited GA**: release to ~10% of accounts globally (diverse countries/ICPs), observe for a specified window
+3) **GA**: if the release passes Limited GA, roll out to 100%
+
+### Canonical domains (dev + prod)
+
+| System | Cloud-dev | Production |
+|---|---|---|
+| **Bob** | `https://bob.dev.clickeen.com` | `https://app.clickeen.com` |
+| **Prague** | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com` |
+| **DevStudio** | `https://devstudio.dev.clickeen.com` | (internal-only) |
+| **Paris** | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` |
+| **Venice** | `https://venice.dev.clickeen.com` | `https://embed.clickeen.com` |
+| **Tokyo** | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` |
+| **San Francisco** | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` |
+
+**Fallback origins (when custom domains aren’t configured yet):**
+- **Pages**: `{project}.pages.dev`
+- **Workers**: `{script}.workers.dev`
+
+### Cloudflare primitives (what we use and why)
+
+| Primitive | Used by | Why |
+|---|---|---|
+| **Pages** | Prague, Bob, DevStudio | Static + Next.js-style app surfaces; simple deploy model |
+| **Workers** | Paris, Venice, San Francisco (and optional Tokyo assets worker) | Edge HTTP services; consistent global runtime |
+| **R2** | Tokyo (assets), San Francisco (raw logs) | Cheap object storage, zero egress for CDN patterns |
+| **KV** | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs |
+| **D1** | San Francisco (indexes) | Queryable learning metadata; low-ops SQL |
+| **Queues** | San Francisco | Non-blocking logging/ingestion; keep request path fast |
+| **Cron Triggers** | San Francisco (later) | Scheduled analysis/maintenance without extra infra |
+
+### Resource naming conventions (dev/prod split)
+
+**Rule:** dev and prod resources are separate (no mixing).
+
+- **Workers**: `{system}-dev`, `{system}-prod`
+- **R2**:
+  - Tokyo: `tokyo-assets-dev`, `tokyo-assets-prod`
+  - San Francisco logs: `sanfrancisco-logs-dev`, `sanfrancisco-logs-prod`
+- **KV**:
+  - San Francisco: `sanfrancisco_kv_dev`, `sanfrancisco_kv_prod`
+  - Atlas: (separate KV, read-only)
+- **D1**:
+  - San Francisco: `sanfrancisco_d1_dev`, `sanfrancisco_d1_prod`
+- **Queues**:
+  - San Francisco: `sanfrancisco-events-dev`, `sanfrancisco-events-prod`
+
+### Routes & bindings (high level)
+
+#### Bob (Pages)
+- **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
+- Bob proxies Paris under same-origin (`/api/paris/*`) using `PARIS_BASE_URL` (preferred).
+
+#### Paris (Workers)
+- Stateless API gateway to Michael (Supabase).
+- Public endpoints are under `/api/*` (`/api/instance/:publicId`, `/api/token`, etc.).
+
+#### Venice (Workers)
+- Public embed surface (third-party websites only talk to Venice).
+- Fetches instance config from Paris; loads widget runtime assets from Tokyo.
+
+#### Tokyo (R2 + optional worker)
+- Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
+- **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
+
+#### San Francisco (Workers + D1/KV/R2/Queues)
+- `/healthz`, `/v1/execute`, queue consumer for non-blocking log writes.
+- Stores sessions in KV, raw logs in R2, indexes in D1.
+
+### Environment variables (minimum matrix)
+
+| Surface | Variable | Dev | Prod | Notes |
+|---|---|---|---|---|
+| **Bob (Pages)** | `NEXT_PUBLIC_TOKYO_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Compiler fetches widget specs over HTTP (even locally) |
+| **Bob (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Bob’s same-origin proxy to Paris |
+| **Paris (Workers)** | `SUPABASE_URL` | dev project | prod project | Service role access |
+| **Paris (Workers)** | `SUPABASE_SERVICE_ROLE_KEY` | dev key | prod key | Never exposed to browsers |
+| **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET` | dev secret | prod secret | Shared with Paris for grant signing |
+| **San Francisco (Workers)** | `DEEPSEEK_API_KEY` | dev key | prod key | Provider key lives only in San Francisco |
+
+**Hard security rule:**
+- `PARIS_DEV_JWT` is **local/dev-worker-only** and must never be set in Cloudflare Pages production env vars.
+
+### Cloudflare config checklist (what “done” looks like)
+
+**DNS & custom domains**
+- `bob.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, `sanfrancisco.dev`, `devstudio.dev` point at the corresponding Pages/Workers deployments.
+- Production domains (`app`, `paris`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
+
+**Pages build settings**
+- Node + pnpm versions pinned so cloud builds match local.
+- Build command matches workspace build (Turbo fan-out).
+
+**Caching**
+- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned assets; avoid caching `spec.json` aggressively in dev.
+- Venice embed HTML uses conservative cache headers for draft vs published instances.
+
+**Access control**
+- DevStudio behind Cloudflare Access (required).
+- Optional: protect `*.dev` surfaces behind Access during early phases.
+
+**Observability**
+- Prefer Cloudflare-native logs/analytics (avoid 3rd-party vendors on embed surfaces).
+ 
+### Deploy discipline (Cloud-dev vs releases)
+
+- **Cloud-dev** auto-deploys from `main` for fast iteration.
+- **UAT / Limited GA / GA** are release stages of the same release build, separated by **account-level exposure controls** (allowlist/percentage rollout) and an observation window.
+
+### Security & config (Cloudflare-level defaults)
+
+- **HTTPS everywhere**: redirect HTTP → HTTPS; HSTS enabled on production domains.
+- **Dev surfaces protected**: DevStudio (and optionally `*.dev`) behind Cloudflare Access.
+- **Secrets isolation**:
+  - Provider keys live only in San Francisco.
+  - Supabase service role lives only in Paris.
+  - `PARIS_DEV_JWT` is **local/dev-worker-only** and must never exist in Pages prod env vars.
+- **Caching**:
+  - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
+  - Venice sets conservative cache headers for embed HTML (draft vs published).
+
+---
+
 ## Architecture Overview
 
 ```
@@ -335,6 +478,8 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 ### What's Working
 
 - Bob compiler with stencil expansion
+- Deterministic compilation contract (Dieter bundling manifest + no classname heuristics)
+- Compile-all widgets gate (`node scripts/compile-all-widgets.mjs`)
 - Auto-generated Typography and Stage/Pod panels
 - Shared runtime modules (CKStagePod, CKTypography)
 - Two-API-Call pattern
