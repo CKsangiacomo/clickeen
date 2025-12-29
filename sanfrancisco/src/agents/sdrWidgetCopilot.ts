@@ -50,6 +50,7 @@ type CopilotSession = {
   lastActiveAtMs: number;
   successfulEdits: number;
   turns: Array<{ role: 'user' | 'assistant'; content: string }>;
+  source?: { url: string; fetchedAtMs: number; title?: string };
 };
 
 type GlobalDictionary = typeof globalDictionary;
@@ -70,6 +71,238 @@ function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: 
   const m = s.match(/error code\s*(\d{3})/);
   const code = m ? Number(m[1]) : undefined;
   return { status: Number.isFinite(code) ? code : undefined, reason: 'cloudflare_error_page' };
+}
+
+function extractUrlCandidates(text: string): string[] {
+  const urls = new Set<string>();
+
+  const add = (raw: string) => {
+    const trimmed = raw.trim().replace(/[),.;]+$/g, '');
+    if (!trimmed) return;
+    urls.add(trimmed);
+  };
+
+  for (const m of text.matchAll(/\bhttps?:\/\/[^\s<>"')]+/gi)) add(m[0]);
+
+  // Bare domains (optionally with a path). Avoid emails.
+  for (const m of text.matchAll(/\b(?![\w.+-]+@)([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/gi)) add(m[0]);
+
+  return Array.from(urls);
+}
+
+function normalizeUrl(candidate: string): URL | null {
+  const raw = candidate.trim();
+  if (!raw) return null;
+  try {
+    if (/^https?:\/\//i.test(raw)) return new URL(raw);
+    return new URL(`https://${raw}`);
+  } catch {
+    return null;
+  }
+}
+
+function isBlockedFetchUrl(url: URL): string | null {
+  const protocol = url.protocol.toLowerCase();
+  if (protocol !== 'https:' && protocol !== 'http:') return 'unsupported_protocol';
+  if (url.username || url.password) return 'userinfo_not_allowed';
+
+  const port = url.port ? Number(url.port) : protocol === 'https:' ? 443 : 80;
+  if (!Number.isFinite(port)) return 'invalid_port';
+  if (port !== 80 && port !== 443) return 'port_not_allowed';
+
+  const host = url.hostname.toLowerCase();
+  if (!host) return 'invalid_host';
+  if (host === 'localhost' || host.endsWith('.localhost')) return 'localhost_not_allowed';
+  if (host.endsWith('.local')) return 'local_domain_not_allowed';
+
+  // Block direct IPs (SSRF hard-stop). Hostnames may still resolve privately, but this is a V1 guardrail.
+  const isIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  if (isIpv4) {
+    const parts = host.split('.').map((p) => Number(p));
+    if (parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) return 'invalid_ip';
+    const [a, b] = parts;
+    if (a === 0) return 'private_ip';
+    if (a === 10) return 'private_ip';
+    if (a === 127) return 'private_ip';
+    if (a === 169 && b === 254) return 'private_ip';
+    if (a === 172 && b >= 16 && b <= 31) return 'private_ip';
+    if (a === 192 && b === 168) return 'private_ip';
+    if (a === 100 && b >= 64 && b <= 127) return 'private_ip';
+    return null;
+  }
+
+  const isIpv6 = host.includes(':');
+  if (isIpv6) {
+    if (host === '::1') return 'private_ip';
+    if (host.startsWith('fe80:')) return 'private_ip';
+    if (host.startsWith('fc') || host.startsWith('fd')) return 'private_ip';
+    return 'ip_not_allowed';
+  }
+
+  return null;
+}
+
+async function readResponseTextWithLimit(res: Response, maxBytes: number): Promise<{ text: string; truncated: boolean }> {
+  const reader = res.body?.getReader();
+  if (!reader) {
+    const text = await res.text();
+    if (text.length > maxBytes) return { text: text.slice(0, maxBytes), truncated: true };
+    return { text, truncated: false };
+  }
+
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+  let received = 0;
+  let truncated = false;
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+
+    received += value.byteLength;
+    if (received > maxBytes) {
+      truncated = true;
+      const allowed = Math.max(0, value.byteLength - (received - maxBytes));
+      chunks.push(decoder.decode(value.slice(0, allowed), { stream: true }));
+      break;
+    }
+    chunks.push(decoder.decode(value, { stream: true }));
+  }
+
+  chunks.push(decoder.decode());
+  return { text: chunks.join(''), truncated };
+}
+
+function decodeHtmlEntities(input: string): string {
+  return input
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_, n) => {
+      const code = Number(n);
+      if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return '';
+      try {
+        return String.fromCodePoint(code);
+      } catch {
+        return '';
+      }
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
+      const code = Number.parseInt(String(hex), 16);
+      if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return '';
+      try {
+        return String.fromCodePoint(code);
+      } catch {
+        return '';
+      }
+    });
+}
+
+function htmlToText(html: string): { title?: string; text: string } {
+  const raw = html || '';
+  const titleMatch = raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/\s+/g, ' ').trim()) : undefined;
+
+  let cleaned = raw;
+  cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+  cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+  cleaned = cleaned.replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ');
+
+  cleaned = cleaned.replace(/<(br|hr)\s*\/?>/gi, '\n');
+  cleaned = cleaned.replace(/<\/(p|div|section|article|header|footer|main|nav|li|h\d|pre|blockquote)>/gi, '\n');
+  cleaned = cleaned.replace(/<[^>]+>/g, ' ');
+  cleaned = decodeHtmlEntities(cleaned);
+
+  cleaned = cleaned.replace(/[ \t\r\f\v]+/g, ' ');
+  cleaned = cleaned.replace(/\n[ \t]+/g, '\n');
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  cleaned = cleaned.trim();
+
+  return { title, text: cleaned };
+}
+
+async function fetchSinglePageText(args: { url: URL; timeoutMs: number }): Promise<
+  | {
+      ok: true;
+      finalUrl: string;
+      status: number;
+      contentType: string;
+      title?: string;
+      text: string;
+      truncated: boolean;
+    }
+  | { ok: false; status?: number; message: string }
+> {
+  const maxRedirects = 3;
+  const maxBytes = 750_000;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.max(250, args.timeoutMs));
+
+  try {
+    let current = args.url;
+    for (let i = 0; i <= maxRedirects; i++) {
+      const blocked = isBlockedFetchUrl(current);
+      if (blocked) return { ok: false, message: `URL is not allowed (${blocked}).` };
+
+      let res: Response;
+      try {
+        res = await fetch(current.toString(), {
+          method: 'GET',
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: {
+            accept: 'text/html, text/plain;q=0.9, */*;q=0.1',
+            'user-agent': 'ClickeenCopilot/1.0 (single-page-fetch)',
+          },
+        });
+      } catch (err) {
+        const name = isRecord(err) ? asString((err as any).name) : null;
+        if (name === 'AbortError') return { ok: false, message: 'Timed out fetching the page.' };
+        return { ok: false, message: 'Failed to fetch the page.' };
+      }
+
+      if ([301, 302, 303, 307, 308].includes(res.status)) {
+        const location = res.headers.get('location') || '';
+        if (!location) return { ok: false, status: res.status, message: 'Redirect response missing Location header.' };
+        try {
+          current = new URL(location, current);
+          continue;
+        } catch {
+          return { ok: false, status: res.status, message: 'Redirected to an invalid URL.' };
+        }
+      }
+
+      if (!res.ok) return { ok: false, status: res.status, message: `Request failed (HTTP ${res.status}).` };
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      const isHtml = contentType.includes('text/html');
+      const isText = contentType.includes('text/plain');
+      if (!isHtml && !isText) return { ok: false, status: res.status, message: `Unsupported content-type: ${contentType || 'unknown'}.` };
+
+      const { text: bodyText, truncated } = await readResponseTextWithLimit(res, maxBytes);
+      const extracted = isHtml ? htmlToText(bodyText) : { text: bodyText.trim() };
+      if (!extracted.text) return { ok: false, status: res.status, message: 'Page content was empty.' };
+
+      return {
+        ok: true,
+        finalUrl: current.toString(),
+        status: res.status,
+        contentType: contentType || 'unknown',
+        title: isHtml ? extracted.title : undefined,
+        text: extracted.text,
+        truncated,
+      };
+    }
+
+    return { ok: false, message: 'Too many redirects.' };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function parseJsonFromModel(raw: string): unknown {
@@ -220,6 +453,8 @@ function systemPrompt(): string {
     'INPUT: user request + current widget config + available editable controls',
     'OUTPUT: JSON with ops array + friendly message + optional conversion CTA',
     '',
+    'If SOURCE_PAGE_TEXT is present, it is extracted from exactly one public web page (no crawling). Use it only to inform content edits (e.g., FAQ questions/answers).',
+    '',
     'RULES:',
     '1) Generate valid ops that target available control paths only.',
     '2) Respect control constraints:',
@@ -305,6 +540,78 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   const maxTokens = getGrantMaxTokens(params.grant);
   const timeoutMs = getGrantTimeoutMs(params.grant);
 
+  let sourcePage:
+    | { url: string; title?: string; text: string; truncated: boolean; status: number; contentType: string }
+    | null = null;
+  {
+    const candidates = extractUrlCandidates(input.prompt)
+      .map(normalizeUrl)
+      .filter((u): u is URL => Boolean(u));
+
+    const unique = Array.from(new Map(candidates.map((u) => [u.toString(), u])).values());
+    if (unique.length > 1) {
+      const msg = `I found multiple URLs in your message. Which single page should I use?\n\n- ${unique.map((u) => u.toString()).join('\n- ')}`;
+      session.lastActiveAtMs = Date.now();
+      session.turns = [
+        ...session.turns,
+        { role: 'user' as const, content: input.prompt },
+        { role: 'assistant' as const, content: msg },
+      ].slice(-10) as CopilotSession['turns'];
+      await putSession(env, session);
+
+      return { result: { message: msg }, usage: { provider: 'local', model: 'url_parser', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+    }
+
+    const url = unique[0] ?? null;
+    if (url) {
+      const blocked = isBlockedFetchUrl(url);
+      if (blocked) {
+        const msg = `I can only read public web pages. That URL is not allowed (${blocked}). Please share a normal public https URL.`;
+        session.lastActiveAtMs = Date.now();
+        session.turns = [
+          ...session.turns,
+          { role: 'user' as const, content: input.prompt },
+          { role: 'assistant' as const, content: msg },
+        ].slice(-10) as CopilotSession['turns'];
+        await putSession(env, session);
+
+        return { result: { message: msg }, usage: { provider: 'local', model: 'url_guard', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+      }
+
+      const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(8_000, Math.max(1_500, timeoutMs - 1_000)) });
+      if (!fetchRes.ok) {
+        const msg =
+          `I tried to read ${url.toString()} but couldn't: ${fetchRes.message}` +
+          (fetchRes.status ? ` (HTTP ${fetchRes.status})` : '') +
+          ' Please share a working URL or paste the page text.';
+
+        session.lastActiveAtMs = Date.now();
+        session.turns = [
+          ...session.turns,
+          { role: 'user' as const, content: input.prompt },
+          { role: 'assistant' as const, content: msg },
+        ].slice(-10) as CopilotSession['turns'];
+        await putSession(env, session);
+
+        return { result: { message: msg }, usage: { provider: 'local', model: 'single_page_fetch', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+      }
+
+      const excerptLimit = 10_000;
+      const excerpt = fetchRes.text.length > excerptLimit ? `${fetchRes.text.slice(0, excerptLimit)}\n\n[truncated]` : fetchRes.text;
+
+      sourcePage = {
+        url: fetchRes.finalUrl,
+        title: fetchRes.title,
+        text: excerpt,
+        truncated: fetchRes.truncated || fetchRes.text.length > excerptLimit,
+        status: fetchRes.status,
+        contentType: fetchRes.contentType,
+      };
+
+      session.source = { url: fetchRes.finalUrl, fetchedAtMs: Date.now(), ...(fetchRes.title ? { title: fetchRes.title } : {}) };
+    }
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -315,6 +622,15 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     `Widget type: ${input.widgetType}`,
     '',
     `User request: ${input.prompt}`,
+    ...(sourcePage
+      ? [
+          '',
+          `SOURCE_PAGE_URL: ${sourcePage.url}`,
+          ...(sourcePage.title ? [`SOURCE_PAGE_TITLE: ${sourcePage.title}`] : []),
+          'SOURCE_PAGE_TEXT:',
+          sourcePage.text,
+        ]
+      : []),
     '',
     'Editable controls (path → kind, label, constraints):',
     input.controls
