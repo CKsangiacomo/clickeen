@@ -24,29 +24,3 @@ queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
 queue = "sanfrancisco-events-dev"
-
-[env.prod]
-name = "sanfrancisco-prod"
-
-[env.prod.vars]
-ENVIRONMENT = "prod"
-
-[[env.prod.kv_namespaces]]
-binding = "SF_KV"
-id = "REPLACE_ME"
-
-[[env.prod.d1_databases]]
-binding = "SF_D1"
-database_name = "sanfrancisco_d1_prod"
-database_id = "REPLACE_ME"
-
-[[env.prod.r2_buckets]]
-binding = "SF_R2"
-bucket_name = "sanfrancisco-logs-prod"
-
-[[env.prod.queues.producers]]
-binding = "SF_EVENTS"
-queue = "sanfrancisco-events-prod"
-
-[[env.prod.queues.consumers]]
-queue = "sanfrancisco-events-prod"
