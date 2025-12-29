@@ -8,7 +8,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 ## AIs Quick Scan
 
 **Purpose:** Edge-deployed SSR embed runtime for widgets.
-**Owner:** Vercel project `c-keen-embed`.
+**Owner:** Cloudflare Workers (`venice`).
 **Dependencies:** Paris (API), Tokyo (CDN assets), Atlas (read-only config), Dieter (CSS tokens).
 **Phase-1 Endpoints:** `GET /e/:publicId`, `/embed/v{semver}/loader.js`, `/embed/latest/loader.js`, `GET /embed/pixel`.
 **Database Tables:** None directly (reads via Paris/Michael).
@@ -42,11 +42,11 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 Venice is Clickeen's edge-deployed embed service that delivers server-rendered HTML to external websites via a single script tag. It is the public-facing front door for embeds and proxies to Paris for instance data. (In this repo snapshot, HTML rendering is a safe debug shell; widget rendering from Tokyo assets is planned.)
 
 ## Deployment & Runtime
-- **Vercel Project**: `c-keen-embed`
+- **Platform**: Cloudflare Workers
 - **Source Directory**: `venice`  
-- **Runtime**: Edge (NOT Node.js)
+- **Runtime**: Edge (V8 isolates)
 - **Build Command**: `pnpm build`
-- **URL Pattern**: `https://c-keen-embed.vercel.app`
+- **URL Pattern**: `https://embed.clickeen.com` (prod) / `https://venice-dev.clickeen.workers.dev` (dev)
 
 ## Core Contracts (Phase-1)
 
@@ -156,7 +156,7 @@ window.addEventListener('message', (event) => {
 Inline (iframe) example:
 ```html
 <iframe
-  src="https://c-keen-embed.vercel.app/e/wgt_42yx31?ref=widget&id=wgt_42yx31"
+  src="https://embed.clickeen.com/e/wgt_42yx31?ref=widget&id=wgt_42yx31"
   loading="lazy"
   title="Clickeen widget"
   sandbox="allow-scripts allow-same-origin"
@@ -168,7 +168,7 @@ Inline (iframe) example:
 Overlay (loader) example:
 ```html
 <script
-  src="https://c-keen-embed.vercel.app/embed/v1.0.0/loader.js"
+  src="https://embed.clickeen.com/embed/v1.0.0/loader.js"
   data-public-id="wgt_42yx31"
   data-trigger="click"
   data-clickselector="#launchWidget"
@@ -406,13 +406,13 @@ Content-Security-Policy:
   default-src 'none';
   frame-ancestors *;
   script-src 'self' 'nonce-{{nonce}}' 'strict-dynamic';
-  connect-src 'self' https://c-keen-api.vercel.app https://c-keen-embed.vercel.app;
+  connect-src 'self' https://paris.clickeen.com https://embed.clickeen.com;
   style-src 'self' 'nonce-{{nonce}}';
   img-src 'self' data:;
   form-action 'self';
 ```
 
-`connect-src` MUST list only Venice itself and the deployed Paris origin (including preview deployments). Update this directive whenever the API hostname changes.
+`connect-src` MUST list only Venice itself and the deployed Paris origin. Update this directive whenever the API hostname changes.
 
 ### Privacy Compliance
 - **No Third-Party Scripts**: Venice widgets are self-contained
@@ -552,7 +552,7 @@ curl "http://localhost:3002/e/demo-widget?theme=light&device=desktop"
 1. Build and bundle widget rendering code
 2. Run performance budget checks  
 3. Test against staging Paris API
-4. Deploy to Vercel Edge locations
+4. Deploy to Cloudflare Workers (global edge)
 5. Validate cache behavior and TTLs
 6. Monitor error rates and performance metrics
 

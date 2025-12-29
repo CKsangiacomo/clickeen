@@ -120,7 +120,7 @@ Examples:
 | **Michael** | Database | Supabase Postgres | `supabase/` |
 | **Dieter** | Design system | — | `dieter/` |
 | **Tokyo** | Asset storage & CDN | — | `tokyo/` |
-| **Atlas** | Edge config cache (read-only) | Vercel Edge Config | — |
+| **Atlas** | Edge config cache (read-only) | Cloudflare KV | — |
 
 ---
 
@@ -140,7 +140,7 @@ Examples:
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 
-**Atlas** — Vercel Edge Config. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.
+**Atlas** — Cloudflare KV. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.
 
 **agent.md** — Per-widget AI contract. Documents editable paths, parts/roles, enums, and safe list operations. Required for AI editing.
 

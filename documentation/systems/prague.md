@@ -10,7 +10,7 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 ## 0) Quick Facts
 - **Route:** `/` (marketing pages) + `/gallery` (public widget showcase)
 - **Repo path:** `prague/` (Next.js App Router)
-- **Deploy surface:** Vercel project `c-keen-site`
+- **Deploy surface:** Cloudflare Pages (`prague`)
 - **Purpose:** Drive PLG funnel — educate, showcase widgets, and hand off to Bob/Venice preview flows without auth friction.
 
 ## 1) Scope (Phase-1)
@@ -19,14 +19,14 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 - **Widget selection flow (CRITICAL):**
   1. User browses gallery, clicks widget card (e.g., "Contact Form")
   2. Prague creates (or selects) a draft instance upstream (outside Paris) and obtains a `publicId`
-  3. Prague opens MiniBob: `<iframe src="https://c-keen-app.vercel.app/bob?minibob=true&publicId={publicId}">` (planned flow)
+  3. Prague opens MiniBob: `<iframe src="https://app.clickeen.com/bob?minibob=true&publicId={publicId}">` (planned flow)
   4. Bob loads that specific instance (either spec-defaults or a curated starter instance)
   5. User edits config (text, colors, layout, etc.) inside Bob
   6. Click "Publish" → signup → claim widget to workspace
 - **MiniBob UI (conditional rendering in Bob):**
   - Bob detects `?minibob=true` and conditionally hides UI (no Save button, no SecondaryDrawer)
   - Only "Publish" button visible in MiniBob mode
-  - "Publish" triggers signup flow → parent window redirects to c-keen-app with claimed widget
+  - "Publish" triggers signup flow → parent window redirects to Bob app with claimed widget
 - **Critical**: Bob does NOT have widget type picker. Widget type is chosen on Prague gallery, Prague creates instance, Bob only edits that specific widget.
 
 ## 2) Integrations & Data Flow
@@ -34,8 +34,8 @@ If any conflict is found, STOP and escalate to the CEO. Do not guess.
 | --- | --- | --- |
 | Fetch gallery data | Tokyo/CDN | Static catalog built from widget definitions; keep marketing pages fast and cacheable. |
 | Create draft instance | Outside Paris | Instance creation is not implemented in this repo snapshot; Paris `POST /api/instance` is disabled. |
-| Open MiniBob | Bob (c-keen-app) | Prague iframes Bob with `?minibob=true&publicId={publicId}` |
-| Generate embed snippet | Venice | Embed code uses `https://c-keen-embed.vercel.app/e/{publicId}`; Prague never calls Paris with secrets. |
+| Open MiniBob | Bob (app.clickeen.com) | Prague iframes Bob with `?minibob=true&publicId={publicId}` |
+| Generate embed snippet | Venice | Embed code uses `https://embed.clickeen.com/e/{publicId}`; Prague never calls Paris with secrets. |
 | Capture attribution | Berlin (if enabled) | Only anonymous page analytics; no PII. |
 
 Environment variables: `NEXT_PUBLIC_BOB_URL`, `NEXT_PUBLIC_VENICE_URL`, `NEXT_PUBLIC_TOKYO_URL` for building links to Bob/embeds/widget catalog assets. No secrets allowed.

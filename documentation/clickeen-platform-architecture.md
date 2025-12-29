@@ -30,15 +30,14 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 
 | System | Repo Path | Deploy | Responsibility | Status |
 |--------|-----------|--------|----------------|--------|
-| **Prague** | `prague/` | Edge (c-keen-site) | Marketing site, gallery | Placeholder |
-| **Bob** | `bob/` | Node.js (c-keen-app) | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
-| **Venice** | `venice/` | Edge (c-keen-embed) | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
-| **Paris** | `paris/` | Node.js (c-keen-api) | HTTP API, instances, tokens, entitlements | ✅ Active |
-| **San Francisco** | `sanfrancisco/` | Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | 📋 Planning |
+| **Prague** | `prague/` | Cloudflare Pages | Marketing site, gallery | Placeholder |
+| **Bob** | `bob/` | Cloudflare Pages | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
+| **Venice** | `venice/` | Cloudflare Workers | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
+| **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
+| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
-| **Tokyo** | `tokyo/` | CDN | Widget definitions, Dieter assets, shared runtime | ✅ Active |
-| **Atlas** | Vercel Edge Config | — | Read-only config cache | Active |
+| **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
 
 ---
 
@@ -319,7 +318,7 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 - **Embed tokens:** 128-bit random, rotatable, revocable
 - **Rate limiting:** Per-IP and per-instance on writes
 - **Embeds:** No third-party scripts, no cookies, no storage
-- **Secrets:** Only in Paris (c-keen-api)
+- **Secrets:** Only in Paris (Cloudflare Workers)
 - **CSP:** Strict; no third-party; `form-action 'self'`
 
 ---
