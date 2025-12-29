@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "next-on-pages",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "gsap": "^3.13.0",
-    "next": "^14.2.15",
+    "next": "15.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tldts": "^6.1.86"
@@ -20,6 +21,7 @@
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "vercel": "47.0.4",
     "typescript": "^5.4.5"
   }
 }

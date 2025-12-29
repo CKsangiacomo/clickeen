@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-pnpm-lock.yaml
 
 # Build outputs
 dist/
@@ -8,6 +7,7 @@ build/
 .next/
 .turbo/
 .wrangler/
+.vercel/
 *.tsbuildinfo
 *.pack
 *.pack.gz
@@ -49,6 +49,9 @@ tooling/sf-symbols/sources/
 .pnpm-store/
 .npm/
 .yarn/
+
+# Tooling workspaces (not part of main pnpm workspace)
+tooling/sf-symbols/pnpm-lock.yaml
 
 # Misc
 .cache/

@@ -36,7 +36,7 @@ All systems deploy to **Cloudflare** (except Michael which is Supabase):
 | **Bob** | `bob/` | Cloudflare Pages + Workers | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
 | **Venice** | `venice/` | Cloudflare Workers | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
 | **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
-| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | 📋 Planning |
+| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
 | **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
@@ -336,16 +336,19 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 
 ### What's Working
 
-- Bob compiler with stencil expansion
+- Bob compiler with stencil expansion and shared stencil renderer
 - Auto-generated Typography and Stage/Pod panels
 - Shared runtime modules (CKStagePod, CKTypography)
 - Two-API-Call pattern
 - Ops validation against controls[] allowlist
-- Paris instance API with entitlements
-- Dieter component library (16+ components)
+- Paris instance API (Cloudflare Workers) aligned with DB migrations
+- Dieter component library (16+ components) with deterministic build
+- San Francisco Phase 1: SDR Copilot agent, grant verification, KV sessions, R2 logging
 
 ### What's Planned
 
 - Venice full SSR rendering (currently debug shell)
 - Prague marketing site
+- San Francisco Phase 2: Learning infrastructure, D1 schema
+- San Francisco Phase 3: Paris grant minting, outcome tracking
 - Additional widget types

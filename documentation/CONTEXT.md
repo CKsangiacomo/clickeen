@@ -133,7 +133,7 @@ All systems deploy to **Cloudflare** (except Michael which is Supabase):
 
 **Paris** — HTTP API gateway (Node.js). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco.
 
-**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `systems/sanfrancisco.md`, `sanfrancisco-learning.md`, `sanfrancisco-infrastructure.md`.
+**San Francisco** — AI Workforce Operating System (Cloudflare Workers). Phase 1 complete: SDR Copilot running on DeepSeek, HMAC grant verification, KV session management, async R2 logging via Queues. See `systems/sanfrancisco.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
@@ -233,12 +233,13 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 | System | Status | Notes |
 |--------|--------|-------|
-| Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
+| Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine. Lib cleanup complete (compiler/, edit/, session/ structure) |
 | Tokyo | ✅ Active | FAQ + Countdown widgets with shared modules |
-| Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
+| Paris | ✅ Active | Cloudflare Workers. Instance API aligned with migrations |
+| San Francisco | ✅ Phase 1 | Cloudflare Workers. SDR Copilot live, grant verification, KV sessions, R2 logging |
 | Venice | ⚠️ Partial | Debug shell (full SSR rendering planned) |
-| Dieter | ✅ Active | 16+ components, tokens, typography |
-| Michael | ✅ Active | Supabase Postgres with RLS |
+| Dieter | ✅ Active | 16+ components, tokens, typography. Deterministic build pipeline |
+| Michael | ✅ Active | Supabase Postgres with RLS. Canonical schema in migrations |
 
 ### Widgets
 

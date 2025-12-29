@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { compileWidgetServer } from '../../../../../lib/compiler.server';
 import type { RawWidget } from '../../../../../lib/compiler.shared';
 
-export async function GET(_req: Request, { params }: { params: { widgetname: string } }) {
-  const widgetname = params.widgetname;
+export const runtime = 'edge';
+
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
+  const { widgetname } = await ctx.params;
   if (!widgetname) {
     return NextResponse.json(
       { error: 'Missing widgetname' },

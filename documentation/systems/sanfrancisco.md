@@ -1,6 +1,6 @@
 # San Francisco — AI Workforce OS
 
-**STATUS: NORMATIVE — PHASE 1 PLANNING**
+**STATUS: NORMATIVE — PHASE 1 COMPLETE**
 
 San Francisco is Clickeen's AI operating system — the infrastructure that runs all AI agents who operate the company.
 
@@ -339,26 +339,33 @@ OPENAI_API_KEY=xxx
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation ✅ COMPLETE
 - [x] Worker with `/v1/execute`
-- [x] Grant verification
-- [x] SDR Copilot agent
-- [ ] KV session management
-- [ ] Queue-based logging
+- [x] Grant verification (HMAC-SHA256 via WebCrypto)
+- [x] SDR Copilot agent with DeepSeek
+- [x] KV session management (24h TTL, last 10 turns)
+- [x] Queue-based async logging to R2
+- [x] Typed errors (GRANT_INVALID, GRANT_EXPIRED, CAPABILITY_DENIED, BUDGET_EXCEEDED, BAD_REQUEST, PROVIDER_ERROR)
+- [x] Concurrency limit (MAX_INFLIGHT_PER_ISOLATE = 8)
 
-### Phase 2: Learning Infrastructure
-- [ ] D1 schema + R2 buckets
-- [ ] Scoring algorithms
+### Phase 2: Learning Infrastructure (Next)
+- [ ] D1 schema creation and migration
+- [ ] Scoring algorithms per agent
 - [ ] Example bank management
-- [ ] Daily update jobs
+- [ ] Daily cron jobs for analysis
 
-### Phase 3: Admin Interface
+### Phase 3: Paris Integration
+- [ ] Paris mints AI Grants for Minibob
+- [ ] Paris reports outcomes (conversion, payment)
+- [ ] Rate limiting in Paris for free tier
+
+### Phase 4: Admin Interface
 - [ ] DevStudio San Francisco pages
 - [ ] Review queue
 - [ ] Prompt editor
 - [ ] Metrics dashboard
 
-### Phase 4: Automation
+### Phase 5: Automation
 - [ ] Failure analysis job
 - [ ] Auto-suggested improvements
 - [ ] A/B testing framework

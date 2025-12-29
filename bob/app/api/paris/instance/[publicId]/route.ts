@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
@@ -64,18 +64,34 @@ async function forwardToParis(
 }
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { publicId: string } }
+  _request: NextRequest,
+  ctx: { params: Promise<{ publicId: string }> }
 ) {
-  return forwardToParis(params.publicId, { method: 'GET' });
+  const { publicId } = await ctx.params;
+  if (typeof publicId !== 'string' || !publicId) {
+    return NextResponse.json(
+      { error: 'INVALID_PUBLIC_ID' },
+      { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
+    );
+  }
+
+  return forwardToParis(publicId, { method: 'GET' });
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { publicId: string } }
+  request: NextRequest,
+  ctx: { params: Promise<{ publicId: string }> }
 ) {
+  const { publicId } = await ctx.params;
+  if (typeof publicId !== 'string' || !publicId) {
+    return NextResponse.json(
+      { error: 'INVALID_PUBLIC_ID' },
+      { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
+    );
+  }
+
   const body = await request.text();
-  return forwardToParis(params.publicId, {
+  return forwardToParis(publicId, {
     method: 'PUT',
     body,
   });
