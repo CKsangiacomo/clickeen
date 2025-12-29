@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "next-on-pages",
+    "build:cf": "next-on-pages --outdir .cloudflare/output/static",
     "start": "next start",
     "lint": "next lint"
   },

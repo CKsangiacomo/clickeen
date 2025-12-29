@@ -8,6 +8,7 @@ build/
 .turbo/
 .wrangler/
 .vercel/
+.cloudflare/
 *.tsbuildinfo
 *.pack
 *.pack.gz
