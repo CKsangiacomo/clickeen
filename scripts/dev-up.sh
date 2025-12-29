@@ -9,6 +9,35 @@ cd "$ROOT_DIR"
 
 mkdir -p CurrentlyExecuting
 
+echo "[dev-up] Ensuring Supabase local DB is running"
+if ! supabase status >/dev/null 2>&1; then
+  supabase start
+fi
+
+echo "[dev-up] Loading local Supabase connection values"
+eval "$(supabase status --output env | rg '^[A-Z_]+=' || true)"
+SUPABASE_URL=${SUPABASE_URL:-${API_URL:-}}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-${SECRET_KEY:-}}
+if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+  echo "[dev-up] Failed to resolve SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from Supabase status"
+  exit 1
+fi
+
+# Dev auth token shared by Bob -> Paris requests.
+PARIS_DEV_JWT_FILE="$ROOT_DIR/CurrentlyExecuting/paris.dev.jwt"
+if [ -z "${PARIS_DEV_JWT:-}" ]; then
+  if [ -f "$PARIS_DEV_JWT_FILE" ]; then
+    PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
+  else
+    PARIS_DEV_JWT="$(python3 - <<'PY'
+import secrets
+print(secrets.token_hex(32))
+PY
+)"
+    echo "$PARIS_DEV_JWT" > "$PARIS_DEV_JWT_FILE"
+  fi
+fi
+
 echo "[dev-up] Building Dieter directly into tokyo/dieter"
 (
   cd "$ROOT_DIR"
@@ -48,7 +77,11 @@ fi
 echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
-  nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
+  nohup pnpm exec wrangler dev --local --port 3001 \
+    --var "SUPABASE_URL:$SUPABASE_URL" \
+    --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" \
+    --var "PARIS_DEV_JWT:$PARIS_DEV_JWT" \
+    > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
   PARIS_PID=$!
   echo "[dev-up] Paris PID: $PARIS_PID"
 )
@@ -63,7 +96,7 @@ fi
 
 (
   cd "$ROOT_DIR/bob"
-  PORT=3000 PARIS_BASE_URL="http://localhost:3001" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+  PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   BOB_PID=$!
   echo "[dev-up] Bob PID: $BOB_PID"
 )

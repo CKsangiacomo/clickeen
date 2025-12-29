@@ -35,7 +35,7 @@ Clickeen is designed from the ground up to be **built by AI** and **run by AI**:
 
 **All agents learn automatically** — outcomes feed back into the system, improving prompts and examples over time.
 
-See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
+See: `systems/sanfrancisco.md`
 
 ---
 
@@ -110,17 +110,18 @@ Examples:
 
 ## Systems
 
+All systems deploy to **Cloudflare** (except Michael which is Supabase):
+
 | System | Purpose | Runtime | Repo Path |
 |--------|---------|---------|-----------|
-| **Prague** | Marketing site + gallery | Edge | `prague/` |
-| **Bob** | Widget builder app | Node.js | `bob/` |
-| **Venice** | SSR embed runtime | Edge | `venice/` |
-| **Paris** | HTTP API gateway | Node.js | `paris/` |
-| **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
+| **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
+| **Bob** | Widget builder app | Cloudflare Pages + Workers | `bob/` |
+| **Venice** | SSR embed runtime | Cloudflare Workers | `venice/` |
+| **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
+| **San Francisco** | AI Workforce OS | Cloudflare Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
 | **Michael** | Database | Supabase Postgres | `supabase/` |
 | **Dieter** | Design system | — | `dieter/` |
-| **Tokyo** | Asset storage & CDN | — | `tokyo/` |
-| **Atlas** | Edge config cache (read-only) | Vercel Edge Config | — |
+| **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
 
 ---
 
@@ -136,13 +137,32 @@ Examples:
 
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
-**Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images.
+**Tokyo** — Asset storage and CDN (Cloudflare R2). Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images. Zero egress costs.
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 
-**Atlas** — Vercel Edge Config. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.
-
 **agent.md** — Per-widget AI contract. Documents editable paths, parts/roles, enums, and safe list operations. Required for AI editing.
+
+---
+
+## Security & Privacy Rules
+
+**PII Logging (NEVER do):**
+- ❌ Never log tokens, emails, or IP addresses in clear text
+- ❌ Never log secrets or API keys
+- ✅ Hash sensitive identifiers before logging (SHA-256 with salt)
+- ✅ Always include `X-Request-ID` for tracing
+
+**Embed Surfaces (Venice, widgets):**
+- ❌ No third-party scripts (no analytics, no tracking pixels)
+- ❌ No cookies or localStorage
+- ❌ No observability vendors (Sentry, PostHog, etc.)
+- ✅ Fire-and-forget usage pixel only (no PII)
+
+**App Surfaces (Bob, Prague, DevStudio):**
+- ✅ Analytics allowed (internal only)
+- ✅ Error tracking allowed
+- ❌ No PII in logs/errors
 
 ---
 

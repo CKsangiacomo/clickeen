@@ -8,7 +8,7 @@ Cloudflare Worker API service (dev).
 - `GET /api/instances`
 - `GET /api/instance/:publicId`
 - `PUT /api/instance/:publicId`
-  - body supports: `{ config?: object, status?: 'draft'|'published'|'inactive', displayName?: string }`
+  - body supports: `{ config?: object, status?: 'published'|'unpublished' }`
 
 ## Auth (dev)
 

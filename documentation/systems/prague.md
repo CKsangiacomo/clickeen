@@ -1,64 +1,108 @@
-STATUS: NORMATIVE — SINGLE SOURCE OF TRUTH (PHASE-1)
-This document is authoritative for the Prague system. It MUST NOT conflict with:
-1) supabase/migrations/ (DB schema truth)
-2) documentation/CONTEXT.md (Global terms and precedence)
-3) Other system PRDs in documentation/systems/
-If any conflict is found, STOP and escalate to the CEO. Do not guess.
+# Prague — Marketing & Discovery Surface
 
-# System: Prague — Marketing & Discovery Surface
+**STATUS: PLANNING**
 
-## 0) Quick Facts
-- **Route:** `/` (marketing pages) + `/gallery` (public widget showcase)
-- **Repo path:** `prague/` (Next.js App Router)
-- **Deploy surface:** Vercel project `c-keen-site`
-- **Purpose:** Drive PLG funnel — educate, showcase widgets, and hand off to Bob/Venice preview flows without auth friction.
-
-## 1) Scope (Phase-1)
-- Static-first marketing pages (home, pricing outline, FAQ) rendered via Next.js SSG. Dynamic user data is out of scope.
-- Gallery (`/gallery`, `/gallery/[widgetSlug]`) is static-first and sourced from Tokyo/CDN widget definitions (Paris does not host a widget catalog in this repo snapshot).
-- **Widget selection flow (CRITICAL):**
-  1. User browses gallery, clicks widget card (e.g., "Contact Form")
-  2. Prague creates (or selects) a draft instance upstream (outside Paris) and obtains a `publicId`
-  3. Prague opens MiniBob: `<iframe src="https://c-keen-app.vercel.app/bob?minibob=true&publicId={publicId}">` (planned flow)
-  4. Bob loads that specific instance (either spec-defaults or a curated starter instance)
-  5. User edits config (text, colors, layout, etc.) inside Bob
-  6. Click "Publish" → signup → claim widget to workspace
-- **MiniBob UI (conditional rendering in Bob):**
-  - Bob detects `?minibob=true` and conditionally hides UI (no Save button, no SecondaryDrawer)
-  - Only "Publish" button visible in MiniBob mode
-  - "Publish" triggers signup flow → parent window redirects to c-keen-app with claimed widget
-- **Critical**: Bob does NOT have widget type picker. Widget type is chosen on Prague gallery, Prague creates instance, Bob only edits that specific widget.
-
-## 2) Integrations & Data Flow
-| Action | Source | Notes |
-| --- | --- | --- |
-| Fetch gallery data | Tokyo/CDN | Static catalog built from widget definitions; keep marketing pages fast and cacheable. |
-| Create draft instance | Outside Paris | Instance creation is not implemented in this repo snapshot; Paris `POST /api/instance` is disabled. |
-| Open MiniBob | Bob (c-keen-app) | Prague iframes Bob with `?minibob=true&publicId={publicId}` |
-| Generate embed snippet | Venice | Embed code uses `https://c-keen-embed.vercel.app/e/{publicId}`; Prague never calls Paris with secrets. |
-| Capture attribution | Berlin (if enabled) | Only anonymous page analytics; no PII. |
-
-Environment variables: `NEXT_PUBLIC_BOB_URL`, `NEXT_PUBLIC_VENICE_URL`, `NEXT_PUBLIC_TOKYO_URL` for building links to Bob/embeds/widget catalog assets. No secrets allowed.
-
-## 3) Performance & SEO
-- All pages must meet Core Web Vitals targets (LCP ≤2.5 s, CLS <0.1). Use static generation + image optimisation.
-- SEO requirements: set canonical URLs, structured data snippets for gallery entries, open graph tags for social sharing.
-- Accessibility: All interactive elements follow WCAG AA (focus management, semantic headings, alt text).
-
-## 4) Out of Scope / Future
-- No authenticated experiences, dashboards, or builder previews.
-- No CMS authoring UI (content edits happen via filesystem/MDX during Phase-1).
-- No third-party scripts beyond sanctioned analytics (Berlin). No marketing pixel injection without explicit CEO approval.
-
-## 5) Testing Checklist
-- Visual regression for home + gallery (Playwright smoke).
-- Link checker ensuring CTA routes point to Bob `/bob` or Venice embed docs.
-- Lighthouse budget tests as part of release checklist.
-
-## 6) Common Mistakes (DO NOT DO)
-- ❌ Calling Paris with service-role tokens — Prague is public-only.
-- ❌ Building widget type picker in Bob — widget type is chosen on Prague gallery before Bob opens.
-- ❌ Shipping heavy client bundles — keep to static/SSR output with minimal JS.
+Prague is Clickeen's marketing site: the public-facing website with the widget gallery, Minibob playground, landing pages, and conversion funnels.
 
 ---
-Links: back to `documentation/CONTEXT.md`
+
+## Deployment
+
+| Aspect | Value |
+|--------|-------|
+| **Platform** | Cloudflare Pages |
+| **Source** | `prague/` |
+| **Domain** | `clickeen.com` |
+| **Assets** | Tokyo (Cloudflare R2) |
+
+---
+
+## Core Pages
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Homepage with value prop + Minibob demo |
+| `/widgets` | Widget gallery (all widget types) |
+| `/widgets/{type}` | Per-widget landing page with Minibob |
+| `/pricing` | Pricing + plan comparison |
+| `/blog` | SEO content (AI-generated via San Francisco) |
+| `/blog/{slug}` | Individual blog posts |
+| `/{locale}/...` | Localized versions of all pages |
+
+---
+
+## Minibob Integration
+
+Minibob is the embedded widget playground on Prague pages:
+
+```html
+<!-- Prague embeds Minibob via iframe -->
+<iframe 
+  src="https://app.clickeen.com/bob?minibob=true&publicId={publicId}"
+  class="minibob-frame"
+></iframe>
+```
+
+**Flow:**
+1. User browses gallery, clicks widget card
+2. Prague opens Minibob with a starter instance
+3. User plays with widget (all edits in memory, zero server calls)
+4. User clicks "Get Widget" → signup flow → claims instance
+
+**Minibob Mode (Bob detects `?minibob=true`):**
+- Hides Save button
+- Hides secondary navigation
+- Only shows "Get Widget" CTA
+- SDR Copilot panel active (San Francisco agent)
+
+---
+
+## SEO & Localization
+
+### Static Generation
+- All pages pre-rendered at build time
+- Per-locale variants: `/en/widgets/faq`, `/es/widgets/faq`, etc.
+- Blog content generated by San Francisco Content Writer agent
+
+### Performance
+- Core Web Vitals targets: LCP ≤2.5s, CLS <0.1
+- Images optimized via Cloudflare
+- Fonts loaded via `<link>` (Google Fonts)
+
+### Localization
+- UI translated by San Francisco UI Translator agent
+- Marketing copy by San Francisco Marketing Copywriter agent
+- Blog by San Francisco Content Writer agent
+
+See: `WhyClickeen_GlobalReach.md` for full localization strategy
+
+---
+
+## Data Sources
+
+| Data | Source | Notes |
+|------|--------|-------|
+| Widget gallery | Tokyo (static JSON) | Built at deploy time |
+| Starter instances | Michael (via Paris) | Cloned for each user |
+| Blog content | San Francisco | AI-generated, stored statically |
+| Pricing | Static config | Updated manually |
+
+---
+
+## Environment Variables
+
+```bash
+NEXT_PUBLIC_BOB_URL=https://app.clickeen.com
+NEXT_PUBLIC_TOKYO_URL=https://tokyo.clickeen.com
+```
+
+No secrets — Prague is fully public.
+
+---
+
+## Common Mistakes (DO NOT)
+
+- ❌ Calling Paris directly from Prague pages (use Minibob/Bob)
+- ❌ Building widget type picker in Prague (widget type is chosen in gallery, Minibob loads that specific widget)
+- ❌ Heavy client bundles (keep to static/SSR with minimal JS)
+- ❌ Third-party tracking without approval (use internal analytics only)

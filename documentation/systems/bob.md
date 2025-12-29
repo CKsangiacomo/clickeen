@@ -208,6 +208,16 @@ The iframe is sandboxed (`allow-scripts allow-same-origin`).
 
 ---
 
+## Deployment
+
+| Aspect | Value |
+|--------|-------|
+| **Platform** | Cloudflare Pages + Workers |
+| **Source** | `bob/` |
+| **Domain** | `app.clickeen.com` |
+
+---
+
 ## Environment & Dev Setup
 
 ### Required

@@ -22,23 +22,24 @@ Clickeen is designed to be **built by AI** and **run by AI**:
 
 **San Francisco is the Workforce OS** — the system that operates the AI agents who run the company.
 
-See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
+See: `systems/sanfrancisco.md`
 
 ---
 
 ## System Map
 
+All systems deploy to **Cloudflare** (except Michael which is Supabase):
+
 | System | Repo Path | Deploy | Responsibility | Status |
 |--------|-----------|--------|----------------|--------|
-| **Prague** | `prague/` | Edge (c-keen-site) | Marketing site, gallery | Placeholder |
-| **Bob** | `bob/` | Node.js (c-keen-app) | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
-| **Venice** | `venice/` | Edge (c-keen-embed) | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
-| **Paris** | `paris/` | Node.js (c-keen-api) | HTTP API, instances, tokens, entitlements | ✅ Active |
-| **San Francisco** | `sanfrancisco/` | Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | 📋 Planning |
+| **Prague** | `prague/` | Cloudflare Pages | Marketing site, gallery | Placeholder |
+| **Bob** | `bob/` | Cloudflare Pages + Workers | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
+| **Venice** | `venice/` | Cloudflare Workers | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
+| **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
+| **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | 📋 Planning |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
-| **Tokyo** | `tokyo/` | CDN | Widget definitions, Dieter assets, shared runtime | ✅ Active |
-| **Atlas** | Vercel Edge Config | — | Read-only config cache | Active |
+| **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
 
 ---
 

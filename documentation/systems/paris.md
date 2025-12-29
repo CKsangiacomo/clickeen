@@ -8,7 +8,7 @@ If any conflict is found, STOP and escalate to CEO. Do not guess.
 ## AIs Quick Scan
 
 **Purpose:** Phase-1 HTTP API (instances, tokens, submissions, usage).
-**Owner:** Vercel project `c-keen-api`.
+**Owner:** Cloudflare Workers `paris`.
 **Dependencies:** Michael (Postgres), Atlas (read-only config).
 **Phase-1 Endpoints:** `POST /api/instance (disabled)`, `GET/PUT /api/instance/:publicId`, `POST /api/claim`, `POST /api/token`, `GET /api/entitlements`, `POST /api/usage`, `POST /api/submit/:publicId`, `GET /api/healthz`. (`GET /api/instances` exists for dev tooling only.)
 **Database Tables:** `widget_instances`, `widgets`, `embed_tokens`, `plan_features`, `plan_limits`, `widget_submissions`, `usage_events`, `events`.
@@ -77,11 +77,10 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 Paris is Clickeen's server-side HTTP API service that handles all privileged operations requiring service-role access to Supabase. It runs on Node.js runtime and serves as the secure backend for Bob (builder app), authentication flows, widget instance management, and data operations that cannot run on the edge.
 
 ## Deployment & Runtime
-- **Vercel Project**: `c-keen-api` 
+- **Platform**: Cloudflare Workers
 - **Source Directory**: `paris`
-- **Runtime**: Node.js (NOT edge)
-- **Build Command**: `pnpm build`
-- **URL Pattern**: `https://c-keen-api.vercel.app`
+- **Runtime**: Edge (V8 isolates)
+- **Domain**: `api.clickeen.com`
 
 ## Security Boundaries
 - **Service Role Access**: Paris has `SUPABASE_SERVICE_ROLE_KEY` and can bypass RLS. Handlers MUST scope service-role usage to the smallest set of operations and MUST never expose this key to clients.

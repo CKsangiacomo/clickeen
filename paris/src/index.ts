@@ -6,8 +6,8 @@ type Env = {
 
 type InstanceRow = {
   public_id: string;
-  status: string;
-  config: Record<string, unknown> | null;
+  status: 'published' | 'unpublished';
+  config: Record<string, unknown>;
   created_at: string;
   updated_at?: string | null;
   widget_id: string | null;
@@ -17,13 +17,11 @@ type WidgetRow = {
   id: string;
   type: string | null;
   name: string | null;
-  workspace_id?: string | null;
 };
 
 type UpdatePayload = {
   config?: Record<string, unknown>;
-  status?: 'draft' | 'published' | 'inactive';
-  displayName?: string;
+  status?: 'published' | 'unpublished';
 };
 
 function json(body: unknown, init?: ResponseInit) {
@@ -96,7 +94,6 @@ async function handleInstances(req: Request, env: Env) {
 
   const params = new URLSearchParams({
     select: 'public_id,status,config,created_at,widget_id',
-    status: 'neq.inactive',
     order: 'created_at.desc',
     limit: '50',
   });
@@ -135,8 +132,8 @@ async function handleInstances(req: Request, env: Env) {
     return {
       publicId: row.public_id,
       widgetname: widget?.type ?? 'unknown',
-      displayName: widget?.name ?? row.public_id,
-      config: row.config ?? {},
+      displayName: row.public_id,
+      config: row.config,
     };
   });
 
@@ -160,7 +157,7 @@ async function loadInstanceByPublicId(env: Env, publicId: string): Promise<Insta
 
 async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null> {
   const params = new URLSearchParams({
-    select: 'id,type,name,workspace_id',
+    select: 'id,type,name',
     id: `eq.${widgetId}`,
     limit: '1',
   });
@@ -188,7 +185,7 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     publicId: instance.public_id,
     status: instance.status,
     widgetType: widget.type ?? null,
-    config: instance.config ?? {},
+    config: instance.config,
     updatedAt: instance.updated_at ?? null,
   });
 }
@@ -202,18 +199,10 @@ function assertConfig(config: unknown) {
 
 function assertStatus(status: unknown) {
   if (status === undefined) return { ok: true as const, value: undefined };
-  if (status !== 'draft' && status !== 'published' && status !== 'inactive') {
+  if (status !== 'published' && status !== 'unpublished') {
     return { ok: false as const, issues: [{ path: 'status', message: 'invalid status' }] };
   }
-  return { ok: true as const, value: status as 'draft' | 'published' | 'inactive' };
-}
-
-function assertDisplayName(value: unknown) {
-  if (value === undefined) return { ok: true as const, value: undefined };
-  if (typeof value !== 'string' || !value.trim()) {
-    return { ok: false as const, issues: [{ path: 'displayName', message: 'displayName must be a non-empty string' }] };
-  }
-  return { ok: true as const, value: value.trim() };
+  return { ok: true as const, value: status as 'published' | 'unpublished' };
 }
 
 async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
@@ -236,17 +225,13 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
   const statusResult = assertStatus(payload.status);
   if (!statusResult.ok) issues.push(...statusResult.issues);
 
-  const displayNameResult = assertDisplayName(payload.displayName);
-  if (!displayNameResult.ok) issues.push(...displayNameResult.issues);
-
   if (issues.length) return json(issues, { status: 422 });
 
   const config = configResult.value;
   const status = statusResult.value;
-  const displayName = displayNameResult.value;
 
-  if (config === undefined && status === undefined && displayName === undefined) {
-    return json([{ path: 'body', message: 'At least one field (config, status, displayName) required' }], {
+  if (config === undefined && status === undefined) {
+    return json([{ path: 'body', message: 'At least one field (config, status) required' }], {
       status: 422,
     });
   }
@@ -274,20 +259,6 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
     );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
-      return json({ error: 'DB_ERROR', details }, { status: 500 });
-    }
-  }
-
-  if (displayName !== undefined) {
-    const widgetRes = await supabaseFetch(env, `/rest/v1/widgets?id=eq.${encodeURIComponent(widgetId)}`, {
-      method: 'PATCH',
-      headers: {
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify({ name: displayName }),
-    });
-    if (!widgetRes.ok) {
-      const details = await readJson(widgetRes);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
     }
   }
@@ -323,4 +294,3 @@ export default {
     }
   },
 };
-

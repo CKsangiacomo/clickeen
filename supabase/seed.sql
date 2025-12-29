@@ -2,26 +2,22 @@
 -- Applied after migrations during `supabase db reset` (see supabase/config.toml).
 --
 -- Creates:
--- - 1 workspace
 -- - 2 widgets (faq, countdown)
 -- - 2 widget_instances (wgt_faq_main, wgt_countdown_main)
 
 BEGIN;
 
-INSERT INTO workspaces (id, name, plan, kind)
-VALUES ('11111111-1111-1111-1111-111111111111'::uuid, 'Dev Workspace', 'free', 'business');
-
-INSERT INTO widgets (id, workspace_id, name, type, public_key, status, config)
+INSERT INTO widgets (id, type, name)
 VALUES
-  ('22222222-2222-2222-2222-222222222222'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 'FAQ', 'faq', 'wgt_faq', 'active', '{}'::jsonb),
-  ('33333333-3333-3333-3333-333333333333'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 'Countdown', 'countdown', 'wgt_countdown', 'active', '{}'::jsonb);
+  ('22222222-2222-2222-2222-222222222222'::uuid, 'faq', 'FAQ'),
+  ('33333333-3333-3333-3333-333333333333'::uuid, 'countdown', 'Countdown');
 
 INSERT INTO widget_instances (widget_id, public_id, status, config)
 VALUES
   (
     '22222222-2222-2222-2222-222222222222'::uuid,
     'wgt_faq_main',
-    'draft',
+    'unpublished',
     $${
       "title":"Frequently Asked Questions",
       "showTitle":true,
@@ -111,7 +107,7 @@ VALUES
   (
     '33333333-3333-3333-3333-333333333333'::uuid,
     'wgt_countdown_main',
-    'draft',
+    'unpublished',
     $${
       "timer":{
         "mode":"personal",
