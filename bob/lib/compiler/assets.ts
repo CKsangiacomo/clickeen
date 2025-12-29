@@ -9,35 +9,80 @@ export function requireTokyoUrl(): string {
   return value;
 }
 
-function normalizeDieterUsageToComponentName(usage: string): string | null {
-  const trimmed = usage.trim();
-  if (!trimmed) return null;
-  if (trimmed === 'popover-host') return 'popover';
+type DieterManifest = {
+  v: number;
+  gitSha: string;
+  builtAt?: string;
+  components: string[];
+  componentsWithJs?: string[];
+  aliases?: Record<string, string>;
+  helpers?: string[];
+  deps?: Record<string, string[]>;
+};
 
-  // Button variants (`diet-btn-*`) are all styled by the `button` component, except `btn-menuactions`
-  // which is a separate Dieter component bundle.
-  if (trimmed === 'btn') return 'button';
-  if (trimmed.startsWith('btn-')) {
-    const rest = trimmed.slice('btn-'.length).trim();
-    if (rest === 'menuactions') return 'menuactions';
-    return 'button';
-  }
-  return trimmed;
+const dieterManifestCache = new Map<string, Promise<DieterManifest>>();
+
+async function loadDieterManifest(tokyoRoot: string): Promise<DieterManifest> {
+  const url = `${tokyoRoot.replace(/\/+$/, '')}/dieter/manifest.json`;
+  const cached = dieterManifestCache.get(url);
+  if (cached) return cached;
+
+  const promise = (async () => {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`[BobCompiler] Failed to load Dieter manifest (${res.status}) ${url}`);
+    }
+    const json = (await res.json()) as DieterManifest;
+    if (!json || typeof json !== 'object' || !Array.isArray(json.components)) {
+      throw new Error(`[BobCompiler] Invalid Dieter manifest ${url}`);
+    }
+    return json;
+  })();
+
+  dieterManifestCache.set(url, promise);
+  return promise;
 }
 
-async function remoteFileExists(url: string): Promise<boolean> {
-  const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-  if (res.ok) return true;
-  if (res.status === 404) return false;
+function resolveUsageToBundleName(manifest: DieterManifest, usage: string): string | null {
+  const trimmed = usage.trim();
+  if (!trimmed) return null;
 
-  if (res.status === 405) {
-    const getRes = await fetch(url, { method: 'GET', cache: 'no-store' });
-    if (getRes.ok) return true;
-    if (getRes.status === 404) return false;
-    throw new Error(`[BobCompiler] Unable to check asset ${url} (GET ${getRes.status})`);
+  if (manifest.helpers?.includes(trimmed)) return null;
+  if (manifest.components.includes(trimmed)) return trimmed;
+
+  const alias = manifest.aliases?.[trimmed];
+  if (alias && manifest.components.includes(alias)) return alias;
+
+  // Back-compat for historical usage tokens (prefer explicit `aliases` in manifest).
+  if (trimmed === 'btn' && manifest.components.includes('button')) return 'button';
+  if (trimmed.startsWith('btn-') && manifest.components.includes('button')) {
+    if (trimmed === 'btn-menuactions' && manifest.components.includes('menuactions')) return 'menuactions';
+    return 'button';
+  }
+  if (trimmed === 'popover-host' && manifest.components.includes('popover')) return 'popover';
+  if (trimmed.startsWith('dropdown-header')) return null;
+
+  return null;
+}
+
+function expandBundleDeps(manifest: DieterManifest, roots: Set<string>): Set<string> {
+  const out = new Set<string>(roots);
+  const queue = Array.from(roots);
+  const deps = manifest.deps ?? {};
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+    const children = deps[current] ?? [];
+    for (const child of children) {
+      if (!out.has(child)) {
+        out.add(child);
+        queue.push(child);
+      }
+    }
   }
 
-  throw new Error(`[BobCompiler] Unable to check asset ${url} (HEAD ${res.status})`);
+  return out;
 }
 
 export async function buildWidgetAssets(args: {
@@ -49,59 +94,33 @@ export async function buildWidgetAssets(args: {
   const dieterBase = `${tokyoRoot}/dieter`;
   const assetBase = `${tokyoRoot}/widgets/${args.widgetname}`;
 
-  const existsCache = new Map<string, Promise<boolean>>();
-  const fileExists = async (url: string) => {
-    const cached = existsCache.get(url);
-    if (cached) return cached;
-    const promise = remoteFileExists(url);
-    existsCache.set(url, promise);
-    return promise;
-  };
+  const manifest = await loadDieterManifest(tokyoRoot);
 
-  const requiredComponentNames = Array.from(
-    new Set(
-      Array.from(args.requiredUsages)
-        .map(normalizeDieterUsageToComponentName)
-        .filter((name): name is string => Boolean(name)),
-    ),
-  );
+  const requiredBundles = new Set<string>();
+  for (const usage of args.requiredUsages) {
+    const resolved = resolveUsageToBundleName(manifest, usage);
+    if (!resolved) {
+      throw new Error(`[BobCompiler] Unknown Dieter component bundle "${usage}" (see ${tokyoRoot}/dieter/manifest.json)`);
+    }
+    requiredBundles.add(resolved);
+  }
 
-  const optionalComponentNames = Array.from(
-    new Set(
-      Array.from(args.optionalUsages)
-        .map(normalizeDieterUsageToComponentName)
-        .filter((name): name is string => Boolean(name)),
-    ),
-  );
+  const bundlesWithDeps = expandBundleDeps(manifest, requiredBundles);
 
-  const requiredNameSet = new Set(requiredComponentNames);
-  const orderedNames = Array.from(new Set([...requiredComponentNames, ...optionalComponentNames]));
+  // Optional hints (derived from markup classnames) are constrained by the manifest; they cannot invent new bundles.
+  // Prefer explicit `deps` in the manifest over expanding this.
+  for (const usage of args.optionalUsages) {
+    const resolved = resolveUsageToBundleName(manifest, usage);
+    if (resolved) bundlesWithDeps.add(resolved);
+  }
 
-  const componentStyles = (
-    await Promise.all(
-      orderedNames.map(async (name) => {
-        const url = `${dieterBase}/components/${name}/${name}.css`;
-        const exists = await fileExists(url);
-        if (!exists) {
-          if (requiredNameSet.has(name)) {
-            throw new Error(`[BobCompiler] Missing Dieter CSS for component "${name}" (${url})`);
-          }
-          return null;
-        }
-        return url;
-      }),
-    )
-  ).filter((url): url is string => Boolean(url));
+  const orderedNames = Array.from(bundlesWithDeps).sort();
+  const jsSet = new Set(manifest.componentsWithJs ?? []);
 
-  const componentScripts = (
-    await Promise.all(
-      orderedNames.map(async (name) => {
-        const url = `${dieterBase}/components/${name}/${name}.js`;
-        const exists = await fileExists(url);
-        return exists ? url : null;
-      }),
-    )
-  ).filter((url): url is string => Boolean(url));
+  const componentStyles = orderedNames.map((name) => `${dieterBase}/components/${name}/${name}.css`);
+  const componentScripts = orderedNames
+    .filter((name) => jsSet.has(name))
+    .map((name) => `${dieterBase}/components/${name}/${name}.js`);
 
   const dieterAssets = {
     styles: [`${dieterBase}/tokens/tokens.css`, ...componentStyles],
