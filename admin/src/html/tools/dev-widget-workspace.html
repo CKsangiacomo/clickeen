@@ -208,7 +208,7 @@
 <script type="module">
 function requireBobOrigin() {
   const params = new URLSearchParams(window.location.search);
-  const raw = (params.get('bob') || 'https://bob-dev.clickeen.com').trim();
+  const raw = (params.get('bob') || 'https://bob.dev.clickeen.com').trim();
   try {
     return new URL(raw).origin;
   } catch {
@@ -290,14 +290,24 @@ async function fetchInstances() {
     throw new Error('[DevStudio] Supabase returned zero instances for dev workspace');
   }
 
-  await Promise.all(uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)));
+  const compileResults = await Promise.allSettled(
+    uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)),
+  );
+  const compileErrors = compileResults.filter((result) => result.status === 'rejected');
+  if (compileErrors.length > 0) {
+    console.error('[DevStudio] Failed to compile one or more widgets; instance list will still load', compileErrors);
+  }
 
   currentPublicId = currentPublicId || instances[0].publicId;
 
   console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
   updateCurrentLabel();
   renderInstances();
-  await sendInstanceToIframe(currentPublicId);
+  try {
+    await sendInstanceToIframe(currentPublicId);
+  } catch (error) {
+    console.error('[DevStudio] Failed to load initial instance into Bob', error);
+  }
 }
 
 function updateCurrentLabel() {
@@ -345,7 +355,9 @@ function switchInstance(publicId) {
   control.setAttribute('aria-expanded', 'false');
   updateCurrentLabel();
   renderInstances();
-  sendInstanceToIframe(publicId);
+  sendInstanceToIframe(publicId).catch((error) => {
+    console.error('[DevStudio] Failed to send instance to Bob', error);
+  });
 }
 
 async function sendInstanceToIframe(publicId) {
