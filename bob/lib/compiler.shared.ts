@@ -20,7 +20,12 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   return attrs;
 }
 
-export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
+export type WidgetUsageSets = {
+  required: Set<string>;
+  optional: Set<string>;
+};
+
+export function collectTooldrawerTypes(markup: string, usages: WidgetUsageSets) {
   const decodeHtmlEntities = (value: string) =>
     value
       .replace(/&quot;/g, '"')
@@ -35,17 +40,17 @@ export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
   let m: RegExpExecArray | null;
   while ((m = tdRegex.exec(markup)) !== null) {
     const attrs = parseTooldrawerAttributes(m[1]);
-    if (attrs.type) usages.add(attrs.type);
+    if (attrs.type) usages.required.add(attrs.type);
     if (attrs.template) {
       const decoded = decodeHtmlEntities(attrs.template);
       collectTooldrawerTypes(decoded, usages);
-      // Also pull in class-based components referenced inside templates
+      // Pull in class-based hints referenced inside templates.
       const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
       let classMatch: RegExpExecArray | null;
       while ((classMatch = classRegex.exec(decoded)) !== null) {
         const raw = classMatch[1];
         const base = raw.replace(/(--|__).*/, '');
-        if (base) usages.add(base);
+        if (base) usages.optional.add(base);
       }
     }
   }
@@ -56,7 +61,10 @@ export function formatPanelLabel(id: string): string {
   return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
-export function parsePanels(htmlLines: unknown): { panels: CompiledPanel[]; usages: Set<string> } {
+export function parsePanels(htmlLines: unknown): {
+  panels: CompiledPanel[];
+  usages: WidgetUsageSets;
+} {
   if (!Array.isArray(htmlLines)) {
     throw new Error('[BobCompiler] widget JSON missing html array');
   }
@@ -64,7 +72,7 @@ export function parsePanels(htmlLines: unknown): { panels: CompiledPanel[]; usag
   const html = htmlLines.join('\n');
   const panelRegex = /<bob-panel\s+id='([^']+)'[^>]*>([\s\S]*?)<\/bob-panel>/gi;
   const panels: CompiledPanel[] = [];
-  const usages = new Set<string>();
+  const usages: WidgetUsageSets = { required: new Set<string>(), optional: new Set<string>() };
   let match: RegExpExecArray | null;
 
   while ((match = panelRegex.exec(html)) !== null) {
@@ -78,7 +86,7 @@ export function parsePanels(htmlLines: unknown): { panels: CompiledPanel[]; usag
     while ((classMatch = classRegex.exec(panelMarkup)) !== null) {
       const raw = classMatch[1];
       const base = raw.replace(/(--|__).*/, '');
-      if (base) usages.add(base);
+      if (base) usages.optional.add(base);
     }
 
     panels.push({

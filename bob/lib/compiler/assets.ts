@@ -12,10 +12,15 @@ export function requireTokyoUrl(): string {
 function normalizeDieterUsageToComponentName(usage: string): string | null {
   const trimmed = usage.trim();
   if (!trimmed) return null;
+  if (trimmed === 'popover-host') return 'popover';
+
+  // Button variants (`diet-btn-*`) are all styled by the `button` component, except `btn-menuactions`
+  // which is a separate Dieter component bundle.
   if (trimmed === 'btn') return 'button';
   if (trimmed.startsWith('btn-')) {
     const rest = trimmed.slice('btn-'.length).trim();
-    return rest || null;
+    if (rest === 'menuactions') return 'menuactions';
+    return 'button';
   }
   return trimmed;
 }
@@ -37,36 +42,62 @@ async function remoteFileExists(url: string): Promise<boolean> {
 
 export async function buildWidgetAssets(args: {
   widgetname: string;
-  usages: Set<string>;
+  requiredUsages: Set<string>;
+  optionalUsages: Set<string>;
 }): Promise<CompiledWidget['assets']> {
   const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
   const dieterBase = `${tokyoRoot}/dieter`;
   const assetBase = `${tokyoRoot}/widgets/${args.widgetname}`;
 
-  const componentNames = Array.from(
+  const existsCache = new Map<string, Promise<boolean>>();
+  const fileExists = async (url: string) => {
+    const cached = existsCache.get(url);
+    if (cached) return cached;
+    const promise = remoteFileExists(url);
+    existsCache.set(url, promise);
+    return promise;
+  };
+
+  const requiredComponentNames = Array.from(
     new Set(
-      Array.from(args.usages)
+      Array.from(args.requiredUsages)
         .map(normalizeDieterUsageToComponentName)
         .filter((name): name is string => Boolean(name)),
     ),
   );
 
-  const componentStyles = await Promise.all(
-    componentNames.map(async (name) => {
-      const url = `${dieterBase}/components/${name}/${name}.css`;
-      const exists = await remoteFileExists(url);
-      if (!exists) {
-        throw new Error(`[BobCompiler] Missing Dieter CSS for component "${name}" (${url})`);
-      }
-      return url;
-    }),
+  const optionalComponentNames = Array.from(
+    new Set(
+      Array.from(args.optionalUsages)
+        .map(normalizeDieterUsageToComponentName)
+        .filter((name): name is string => Boolean(name)),
+    ),
   );
+
+  const requiredNameSet = new Set(requiredComponentNames);
+  const orderedNames = Array.from(new Set([...requiredComponentNames, ...optionalComponentNames]));
+
+  const componentStyles = (
+    await Promise.all(
+      orderedNames.map(async (name) => {
+        const url = `${dieterBase}/components/${name}/${name}.css`;
+        const exists = await fileExists(url);
+        if (!exists) {
+          if (requiredNameSet.has(name)) {
+            throw new Error(`[BobCompiler] Missing Dieter CSS for component "${name}" (${url})`);
+          }
+          return null;
+        }
+        return url;
+      }),
+    )
+  ).filter((url): url is string => Boolean(url));
 
   const componentScripts = (
     await Promise.all(
-      componentNames.map(async (name) => {
+      orderedNames.map(async (name) => {
         const url = `${dieterBase}/components/${name}/${name}.js`;
-        const exists = await remoteFileExists(url);
+        const exists = await fileExists(url);
         return exists ? url : null;
       }),
     )

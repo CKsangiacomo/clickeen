@@ -163,7 +163,11 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     }),
   );
 
-  const assets = await buildWidgetAssets({ widgetname, usages: parsed.usages });
+  const assets = await buildWidgetAssets({
+    widgetname,
+    requiredUsages: parsed.usages.required,
+    optionalUsages: parsed.usages.optional,
+  });
 
   return {
     widgetname,
