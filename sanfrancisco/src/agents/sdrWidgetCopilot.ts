@@ -1,11 +1,17 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
+import globalDictionary from '../lexicon/global_dictionary.json';
 
 type ControlSummary = {
   path: string;
+  panelId?: string;
+  groupId?: string;
+  groupLabel?: string;
+  type?: string;
   kind?: string;
   label?: string;
+  options?: Array<{ label: string; value: string }>;
   enumValues?: string[];
   min?: number;
   max?: number;
@@ -45,6 +51,8 @@ type CopilotSession = {
   successfulEdits: number;
   turns: Array<{ role: 'user' | 'assistant'; content: string }>;
 };
+
+type GlobalDictionary = typeof globalDictionary;
 
 function parseJsonFromModel(raw: string): unknown {
   const trimmed = raw.trim();
@@ -106,15 +114,60 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
     .filter((c) => isRecord(c) && typeof c.path === 'string' && c.path.trim())
     .map((c) => ({
       path: String(c.path),
+      panelId: typeof c.panelId === 'string' ? c.panelId : undefined,
+      groupId: typeof c.groupId === 'string' ? c.groupId : undefined,
+      groupLabel: typeof c.groupLabel === 'string' ? c.groupLabel : undefined,
+      type: typeof c.type === 'string' ? c.type : undefined,
       kind: typeof c.kind === 'string' ? c.kind : undefined,
       label: typeof c.label === 'string' ? c.label : undefined,
-      enumValues: Array.isArray(c.enumValues) && c.enumValues.every((v) => typeof v === 'string') ? c.enumValues : undefined,
+      options:
+        Array.isArray(c.options) && c.options.every((o: any) => isRecord(o) && typeof o.label === 'string' && typeof o.value === 'string')
+          ? (c.options as Array<{ label: string; value: string }>)
+          : undefined,
+      enumValues: Array.isArray(c.enumValues) && c.enumValues.every((v: unknown) => typeof v === 'string') ? c.enumValues : undefined,
       min: typeof c.min === 'number' ? c.min : undefined,
       max: typeof c.max === 'number' ? c.max : undefined,
       itemIdPath: typeof c.itemIdPath === 'string' ? c.itemIdPath : undefined,
     }));
 
   return { sessionId, prompt, widgetType, currentConfig: currentConfig as Record<string, unknown>, controls: safeControls };
+}
+
+function containsAny(haystack: string, needles: string[]): boolean {
+  const lower = haystack.toLowerCase();
+  return needles.some((n) => lower.includes(n.toLowerCase()));
+}
+
+function getConcept(dict: GlobalDictionary, id: string) {
+  return dict.concepts.find((c) => c.id === id) ?? null;
+}
+
+function getScope(dict: GlobalDictionary, id: string) {
+  return dict.scopes.find((s) => s.id === id) ?? null;
+}
+
+function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
+  if (controlPath.startsWith('stage.')) return 'stage';
+  if (controlPath.startsWith('pod.')) return 'pod';
+  return 'content';
+}
+
+function maybeClarify(dict: GlobalDictionary, input: WidgetCopilotInput): string | null {
+  const prompt = input.prompt;
+
+  const backgroundConcept = getConcept(dict, 'background');
+  if (backgroundConcept && containsAny(prompt, backgroundConcept.synonyms)) {
+    const hasStageBackground = input.controls.some((c) => inferScopeFromPath(c.path) === 'stage' && c.path.includes('background'));
+    const hasPodBackground = input.controls.some((c) => inferScopeFromPath(c.path) === 'pod' && c.path.includes('background'));
+    if (hasStageBackground && hasPodBackground) {
+      const q =
+        dict.clarifications.find((c) => c.conceptId === 'background')?.question ??
+        'Do you mean the stage background or the widget container background?';
+      return q;
+    }
+  }
+
+  return null;
 }
 
 async function getSession(env: Env, sessionId: string): Promise<CopilotSession> {
@@ -136,6 +189,13 @@ async function putSession(env: Env, session: CopilotSession): Promise<void> {
 }
 
 function systemPrompt(): string {
+  const stage = getScope(globalDictionary, 'stage');
+  const pod = getScope(globalDictionary, 'pod');
+  const content = getScope(globalDictionary, 'content');
+  const modern = globalDictionary.intents.find((i) => i.id === 'modern');
+  const classic = globalDictionary.intents.find((i) => i.id === 'classic');
+  const playful = globalDictionary.intents.find((i) => i.id === 'playful');
+
   return [
     "You help users customize widgets in Clickeen's playground (Minibob).",
     '',
@@ -144,10 +204,26 @@ function systemPrompt(): string {
     '',
     'RULES:',
     '1) Generate valid ops that target available control paths only.',
-    '2) Keep changes minimal — one thing at a time.',
-    '3) If the user asks a question or requests an explanation, return NO ops and answer briefly.',
-    '4) Message should confirm what changed (1–2 sentences).',
-    '5) If user asks for a paid feature, explain kindly and suggest signup/upgrade.',
+    '2) Respect control constraints:',
+    '   - If a control kind is "enum": value MUST be one of enumValues.',
+    '   - If min/max exist: keep numeric values within range.',
+    '   - If user asks for something not possible, ask a short clarifying question instead of guessing.',
+    '3) Keep changes minimal — one thing at a time.',
+    '4) If the user asks a question or requests an explanation, return NO ops and answer briefly.',
+    '5) Message should confirm what changed (1–2 sentences).',
+    '6) If user asks for a paid feature, explain kindly and suggest signup/upgrade.',
+    '',
+    'GLOBAL VOCABULARY (applies to all widgets):',
+    `- Scopes:`,
+    `  - stage: ${stage?.description ?? 'background behind the widget'}`,
+    `  - pod: ${pod?.description ?? 'widget container'}`,
+    `  - content: ${content?.description ?? 'inside the widget'}`,
+    `- If user says "background" and both stage + pod backgrounds exist, ask which scope they mean.`,
+    `- If user says "font(s)" without specifying a target, default to changing all available typography roles (title, section titles, questions, answers).`,
+    `- If user asks for a "modern/classic/playful font", pick from enumValues using these candidates:`,
+    `  - modern: ${(modern?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
+    `  - classic: ${(classic?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
+    `  - playful: ${(playful?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
     '',
     'Output MUST be JSON, with this shape:',
     '{ "ops"?: WidgetOp[], "message": string, "cta"?: { "text": string, "action": "signup"|"upgrade"|"learn-more", "url"?: string } }',
@@ -162,6 +238,23 @@ function systemPrompt(): string {
 
 export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: unknown }, env: Env): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
   const input = parseWidgetCopilotInput(params.input);
+
+  const clarification = maybeClarify(globalDictionary, input);
+  if (clarification) {
+    const session = await getSession(env, input.sessionId);
+    session.lastActiveAtMs = Date.now();
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: clarification },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+
+    return {
+      result: { message: clarification },
+      usage: { provider: 'local', model: 'global_dictionary', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
+  }
 
   if (!env.DEEPSEEK_API_KEY) {
     throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
@@ -182,10 +275,27 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     '',
     `User request: ${input.prompt}`,
     '',
-    'Editable controls (path → kind, label):',
+    'Editable controls (path → kind, label, constraints):',
     input.controls
       .slice(0, 180)
-      .map((c) => `- ${c.path}${c.kind ? ` (${c.kind})` : ''}${c.label ? ` — ${c.label}` : ''}`)
+      .map((c) => {
+        const parts: string[] = [];
+        parts.push(`- ${c.path}`);
+        if (c.kind) parts.push(`(${c.kind})`);
+        if (c.label) parts.push(`— ${c.label}`);
+        if (c.panelId) parts.push(`[panel:${c.panelId}]`);
+        if (c.groupLabel) parts.push(`[group:${c.groupLabel}]`);
+
+        if (c.kind === 'enum' && Array.isArray(c.enumValues) && c.enumValues.length) {
+          const values = c.enumValues.slice(0, 24);
+          parts.push(`[allowed:${values.join(', ')}${c.enumValues.length > values.length ? ', …' : ''}]`);
+        }
+
+        if (typeof c.min === 'number' || typeof c.max === 'number') {
+          parts.push(`[range:${typeof c.min === 'number' ? c.min : '-∞'}..${typeof c.max === 'number' ? c.max : '∞'}]`);
+        }
+        return parts.join(' ');
+      })
       .join('\n'),
     '',
     'Current config (JSON):',
@@ -259,7 +369,11 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   const hasEdit = Boolean(ops && ops.length > 0);
   session.lastActiveAtMs = Date.now();
   session.successfulEdits = hasEdit ? session.successfulEdits + 1 : session.successfulEdits;
-  session.turns = [...session.turns, { role: 'user', content: input.prompt }, { role: 'assistant', content: message }].slice(-10);
+  session.turns = [
+    ...session.turns,
+    { role: 'user' as const, content: input.prompt },
+    { role: 'assistant' as const, content: message },
+  ].slice(-10) as CopilotSession['turns'];
   await putSession(env, session);
 
   const result: WidgetCopilotResult = {

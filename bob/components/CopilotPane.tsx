@@ -136,8 +136,13 @@ export function CopilotPane() {
     if (!compiled) return [];
     return compiled.controls.map((c) => ({
       path: c.path,
+      panelId: c.panelId,
+      groupId: c.groupId,
+      groupLabel: c.groupLabel,
+      type: c.type,
       kind: c.kind,
       label: c.label,
+      options: c.options,
       enumValues: c.enumValues,
       min: c.min,
       max: c.max,
@@ -208,7 +213,7 @@ export function CopilotPane() {
           const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
           pushMessage({
             role: 'assistant',
-            text: `${message}\n\nI tried to apply a change, but it was rejected:\n${details}`,
+            text: `I couldn’t apply that change because it’s not valid for this widget:\n${details}`,
           });
           setStatus('idle');
           return;

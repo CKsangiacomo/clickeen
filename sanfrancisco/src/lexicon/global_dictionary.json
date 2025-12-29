@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "scopes": [
+    {
+      "id": "stage",
+      "label": "Stage",
+      "description": "The canvas/background behind the widget (workspace area).",
+      "synonyms": ["stage", "canvas", "backdrop", "outside", "around", "page", "workspace", "background behind"]
+    },
+    {
+      "id": "pod",
+      "label": "Pod",
+      "description": "The widget container/card around the content.",
+      "synonyms": ["pod", "container", "card", "box", "panel", "widget background", "outer container", "frame"]
+    },
+    {
+      "id": "content",
+      "label": "Content",
+      "description": "The content inside the widget (text, items, buttons, etc.).",
+      "synonyms": ["content", "inside", "text", "items", "questions", "answers", "body"]
+    }
+  ],
+  "concepts": [
+    {
+      "id": "background",
+      "label": "Background",
+      "synonyms": ["background", "bg", "backdrop"],
+      "ambiguousScopes": ["stage", "pod"]
+    },
+    {
+      "id": "font",
+      "label": "Font / Typography",
+      "synonyms": ["font", "fonts", "typography", "typeface", "text style", "type"],
+      "targets": ["all", "title", "section title", "question", "answer", "button"]
+    },
+    {
+      "id": "textColor",
+      "label": "Text color",
+      "synonyms": ["text color", "font color", "color of the text", "copy color"]
+    },
+    {
+      "id": "radius",
+      "label": "Corner radius",
+      "synonyms": ["radius", "corner radius", "rounded", "corners", "roundness"]
+    },
+    {
+      "id": "shadow",
+      "label": "Shadow",
+      "synonyms": ["shadow", "drop shadow", "elevation"]
+    },
+    {
+      "id": "border",
+      "label": "Border",
+      "synonyms": ["border", "stroke", "outline"]
+    },
+    {
+      "id": "spacing",
+      "label": "Spacing",
+      "synonyms": ["padding", "spacing", "margin", "gap", "whitespace", "breathing room"]
+    }
+  ],
+  "intents": [
+    {
+      "id": "modern",
+      "label": "Modern",
+      "synonyms": ["modern", "clean", "sleek", "minimal", "contemporary", "fresh"],
+      "fontCandidates": ["Inter", "Manrope", "Montserrat", "Roboto", "Open Sans", "Raleway", "Lato", "Michroma"]
+    },
+    {
+      "id": "classic",
+      "label": "Classic",
+      "synonyms": ["classic", "elegant", "editorial", "traditional", "timeless"],
+      "fontCandidates": ["Playfair Display", "Cormorant Garamond", "Lora", "Libre Baskerville", "Crimson Text", "Gabriela"]
+    },
+    {
+      "id": "playful",
+      "label": "Playful",
+      "synonyms": ["playful", "fun", "handwritten", "casual", "quirky"],
+      "fontCandidates": ["Cookie", "Homemade Apple", "Permanent Marker", "Shadows Into Light"]
+    }
+  ],
+  "clarifications": [
+    {
+      "conceptId": "background",
+      "whenScopesPresent": ["stage", "pod"],
+      "question": "When you say background, do you mean the background behind the widget (stage) or the widget container background (pod)?"
+    },
+    {
+      "conceptId": "font",
+      "question": "Which text should I change: everything, the title, section titles, questions, or answers?"
+    }
+  ]
+}
+
