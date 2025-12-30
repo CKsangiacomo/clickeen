@@ -153,9 +153,10 @@ fi
 (
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
-    PORT=3000 PARIS_BASE_URL="${PARIS_BASE_URL:-http://localhost:3001}" PARIS_DEV_JWT="$PARIS_DEV_JWT" SANFRANCISCO_BASE_URL="${SANFRANCISCO_BASE_URL:-$SF_BASE_URL}" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    # Always prefer local Workers in local dev (avoid accidentally pointing at Cloudflare URLs from .env.local).
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   else
-    PORT=3000 PARIS_BASE_URL="${PARIS_BASE_URL:-http://localhost:3001}" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   fi
   BOB_PID=$!
   echo "[dev-up] Bob PID: $BOB_PID"

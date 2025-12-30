@@ -45,6 +45,15 @@ function looksLikeHtml(text: string): boolean {
   );
 }
 
+function normalizeAssistantText(text: string): string {
+  const candidate = (text || '').trim();
+  if (!candidate) return 'Done.';
+  if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
+  if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
+  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
+  return candidate;
+}
+
 function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
   const bodyText = args.bodyText || '';
   const parsed = args.parsed || null;
@@ -60,10 +69,7 @@ function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyTex
 
   const candidate = (parsedMessage || bodyText || args.fallback || '').trim();
   if (!candidate) return 'Copilot failed unexpectedly. Please try again.';
-  if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
-  if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
-  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
-  return candidate;
+  return normalizeAssistantText(candidate);
 }
 
 function newId(): string {
@@ -193,10 +199,51 @@ export function CopilotPane() {
     const prompt = draft.trim();
     if (!prompt) return;
 
-    // If there's a pending decision, treat the next user message as "keep" by default.
+    // If there's a pending decision, block new requests until the user explicitly keeps or undoes.
     if (pendingDecisionRef.current) {
-      session.commitLastOps();
-      clearPendingDecision();
+      const normalized = prompt.toLowerCase();
+      if (normalized === 'keep') {
+        setDraft('');
+        pushMessage({ role: 'user', text: prompt });
+        session.commitLastOps();
+        clearPendingDecision();
+        pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
+        return;
+      }
+      if (normalized === 'undo') {
+        setDraft('');
+        pushMessage({ role: 'user', text: prompt });
+        session.undoLastOps();
+        clearPendingDecision();
+        pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
+        return;
+      }
+      const nudge = 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)';
+      const last = messages[messages.length - 1];
+      if (!(last?.role === 'assistant' && last.text === nudge)) {
+        pushMessage({ role: 'assistant', text: nudge });
+      }
+      return;
+    }
+
+    let sessionId = copilotSessionId;
+    if (!sessionId && threadKey && compiled && canApplyOps && widgetType) {
+      sessionId = crypto.randomUUID();
+      session.setCopilotThread(threadKey, {
+        sessionId,
+        messages: [
+          {
+            id: newId(),
+            role: 'assistant',
+            text: initialCopilotMessage({ widgetType, config: session.instanceData }),
+            ts: Date.now(),
+          },
+        ],
+      });
+    }
+    if (!sessionId) {
+      pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
+      return;
     }
 
     setStatus('loading');
@@ -204,10 +251,6 @@ export function CopilotPane() {
     pushMessage({ role: 'user', text: prompt });
 
     try {
-      if (!copilotSessionId) {
-        throw new Error('Copilot session not ready.');
-      }
-
       const res = await fetch('/api/ai/sdr-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,12 +259,15 @@ export function CopilotPane() {
           widgetType,
           currentConfig: session.instanceData,
           controls: controlsForAi,
-          sessionId: copilotSessionId,
+          sessionId,
           instancePublicId,
         }),
       });
 
       const text = await res.text();
+      if (looksLikeHtml(text)) {
+        throw new Error(normalizeAssistantText(text));
+      }
       const parsed = safeJsonParse(text) as any;
       if (!res.ok) {
         throw new Error(
@@ -234,7 +280,7 @@ export function CopilotPane() {
         );
       }
 
-      const message = asTrimmedString(parsed?.message) || 'Done.';
+      const message = normalizeAssistantText(asTrimmedString(parsed?.message) || 'Done.');
       const cta = parsed?.cta && typeof parsed.cta === 'object' ? parsed.cta : undefined;
       const ops = Array.isArray(parsed?.ops) ? (parsed.ops as WidgetOp[]) : null;
 
