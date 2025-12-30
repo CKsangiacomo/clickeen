@@ -36,7 +36,13 @@ type WidgetCopilotResult = {
   message: string;
   ops?: WidgetOp[];
   cta?: { text: string; action: 'signup' | 'upgrade' | 'learn-more'; url?: string };
-  meta?: { intent?: 'edit' | 'explain' | 'clarify' };
+  meta?: {
+    intent?: 'edit' | 'explain' | 'clarify';
+    outcome?: 'ops_applied' | 'no_ops' | 'invalid_ops';
+    promptVersion?: string;
+    policyVersion?: string;
+    dictionaryHash?: string;
+  };
 };
 
 type OpenAIChatResponse = {
@@ -68,6 +74,33 @@ type CopilotSession = {
 };
 
 type GlobalDictionary = typeof globalDictionary;
+
+const PROMPT_VERSION = 'sdr.widget.copilot.v1@2025-12-30';
+const POLICY_VERSION = 'light_edits.v1';
+
+function fnv1aHashHex(input: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+const DICTIONARY_HASH = fnv1aHashHex(JSON.stringify(globalDictionary));
+
+function baseMeta(
+  intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
+  outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+): NonNullable<WidgetCopilotResult['meta']> {
+  return {
+    intent,
+    outcome,
+    promptVersion: PROMPT_VERSION,
+    policyVersion: POLICY_VERSION,
+    dictionaryHash: DICTIONARY_HASH,
+  };
+}
 
 function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: string } | null {
   const s = text.toLowerCase();
@@ -979,7 +1012,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     await putSession(env, session);
 
     return {
-      result: { message: msg, meta: { intent: 'clarify' } },
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
       usage: { provider: 'local', model: 'cloudflare_error_detector', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
     };
   }
@@ -1000,7 +1033,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
       ].slice(-10) as CopilotSession['turns'];
       await putSession(env, session);
       return {
-        result: { message: msg, ops, meta: { intent: 'edit' } },
+        result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
         usage: { provider: 'local', model: 'policy_confirm_all', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
       };
     }
@@ -1019,7 +1052,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session);
         return {
-          result: { message: msg, ops, meta: { intent: 'edit' } },
+          result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
           usage: { provider: 'local', model: 'policy_scope_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
@@ -1039,7 +1072,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session);
         return {
-          result: { message: msg, ops, meta: { intent: 'edit' } },
+          result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
           usage: { provider: 'local', model: 'policy_group_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
@@ -1060,7 +1093,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     ].slice(-10) as CopilotSession['turns'];
     await putSession(env, session);
 
-    return { result: { message: msg, meta: { intent: 'explain' } }, usage: { provider: 'local', model: 'router_v1', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+    return {
+      result: { message: msg, meta: baseMeta('explain', 'no_ops') },
+      usage: { provider: 'local', model: 'router_v1', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
   }
 
   const clarification = maybeClarify(globalDictionary, input);
@@ -1074,7 +1110,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     await putSession(env, session);
 
     return {
-      result: { message: clarification, meta: { intent: 'clarify' } },
+      result: { message: clarification, meta: baseMeta('clarify', 'no_ops') },
       usage: { provider: 'local', model: 'global_dictionary', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
     };
   }
@@ -1105,7 +1141,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
       ].slice(-10) as CopilotSession['turns'];
       await putSession(env, session);
 
-      return { result: { message: msg, meta: { intent: 'clarify' } }, usage: { provider: 'local', model: 'url_parser', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+      return {
+        result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+        usage: { provider: 'local', model: 'url_parser', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+      };
     }
 
     const url = unique[0] ?? null;
@@ -1121,7 +1160,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session);
 
-        return { result: { message: msg, meta: { intent: 'clarify' } }, usage: { provider: 'local', model: 'url_guard', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+        return {
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+          usage: { provider: 'local', model: 'url_guard', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        };
       }
 
       const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(8_000, Math.max(1_500, timeoutMs - 1_000)) });
@@ -1139,7 +1181,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session);
 
-        return { result: { message: msg, meta: { intent: 'clarify' } }, usage: { provider: 'local', model: 'single_page_fetch', promptTokens: 0, completionTokens: 0, latencyMs: 0 } };
+        return {
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+          usage: { provider: 'local', model: 'single_page_fetch', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        };
       }
 
       const excerptLimit = 10_000;
@@ -1316,7 +1361,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   let finalMessage = message;
   let finalOps = ops && ops.length ? ops : undefined;
   let finalCta: WidgetCopilotResult['cta'] | undefined = cta;
-  let finalIntent: WidgetCopilotResult['meta'] = { intent: finalOps ? 'edit' : 'clarify' };
+  let finalMeta: WidgetCopilotResult['meta'] = baseMeta(finalOps ? 'edit' : 'clarify', finalOps ? 'ops_applied' : 'no_ops');
 
   if (finalOps && finalOps.length) {
     const validated = validateOpsAgainstControls({ ops: finalOps, controls: input.controls });
@@ -1331,7 +1376,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         (details ? `\n\nDetails:\n${details}` : '');
       finalOps = undefined;
       finalCta = undefined;
-      finalIntent = { intent: 'clarify' };
+      finalMeta = baseMeta('clarify', 'invalid_ops');
       session.pendingPolicy = undefined;
     } else {
       const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
@@ -1339,7 +1384,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         finalMessage = policy.message;
         finalOps = undefined;
         finalCta = undefined;
-        finalIntent = { intent: 'clarify' };
+        finalMeta = baseMeta('clarify', 'no_ops');
         session.pendingPolicy = policy.pendingPolicy;
       } else {
         session.pendingPolicy = undefined;
@@ -1363,7 +1408,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     message: finalMessage,
     ...(finalOps && finalOps.length ? { ops: finalOps } : {}),
     ...(finalCta ? { cta: finalCta } : {}),
-    meta: finalIntent,
+    meta: finalMeta,
   };
 
   const usage: Usage = {

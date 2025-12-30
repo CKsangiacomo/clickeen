@@ -3,6 +3,8 @@ type Env = {
   SUPABASE_SERVICE_ROLE_KEY: string;
   PARIS_DEV_JWT: string;
   AI_GRANT_HMAC_SECRET?: string;
+  ENVIRONMENT?: string;
+  ENV_STAGE?: string;
 };
 
 type InstanceRow = {
@@ -46,6 +48,7 @@ type AIGrant = {
   trace?: {
     sessionId?: string;
     instancePublicId?: string;
+    envStage?: string;
   };
 };
 
@@ -161,12 +164,19 @@ async function handleAiGrant(req: Request, env: Env) {
   }
 
   const traceRaw = isRecord(body.trace) ? body.trace : null;
-  const trace: AIGrant['trace'] | undefined = traceRaw
-    ? {
-        sessionId: typeof traceRaw.sessionId === 'string' ? traceRaw.sessionId : undefined,
-        instancePublicId: typeof traceRaw.instancePublicId === 'string' ? traceRaw.instancePublicId : undefined,
-      }
-    : undefined;
+  const sessionId = typeof traceRaw?.sessionId === 'string' && traceRaw.sessionId.trim() ? traceRaw.sessionId.trim() : crypto.randomUUID();
+  const instancePublicId =
+    typeof traceRaw?.instancePublicId === 'string' && traceRaw.instancePublicId.trim()
+      ? traceRaw.instancePublicId.trim()
+      : undefined;
+
+  const envStage = typeof env.ENV_STAGE === 'string' && env.ENV_STAGE.trim() ? env.ENV_STAGE.trim() : 'cloud-dev';
+
+  const trace: AIGrant['trace'] = {
+    sessionId,
+    ...(instancePublicId ? { instancePublicId } : {}),
+    envStage,
+  };
 
   const budgetsRaw = isRecord(body.budgets) ? body.budgets : null;
   const requestedMaxTokens = budgetsRaw && typeof budgetsRaw.maxTokens === 'number' ? budgetsRaw.maxTokens : null;
@@ -196,12 +206,12 @@ async function handleAiGrant(req: Request, env: Env) {
   const grantPayload: AIGrant = {
     v: 1,
     iss: 'paris',
-    sub: { kind: 'anon', sessionId: trace?.sessionId || crypto.randomUUID() },
+    sub: { kind: 'anon', sessionId: trace.sessionId || crypto.randomUUID() },
     exp,
     caps: [`agent:${agentId}`],
     budgets: { maxTokens, timeoutMs, maxRequests },
     mode,
-    ...(trace ? { trace } : {}),
+    trace,
   };
 
   const secret = env.AI_GRANT_HMAC_SECRET?.trim();

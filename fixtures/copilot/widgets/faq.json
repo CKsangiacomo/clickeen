@@ -1,0 +1,23 @@
+{
+  "currentConfig": {
+    "title": "Frequently Asked Questions",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "All Questions",
+        "faqs": [
+          { "id": "q1", "question": "What is Clickeen?", "answer": "Embeddable widgets with conversational UX." },
+          { "id": "q2", "question": "Is there a free plan?", "answer": "Yes, one active widget with core features." },
+          { "id": "q3", "question": "How do I install a widget?", "answer": "Copy the embed code and paste it on your site." }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "path": "title", "kind": "text", "label": "FAQ title" },
+    { "path": "behavior.multiOpen", "kind": "boolean", "label": "Multi-open" },
+    { "path": "stage.background", "kind": "color", "label": "Stage background" },
+    { "path": "pod.background", "kind": "color", "label": "Pod background" }
+  ]
+}
+

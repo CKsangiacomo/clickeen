@@ -104,6 +104,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+  VARS+=(--var "ENV_STAGE:local")
   if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
   fi

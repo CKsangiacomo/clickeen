@@ -19,6 +19,7 @@ export type AIGrant = {
   trace?: {
     sessionId?: string;
     instancePublicId?: string;
+    envStage?: string;
   };
 };
 
@@ -80,4 +81,3 @@ export type Env = {
   SF_D1: D1Database;
   SF_R2: R2Bucket;
 };
-

@@ -1,0 +1,5 @@
+{"name":"explain multi-open","widgetType":"faq","prompt":"What does multi-open do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false}
+{"name":"clarify background scope","widgetType":"faq","prompt":"Make the background red","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"detect cloudflare error html","widgetType":"faq","prompt":"<!DOCTYPE html><div id=\"cf-wrapper\">Bad gateway <span class=\"code-label\">Error code 502</span></div>","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Cloudflare"}
+{"name":"multiple url clarification","widgetType":"faq","prompt":"Update my FAQs based on https://example.com and https://example.org","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"multiple URLs"}
+
