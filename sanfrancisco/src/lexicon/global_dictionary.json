@@ -57,6 +57,23 @@
       "id": "spacing",
       "label": "Spacing",
       "synonyms": ["padding", "spacing", "margin", "gap", "whitespace", "breathing room"]
+    },
+    {
+      "id": "language",
+      "label": "Language / Localization",
+      "synonyms": [
+        "language",
+        "localize",
+        "localise",
+        "localization",
+        "translation",
+        "translate",
+        "translated",
+        "in french",
+        "en français",
+        "français",
+        "francais"
+      ]
     }
   ],
   "intents": [
@@ -88,7 +105,10 @@
     {
       "conceptId": "font",
       "question": "Which text should I change: everything, the title, section titles, questions, or answers?"
+    },
+    {
+      "conceptId": "language",
+      "question": "When you ask for a language change, should I translate just the widget content (text), or also adjust styling (colors/fonts/layout) for that audience? We can start with content first."
     }
   ]
 }
-

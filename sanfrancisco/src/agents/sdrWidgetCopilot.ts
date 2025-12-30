@@ -329,7 +329,16 @@ function parseJsonFromModel(raw: string): unknown {
         // continue
       }
     }
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model did not return valid JSON' });
+    // Fail soft: if the model returned plain text, treat it as an assistant message and
+    // apply no ops. This avoids surfacing transient "invalid JSON" as a 502 in the UI.
+    const fallback = cleaned.trim();
+    const tooLong = fallback.length > 1200;
+    const text = (tooLong ? `${fallback.slice(0, 1200)}\n\n[truncated]` : fallback).trim();
+    return {
+      message:
+        text ||
+        'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. “translate the FAQs to French”).',
+    };
   }
 }
 
@@ -406,6 +415,18 @@ function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
 function maybeClarify(dict: GlobalDictionary, input: WidgetCopilotInput): string | null {
   const prompt = input.prompt;
 
+  // Overbroad requests tend to produce brittle edits (and are hard to map to controls deterministically).
+  // Ask the user to pick a starting area.
+  if (/\b(adjust|change|update|make)\b[\s\S]{0,30}\b(everything|all of it|the whole thing|all settings)\b/i.test(prompt)) {
+    return (
+      'That’s a broad request. What should I start with?\n' +
+      '- Content (FAQ questions/answers)\n' +
+      '- Styling (colors/fonts/layout)\n' +
+      '\n' +
+      'Reply “content” or “styling” and I’ll do that first.'
+    );
+  }
+
   const backgroundConcept = getConcept(dict, 'background');
   if (backgroundConcept && containsAny(prompt, backgroundConcept.synonyms)) {
     const hasStageBackground = input.controls.some((c) => inferScopeFromPath(c.path) === 'stage' && c.path.includes('background'));
@@ -416,6 +437,20 @@ function maybeClarify(dict: GlobalDictionary, input: WidgetCopilotInput): string
         'Do you mean the stage background or the widget container background?';
       return q;
     }
+  }
+
+  const languageConcept = getConcept(dict, 'language');
+  if (languageConcept && containsAny(prompt, languageConcept.synonyms)) {
+    return (
+      dict.clarifications.find((c) => c.conceptId === 'language')?.question ??
+      'When you ask for a language change, should I translate just the widget content (text), or also adjust styling for that audience?'
+    );
+  }
+
+  const fontConcept = getConcept(dict, 'font');
+  if (fontConcept && containsAny(prompt, fontConcept.synonyms)) {
+    const q = dict.clarifications.find((c) => c.conceptId === 'font')?.question ?? 'Which text should I change: everything, the title, questions, or answers?';
+    return q;
   }
 
   return null;
@@ -480,6 +515,10 @@ function systemPrompt(): string {
     '',
     'Output MUST be JSON, with this shape:',
     '{ "ops"?: WidgetOp[], "message": string, "cta"?: { "text": string, "action": "signup"|"upgrade"|"learn-more", "url"?: string } }',
+    '',
+    'Examples (copy this style exactly):',
+    '{"message":"Which should I change: the stage background or the widget container background?"}',
+    '{"message":"Translated the FAQ content to French.","ops":[{"op":"set","path":"title","value":"Questions fréquentes"}]}',
     '',
     'WidgetOp:',
     '{ op:"set", path:string, value:any } | { op:"insert", path:string, index:number, value:any } | { op:"remove", path:string, index:number } | { op:"move", path:string, from:number, to:number }',
