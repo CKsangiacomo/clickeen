@@ -691,10 +691,26 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     }
 
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: `Upstream error (${res.status}) ${text}`.trim() });
+      let text = '';
+      try {
+        text = await res.text();
+      } catch (err: unknown) {
+        const name = isRecord(err) ? asString((err as any).name) : null;
+        if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      }
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: 'deepseek',
+        message: `Upstream error (${res.status}) ${text}`.trim(),
+      });
     }
-    responseJson = (await res.json()) as OpenAIChatResponse;
+    try {
+      responseJson = (await res.json()) as OpenAIChatResponse;
+    } catch (err: unknown) {
+      const name = isRecord(err) ? asString((err as any).name) : null;
+      if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Invalid upstream JSON' });
+    }
   } finally {
     clearTimeout(timeout);
   }

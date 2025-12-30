@@ -179,12 +179,15 @@ async function getAiGrant(args: {
   const text = await res.text().catch(() => '');
   const payload = safeJsonParse(text) as any;
   if (!res.ok) {
-    const message =
+    let message =
       typeof payload?.message === 'string'
         ? payload.message
         : looksLikeHtml(text)
           ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${PARIS_BASE_URL.replace(/\/$/, '')}).`
           : text || `Grant request failed (${res.status})`;
+    if (looksLikeHtml(message)) {
+      message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: PARIS_BASE_URL, status: res.status, bodyText: message });
+    }
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
@@ -218,12 +221,15 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
   const text = await res.text().catch(() => '');
   const payload = safeJsonParse(text) as any;
   if (!res.ok) {
-    const message =
+    let message =
       typeof payload?.error?.message === 'string'
         ? payload.error.message
         : typeof payload?.message === 'string'
           ? payload.message
           : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl: resolved.baseUrl, status: res.status, bodyText: text });
+    if (looksLikeHtml(message)) {
+      message = summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl: resolved.baseUrl, status: res.status, bodyText: message });
+    }
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
@@ -267,7 +273,7 @@ export async function POST(req: Request) {
       mode: 'ops',
       sessionId,
       instancePublicId,
-      budgets: { maxTokens: 420, timeoutMs: 15_000, maxRequests: 1 },
+      budgets: { maxTokens: 420, timeoutMs: 25_000, maxRequests: 1 },
     });
     if (!grantRes.ok) return NextResponse.json({ error: grantRes.error, message: grantRes.message }, { status: 502 });
 

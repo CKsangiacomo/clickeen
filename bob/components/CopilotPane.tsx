@@ -32,6 +32,40 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
+function looksLikeHtml(text: string): boolean {
+  const s = (text || '').trim().slice(0, 2000).toLowerCase();
+  if (!s) return false;
+  return (
+    s.startsWith('<!doctype html') ||
+    s.startsWith('<html') ||
+    s.includes('<html') ||
+    s.includes('id="cf-wrapper"') ||
+    s.includes("id='cf-wrapper'") ||
+    s.includes('cloudflare.com/5xx-error-landing')
+  );
+}
+
+function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
+  const bodyText = args.bodyText || '';
+  const parsed = args.parsed || null;
+
+  const parsedMessage =
+    typeof parsed?.message === 'string'
+      ? parsed.message
+      : typeof parsed?.error?.message === 'string'
+        ? parsed.error.message
+        : typeof parsed?.error === 'string'
+          ? parsed.error
+          : '';
+
+  const candidate = (parsedMessage || bodyText || args.fallback || '').trim();
+  if (!candidate) return 'Copilot failed unexpectedly. Please try again.';
+  if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
+  if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
+  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
+  return candidate;
+}
+
 function newId(): string {
   return crypto.randomUUID();
 }
@@ -74,7 +108,6 @@ export function CopilotPane() {
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
-  const [error, setError] = useState<string | null>(null);
 
   const pendingDecisionRef = useRef(false);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -166,7 +199,6 @@ export function CopilotPane() {
       clearPendingDecision();
     }
 
-    setError(null);
     setStatus('loading');
     setDraft('');
     pushMessage({ role: 'user', text: prompt });
@@ -192,15 +224,14 @@ export function CopilotPane() {
       const text = await res.text();
       const parsed = safeJsonParse(text) as any;
       if (!res.ok) {
-        const message =
-          typeof parsed?.message === 'string'
-            ? parsed.message
-            : typeof parsed?.error?.message === 'string'
-              ? parsed.error.message
-              : typeof parsed?.error === 'string'
-                ? parsed.error
-                : text || `AI request failed (${res.status})`;
-        throw new Error(message);
+        throw new Error(
+          normalizeErrorMessage({
+            resStatus: res.status,
+            parsed,
+            bodyText: text,
+            fallback: `Copilot request failed (${res.status}).`,
+          }),
+        );
       }
 
       const message = asTrimmedString(parsed?.message) || 'Done.';
@@ -234,7 +265,8 @@ export function CopilotPane() {
       setStatus('idle');
     } catch (err) {
       setStatus('idle');
-      setError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      pushMessage({ role: 'assistant', text: msg || 'Copilot failed unexpectedly. Please try again.' });
     }
   };
 
@@ -367,12 +399,6 @@ export function CopilotPane() {
             <span className="diet-btn-txt__label">{status === 'loading' ? '...' : 'Send'}</span>
           </button>
         </div>
-
-        {error ? (
-          <pre className="caption" style={{ whiteSpace: 'pre-wrap', marginTop: 'var(--space-2)' }}>
-            {error}
-          </pre>
-        ) : null}
       </div>
     </section>
   );
