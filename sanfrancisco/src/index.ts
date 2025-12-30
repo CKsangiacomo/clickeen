@@ -119,6 +119,8 @@ async function ensureD1Schema(env: Env): Promise<void> {
         occurredAtMs INTEGER NOT NULL,
         runtimeEnv TEXT,
         envStage TEXT,
+        sessionId TEXT,
+        instancePublicId TEXT,
         agentId TEXT NOT NULL,
         widgetType TEXT,
         intent TEXT,
@@ -137,9 +139,21 @@ async function ensureD1Schema(env: Env): Promise<void> {
         latencyMs INTEGER
       )`,
     ).run();
+
+    const maybeAddColumn = async (sql: string) => {
+      try {
+        await env.SF_D1.prepare(sql).run();
+      } catch {
+        // best-effort migration; ignore if the column already exists
+      }
+    };
+    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN sessionId TEXT`);
+    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN instancePublicId TEXT`);
+
     await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent ON copilot_events_v1(day, agentId)`).run();
     await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage ON copilot_events_v1(day, envStage)`).run();
     await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_widget ON copilot_events_v1(day, widgetType)`).run();
+    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_session ON copilot_events_v1(day, sessionId)`).run();
     await env.SF_D1.prepare(
       `CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome ON copilot_events_v1(day, intent, outcome)`,
     ).run();
@@ -168,6 +182,8 @@ async function ensureD1Schema(env: Env): Promise<void> {
 async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
   const runtimeEnv = asTrimmedString(env.ENVIRONMENT) ?? 'unknown';
   const envStage = isRecord(e.trace) ? asTrimmedString((e.trace as any).envStage) : null;
+  const sessionId = isRecord(e.trace) ? asTrimmedString((e.trace as any).sessionId) : null;
+  const instancePublicId = isRecord(e.trace) ? asTrimmedString((e.trace as any).instancePublicId) : null;
 
   const day = toIsoDay(e.occurredAtMs);
   const agentId = e.agentId;
@@ -234,8 +250,8 @@ async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, provider, model, latencyMs)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, provider, model, latencyMs)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         e.requestId,
@@ -243,6 +259,8 @@ async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
         e.occurredAtMs,
         runtimeEnv,
         envStage,
+        sessionId,
+        instancePublicId,
         agentId,
         widgetType,
         intent,
