@@ -58,6 +58,68 @@ function summarizeUpstreamError(args: { serviceName: string; baseUrl: string; st
   return args.bodyText || `${args.serviceName} error (${args.status})`;
 }
 
+type UrlResolution = { baseUrl: string; resolvedAtMs: number; source: 'env' | 'fallback' };
+
+const SANFRANCISCO_FALLBACKS =
+  process.env.NODE_ENV === 'development'
+    ? ['http://localhost:8787', 'https://sanfrancisco.dev.clickeen.com']
+    : ['https://sanfrancisco.dev.clickeen.com'];
+
+let cachedSanFrancisco: UrlResolution | null = null;
+
+function uniqStrings(values: Array<string | undefined | null>): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const v of values) {
+    const s = typeof v === 'string' ? v.trim() : '';
+    if (!s) continue;
+    const normalized = s.replace(/\/+$/, '');
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized);
+  }
+  return out;
+}
+
+async function probeHealthz(baseUrl: string, timeoutMs = 800): Promise<boolean> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/healthz`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { accept: 'application/json, text/plain;q=0.9, */*;q=0.1' },
+    });
+    const text = await res.text().catch(() => '');
+    if (!res.ok) return false;
+    if (looksLikeHtml(text)) return false;
+    const parsed = safeJsonParse(text) as any;
+    if (parsed && typeof parsed === 'object' && parsed.ok === true) return true;
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveSanFranciscoBaseUrl(): Promise<UrlResolution | null> {
+  const now = Date.now();
+  if (cachedSanFrancisco && now - cachedSanFrancisco.resolvedAtMs < 5 * 60_000) return cachedSanFrancisco;
+
+  const envNormalized = (SANFRANCISCO_BASE_URL || '').trim().replace(/\/+$/, '');
+  const candidates = uniqStrings([SANFRANCISCO_BASE_URL, ...SANFRANCISCO_FALLBACKS]);
+
+  for (const baseUrl of candidates) {
+    if (await probeHealthz(baseUrl)) {
+      cachedSanFrancisco = { baseUrl, resolvedAtMs: now, source: baseUrl === envNormalized ? 'env' : 'fallback' };
+      return cachedSanFrancisco;
+    }
+  }
+
+  return null;
+}
+
 function getClientKey(req: Request) {
   const forwarded = req.headers.get('x-forwarded-for') || '';
   const ip = forwarded.split(',')[0]?.trim();
@@ -132,7 +194,10 @@ async function getAiGrant(args: {
 }
 
 async function executeOnSanFrancisco(args: { grant: string; agentId: string; input: unknown }) {
-  const url = `${SANFRANCISCO_BASE_URL.replace(/\/$/, '')}/v1/execute`;
+  const resolved = await resolveSanFranciscoBaseUrl();
+  if (!resolved) return { ok: false as const, error: 'AI_NOT_CONFIGURED', message: 'SanFrancisco is not reachable' };
+
+  const url = `${resolved.baseUrl.replace(/\/$/, '')}/v1/execute`;
   let res: Response;
   try {
     res = await fetch(url, {
@@ -158,7 +223,7 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
         ? payload.error.message
         : typeof payload?.message === 'string'
           ? payload.message
-          : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl: SANFRANCISCO_BASE_URL, status: res.status, bodyText: text });
+          : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl: resolved.baseUrl, status: res.status, bodyText: text });
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
@@ -167,8 +232,9 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
 
 export async function POST(req: Request) {
   try {
-    if (!SANFRANCISCO_BASE_URL) {
-      return NextResponse.json({ error: 'AI_NOT_CONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
+    const resolved = await resolveSanFranciscoBaseUrl();
+    if (!resolved) {
+      return NextResponse.json({ error: 'AI_NOT_CONFIGURED', message: 'SanFrancisco is not reachable' }, { status: 503 });
     }
 
     const limited = checkRateLimit(req);
