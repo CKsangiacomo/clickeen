@@ -240,14 +240,16 @@ export async function POST(req: Request) {
   try {
     const resolved = await resolveSanFranciscoBaseUrl();
     if (!resolved) {
-      return NextResponse.json({ error: 'AI_NOT_CONFIGURED', message: 'SanFrancisco is not reachable' }, { status: 503 });
+      // Return 200 so the UI can display a friendly message without triggering noisy console "Failed to load resource" logs.
+      return NextResponse.json({ message: 'Copilot is temporarily unavailable (SanFrancisco is not reachable). Please try again in a moment.' }, { status: 200 });
     }
 
     const limited = checkRateLimit(req);
     if (limited) {
+      // Return 200 so the UI can show this inline (no red console errors).
       return NextResponse.json(
-        { error: 'RATE_LIMIT', message: 'Too many requests. Please wait and try again.', retryAfterMs: limited.retryAfterMs },
-        { status: 429 },
+        { message: 'Too many Copilot requests. Please wait a moment and try again.' },
+        { status: 200, headers: { 'x-retry-after-ms': String(limited.retryAfterMs) } },
       );
     }
 
@@ -275,7 +277,12 @@ export async function POST(req: Request) {
       instancePublicId,
       budgets: { maxTokens: 420, timeoutMs: 25_000, maxRequests: 1 },
     });
-    if (!grantRes.ok) return NextResponse.json({ error: grantRes.error, message: grantRes.message }, { status: 502 });
+    if (!grantRes.ok) {
+      return NextResponse.json(
+        { message: grantRes.message || 'Copilot is temporarily unavailable. Please try again.' },
+        { status: 200 },
+      );
+    }
 
     const executed = await executeOnSanFrancisco({
       grant: grantRes.value,
@@ -288,11 +295,20 @@ export async function POST(req: Request) {
         sessionId,
       },
     });
-    if (!executed.ok) return NextResponse.json({ error: executed.error, message: executed.message }, { status: 502 });
+    if (!executed.ok) {
+      return NextResponse.json(
+        { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
+        { status: 200 },
+      );
+    }
 
     return NextResponse.json(executed.value ?? null);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: 'BAD_REQUEST', message }, { status: 400 });
+    // Return 200 so UI can surface the message inline without a console error spam.
+    return NextResponse.json(
+      { message: message || 'Copilot failed unexpectedly. Please try again.' },
+      { status: 200 },
+    );
   }
 }
