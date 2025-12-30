@@ -1,5 +1,14 @@
 {"name":"explain multi-open","widgetType":"faq","prompt":"What does multi-open do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false}
+{"name":"explain capabilities","widgetType":"faq","prompt":"What can you do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"editable controls"}
+{"name":"explain accordion","widgetType":"faq","prompt":"What is an accordion?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"collapsible"}
 {"name":"clarify background scope","widgetType":"faq","prompt":"Make the background red","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify language","widgetType":"faq","prompt":"Can you change the FAQs in French?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"translate just the widget content"}
+{"name":"clarify overbroad everything","widgetType":"faq","prompt":"I'm a gondolier in Venice and my customers are French — can you adjust everything for that?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Reply “content” or “styling”"}
 {"name":"detect cloudflare error html","widgetType":"faq","prompt":"<!DOCTYPE html><div id=\"cf-wrapper\">Bad gateway <span class=\"code-label\">Error code 502</span></div>","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Cloudflare"}
 {"name":"multiple url clarification","widgetType":"faq","prompt":"Update my FAQs based on https://example.com and https://example.org","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"multiple URLs"}
-
+{"name":"url blocked private ip","widgetType":"faq","prompt":"Update my FAQs based on http://127.0.0.1","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked userinfo","widgetType":"faq","prompt":"Update my FAQs based on https://user:pass@example.com","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"userinfo_not_allowed"}
+{"name":"url blocked port","widgetType":"faq","prompt":"Update my FAQs based on https://example.com:8080","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"port_not_allowed"}
+{"name":"explain countdown timer mode","widgetType":"countdown","prompt":"What does timer mode do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Allowed values include"}
+{"name":"clarify countdown background scope","widgetType":"countdown","prompt":"Make the background dark","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify countdown font target","widgetType":"countdown","prompt":"Change the fonts to something more modern","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}

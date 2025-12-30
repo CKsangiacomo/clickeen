@@ -122,6 +122,7 @@ function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: 
 
 function extractUrlCandidates(text: string): string[] {
   const urls = new Set<string>();
+  const httpRanges: Array<{ start: number; end: number }> = [];
 
   const add = (raw: string) => {
     const trimmed = raw.trim().replace(/[),.;]+$/g, '');
@@ -129,10 +130,18 @@ function extractUrlCandidates(text: string): string[] {
     urls.add(trimmed);
   };
 
-  for (const m of text.matchAll(/\bhttps?:\/\/[^\s<>"')]+/gi)) add(m[0]);
+  for (const m of text.matchAll(/\bhttps?:\/\/[^\s<>"')]+/gi)) {
+    add(m[0]);
+    if (typeof m.index === 'number') httpRanges.push({ start: m.index, end: m.index + m[0].length });
+  }
+
+  const isInsideHttpUrl = (index: number) => httpRanges.some((r) => index >= r.start && index < r.end);
 
   // Bare domains (optionally with a path). Avoid emails.
-  for (const m of text.matchAll(/\b(?![\w.+-]+@)([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/gi)) add(m[0]);
+  for (const m of text.matchAll(/\b(?![\w.+-]+@)([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/gi)) {
+    if (typeof m.index === 'number' && isInsideHttpUrl(m.index)) continue;
+    add(m[0]);
+  }
 
   return Array.from(urls);
 }

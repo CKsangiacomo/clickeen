@@ -64,6 +64,10 @@ async function main() {
   console.log(`[eval-copilot] Prompts: ${prompts.length}`);
 
   let failures = 0;
+  let successes = 0;
+  const intents = new Map();
+  const outcomes = new Map();
+  let hadOps = 0;
   for (let i = 0; i < prompts.length; i++) {
     const p = prompts[i];
     const name = asTrimmedString(p.name) || `case_${i + 1}`;
@@ -105,6 +109,7 @@ async function main() {
       assert(asTrimmedString(meta.dictionaryHash), 'meta.dictionaryHash missing');
 
       const ops = Array.isArray(payload.ops) ? payload.ops : null;
+      if (ops && ops.length > 0) hadOps += 1;
       if (p.expectOps === true) {
         assert(ops && ops.length > 0, 'Expected ops, got none');
       } else if (p.expectOps === false) {
@@ -120,11 +125,23 @@ async function main() {
       }
 
       console.log(`${label} ✅`);
+      successes++;
+      intents.set(intent, (intents.get(intent) || 0) + 1);
+      outcomes.set(outcome, (outcomes.get(outcome) || 0) + 1);
     } catch (err) {
       failures++;
       console.error(`${label} ❌ ${err instanceof Error ? err.message : String(err)}`);
     }
   }
+
+  const total = prompts.length;
+  const passRate = total > 0 ? (successes / total) * 100 : 0;
+  console.log('');
+  console.log('[eval-copilot] Summary');
+  console.log(`  Passed: ${successes}/${total} (${passRate.toFixed(1)}%)`);
+  console.log(`  Ops returned: ${hadOps}/${total}`);
+  console.log('  Intents:', Object.fromEntries([...intents.entries()].sort((a, b) => String(a[0]).localeCompare(String(b[0])))));
+  console.log('  Outcomes:', Object.fromEntries([...outcomes.entries()].sort((a, b) => String(a[0]).localeCompare(String(b[0])))));
 
   if (failures > 0) {
     console.error(`[eval-copilot] Failed: ${failures}/${prompts.length}`);
@@ -137,4 +154,3 @@ main().catch((err) => {
   console.error('[eval-copilot] Unhandled error', err);
   process.exit(1);
 });
-

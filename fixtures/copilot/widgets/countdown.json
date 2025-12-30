@@ -1,0 +1,35 @@
+{
+  "currentConfig": {
+    "timer": {
+      "mode": "personal",
+      "heading": "Get 50% off before it's too late ⏰"
+    },
+    "stage": {
+      "background": "var(--color-system-gray-5)"
+    },
+    "pod": {
+      "background": "transparent"
+    },
+    "settings": {
+      "language": "en-US"
+    }
+  },
+  "controls": [
+    {
+      "path": "timer.mode",
+      "kind": "enum",
+      "label": "Timer mode",
+      "enumValues": ["date", "personal", "number"]
+    },
+    { "path": "timer.heading", "kind": "text", "label": "Heading" },
+    { "path": "stage.background", "kind": "color", "label": "Stage background" },
+    { "path": "pod.background", "kind": "color", "label": "Pod background" },
+    {
+      "path": "settings.language",
+      "kind": "enum",
+      "label": "Language",
+      "enumValues": ["en-US", "es", "fr", "de", "it", "pt", "ja", "zh"]
+    }
+  ]
+}
+

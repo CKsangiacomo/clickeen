@@ -137,7 +137,7 @@ export function CopilotPane() {
   };
 
   const reportOutcome = async (args: {
-    event: 'ux_keep' | 'ux_undo';
+    event: 'ux_keep' | 'ux_undo' | 'cta_clicked';
     requestId: string;
     sessionId: string;
     timeToDecisionMs?: number;
@@ -348,7 +348,7 @@ export function CopilotPane() {
         return;
       }
 
-      pushMessage({ role: 'assistant', text: message, cta });
+      pushMessage({ role: 'assistant', text: message, cta, ...(requestId ? { requestId } : {}) });
       setStatus('idle');
     } catch (err) {
       setStatus('idle');
@@ -395,20 +395,27 @@ export function CopilotPane() {
                   {m.text}
                 </div>
 
-            {m.cta?.text ? (
-              <div style={{ marginTop: 'var(--space-1)' }}>
-                <a
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="primary"
-                  href={m.cta.url || '#'}
-                  target={m.cta.url ? '_blank' : undefined}
-                  rel={m.cta.url ? 'noreferrer' : undefined}
-                >
-                  <span className="diet-btn-txt__label">{m.cta.text}</span>
-                </a>
-              </div>
-            ) : null}
+	            {m.cta?.text ? (
+	              <div style={{ marginTop: 'var(--space-1)' }}>
+	                <a
+	                  className="diet-btn-txt"
+	                  data-size="md"
+	                  data-variant="primary"
+	                  href={m.cta.url || '#'}
+	                  target={m.cta.url ? '_blank' : undefined}
+	                  rel={m.cta.url ? 'noreferrer' : undefined}
+	                  onClick={() => {
+	                    void reportOutcome({
+	                      event: 'cta_clicked',
+	                      requestId: m.requestId || '',
+	                      sessionId: copilotSessionId,
+	                    });
+	                  }}
+	                >
+	                  <span className="diet-btn-txt__label">{m.cta.text}</span>
+	                </a>
+	              </div>
+	            ) : null}
 
             {m.hasPendingDecision ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
