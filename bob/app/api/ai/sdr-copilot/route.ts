@@ -275,7 +275,7 @@ export async function POST(req: Request) {
       mode: 'ops',
       sessionId,
       instancePublicId,
-      budgets: { maxTokens: 420, timeoutMs: 25_000, maxRequests: 1 },
+      budgets: { maxTokens: 420, timeoutMs: 25_000, maxRequests: 2 },
     });
     if (!grantRes.ok) {
       return NextResponse.json(
