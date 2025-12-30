@@ -37,6 +37,27 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
+function looksLikeHtml(text: string): boolean {
+  const s = (text || '').trim().slice(0, 2000).toLowerCase();
+  if (!s) return false;
+  return (
+    s.startsWith('<!doctype html') ||
+    s.startsWith('<html') ||
+    s.includes('<html') ||
+    s.includes('id="cf-wrapper"') ||
+    s.includes("id='cf-wrapper'") ||
+    s.includes('cloudflare.com/5xx-error-landing')
+  );
+}
+
+function summarizeUpstreamError(args: { serviceName: string; baseUrl: string; status: number; bodyText: string }): string {
+  const base = args.baseUrl ? args.baseUrl.replace(/\/$/, '') : '(missing)';
+  if (looksLikeHtml(args.bodyText)) {
+    return `${args.serviceName} returned an HTML error page (HTTP ${args.status}). This usually means ${args.serviceName} is down or ${args.serviceName.toLowerCase()} base URL is misconfigured. Check that ${args.serviceName.toUpperCase()}_BASE_URL points to the correct service (currently: ${base}).`;
+  }
+  return args.bodyText || `${args.serviceName} error (${args.status})`;
+}
+
 function getClientKey(req: Request) {
   const forwarded = req.headers.get('x-forwarded-for') || '';
   const ip = forwarded.split(',')[0]?.trim();
@@ -99,7 +120,9 @@ async function getAiGrant(args: {
     const message =
       typeof payload?.message === 'string'
         ? payload.message
-        : text || `Grant request failed (${res.status})`;
+        : looksLikeHtml(text)
+          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${PARIS_BASE_URL.replace(/\/$/, '')}).`
+          : text || `Grant request failed (${res.status})`;
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
@@ -135,7 +158,7 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
         ? payload.error.message
         : typeof payload?.message === 'string'
           ? payload.message
-          : text || `SanFrancisco error (${res.status})`;
+          : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl: SANFRANCISCO_BASE_URL, status: res.status, bodyText: text });
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
@@ -201,4 +224,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'BAD_REQUEST', message }, { status: 400 });
   }
 }
-
