@@ -78,8 +78,8 @@ for p in 3000 3001 3002 4000 5173; do
   fi
 done
 
-echo "[dev-up] Cleaning Bob build artifacts (.next) to avoid stale chunk mismatches"
-rm -rf "$ROOT_DIR/bob/.next" || true
+echo "[dev-up] Cleaning Bob dev artifacts (.next-dev) to avoid stale chunk mismatches"
+rm -rf "$ROOT_DIR/bob/.next-dev" || true
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 TOKYO_URL=${NEXT_PUBLIC_TOKYO_URL:-$TOKYO_URL}
@@ -92,10 +92,10 @@ echo "[dev-up] Starting Tokyo CDN stub on 4000"
   echo "[dev-up] Tokyo PID: $TOKYO_PID"
 )
 for i in {1..30}; do
-  if curl -sI "http://localhost:4000/healthz" >/dev/null 2>&1; then break; fi
+  if curl -sf "http://localhost:4000/healthz" >/dev/null 2>&1; then break; fi
   sleep 0.5
 done
-if ! curl -sI "http://localhost:4000/healthz" >/dev/null 2>&1; then
+if ! curl -sf "http://localhost:4000/healthz" >/dev/null 2>&1; then
   echo "[dev-up] Timeout waiting for Tokyo @ http://localhost:4000/healthz"
   exit 1
 fi
@@ -115,10 +115,10 @@ echo "[dev-up] Starting Paris Worker (3001)"
   echo "[dev-up] Paris PID: $PARIS_PID"
 )
 for i in {1..30}; do
-  if curl -sI "http://localhost:3001/api/healthz" >/dev/null 2>&1; then break; fi
+  if curl -sf "http://localhost:3001/api/healthz" >/dev/null 2>&1; then break; fi
   sleep 0.5
 done
-if ! curl -sI "http://localhost:3001/api/healthz" >/dev/null 2>&1; then
+if ! curl -sf "http://localhost:3001/api/healthz" >/dev/null 2>&1; then
 echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
@@ -140,10 +140,10 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     echo "[dev-up] SanFrancisco PID: $SF_PID"
   )
   for i in {1..30}; do
-    if curl -sI "http://localhost:3002/healthz" >/dev/null 2>&1; then break; fi
+    if curl -sf "http://localhost:3002/healthz" >/dev/null 2>&1; then break; fi
     sleep 0.5
   done
-  if ! curl -sI "http://localhost:3002/healthz" >/dev/null 2>&1; then
+  if ! curl -sf "http://localhost:3002/healthz" >/dev/null 2>&1; then
     echo "[dev-up] Timeout waiting for SanFrancisco @ http://localhost:3002/healthz"
     exit 1
   fi
@@ -161,10 +161,10 @@ fi
   echo "[dev-up] Bob PID: $BOB_PID"
 )
 for i in {1..30}; do
-  if curl -sI "http://localhost:3000" >/dev/null 2>&1; then break; fi
+  if curl -sf "http://localhost:3000" >/dev/null 2>&1; then break; fi
   sleep 0.5
 done
-if ! curl -sI "http://localhost:3000" >/dev/null 2>&1; then
+if ! curl -sf "http://localhost:3000" >/dev/null 2>&1; then
   echo "[dev-up] Timeout waiting for Bob @ http://localhost:3000"
   exit 1
 fi
@@ -176,10 +176,10 @@ fi
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
 )
 for i in {1..30}; do
-  if curl -sI "http://localhost:5173" >/dev/null 2>&1; then break; fi
+  if curl -sf "http://localhost:5173" >/dev/null 2>&1; then break; fi
   sleep 0.5
 done
-if ! curl -sI "http://localhost:5173" >/dev/null 2>&1; then
+if ! curl -sf "http://localhost:5173" >/dev/null 2>&1; then
   echo "[dev-up] Timeout waiting for DevStudio @ http://localhost:5173"
   exit 1
 fi

@@ -88,7 +88,7 @@ export default {
     const url = new URL(request.url);
 
     try {
-      if (request.method === 'GET' && url.pathname === '/healthz') return okHealth(env);
+      if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });

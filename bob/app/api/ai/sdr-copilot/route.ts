@@ -62,7 +62,7 @@ type UrlResolution = { baseUrl: string; resolvedAtMs: number; source: 'env' | 'f
 
 const SANFRANCISCO_FALLBACKS =
   process.env.NODE_ENV === 'development'
-    ? ['http://localhost:8787', 'https://sanfrancisco.dev.clickeen.com']
+    ? ['http://localhost:3002', 'http://localhost:8787', 'https://sanfrancisco.dev.clickeen.com']
     : ['https://sanfrancisco.dev.clickeen.com'];
 
 let cachedSanFrancisco: UrlResolution | null = null;
