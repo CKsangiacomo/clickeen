@@ -41,6 +41,25 @@ export type ExecuteResponse = {
   usage: Usage;
 };
 
+export type CopilotOutcomeEvent =
+  | 'signup_started'
+  | 'signup_completed'
+  | 'upgrade_clicked'
+  | 'upgrade_completed'
+  | 'cta_clicked'
+  | 'ux_keep'
+  | 'ux_undo';
+
+export type OutcomeAttachRequest = {
+  requestId: string;
+  sessionId: string;
+  event: CopilotOutcomeEvent;
+  occurredAtMs: number;
+  timeToDecisionMs?: number;
+  accountIdHash?: string;
+  workspaceIdHash?: string;
+};
+
 export type Usage = {
   provider: string;
   model: string;

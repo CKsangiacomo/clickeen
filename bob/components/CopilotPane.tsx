@@ -128,6 +128,38 @@ export function CopilotPane() {
   const messages = thread?.messages ?? [];
   const copilotSessionId = thread?.sessionId ?? '';
 
+  const getPendingDecisionMessage = (): CopilotMessage | null => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant' && msg.hasPendingDecision) return msg;
+    }
+    return null;
+  };
+
+  const reportOutcome = async (args: {
+    event: 'ux_keep' | 'ux_undo';
+    requestId: string;
+    sessionId: string;
+    timeToDecisionMs?: number;
+  }) => {
+    if (!args.requestId || !args.sessionId) return;
+    try {
+      await fetch('/api/ai/outcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: args.requestId,
+          sessionId: args.sessionId,
+          event: args.event,
+          occurredAtMs: Date.now(),
+          ...(typeof args.timeToDecisionMs === 'number' ? { timeToDecisionMs: args.timeToDecisionMs } : {}),
+        }),
+      });
+    } catch {
+      // best-effort
+    }
+  };
+
   useEffect(() => {
     if (!threadKey || !compiled || !canApplyOps || !widgetType) return;
     if (thread && thread.messages.length > 0) return;
@@ -201,11 +233,17 @@ export function CopilotPane() {
 
     // If there's a pending decision, block new requests until the user explicitly keeps or undoes.
     if (pendingDecisionRef.current) {
+      const pending = getPendingDecisionMessage();
+      const pendingRequestId = pending?.requestId || '';
+      const pendingTs = pending?.ts;
+      const timeToDecisionMs = typeof pendingTs === 'number' ? Math.max(0, Date.now() - pendingTs) : undefined;
+
       const normalized = prompt.toLowerCase();
       if (normalized === 'keep') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
         session.commitLastOps();
+        void reportOutcome({ event: 'ux_keep', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
         return;
@@ -214,6 +252,7 @@ export function CopilotPane() {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
         session.undoLastOps();
+        void reportOutcome({ event: 'ux_undo', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
         return;
@@ -283,6 +322,7 @@ export function CopilotPane() {
       const message = normalizeAssistantText(asTrimmedString(parsed?.message) || 'Done.');
       const cta = parsed?.cta && typeof parsed.cta === 'object' ? parsed.cta : undefined;
       const ops = Array.isArray(parsed?.ops) ? (parsed.ops as WidgetOp[]) : null;
+      const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
 
       if (ops && ops.length > 0) {
         const applied = session.applyOps(ops);
@@ -302,6 +342,7 @@ export function CopilotPane() {
           text: `${message}\n\nWant to keep this change?`,
           cta,
           hasPendingDecision: true,
+          ...(requestId ? { requestId } : {}),
         });
         setStatus('idle');
         return;
@@ -378,6 +419,12 @@ export function CopilotPane() {
                   type="button"
                   onClick={() => {
                     session.commitLastOps();
+                    void reportOutcome({
+                      event: 'ux_keep',
+                      requestId: m.requestId || '',
+                      sessionId: copilotSessionId,
+                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                    });
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
                   }}
@@ -391,6 +438,12 @@ export function CopilotPane() {
                   type="button"
                   onClick={() => {
                     session.undoLastOps();
+                    void reportOutcome({
+                      event: 'ux_undo',
+                      requestId: m.requestId || '',
+                      sessionId: copilotSessionId,
+                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                    });
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
                   }}

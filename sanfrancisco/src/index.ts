@@ -1,4 +1,4 @@
-import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent } from './types';
+import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent, OutcomeAttachRequest } from './types';
 import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
 import { executeSdrCopilot } from './agents/sdrCopilot';
@@ -38,6 +38,77 @@ function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
   return 'content';
 }
 
+const OUTCOME_EVENTS = new Set([
+  'signup_started',
+  'signup_completed',
+  'upgrade_clicked',
+  'upgrade_completed',
+  'cta_clicked',
+  'ux_keep',
+  'ux_undo',
+]);
+
+function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
+  if (!isRecord(value)) return false;
+  const requestId = asTrimmedString((value as any).requestId);
+  const sessionId = asTrimmedString((value as any).sessionId);
+  const event = asTrimmedString((value as any).event);
+  const occurredAtMs = (value as any).occurredAtMs;
+  const timeToDecisionMs = (value as any).timeToDecisionMs;
+  const accountIdHash = (value as any).accountIdHash;
+  const workspaceIdHash = (value as any).workspaceIdHash;
+
+  if (!requestId) return false;
+  if (!sessionId) return false;
+  if (!event || !OUTCOME_EVENTS.has(event)) return false;
+  if (typeof occurredAtMs !== 'number' || !Number.isFinite(occurredAtMs)) return false;
+
+  if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0)) {
+    return false;
+  }
+  if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
+  if (workspaceIdHash !== undefined && (typeof workspaceIdHash !== 'string' || !workspaceIdHash.trim())) return false;
+
+  return true;
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  if (aBytes.length !== bBytes.length) return false;
+  let out = 0;
+  for (let i = 0; i < aBytes.length; i++) out |= aBytes[i] ^ bBytes[i];
+  return out === 0;
+}
+
+async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return base64UrlEncodeBytes(new Uint8Array(sig));
+}
+
+async function verifyOutcomeSignature(args: { request: Request; env: Env; bodyText: string }): Promise<void> {
+  const provided = asTrimmedString(args.request.headers.get('x-paris-signature'));
+  if (!provided) {
+    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing signature' });
+  }
+  const secret = asTrimmedString(args.env.AI_GRANT_HMAC_SECRET);
+  if (!secret) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing AI_GRANT_HMAC_SECRET' });
+  }
+  const expected = await hmacSha256Base64Url(secret, `outcome.v1.${args.bodyText}`);
+  if (!timingSafeEqual(provided, expected)) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid signature' });
+  }
+}
+
 async function ensureD1Schema(env: Env): Promise<void> {
   if (d1SchemaReady) return;
   try {
@@ -72,6 +143,22 @@ async function ensureD1Schema(env: Env): Promise<void> {
     await env.SF_D1.prepare(
       `CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome ON copilot_events_v1(day, intent, outcome)`,
     ).run();
+
+    await env.SF_D1.prepare(
+      `CREATE TABLE IF NOT EXISTS copilot_outcomes_v1 (
+        requestId TEXT NOT NULL,
+        event TEXT NOT NULL,
+        day TEXT NOT NULL,
+        occurredAtMs INTEGER NOT NULL,
+        sessionId TEXT NOT NULL,
+        timeToDecisionMs INTEGER,
+        accountIdHash TEXT,
+        workspaceIdHash TEXT,
+        PRIMARY KEY (requestId, event)
+      )`,
+    ).run();
+    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_day_event ON copilot_outcomes_v1(day, event)`).run();
+    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_request ON copilot_outcomes_v1(requestId)`).run();
     d1SchemaReady = true;
   } catch (err) {
     console.error('[sanfrancisco] ensureD1Schema failed', err);
@@ -253,6 +340,53 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
   }
 }
 
+async function handleOutcome(request: Request, env: Env): Promise<Response> {
+  const bodyText = await request.text();
+  await verifyOutcomeSignature({ request, env, bodyText });
+
+  let body: unknown;
+  try {
+    body = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  if (!isOutcomeAttachRequest(body)) {
+    throw new HttpError(400, {
+      code: 'BAD_REQUEST',
+      message: 'Invalid request',
+      issues: [{ path: '', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
+    });
+  }
+
+  await ensureD1Schema(env);
+  const day = toIsoDay(body.occurredAtMs);
+
+  try {
+    await env.SF_D1.prepare(
+      `INSERT OR REPLACE INTO copilot_outcomes_v1
+      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash, workspaceIdHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        body.requestId,
+        body.event,
+        day,
+        body.occurredAtMs,
+        body.sessionId,
+        body.timeToDecisionMs ?? null,
+        body.accountIdHash ?? null,
+        body.workspaceIdHash ?? null,
+      )
+      .run();
+  } catch (err) {
+    console.error('[sanfrancisco] outcome insert failed', err);
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Failed to persist outcome' });
+  }
+
+  return noStore(json({ ok: true }));
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -260,6 +394,7 @@ export default {
     try {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
+      if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {

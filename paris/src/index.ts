@@ -3,6 +3,7 @@ type Env = {
   SUPABASE_SERVICE_ROLE_KEY: string;
   PARIS_DEV_JWT: string;
   AI_GRANT_HMAC_SECRET?: string;
+  SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
 };
@@ -102,6 +103,10 @@ async function hmacSha256(secret: string, message: string): Promise<Uint8Array> 
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
   return new Uint8Array(sig);
+}
+
+async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
+  return base64UrlEncodeBytes(await hmacSha256(secret, message));
 }
 
 async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
@@ -221,6 +226,97 @@ async function handleAiGrant(req: Request, env: Env) {
 
   const grant = await mintGrant(grantPayload, secret);
   return json({ grant, exp, agentId });
+}
+
+const OUTCOME_EVENTS = new Set([
+  'signup_started',
+  'signup_completed',
+  'upgrade_clicked',
+  'upgrade_completed',
+  'cta_clicked',
+  'ux_keep',
+  'ux_undo',
+]);
+
+function asTrimmedString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const s = value.trim();
+  return s ? s : null;
+}
+
+function isOutcomeAttachPayload(value: unknown): value is {
+  requestId: string;
+  sessionId: string;
+  event: string;
+  occurredAtMs: number;
+  timeToDecisionMs?: number;
+  accountIdHash?: string;
+  workspaceIdHash?: string;
+} {
+  if (!isRecord(value)) return false;
+  const requestId = asTrimmedString((value as any).requestId);
+  const sessionId = asTrimmedString((value as any).sessionId);
+  const event = asTrimmedString((value as any).event);
+  const occurredAtMs = (value as any).occurredAtMs;
+  const timeToDecisionMs = (value as any).timeToDecisionMs;
+  const accountIdHash = (value as any).accountIdHash;
+  const workspaceIdHash = (value as any).workspaceIdHash;
+
+  if (!requestId) return false;
+  if (!sessionId) return false;
+  if (!event || !OUTCOME_EVENTS.has(event)) return false;
+  if (typeof occurredAtMs !== 'number' || !Number.isFinite(occurredAtMs)) return false;
+  if (timeToDecisionMs !== undefined && (typeof timeToDecisionMs !== 'number' || !Number.isFinite(timeToDecisionMs) || timeToDecisionMs < 0)) return false;
+  if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
+  if (workspaceIdHash !== undefined && (typeof workspaceIdHash !== 'string' || !workspaceIdHash.trim())) return false;
+  return true;
+}
+
+async function handleAiOutcome(req: Request, env: Env) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+
+  if (!isOutcomeAttachPayload(body)) {
+    return json([{ path: 'body', message: 'expected { requestId, sessionId, event, occurredAtMs }' }], { status: 422 });
+  }
+
+  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
+  if (!sfBaseUrl) {
+    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
+  }
+
+  const secret = env.AI_GRANT_HMAC_SECRET?.trim();
+  if (!secret) {
+    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+  }
+
+  const bodyText = JSON.stringify(body);
+  const signature = await hmacSha256Base64Url(secret, `outcome.v1.${bodyText}`);
+  const outcomeUrl = new URL('/v1/outcome', sfBaseUrl).toString();
+
+  const res = await fetch(outcomeUrl, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-paris-signature': signature,
+    },
+    body: bodyText,
+  });
+
+  if (!res.ok) {
+    const details = await readJson(res);
+    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details }, { status: 502 });
+  }
+
+  const data = await readJson(res);
+  return json({ ok: true, upstream: data });
 }
 
 async function handleInstances(req: Request, env: Env) {
@@ -412,6 +508,11 @@ export default {
       if (pathname === '/api/ai/grant') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleAiGrant(req, env);
+      }
+
+      if (pathname === '/api/ai/outcome') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleAiOutcome(req, env);
       }
 
       if (pathname === '/api/instances') {

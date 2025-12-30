@@ -63,6 +63,11 @@ if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] AI_GRANT_HMAC_SECRET not set; AI copilots will be disabled in local dev."
 fi
 
+SF_BASE_URL=""
+if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
+  SF_BASE_URL="http://localhost:3002"
+fi
+
 echo "[dev-up] Building Dieter directly into tokyo/dieter"
 (
   cd "$ROOT_DIR"
@@ -105,6 +110,9 @@ echo "[dev-up] Starting Paris Worker (3001)"
   cd "$ROOT_DIR/paris"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
   VARS+=(--var "ENV_STAGE:local")
+  if [ -n "$SF_BASE_URL" ]; then
+    VARS+=(--var "SANFRANCISCO_BASE_URL:$SF_BASE_URL")
+  fi
   if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
   fi
@@ -124,7 +132,6 @@ echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
 
-SF_BASE_URL=""
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] Starting SanFrancisco Worker (3002)"
   (
@@ -148,7 +155,6 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     echo "[dev-up] Timeout waiting for SanFrancisco @ http://localhost:3002/healthz"
     exit 1
   fi
-  SF_BASE_URL="http://localhost:3002"
 fi
 
 (

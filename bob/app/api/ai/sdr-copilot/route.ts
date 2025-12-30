@@ -233,7 +233,7 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }
 
-  return { ok: true as const, value: payload?.result };
+  return { ok: true as const, value: { requestId: asTrimmedString(payload?.requestId), result: payload?.result } };
 }
 
 export async function POST(req: Request) {
@@ -302,7 +302,15 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(executed.value ?? null);
+    const requestId = asTrimmedString(executed.value?.requestId);
+    const result = executed.value?.result ?? null;
+    if (requestId && isRecord(result)) {
+      const baseMeta = isRecord((result as any).meta) ? ((result as any).meta as Record<string, unknown>) : {};
+      const meta = { ...baseMeta, requestId };
+      return NextResponse.json({ ...(result as Record<string, unknown>), meta });
+    }
+
+    return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Return 200 so UI can surface the message inline without a console error spam.
