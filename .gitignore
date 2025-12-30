@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .next/
+.next-dev/
 .turbo/
 .wrangler/
 .vercel/

@@ -78,8 +78,8 @@ for p in 3000 3001 3002 4000 5173; do
   fi
 done
 
-echo "[dev-up] Cleaning Bob dev artifacts (.next-dev) to avoid stale chunk mismatches"
-rm -rf "$ROOT_DIR/bob/.next-dev" || true
+echo "[dev-up] Cleaning Bob build artifacts (.next) to avoid stale chunk mismatches"
+rm -rf "$ROOT_DIR/bob/.next" || true
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 TOKYO_URL=${NEXT_PUBLIC_TOKYO_URL:-$TOKYO_URL}

@@ -1,16 +1,8 @@
 import type { CompiledWidget } from '../types';
+import { resolveTokyoBaseUrl } from '../env/tokyo';
 
 export function requireTokyoUrl(): string {
-  const raw =
-    typeof process !== 'undefined'
-      ? (process.env.NEXT_PUBLIC_TOKYO_URL ?? process.env.TOKYO_URL ?? undefined)
-      : undefined;
-  const isProd = typeof process !== 'undefined' ? process.env.NODE_ENV === 'production' : true;
-  const value = raw?.trim() || (isProd ? '' : 'http://localhost:4000');
-  if (!value) {
-    throw new Error('[BobCompiler] NEXT_PUBLIC_TOKYO_URL is required to build widget assets');
-  }
-  return value;
+  return resolveTokyoBaseUrl();
 }
 
 type DieterManifest = {

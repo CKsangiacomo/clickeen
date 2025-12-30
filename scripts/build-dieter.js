@@ -25,7 +25,12 @@ function tryGetGitSha(repoRoot) {
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
   try {
-    const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
+    // Prefer a commit SHA that changes only when Dieter inputs change, so local installs/builds
+    // don't dirty `tokyo/dieter/manifest.json` on every unrelated commit.
+    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'dieter', 'scripts/build-dieter.js'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
     if (res.status === 0) {
       const sha = String(res.stdout || '').trim();
       if (sha) return sha;
