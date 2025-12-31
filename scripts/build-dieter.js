@@ -77,6 +77,8 @@ function writeDieterManifest({ dist, repoRoot }) {
     'dropdown-actions': ['popover', 'button'],
     'dropdown-edit': ['popover', 'button', 'popaddlink', 'textfield'],
     'dropdown-fill': ['popover', 'button', 'textfield'],
+    'dropdown-shadow': ['popover', 'button', 'textfield', 'slider', 'toggle', 'menuactions'],
+    'dropdown-upload': ['popover', 'button', 'textfield'],
     popaddlink: ['popover', 'button', 'textfield'],
   };
 

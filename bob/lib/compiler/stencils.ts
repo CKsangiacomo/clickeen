@@ -211,6 +211,12 @@ export async function buildContext(
 
   const allowImage = component === 'dropdown-fill' ? (allowImageOverride ?? inferredAllowsImage) : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
+  if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
+
+  const accept = attrs.accept || (merged.accept as string) || 'image/*';
+  const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
+  const grantUrl = attrs.grantUrl || attrs['grant-url'] || (merged.grantUrl as string) || '/api/assets/grant';
+  const resolveUrl = attrs.resolveUrl || attrs['resolve-url'] || (merged.resolveUrl as string) || '/api/assets/resolve';
 
   let templateValue = attrs.template ? decodeHtmlEntities(attrs.template) : (merged.template as string) || '';
   if (templateValue) {
@@ -234,6 +240,10 @@ export async function buildContext(
     headerLabel,
     headerIcon,
     allowImage,
+    accept: component === 'dropdown-upload' ? accept : undefined,
+    maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
+    grantUrl: component === 'dropdown-upload' ? grantUrl : undefined,
+    resolveUrl: component === 'dropdown-upload' ? resolveUrl : undefined,
     indexToken,
     id,
     options,

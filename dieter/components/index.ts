@@ -2,6 +2,8 @@
 export { hydrateTextedit } from './textedit/textedit';
 export { hydrateDropdownActions } from './dropdown-actions/dropdown-actions';
 export { hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
+export { hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';
+export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
 export { hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateButton } from './button/button';

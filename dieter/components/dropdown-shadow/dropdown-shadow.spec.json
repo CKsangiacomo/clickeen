@@ -1,0 +1,41 @@
+{
+  "component": "dropdown-shadow",
+  "syntax": "<tooldrawer-field type='dropdown-shadow' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "optional": true },
+    "headerLabel": { "optional": true },
+    "headerIcon": { "optional": true },
+    "placeholder": { "optional": true, "default": "Select a shadow" },
+    "value": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "defaults": [
+    {
+      "id": "dropdown-shadow",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-dropdown-shadow", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "dropdown-shadow-{{size}}",
+        "label": "Label",
+        "placeholder": "Select a shadow",
+        "value": "",
+        "path": "",
+        "popoverLabel": "Shadow options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Shadow",
+        "headerIcon": "paintbrush",
+        "headerLabelClass": "label-s"
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
+        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    }
+  ]
+}
+

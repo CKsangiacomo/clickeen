@@ -629,6 +629,7 @@ export function TdMenuContent({
 
       if ('value' in target) {
         const rawValue = (target as HTMLInputElement).value;
+        const currentValue = getAt(instanceData, path);
 
         if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
           const parsed = parseBobJsonValue(target, rawValue);
@@ -636,6 +637,27 @@ export function TdMenuContent({
             if (process.env.NODE_ENV === 'development') {
               // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] Ignoring invalid JSON input for path', path);
+            }
+            return;
+          }
+          applySet(path, parsed);
+          return;
+        }
+
+        if (isFiniteNumber(currentValue)) {
+          const trimmed = rawValue.trim();
+          if (!trimmed) {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[TdMenuContent] Ignoring empty numeric input for path', path);
+            }
+            return;
+          }
+          const parsed = Number(trimmed);
+          if (!Number.isFinite(parsed)) {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[TdMenuContent] Ignoring invalid numeric input for path', path);
             }
             return;
           }
@@ -707,7 +729,7 @@ export function TdMenuContent({
           field instanceof HTMLInputElement && field.dataset.bobJson != null
             ? (() => {
                 try {
-                  return JSON.stringify(value ?? []);
+                  return value == null ? '' : JSON.stringify(value);
                 } catch {
                   return '';
                 }
@@ -797,4 +819,8 @@ function parseBobJsonValue(input: HTMLInputElement, rawValue: string): unknown |
   } catch {
     return null;
   }
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }

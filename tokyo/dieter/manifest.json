@@ -1,12 +1,14 @@
 {
   "v": 1,
-  "gitSha": "1188fbee28d530fde791362c162b072a731392df",
+  "gitSha": "97e4dcb3d31505b8ba7b0d4e38e9a049a94dbd27",
   "components": [
     "button",
     "choice-tiles",
     "dropdown-actions",
     "dropdown-edit",
     "dropdown-fill",
+    "dropdown-shadow",
+    "dropdown-upload",
     "icon",
     "menuactions",
     "object-manager",
@@ -27,6 +29,8 @@
     "dropdown-actions",
     "dropdown-edit",
     "dropdown-fill",
+    "dropdown-shadow",
+    "dropdown-upload",
     "menuactions",
     "object-manager",
     "popaddlink",
@@ -63,6 +67,19 @@
       "textfield"
     ],
     "dropdown-fill": [
+      "popover",
+      "button",
+      "textfield"
+    ],
+    "dropdown-shadow": [
+      "popover",
+      "button",
+      "textfield",
+      "slider",
+      "toggle",
+      "menuactions"
+    ],
+    "dropdown-upload": [
       "popover",
       "button",
       "textfield"
