@@ -11,12 +11,12 @@ Clickeen is complex and interconnected. **Before touching code:**
 - Read the relevant system PRD (how it works)
 - Understand the architecture, data flow, and constraints
 
-Don't edit in isolation. Every change affects the whole.
+Edit in context. Every change affects the whole.
 
 ### 2. No Smoke and Mirrors
 - We care about the **integrity of the system**, not ad-hoc fixes that "work for now"
 - A change that makes something work but breaks another thing silently is worse than no change
-- If you don't understand the downstream impact, **stop and ask**
+- If downstream impact is unclear, **stop and ask**
 - Technical debt compounds; elegant solutions scale
 
 ### 3. Elegant Engineering Only
@@ -26,7 +26,7 @@ Clickeen scales through **architectural elegance**, not brute force:
 - Dieter tokens → consistent, maintainable design
 - ToolDrawer widget-agnostic → one codebase, 100 widgets
 
-When tempted to add special cases, parameters, or workarounds—**don't**. Redesign to be elegant.
+When tempted to add special cases, parameters, or workarounds, redesign to be elegant.
 
 ### 4. Design & UX is the Moat
 **Dieter and design tokens are not optional.** They are the competitive advantage:
@@ -71,13 +71,13 @@ When building features:
 
 **While coding:**
 1. Follow existing patterns (consistency matters)
-2. Use Dieter components and tokens (never reinvent)
+2. Use Dieter components and tokens; reuse instead of reinventing
 3. Write elegant code, not clever code
 4. Update docs simultaneously
 
 **When uncertain:**
 1. Ask a yes/no question
-2. Do not guess or proceed with assumptions
+2. Ask instead of guessing or proceeding with assumptions
 3. Stop and clarify before continuing
 
 ---
@@ -85,4 +85,3 @@ When building features:
 This is how we maintain a system that scales. Not through patches. Through design.
 
 The moats are **AI-Native, PLG, and Design-Led Excellence**. Protect them.
-

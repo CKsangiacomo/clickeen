@@ -1124,10 +1124,6 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     };
   }
 
-  if (!env.DEEPSEEK_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-  }
-
   const maxTokens = getGrantMaxTokens(params.grant);
   const timeoutMs = getGrantTimeoutMs(params.grant);
 
@@ -1175,6 +1171,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         };
       }
 
+      if (!env.DEEPSEEK_API_KEY) {
+        throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
+      }
+
       const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(8_000, Math.max(1_500, timeoutMs - 1_000)) });
       if (!fetchRes.ok) {
         const msg =
@@ -1210,6 +1210,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
 
       session.source = { url: fetchRes.finalUrl, fetchedAtMs: Date.now(), ...(fetchRes.title ? { title: fetchRes.title } : {}) };
     }
+  }
+
+  if (!env.DEEPSEEK_API_KEY) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
   }
 
   const baseUrl = env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';

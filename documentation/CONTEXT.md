@@ -47,7 +47,7 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 ### Widget Definition vs Widget Instance
 
 **Widget Definition** (Tokyo widget folder) = THE SOFTWARE
-- Complete functional software for a widget type (FAQ, countdown, etc.)
+- Complete functional software for a widget type (e.g. FAQ)
 - Lives in `tokyo/widgets/{widgetType}/`
 - Contains: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
@@ -88,7 +88,7 @@ Between load and publish:
 
 **How it works:**
 1. Clickeen team creates widget instances using Bob Editor (via DevStudio)
-2. Instances are named with `ck-` prefix: `ck-faq-christmas`, `ck-faq-minimal-dark`, `ck-countdown-blackfriday`
+2. Instances are named with `ck-` prefix: `ck-faq-christmas`, `ck-faq-minimal-dark`
 3. These instances are flagged as available for users to clone
 4. User browses gallery → clicks "Use this" → clones the instance to their workspace
 5. User customizes their copy freely (full ToolDrawer access)
@@ -105,8 +105,6 @@ ck-{widgetType}-{theme/variant}
 Examples:
   ck-faq-christmas
   ck-faq-minimal-dark
-  ck-countdown-blackfriday
-  ck-logoshowcase-grayscale
 ```
 
 ---
@@ -217,7 +215,7 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 | System | Status | Notes |
 |--------|--------|-------|
 | Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
-| Tokyo | ✅ Active | FAQ + Countdown widgets with shared modules |
+| Tokyo | ✅ Active | FAQ widget with shared modules |
 | Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
 | Venice | ⚠️ Partial | Debug shell (full SSR rendering planned) |
 | Dieter | ✅ Active | 16+ components, tokens, typography |
@@ -228,7 +226,6 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 | Widget | Status | Components Used |
 |--------|--------|-----------------|
 | FAQ | ✅ Complete | object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions |
-| Countdown | ✅ Complete | textfield, toggle, dropdown-actions |
 
 ### Dieter Components
 

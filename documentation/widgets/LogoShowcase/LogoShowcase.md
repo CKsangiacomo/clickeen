@@ -1,6 +1,6 @@
-# content.logoshowcase — Logo Showcase competitor analysis
+# content.logoshowcase — Logo Showcase Widget PRD
 
-STATUS: REFERENCE — Competitor inventory (Elfsight) + key takeaways
+STATUS: NORMATIVE — rebuild target (widget definition currently removed from `tokyo/widgets/`)
 
 ---
 
@@ -9,37 +9,32 @@ STATUS: REFERENCE — Competitor inventory (Elfsight) + key takeaways
 - **Type ID:** `content.logoshowcase`
 - **Category:** Content Display / Social Proof
 - **Competitive Target:** Complete Elfsight Logo Showcase feature set (70%+ coverage)
-- **Rendering:** Venice SSR at edge (100% SEO indexable)
-- **Renderer:** Venice SSR from Tokyo widget packages (no per-widget renderer library; `GET /e/:publicId` injects `window.CK_WIDGET`)
+- **Performance Target:** <8KB SSR (vs Elfsight 120KB+ client JS)
+- **Renderer:** Planned Venice SSR renderer (this repo snapshot has no `venice/lib/renderers/*`; Venice currently serves a safe debug shell)
 - **Dieter Components:** Custom carousel/ticker/grid (new components needed)
 
-### 🎯 Feature Coverage Goal: 100% of Elfsight (minus templates & custom code)
+### 🎯 Feature Coverage Goal: 70%+ of Elfsight
 
-Based on competitor analysis (**30 screenshots from Elfsight**), this inventory covers **100% of user-facing features** except for Elfsight-specific features that don't fit Clickeen's architecture.
+Based on comprehensive competitor analysis (**30 screenshots from Elfsight**), this PRD targets the **core 70%** of features that deliver maximum user value while maintaining Clickeen's SSR performance advantage.
 
-Canonical Clickeen PRD (what we will build): `documentation/widgets/LogoShowcase/LogoShowcase_PRD.md`.
-
-**What We MUST Implement (100% Core):**
+**What We MUST Implement (70% Core):**
 - ✅ 3 layout modes (Carousel, Ticker, Grid)
 - ✅ Complete logo upload & management (drag & drop, browse, reorder, delete)
-- ✅ Per-logo settings (alt text, link URL, open in new tab, nofollow)
 - ✅ Full responsive controls (desktop, tablet, mobile separately)
-- ✅ Header customization (title, caption, alignment, fonts, colors, bold/italic)
-- ✅ CTA button with full styling (text, link, colors, radius, icon with position)
+- ✅ Header customization (title, caption, alignment, fonts, colors)
+- ✅ CTA button with full styling (text, link, colors, radius, icon)
 - ✅ Logo styling (color schemes: original/grayscale/custom, sizing)
-- ✅ Logo hover effects (none, color-restore, scale, opacity)
-- ✅ Ticker animation with speed control + pause on hover + direction
-- ✅ Carousel navigation (arrows, items visible, auto-slide, slide delay)
-- ✅ Grid columns per breakpoint
+- ✅ Ticker animation with speed control + pause on hover
+- ✅ Carousel navigation (arrows, items visible)
 - ✅ Random order toggle
-- ✅ Links color for caption text
+- ✅ Custom CSS support
 
-**What We Skip (Elfsight-specific features):**
-- ⚠️ **Templates** — Clickeen treats templates as curated widget instances (no SQL seeds)
-- ⚠️ **Custom CSS** — Not supported in Clickeen architecture
-- ⚠️ **Custom JS** — Not supported in Clickeen architecture
-- ⚠️ Background gradient/image/video (solid color only via Stage/Pod)
-- ⚠️ Font library (200+ fonts) — Uses Clickeen typography system with global font family
+**What We Skip (<30% Optional):**
+- ⚠️ Background gradient/image/video (color only for V1)
+- ⚠️ Font library (200+ fonts - use default/system fonts only)
+- ⚠️ Custom JS (CSS only)
+- ⚠️ 6 pre-configured templates (can add later)
+- ⚠️ Link settings (new tab, nofollow - can add later)
 
 ---
 
@@ -92,10 +87,10 @@ Canonical Clickeen PRD (what we will build): `documentation/widgets/LogoShowcase
   - Dieter icons (sparkles, arrow, etc.)
   - Icon position: before or after text
 
-#### Link Settings (Per-Logo)
+#### ⚠️ Link Settings (OPTIONAL - Skip for V1)
 - Open in new tab toggle
 - rel="nofollow" toggle
-- *Included in 100% feature coverage*
+- *These can be added in future iteration*
 
 ---
 
@@ -267,14 +262,18 @@ Visual segmented control with icons:
     - Default: 8px
     - CSS: border-radius property
 
-#### Advanced (⚠️ Skip - Not Supported in Clickeen)
-- **Custom CSS** - ⚠️ Not supported in Clickeen architecture
-  - Clickeen uses a strict, validated schema approach
-  - All styling is controlled via ToolDrawer controls
-  
-- **Custom JS** - ⚠️ Not supported in Clickeen architecture
-  - Security concern
-  - Not part of Clickeen's widget model
+#### Advanced
+- **Custom CSS** - Expandable section (arrow ►)
+  - Textarea with code editor styling (implied)
+  - Max length: 10,000 chars
+  - Advanced styling overrides
+  - Warning note about breaking preview
+
+- **Custom JS** - Expandable section (⚠️ Skip V1)
+  - Textarea for custom JavaScript
+  - Max length: 10,000 chars
+  - Security warning
+  - *Skip for V1 - CSS only*
 
 ---
 
@@ -310,16 +309,6 @@ Visual segmented control with icons:
               "format": "uri",
               "description": "Optional click-through URL",
               "default": ""
-            },
-            "openInNewTab": {
-              "type": "boolean",
-              "default": true,
-              "description": "Open link in new tab"
-            },
-            "nofollow": {
-              "type": "boolean",
-              "default": false,
-              "description": "Add rel=nofollow to link"
             },
             "originalFilename": {
               "type": "string"
@@ -588,11 +577,9 @@ Visual segmented control with icons:
           }
         }
       },
-      "linksColor": {
+      "customCSS": {
         "type": "string",
-        "pattern": "^#[0-9A-Fa-f]{6}$",
-        "default": "#5865F2",
-        "description": "Color for links in caption text"
+        "maxLength": 10000
       }
     }
   }
@@ -1288,15 +1275,16 @@ Vertical stack of three Dieter icon buttons:
 
 ---
 
-## Key Advantages
+## Performance Targets
 
-| Metric | Elfsight | Clickeen |
-|--------|----------|----------|
-| SSR | No (client-side rendering) | Yes (Venice edge) |
-| SEO | Delayed crawl | Immediate indexing |
-| Logo count | 50 | 100 |
-| 3rd party scripts | Yes | No |
-| AI-native editing | No | Yes (spec-driven) |
+| Metric | Elfsight | Clickeen | Improvement |
+|--------|----------|----------|-------------|
+| Initial HTML | ~2KB | ~6KB | Acceptable (SSR content) |
+| JavaScript | 120KB | 2KB (carousel nav only) | 118KB smaller |
+| First Paint | ~2s | ~300ms | 6.5x faster |
+| Interactive | ~2.5s | Instant (ticker/grid), <500ms (carousel) | 5x faster |
+| SEO | Delayed crawl | Immediate | 100% SSR |
+| Logo count | 50 | 100 | 2x capacity |
 
 ---
 
@@ -1314,7 +1302,7 @@ Vertical stack of three Dieter icon buttons:
 - [ ] CTA button configuration (text, link, show/hide)
 
 ### Phase 2: Layout Modes (4-5 days)
-- [ ] Ensure Venice SSR contract works for LogoShowcase (Tokyo `widget.html` + `window.CK_WIDGET` injection)
+- [ ] Venice SSR renderer base structure (TBD; current Venice is debug shell in this repo snapshot)
 - [ ] Ticker layout with CSS animation
   - Duplicate logo list for seamless loop
   - Speed control (animation-duration)
@@ -1335,6 +1323,7 @@ Vertical stack of three Dieter icon buttons:
 - [ ] Button styling (alignment, colors, border radius)
 - [ ] Font size dropdowns (16-72px presets)
 - [ ] Bold/Italic toggles for title
+- [ ] Custom CSS textarea
 - [ ] Color picker component (7x7 grid, HEX input, eyedropper)
 
 ### Phase 4: Advanced Features (2-3 days)
@@ -1347,7 +1336,7 @@ Vertical stack of three Dieter icon buttons:
 - [ ] Logo alt text for accessibility
 
 ### Phase 5: Preview & Testing (2 days)
-- [ ] `ck:state-update` postMessage updates for all settings
+- [ ] postMessage patches for all settings
   - CSS variables for colors, sizes, spacing
   - Layout mode switching (re-render)
   - Ticker speed (animation-duration update)
@@ -1363,59 +1352,57 @@ Vertical stack of three Dieter icon buttons:
 
 ## Success Criteria
 
-### Core Features (100% Elfsight Parity - minus templates & custom code)
+### Core Features (70%+ Elfsight Parity)
 ✅ **Logo upload & management** (drag & drop, browse, reorder, delete, 100 logos)
-✅ **Per-logo settings** (alt text, link URL, open in new tab, nofollow)
 ✅ **3 layout modes** (Carousel, Ticker, Grid)
 ✅ **Full responsive controls** (desktop + separate tablet/mobile)
-✅ **Ticker animation** (smooth infinite scroll, speed control, pause on hover, direction)
-✅ **Carousel navigation** (arrow buttons, items visible, auto-slide, slide delay)
-✅ **Grid columns** per breakpoint (desktop/tablet/mobile)
+✅ **Ticker animation** (smooth infinite scroll, speed control, pause on hover)
+✅ **Carousel navigation** (arrow buttons, items visible control)
 ✅ **Header customization** (title, caption, alignment, colors, font sizes, bold/italic)
-✅ **CTA button** (text, link, icon with position, colors, border radius, alignment)
+✅ **CTA button** (text, link, icon, colors, border radius, alignment)
 ✅ **Logo styling** (size, spacing, color schemes: original/grayscale/custom)
-✅ **Logo hover effects** (none, color-restore, scale, opacity)
-✅ **Links color** for caption text
+✅ **Custom CSS** support
 ✅ **Random order** toggle
-✅ **100% SSR** for SEO via Venice edge rendering
+✅ **<8KB initial load** (vs 120KB+)
+✅ **<500ms LCP** on mobile 3G
+✅ **100% SSR** for SEO
 ✅ **Instant preview** via postMessage
 
 ---
 
 ## What We Match/Exceed vs Elfsight
 
-### Match Elfsight (100% Feature Parity):
+### Match Elfsight (70%+ Core):
 - ✅ Logo upload (drag & drop, browse, 100MB limit, 100 logos)
-- ✅ Logo management (reorder, delete)
-- ✅ Per-logo settings (alt text, link URL, open in new tab, nofollow)
+- ✅ Logo management (reorder, delete, click-through links)
 - ✅ 3 layout modes (Carousel, Ticker, Grid)
 - ✅ Width, logo size, spacing controls (sliders)
 - ✅ Mobile responsive settings (separate tablet/mobile)
-- ✅ Ticker speed, pause on hover, direction
-- ✅ Carousel navigation (arrows, items visible, auto-slide, slide delay)
-- ✅ Grid columns per breakpoint (desktop/tablet/mobile)
+- ✅ Ticker speed & pause on hover
+- ✅ Carousel navigation (arrows, items visible)
 - ✅ Header (title, caption, alignment, colors, fonts, sizes, bold/italic)
-- ✅ CTA button (text, link, icon with position, alignment, colors, border radius)
-- ✅ Logo color schemes (original, grayscale, custom tint)
-- ✅ Logo hover effects (none, color-restore, scale, opacity)
-- ✅ Background color (via Stage/Pod)
-- ✅ Links color for caption
+- ✅ CTA button (text, link, icon, alignment, colors, border radius)
+- ✅ Logo color schemes (original, grayscale, custom)
+- ✅ Background color
 - ✅ Random order
+- ✅ Custom CSS
 
-### Exceed Elfsight:
-- ✨ **SSR-first** (100% SSR via Venice edge rendering)
+### Exceed Elfsight (Performance):
+- ✨ **15x smaller** bundle (8KB vs 120KB)
+- ✨ **6.5x faster** first paint (300ms vs 2s)
 - ✨ **Works without JS** (ticker/grid are pure CSS)
+- ✨ **Perfect SEO** (no client rendering delay)
 - ✨ **No 3rd party scripts** (privacy by default)
-- ✨ **Instant preview updates** (`ck:state-update` postMessage)
+- ✨ **Instant preview updates** (postMessage patches)
 - ✨ **2x logo capacity** (100 vs 50)
-- ✨ **AI-native editing** (spec-driven ToolDrawer)
 
-### Skip (Elfsight-specific, doesn't fit Clickeen architecture):
-- ⚠️ **Templates** — Handled as curated widget instances (bootstrap; no SQL seeds)
-- ⚠️ **Custom CSS** — Not supported in Clickeen
-- ⚠️ **Custom JS** — Not supported in Clickeen
-- ⚠️ Background gradient/image/video (solid color only for V1)
-- ⚠️ Font library (200+ fonts) — Uses Clickeen typography system
+### Skip for V1 (<30% Optional):
+- ⚠️ Background gradient/image/video (color only)
+- ⚠️ Font library (200+ fonts - use default/system)
+- ⚠️ Logo background color
+- ⚠️ Custom JS (CSS only for security)
+- ⚠️ 6 pre-configured templates (can add later)
+- ⚠️ Link settings (new tab, nofollow - can add later)
 
 ---
 
@@ -1424,27 +1411,21 @@ Vertical stack of three Dieter icon buttons:
 **Critical references:**
 Tokenization patterns
 - `documentation/systems/bob.md` - Preview system architecture
-- `documentation/widgets/WidgetArchitecture.md` - Canonical widget + editor contracts
-- `tokyo/widgets/faq/spec.json` - Reference widget definition patterns (repeaters, clusters, strict controls)
+- `documentation/widgets/FAQs/content.faq.md` - Similar widget PRD structure
 - `dieter/components/expander.css` - Use for expandable sections
 
 **Implementation Critical Points:**
-- ✅ **Ticker animation:** Use CSS `@keyframes`, duplicate logo list for seamless loop, direction support
-- ✅ **Carousel navigation:** Minimal JS (<500 bytes) for arrows, auto-slide with delay
-- ✅ **Grid layout:** CSS Grid with responsive columns per breakpoint
-- ✅ **Color picker:** Reusable `dropdown-fill` component
-- ✅ **Logo upload:** Multipart/form-data to SanFrancisco API → Cloudflare R2 → save URLs
-- ✅ **Per-logo settings:** alt text, link URL, openInNewTab, nofollow toggles
+- ✅ **Ticker animation:** Use CSS `@keyframes`, duplicate logo list for seamless loop
+- ✅ **Carousel navigation:** Minimal JS (<2KB) for arrow buttons, use CSS transform
+- ✅ **Grid layout:** CSS Grid with `auto-fit` and `minmax` for responsiveness
+- ✅ **Color picker:** Reusable component (same as FAQ widget)
+- ✅ **Logo upload:** Multipart/form-data to Paris API → CDN storage → save URLs
 - ✅ **Drag & drop:** HTML5 Drag and Drop API for file upload and reordering
 - ✅ **Responsive:** CSS media queries for tablet (1024px) and mobile (768px)
 - ✅ **Random order:** Server-side array shuffle (not client-side)
-- ✅ **Tokenization:** All colors/sizes as CSS variables for instant preview
-- ✅ **postMessage:** Use the canonical `ck:state-update` protocol; runtime sets CSS variables deterministically from state
-- ✅ **data-role:** Use stable `data-role` hooks for runtime selectors
-- ✅ **Button icon:** Support icon with position (before/after text)
-- ✅ **Typography:** Title/caption bold and italic toggles
-- ✅ **Links color:** Dedicated CSS variable for caption links
-- ✅ **Hover effects:** none, color-restore, scale, opacity options
+- ✅ **Tokenization:** All colors/sizes as CSS variables in inline `<style>`
+- ✅ **postMessage:** Patch CSS variables for instant preview updates
+- ✅ **data-widget-element:** Add to all patchable elements
 
 **File Upload Implementation:**
 - ✅ Accept: image/* (PNG, JPG, SVG, WebP)
@@ -1477,13 +1458,13 @@ Tokenization patterns
 
 ## Status
 
-**Phase:** Detailed specification complete (100% feature coverage)
+**Phase:** Detailed specification complete (70%+ feature coverage)
 **Blockers:** None
 **Next:** Begin Phase 1 implementation (logo upload & content management)
 **Recommendation:**
 - Start with Phases 1-3 (core features: ~10-12 days)
 - Validate with users
-- Add Phase 4-5 polish (~4-6 days)
-**Estimated completion:** 14-18 days for 100% feature coverage (minus templates & custom code)
+- Add advanced features in Phase 4-5 (~4-6 days)
+**Estimated completion:** 14-18 days for 70%+ feature coverage
 
-**Implementation Benefits:** 100% SSR rendering via Venice, 2x logo capacity (100 vs 50), AI-native spec-driven editing - all while matching 100% of Elfsight's user-facing feature set (excluding templates and custom code which don't fit Clickeen's architecture).
+**Implementation Benefits:** 15x smaller JavaScript, 6.5x faster, 100% SSR rendering, 2x logo capacity - all while matching 70%+ of Elfsight's feature set. These are outcomes of good engineering, not defensible competitive advantages.

@@ -1,9 +1,27 @@
 # content.faq — FAQ Widget PRD
 
-STATUS: NORMATIVE — IMPLEMENTED (v1) / Iterating
+STATUS: PRD — IMPLEMENTED (v1) / Iterating
 
 This is the canonical PRD for the FAQ widget in the Clickeen model.
 For competitor feature inventory, see `documentation/widgets/FAQ/FAQ_competitoranalysis.md`.
+
+## What this widget does (1 sentence)
+
+Renders an FAQ section (questions + answers) with an optional accordion interaction, with content managed in Bob and rendered deterministically in the embed.
+
+## Types available (core framework)
+
+FAQ has **one Type**: **FAQ**.
+
+Why this matters:
+- With one Type, the content model is fixed (sections → questions/answers).
+- The main variation axis is **Layout**, not Type.
+
+How it differs from other widgets:
+- Content is structured text (sections + Q/A items) and the runtime can optionally make it interactive (accordion).
+
+Layout choices (inside the same Type):
+- `layout.type = accordion | list | multicolumn`
 
 ## 0) Non-negotiables (Architecture)
 1. **Starter designs are instances**: curated designs are Clickeen-owned instances that users clone.
@@ -80,4 +98,3 @@ Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
 - Sanitize any inline HTML allowed in questions
 - Convert URLs in answers to links and optionally embed images/videos
 - Use Dieter tokens + Dieter icon system for visuals
-

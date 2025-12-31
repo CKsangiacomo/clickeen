@@ -76,30 +76,8 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
-function countFaqQuestions(config: Record<string, unknown>): number | null {
-  const sections = config.sections;
-  if (!Array.isArray(sections)) return null;
-  let total = 0;
-  for (const section of sections) {
-    if (!isRecord(section)) continue;
-    const faqs = section.faqs;
-    if (!Array.isArray(faqs)) continue;
-    total += faqs.length;
-  }
-  return total;
-}
-
 function initialCopilotMessage(args: { widgetType: string; config: Record<string, unknown> }): string {
   const type = args.widgetType;
-  if (type === 'faq') {
-    const count = countFaqQuestions(args.config);
-    const countText =
-      typeof count === 'number'
-        ? `${count} ${count === 1 ? 'question' : 'questions'}`
-        : 'a few questions';
-    return `Hello! I see you have an FAQ widget with ${countText}. You can ask me to change the title, colors, layout, add or edit questions, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?`;
-  }
-
   const label = titleCase(type) || 'widget';
   return `Hello! I see you have a ${label} widget. You can ask me to change the title, colors, layout, add or edit content, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?`;
 }

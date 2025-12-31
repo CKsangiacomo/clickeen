@@ -35,10 +35,14 @@ function asTrimmedString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-async function postCopilot(body) {
+async function postCopilot(body, opts = {}) {
+  const forwardedFor = typeof opts.forwardedFor === 'string' ? opts.forwardedFor.trim() : '';
   const res = await fetch(`${bobOrigin}/api/ai/sdr-copilot`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
+    },
     body: JSON.stringify(body),
   });
   const text = await res.text().catch(() => '');
@@ -82,13 +86,17 @@ async function main() {
 
     const label = `[eval-copilot] ${name}`;
     try {
-      const payload = await postCopilot({
+      const forwardedFor = `203.0.113.${(i % 250) + 1}`;
+      const payload = await postCopilot(
+        {
         prompt: p.prompt,
         widgetType,
         sessionId,
         currentConfig: fixture.currentConfig,
         controls: fixture.controls,
-      });
+        },
+        { forwardedFor },
+      );
 
       assert(isRecord(payload), 'Response is not an object');
       assert(asTrimmedString(payload.message), 'Response missing message');

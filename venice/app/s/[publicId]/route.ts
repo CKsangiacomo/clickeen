@@ -4,7 +4,8 @@ import { parisFetch } from '@venice/lib/paris';
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request, { params }: { params: { publicId: string } }) {
+export async function POST(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
+  const { publicId } = await ctx.params;
   const forwardedHeaders: HeadersInit = {
     'Content-Type': req.headers.get('content-type') ?? 'application/json',
   };
@@ -16,7 +17,7 @@ export async function POST(req: Request, { params }: { params: { publicId: strin
 
   const body = await req.text();
 
-  const response = await parisFetch(`/api/submit/${encodeURIComponent(params.publicId)}`, {
+  const response = await parisFetch(`/api/submit/${encodeURIComponent(publicId)}`, {
     method: 'POST',
     headers: forwardedHeaders,
     body,

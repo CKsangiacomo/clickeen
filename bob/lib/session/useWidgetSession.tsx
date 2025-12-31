@@ -11,7 +11,7 @@ import {
 import type { ReactNode } from 'react';
 import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
-import { applyWidgetOps, validateWidgetData } from '../ops';
+import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
 
 type UpdateMeta = {
@@ -149,26 +149,19 @@ function useWidgetSessionInternal() {
         throw new Error('[useWidgetSession] Widget compiled without controls[]');
       }
 
-      const incoming = message.instanceData as Record<string, unknown> | null | undefined;
-      if (incoming == null) {
-        if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) {
-          throw new Error('[useWidgetSession] compiled.defaults must be an object');
-        }
+      if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) {
+        throw new Error('[useWidgetSession] compiled.defaults must be an object');
       }
-      const resolved = incoming == null ? structuredClone(compiled.defaults) : incoming;
+      const defaults = compiled.defaults as Record<string, unknown>;
 
-      if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) {
+      const incoming = message.instanceData as Record<string, unknown> | null | undefined;
+      if (incoming != null && (!incoming || typeof incoming !== 'object' || Array.isArray(incoming))) {
         throw new Error('[useWidgetSession] instanceData must be an object');
       }
-
-      const issues = validateWidgetData({
-        data: resolved,
-        controls: compiled.controls,
-      });
-      if (issues.length > 0) {
-        const details = issues.map((issue) => `${issue.path}: ${issue.message}`).join('\n');
-        throw new Error(`[useWidgetSession] Invalid instanceData\n${details}`);
-      }
+      const resolved =
+        incoming == null
+          ? structuredClone(defaults)
+          : structuredClone(incoming);
 
       setState((prev) => ({
         ...prev,
@@ -242,49 +235,6 @@ function useWidgetSessionInternal() {
     }));
   }, []);
 
-  const renameInstance = useCallback(
-    async (nextLabel: string) => {
-      const trimmed = nextLabel.trim();
-      if (!trimmed) {
-        throw new Error('Instance name cannot be empty');
-      }
-
-      const publicId = state.meta?.publicId;
-      if (!publicId) {
-        throw new Error('No active instance to rename');
-      }
-
-      const res = await fetch(`/api/paris/instance/${encodeURIComponent(publicId)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ displayName: trimmed }),
-      });
-
-      if (!res.ok) {
-        let details = '';
-        try {
-          const data = await res.json();
-          details = typeof data === 'string' ? data : JSON.stringify(data);
-        } catch {
-          details = await res.text();
-        }
-        const message = details || `Failed to rename instance (status ${res.status})`;
-        throw new Error(message);
-      }
-
-      setState((prev) => ({
-        ...prev,
-        compiled: prev.compiled ? { ...prev.compiled, displayName: trimmed } : prev.compiled,
-        meta: prev.meta ? { ...prev.meta, label: trimmed } : prev.meta,
-      }));
-
-      return trimmed;
-    },
-    [state.meta?.publicId]
-  );
-
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       const data = event.data as WidgetBootstrapMessage | undefined;
@@ -320,7 +270,6 @@ function useWidgetSessionInternal() {
       commitLastOps,
       setSelectedPath,
       setPreview,
-      renameInstance,
       loadInstance,
       setCopilotThread,
       updateCopilotThread,
@@ -332,7 +281,6 @@ function useWidgetSessionInternal() {
       commitLastOps,
       loadInstance,
       setPreview,
-      renameInstance,
       setSelectedPath,
       setCopilotThread,
       updateCopilotThread,

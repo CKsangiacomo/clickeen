@@ -20,6 +20,31 @@ function decodeHtmlEntities(value: string): string {
     .replace(/&gt;/g, '>');
 }
 
+function encodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function normalizeJsonHtmlAttr(raw: string): string {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return '';
+
+  // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
+  const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
+
+  try {
+    const parsed = JSON.parse(decodedTwice) as unknown;
+    return encodeHtmlEntities(JSON.stringify(parsed));
+  } catch {
+    // Still ensure the attribute remains valid HTML even if the payload isn't valid JSON.
+    return encodeHtmlEntities(decodedTwice);
+  }
+}
+
 function parseBooleanAttr(value: string | undefined): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
@@ -157,7 +182,8 @@ export async function buildContext(
     attrs.reorderLabelPath || attrs['reorder-label-path'] || (merged.reorderLabelPath as string) || '';
   const reorderMode = attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
   const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
-  const defaultItem = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
+  const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
+  const defaultItem = normalizeJsonHtmlAttr(defaultItemRaw);
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -228,6 +254,43 @@ export async function buildContext(
     template: templateValue,
     defaultItem,
   });
+
+  // Segmented is special: the Dieter stencil expects `segments` (not `options`), and the radio group name
+  // must be unique per control to avoid cross-control selection collisions.
+  if (component === 'segmented') {
+    const segments = Array.isArray(options)
+      ? options.map((opt) => ({
+          value: opt?.value == null ? '' : String(opt.value),
+          label: opt?.label == null ? '' : String(opt.label),
+          icon: opt?.icon == null ? '' : String(opt.icon),
+          disabled: opt?.disabled === true,
+          checked: false,
+        }))
+      : [];
+
+    if (segments.length === 0) {
+      throw new Error(
+        `[BobCompiler] segmented control "${label}" is missing options (path="${pathAttr || ''}")`,
+      );
+    }
+
+    const hasAnyIcon = segments.some((s) => Boolean(s.icon));
+    const hasAnyLabel = segments.some((s) => Boolean(s.label));
+    const buttonLayout = hasAnyIcon ? (hasAnyLabel ? 'ictxt' : 'ic') : 'txt';
+
+    Object.assign(merged, {
+      // Defaults to a good a11y label for widget controls.
+      ariaLabel: label,
+      // Use stable, per-control groupName so radio inputs don't conflict across multiple segmented controls.
+      groupName: `${id}-seg`,
+      variant: buttonLayout,
+      buttonLayout,
+      buttonClass: `diet-btn-${buttonLayout}`,
+      buttonSize: size,
+      buttonVariant: 'neutral',
+      segments,
+    });
+  }
 
   if (merged.labelClass == null) merged.labelClass = 'label-s';
   if (merged.bodyClass == null) merged.bodyClass = 'body-s';

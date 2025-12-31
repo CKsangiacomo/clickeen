@@ -1,7 +1,5 @@
 import type { CompiledControl } from '../types';
-import { buildControlMatchers, coerceValueStrict, findBestControlForPath } from './controls';
 import { getAt, setAt } from '../utils/paths';
-import { getTypographyRoleScaleKind, validateArrayItemIds, validateNumberConstraints, validateWidgetData } from './validate';
 
 export type WidgetOp =
   | { op: 'set'; path: string; value: unknown }
@@ -60,12 +58,6 @@ function moveAtPath(data: Record<string, unknown>, path: string, from: number, t
   return setAt(data, path, next) as Record<string, unknown>;
 }
 
-const NUMERIC_STRING = /^-?\d+(?:\.\d+)?$/;
-
-function isNumericString(value: string): boolean {
-  return NUMERIC_STRING.test(value.trim());
-}
-
 function splitPath(path: string): string[] {
   return String(path ?? '')
     .split('.')
@@ -106,13 +98,12 @@ export function applyWidgetOps(args: {
   ops: WidgetOp[];
   controls: CompiledControl[];
 }): ApplyWidgetOpsResult {
-  const { data, ops, controls } = args;
+  const { data, ops } = args;
 
   if (!Array.isArray(ops) || ops.length === 0) {
     return { ok: false, errors: [{ opIndex: 0, message: 'Ops must be a non-empty array' }] };
   }
 
-  const matchers = buildControlMatchers(controls);
   let working = data;
 
   for (let idx = 0; idx < ops.length; idx += 1) {
@@ -137,67 +128,16 @@ export function applyWidgetOps(args: {
       return { ok: false, errors: [{ opIndex: idx, path, message: 'Path contains a prohibited segment' }] };
     }
 
-    const control = findBestControlForPath(matchers, path);
-    if (!control) {
-      return { ok: false, errors: [{ opIndex: idx, path, message: 'Path is not editable' }] };
-    }
-
     if (opType === 'set') {
       if (raw.value === undefined) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'Value cannot be undefined' }] };
       }
-      const coerced = coerceValueStrict(control, raw.value);
-      if (!coerced.ok) {
-        return { ok: false, errors: [{ opIndex: idx, path, message: coerced.message }] };
-      }
-      let coercedValue = coerced.value;
-
-      if (control.kind === 'number' && typeof coerced.value === 'number') {
-        const constraintError = validateNumberConstraints(control, coerced.value);
-        if (constraintError) {
-          return { ok: false, errors: [{ opIndex: idx, path, message: constraintError }] };
-        }
-      }
-
-      const idError = validateArrayItemIds(control, coerced.value);
-      if (idError) {
-        return { ok: false, errors: [{ opIndex: idx, path, message: idError }] };
-      }
-
-      const typographySizeCustomMatch = path.match(/^typography\.roles\.([^.]+)\.sizeCustom$/);
-      if (typographySizeCustomMatch && typeof coerced.value === 'string') {
-        const roleKey = typographySizeCustomMatch[1];
-        const trimmed = coerced.value.trim();
-        const kind = getTypographyRoleScaleKind(working, roleKey);
-        if (kind === 'css-length') {
-          if (isNumericString(trimmed)) {
-            coercedValue = `${trimmed}px`;
-          } else if (/^--[a-z0-9-]+$/i.test(trimmed)) {
-            coercedValue = `var(${trimmed})`;
-          } else {
-            coercedValue = trimmed;
-          }
-        } else if (kind === 'number') {
-          if (trimmed.endsWith('%')) {
-            const numPart = trimmed.slice(0, -1).trim();
-            coercedValue = isNumericString(numPart) ? numPart : trimmed;
-          } else {
-            coercedValue = trimmed;
-          }
-        } else {
-          coercedValue = trimmed;
-        }
-      }
-
-      const next = setAt(working, path, coercedValue) as Record<string, unknown>;
+      const next = setAt(working, path, raw.value) as Record<string, unknown>;
       working = next;
       continue;
     }
 
     if (opType === 'insert') {
-      if (control.kind !== 'array') {
-        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target must be an array control' }] };
-      }
       if (!isInteger(raw.index) || raw.index < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
       }
@@ -209,36 +149,12 @@ export function applyWidgetOps(args: {
       if (raw.index > len) {
         return { ok: false, errors: [{ opIndex: idx, path, message: `index out of range (0..${len})` }] };
       }
-      if (control.itemIdPath) {
-        const item = raw.value;
-        if (!item || typeof item !== 'object' || Array.isArray(item)) {
-          return {
-            ok: false,
-            errors: [
-              { opIndex: idx, path, message: `Inserted item must be an object with "${control.itemIdPath}"` },
-            ],
-          };
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const id = (item as any)[control.itemIdPath];
-        if (typeof id !== 'string' || !id.trim()) {
-          return {
-            ok: false,
-            errors: [
-              { opIndex: idx, path, message: `Inserted item must include a non-empty "${control.itemIdPath}"` },
-            ],
-          };
-        }
-      }
       const next = insertAtPath(working, path, raw.index, raw.value);
       working = next;
       continue;
     }
 
     if (opType === 'remove') {
-      if (control.kind !== 'array') {
-        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target must be an array control' }] };
-      }
       if (!isInteger(raw.index) || raw.index < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
       }
@@ -258,9 +174,6 @@ export function applyWidgetOps(args: {
     }
 
     if (opType === 'move') {
-      if (control.kind !== 'array') {
-        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target must be an array control' }] };
-      }
       if (!isInteger(raw.from) || raw.from < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'from must be an integer >= 0' }] };
       }
@@ -286,16 +199,5 @@ export function applyWidgetOps(args: {
     return { ok: false, errors: [{ opIndex: idx, path, message: `Unknown op "${opType}"` }] };
   }
 
-  const stateErrors = validateWidgetData({ data: working, controls });
-  if (stateErrors.length > 0) {
-    return {
-      ok: false,
-      errors: stateErrors.map((err) => ({
-        opIndex: findBestOpIndexForPath(err.path, ops),
-        path: err.path,
-        message: err.message,
-      })),
-    };
-  }
   return { ok: true, data: working };
 }

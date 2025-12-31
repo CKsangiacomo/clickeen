@@ -10,6 +10,7 @@ Local dev:
 Endpoints:
 - `GET /healthz`
 - `POST /v1/execute`
+- `POST /v1/outcome` (signed outcome attach)
 
 Deploy note:
 - This worker is intended to deploy from Cloudflare “Workers → Deploy from Git” (root: `/sanfrancisco`).

@@ -1,310 +1,253 @@
-# SDR Copilot Agent
+# SDR Copilot (Minibob) — Conversational Widget Copilot (V1)
 
-**STATUS: PLANNING — REVIEW BEFORE EXECUTION**  
-**Created:** 2024-12-27  
-**Location:** Minibob ToolDrawer → "Copilot" tab  
-**LLM:** DeepSeek (cost-optimized)
+STATUS: REFERENCE / PRD (keep in sync with shipped code)
+Created: 2024-12-27
+Last updated: 2025-12-30
 
----
+This doc defines the **chat-first Copilot UX** inside Minibob (DevStudio’s Dev Widget Workspace). It is also a conversion surface: Copilot can include CTAs (signup/upgrade) when appropriate.
 
-## Overview
-
-The SDR Copilot is a **ToolDrawer mode** (not a chat widget) in Minibob that helps anonymous visitors:
-1. Make light edits via natural language → AI generates ops
-2. Understand widget features and capabilities
-3. See the value of registering (free) or upgrading (paid)
-
-**Goal:** Convert playground visitors → registered users → paid users
+When debugging reality, treat runtime code + Cloudflare bindings as truth and update this doc when they drift.
 
 ---
 
-## How It Works: Manual vs Copilot Mode
+## 1) Overview
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  faq                                                    │
-│  ┌──────────────┬──────────────┐                       │
-│  │ ✏️ Manual    │ ✨ Copilot   │  ← MODE TOGGLE        │
-│  └──────────────┴──────────────┘                       │
-│                                                         │
-│  MANUAL MODE:              COPILOT MODE:               │
-│  • Direct controls         • Text input                │
-│  • User clicks/types       • AI interprets intent      │
-│  • Immediate feedback      • AI generates ops          │
-│  • Full control            • AI applies changes        │
-│                            • Conversion messaging      │
-└─────────────────────────────────────────────────────────┘
-```
+SDR Copilot is the ToolDrawer “Copilot” tab that lets an anonymous visitor customize a widget using natural language.
 
-### Manual Mode (existing)
-User interacts directly with ToolDrawer controls:
-- Clicks dropdowns, toggles, sliders
-- Types into text fields
-- Manages items via object-manager
-- Full control, no AI
-
-### Copilot Mode (SDR)
-User describes what they want in natural language:
-- AI interprets the request
-- AI generates `ops[]` to modify widget
-- Changes apply to preview instantly
-- AI response includes conversion nudges when appropriate
+Key properties:
+- **Chat-only UI** (full-height conversation + bottom input).
+- **Ops-based edits**: Copilot returns `ops[]` (machine diffs), never “instructions”.
+- **Deterministic application**: Bob applies ops as pure transforms (no coercion of widget config). It blocks only obvious protocol abuse (e.g. prototype pollution path segments).
+- **Explicit commit**: after an edit, the user must **Keep** or **Undo** (no silent commits).
+- **Budgeted + signed**: every model execution is authorized by a short-lived **AI Grant** minted by Paris and verified by San Francisco.
 
 ---
 
-## Scope
+## 2) Goals / Non-goals
 
-### What It Does
+### Goals
+- Visitors can make a **small edit successfully** in under 30 seconds.
+- The system remains deterministic and safe:
+  - ops apply deterministically to the current config
+  - ambiguous vocabulary triggers clarifying questions
+- Copilot supports conversion messaging (CTA) without degrading the editing loop.
 
-| Capability | How It Works |
-|------------|--------------|
-| **Light edits via NL** | "Make the title bigger" → AI returns `{ op: "set", path: "typography.title.size", value: 24 }` |
-| **Feature explanation** | "What's the accordion for?" → AI explains in response text |
-| **Conversion nudge** | After successful edit: "Nice! Create a free account to save this to your site" |
-| **Paid feature teaser** | "Remove branding" → "Branding removal is a Pro feature. Sign up free to try everything else!" |
-
-### What It Does NOT Do
-
-| Out of Scope | Why |
-|--------------|-----|
-| Complex multi-step edits | Keep it simple for conversion |
-| Content generation | That's Editor Copilot (paid feature in full Bob) |
-| Deep customization | User should upgrade to full Bob for that |
+### Non-goals (V1)
+- Crawling whole sites, multi-page scraping, or following links.
+- Free-form CSS/HTML generation.
+- Auto-save or persistence (Bob’s in-memory model remains unchanged).
 
 ---
 
-## User Experience
+## 3) UX Spec (Minibob ToolDrawer → “Copilot” tab)
 
-### Copilot Panel UI
+### 3.1 Layout
+- Copilot panel is **only chat**:
+  - conversation list fills the height
+  - input is pinned to the bottom
+  - no “quick actions”, no extra instruction blocks
 
-```
-┌─────────────────────────────────────────┐
-│  ┌─────────────┬─────────────┐          │
-│  │ ✏️ Manual   │ ✨ Copilot  │          │
-│  └─────────────┴─────────────┘          │
-│                                          │
-│  ┌────────────────────────────────────┐ │
-│  │ What would you like to change?     │ │
-│  │                                    │ │
-│  │ __________________________________ │ │
-│  │ │ Make the title blue            │ │ │
-│  │ └────────────────────────[Send]──┘ │ │
-│  └────────────────────────────────────┘ │
-│                                          │
-│  ┌────────────────────────────────────┐ │
-│  │ ✨ Done! I changed the title       │ │
-│  │    color to blue.                  │ │
-│  │                                    │ │
-│  │    💡 Like what you see? Create a │ │
-│  │    free account to save this.     │ │
-│  │                     [Sign up free] │ │
-│  └────────────────────────────────────┘ │
-│                                          │
-│  Quick actions:                          │
-│  ┌──────────┐ ┌──────────┐ ┌─────────┐  │
-│  │ Add item │ │ Change   │ │ Style   │  │
-│  │          │ │ colors   │ │ text    │  │
-│  └──────────┘ └──────────┘ └─────────┘  │
-└─────────────────────────────────────────┘
-```
+### 3.2 Message styling
+- Chat text uses `.body-m` typography.
+- User bubble:
+  - background: `--color-system-gray-5`
+  - padding: `--space-2`
+  - rounded: `--control-radius-md`
+- Assistant bubble:
+  - no background
+  - no extra padding
 
-### Interaction Flow
+### 3.3 Default first message (all widgets)
+Copilot starts with a short contextual greeting based on the loaded instance.
 
-```
-1. User switches to "Copilot" tab
-2. User types: "Add a new FAQ about pricing"
-3. AI processes request
-4. AI returns:
-   - ops: [{ op: "insert", path: "items", value: { q: "Pricing?", a: "..." } }]
-   - message: "Added a pricing FAQ! Want to customize the answer?"
-   - cta: { text: "Save to your site", action: "signup" }
-5. Minibob applies ops → preview updates
-6. User sees change + conversion prompt
-```
+Template (example for FAQ):
+> Hello! I see you have an FAQ widget with 3 questions. You can ask me to change the title, colors, layout, add or edit questions, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?
 
-### Conversion Moments
+### 3.4 Keep / Undo loop (core interaction)
+When Copilot returns `ops[]`:
+1) Bob applies ops immediately (preview updates).
+2) Copilot asks: “Want to keep this change?”
+3) UI shows **Keep** and **Undo** buttons.
+4) Until a decision is made, Copilot blocks new prompts and nudges:
+   - “Keep or Undo? (Use the buttons above, or type ‘keep’ / ‘undo’.)”
 
-| Trigger | AI Response |
-|---------|-------------|
-| After 3+ successful edits | "You're getting the hang of this! Save your work with a free account." |
-| User asks to save/embed | "To embed this on your site, create a free account (10 seconds)." |
-| User asks about Pro feature | "That's available on Pro. But you can try everything else free first!" |
-| User tries advanced edit | "For that level of customization, sign up for the full editor — it's free to start." |
+Typed commands are supported:
+- typing `keep` commits the last ops batch
+- typing `undo` reverts the last ops batch
+
+### 3.5 Error behavior (chat never degrades)
+- If any upstream returns HTML (Cloudflare 502/5xx), Copilot must **not** display raw HTML. It displays a short friendly message instead.
+- If the model returns invalid JSON, Copilot displays a friendly message (“Model did not return valid JSON”) and applies **no ops**.
 
 ---
 
-## Technical Spec
+## 4) Architecture (shipped)
 
-### API: San Francisco SDR Endpoint
+### 4.1 Call chain (Minibob)
 
-```typescript
-POST /api/ai/sdr-copilot
+1) UI calls Bob (same-origin):
+- `POST /api/ai/sdr-copilot`
 
-Request:
+2) Bob requests a short-lived grant from Paris:
+- `POST {PARIS_BASE_URL}/api/ai/grant`
+
+3) Bob executes on San Francisco:
+- `POST {SANFRANCISCO_BASE_URL}/v1/execute`
+
+4) San Francisco calls the provider (DeepSeek) and returns structured output.
+
+5) Bob applies ops, then waits for Keep/Undo.
+
+6) UI reports outcomes:
+- `POST /api/ai/outcome` → `POST {PARIS_BASE_URL}/api/ai/outcome` → `POST {SANFRANCISCO_BASE_URL}/v1/outcome`
+
+### 4.2 “Two-call model” clarification
+From Bob’s perspective, a single Copilot request uses **two platform services**:
+- Bob → Paris (grant)
+- Bob → San Francisco (execute)
+
+(San Francisco → DeepSeek is the provider call.)
+
+---
+
+## 5) API Contracts
+
+### 5.1 Bob API: `POST /api/ai/sdr-copilot`
+
+This is the only endpoint the browser should call for Copilot execution.
+
+Request body:
+```json
 {
-  "prompt": string,              // User's natural language request
-  "widgetType": "faq" | "countdown" | "logo-showcase",
-  "currentConfig": object,       // Current widget state
-  "controls": ControlSpec[],     // Available controls from compiled widget
-  "sessionId": string            // Anonymous session for conversion tracking
-}
-
-Response:
-{
-  "ops": WidgetOp[],             // Operations to apply (same as Editor Copilot)
-  "message": string,             // Friendly response text
-  "cta"?: {                      // Optional conversion prompt
-    "text": string,
-    "action": "signup" | "upgrade" | "learn-more",
-    "url"?: string
-  }
+  "prompt": "string",
+  "widgetType": "faq",
+  "currentConfig": {},
+  "controls": [],
+  "sessionId": "anon-session-id",
+  "instancePublicId": "wgt_..." 
 }
 ```
 
-### Ops Protocol (same as full Bob)
+Notes:
+- `controls` must be derived from `compiled.controls[]` (binding + AI context). Do not treat `controls[]` as an enforcement layer; Clickeen owns both the widget definition and the editor surface.
+- `sessionId` is used for learning + conversion attribution.
 
-SDR Copilot generates the same ops that Manual mode would:
-
-```typescript
-type WidgetOp = 
-  | { op: "set"; path: string; value: unknown }
-  | { op: "insert"; path: string; value: unknown; index?: number }
-  | { op: "remove"; path: string; index: number }
-  | { op: "move"; path: string; from: number; to: number }
-```
-
-**Key insight:** Copilot doesn't bypass the control system — it generates ops that are validated against the same `compiled.controls[]` as Manual mode.
-
-### LLM Configuration
-
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| Model | DeepSeek Chat | Cost: ~$0.001/interaction |
-| Max tokens | 200 | Ops + short message |
-| Temperature | 0.3 | Consistent ops generation |
-| Context | Widget spec + current config | Enables accurate ops |
-
-### System Prompt
-
-```
-You help users customize widgets in Clickeen's playground.
-
-INPUT: User request + current widget config + available controls
-OUTPUT: JSON with ops array + friendly message + optional conversion CTA
-
-RULES:
-1. Generate valid ops that match available controls
-2. Keep changes minimal — one thing at a time
-3. Message should confirm what changed (1-2 sentences)
-4. Add conversion CTA naturally after successful edits
-5. If request needs Pro/paid features, explain kindly and suggest signup
-
-CONVERSION MOMENTS (weave in naturally):
-- After successful edit → "Save your work with a free account"
-- Multiple edits → "You're creating something great! Sign up to keep it"
-- Advanced request → "Full editor has that — sign up free to access"
-- Save/embed request → "Create account to get embed code"
-
-OUTPUT FORMAT:
+Response shape (success):
+```json
 {
-  "ops": [...],
-  "message": "...",
-  "cta": { "text": "...", "action": "signup" }  // optional
+  "message": "string",
+  "ops": [],
+  "cta": { "text": "string", "action": "signup" },
+  "meta": { "requestId": "uuid", "intent": "edit", "outcome": "ops_applied" }
 }
 ```
 
-### Cost Estimate
+HTTP semantics (intentional):
+- `422` for **client validation errors** (missing prompt/widgetType/controls/currentConfig/sessionId).
+- `200` with `{ "message": "..." }` for **upstream issues** (Paris/SF/provider down), to avoid noisy “Failed to load resource” console spam in Pages/DevStudio surfaces.
 
-| Metric | Value |
-|--------|-------|
-| Avg tokens per interaction | ~400 (input + output) |
-| DeepSeek cost per 1M tokens | ~$0.14 |
-| **Cost per interaction** | **~$0.00006** |
-| 100k interactions/month | **~$6/month** |
+### 5.2 Bob API: `POST /api/ai/outcome`
+Best-effort outcome attach used by the UI:
+```json
+{
+  "requestId": "uuid",
+  "sessionId": "anon-session-id",
+  "event": "ux_keep",
+  "occurredAtMs": 1735521234567,
+  "timeToDecisionMs": 1200
+}
+```
 
----
+Supported `event` values (V1):
+- `ux_keep`, `ux_undo`
+- `cta_clicked`
+- `signup_started`, `signup_completed`
+- `upgrade_clicked`, `upgrade_completed`
 
-## Conversion Metrics
-
-### Track
-
-| Metric | Target |
-|--------|--------|
-| Copilot tab usage | 30% of playground visitors try it |
-| Successful edit rate | 80% of prompts result in valid ops |
-| Signup after Copilot use | 20% of Copilot users |
-| Copilot → Paid (30 day) | 5% of Copilot users |
-
-### Attribution
-
-Track: `sessionId` → `copilot_interactions` → `signup` → `conversion`
-
----
-
-## Implementation
-
-### Phase 1: MVP
-- [ ] Add "Copilot" tab to Minibob ToolDrawer
-- [ ] San Francisco `/api/ai/sdr-copilot` endpoint
-- [ ] DeepSeek integration with ops generation
-- [ ] Apply ops to widget state
-- [ ] Basic conversion CTAs in responses
-- [ ] Analytics: interactions, signups
-
-### Phase 2: Polish
-- [ ] Quick action buttons (common requests)
-- [ ] Smarter conversion timing (not every response)
-- [ ] Error handling for invalid ops
-- [ ] Prompt refinement based on failure analysis
-
-### Phase 3: Optimize
-- [ ] A/B test conversion messaging
-- [ ] Analyze common requests → improve system prompt
-- [ ] Per-widget-type prompt tuning
+HTTP semantics:
+- Always returns `200` with `{ ok: true|false }` (best-effort logging; should not break UX).
 
 ---
 
-## Difference: SDR Copilot vs Editor Copilot
+## 6) San Francisco agent contract (V1)
 
-| Aspect | SDR Copilot (Minibob) | Editor Copilot (Full Bob) |
-|--------|----------------------|---------------------------|
-| **Location** | Minibob playground | Full Bob editor |
-| **Users** | Anonymous visitors | Registered users |
-| **LLM** | DeepSeek (cheap) | Claude/GPT-4 (quality) |
-| **Scope** | Light edits only | Full customization + content |
-| **Goal** | Convert to signup | Help users succeed |
-| **Content gen** | No | Yes (paid feature) |
-| **Conversion CTAs** | Yes, frequent | No (already converted) |
+Current Minibob uses:
+- `agentId: "sdr.widget.copilot.v1"`
 
----
+The agent is expected to return:
+- `message` (always)
+- `ops[]` (optional; empty means “no edit”)
+- `cta?` (optional)
+- `meta` (includes at least intent/outcome + version stamps when available)
 
-## Dependencies
-
-| Dependency | Status |
-|------------|--------|
-| Minibob built | Required |
-| ToolDrawer with tab system | Required (exists in Bob) |
-| San Francisco API | Required |
-| DeepSeek API key | Required |
-| Ops validation (compiler) | Required (exists) |
-| Analytics tracking | Required |
+It uses two deterministic layers before/around model output:
+1) **Global edit vocabulary** (clarify ambiguous terms like “background”).
+2) **URL guardrails** (single-page read, SSRF protections, Cloudflare HTML detection).
 
 ---
 
-## Success Criteria
+## 7) Global edit vocabulary (shared across all widgets)
 
-1. **Cost:** < $50/month at 500k playground visitors
-2. **Engagement:** 30%+ of visitors try Copilot tab
-3. **Edit success rate:** 80%+ of prompts produce valid ops
-4. **Conversion lift:** 15%+ increase in playground → signup rate
+San Francisco owns the shared dictionary:
+- `sanfrancisco/src/lexicon/global_dictionary.json`
+
+Purpose:
+- Map user language into canonical widget concepts (stage vs pod vs content).
+- Trigger deterministic clarification prompts when a request is ambiguous.
+
+Example:
+- User: “Make the background darker”
+- Copilot: “Do you mean the stage (outside the widget) or the pod (the widget surface)?”
 
 ---
 
-## Open Questions
+## 8) URL read (V1 capability)
 
-1. **Quick actions:** Pre-defined buttons for common requests? Which ones?
-2. **Multilingual:** DeepSeek handles all languages? Test needed.
-3. **Context size:** Full config or summarized? (token cost vs accuracy)
-4. **Fallback:** If DeepSeek fails, show "Try Manual mode" or retry?
-5. **CTA frequency:** Every response? Every 3rd? A/B test.
+Copilot may read **one public URL** to propose edits (for example: “Update these FAQs from my homepage”).
 
+Constraints:
+- Only one page (no crawling).
+- Protocol: `http`/`https` only.
+- Blocks localhost, `.local`, and direct IPs (SSRF hard-stop).
+- Caps response size to avoid token explosions.
+- If the page is an error page (Cloudflare 5xx HTML), Copilot should ask for another URL or suggest manual edits.
+
+---
+
+## 9) Learning + Regression Protection
+
+### 9.1 Learning signals (outcomes, not “more logs”)
+San Francisco logs every interaction and Paris/Bob attach outcomes:
+- edit success (ops applied)
+- undo/keep decisions
+- CTA clicks + conversions
+- failure reasons (invalid ops, timeouts, upstream errors)
+
+### 9.2 Golden set (deterministic regression harness)
+The golden set protects:
+- routing decisions (explain vs clarify vs edit)
+- dictionary clarifications
+- URL guardrails / Cloudflare HTML detection
+
+Location + runner:
+- `fixtures/copilot/prompts.jsonl`
+- `fixtures/copilot/widgets/{widgetType}.json`
+- `scripts/eval-copilot.mjs` (`pnpm eval:copilot`)
+
+---
+
+## 10) Rollout model
+
+San Francisco indexes events by exposure stage (`envStage`), stamped into grants by Paris (`ENV_STAGE`):
+- `local` (developer machine)
+- `cloud-dev` (integration surface; can break)
+- `uat` / `limited-ga` / `ga` (release stages; production infra with controlled exposure)
+
+---
+
+## 11) Success criteria (initial)
+
+- Valid ops rate: ≥ 80% in Cloud-dev
+- Undo rate: ≤ 25% in Cloud-dev
+- p95 latency: < 8 seconds for simple edits
+- Conversion lift: positive signal without harming editing success

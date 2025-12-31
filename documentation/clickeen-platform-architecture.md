@@ -26,6 +26,19 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 
 ---
 
+## Core Architecture Principles
+
+> Full details: [Clickeen_Architecture_Tenets.md](./Clickeen_Architecture_Tenets.md)
+
+| Principle | Rule |
+|-----------|------|
+| **No Fallbacks** | Orchestrators never apply default values. If data is missing, the system fails visibly. |
+| **Widget Files = Truth** | The 5 files in `tokyo/widgets/{name}/` define everything about a widget. |
+| **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. They don't validate widget-specific logic. |
+| **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
+
+---
+
 ## System Map
 
 | System | Repo Path | Deploy | Responsibility | Status |
@@ -525,7 +538,6 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 | Widget | Status | Notable Patterns |
 |--------|--------|------------------|
 | FAQ | ✅ Complete | object-manager → repeater (nested), dropdown-edit (rich text) |
-| Countdown | ✅ Complete | Standard controls |
 
 ### What's Working
 

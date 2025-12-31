@@ -22,12 +22,11 @@ The widget definition (`tokyo/widgets/{widget}/spec.json`) is the source of trut
 
 Bob compiles the spec into a deterministic contract:
 - `compiled.panels[]` (rendered panel HTML)
-- `compiled.controls[]` (strict editable allowlist + type/constraints metadata)
+- `compiled.controls[]` (editor binding metadata + AI context)
 
-### Bob is strict (no “silent fixing” of invalid state)
-- Instance load fails fast if `instanceData` is invalid.
-- All edits are ops; ops are validated and applied fail-closed.
-- Widget runtimes assume state is canonical and do not merge defaultState at runtime.
+### Bob does not “heal” state
+- Bob does not coerce values or perform orchestrator-owned schema validation.
+- State errors are surfaced by the widget runtime (Tokyo) and fixed at the source (Tokyo widget package + our own code).
 
 ---
 
@@ -36,7 +35,7 @@ Bob compiles the spec into a deterministic contract:
 ### DevStudio harness (current repo behavior)
 DevStudio fetches:
 - `compiled` (via Bob compile API)
-- `instanceData` (via Bob → Paris proxy)
+- `instanceData` (via Paris)
 
 Then DevStudio posts into Bob:
 ```js
@@ -53,7 +52,6 @@ Then DevStudio posts into Bob:
 Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Requires `compiled.controls[]` (must be present and non-empty)
 - Uses `compiled.defaults` when `instanceData` is null
-- Validates `instanceData` strictly (`validateWidgetData`)
 - Stores `{ compiled, instanceData }` in React state
 
 ### Intended product shape (still aligned)
@@ -124,7 +122,6 @@ Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
 Golden compiler fixtures live in:
 - `admin/tests/compiled-fixtures.test.ts`
 - `admin/tests/fixtures/compiled-faq.json`
-- `admin/tests/fixtures/compiled-countdown.json`
 
 Use them to catch accidental compiler drift during refactors.
 
@@ -155,12 +152,31 @@ The compiler and ToolDrawer support:
 - **Clusters**: `<tooldrawer-cluster>` expands to a tight wrapper in compiled HTML; ToolDrawer can also auto-nest dependent clusters based on `show-if`.
 
 ### Built-in editor actions (current)
-- “Generate answer with AI” exists for FAQ answer fields (UI in `bob/components/TdMenuContent.tsx`, calls `/api/ai/faq-answer` and applies returned ops).
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
 
 ---
 
-## Edit Engine (Ops + validation)
+## Copilot (chat-first, ops-based)
+
+Bob includes a chat-only Copilot panel in ToolDrawer (`bob/components/CopilotPane.tsx`).
+
+Behavior:
+- Sends prompts to `/api/ai/sdr-copilot` with `{ prompt, widgetType, currentConfig, controls, sessionId, instancePublicId }`.
+- Applies returned `ops[]` locally as pure state transforms (no orchestrator-owned schema validation/coercion).
+- Requires an explicit **Keep** or **Undo** decision for any applied ops (blocks new prompts while pending; no auto-commit).
+- Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
+
+### AI routes (current)
+- `/api/ai/sdr-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
+- `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
+
+### Copilot env vars (local + Cloud-dev)
+- `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.
+- `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/sdr-copilot` also has local fallbacks + health probing.)
+
+---
+
+## Edit Engine (Ops)
 
 ### Contract
 Edits are expressed as ops (no direct mutation paths):
@@ -174,15 +190,11 @@ type WidgetOp =
 
 ### How ops are applied
 - Entrypoint: `bob/lib/ops.ts`
-- Ops must match `compiled.controls[]` (fail-closed allowlist).
-- Values are strictly coerced by `control.kind` (`bob/lib/edit/controls.ts`).
-- `validateWidgetData()` runs on:
-  - Instance load (`useWidgetSession`)
-  - After every op apply
-
-If validation fails:
-- Instance load fails and Bob shows an “Instance load error”.
-- Edits are rejected and Bob shows an “Edit rejected” error panel.
+- Ops are applied as pure state transforms (no coercion, no schema validation).
+- Minimal protocol safety:
+  - reject empty/invalid ops arrays
+  - reject prohibited path segments (`__proto__`, `constructor`, `prototype`)
+  - enforce array semantics for `insert/remove/move`
 
 ### Control metadata (the machine contract)
 `compiled.controls[]` includes (as available):
@@ -277,4 +289,5 @@ Preview:
 ## Not solved yet (intentionally)
 - Backward compatibility / legacy instance migration.
 - Hardened embed runtime surface (Venice) as a product contract.
-- Full Copilot chat UX (we only have a narrow FAQ “generate answer” endpoint + ops pathway).
+- Copilot rollout/auth: Paris grant issuance is currently a dev-gated surface in this repo snapshot; production user/workspace auth + allowlists/flags evolve with the release model.
+- Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).

@@ -19,6 +19,12 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
   try {
     const res = await fetch(specUrl, { cache: 'no-store' });
     if (!res.ok) {
+      if (res.status === 404) {
+        return NextResponse.json(
+          { error: `[Bob] Widget not found in Tokyo: ${widgetname}` },
+          { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } },
+        );
+      }
       return NextResponse.json(
         { error: `[Bob] Failed to fetch widget spec from Tokyo (${res.status} ${res.statusText})` },
         { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } },

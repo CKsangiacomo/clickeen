@@ -6,18 +6,17 @@ Michael is Clickeen’s **minimal** persistence layer. It stores exactly what we
 
 The schema is defined by:
 - `supabase/migrations/20251228000000__base.sql`
-- `supabase/seed.sql` (local dev only)
 
 If this document conflicts with those files, the SQL wins.
 
 ## What Michael Stores (and only this)
 
 ### `widgets`
-One row per widget type (FAQ, Countdown, …).
+One row per widget type (e.g. FAQ).
 
 Core columns:
 - `id` (uuid) — internal
-- `type` (text) — widget type slug (e.g. `faq`, `countdown`)
+- `type` (text) — widget type slug (e.g. `faq`)
 - `name` (text) — human label
 
 ### `widget_instances`
@@ -52,7 +51,6 @@ One per widget type. Used for:
 
 Examples:
 - `wgt_faq_main`
-- `wgt_countdown_main`
 
 ### B) Template instance (Clickeen curated “gallery”)
 These are instances created by Clickeen (via Bob) that serve as starter designs.
@@ -72,7 +70,6 @@ Instances created by users (usually by cloning either a `main` instance or a tem
 
 Examples:
 - `wgt_faq_u_4f8k2m1x`
-- `wgt_countdown_u_9a2d7c`
 
 ## “Instances ARE Templates” (how templates work)
 
@@ -86,11 +83,7 @@ A “template” is just a `widget_instances` row whose `public_id` uses the `tm
 
 Local DB is Supabase CLI + Docker:
 - `supabase db reset` applies `supabase/migrations/*`
-- then applies `supabase/seed.sql`
-
-The seed creates:
-- widgets: `faq`, `countdown`
-- instances: `wgt_faq_main`, `wgt_countdown_main`
+- then run `pnpm bootstrap:local` to create `wgt_*_main` instances from Tokyo `spec.json` defaults (no SQL seeds)
 
 ## What Michael Does NOT Do (by design)
 

@@ -25,7 +25,9 @@ fi
 echo "[dev-up] Loading local Supabase connection values"
 ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
 ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
-eval "$(supabase status --output env | rg '^[A-Z_]+=' || true)"
+# Avoid depending on ripgrep (rg) in dev environments; plain grep is sufficient.
+# shellcheck disable=SC2046
+eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
 SUPABASE_URL=${SUPABASE_URL:-${API_URL:-}}
 SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-${SECRET_KEY:-}}
 if [ -n "$ORIG_SUPABASE_URL" ]; then
@@ -86,8 +88,8 @@ done
 echo "[dev-up] Cleaning Bob build artifacts (.next) to avoid stale chunk mismatches"
 rm -rf "$ROOT_DIR/bob/.next" || true
 
+# Local dev always uses the local Tokyo CDN stub.
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
-TOKYO_URL=${NEXT_PUBLIC_TOKYO_URL:-$TOKYO_URL}
 
 echo "[dev-up] Starting Tokyo CDN stub on 4000"
 (
@@ -109,6 +111,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+  VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
   VARS+=(--var "ENV_STAGE:local")
   if [ -n "$SF_BASE_URL" ]; then
     VARS+=(--var "SANFRANCISCO_BASE_URL:$SF_BASE_URL")
@@ -131,6 +134,9 @@ if ! curl -sf "http://localhost:3001/api/healthz" >/dev/null 2>&1; then
 echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
+
+echo "[dev-up] Bootstrapping local widget instances from Tokyo defaults (no seeds)"
+PARIS_ORIGIN="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" node "$ROOT_DIR/scripts/bootstrap-local-widgets.mjs"
 
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] Starting SanFrancisco Worker (3002)"

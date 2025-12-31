@@ -73,6 +73,8 @@ function serveStatic(req, res, prefix) {
     const stream = fs.createReadStream(filePath);
     res.statusCode = 200;
     res.setHeader('Content-Type', getContentType(filePath));
+    // Dev ergonomics: avoid stale widget/dieter assets in iframes and hard-to-debug caching.
+    res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
     stream.on('error', () => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

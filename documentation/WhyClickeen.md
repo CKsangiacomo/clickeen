@@ -165,7 +165,7 @@ Without both, AI is useless. With both, it's magic.
 - Attributes-only contracts (`data-variant="primary"` not `class="btn-blue-500"`)
 - Structured JSON schemas for every widget type
 - Complete API contracts (Paris/Venice documented)
-- Bob validates ops fail-closed; AI can't break things
+- Bob applies ops as pure transforms; failures are visible (no hidden healing)
 
 **Why This Is Unfair:**
 
@@ -234,7 +234,7 @@ Clickeen is architected by a designer. Our design-led culture creates a product 
 **Play without an account (marketing site):**
 - Visitor browses widgets on clickeen.com website (Prague)
 - Chooses a widget (e.g., "FAQ", "Testimonials") and lands on the widget's landing page
-- Sees MiniBob loaded with a draft instance
+- Sees MiniBob loaded with an unpublished instance
 - Can customize config (text, colors, etc.) and optionally start from a different starter design
 - No signup needed to experiment
 - **NO Save button** in MiniBob (claim persists on signup)
@@ -314,7 +314,7 @@ Clickeen isn't building separate products—it's building **composable building 
 │                     WIDGETS = ATOMIC BUILDING BLOCKS                    │
 │                                                                         │
 │   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
-│   │ Countdown│   │   FAQ    │   │Testimonial│  │  Pricing │           │
+│   │ Logo     │   │   FAQ    │   │Testimonial│  │  Pricing │           │
 │   └────┬─────┘   └────┬─────┘   └─────┬─────┘  └────┬─────┘           │
 │        │              │               │              │                 │
 │        └──────────────┴───────┬───────┴──────────────┘                 │
@@ -335,7 +335,7 @@ Clickeen isn't building separate products—it's building **composable building 
 
 | Phase | Product | Description |
 |-------|---------|-------------|
-| **1** | Clickeen Widgets | Embeddable widgets for websites (FAQ, Countdown, Testimonials, etc.) |
+| **1** | Clickeen Widgets | Embeddable widgets for websites (FAQ, Logo Showcase, Testimonials, etc.) |
 | **2** | Clickeen Emails | Email templates that embed the same widgets |
 | **3** | Clickeen Landing Pages | Landing pages composed of widgets |
 | **4** | Clickeen Creatives | Social posts, ads, memes using the same building blocks |
@@ -344,7 +344,7 @@ Clickeen isn't building separate products—it's building **composable building 
 
 **1. Create Once, Use Everywhere**
 ```
-User creates Black Friday countdown:
+User creates a Black Friday landing-page widget:
 ├── Embeds on website ✓
 ├── Adds to promo email ✓
 ├── Uses on landing page ✓
@@ -363,16 +363,16 @@ Clickeen: "I have to rebuild my widget AND my emails AND my
 
 **3. Compositional Power**
 ```
-Landing Page = Hero + Countdown + FAQ + Testimonials + CTA
-Email = Header + Countdown + CTA
-Ad = Headline + Countdown + Logo
+Landing Page = Hero + Logo Showcase + FAQ + Testimonials + CTA
+Email = Header + Logo Showcase + CTA
+Ad = Headline + Logo Showcase + CTA
 
 Users compose, not just use.
 ```
 
 **4. Cross-Context Learning**
 ```
-Same countdown, different contexts:
+Same widget, different contexts:
 ├── Website: What CTAs convert?
 ├── Email: What urgency works?
 ├── Landing Page: What placement converts?
@@ -398,10 +398,10 @@ Each step = deeper lock-in + more revenue
            ┌──────────────────────────────────────────┐
            │              USER WORKSPACE              │
            │                                          │
-           │  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
-           │  │Countdown│  │   FAQ   │  │ Pricing │  │
-           │  │ Widget  │  │ Widget  │  │ Widget  │  │
-           │  └────┬────┘  └────┬────┘  └────┬────┘  │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
+│  │ Logo    │  │   FAQ   │  │ Pricing │  │
+│  │ Showcase│  │ Widget  │  │ Widget  │  │
+│  └────┬────┘  └────┬────┘  └────┬────┘  │
            │       │            │            │       │
            │       └────────────┼────────────┘       │
            │                    │                    │

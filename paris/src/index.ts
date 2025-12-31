@@ -28,6 +28,14 @@ type UpdatePayload = {
   status?: 'published' | 'unpublished';
 };
 
+type CreateInstancePayload = {
+  widgetType: string;
+  publicId: string;
+  config: Record<string, unknown>;
+  status?: 'published' | 'unpublished';
+  widgetName?: string;
+};
+
 type GrantSubject =
   | { kind: 'anon'; sessionId: string }
   | { kind: 'user'; userId: string; workspaceId: string }
@@ -145,6 +153,12 @@ async function handleHealthz() {
   return json({ up: true });
 }
 
+async function handleNotImplemented(req: Request, env: Env, feature: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+  return json({ error: 'NOT_IMPLEMENTED', feature }, { status: 501 });
+}
+
 async function handleAiGrant(req: Request, env: Env) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -163,7 +177,7 @@ async function handleAiGrant(req: Request, env: Env) {
   const agentId = typeof body.agentId === 'string' ? body.agentId.trim() : '';
   const mode = body.mode === 'ops' ? 'ops' : 'editor';
 
-  const allowedAgentIds = new Set(['editor.faq.answer.v1', 'sdr.copilot', 'sdr.widget.copilot.v1', 'debug.grantProbe']);
+  const allowedAgentIds = new Set(['sdr.copilot', 'sdr.widget.copilot.v1', 'debug.grantProbe']);
   if (!agentId || !allowedAgentIds.has(agentId)) {
     return json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 });
   }
@@ -242,6 +256,24 @@ function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const s = value.trim();
   return s ? s : null;
+}
+
+function assertWidgetType(widgetType: unknown) {
+  const value = asTrimmedString(widgetType);
+  if (!value) return { ok: false as const, issues: [{ path: 'widgetType', message: 'widgetType is required' }] };
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(value)) {
+    return { ok: false as const, issues: [{ path: 'widgetType', message: 'invalid widgetType format' }] };
+  }
+  return { ok: true as const, value };
+}
+
+function assertPublicId(publicId: unknown) {
+  const value = asTrimmedString(publicId);
+  if (!value) return { ok: false as const, issues: [{ path: 'publicId', message: 'publicId is required' }] };
+  if (!/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/.test(value)) {
+    return { ok: false as const, issues: [{ path: 'publicId', message: 'invalid publicId format' }] };
+  }
+  return { ok: true as const, value };
 }
 
 function isOutcomeAttachPayload(value: unknown): value is {
@@ -401,6 +433,21 @@ async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null>
   return rows?.[0] ?? null;
 }
 
+async function loadWidgetByType(env: Env, widgetType: string): Promise<WidgetRow | null> {
+  const params = new URLSearchParams({
+    select: 'id,type,name',
+    type: `eq.${widgetType}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load widget by type (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as WidgetRow[];
+  return rows?.[0] ?? null;
+}
+
 async function handleGetInstance(req: Request, env: Env, publicId: string) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -419,6 +466,97 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     config: instance.config,
     updatedAt: instance.updated_at ?? null,
   });
+}
+
+function titleCase(input: string): string {
+  return input
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+async function handleCreateInstance(req: Request, env: Env) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+
+  if (!isRecord(payload)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const issues: Array<{ path: string; message: string }> = [];
+
+  const widgetTypeResult = assertWidgetType((payload as any).widgetType);
+  if (!widgetTypeResult.ok) issues.push(...widgetTypeResult.issues);
+
+  const publicIdResult = assertPublicId((payload as any).publicId);
+  if (!publicIdResult.ok) issues.push(...publicIdResult.issues);
+
+  const configResult = assertConfig((payload as any).config);
+  if (!configResult.ok) issues.push(...configResult.issues);
+
+  const statusResult = assertStatus((payload as any).status);
+  if (!statusResult.ok) issues.push(...statusResult.issues);
+
+  const widgetName = asTrimmedString((payload as any).widgetName);
+
+  if (issues.length) return json(issues, { status: 422 });
+
+  const widgetType = widgetTypeResult.value;
+  const publicId = publicIdResult.value;
+  const config = configResult.value;
+  const status = statusResult.value ?? 'unpublished';
+
+  const existing = await loadInstanceByPublicId(env, publicId);
+  if (existing) return handleGetInstance(req, env, publicId);
+
+  let widget = await loadWidgetByType(env, widgetType);
+  if (!widget) {
+    const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        type: widgetType,
+        name: widgetName ?? (titleCase(widgetType) || widgetType),
+      }),
+    });
+    if (!insertRes.ok) {
+      const details = await readJson(insertRes);
+      return json({ error: 'DB_ERROR', details }, { status: 500 });
+    }
+    const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
+    widget = created?.[0] ?? null;
+  }
+
+  if (!widget?.id) {
+    return json({ error: 'DB_ERROR', message: 'Failed to resolve widget row' }, { status: 500 });
+  }
+
+  const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      widget_id: widget.id,
+      public_id: publicId,
+      status,
+      config,
+    }),
+  });
+  if (!instanceInsert.ok) {
+    const details = await readJson(instanceInsert);
+    return json({ error: 'DB_ERROR', details }, { status: 500 });
+  }
+
+  return handleGetInstance(req, env, publicId);
 }
 
 function assertConfig(config: unknown) {
@@ -505,6 +643,17 @@ export default {
 
       if (pathname === '/api/healthz') return handleHealthz();
 
+      if (pathname === '/api/usage') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleNotImplemented(req, env, 'usage');
+      }
+
+      const submitMatch = pathname.match(/^\/api\/submit\/([^/]+)$/);
+      if (submitMatch) {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleNotImplemented(req, env, 'submit');
+      }
+
       if (pathname === '/api/ai/grant') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleAiGrant(req, env);
@@ -518,6 +667,11 @@ export default {
       if (pathname === '/api/instances') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleInstances(req, env);
+      }
+
+      if (pathname === '/api/instance') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleCreateInstance(req, env);
       }
 
       const instanceMatch = pathname.match(/^\/api\/instance\/([^/]+)$/);

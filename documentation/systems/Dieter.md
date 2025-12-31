@@ -50,7 +50,6 @@ If you add a new component or a new dependency, you must update the manifest emi
 2. **Widget-Specific Compositions** - Components built FROM primitives for specific widgets
    - `expander-faq.css` - FAQ-specific expander with delete button, Q&A structure
    - `card-testimonials.css` - Testimonial card layout
-   - `timer-countdown.css` - Countdown widget timer display
    - Each widget can create its own compositions as needed
 
 3. **Bob-Specific Components** - Components for Bob's UI
@@ -61,7 +60,6 @@ If you add a new component or a new dependency, you must update the manifest emi
 
 **Performance:** We never load all of Dieter. Each widget only loads the CSS for components it actually uses:
 - FAQ widget loads: `expander-faq.css`, `button.css`, `textfield.css`
-- Countdown widget loads: `timer-countdown.css`, `color-picker.css`, `dropdown.css`
 - Newsletter widget loads: whatever IT needs
 
 **Scalability:** Dieter can grow to 1,000+ components without performance penalty:
@@ -86,9 +84,7 @@ dieter/components/
 
   // Widget-specific compositions
   expander-faq.css
-  expander-countdown.css
   card-testimonials.css
-  timer-countdown.css
 
   // Bob-specific
   bob-basetooldrawer.css

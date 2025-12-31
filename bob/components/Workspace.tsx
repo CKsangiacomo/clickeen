@@ -10,6 +10,7 @@ export function Workspace() {
   const hasWidget = Boolean(compiled);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
+  const [iframeRevision, setIframeRevision] = useState(0);
   const displayName =
     meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
 
@@ -25,12 +26,22 @@ export function Workspace() {
 
     const handleLoad = () => setIframeReady(true);
     iframe.addEventListener('load', handleLoad);
-    iframe.src = compiled.assets.htmlUrl;
+    // Dev ergonomics: prevent stale Tokyo assets in the preview iframe (HTML/CSS/JS caching can make edits look like "nothing changed").
+    const baseUrl = compiled.assets.htmlUrl;
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    iframe.src = `${baseUrl}${sep}ck_preview_rev=${iframeRevision}`;
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
     };
-  }, [hasWidget, compiled, compiled?.assets.htmlUrl]);
+  }, [hasWidget, compiled, compiled?.assets.htmlUrl, iframeRevision]);
+
+  // Reload iframe when a new widget/instance is loaded (so HTML/CSS/JS changes are picked up immediately).
+  useEffect(() => {
+    if (!compiled) return;
+    setIframeRevision((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compiled?.assets.htmlUrl, meta?.publicId]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;

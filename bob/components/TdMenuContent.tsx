@@ -89,6 +89,14 @@ function runHydrators(scope: HTMLElement) {
   }
 }
 
+function syncSegmentedPressedState(input: HTMLInputElement) {
+  const segment = input.closest('.diet-segment');
+  if (!segment) return;
+  const button = segment.querySelector<HTMLElement>('.diet-btn-ictxt, .diet-btn-ic, .diet-btn-txt');
+  if (!button) return;
+  button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
+}
+
 type TdMenuContentProps = {
   panelId: PanelId | null;
   panelHtml: string;
@@ -501,10 +509,6 @@ export function TdMenuContent({
   const activePathRef = useRef<string | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const lastUpdateRef = useRef<TdMenuContentProps['lastUpdate']>();
-  const [aiInstruction, setAiInstruction] = useState('Make it concise, friendly, and helpful.');
-  const [aiStatus, setAiStatus] = useState<'idle' | 'loading' | 'done'>('idle');
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiLastAppliedPath, setAiLastAppliedPath] = useState<string | null>(null);
 
   useEffect(() => {
     lastUpdateRef.current = lastUpdate ?? null;
@@ -543,92 +547,8 @@ export function TdMenuContent({
   }, [panelHtml]);
 
   useEffect(() => {
-    setAiError(null);
-    setAiStatus('idle');
-    setAiLastAppliedPath(null);
+    // (reserved for future per-path UX enhancements)
   }, [selectedPath]);
-
-  const faqAnswerContext = useMemo(() => {
-    if (widgetKey !== 'faq') return null;
-    if (!selectedPath) return null;
-
-    const match = selectedPath.match(/^sections\.(\d+)\.faqs\.(\d+)\.answer$/);
-    if (!match) return null;
-
-    const sectionIndex = Number(match[1]);
-    const faqIndex = Number(match[2]);
-    const questionPath = `sections.${sectionIndex}.faqs.${faqIndex}.question`;
-    const sectionTitlePath = `sections.${sectionIndex}.title`;
-
-    const question = getAt<unknown>(instanceData, questionPath);
-    const sectionTitle = getAt<unknown>(instanceData, sectionTitlePath);
-    const existingAnswer = getAt<unknown>(instanceData, selectedPath);
-
-    return {
-      path: selectedPath,
-      question: typeof question === 'string' ? question : String(question ?? ''),
-      existingAnswer: typeof existingAnswer === 'string' ? existingAnswer : String(existingAnswer ?? ''),
-      sectionTitle: typeof sectionTitle === 'string' ? sectionTitle : String(sectionTitle ?? ''),
-    };
-  }, [widgetKey, selectedPath, instanceData]);
-
-  const handleGenerateFaqAnswer = async () => {
-    if (!faqAnswerContext) return;
-    setAiError(null);
-    setAiStatus('loading');
-
-    try {
-      const res = await fetch('/api/ai/faq-answer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: faqAnswerContext.path,
-          question: faqAnswerContext.question,
-          existingAnswer: faqAnswerContext.existingAnswer,
-          instruction: aiInstruction,
-        }),
-      });
-
-      const text = await res.text();
-      let payload: any = null;
-      try {
-        payload = text ? JSON.parse(text) : null;
-      } catch {
-        payload = null;
-      }
-
-      if (!res.ok) {
-        const issueMessage = Array.isArray(payload?.issues)
-          ? (payload.issues as any[]).map((i) => (i && typeof i.message === 'string' ? i.message : '')).filter(Boolean)
-          : Array.isArray(payload)
-            ? (payload as any[]).map((i) => (i && typeof i.message === 'string' ? i.message : '')).filter(Boolean)
-            : [];
-        const message =
-          typeof payload?.message === 'string'
-            ? payload.message
-            : issueMessage.length
-              ? issueMessage.join('\n')
-            : typeof payload?.error === 'string'
-              ? payload.error
-              : text || `AI request failed (${res.status})`;
-        throw new Error(message);
-      }
-
-      const ops = Array.isArray(payload?.ops) ? (payload.ops as WidgetOp[]) : null;
-      if (!ops || ops.length === 0) throw new Error('AI returned no ops');
-
-      const applied = applyOps(ops);
-      if (!applied.ok) {
-        throw new Error(applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n'));
-      }
-
-      setAiLastAppliedPath(faqAnswerContext.path);
-      setAiStatus('done');
-    } catch (err) {
-      setAiStatus('idle');
-      setAiError(err instanceof Error ? err.message : String(err));
-    }
-  };
 
   // Inject panel HTML when it changes
   useEffect(() => {
@@ -751,6 +671,18 @@ export function TdMenuContent({
       const isActive = activePathRef.current === path;
       const lastUpdate = lastUpdateRef.current;
 
+      if (field instanceof HTMLInputElement && field.type === 'radio') {
+        const nextChecked = value != null && String(value) === field.value;
+        if (!isActive && field.checked !== nextChecked) {
+          field.checked = nextChecked;
+          syncSegmentedPressedState(field);
+        } else if (!isActive) {
+          // Keep aria-pressed in sync even when the checked state didn't change.
+          syncSegmentedPressedState(field);
+        }
+        return;
+      }
+
       if (field instanceof HTMLInputElement && field.type === 'checkbox') {
         const nextChecked = value === true;
         if (isActive) return;
@@ -825,77 +757,6 @@ export function TdMenuContent({
   return (
     <div className="tdmenucontent">
       <div className="heading-3">{panelId}</div>
-      {faqAnswerContext ? (
-        <section
-          style={{
-            marginTop: 'var(--space-2)',
-            padding: 'var(--space-2)',
-            border: '1px solid var(--color-system-gray-5)',
-            borderRadius: 'var(--control-radius-md)',
-            background: 'var(--color-system-gray-6-step5)',
-          }}
-          aria-label="AI generate"
-        >
-          <div className="label-s">Generate answer with AI</div>
-          <div className="caption" style={{ opacity: 0.7, marginTop: 'var(--space-1)' }}>
-            {faqAnswerContext.sectionTitle ? `Section: ${faqAnswerContext.sectionTitle}` : null}
-            {faqAnswerContext.sectionTitle ? ' • ' : null}
-            {faqAnswerContext.question ? `Q: ${faqAnswerContext.question}` : 'Select an answer field to generate.'}
-          </div>
-
-          <textarea
-            className="body-s"
-            value={aiInstruction}
-            onChange={(e) => setAiInstruction(e.target.value)}
-            rows={2}
-            style={{
-              width: '100%',
-              marginTop: 'var(--space-2)',
-              padding: 'var(--space-2)',
-              borderRadius: 'var(--control-radius-md)',
-              border: '1px solid var(--color-system-gray-5)',
-            }}
-            placeholder="Optional instruction (tone, length, etc.)"
-          />
-
-          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="primary"
-              type="button"
-              onClick={handleGenerateFaqAnswer}
-              disabled={aiStatus === 'loading' || !faqAnswerContext.question}
-            >
-              <span className="diet-btn-txt__label">{aiStatus === 'loading' ? 'Generating…' : 'Generate'}</span>
-            </button>
-            {undoLastOps ? (
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="neutral"
-                type="button"
-                onClick={undoLastOps}
-                disabled={!canUndo}
-              >
-                <span className="diet-btn-txt__label">Undo</span>
-              </button>
-            ) : null}
-          </div>
-
-          {aiLastAppliedPath ? (
-            <div className="caption" style={{ opacity: 0.7, marginTop: 'var(--space-2)' }}>
-              Applied to: {aiLastAppliedPath}
-            </div>
-          ) : null}
-
-          {aiError ? (
-            <pre className="caption" style={{ whiteSpace: 'pre-wrap', marginTop: 'var(--space-2)' }}>
-              {aiError}
-            </pre>
-          ) : null}
-        </section>
-      ) : null}
       <div className="tdmenucontent__fields" ref={containerRef} />
     </div>
   );

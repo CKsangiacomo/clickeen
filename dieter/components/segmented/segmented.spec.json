@@ -112,6 +112,26 @@
   },
   "defaults": [
     {
+      "id": "segmented",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-segmented", "data-size='{{size}}'"],
+      "context": {
+        "variant": "txt",
+        "size": "md",
+        "ariaLabel": "",
+        "groupName": "",
+        "buttonLayout": "txt",
+        "buttonClass": "diet-btn-{{buttonLayout}}",
+        "buttonSize": "{{size}}",
+        "buttonVariant": "neutral"
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "body-xs" },
+        "md": { "labelClass": "body-s" },
+        "lg": { "labelClass": "body-m" }
+      }
+    },
+    {
       "id": "segmented-ictxt",
       "sizes": [
         "sm",

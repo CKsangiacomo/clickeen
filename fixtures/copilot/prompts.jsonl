@@ -1,14 +1,50 @@
+# FAQ — explain (deterministic, no model call)
 {"name":"explain multi-open","widgetType":"faq","prompt":"What does multi-open do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false}
 {"name":"explain capabilities","widgetType":"faq","prompt":"What can you do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"editable controls"}
 {"name":"explain accordion","widgetType":"faq","prompt":"What is an accordion?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"collapsible"}
+{"name":"explain expand all","widgetType":"faq","prompt":"What does expand all do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Expand all"}
+{"name":"explain expand first","widgetType":"faq","prompt":"What does expand first do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Expand first"}
+{"name":"explain faq title setting","widgetType":"faq","prompt":"What is the FAQ title setting?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"FAQ title"}
+{"name":"explain stage background setting","widgetType":"faq","prompt":"What is the Stage background setting?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Stage background"}
+{"name":"explain pod background setting","widgetType":"faq","prompt":"What is the Pod background setting?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Pod background"}
+{"name":"explain multiopen meaning","widgetType":"faq","prompt":"What does multiopen mean?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Multi-open"}
+{"name":"explain multi-open toggle","widgetType":"faq","prompt":"Is multi-open a toggle?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Multi-open"}
+
+# FAQ — clarify (global dictionary, deterministic)
 {"name":"clarify background scope","widgetType":"faq","prompt":"Make the background red","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify background bg shorthand","widgetType":"faq","prompt":"Set the bg to blue","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify background backdrop","widgetType":"faq","prompt":"Change the backdrop to black","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify background update hex","widgetType":"faq","prompt":"Update the background to #fff","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify background behind widget","widgetType":"faq","prompt":"Make the background behind the widget red","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
+{"name":"clarify font modern","widgetType":"faq","prompt":"Change the fonts to something modern","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}
+{"name":"clarify typography readable","widgetType":"faq","prompt":"Update the typography to be more readable","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}
+{"name":"clarify typeface playful","widgetType":"faq","prompt":"Set the typeface to something playful","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}
+{"name":"clarify text style classic","widgetType":"faq","prompt":"Style the text style to be classic","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}
 {"name":"clarify language","widgetType":"faq","prompt":"Can you change the FAQs in French?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"translate just the widget content"}
-{"name":"clarify overbroad everything","widgetType":"faq","prompt":"I'm a gondolier in Venice and my customers are French — can you adjust everything for that?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Reply “content” or “styling”"}
+{"name":"clarify language translate","widgetType":"faq","prompt":"Translate the FAQs into French","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"translate just the widget content"}
+{"name":"clarify language localize german","widgetType":"faq","prompt":"Can you localize this widget to German?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"translate just the widget content"}
+{"name":"clarify language en francais","widgetType":"faq","prompt":"Please translate the FAQs en français","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"translate just the widget content"}
+{"name":"clarify overbroad everything","widgetType":"faq","prompt":"I'm a gondolier in Venice and my customers are French — can you adjust everything for that?","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"broad request"}
+{"name":"clarify overbroad all settings","widgetType":"faq","prompt":"Update all settings to match my brand","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"broad request"}
+
+# Cloudflare error detector (deterministic)
 {"name":"detect cloudflare error html","widgetType":"faq","prompt":"<!DOCTYPE html><div id=\"cf-wrapper\">Bad gateway <span class=\"code-label\">Error code 502</span></div>","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Cloudflare"}
+{"name":"detect cloudflare error details","widgetType":"faq","prompt":"<div id='cf-error-details'>Bad gateway <span class=\"code-label\">Error code 504</span></div>","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Cloudflare"}
+{"name":"detect cloudflare cdn-cgi marker","widgetType":"faq","prompt":"<link rel=\"stylesheet\" href=\"/cdn-cgi/styles/main.css\" /> Error code 502","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Cloudflare"}
+
+# URL parser / guard (deterministic)
 {"name":"multiple url clarification","widgetType":"faq","prompt":"Update my FAQs based on https://example.com and https://example.org","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"multiple URLs"}
+{"name":"multiple url clarification bare domains","widgetType":"faq","prompt":"Update my FAQs based on example.com and example.org","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"multiple URLs"}
+{"name":"multiple url clarification path variants","widgetType":"faq","prompt":"Update my FAQs based on https://example.com and example.com/about","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"multiple URLs"}
 {"name":"url blocked private ip","widgetType":"faq","prompt":"Update my FAQs based on http://127.0.0.1","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked localhost","widgetType":"faq","prompt":"Update my FAQs based on http://localhost","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"localhost_not_allowed"}
+{"name":"url blocked local domain","widgetType":"faq","prompt":"Update my FAQs based on https://internal.local","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"local_domain_not_allowed"}
+{"name":"url blocked private ip 10x","widgetType":"faq","prompt":"Update my FAQs based on http://10.0.0.5","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked private ip 192x","widgetType":"faq","prompt":"Update my FAQs based on http://192.168.1.10","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked private ip 172x","widgetType":"faq","prompt":"Update my FAQs based on http://172.16.0.10","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked private ip 169x","widgetType":"faq","prompt":"Update my FAQs based on http://169.254.10.10","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked private ip 100x","widgetType":"faq","prompt":"Update my FAQs based on http://100.64.10.10","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked private ip 0x","widgetType":"faq","prompt":"Update my FAQs based on http://0.0.0.0","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"private_ip"}
+{"name":"url blocked ipv6 ip_not_allowed","widgetType":"faq","prompt":"Update my FAQs based on https://[2001:db8::1]","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"ip_not_allowed"}
 {"name":"url blocked userinfo","widgetType":"faq","prompt":"Update my FAQs based on https://user:pass@example.com","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"userinfo_not_allowed"}
 {"name":"url blocked port","widgetType":"faq","prompt":"Update my FAQs based on https://example.com:8080","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"port_not_allowed"}
-{"name":"explain countdown timer mode","widgetType":"countdown","prompt":"What does timer mode do?","expectedIntent":"explain","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Allowed values include"}
-{"name":"clarify countdown background scope","widgetType":"countdown","prompt":"Make the background dark","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"stage"}
-{"name":"clarify countdown font target","widgetType":"countdown","prompt":"Change the fonts to something more modern","expectedIntent":"clarify","expectedOutcome":"no_ops","expectOps":false,"expectTextIncludes":"Which text should I change"}

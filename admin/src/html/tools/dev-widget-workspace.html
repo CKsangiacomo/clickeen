@@ -268,10 +268,38 @@ async function ensureCompiledWidget(widgetname) {
   if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
   if (compiledCache.has(slug)) return compiledCache.get(slug);
   const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Failed to compile widget ${widgetname} (${res.status})`);
+  if (!res.ok) {
+    let details = '';
+    try {
+      const text = await res.text();
+      if (text) {
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && typeof parsed === 'object' && 'error' in parsed) {
+            details = String(parsed.error || '');
+          } else {
+            details = text;
+          }
+        } catch {
+          details = text;
+        }
+      }
+    } catch {}
+    const suffix = details ? ` → ${details}` : '';
+    throw new Error(`Failed to compile widget ${widgetname} (${res.status})${suffix}`);
+  }
   const json = await res.json();
   compiledCache.set(slug, json);
   return json;
+}
+
+async function fetchInstanceConfig(publicId) {
+  const res = await fetch(`${PARIS_API}/instance/${encodeURIComponent(publicId)}?_t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
+  const json = await res.json();
+  return json?.config ?? null;
 }
 
 async function fetchInstances() {
@@ -386,6 +414,8 @@ async function sendInstanceToIframe(publicId) {
   if (!compiled) {
     compiled = await ensureCompiledWidget(instance.widgetname);
   }
+  const config = await fetchInstanceConfig(publicId);
+  instance.config = config;
   console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
   target.postMessage(
     {
@@ -393,7 +423,7 @@ async function sendInstanceToIframe(publicId) {
       publicId,
       widgetname: slug,
       compiled,
-      instanceData: instance.config ?? null,
+      instanceData: config ?? null,
     },
     BOB_ORIGIN
   );

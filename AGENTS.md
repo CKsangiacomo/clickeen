@@ -34,6 +34,6 @@
 - Update relevant docs (`documentation/CONTEXT.md`, feature PRDs) when behavior shifts.
 
 ## Security & Configuration Tips
-- Store secrets in per-app `.env.local` files; do not commit keys (Supabase/Redis, Edge Config, etc.).
-- Keep Dieter asset paths in sync with `tokyo/dieter`; avoid hard-coded absolute URLs.
+- Store secrets in per-app `.env.local` files; keep keys out of version control (Supabase/Redis, Edge Config, etc.).
+- Keep Dieter asset paths in sync with `tokyo/dieter`; prefer configurable base URLs over hard-coded absolute URLs.
 - When touching networked services, note rate limits and production endpoints; prefer feature flags or config toggles for risky changes.

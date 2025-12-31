@@ -19,6 +19,7 @@
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
     "compile:widgets": "node scripts/compile-all-widgets.mjs",
+    "bootstrap:local": "node scripts/bootstrap-local-widgets.mjs",
     "smoke:ai": "node scripts/smoke-ai.mjs",
     "eval:copilot": "node scripts/eval-copilot.mjs",
     "dev:bob": "pnpm --filter @clickeen/bob dev",

@@ -3,7 +3,8 @@
  Build @ck/dieter artifacts directly into tokyo/dieter:
  - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
- - Copy tokens/tokens.css -> dist/tokens.css
+ - Copy tokens/* -> dist/tokens/*
+ - Write dist/tokens.css wrapper -> dist/tokens/tokens.css
  - Copy icons/icons.json -> dist/icons/icons.json
  - Copy icons/svg/* -> dist/icons/svg/*
  - Copy component/foundation CSS
@@ -239,10 +240,11 @@ async function main() {
     console.error('[build-dieter] Missing tokens source:', tokensSrc);
     process.exit(1);
   }
-  copyRecursiveSync(tokensSrc, tokensDst);
   if (fs.existsSync(tokensDirSrc)) {
     copyRecursiveSync(tokensDirSrc, path.join(dist, 'tokens'));
   }
+  // Keep legacy /dieter/tokens.css working even though the actual token files live under /dieter/tokens/*.
+  fs.writeFileSync(tokensDst, "@import url('./tokens/tokens.css');\n");
 
   // 4) Copy icons manifest and svgs
   const iconsJsonSrc = path.join(dieterRoot, 'icons', 'icons.json');
