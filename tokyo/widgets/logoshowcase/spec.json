@@ -1,0 +1,271 @@
+{
+  "widgetname": "logoshowcase",
+  "defaults": {
+    "logos": [
+      { "id": "logo-1", "url": "/widgets/logoshowcase/assets/logo-1.png", "alt": "Company 1", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-2", "url": "/widgets/logoshowcase/assets/logo-2.png", "alt": "Company 2", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-3", "url": "/widgets/logoshowcase/assets/logo-3.png", "alt": "Company 3", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-4", "url": "/widgets/logoshowcase/assets/logo-4.png", "alt": "Company 4", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-5", "url": "/widgets/logoshowcase/assets/logo-5.png", "alt": "Company 5", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-6", "url": "/widgets/logoshowcase/assets/logo-6.png", "alt": "Company 6", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-7", "url": "/widgets/logoshowcase/assets/logo-7.png", "alt": "Company 7", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-8", "url": "/widgets/logoshowcase/assets/logo-8.png", "alt": "Company 8", "link": "", "openInNewTab": true, "nofollow": false }
+    ],
+    "header": {
+      "show": true,
+      "title": "Trusted by leading companies",
+      "titleBold": true,
+      "titleItalic": false,
+      "caption": "",
+      "captionBold": false,
+      "captionItalic": false,
+      "alignment": "center"
+    },
+    "button": {
+      "show": false,
+      "text": "Contact Us",
+      "url": "",
+      "icon": "",
+      "iconPosition": "before",
+      "alignment": "center"
+    },
+    "layout": {
+      "mode": "ticker",
+      "width": 1200,
+      "logoSize": 80,
+      "spacing": 80,
+      "randomOrder": false,
+      "ticker": {
+        "speed": 5,
+        "pauseOnHover": true,
+        "direction": "left"
+      },
+      "carousel": {
+        "itemsVisible": 6,
+        "showArrows": true,
+        "autoSlide": false,
+        "slideDelay": 3
+      },
+      "grid": {
+        "columnsDesktop": 6,
+        "columnsTablet": 4,
+        "columnsMobile": 3
+      }
+    },
+    "responsive": {
+      "tablet": {
+        "logoSize": 60,
+        "spacing": 40
+      },
+      "mobile": {
+        "logoSize": 50,
+        "spacing": 20
+      }
+    },
+    "appearance": {
+      "colorScheme": "original",
+      "customColor": "#000000",
+      "hoverEffect": "none"
+    },
+    "stage": {
+      "background": "var(--color-system-white)",
+      "alignment": "center",
+      "paddingLinked": true,
+      "padding": 60,
+      "paddingTop": 60,
+      "paddingRight": 60,
+      "paddingBottom": 60,
+      "paddingLeft": 60
+    },
+    "pod": {
+      "background": "transparent",
+      "paddingLinked": true,
+      "padding": 0,
+      "paddingTop": 0,
+      "paddingRight": 0,
+      "paddingBottom": 0,
+      "paddingLeft": 0,
+      "widthMode": "full",
+      "contentWidth": 1200,
+      "radiusLinked": true,
+      "radius": "none",
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "radiusBR": "none",
+      "radiusBL": "none"
+    },
+    "typography": {
+      "globalFamily": "Inter",
+      "roleScales": {
+        "title": {
+          "xs": "20px", "s": "24px", "m": "28px", "l": "32px", "xl": "36px"
+        },
+        "caption": {
+          "xs": "14px", "s": "15px", "m": "16px", "l": "17px", "xl": "18px"
+        },
+        "button": {
+          "xs": "14px", "s": "15px", "m": "16px", "l": "18px", "xl": "20px"
+        }
+      },
+      "roles": {
+        "title": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "28px",
+          "fontStyle": "normal",
+          "weight": "600"
+        },
+        "caption": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "16px",
+          "fontStyle": "normal",
+          "weight": "400"
+        },
+        "button": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "16px",
+          "fontStyle": "normal",
+          "weight": "600"
+        }
+      }
+    },
+    "style": {
+      "buttonColor": "var(--color-brand-primary)",
+      "buttonTextColor": "var(--color-system-white)",
+      "buttonRadius": 8,
+      "titleColor": "var(--color-system-black)",
+      "captionColor": "color-mix(in oklab, var(--color-system-black), transparent 40%)",
+      "linksColor": "var(--color-brand-primary)"
+    },
+    "behavior": {
+      "showBacklink": true
+    }
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Logos' />",
+    "    <tooldrawer-field type='repeater' path='logos' label='Logos' add-label='Add logo' default-item='{\"id\":\"\",\"url\":\"\",\"alt\":\"\",\"link\":\"\",\"openInNewTab\":true,\"nofollow\":false}' template='<div class=\"diet-repeater__item-body diet-logo-item\"><div class=\"diet-logo-preview\"><img src=\"\" alt=\"\" data-bob-src=\"logos.__INDEX__.url\" /></div><div class=\"diet-logo-fields\"><div class=\"diet-textfield\" data-size=\"sm\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-xs\">URL</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"logos.__INDEX__.url\" placeholder=\"https://... or upload\" /></label></div><div class=\"diet-textfield\" data-size=\"sm\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-xs\">Alt</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"logos.__INDEX__.alt\" placeholder=\"Company name\" /></label></div><div class=\"diet-textfield\" data-size=\"sm\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-xs\">Link</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"logos.__INDEX__.link\" placeholder=\"https://...\" /></label></div><div class=\"diet-logo-toggles\"><label class=\"diet-toggle\" data-size=\"xs\"><input class=\"diet-toggle__input\" type=\"checkbox\" data-bob-path=\"logos.__INDEX__.openInNewTab\" /><span class=\"diet-toggle__track\"></span><span class=\"diet-toggle__label label-xs\">New tab</span></label><label class=\"diet-toggle\" data-size=\"xs\"><input class=\"diet-toggle__input\" type=\"checkbox\" data-bob-path=\"logos.__INDEX__.nofollow\" /><span class=\"diet-toggle__track\"></span><span class=\"diet-toggle__label label-xs\">Nofollow</span></label></div></div></div>' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Header' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.show' label='Show header' />",
+    "    <tooldrawer-field type='textedit' size='lg' path='header.title' label='Title' hint='Trusted by leading companies' show-if=\"header.show == true\" />",
+    "    <tooldrawer-field type='textedit' size='lg' path='header.caption' label='Caption' hint='Optional subtitle' show-if=\"header.show == true\" />",
+    "    <tooldrawer-field type='segmented' size='md' path='header.alignment' label='Alignment' show-if=\"header.show == true\" options='[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Right\",\"value\":\"right\"}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Call to Action' />",
+    "    <tooldrawer-field type='toggle' size='md' path='button.show' label='Show button' />",
+    "    <tooldrawer-field type='textfield' size='lg' path='button.text' label='Button text' hint='Contact Us' show-if=\"button.show == true\" />",
+    "    <tooldrawer-field type='textfield' size='lg' path='button.url' label='Button URL' hint='https://...' show-if=\"button.show == true\" />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='button.icon' label='Button icon' placeholder='No icon' show-if=\"button.show == true\" options='[{\"label\":\"None\",\"value\":\"\"},{\"label\":\"Arrow Right\",\"value\":\"arrow.right\"},{\"label\":\"Chevron Right\",\"value\":\"chevron.right\"},{\"label\":\"External Link\",\"value\":\"square.and.arrow.up\"},{\"label\":\"Sparkles\",\"value\":\"sparkles\"},{\"label\":\"Phone\",\"value\":\"phone\"},{\"label\":\"Paper Plane\",\"value\":\"paperplane\"}]' />",
+    "    <tooldrawer-field type='segmented' size='md' path='button.iconPosition' label='Icon position' show-if=\"button.show == true && button.icon != ''\" options='[{\"label\":\"Before\",\"value\":\"before\"},{\"label\":\"After\",\"value\":\"after\"}]' />",
+    "    <tooldrawer-field type='segmented' size='md' path='button.alignment' label='Alignment' show-if=\"button.show == true\" options='[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Right\",\"value\":\"right\"}]' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "",
+    "<bob-panel id='layout'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Display mode' />",
+    "    <tooldrawer-field type='choice-tiles' size='lg' path='layout.mode' label='Layout' options='[{\"label\":\"Ticker\",\"value\":\"ticker\"},{\"label\":\"Carousel\",\"value\":\"carousel\"},{\"label\":\"Grid\",\"value\":\"grid\"}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Size & spacing' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.logoSize' label='Logo size' min='20' max='200' unit='px' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.spacing' label='Spacing' min='0' max='200' unit='px' />",
+    "    <tooldrawer-field type='textfield' size='md' path='layout.width' label='Max width (px)' hint='1200' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"layout.mode == 'ticker'\">",
+    "    <tooldrawer-eyebrow text='Ticker settings' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.ticker.speed' label='Speed' min='1' max='10' hint-left='Slow' hint-right='Fast' />",
+    "    <tooldrawer-field type='toggle' size='md' path='layout.ticker.pauseOnHover' label='Pause on hover' />",
+    "    <tooldrawer-field type='segmented' size='md' path='layout.ticker.direction' label='Direction' options='[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"layout.mode == 'carousel'\">",
+    "    <tooldrawer-eyebrow text='Carousel settings' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.carousel.itemsVisible' label='Items visible' min='1' max='10' />",
+    "    <tooldrawer-field type='toggle' size='md' path='layout.carousel.showArrows' label='Show navigation arrows' />",
+    "    <tooldrawer-field type='toggle' size='md' path='layout.carousel.autoSlide' label='Auto-slide' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.carousel.slideDelay' label='Slide delay (seconds)' min='1' max='10' show-if=\"layout.carousel.autoSlide == true\" />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"layout.mode == 'grid'\">",
+    "    <tooldrawer-eyebrow text='Grid columns' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.grid.columnsDesktop' label='Desktop columns' min='2' max='12' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.grid.columnsTablet' label='Tablet columns' min='2' max='8' />",
+    "    <tooldrawer-field type='slider' size='md' path='layout.grid.columnsMobile' label='Mobile columns' min='1' max='4' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Responsive sizes' />",
+    "    <tooldrawer-field type='slider' size='md' path='responsive.tablet.logoSize' label='Tablet logo size' min='20' max='150' unit='px' />",
+    "    <tooldrawer-field type='slider' size='md' path='responsive.tablet.spacing' label='Tablet spacing' min='0' max='150' unit='px' />",
+    "    <tooldrawer-field type='slider' size='md' path='responsive.mobile.logoSize' label='Mobile logo size' min='20' max='120' unit='px' />",
+    "    <tooldrawer-field type='slider' size='md' path='responsive.mobile.spacing' label='Mobile spacing' min='0' max='100' unit='px' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Stage/Pod layout' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' placeholder='Choose width' value='{{pod.widthMode}}' options='[{\"label\":\"Full width\",\"value\":\"full\"},{\"label\":\"Fixed width\",\"value\":\"fixed\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.contentWidth' label='Width in pixels' show-if=\"pod.widthMode == 'fixed'\" />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='[{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTL' label='Top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTR' label='Top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBR' label='Bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBL' label='Bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]' />",
+    "    <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.paddingLinked' label='Link pod padding' value='{{pod.paddingLinked}}' />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.padding' label='Pod padding (px)' show-if=\"pod.paddingLinked == true\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingTop' label='Pod top padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingRight' label='Pod right padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingBottom' label='Pod bottom padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingLeft' label='Pod left padding (px)' show-if=\"pod.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='toggle' size='md' path='stage.paddingLinked' label='Link stage padding' value='{{stage.paddingLinked}}' />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.padding' label='Stage padding (px)' show-if=\"stage.paddingLinked == true\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingTop' label='Stage top padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingRight' label='Stage right padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingBottom' label='Stage bottom padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingLeft' label='Stage left padding (px)' show-if=\"stage.paddingLinked == false\" />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "",
+    "<bob-panel id='appearance'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Logo style' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.colorScheme' label='Color scheme' options='[{\"label\":\"Original colors\",\"value\":\"original\"},{\"label\":\"Grayscale\",\"value\":\"grayscale\"},{\"label\":\"Custom color\",\"value\":\"custom\"}]' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.customColor' label='Logo tint color' show-if=\"appearance.colorScheme == 'custom'\" />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.hoverEffect' label='Hover effect' options='[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Restore color\",\"value\":\"color-restore\"},{\"label\":\"Scale up\",\"value\":\"scale\"},{\"label\":\"Opacity fade\",\"value\":\"opacity\"}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Header style' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.titleColor' label='Title color' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.titleBold' label='Title bold' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.titleItalic' label='Title italic' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.captionColor' label='Caption color' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.captionBold' label='Caption bold' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.captionItalic' label='Caption italic' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.linksColor' label='Links color' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"button.show == true\">",
+    "    <tooldrawer-eyebrow text='Button style' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.buttonColor' label='Button color' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.buttonTextColor' label='Button text color' />",
+    "    <tooldrawer-field type='slider' size='md' path='style.buttonRadius' label='Button corner radius' min='0' max='50' unit='px' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Background' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Widget background' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "",
+    "<bob-panel id='settings'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Behavior' />",
+    "    <tooldrawer-field type='toggle' size='md' path='layout.randomOrder' label='Randomize logo order' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.showBacklink' label='Show Clickeen badge' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>"
+  ]
+}

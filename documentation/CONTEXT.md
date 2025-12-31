@@ -2,12 +2,15 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `WhyClickeen.md`.
 
-**Authoritative Sources (in order):**
-1. `supabase/migrations/` — Database schema truth
-2. `documentation/systems/` — System PRDs (Bob, Venice, Paris, etc.)
-3. `documentation/widgets/` — Widget PRDs and schemas
-4. `documentation/clickeen-platform-architecture.md` — System boundaries
-5. This file — Glossary and quick reference
+**Debugging order (when something is unclear):**
+1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
+2. Deployed Cloudflare config — environment variables/bindings can differ by stage
+3. `documentation/systems/` + `documentation/widgets/` — best-effort guides (may drift)
+4. `documentation/clickeen-platform-architecture.md` + this file — concepts and glossary
+
+Docs are not “single source of truth”. If docs and code disagree, prefer code/schema and update the docs.
+
+**Docs maintenance:** See `documentation/README.md`. Treat doc updates as part of the definition of done for any change that affects runtime behavior, APIs, env vars, or operational workflows.
 
 ---
 
@@ -279,6 +282,6 @@ UAT / Limited GA / GA are **release stages** (account-level exposure controls), 
 - **Compile-all gate**: `node scripts/compile-all-widgets.mjs` must stay green.
 
 **Key Discipline:**
-- Documentation is the source of truth. Update docs when behavior changes.
+- Runtime code + DB schema are truth. Update docs when behavior changes.
 - Preserve what works; no speculative refactors.
 - Ask questions rather than guess.

@@ -6,7 +6,7 @@ This document describes system boundaries, data flows, and how the platform fits
 **For strategy and vision:** See `WhyClickeen.md`
 **For system details:** See `systems/*.md`
 
-**Authority order:** DB Schema (`supabase/migrations/`) > System PRDs > Widget PRDs > CONTEXT.md
+For debugging reality, follow the “Debugging order” in `CONTEXT.md` (runtime code + DB schema, then deployed Cloudflare config, then docs).
 
 ---
 
@@ -116,18 +116,20 @@ Each release proceeds in 3 steps:
 
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
-- Public endpoints are under `/api/*` (`/api/instance/:publicId`, `/api/token`, etc.).
+- Public endpoints are under `/api/*`.
+  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId`, `GET /api/instances` (dev tooling), `POST /api/ai/grant`, `POST /api/ai/outcome`.
+  - Planned surfaces (not implemented here yet) are described in `documentation/systems/paris.md`.
 
 #### Venice (Workers)
-- Public embed surface (third-party websites only talk to Venice).
-- Fetches instance config from Paris; loads widget runtime assets from Tokyo.
+- Planned public embed surface (third-party websites only talk to Venice).
+- **Current repo snapshot:** `venice/` is a placeholder workspace; embed UX/runtime is not shipped yet.
 
 #### Tokyo (R2 + optional worker)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
-- `/healthz`, `/v1/execute`, queue consumer for non-blocking log writes.
+- `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
 - Stores sessions in KV, raw logs in R2, indexes in D1.
 
 ### Environment variables (minimum matrix)
@@ -136,9 +138,13 @@ Each release proceeds in 3 steps:
 |---|---|---|---|---|
 | **Bob (Pages)** | `NEXT_PUBLIC_TOKYO_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Compiler fetches widget specs over HTTP (even locally) |
 | **Bob (Pages)** | `PARIS_BASE_URL` | `https://paris.dev.clickeen.com` | `https://paris.clickeen.com` | Bob’s same-origin proxy to Paris |
+| **Bob (Pages)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
 | **Paris (Workers)** | `SUPABASE_URL` | dev project | prod project | Service role access |
 | **Paris (Workers)** | `SUPABASE_SERVICE_ROLE_KEY` | dev key | prod key | Never exposed to browsers |
-| **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET` | dev secret | prod secret | Shared with Paris for grant signing |
+| **Paris (Workers)** | `AI_GRANT_HMAC_SECRET` | dev secret | prod secret | Shared HMAC secret with San Francisco (grant + outcome signatures) |
+| **Paris (Workers)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Used to forward outcomes to `/v1/outcome` |
+| **Paris (Workers)** | `ENV_STAGE` | `cloud-dev` | `ga` | Exposure stage stamped into grants for learning attribution |
+| **San Francisco (Workers)** | `AI_GRANT_HMAC_SECRET` | dev secret | prod secret | Shared HMAC secret with Paris (grant + outcome signatures) |
 | **San Francisco (Workers)** | `DEEPSEEK_API_KEY` | dev key | prod key | Provider key lives only in San Francisco |
 
 **Hard security rule:**
@@ -226,6 +232,50 @@ Each release proceeds in 3 steps:
 │                                                          └─────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### AI Copilot Flow (Minibob / Bob)
+
+Copilot execution is a separate, budgeted flow that never exposes provider keys to the browser.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           AI COPILOT FLOW                               │
+│                                                                         │
+│  ┌──────────────┐   POST /api/ai/sdr-copilot   ┌─────────┐             │
+│  │ Browser UI   │ ────────────────────────────►│   Bob   │             │
+│  │ (ToolDrawer) │                              │  (API)  │             │
+│  └──────┬───────┘                              └────┬────┘             │
+│         │                                            │                  │
+│         │                         POST /api/ai/grant │                  │
+│         │                         (AI Grant)         ▼                  │
+│         │                                       ┌─────────┐            │
+│         │                                       │  Paris  │            │
+│         │                                       │   API   │            │
+│         │                                       └────┬────┘            │
+│         │                                            │                  │
+│         │                     POST /v1/execute (grant│                  │
+│         │                     + agentId + input)     ▼                  │
+│         │                                       ┌──────────────┐        │
+│         │                                       │ SanFrancisco  │        │
+│         │                                       │  /v1/execute  │        │
+│         │                                       └──────┬───────┘        │
+│         │                                              │                │
+│         │                                              ▼                │
+│         │                                         DeepSeek (LLM)        │
+│         │                                                               │
+│         │  Response: { message, ops?, meta.requestId, usage }           │
+│         ▼                                                               │
+│  Bob applies ops strictly (controls allowlist) and requires Keep/Undo   │
+│                                                                         │
+│  Outcomes (keep/undo/CTA clicks):                                       │
+│    Browser → POST /api/ai/outcome (Bob) → POST /api/ai/outcome (Paris)  │
+│           → POST /v1/outcome (SanFrancisco, signed)                     │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+Notes:
+- `envStage` is stamped into grants by Paris (`ENV_STAGE`) so San Francisco can index learning data by exposure stage.
+- San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `systems/sanfrancisco-learning.md`).
 
 ---
 
@@ -415,26 +465,28 @@ User opens widget → Bob GET /api/instance/:publicId
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → Venice GET /e/:publicId
-                    → Venice calls Paris for instance
-                    → Paris reads from Michael
-                    → Venice renders SSR HTML (planned: from Tokyo assets)
-                    → Venice fires usage pixel
+Visitor loads embed → Venice GET /e/:publicId (planned)
+	                    → Venice calls Paris for instance
+	                    → Paris reads from Michael
+	                    → Venice renders SSR HTML (planned: from Tokyo assets)
+	                    → Venice fires usage pixel
 ```
 
 ### 3. Form Submission Flow
 
 ```
-User submits form → POST /s/:publicId to Venice
-                  → Venice validates + proxies to Paris
-                  → Paris POST /api/submit/:publicId
-                  → Paris writes to Michael (widget_submissions)
-                  → Rate limited, no PII in events
+User submits form → POST /s/:publicId to Venice (planned)
+	                  → Venice validates + proxies to Paris
+	                  → Paris POST /api/submit/:publicId (planned)
+	                  → Paris writes to Michael (widget_submissions)
+	                  → Rate limited, no PII in events
 ```
 
 ---
 
 ## Plans & Entitlements
+
+Planned (not enforced in this repo snapshot).
 
 | Plan | Active Widgets | Branding | Premium Templates |
 |------|----------------|----------|-------------------|
@@ -461,7 +513,7 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 - **Embed tokens:** 128-bit random, rotatable, revocable
 - **Rate limiting:** Per-IP and per-instance on writes
 - **Embeds:** No third-party scripts, no cookies, no storage
-- **Secrets:** Only in Paris (Cloudflare Workers)
+- **Secrets:** Supabase service role in Paris; LLM provider keys in San Francisco
 - **CSP:** Strict; no third-party; `form-action 'self'`
 
 ---

@@ -35,6 +35,17 @@ function getContentType(filePath) {
       return 'application/json; charset=utf-8';
     case '.svg':
       return 'image/svg+xml; charset=utf-8';
+    case '.png':
+      return 'image/png';
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.webp':
+      return 'image/webp';
+    case '.gif':
+      return 'image/gif';
+    case '.ico':
+      return 'image/x-icon';
     default:
       return 'application/octet-stream';
   }

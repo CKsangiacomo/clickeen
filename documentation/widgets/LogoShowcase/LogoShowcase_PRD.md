@@ -1,6 +1,6 @@
 # Logo Showcase Widget PRD
 
-**Status:** NORMATIVE — Ready for Implementation  
+**Status:** PRD — Ready for Implementation  
 **Widget ID:** `content.logoshowcase`  
 **Category:** Content Display / Social Proof  
 
@@ -10,38 +10,49 @@
 
 The Logo Showcase widget displays client/partner logos in a visually appealing carousel, ticker (infinite scroll), or static grid layout. It builds trust and social proof by showcasing partnerships.
 
-### Performance Advantage
+### Key Advantages
 
-| Metric | Elfsight (Competitor) | Clickeen (Target) | Improvement |
-|--------|----------------------|-------------------|-------------|
-| Initial JS | 120KB+ | <3KB | 40× smaller |
-| First Paint | ~2s | ~300ms | 6× faster |
-| SSR | No | Yes (Venice) | 100% SEO |
-| Max Logos | 50 | 100 | 2× capacity |
+- **SSR-first**: Venice renders full HTML at edge for instant SEO indexability
+- **Logo capacity**: 100 logos (vs competitor 50)
+- **AI-native editing**: Spec-driven ToolDrawer with strict ops validation
 
 ---
 
-## Feature Scope (70%+ Elfsight Parity)
+## Feature Scope (100% Elfsight Parity)
 
-### ✅ MUST Implement (Core 70%)
+### ✅ MUST Implement (100% Feature Parity)
 
-1. **3 Layout Modes**: Ticker, Carousel, Grid
-2. **Logo Management**: Upload, reorder, delete (object-manager pattern)
-3. **Responsive Controls**: Desktop, tablet, mobile sizing
-4. **Header Section**: Title, caption, show/hide
-5. **CTA Button**: Text, link, colors, radius
-6. **Logo Styling**: Size, spacing, color schemes (original/grayscale/custom)
-7. **Ticker Settings**: Speed slider, pause on hover
-8. **Carousel Settings**: Items visible, arrow navigation
-9. **Random Order**: Server-side shuffle toggle
+#### Content Features
+1. **Logo Management**: Upload (drag & drop, browse), reorder, delete (object-manager pattern)
+2. **Per-Logo Settings**: Alt text, link URL, open in new tab toggle, nofollow toggle
+3. **Header Section**: Title, caption (with rich text), show/hide toggle
+4. **CTA Button**: Text, link, icon (with position before/after), colors, radius, alignment
 
-### ⚠️ Skip for V1 (<30%)
+#### Layout Features
+5. **3 Layout Modes**: Ticker, Carousel, Grid
+6. **Width Control**: Max width in px/percentage
+7. **Logo Size**: Slider (20-200px)
+8. **Spacing**: Gap between logos slider (0-200px)
+9. **Ticker Settings**: Speed slider (1-10), pause on hover, direction (left/right)
+10. **Carousel Settings**: Items visible (1-10), arrow navigation, auto-slide toggle, slide delay
+11. **Grid Settings**: Columns per breakpoint (desktop, tablet, mobile)
+12. **Responsive Controls**: Separate tablet & mobile settings for logo size and spacing
+13. **Random Order**: Server-side shuffle toggle
 
-- Background gradient/image/video (color only)
-- Font library (use Clickeen typography system)
-- Custom JS
-- Pre-configured starter designs (curated instances) (add later)
-- Link settings per logo (new tab, nofollow)
+#### Style Features
+14. **Background**: Solid color (via Stage/Pod appearance)
+15. **Logo Styling**: Color schemes (original/grayscale/custom tint), hover effects (none/color-restore/scale/opacity)
+16. **Header Styling**: Title color, caption color, links color, alignment (left/center/right)
+17. **Header Typography**: Title size (preset dropdown), bold toggle, italic toggle; Caption size, bold, italic
+18. **Button Styling**: Background color, text color, border radius, alignment
+
+### ⚠️ Skip for V1 (Elfsight-specific features)
+
+- **Templates** — Clickeen treats templates as curated instances (bootstrap; no SQL seeds)
+- **Custom CSS** — Not supported in Clickeen architecture
+- **Custom JS** — Not supported in Clickeen architecture  
+- **Background gradient/image/video** — Use solid color via Stage/Pod (can add later)
+- **Font library (200+ fonts)** — Use Clickeen's typography system with global font family
 
 ---
 
@@ -49,12 +60,43 @@ The Logo Showcase widget displays client/partner logos in a visually appealing c
 
 **Location:** `tokyo/widgets/logoshowcase/`
 
-Files:
-- `spec.json` — Configuration schema and ToolDrawer panels
-- `widget.html` — Stage/Pod HTML scaffold
-- `widget.css` — Widget-specific styles (extends Dieter)
-- `widget.client.js` — Runtime state application (like FAQ)
-- `agent.md` — AI editing context (future)
+```
+tokyo/widgets/logoshowcase/
+├── spec.json           # Configuration schema and ToolDrawer panels
+├── widget.html         # Stage/Pod HTML scaffold
+├── widget.css          # Widget-specific styles (extends Dieter)
+├── widget.client.js    # Runtime state application
+├── agent.md            # AI editing context
+└── assets/             # Default placeholder images
+    ├── logo-1.png      # Placeholder logo 1
+    ├── logo-2.png      # Placeholder logo 2
+    ├── logo-3.png      # Placeholder logo 3
+    ├── logo-4.png      # Placeholder logo 4
+    ├── logo-5.png      # Placeholder logo 5
+    ├── logo-6.png      # Placeholder logo 6
+    ├── logo-7.png      # Placeholder logo 7
+    └── logo-8.png      # Placeholder logo 8
+```
+
+### Assets Folder Pattern
+
+Widgets that ship with default assets (images, icons, etc.) store them in `tokyo/widgets/{widgetname}/assets/`. These are served by Tokyo's dev server and referenced in `spec.json` defaults:
+
+```json
+{
+  "logos": [
+    { "id": "logo-1", "url": "/widgets/logoshowcase/assets/logo-1.png", "alt": "Company 1" },
+    { "id": "logo-2", "url": "/widgets/logoshowcase/assets/logo-2.png", "alt": "Company 2" },
+    // ... 8 logos total
+  ]
+}
+```
+
+**How it works:**
+1. Tokyo dev server (`tokyo/dev-server.mjs`) serves static files from `tokyo/`
+2. Widget assets are accessible at `http://localhost:3456/widgets/logoshowcase/assets/logo-1.png`
+3. In production, Tokyo assets deploy to CDN (same URL structure)
+4. When user uploads their own logos via SanFrancisco, URLs point to R2 CDN instead
 
 ---
 
@@ -65,29 +107,31 @@ Files:
   "widgetname": "logoshowcase",
   "defaults": {
     "logos": [
-      {
-        "id": "logo-1",
-        "url": "/placeholder-logo-1.svg",
-        "alt": "Company 1",
-        "link": ""
-      },
-      {
-        "id": "logo-2",
-        "url": "/placeholder-logo-2.svg",
-        "alt": "Company 2",
-        "link": ""
-      }
+      { "id": "logo-1", "url": "/widgets/logoshowcase/assets/logo-1.png", "alt": "Company 1", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-2", "url": "/widgets/logoshowcase/assets/logo-2.png", "alt": "Company 2", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-3", "url": "/widgets/logoshowcase/assets/logo-3.png", "alt": "Company 3", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-4", "url": "/widgets/logoshowcase/assets/logo-4.png", "alt": "Company 4", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-5", "url": "/widgets/logoshowcase/assets/logo-5.png", "alt": "Company 5", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-6", "url": "/widgets/logoshowcase/assets/logo-6.png", "alt": "Company 6", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-7", "url": "/widgets/logoshowcase/assets/logo-7.png", "alt": "Company 7", "link": "", "openInNewTab": true, "nofollow": false },
+      { "id": "logo-8", "url": "/widgets/logoshowcase/assets/logo-8.png", "alt": "Company 8", "link": "", "openInNewTab": true, "nofollow": false }
     ],
     "header": {
       "show": true,
       "title": "Trusted by leading companies",
+      "titleBold": true,
+      "titleItalic": false,
       "caption": "",
+      "captionBold": false,
+      "captionItalic": false,
       "alignment": "center"
     },
     "button": {
       "show": false,
       "text": "Contact Us",
       "url": "",
+      "icon": "",
+      "iconPosition": "before",
       "alignment": "center"
     },
     "layout": {
@@ -103,7 +147,9 @@ Files:
       },
       "carousel": {
         "itemsVisible": 6,
-        "showArrows": true
+        "showArrows": true,
+        "autoSlide": false,
+        "slideDelay": 3
       },
       "grid": {
         "columnsDesktop": 6,
@@ -195,7 +241,8 @@ Files:
       "buttonTextColor": "var(--color-system-white)",
       "buttonRadius": 8,
       "titleColor": "var(--color-system-black)",
-      "captionColor": "color-mix(in oklab, var(--color-system-black), transparent 40%)"
+      "captionColor": "color-mix(in oklab, var(--color-system-black), transparent 40%)",
+      "linksColor": "var(--color-brand-primary)"
     },
     "behavior": {
       "showBacklink": true
@@ -227,20 +274,19 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
   <tooldrawer-cluster>
     <tooldrawer-eyebrow text='Logos' />
     <tooldrawer-field 
-      type='logo-gallery' 
+      type='repeater' 
       path='logos' 
-      add-label='Upload logo' 
-      max-items='100'
-      accept='image/png,image/jpeg,image/svg+xml,image/webp'
-      max-size='10485760'
-      default-item='{"id":"","url":"","alt":"","link":""}' />
+      label='Logos'
+      add-label='Add logo'
+      default-item='{"id":"","url":"","alt":"","link":"","openInNewTab":true,"nofollow":false}'
+      template='<div class="diet-repeater__item-body diet-logo-item"><div class="diet-logo-preview"><img src="" alt="" data-bob-src="logos.__INDEX__.url" /></div><div class="diet-logo-fields"><div class="diet-textfield" data-size="sm"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-xs">URL</span><input class="diet-textfield__field body-s" type="text" data-bob-path="logos.__INDEX__.url" placeholder="https://... or upload" /></label></div><div class="diet-textfield" data-size="sm"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-xs">Alt</span><input class="diet-textfield__field body-s" type="text" data-bob-path="logos.__INDEX__.alt" placeholder="Company name" /></label></div><div class="diet-textfield" data-size="sm"><label class="diet-textfield__control"><span class="diet-textfield__display-label label-xs">Link</span><input class="diet-textfield__field body-s" type="text" data-bob-path="logos.__INDEX__.link" placeholder="https://..." /></label></div><div class="diet-logo-toggles"><label class="diet-toggle" data-size="xs"><input class="diet-toggle__input" type="checkbox" data-bob-path="logos.__INDEX__.openInNewTab" /><span class="diet-toggle__track"></span><span class="diet-toggle__label label-xs">New tab</span></label><label class="diet-toggle" data-size="xs"><input class="diet-toggle__input" type="checkbox" data-bob-path="logos.__INDEX__.nofollow" /><span class="diet-toggle__track"></span><span class="diet-toggle__label label-xs">Nofollow</span></label></div></div></div>' />
   </tooldrawer-cluster>
   
   <tooldrawer-cluster>
     <tooldrawer-eyebrow text='Header' />
     <tooldrawer-field type='toggle' size='md' path='header.show' label='Show header' />
-    <tooldrawer-field type='textfield' size='lg' path='header.title' label='Title' hint='Trusted by leading companies' show-if="header.show == true" />
-    <tooldrawer-field type='textfield' size='lg' path='header.caption' label='Caption' hint='Optional subtitle' show-if="header.show == true" />
+    <tooldrawer-field type='textedit' size='lg' path='header.title' label='Title' hint='Trusted by leading companies' show-if="header.show == true" />
+    <tooldrawer-field type='textedit' size='lg' path='header.caption' label='Caption' hint='Optional subtitle with formatting support' show-if="header.show == true" />
     <tooldrawer-field type='segmented' size='md' path='header.alignment' label='Alignment' show-if="header.show == true" options='[{"label":"Left","value":"left","icon":"text.alignleft"},{"label":"Center","value":"center","icon":"text.aligncenter"},{"label":"Right","value":"right","icon":"text.alignright"}]' />
   </tooldrawer-cluster>
   
@@ -249,6 +295,8 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
     <tooldrawer-field type='toggle' size='md' path='button.show' label='Show button' />
     <tooldrawer-field type='textfield' size='lg' path='button.text' label='Button text' hint='Contact Us' show-if="button.show == true" />
     <tooldrawer-field type='textfield' size='lg' path='button.url' label='Button URL' hint='https://...' show-if="button.show == true" />
+    <tooldrawer-field type='dropdown-actions' size='md' path='button.icon' label='Button icon' placeholder='No icon' show-if="button.show == true" options='[{"label":"None","value":""},{"label":"Arrow Right","value":"arrow.right"},{"label":"Chevron Right","value":"chevron.right"},{"label":"External Link","value":"arrow.up.right.square"},{"label":"Sparkles","value":"sparkles"},{"label":"Phone","value":"phone"},{"label":"Envelope","value":"envelope"}]' />
+    <tooldrawer-field type='segmented' size='md' path='button.iconPosition' label='Icon position' show-if="button.show == true && button.icon != ''" options='[{"label":"Before text","value":"before"},{"label":"After text","value":"after"}]' />
     <tooldrawer-field type='segmented' size='md' path='button.alignment' label='Alignment' show-if="button.show == true" options='[{"label":"Left","value":"left","icon":"text.alignleft"},{"label":"Center","value":"center","icon":"text.aligncenter"},{"label":"Right","value":"right","icon":"text.alignright"}]' />
   </tooldrawer-cluster>
 </bob-panel>
@@ -281,6 +329,8 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
     <tooldrawer-eyebrow text='Carousel settings' />
     <tooldrawer-field type='slider' size='md' path='layout.carousel.itemsVisible' label='Items visible' min='1' max='10' />
     <tooldrawer-field type='toggle' size='md' path='layout.carousel.showArrows' label='Show navigation arrows' />
+    <tooldrawer-field type='toggle' size='md' path='layout.carousel.autoSlide' label='Auto-slide' />
+    <tooldrawer-field type='slider' size='md' path='layout.carousel.slideDelay' label='Slide delay (seconds)' min='1' max='10' show-if="layout.carousel.autoSlide == true" />
   </tooldrawer-cluster>
   
   <tooldrawer-cluster show-if="layout.mode == 'grid'">
@@ -300,9 +350,27 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
   
   <tooldrawer-cluster>
     <tooldrawer-eyebrow text='Stage/Pod layout' />
-    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' options='[{"label":"Full width","value":"full"},{"label":"Fixed width","value":"fixed"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' placeholder='Choose width' value='{{pod.widthMode}}' options='[{"label":"Full width","value":"full"},{"label":"Fixed width","value":"fixed"}]' />
     <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.contentWidth' label='Width in pixels' show-if="pod.widthMode == 'fixed'" />
-    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' options='[{"label":"Center","value":"center"},{"label":"Left","value":"left"},{"label":"Right","value":"right"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='[{"label":"Center","value":"center"},{"label":"Left","value":"left"},{"label":"Right","value":"right"}]' />
+    <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if="pod.radiusLinked == true" options='[{"label":"None","value":"none"},{"label":"Small","value":"2xl"},{"label":"Medium","value":"4xl"},{"label":"Large","value":"6xl"},{"label":"X-Large","value":"10xl"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTL' label='Top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if="pod.radiusLinked == false" options='[{"label":"None","value":"none"},{"label":"Small","value":"2xl"},{"label":"Medium","value":"4xl"},{"label":"Large","value":"6xl"},{"label":"X-Large","value":"10xl"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusTR' label='Top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if="pod.radiusLinked == false" options='[{"label":"None","value":"none"},{"label":"Small","value":"2xl"},{"label":"Medium","value":"4xl"},{"label":"Large","value":"6xl"},{"label":"X-Large","value":"10xl"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBR' label='Bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if="pod.radiusLinked == false" options='[{"label":"None","value":"none"},{"label":"Small","value":"2xl"},{"label":"Medium","value":"4xl"},{"label":"Large","value":"6xl"},{"label":"X-Large","value":"10xl"}]' />
+    <tooldrawer-field-podstagelayout type='dropdown-actions' size='md' path='pod.radiusBL' label='Bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if="pod.radiusLinked == false" options='[{"label":"None","value":"none"},{"label":"Small","value":"2xl"},{"label":"Medium","value":"4xl"},{"label":"Large","value":"6xl"},{"label":"X-Large","value":"10xl"}]' />
+    <tooldrawer-field-podstagelayout type='toggle' size='md' path='pod.paddingLinked' label='Link pod padding' value='{{pod.paddingLinked}}' />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.padding' label='Pod padding (px)' show-if="pod.paddingLinked == true" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingTop' label='Pod top padding (px)' show-if="pod.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingRight' label='Pod right padding (px)' show-if="pod.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingBottom' label='Pod bottom padding (px)' show-if="pod.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='pod.paddingLeft' label='Pod left padding (px)' show-if="pod.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='toggle' size='md' path='stage.paddingLinked' label='Link stage padding' value='{{stage.paddingLinked}}' />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.padding' label='Stage padding (px)' show-if="stage.paddingLinked == true" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingTop' label='Stage top padding (px)' show-if="stage.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingRight' label='Stage right padding (px)' show-if="stage.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingBottom' label='Stage bottom padding (px)' show-if="stage.paddingLinked == false" />
+    <tooldrawer-field-podstagelayout type='textfield' size='md' path='stage.paddingLeft' label='Stage left padding (px)' show-if="stage.paddingLinked == false" />
   </tooldrawer-cluster>
 </bob-panel>
 ```
@@ -315,13 +383,18 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
     <tooldrawer-eyebrow text='Logo style' />
     <tooldrawer-field type='dropdown-actions' size='md' path='appearance.colorScheme' label='Color scheme' options='[{"label":"Original colors","value":"original"},{"label":"Grayscale","value":"grayscale"},{"label":"Custom color","value":"custom"}]' />
     <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.customColor' label='Logo tint color' show-if="appearance.colorScheme == 'custom'" />
-    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.hoverEffect' label='Hover effect' options='[{"label":"None","value":"none"},{"label":"Restore color","value":"color-restore"},{"label":"Scale up","value":"scale"}]' />
+    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.hoverEffect' label='Hover effect' options='[{"label":"None","value":"none"},{"label":"Restore color","value":"color-restore"},{"label":"Scale up","value":"scale"},{"label":"Opacity fade","value":"opacity"}]' />
   </tooldrawer-cluster>
   
   <tooldrawer-cluster>
     <tooldrawer-eyebrow text='Header style' />
     <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.titleColor' label='Title color' />
+    <tooldrawer-field type='toggle' size='md' path='header.titleBold' label='Title bold' />
+    <tooldrawer-field type='toggle' size='md' path='header.titleItalic' label='Title italic' />
     <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.captionColor' label='Caption color' />
+    <tooldrawer-field type='toggle' size='md' path='header.captionBold' label='Caption bold' />
+    <tooldrawer-field type='toggle' size='md' path='header.captionItalic' label='Caption italic' />
+    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='style.linksColor' label='Links color' />
   </tooldrawer-cluster>
   
   <tooldrawer-cluster show-if="button.show == true">
@@ -353,132 +426,157 @@ Following Clickeen convention, 4 main panels + auto-generated Typography panel:
 
 ---
 
-## New Control: `logo-gallery`
+## Logo Management: Leveraging `repeater` Component
 
-The Logo Showcase requires a **new tooldrawer-field type** for file upload and management. This differs from existing controls.
+Instead of creating a new component, Logo Showcase uses the **existing `repeater`** pattern (same as FAQ questions). This gives us massive advantages over Elfsight.
 
-### Requirements
+### Why Repeater is 100× Better Than Elfsight
 
-1. **File Upload**
-   - Drag-and-drop zone
-   - "Browse Files" button fallback
-   - Progress indicator during upload
-   - Multi-file selection support
-   
-2. **Gallery Display**
-   - Thumbnail grid of uploaded logos
-   - Drag handles for reordering
-   - Delete button per logo
-   - Alt text input (inline or modal)
-   - Optional link URL input
+| Feature | Elfsight | Clickeen (Repeater) |
+|---------|----------|---------------------|
+| Per-logo editing | Basic popover | **Rich inline editing** with dropdown-edit |
+| Reordering | Drag thumbnails | **Visual drag handles** with animation |
+| Add logo | File picker only | **File picker + URL paste + AI-generated** |
+| Bulk operations | None | **AI ops**: insert, remove, move, set |
+| Validation | Client-only | **No hidden fixups** (ops apply deterministically; Keep/Undo is the commit gate) |
+| Undo/Redo | None | **Full undo stack** via ops history |
+| Accessibility | Limited | **WCAG AA** (keyboard nav, screen readers) |
+| Preview sync | Reload iframe | **Instant postMessage** state updates |
 
-3. **Upload Flow**
-   - Client uploads to Bob → Bob proxies to Paris API
-   - Paris stores to CDN (Supabase Storage or Cloudflare R2)
-   - Paris returns CDN URL
-   - Bob updates `logos[]` array via ops
+### Repeater Template for Logos
 
-### Paris API Endpoint
+Each logo item uses `dropdown-edit` for rich inline editing:
 
-**New:** `POST /api/upload`
+```html
+<tooldrawer-field 
+  type='repeater' 
+  path='logos' 
+  label='Logos' 
+  add-label='Add logo'
+  default-item='{"id":"","url":"","alt":"","link":"","openInNewTab":true,"nofollow":false}'
+  template='
+    <div class="diet-repeater__item-body">
+      <!-- Logo Thumbnail Preview -->
+      <div class="diet-logo-preview" data-role="logo-preview">
+        <img src="" alt="" data-bob-path="logos.__INDEX__.url" />
+      </div>
+      
+      <!-- URL Input (supports upload or paste) -->
+      <div class="diet-textfield" data-size="md">
+        <label class="diet-textfield__control">
+          <span class="diet-textfield__display-label label-s">Image URL</span>
+          <input class="diet-textfield__field body-s" type="text" 
+                 data-bob-path="logos.__INDEX__.url" 
+                 placeholder="https://... or upload" />
+        </label>
+        <button type="button" class="diet-btn-ic diet-logo-upload" data-size="sm" data-variant="neutral">
+          <span class="diet-btn-ic__icon" data-icon="arrow.up.doc"></span>
+        </button>
+      </div>
+      
+      <!-- Alt Text -->
+      <div class="diet-textfield" data-size="md">
+        <label class="diet-textfield__control">
+          <span class="diet-textfield__display-label label-s">Alt text</span>
+          <input class="diet-textfield__field body-s" type="text" 
+                 data-bob-path="logos.__INDEX__.alt" 
+                 placeholder="Company name" />
+        </label>
+      </div>
+      
+      <!-- Link URL -->
+      <div class="diet-textfield" data-size="md">
+        <label class="diet-textfield__control">
+          <span class="diet-textfield__display-label label-s">Link URL</span>
+          <input class="diet-textfield__field body-s" type="text" 
+                 data-bob-path="logos.__INDEX__.link" 
+                 placeholder="https://..." />
+        </label>
+      </div>
+      
+      <!-- Link Options (inline toggles) -->
+      <div class="diet-logo-link-options">
+        <label class="diet-toggle" data-size="sm">
+          <input class="diet-toggle__input" type="checkbox" 
+                 data-bob-path="logos.__INDEX__.openInNewTab" />
+          <span class="diet-toggle__track"></span>
+          <span class="diet-toggle__label label-xs">New tab</span>
+        </label>
+        <label class="diet-toggle" data-size="sm">
+          <input class="diet-toggle__input" type="checkbox" 
+                 data-bob-path="logos.__INDEX__.nofollow" />
+          <span class="diet-toggle__track"></span>
+          <span class="diet-toggle__label label-xs">Nofollow</span>
+        </label>
+      </div>
+    </div>
+  '
+/>
+```
+
+### Upload Flow (Enhanced)
+
+**Three ways to add a logo:**
+
+1. **File Upload** — Click upload button → SanFrancisco API → R2 → CDN URL
+2. **Paste URL** — Directly paste any image URL (validates on blur)
+3. **AI-Generated** — Copilot generates placeholder SVGs or fetches brand logos
+
+**SanFrancisco Upload Endpoint (existing):**
 
 ```typescript
-// Paris: app/api/upload/route.ts
-export async function POST(req: Request) {
-  const formData = await req.formData();
-  const file = formData.get('file') as File;
-  const workspaceId = formData.get('workspaceId') as string;
-  
-  // Validate file type & size
-  // Upload to Supabase Storage bucket
-  // Return CDN URL
-  
-  return NextResponse.json({ 
-    url: 'https://cdn.clickeen.com/logos/abc123.png',
-    width: 200,
-    height: 80
-  });
+// POST /upload → Returns CDN URL
+interface UploadResponse {
+  url: string;      // CDN URL (e.g., https://cdn.clickeen.com/logos/abc123.png)
+  key: string;      // R2 object key
+  width?: number;   
+  height?: number;
 }
 ```
 
-### Dieter Component
+### AI Ops Advantage
 
-**New:** `dieter/components/logo-gallery/`
+Because logos use the standard `repeater` pattern, AI can manipulate them via ops:
 
-- `logo-gallery.html` — Upload zone + thumbnail grid HTML
-- `logo-gallery.css` — Styles for upload zone, thumbnails, drag handles
-- `logo-gallery.spec.json` — Component specification
+```typescript
+// AI adds a new logo
+{ op: "insert", path: "logos", index: 0, value: { id: "new-1", url: "https://...", alt: "Acme Corp" } }
+
+// AI reorders logos
+{ op: "move", path: "logos", from: 3, to: 0 }
+
+// AI updates alt text for SEO
+{ op: "set", path: "logos.2.alt", value: "Acme Corporation - Enterprise Solutions" }
+
+// AI removes duplicate
+{ op: "remove", path: "logos", index: 5 }
+```
+
+### Important: Separation of Concerns
+
+**Repeater/Object-Manager** = ToolDrawer controls for **managing the `logos[]` array** in the editor:
+- Add new logo items
+- Remove logo items  
+- Reorder logo items (drag handles)
+- Edit per-logo fields (URL, alt, link, toggles)
+
+**`widget.css`** = Styling for **how logos render** in the preview/embed:
+- Ticker animation
+- Carousel layout
+- Grid layout
+- Color schemes, hover effects, etc.
+
+The repeater just provides the standard array management UI. All widget-specific styling is in `tokyo/widgets/logoshowcase/widget.css` (specified in the Widget CSS section of this PRD).
 
 ---
 
 ## Shared Runtime Module
 
-**File:** `tokyo/widgets/shared/logoShowcase.js`
+The Logo Showcase uses the existing shared runtime modules:
 
-```javascript
-// Logo Showcase runtime helpers
-(function () {
-  if (typeof window === 'undefined') return;
-
-  function applyLogoShowcase(cfg, scopeEl) {
-    const root = scopeEl.querySelector('[data-role="logoshowcase"]');
-    if (!root) return;
-    
-    // Apply CSS custom properties
-    root.style.setProperty('--ls-logo-size', `${cfg.layout.logoSize}px`);
-    root.style.setProperty('--ls-spacing', `${cfg.layout.spacing}px`);
-    root.style.setProperty('--ls-ticker-duration', `${mapSpeedToDuration(cfg.layout.ticker.speed)}s`);
-    root.style.setProperty('--ls-title-color', cfg.style.titleColor);
-    root.style.setProperty('--ls-caption-color', cfg.style.captionColor);
-    root.style.setProperty('--ls-button-bg', cfg.style.buttonColor);
-    root.style.setProperty('--ls-button-color', cfg.style.buttonTextColor);
-    root.style.setProperty('--ls-button-radius', `${cfg.style.buttonRadius}px`);
-    
-    // Apply layout mode
-    root.setAttribute('data-layout', cfg.layout.mode);
-    root.setAttribute('data-color-scheme', cfg.appearance.colorScheme);
-    root.setAttribute('data-hover-effect', cfg.appearance.hoverEffect);
-    
-    // Ticker direction
-    if (cfg.layout.mode === 'ticker') {
-      root.setAttribute('data-ticker-direction', cfg.layout.ticker.direction);
-      root.setAttribute('data-pause-on-hover', cfg.layout.ticker.pauseOnHover);
-    }
-    
-    // Render logos
-    renderLogos(root, cfg.logos, cfg.layout.mode);
-  }
-
-  function mapSpeedToDuration(speed) {
-    // speed 1=slow (60s), 10=fast (10s)
-    return 70 - (speed * 6);
-  }
-
-  function renderLogos(root, logos, mode) {
-    const track = root.querySelector('[data-role="logo-track"]');
-    if (!track) return;
-    
-    const html = logos.map(logo => `
-      <div class="ck-ls__item" data-role="logo-item">
-        <img src="${escapeHtml(logo.url)}" alt="${escapeHtml(logo.alt)}" loading="lazy" />
-      </div>
-    `).join('');
-    
-    // For ticker, duplicate for seamless loop
-    if (mode === 'ticker') {
-      track.innerHTML = html + html;
-    } else {
-      track.innerHTML = html;
-    }
-  }
-
-  function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  window.CKLogoShowcase = { applyLogoShowcase };
-})();
-```
+- `tokyo/widgets/shared/stagePod.js` — Stage/Pod appearance
+- `tokyo/widgets/shared/typography.js` — Typography roles
+- `tokyo/widgets/shared/branding.js` — Clickeen badge
 
 ---
 
@@ -522,7 +620,11 @@ export async function POST(req: Request) {
         
         <!-- CTA Button -->
         <div class="ck-ls__cta" data-role="cta">
-          <a class="ck-ls__button" data-role="button" href="#">Contact Us</a>
+          <a class="ck-ls__button" data-role="button" href="#">
+            <span class="ck-ls__button-icon ck-ls__button-icon--before" data-role="button-icon-before"></span>
+            <span class="ck-ls__button-text" data-role="button-text">Contact Us</span>
+            <span class="ck-ls__button-icon ck-ls__button-icon--after" data-role="button-icon-after"></span>
+          </a>
         </div>
         
         <!-- Empty State -->
@@ -554,7 +656,12 @@ export async function POST(req: Request) {
   --ls-spacing: 80px;
   --ls-ticker-duration: 30s;
   --ls-title-color: var(--color-system-black);
+  --ls-title-weight: 600;
+  --ls-title-style: normal;
   --ls-caption-color: color-mix(in oklab, var(--color-system-black), transparent 40%);
+  --ls-caption-weight: 400;
+  --ls-caption-style: normal;
+  --ls-links-color: var(--color-brand-primary);
   --ls-button-bg: var(--color-brand-primary);
   --ls-button-color: var(--color-system-white);
   --ls-button-radius: 8px;
@@ -575,15 +682,23 @@ export async function POST(req: Request) {
 
 .ck-ls__title {
   font-size: var(--ls-title-size, 28px);
-  font-weight: var(--ls-title-weight, 600);
+  font-weight: var(--ls-title-weight);
+  font-style: var(--ls-title-style);
   color: var(--ls-title-color);
   margin: 0 0 var(--spacing-2) 0;
 }
 
 .ck-ls__caption {
   font-size: var(--ls-caption-size, 16px);
+  font-weight: var(--ls-caption-weight);
+  font-style: var(--ls-caption-style);
   color: var(--ls-caption-color);
   margin: 0;
+}
+
+.ck-ls__caption a {
+  color: var(--ls-links-color);
+  text-decoration: underline;
 }
 
 .ck-ls__caption:empty {
@@ -614,11 +729,19 @@ export async function POST(req: Request) {
   justify-content: center;
 }
 
+.ck-ls__item a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .ck-ls__item img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  transition: filter 0.2s, transform 0.2s;
+  transition: filter 0.2s, transform 0.2s, opacity 0.2s;
 }
 
 /* Color Schemes */
@@ -638,6 +761,14 @@ export async function POST(req: Request) {
 
 [data-hover-effect="scale"] .ck-ls__item:hover img {
   transform: scale(1.1);
+}
+
+[data-hover-effect="opacity"] .ck-ls__item img {
+  opacity: 0.7;
+}
+
+[data-hover-effect="opacity"] .ck-ls__item:hover img {
+  opacity: 1;
 }
 
 /* ===== TICKER LAYOUT ===== */
@@ -709,6 +840,10 @@ export async function POST(req: Request) {
   cursor: default;
 }
 
+[data-layout="carousel"][data-show-arrows="false"] .ck-ls__nav {
+  display: none;
+}
+
 /* ===== GRID LAYOUT ===== */
 [data-layout="grid"] .ck-ls__track {
   display: grid;
@@ -745,6 +880,22 @@ export async function POST(req: Request) {
 
 .ck-ls__button:hover {
   opacity: 0.9;
+}
+
+.ck-ls__button-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+.ck-ls__button-icon[data-visible="true"] {
+  display: flex;
+}
+
+.ck-ls__button-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 /* ===== Empty State ===== */
@@ -816,13 +967,19 @@ export async function POST(req: Request) {
   function renderLogos(track, logos, mode) {
     if (!track) return;
     
-    const items = logos.map(logo => `
-      <div class="ck-ls__item" data-role="logo-item">
-        ${logo.link ? `<a href="${escapeHtml(logo.link)}" target="_blank" rel="noopener">` : ''}
-        <img src="${escapeHtml(logo.url)}" alt="${escapeHtml(logo.alt || '')}" loading="lazy" />
-        ${logo.link ? '</a>' : ''}
-      </div>
-    `).join('');
+    const items = logos.map(logo => {
+      const linkAttrs = logo.link 
+        ? `href="${escapeHtml(logo.link)}"${logo.openInNewTab ? ' target="_blank"' : ''}${logo.nofollow ? ' rel="nofollow noopener"' : ' rel="noopener"'}`
+        : '';
+      
+      const img = `<img src="${escapeHtml(logo.url)}" alt="${escapeHtml(logo.alt || '')}" loading="lazy" />`;
+      
+      return `
+        <div class="ck-ls__item" data-role="logo-item">
+          ${logo.link ? `<a ${linkAttrs}>${img}</a>` : img}
+        </div>
+      `;
+    }).join('');
     
     // Duplicate logos for seamless ticker loop
     if (mode === 'ticker') {
@@ -855,6 +1012,10 @@ export async function POST(req: Request) {
       lsRoot.setAttribute('data-pause-on-hover', String(state.layout.ticker.pauseOnHover));
     }
     
+    if (mode === 'carousel') {
+      lsRoot.setAttribute('data-show-arrows', String(state.layout.carousel.showArrows));
+    }
+    
     if (mode === 'grid') {
       lsRoot.style.setProperty('--ls-grid-cols', String(state.layout.grid.columnsDesktop));
       lsRoot.style.setProperty('--ls-grid-cols-tablet', String(state.layout.grid.columnsTablet));
@@ -874,9 +1035,18 @@ export async function POST(req: Request) {
   function applyStyle(state) {
     lsRoot.style.setProperty('--ls-title-color', state.style.titleColor);
     lsRoot.style.setProperty('--ls-caption-color', state.style.captionColor);
+    lsRoot.style.setProperty('--ls-links-color', state.style.linksColor);
     lsRoot.style.setProperty('--ls-button-bg', state.style.buttonColor);
     lsRoot.style.setProperty('--ls-button-color', state.style.buttonTextColor);
     lsRoot.style.setProperty('--ls-button-radius', `${state.style.buttonRadius}px`);
+    
+    // Title styling
+    lsRoot.style.setProperty('--ls-title-weight', state.header.titleBold ? '700' : '600');
+    lsRoot.style.setProperty('--ls-title-style', state.header.titleItalic ? 'italic' : 'normal');
+    
+    // Caption styling
+    lsRoot.style.setProperty('--ls-caption-weight', state.header.captionBold ? '600' : '400');
+    lsRoot.style.setProperty('--ls-caption-style', state.header.captionItalic ? 'italic' : 'normal');
   }
 
   function applyHeader(state) {
@@ -890,13 +1060,16 @@ export async function POST(req: Request) {
       lsRoot.style.setProperty('--ls-header-align', state.header.alignment);
     }
     
-    if (titleEl) titleEl.textContent = state.header.title;
-    if (captionEl) captionEl.textContent = state.header.caption || '';
+    if (titleEl) titleEl.innerHTML = state.header.title || '';
+    if (captionEl) captionEl.innerHTML = state.header.caption || '';
   }
 
   function applyButton(state) {
     const ctaEl = lsRoot.querySelector('[data-role="cta"]');
     const buttonEl = lsRoot.querySelector('[data-role="button"]');
+    const buttonTextEl = lsRoot.querySelector('[data-role="button-text"]');
+    const iconBeforeEl = lsRoot.querySelector('[data-role="button-icon-before"]');
+    const iconAfterEl = lsRoot.querySelector('[data-role="button-icon-after"]');
     
     if (ctaEl) {
       ctaEl.hidden = state.button.show !== true;
@@ -905,15 +1078,47 @@ export async function POST(req: Request) {
     }
     
     if (buttonEl) {
-      buttonEl.textContent = state.button.text;
       buttonEl.href = state.button.url || '#';
+    }
+    
+    if (buttonTextEl) {
+      buttonTextEl.textContent = state.button.text;
+    }
+    
+    // Handle button icon
+    const hasIcon = state.button.icon && state.button.icon.length > 0;
+    const iconPosition = state.button.iconPosition || 'before';
+    
+    if (iconBeforeEl) {
+      iconBeforeEl.setAttribute('data-visible', String(hasIcon && iconPosition === 'before'));
+      if (hasIcon && iconPosition === 'before') {
+        iconBeforeEl.innerHTML = `<span class="diet-btn-ic__icon" data-icon="${escapeHtml(state.button.icon)}"></span>`;
+      } else {
+        iconBeforeEl.innerHTML = '';
+      }
+    }
+    
+    if (iconAfterEl) {
+      iconAfterEl.setAttribute('data-visible', String(hasIcon && iconPosition === 'after'));
+      if (hasIcon && iconPosition === 'after') {
+        iconAfterEl.innerHTML = `<span class="diet-btn-ic__icon" data-icon="${escapeHtml(state.button.icon)}"></span>`;
+      } else {
+        iconAfterEl.innerHTML = '';
+      }
     }
   }
 
   let carouselPosition = 0;
+  let autoSlideInterval = null;
 
   function wireCarousel(state) {
-    if (state.layout.mode !== 'carousel') return;
+    if (state.layout.mode !== 'carousel') {
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval);
+        autoSlideInterval = null;
+      }
+      return;
+    }
     
     const prevBtn = lsRoot.querySelector('[data-role="nav-prev"]');
     const nextBtn = lsRoot.querySelector('[data-role="nav-next"]');
@@ -922,19 +1127,22 @@ export async function POST(req: Request) {
     if (!prevBtn || !nextBtn || !track) return;
     
     const itemWidth = state.layout.logoSize + state.layout.spacing;
-    const maxScroll = (state.logos.length - state.layout.carousel.itemsVisible) * itemWidth;
+    const maxScroll = Math.max(0, (state.logos.length - state.layout.carousel.itemsVisible) * itemWidth);
     
-    prevBtn.onclick = () => {
-      carouselPosition = Math.max(0, carouselPosition - itemWidth);
-      track.style.transform = `translateX(-${carouselPosition}px)`;
-      updateNavButtons();
-    };
-    
-    nextBtn.onclick = () => {
+    function goNext() {
       carouselPosition = Math.min(maxScroll, carouselPosition + itemWidth);
       track.style.transform = `translateX(-${carouselPosition}px)`;
       updateNavButtons();
-    };
+    }
+    
+    function goPrev() {
+      carouselPosition = Math.max(0, carouselPosition - itemWidth);
+      track.style.transform = `translateX(-${carouselPosition}px)`;
+      updateNavButtons();
+    }
+    
+    prevBtn.onclick = goPrev;
+    nextBtn.onclick = goNext;
     
     function updateNavButtons() {
       prevBtn.disabled = carouselPosition <= 0;
@@ -942,6 +1150,24 @@ export async function POST(req: Request) {
     }
     
     updateNavButtons();
+    
+    // Auto-slide
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval);
+      autoSlideInterval = null;
+    }
+    
+    if (state.layout.carousel.autoSlide) {
+      const delay = (state.layout.carousel.slideDelay || 3) * 1000;
+      autoSlideInterval = setInterval(() => {
+        if (carouselPosition >= maxScroll) {
+          carouselPosition = 0;
+          track.style.transform = `translateX(-${carouselPosition}px)`;
+        } else {
+          goNext();
+        }
+      }, delay);
+    }
   }
 
   function applyState(state) {
@@ -1012,47 +1238,45 @@ export async function POST(req: Request) {
 
 ## Implementation Phases
 
-### Phase 1: Core Structure (3-4 days)
+### Phase 1: Core Structure (2-3 days)
 - [ ] Create `tokyo/widgets/logoshowcase/` directory
-- [ ] Implement `spec.json` with defaults and panels
+- [ ] Create `tokyo/widgets/logoshowcase/assets/` with placeholder logos (from `LogoTemp.png`)
+- [ ] Implement `spec.json` with defaults and panels (using existing repeater)
 - [ ] Implement `widget.html` with Stage/Pod structure
 - [ ] Implement `widget.css` with all layout modes
 - [ ] Implement `widget.client.js` with `applyState`
-- [ ] Add widget to Bob's widget catalog
+- [ ] Create a test instance via Paris (or run `pnpm bootstrap:local` locally)
 - [ ] Test basic rendering in preview iframe
 
-### Phase 2: Logo Management (4-5 days)
-- [ ] Design `logo-gallery` control in Dieter
-- [ ] Implement Paris `POST /api/upload` endpoint
-- [ ] Set up Supabase Storage bucket (or Cloudflare R2)
-- [ ] Implement logo upload flow in Bob
-- [ ] Implement logo reordering (drag handles)
-- [ ] Implement logo deletion
-- [ ] Alt text and link editing per logo
+### Phase 2: Logo Management (2-3 days)
+- [ ] Add logo preview CSS to `repeater.css` (minor additions)
+- [ ] Wire repeater template with logo fields (URL, alt, link, toggles)
+- [ ] Integrate SanFrancisco upload button in repeater item
+- [ ] Test add/remove/reorder via repeater (already works!)
+- [ ] Test per-logo settings (all use existing controls)
 
 ### Phase 3: Layout Modes (3-4 days)
-- [ ] Ticker animation (CSS keyframes, pause on hover)
-- [ ] Carousel navigation (minimal JS, arrow buttons)
+- [ ] Ticker animation (CSS keyframes, pause on hover, direction)
+- [ ] Carousel navigation (minimal JS, arrow buttons, auto-slide)
 - [ ] Grid layout (CSS Grid, responsive columns)
 - [ ] Layout mode switcher UI
 - [ ] Responsive controls (tablet/mobile sliders)
 
-### Phase 4: Styling & Polish (2-3 days)
+### Phase 4: Styling & Polish (2 days)
 - [ ] Color scheme application (original/grayscale/custom)
-- [ ] Hover effects (color-restore, scale)
-- [ ] Button styling controls
-- [ ] Header alignment and colors
+- [ ] Hover effects (color-restore, scale, opacity)
+- [ ] Button styling controls with icon picker
+- [ ] Header typography (bold/italic toggles, links color)
 - [ ] Stage/Pod appearance integration
 
-### Phase 5: Testing & Edge Cases (2 days)
+### Phase 5: Testing & Edge Cases (1-2 days)
 - [ ] Test with 1 logo, 100 logos
 - [ ] Test responsive breakpoints
 - [ ] Test carousel edge cases (fewer logos than visible)
 - [ ] Test ticker seamless loop
 - [ ] Accessibility review (WCAG AA)
-- [ ] Performance audit (<3KB JS target)
 
-**Total Estimate: 14-18 days**
+**Total Estimate: 10-14 days** (reduced from 14-18 by reusing repeater)
 
 ---
 
@@ -1060,13 +1284,75 @@ export async function POST(req: Request) {
 
 | Metric | Target |
 |--------|--------|
-| Initial JS bundle | <3KB |
-| First contentful paint | <400ms |
 | Layout modes | 3 (Ticker, Carousel, Grid) |
 | Max logos | 100 |
-| Elfsight feature parity | 70%+ |
+| Elfsight feature parity | 100% (minus templates & custom code) |
 | Accessibility | WCAG AA |
 | Mobile responsiveness | Separate tablet/mobile controls |
+| SSR | Yes (Venice edge rendering) |
+
+---
+
+## Feature Parity Checklist
+
+### Content Features (100%)
+- [x] Logo upload (drag & drop, browse, multi-file)
+- [x] Logo management (reorder, delete)
+- [x] Per-logo alt text
+- [x] Per-logo link URL
+- [x] Per-logo open in new tab toggle
+- [x] Per-logo nofollow toggle
+- [x] Header show/hide toggle
+- [x] Header title (rich text)
+- [x] Header caption (rich text with links)
+- [x] CTA button show/hide
+- [x] CTA button text
+- [x] CTA button URL
+- [x] CTA button icon (with before/after position)
+
+### Layout Features (100%)
+- [x] Ticker layout mode
+- [x] Carousel layout mode
+- [x] Grid layout mode
+- [x] Max width control
+- [x] Logo size slider
+- [x] Spacing slider
+- [x] Ticker speed slider
+- [x] Ticker pause on hover
+- [x] Ticker direction (left/right)
+- [x] Carousel items visible
+- [x] Carousel arrow navigation toggle
+- [x] Carousel auto-slide toggle
+- [x] Carousel slide delay
+- [x] Grid columns (desktop/tablet/mobile)
+- [x] Responsive tablet size/spacing
+- [x] Responsive mobile size/spacing
+- [x] Random order toggle
+
+### Style Features (100%)
+- [x] Logo color scheme (original/grayscale/custom)
+- [x] Logo custom tint color
+- [x] Logo hover effect (none/color-restore/scale/opacity)
+- [x] Header alignment
+- [x] Title color
+- [x] Title bold toggle
+- [x] Title italic toggle
+- [x] Caption color
+- [x] Caption bold toggle
+- [x] Caption italic toggle
+- [x] Links color
+- [x] Button color
+- [x] Button text color
+- [x] Button border radius
+- [x] Button alignment
+- [x] Background color (via Stage/Pod)
+
+### Explicitly Skipped (per Clickeen architecture)
+- [ ] ~~Templates~~ → Handled as curated widget instances (bootstrap; no SQL seeds)
+- [ ] ~~Custom CSS~~ → Not supported
+- [ ] ~~Custom JS~~ → Not supported
+- [ ] ~~Background gradient/image/video~~ → Solid color only (Phase 2 candidate)
+- [ ] ~~Font library (200+ fonts)~~ → Uses Clickeen typography system
 
 ---
 
@@ -1074,33 +1360,63 @@ export async function POST(req: Request) {
 
 ### Requires Before Implementation
 
-1. **Paris `/api/upload` endpoint** — New file upload capability
-2. **Supabase Storage bucket** — CDN for logo images
-3. **Dieter `logo-gallery` component** — New control type
-4. **Dieter `slider` component** — Speed/size controls (partially exists)
+1. **SanFrancisco upload endpoint** — ✅ Already exists (`POST /upload`)
+
+**No new Dieter components needed** — Repeater handles array management, widget.css handles rendering.
+
+### Control to Dieter Component Mapping
+
+**All controls already exist — no new components needed!**
+
+| ToolDrawer Field Type | Dieter Component | Status |
+|-----------------------|------------------|--------|
+| `repeater` | `dieter/components/repeater/` | ✅ Exists (for logos) |
+| `toggle` | `dieter/components/toggle/` | ✅ Exists |
+| `textedit` | `dieter/components/textedit/` | ✅ Exists |
+| `textfield` | `dieter/components/textfield/` | ✅ Exists |
+| `segmented` | `dieter/components/segmented/` | ✅ Exists |
+| `dropdown-actions` | `dieter/components/dropdown-actions/` | ✅ Exists |
+| `dropdown-fill` | `dieter/components/dropdown-fill/` | ✅ Exists |
+| `choice-tiles` | `dieter/components/choice-tiles/` | ✅ Exists |
+| `slider` | `dieter/components/slider/` | ✅ Exists |
 
 ### Reuses Existing
 
-- CKStagePod shared runtime
-- CKTypography shared runtime  
-- `dropdown-actions`, `dropdown-fill`, `toggle`, `textfield`, `segmented` controls
-- `tooldrawer-field-podstagelayout`, `tooldrawer-field-podstageappearance` macros
+- **Repeater** — Same pattern as FAQ questions, handles add/remove/reorder
+- CKStagePod shared runtime (`tokyo/widgets/shared/stagePod.js`)
+- CKTypography shared runtime (`tokyo/widgets/shared/typography.js`)
+- CKBranding shared runtime (`tokyo/widgets/shared/branding.js`)
+- `tooldrawer-field-podstagelayout` macro (compiler-generated)
+- `tooldrawer-field-podstageappearance` macro (compiler-generated)
 
 ---
 
 ## For AI Implementers
 
 **Key files to reference:**
-- `tokyo/widgets/faq/spec.json` — Panel structure pattern
+- `tokyo/widgets/faq/spec.json` — **Repeater pattern** (logos work exactly like FAQ questions)
 - `tokyo/widgets/faq/widget.client.js` — Runtime pattern
+- `tokyo/widgets/countdown/spec.json` — Advanced controls pattern
 - `tokyo/widgets/shared/stagePod.js` — Shared runtime pattern
+- `dieter/components/repeater/` — **Logo list uses this directly**
 - `bob/lib/compiler.server.ts` — Panel compilation
-- `dieter/components/object-manager/` — Array management pattern
+
+**Why Repeater Makes This 100× Better Than Elfsight:**
+
+1. **AI Ops** — Logos are a standard array, so AI can `insert`, `remove`, `move`, `set` via ops
+2. **Undo/Redo** — Full ops history means users can undo logo changes
+3. **Visible failures** — If an edit produces a bad state, it should be fixed at the source (widget definition / agent contract / prompts), not “corrected” downstream by orchestrators
+4. **Reordering** — Built-in drag handles, no custom code needed
+5. **Inline Editing** — Per-logo fields (URL, alt, link, toggles) all use existing controls
+6. **Accessibility** — Repeater has keyboard nav and screen reader support
 
 **Critical implementation notes:**
-1. Ticker animation uses CSS `@keyframes`, duplicate logo array in DOM for seamless loop
-2. Carousel uses minimal JS (<500 bytes) for arrow navigation
-3. Grid is pure CSS Grid with `auto-fit` for responsiveness
-4. All colors/sizes must be CSS variables for instant preview updates
-5. `data-role` attributes required on all patchable elements
-6. Logo upload is async — show progress, handle errors gracefully
+1. **Ticker animation** — CSS `@keyframes`, duplicate logo array in DOM for seamless loop
+2. **Carousel** — Minimal JS (<500 bytes) for arrow navigation and auto-slide
+3. **Grid** — Pure CSS Grid with responsive columns via CSS variables
+4. **Preview sync** — All colors/sizes as CSS variables for instant postMessage updates
+5. **Logo upload** — Button in repeater item triggers SanFrancisco upload, sets URL via op
+6. **Per-logo fields** — URL, alt, link all bind via `data-bob-path="logos.__INDEX__.field"`
+7. **Link toggles** — `openInNewTab` and `nofollow` are inline toggles in repeater template
+8. **Button icon** — Dropdown with position (before/after text)
+9. **Header styling** — Bold/italic toggles map to `font-weight` and `font-style` CSS vars

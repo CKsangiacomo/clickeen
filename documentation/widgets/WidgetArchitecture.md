@@ -1,6 +1,6 @@
 # Bob & Widget Architecture: Building for Scale
 
-STATUS: NORMATIVE — Source of Truth (Sep 2025)
+STATUS: REFERENCE — Architecture overview (Sep 2025)
 
 ## The Challenge
 
@@ -31,7 +31,7 @@ We need a different approach.
 - `widget.client.js`: Applies config to DOM in real-time
 - `widget.html`: Semantic markup for the widget
 - `widget.css`: Styles for the widget
-- Lives in Tokyo; loaded by Bob's preview and Venice's SSR
+- Lives in Tokyo; loaded by Bob's preview and (planned) Venice SSR
 
 Together, **Tokyo + Bob + widget.client.js = a complete widget editing and rendering system**.
 
@@ -177,7 +177,7 @@ Rules:
 
 **Location:** `tokyo/widgets/{widget}/widget.css`
 
-**Purpose:** All CSS needed for the widget (inlined in Venice SSR, linked in Bob preview).
+**Purpose:** All CSS needed for the widget (linked in Bob preview; planned to be inlined by Venice SSR).
 
 **Rules:**
 - Scoped to `.ck-widget` or `.ck-{widgetname}` class
@@ -228,7 +228,7 @@ Rules:
 
 **Location:** `tokyo/widgets/{widget}/widget.client.js`
 
-**Purpose:** Applies state/config changes to DOM in real-time (Bob preview + Venice SSR).
+**Purpose:** Applies state/config changes to DOM in real-time (Bob preview + planned Venice SSR).
 
 **Required Function:**
 ```javascript
@@ -243,7 +243,7 @@ function applyState(state) {
 
 1. **On Load (Optional initial state):**
    ```javascript
-   // Venice may set an initial state. (Bob preview usually relies on postMessage.)
+   // (Planned) Venice may set an initial state for SSR-first paint. (Bob preview usually relies on postMessage.)
    if (window.CK_WIDGET?.state) {
      applyState(window.CK_WIDGET.state);
    }
@@ -435,7 +435,7 @@ instanceData = {
 
 2. **Initial Render:**
    - After the iframe loads, Bob posts the first `{ type: 'ck:state-update', state: instanceData }`
-   - (Optional) Venice may also set `window.CK_WIDGET.state` for SSR-first paint; widgets should support both
+   - (Planned) Venice may also set `window.CK_WIDGET.state` for SSR-first paint; widgets should support both
 
 3. **On instanceData Change (Every Keystroke):**
    - **NO iframe reload**
@@ -639,30 +639,32 @@ Paris (Database)
 8. Done. Next user that opens this widget gets the new published config.
 ```
 
-## How Venice Uses The Same Files
+## How Venice Uses The Same Files (planned)
 
-Venice (embed renderer) uses the same widget files from Tokyo:
+Venice (embed renderer) will use the same widget files from Tokyo.
+
+**Current repo snapshot:** Venice `/e/:publicId` returns a safe debug shell (shows `config`) and does not yet render widget HTML from Tokyo runtime assets.
 
 ```
 1. User embeds widget via <script src="...">
 2. Venice loads published config from Paris (or fetches if not cached)
-3. Venice fetches widget files from Tokyo:
+3. (Planned) Venice fetches widget files from Tokyo:
 	   - widget.html (renders as-is)
 	   - widget.css (inlines in <style> tag)
 	   - widget.client.js (includes in <script> tag)
 	   - agent.md (NOT used at runtime; AI-only)
-4. Venice renders:
+4. (Planned) Venice renders:
 	   <style>/* widget.css inlined */</style>
 	   <div><!-- widget.html content --></div>
 	   <script>/* widget.client.js */</script>
-5. widget.client.js runs:
+5. (Planned) widget.client.js runs:
 	   - Optionally reads window.CK_WIDGET.state (Venice may set this for SSR-first paint)
 	   - Always listens for postMessage patches in preview contexts
 	   - Calls applyState(state) to sync DOM
-6. Widget is now live and interactive (same DOM logic as Bob preview)
+6. (Planned) Widget is now live and interactive (same DOM logic as Bob preview)
 ```
 
-**Same runtime files, used in 2 places:**
+**Same runtime files, used in 2 places (target architecture):**
 - Bob: Live editing preview
 - Venice: Production embed rendering
 
@@ -881,9 +883,11 @@ If the widget supports AI editing, add `agent.md` describing:
 4. Edit in preview
 5. Changes flow through postMessage → applyState
 
-### Step 8: Venice Will Use Same Runtime Files
+### Step 8: (Planned) Venice Will Use Same Runtime Files
 
-Once published, Venice uses the exact same runtime files (`widget.html`, `widget.css`, `widget.client.js`) to render the widget in production embeds. (`agent.md` is AI-only and not used at runtime.)
+Target behavior: once published, Venice uses the exact same runtime files (`widget.html`, `widget.css`, `widget.client.js`) to render the widget in production embeds. (`agent.md` is AI-only and not used at runtime.)
+
+Current repo snapshot: Venice `/e/:publicId` returns a safe debug shell and does not yet render widget HTML from Tokyo assets.
 
 ## Checklist: New Widget Implementation
 
