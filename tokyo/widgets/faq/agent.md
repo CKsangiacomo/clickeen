@@ -8,8 +8,6 @@
 ## State Encoding (DOM `data-*` enums)
 Set on the main element `[data-role="faq"]`:
 - `data-layout`: `accordion` | `list` | `multicolumn`
-- `data-icon`: `plus` | `chevron`
-- `data-variant`: `default` | `card`
 - `data-state`: `ready` | `empty`
 
 ## Parts (query within root)
@@ -38,6 +36,18 @@ Layout:
 - `layout.type` (`accordion` | `list` | `multicolumn`)
 - `layout.gap` (number; px)
 - `layout.columns.desktop|mobile` (number; >= 1, `multicolumn` only)
+
+Appearance:
+- `appearance.iconStyle` (`plus` | `chevron` | `arrow` | `arrowshape`; accordion only)
+- `appearance.itemCard.shadow` (object; item card shadow)
+  - `enabled` (boolean)
+  - `inset` (boolean)
+  - `x` (number; px)
+  - `y` (number; px)
+  - `blur` (number; px)
+  - `spread` (number; px)
+  - `color` (string; hex)
+  - `alpha` (number; 0..100)
 
 Behavior:
 - `behavior.expandFirst` (boolean; accordion only)

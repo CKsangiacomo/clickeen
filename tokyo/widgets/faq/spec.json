@@ -3,7 +3,6 @@
   "defaults": {
     "title": "Frequently Asked Questions",
     "showTitle": true,
-    "categoryTitle": "All Questions",
     "displayCategoryTitles": true,
     "layout": {
       "type": "accordion",
@@ -17,7 +16,19 @@
       "itemBackground": "var(--color-system-white)",
       "iconStyle": "plus",
       "questionColor": "var(--color-system-black)",
-      "answerColor": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
+      "answerColor": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+      "itemCard": {
+        "shadow": {
+          "enabled": true,
+          "inset": false,
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "spread": 0,
+          "color": "#000000",
+          "alpha": 18
+        }
+      }
     },
     "behavior": {
       "expandFirst": false,
@@ -117,37 +128,6 @@
         }
       }
     },
-    "objects": {
-      "objects": [
-        {
-          "id": "q1",
-          "type": "faq-qa",
-          "payload": {
-            "question": "What is Clickeen?",
-            "answer": "Embeddable widgets with conversions built in.",
-            "defaultOpen": false
-          }
-        },
-        {
-          "id": "q2",
-          "type": "faq-qa",
-          "payload": {
-            "question": "Is there a free plan?",
-            "answer": "Yes, one active widget with core features.",
-            "defaultOpen": false
-          }
-        },
-        {
-          "id": "q3",
-          "type": "faq-qa",
-          "payload": {
-            "question": "How do I install a widget?",
-            "answer": "Copy the embed code and paste it before </body> on your site.",
-            "defaultOpen": false
-          }
-        }
-      ]
-    },
     "sections": [
       {
         "id": "s1",
@@ -190,7 +170,6 @@
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Widget layout' />",
     "    <tooldrawer-field type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
     "    <tooldrawer-field type='textfield' size='md' path='layout.gap' label='Gap (px)' />",
     "    <tooldrawer-field type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
     "    <tooldrawer-field type='toggle' size='md' path='behavior.multiOpen' label='Allow multiple open' show-if=\"layout.type == 'accordion'\" />",
@@ -207,6 +186,8 @@
     "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.itemBackground' label='Item background' value='{{appearance.itemBackground}}' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.questionColor' label='Question text color' value='{{appearance.questionColor}}' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.answerColor' label='Answer text color' value='{{appearance.answerColor}}' />",
+    "    <tooldrawer-field type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Item shadow' value='{{appearance.itemCard.shadow}}' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",

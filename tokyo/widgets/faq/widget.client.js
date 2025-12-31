@@ -17,6 +17,113 @@
     throw new Error('[FAQ] Missing [data-role="faq"] root');
   }
 
+  const titleEl = faqRoot.querySelector('[data-role="faq-title"]');
+  if (!(titleEl instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing [data-role="faq-title"]');
+  }
+
+  const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
+  if (!(emptyEl instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing [data-role="faq-empty"]');
+  }
+
+  const listEl = faqRoot.querySelector('[data-role="faq-list"]');
+  if (!(listEl instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing [data-role="faq-list"]');
+  }
+
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') {
+      throw new Error(`[FAQ] ${path} must be a boolean`);
+    }
+  }
+
+  function assertNumber(value, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error(`[FAQ] ${path} must be a finite number`);
+    }
+  }
+
+  function assertString(value, path) {
+    if (typeof value !== 'string') {
+      throw new Error(`[FAQ] ${path} must be a string`);
+    }
+  }
+
+  function assertObject(value, path) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`[FAQ] ${path} must be an object`);
+    }
+  }
+
+  function assertArray(value, path) {
+    if (!Array.isArray(value)) {
+      throw new Error(`[FAQ] ${path} must be an array`);
+    }
+  }
+
+  function assertFaqState(state) {
+    assertObject(state, 'state');
+    assertString(state.title, 'state.title');
+    assertBoolean(state.showTitle, 'state.showTitle');
+    assertBoolean(state.displayCategoryTitles, 'state.displayCategoryTitles');
+
+    assertObject(state.layout, 'state.layout');
+    if (!['accordion', 'list', 'multicolumn'].includes(state.layout.type)) {
+      throw new Error('[FAQ] state.layout.type must be accordion|list|multicolumn');
+    }
+    assertNumber(state.layout.gap, 'state.layout.gap');
+    assertObject(state.layout.columns, 'state.layout.columns');
+    assertNumber(state.layout.columns.desktop, 'state.layout.columns.desktop');
+    assertNumber(state.layout.columns.mobile, 'state.layout.columns.mobile');
+
+    assertObject(state.appearance, 'state.appearance');
+    assertString(state.appearance.itemBackground, 'state.appearance.itemBackground');
+    assertString(state.appearance.questionColor, 'state.appearance.questionColor');
+    assertString(state.appearance.answerColor, 'state.appearance.answerColor');
+    if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
+      throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
+    }
+    assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
+    assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
+    assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
+    assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
+    assertNumber(state.appearance.itemCard.shadow.x, 'state.appearance.itemCard.shadow.x');
+    assertNumber(state.appearance.itemCard.shadow.y, 'state.appearance.itemCard.shadow.y');
+    assertNumber(state.appearance.itemCard.shadow.blur, 'state.appearance.itemCard.shadow.blur');
+    assertNumber(state.appearance.itemCard.shadow.spread, 'state.appearance.itemCard.shadow.spread');
+    assertString(state.appearance.itemCard.shadow.color, 'state.appearance.itemCard.shadow.color');
+    assertNumber(state.appearance.itemCard.shadow.alpha, 'state.appearance.itemCard.shadow.alpha');
+    if (state.appearance.itemCard.shadow.alpha < 0 || state.appearance.itemCard.shadow.alpha > 100) {
+      throw new Error('[FAQ] state.appearance.itemCard.shadow.alpha must be 0..100');
+    }
+
+    assertObject(state.behavior, 'state.behavior');
+    assertBoolean(state.behavior.expandFirst, 'state.behavior.expandFirst');
+    assertBoolean(state.behavior.expandAll, 'state.behavior.expandAll');
+    assertBoolean(state.behavior.multiOpen, 'state.behavior.multiOpen');
+    assertBoolean(state.behavior.displayVideos, 'state.behavior.displayVideos');
+    assertBoolean(state.behavior.displayImages, 'state.behavior.displayImages');
+    assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
+
+    assertObject(state.stage, 'state.stage');
+    assertObject(state.pod, 'state.pod');
+    assertObject(state.typography, 'state.typography');
+
+    assertArray(state.sections, 'state.sections');
+    state.sections.forEach((section, idx) => {
+      assertObject(section, `state.sections[${idx}]`);
+      assertString(section.title, `state.sections[${idx}].title`);
+      assertArray(section.faqs, `state.sections[${idx}].faqs`);
+      section.faqs.forEach((faq, j) => {
+        assertObject(faq, `state.sections[${idx}].faqs[${j}]`);
+        assertString(faq.question, `state.sections[${idx}].faqs[${j}].question`);
+        assertString(faq.answer, `state.sections[${idx}].faqs[${j}].answer`);
+        assertBoolean(faq.defaultOpen, `state.sections[${idx}].faqs[${j}].defaultOpen`);
+      });
+    });
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, '&amp;')
@@ -78,7 +185,9 @@
   }
 
   function renderAnswerHtml(text, behavior) {
-    if (!text) return '';
+    if (text == null) {
+      throw new Error('[FAQ] answer must be a string');
+    }
 
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = String(text).split(urlRegex);
@@ -112,35 +221,14 @@
   function collapseAll(listEl) {
     listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
       button.setAttribute('aria-expanded', 'false');
-      const ans = button.nextElementSibling;
-      if (ans && ans.classList.contains('ck-faq__a')) ans.style.display = 'none';
     });
   }
 
   function setExpanded(button, expanded) {
     button.setAttribute('aria-expanded', String(expanded));
-    const ans = button.nextElementSibling;
-    if (ans && ans.classList.contains('ck-faq__a')) {
-      ans.style.display = expanded ? '' : 'none';
-    }
-  }
-
-  function wireAccordion(listEl, multiOpen) {
-    const buttons = listEl.querySelectorAll('.ck-faq__q');
-    buttons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const isOpen = button.getAttribute('aria-expanded') === 'true';
-        const next = !isOpen;
-        if (!multiOpen) collapseAll(listEl);
-        setExpanded(button, next);
-      });
-    });
   }
 
   function renderItems(sections, behavior, displayCategoryTitles) {
-    const listEl = faqRoot.querySelector('[data-role="faq-list"]');
-    if (!(listEl instanceof HTMLElement)) return;
-
     const markup = sections
       .map((section) => {
         const header = displayCategoryTitles
@@ -174,10 +262,18 @@
     listEl.innerHTML = markup;
   }
 
+  function computeShadowBoxShadow(shadow) {
+    if (shadow.enabled !== true || shadow.alpha <= 0) return 'none';
+    const alphaMix = 100 - shadow.alpha;
+    const color = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
+    return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
+  }
+
   function applyAppearance(appearance) {
     faqRoot.style.setProperty('--faq-item-bg', appearance.itemBackground);
     faqRoot.style.setProperty('--faq-question-color', appearance.questionColor);
     faqRoot.style.setProperty('--faq-answer-color', appearance.answerColor);
+    faqRoot.style.setProperty('--faq-item-shadow', computeShadowBoxShadow(appearance.itemCard.shadow));
   }
 
   function applyLayout(layout) {
@@ -201,10 +297,28 @@
     }
     faqRoot.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
     faqRoot.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
-    faqRoot.setAttribute('data-icon-style', iconStyle);
   }
 
+  const accordionRuntime = {
+    isAccordion: true,
+    multiOpen: false,
+  };
+
+  listEl.addEventListener('click', (event) => {
+    if (!accordionRuntime.isAccordion) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const button = target.closest('.ck-faq__q');
+    if (!(button instanceof HTMLElement)) return;
+    const isOpen = button.getAttribute('aria-expanded') === 'true';
+    const next = !isOpen;
+    if (!accordionRuntime.multiOpen) collapseAll(listEl);
+    setExpanded(button, next);
+  });
+
   function applyState(state) {
+    assertFaqState(state);
+
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[FAQ] Missing CKStagePod.applyStagePod');
     }
@@ -220,12 +334,8 @@
       answer: { varKey: 'answer' },
     });
 
-    const titleEl = faqRoot.querySelector('[data-role="faq-title"]');
-    if (titleEl instanceof HTMLElement) {
-      titleEl.textContent = state.title;
-      titleEl.hidden = state.showTitle !== true;
-      titleEl.style.display = state.showTitle === true ? '' : 'none';
-    }
+    titleEl.textContent = state.title;
+    titleEl.hidden = state.showTitle !== true;
 
     applyAccordionIcons(state.appearance.iconStyle);
 
@@ -233,24 +343,25 @@
     applyLayout(state.layout);
     renderItems(state.sections, state.behavior, state.displayCategoryTitles === true);
 
-    const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
     const hasAny = state.sections.some((section) => section.faqs.length > 0);
     faqRoot.setAttribute('data-state', hasAny ? 'ready' : 'empty');
-    if (emptyEl instanceof HTMLElement) emptyEl.hidden = hasAny;
-
-    const listEl = faqRoot.querySelector('.ck-faq__list');
-    if (!(listEl instanceof HTMLElement)) return;
+    emptyEl.hidden = hasAny;
 
     if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
+      accordionRuntime.isAccordion = false;
       listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
         setExpanded(button, true);
-        button.style.cursor = 'default';
         button.setAttribute('tabindex', '-1');
       });
       return;
     }
 
     const buttons = listEl.querySelectorAll('.ck-faq__q');
+    accordionRuntime.isAccordion = true;
+    accordionRuntime.multiOpen = state.behavior.multiOpen === true;
+    buttons.forEach((button) => {
+      button.removeAttribute('tabindex');
+    });
     collapseAll(listEl);
 
     if (state.behavior.expandAll === true) {
@@ -264,9 +375,6 @@
       const first = buttons[0];
       if (first) setExpanded(first, true);
     }
-
-    wireAccordion(listEl, state.behavior.multiOpen === true);
-
   }
 
   window.addEventListener('message', (event) => {

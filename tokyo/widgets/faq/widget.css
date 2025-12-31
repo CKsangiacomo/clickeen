@@ -1,6 +1,3 @@
-@import url('/dieter/tokens/tokens.css');
-@import url('/dieter/components/button/button.css');
-
 :root,
 html,
 body {
@@ -111,7 +108,7 @@ body {
   border-radius: var(--faq-card-radius, var(--control-radius-lg));
   border: var(--faq-card-border, 1px solid var(--color-system-gray-5));
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
-  box-shadow: var(--faq-card-shadow, var(--shadow-floating));
+  box-shadow: var(--faq-item-shadow);
   overflow: hidden;
 }
 
@@ -200,13 +197,11 @@ body {
 
 .ck-faq[data-layout='list'] .ck-faq__item {
   border: 1px solid var(--color-system-gray-5);
-  box-shadow: none;
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__item {
   border: 1px solid color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
-  box-shadow: var(--shadow-floating);
   background: var(--faq-item-bg, var(--color-system-white));
 }
 
