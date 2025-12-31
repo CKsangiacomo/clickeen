@@ -45,6 +45,40 @@ function loadWidgetDefaults(widgetType) {
   return defaults;
 }
 
+function isPlainObject(value) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function mergeMissing(defaults, current) {
+  if (current === undefined || current === null) return { value: defaults, changed: true };
+
+  if (Array.isArray(defaults) || Array.isArray(current)) {
+    return { value: current, changed: false };
+  }
+
+  if (!isPlainObject(defaults) || !isPlainObject(current)) {
+    return { value: current, changed: false };
+  }
+
+  let changed = false;
+  const out = { ...current };
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    const curValue = current[key];
+    if (curValue === undefined || curValue === null) {
+      out[key] = defaultValue;
+      changed = true;
+      continue;
+    }
+    if (isPlainObject(defaultValue) && isPlainObject(curValue)) {
+      const merged = mergeMissing(defaultValue, curValue);
+      out[key] = merged.value;
+      if (merged.changed) changed = true;
+    }
+  }
+
+  return { value: out, changed };
+}
+
 async function createInstance(args) {
   const res = await fetch(`${parisOrigin}/api/instance`, {
     method: 'POST',
@@ -58,6 +92,27 @@ async function createInstance(args) {
       status: 'unpublished',
       config: args.config,
     }),
+  });
+
+  const text = await res.text().catch(() => '');
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} ${text}`.trim());
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+async function updateInstance(args) {
+  const res = await fetch(`${parisOrigin}/api/instance/${encodeURIComponent(args.publicId)}`, {
+    method: 'PUT',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${args.parisDevJwt}`,
+    },
+    body: JSON.stringify({ config: args.config }),
   });
 
   const text = await res.text().catch(() => '');
@@ -91,7 +146,13 @@ async function main() {
   for (const widgetType of eligible) {
     const publicId = `wgt_${widgetType}_main`;
     const defaults = loadWidgetDefaults(widgetType);
-    await createInstance({ parisDevJwt, widgetType, publicId, config: defaults });
+    const createdRes = await createInstance({ parisDevJwt, widgetType, publicId, config: defaults });
+    const existingConfig = createdRes && typeof createdRes === 'object' ? createdRes.config : undefined;
+    const merged = mergeMissing(defaults, existingConfig);
+    if (merged.changed) {
+      await updateInstance({ parisDevJwt, publicId, config: merged.value });
+      console.log(`[bootstrap-local-widgets] Patched ${publicId} (added missing defaults)`);
+    }
     created += 1;
     console.log(`[bootstrap-local-widgets] Ensured ${publicId}`);
   }
@@ -104,4 +165,3 @@ main().catch((err) => {
   console.error(`[bootstrap-local-widgets] ${message}`);
   process.exit(1);
 });
-
