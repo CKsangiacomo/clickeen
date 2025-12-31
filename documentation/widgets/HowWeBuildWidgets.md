@@ -230,7 +230,7 @@ Everything else is just normal control wiring.
 #### Where Type and Layout belong (panel rule)
 
 - **Type lives in the Content panel** because Type determines *what content exists* (which content blocks/fields are relevant).
-  - Example: Countdown `timer.mode` changes the content model: date vs personal vs number.
+  - Example: a widget `timer.mode` changes the content model: date vs personal vs number.
 - **Layout lives in the Layout panel** because Layout determines *how the chosen type is arranged/placed*.
   - Example: inline vs top-bar vs floating.
 
@@ -285,7 +285,7 @@ Defining a Type always includes:
 2) the Stage/Pod + Layout defaults that make it feel like that type.
 ```
 
-#### A) Type variant (Mode) — example: Countdown
+#### A) Type variant (Mode) — example: Timer widget
 
 **State**:
 - `timer.mode = 'date' | 'personal' | 'number'`
@@ -297,9 +297,9 @@ Defining a Type always includes:
 Example (from the pattern):
 
 ```json
-"  <tooldrawer-field type='dropdown-actions' size='lg' path='timer.mode' label='Timer mode' value='{{timer.mode}}' options='[{\"label\":\"Countdown to Date\",\"value\":\"date\"},{\"label\":\"Personal Countdown\",\"value\":\"personal\"},{\"label\":\"Number Counter\",\"value\":\"number\"}]' />",
+"  <tooldrawer-field type='dropdown-actions' size='lg' path='timer.mode' label='Timer mode' value='{{timer.mode}}' options='[{\"label\":\"Target date\",\"value\":\"date\"},{\"label\":\"Personal timer\",\"value\":\"personal\"},{\"label\":\"Number counter\",\"value\":\"number\"}]' />",
 "  <tooldrawer-cluster show-if=\"timer.mode == 'date'\">",
-"    <tooldrawer-field type='textfield' size='lg' path='timer.countdownToDate.targetDate' label='Target Date' />",
+"    <tooldrawer-field type='textfield' size='lg' path='timer.dateTarget.targetDate' label='Target Date' />",
 "  </tooldrawer-cluster>",
 "  <tooldrawer-cluster show-if=\"timer.mode == 'number'\">",
 "    <tooldrawer-field type='textfield' size='md' path='timer.numberCounter.targetNumber' label='Target number' />",
@@ -588,4 +588,3 @@ Usage in widget.client.js:
 window.CKTypography.applyTypography(state.typography, widgetRoot, roleMap);
 window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
 ```
-
