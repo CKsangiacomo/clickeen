@@ -76,6 +76,12 @@
     assertObject(state.layout.columns, 'state.layout.columns');
     assertNumber(state.layout.columns.desktop, 'state.layout.columns.desktop');
     assertNumber(state.layout.columns.mobile, 'state.layout.columns.mobile');
+    assertBoolean(state.layout.itemPaddingLinked, 'state.layout.itemPaddingLinked');
+    assertNumber(state.layout.itemPadding, 'state.layout.itemPadding');
+    assertNumber(state.layout.itemPaddingTop, 'state.layout.itemPaddingTop');
+    assertNumber(state.layout.itemPaddingRight, 'state.layout.itemPaddingRight');
+    assertNumber(state.layout.itemPaddingBottom, 'state.layout.itemPaddingBottom');
+    assertNumber(state.layout.itemPaddingLeft, 'state.layout.itemPaddingLeft');
 
     assertObject(state.appearance, 'state.appearance');
     assertString(state.appearance.itemBackground, 'state.appearance.itemBackground');
@@ -85,6 +91,12 @@
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
     assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
+    assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
+    assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
+    assertString(state.appearance.itemCard.radiusTL, 'state.appearance.itemCard.radiusTL');
+    assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
+    assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
+    assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
     assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
     assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
     assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
@@ -274,6 +286,22 @@
     faqRoot.style.setProperty('--faq-question-color', appearance.questionColor);
     faqRoot.style.setProperty('--faq-answer-color', appearance.answerColor);
     faqRoot.style.setProperty('--faq-item-shadow', computeShadowBoxShadow(appearance.itemCard.shadow));
+
+    const tokenize = (value) => (value === 'none' ? '0' : `var(--control-radius-${value})`);
+    const radiusCfg = appearance.itemCard;
+    const r =
+      radiusCfg.radiusLinked === false
+        ? {
+            tl: tokenize(radiusCfg.radiusTL),
+            tr: tokenize(radiusCfg.radiusTR),
+            br: tokenize(radiusCfg.radiusBR),
+            bl: tokenize(radiusCfg.radiusBL),
+          }
+        : (() => {
+            const all = tokenize(radiusCfg.radius);
+            return { tl: all, tr: all, br: all, bl: all };
+          })();
+    faqRoot.style.setProperty('--faq-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
   }
 
   function applyLayout(layout) {
@@ -281,6 +309,25 @@
     faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
     faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
     faqRoot.setAttribute('data-layout', layout.type);
+
+    const pad =
+      layout.itemPaddingLinked === false
+        ? {
+            top: layout.itemPaddingTop,
+            right: layout.itemPaddingRight,
+            bottom: layout.itemPaddingBottom,
+            left: layout.itemPaddingLeft,
+          }
+        : {
+            top: layout.itemPadding,
+            right: layout.itemPadding,
+            bottom: layout.itemPadding,
+            left: layout.itemPadding,
+          };
+    faqRoot.style.setProperty('--faq-item-pad-top', `${pad.top}px`);
+    faqRoot.style.setProperty('--faq-item-pad-right', `${pad.right}px`);
+    faqRoot.style.setProperty('--faq-item-pad-bottom', `${pad.bottom}px`);
+    faqRoot.style.setProperty('--faq-item-pad-left', `${pad.left}px`);
   }
 
   const ICON_PAIRS = {

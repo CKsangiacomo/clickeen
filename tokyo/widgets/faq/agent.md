@@ -36,6 +36,10 @@ Layout:
 - `layout.type` (`accordion` | `list` | `multicolumn`)
 - `layout.gap` (number; px)
 - `layout.columns.desktop|mobile` (number; >= 1, `multicolumn` only)
+- Item card padding (layout spacing):
+  - `layout.itemPaddingLinked` (boolean)
+  - `layout.itemPadding` (number; px; when linked)
+  - `layout.itemPaddingTop|Right|Bottom|Left` (number; px; when unlinked)
 
 Appearance:
 - `appearance.iconStyle` (`plus` | `chevron` | `arrow` | `arrowshape`; accordion only)
@@ -48,6 +52,10 @@ Appearance:
   - `spread` (number; px)
   - `color` (string; hex)
   - `alpha` (number; 0..100)
+- Item card radius (appearance):
+  - `appearance.itemCard.radiusLinked` (boolean)
+  - `appearance.itemCard.radius` (`none` | `2xl` | `4xl` | `6xl` | `10xl`; when linked)
+  - `appearance.itemCard.radiusTL|TR|BR|BL` (same enum; when unlinked)
 
 Behavior:
 - `behavior.expandFirst` (boolean; accordion only)

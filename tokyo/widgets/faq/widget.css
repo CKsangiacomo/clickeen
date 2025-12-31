@@ -105,17 +105,19 @@ body {
 }
 
 .ck-faq__item {
-  border-radius: var(--faq-card-radius, var(--control-radius-lg));
+  border-radius: var(--faq-item-radius, var(--control-radius-lg));
   border: var(--faq-card-border, 1px solid var(--color-system-gray-5));
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
   box-shadow: var(--faq-item-shadow);
   overflow: hidden;
+  padding: var(--faq-item-pad-top, var(--space-3)) var(--faq-item-pad-right, var(--space-4))
+    var(--faq-item-pad-bottom, var(--space-3)) var(--faq-item-pad-left, var(--space-4));
 }
 
 .ck-faq__q {
   width: 100%;
   text-align: left;
-  padding: var(--space-3) var(--space-4);
+  padding: 0;
   background: none;
   border: 0;
   cursor: pointer;
@@ -206,7 +208,8 @@ body {
 }
 
 .ck-faq__a {
-  padding: 0 var(--space-4) var(--space-3);
+  padding: 0;
+  margin-top: var(--space-2);
   color: var(--faq-answer-color, color-mix(in oklab, var(--color-system-black), transparent 45%));
   display: none;
 }
