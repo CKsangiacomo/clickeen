@@ -297,14 +297,13 @@ When reviewing any code change, ask:
 If yes → the change violates architecture
 If no → the change is correct
 
-### Examples
+### Canonical examples (golden path)
 
-| Change | Violates? | Why |
-|--------|-----------|-----|
-| Bob renders ToolDrawer from spec.json | No | Bob reads widget definition, doesn't add to it |
-| Venice fetches widget.html and serves it | No | Venice passes through, doesn't modify |
-| Paris applies default values to missing fields | **Yes** | Paris is adding knowledge only widget should have |
-| Bob validates that "layout.mode" must be one of 3 values | **Yes** | Bob is encoding widget-specific rules |
+| Change | Why it’s correct |
+|--------|------------------|
+| Bob renders ToolDrawer from `spec.json` | Bob compiles the widget definition into UI; it doesn’t invent widget semantics. |
+| Venice fetches `widget.html` and serves it | Venice passes through widget assets; it doesn’t mutate widget meaning. |
+| Paris reads/writes instances as JSON | Paris stores and returns `instanceData` verbatim; widget semantics live in the widget package. |
 
 ---
 

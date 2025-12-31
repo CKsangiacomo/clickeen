@@ -13,7 +13,7 @@
 | Widget Files = Truth | 5 files in Tokyo define everything |
 | Orchestrators = Dumb Pipes | Bob, Paris, Venice pass data unchanged |
 | Visible Failure | The system fails visibly when contracts are broken |
-| No Fallbacks | Orchestrators do not apply widget defaults at runtime |
+| No Fallbacks | Orchestrators apply zero widget defaults at runtime |
 
 ---
 

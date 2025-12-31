@@ -26,7 +26,7 @@ These exist for **every** widget and should be treated as fixed infrastructure:
 - **Preview protocol** (Bob → iframe)
   - Message: `{ type: 'ck:state-update', widgetname, state }`
 
-Widgets should not create alternative systems for these “globals”. They are the shared wheel.
+Widgets use these platform-provided “globals” as-is. They are the shared wheel.
 
 ### 0) Stage/Pod block (canonical, never changes)
 

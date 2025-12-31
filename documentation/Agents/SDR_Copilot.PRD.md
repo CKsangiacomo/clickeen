@@ -129,7 +129,7 @@ Request body:
 ```
 
 Notes:
-- `controls` must be derived from `compiled.controls[]` (binding + AI context). Do not treat `controls[]` as an enforcement layer; Clickeen owns both the widget definition and the editor surface.
+- `controls` must be derived from `compiled.controls[]` (binding + AI context). `controls[]` is binding/context, while enforcement lives in Clickeen-owned widget definition + editor surfaces.
 - `sessionId` is used for learning + conversion attribution.
 
 Response shape (success):
@@ -165,7 +165,7 @@ Supported `event` values (V1):
 - `upgrade_clicked`, `upgrade_completed`
 
 HTTP semantics:
-- Always returns `200` with `{ ok: true|false }` (best-effort logging; should not break UX).
+- Always returns `200` with `{ ok: true|false }` (best-effort logging; UX continues even if logging fails).
 
 ---
 

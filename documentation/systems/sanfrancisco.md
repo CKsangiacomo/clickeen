@@ -1,7 +1,7 @@
 STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
 This document describes the intended boundary between Paris and San Francisco.
 When debugging reality, treat runtime code, `supabase/migrations/`, and deployed Cloudflare config as truth.
-If you find a mismatch, update this document (do not block execution on doc drift).
+If you find a mismatch, update this document; execution continues even if docs drift.
 
 # System: San Francisco — AI Workforce Operating System
 
@@ -123,7 +123,7 @@ Paris computes grants from paid/free entitlements and returns a **signed** token
 Requirements:
 - San Francisco MUST verify the signature and expiry.
 - Grants are short-lived (minutes), scoped (capabilities), and revocable by key rotation.
-- Grants do not encode “paid/free rules” beyond allowed capabilities/budgets.
+- Grants encode only allowed capabilities/budgets; pricing-tier rules live elsewhere.
 
 Shape (conceptual):
 ```ts

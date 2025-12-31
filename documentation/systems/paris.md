@@ -1,7 +1,7 @@
 STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
 This document describes the intended Paris responsibilities and APIs.
 When debugging reality, treat runtime code, `supabase/migrations/`, and deployed Cloudflare config as truth.
-If you find a mismatch, update this document (do not block execution on doc drift).
+If you find a mismatch, update this document; execution continues even if docs drift.
 
 ## AIs Quick Scan
 
@@ -265,7 +265,7 @@ Required env vars:
 
 ### Privacy, Rate Limiting, Usage, Submissions (Not Shipped Here)
 - `POST /api/usage` and `POST /api/submit/:publicId` exist only as explicit `501 NOT_IMPLEMENTED` placeholders in this repo snapshot.
-- Do not document token flows, event storage tables, or rate-limit behavior as shipped until the endpoints exist and `supabase/migrations/` includes the authoritative schema.
+- Document token flows, event storage tables, and rate-limit behavior as “shipped” only once the endpoints exist and `supabase/migrations/` includes the authoritative schema.
 
 ## Database Integration (This Repo Snapshot)
 

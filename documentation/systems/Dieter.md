@@ -326,7 +326,7 @@ Dieter Admin is the internal preview harness used for documentation and manual Q
 1. Create or edit the HTML fragment under `src/html/dieter-showcase/`.
 2. Ensure the fragment’s CSS imports are listed in `routes.ts`.
 3. Register the page in `nav.config.ts` to expose it in the sidebar.
-4. If the demo needs interaction, add local inline scripts guarded by `data-demo` hooks (admin-only; do not ship to production).
+4. If the demo needs interaction, add local inline scripts guarded by `data-demo` hooks (admin-only; never shipped to production).
 
 ### 2.5 Shared Renderer Warnings
 
@@ -357,9 +357,9 @@ After modifying shared code or CSS imports, manually confirm:
 
 ### 2.7 Best Practices for Contributors (Human or AI)
 
-- Keep component wiring local to the fragment—do **not** add admin-specific logic to shared CSS or app code.
+- Keep component wiring local to the fragment; shared CSS/app code stays generic.
 - When adding new demos, follow the button page pattern: spec/preview area + component preview + optional CSS/UX blocks.
-- Use inline scripts guarded by `data-demo` attributes for interaction (e.g., dropdown click handler). These scripts must not ship externally.
+- Use inline scripts guarded by `data-demo` attributes for interaction (e.g., dropdown click handler). These scripts are admin-only and stripped from external builds.
 - Always verify markup against `dietercomponents.md`; the admin harness does not supersede the component contract.
 
 ### 2.8 Keeping Admin in Sync

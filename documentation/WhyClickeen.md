@@ -294,7 +294,7 @@ Rule of thumb: when in doubt, choose the path that delivers value faster with le
 - **Phase 3 (Future):** Clickeen Landing Pages
 - **Phase 4 (Future):** Clickeen Creatives (Ads/Social)
 
-Do not implement Phase 2/3/4 features. Assume Phase 1 only unless CONTEXT.md specifies otherwise.
+Scope: implement Phase 1 only unless `documentation/CONTEXT.md` explicitly expands scope.
 
 **Phase-1 Success Metrics:**
 - 10,000+ free users with embedded widgets

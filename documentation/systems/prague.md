@@ -1,7 +1,7 @@
 STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
 This document describes the intended Prague responsibilities and contracts.
 When debugging reality, treat runtime code, `supabase/migrations/`, and deployed Cloudflare config as truth.
-If you find a mismatch, update this document (do not block execution on doc drift).
+If you find a mismatch, update this document; execution continues even if docs drift.
 
 # System: Prague — Marketing & Discovery Surface
 

@@ -21,7 +21,7 @@ This doc is meant to answer:
 
 Naming:
 - Dev worker name defaults to `sanfrancisco-dev` in `sanfrancisco/wrangler.toml`
-- Prod should use a separate worker name + bindings (do not reuse dev D1/R2/KV/Queues)
+- Prod uses a separate worker name + bindings; dev D1/R2/KV/Queues are distinct from prod.
 
 ## 2) Bindings & environment variables
 
@@ -84,7 +84,7 @@ Example keys (current code):
 
 Design intent:
 - execution must not block on logging/indexing
-- ingestion is best-effort; failures log to console but do not break user flow
+- ingestion is best-effort; failures log to console and user flow continues
 
 ### R2 (raw events)
 
@@ -151,7 +151,7 @@ Meaning: the execution reached a code path that requires model access.
 
 Actions:
 - Set `DEEPSEEK_API_KEY` in the San Francisco environment.
-- Note: many deterministic “clarify/explain/guard” paths do not require provider keys.
+- Note: many deterministic “clarify/explain/guard” paths work without provider keys.
 
 ## 7) Local development
 
@@ -166,4 +166,3 @@ Full stack (recommended):
 Useful checks:
 - `curl http://localhost:3002/healthz`
 - `curl http://localhost:3001/api/healthz`
-

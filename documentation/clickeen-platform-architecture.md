@@ -34,7 +34,7 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 |-----------|------|
 | **No Fallbacks** | Orchestrators never apply default values. If data is missing, the system fails visibly. |
 | **Widget Files = Truth** | The 5 files in `tokyo/widgets/{name}/` define everything about a widget. |
-| **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. They don't validate widget-specific logic. |
+| **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. Widget-specific rules live only in the widget package. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
 
 ---
