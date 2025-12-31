@@ -9,8 +9,7 @@
       "type": "accordion",
       "columns": {
         "desktop": 2,
-      "tablet": 2,
-      "mobile": 1
+        "mobile": 1
       },
       "gap": 16
     },
@@ -199,7 +198,6 @@
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"layout.type == 'multicolumn'\">",
     "    <tooldrawer-field type='textfield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.tablet' label='Columns (tablet)' />",
     "    <tooldrawer-field type='textfield' size='md' path='layout.columns.mobile' label='Columns (mobile)' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",

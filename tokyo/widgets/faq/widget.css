@@ -255,12 +255,6 @@ body {
   grid-template-columns: repeat(var(--faq-columns-desktop, 2), minmax(0, 1fr));
 }
 
-@media (max-width: 1024px) {
-  .ck-faq[data-layout='multicolumn'] .ck-faq__list {
-    grid-template-columns: repeat(var(--faq-columns-tablet, 2), minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 768px) {
   .ck-faq__header {
     flex-direction: column;

@@ -183,7 +183,6 @@
   function applyLayout(layout) {
     faqRoot.style.setProperty('--layout-gap', `${layout.gap}px`);
     faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
-    faqRoot.style.setProperty('--faq-columns-tablet', String(layout.columns.tablet));
     faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
     faqRoot.setAttribute('data-layout', layout.type);
   }

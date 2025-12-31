@@ -37,7 +37,7 @@ Widget:
 Layout:
 - `layout.type` (`accordion` | `list` | `multicolumn`)
 - `layout.gap` (number; px)
-- `layout.columns.desktop|tablet|mobile` (number; >= 1, `multicolumn` only)
+- `layout.columns.desktop|mobile` (number; >= 1, `multicolumn` only)
 
 Behavior:
 - `behavior.expandFirst` (boolean; accordion only)
