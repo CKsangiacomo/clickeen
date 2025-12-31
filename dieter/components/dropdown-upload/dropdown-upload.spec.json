@@ -1,0 +1,48 @@
+{
+  "component": "dropdown-upload",
+  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxSizeMb='{{MAX_SIZE_MB}}' grantUrl='{{GRANT_URL}}' resolveUrl='{{RESOLVE_URL}}' template='{{TEMPLATE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "optional": true },
+    "headerLabel": { "optional": true },
+    "placeholder": { "optional": true, "default": "Upload file" },
+    "value": { "optional": true },
+    "accept": { "optional": true, "default": "image/*" },
+    "maxSizeMb": { "optional": true, "type": "number" },
+    "grantUrl": { "optional": true, "default": "/api/assets/grant" },
+    "resolveUrl": { "optional": true, "default": "/api/assets/resolve" },
+    "template": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "defaults": [
+    {
+      "id": "dropdown-upload",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-dropdown-upload", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "dropdown-upload-{{size}}",
+        "label": "File",
+        "placeholder": "Upload file",
+        "value": "",
+        "path": "",
+        "popoverLabel": "File upload",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "File",
+        "headerLabelClass": "label-s",
+        "accept": "image/*",
+        "maxSizeMb": 5,
+        "grantUrl": "/api/assets/grant",
+        "resolveUrl": "/api/assets/resolve",
+        "template": ""
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
+        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    }
+  ]
+}
