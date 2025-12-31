@@ -630,6 +630,19 @@ export function TdMenuContent({
       if ('value' in target) {
         const rawValue = (target as HTMLInputElement).value;
 
+        if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+          const parsed = parseBobJsonValue(target, rawValue);
+          if (parsed == null) {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[TdMenuContent] Ignoring invalid JSON input for path', path);
+            }
+            return;
+          }
+          applySet(path, parsed);
+          return;
+        }
+
         // Typography: switching to "custom" should prefill sizeCustom with the current preset size.
         const sizePresetMatch = path.match(/^typography\.roles\.([^.]+)\.sizePreset$/);
         if (sizePresetMatch && rawValue === 'custom') {
@@ -773,4 +786,15 @@ function resolvePathFromTarget(target: EventTarget | null): string | null {
     if (hidden) return hidden.getAttribute('data-bob-path');
   }
   return null;
+}
+
+function parseBobJsonValue(input: HTMLInputElement, rawValue: string): unknown | null {
+  if (input.dataset.bobJson == null) return null;
+  const trimmed = rawValue.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return null;
+  }
 }
