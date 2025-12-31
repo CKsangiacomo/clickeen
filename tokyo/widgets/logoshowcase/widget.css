@@ -1,0 +1,279 @@
+/* Logo Showcase Widget Styles */
+
+.ck-logoshowcase {
+  --ls-logo-size: 80px;
+  --ls-spacing: 80px;
+  --ls-ticker-duration: 30s;
+  --ls-title-color: var(--color-system-black);
+  --ls-title-weight: 600;
+  --ls-title-style: normal;
+  --ls-caption-color: color-mix(in oklab, var(--color-system-black), transparent 40%);
+  --ls-caption-weight: 400;
+  --ls-caption-style: normal;
+  --ls-links-color: var(--color-brand-primary);
+  --ls-button-bg: var(--color-brand-primary);
+  --ls-button-color: var(--color-system-white);
+  --ls-button-radius: 8px;
+  
+  width: 100%;
+  max-width: var(--content-width, 1200px);
+}
+
+/* Header */
+.ck-ls__header {
+  text-align: var(--ls-header-align, center);
+  margin-bottom: var(--spacing-6);
+}
+
+.ck-ls__header[hidden] {
+  display: none;
+}
+
+.ck-ls__title {
+  font-size: var(--ls-title-size, 28px);
+  font-weight: var(--ls-title-weight);
+  font-style: var(--ls-title-style);
+  color: var(--ls-title-color);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.ck-ls__caption {
+  font-size: var(--ls-caption-size, 16px);
+  font-weight: var(--ls-caption-weight);
+  font-style: var(--ls-caption-style);
+  color: var(--ls-caption-color);
+  margin: 0;
+}
+
+.ck-ls__caption a {
+  color: var(--ls-links-color);
+  text-decoration: underline;
+}
+
+.ck-ls__caption:empty {
+  display: none;
+}
+
+/* Viewport */
+.ck-ls__viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Track */
+.ck-ls__track {
+  display: flex;
+  gap: var(--ls-spacing);
+  align-items: center;
+}
+
+/* Logo Item */
+.ck-ls__item {
+  flex-shrink: 0;
+  width: var(--ls-logo-size);
+  height: var(--ls-logo-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ck-ls__item a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ck-ls__item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: filter 0.2s, transform 0.2s, opacity 0.2s;
+}
+
+/* Color Schemes */
+[data-color-scheme="grayscale"] .ck-ls__item img {
+  filter: grayscale(100%);
+}
+
+[data-color-scheme="custom"] .ck-ls__item img {
+  filter: grayscale(100%) brightness(0.5);
+  /* Custom color applied via CSS variable overlay or mix-blend-mode */
+}
+
+/* Hover Effects */
+[data-hover-effect="color-restore"][data-color-scheme="grayscale"] .ck-ls__item:hover img {
+  filter: grayscale(0%);
+}
+
+[data-hover-effect="scale"] .ck-ls__item:hover img {
+  transform: scale(1.1);
+}
+
+[data-hover-effect="opacity"] .ck-ls__item img {
+  opacity: 0.7;
+}
+
+[data-hover-effect="opacity"] .ck-ls__item:hover img {
+  opacity: 1;
+}
+
+/* ===== TICKER LAYOUT ===== */
+[data-layout="ticker"] .ck-ls__track {
+  animation: ls-scroll var(--ls-ticker-duration) linear infinite;
+  will-change: transform;
+}
+
+[data-layout="ticker"][data-ticker-direction="right"] .ck-ls__track {
+  animation-name: ls-scroll-right;
+}
+
+[data-layout="ticker"][data-pause-on-hover="true"]:hover .ck-ls__track {
+  animation-play-state: paused;
+}
+
+[data-layout="ticker"] .ck-ls__nav {
+  display: none;
+}
+
+@keyframes ls-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes ls-scroll-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+/* ===== CAROUSEL LAYOUT ===== */
+[data-layout="carousel"] .ck-ls__track {
+  transition: transform 0.3s ease;
+}
+
+[data-layout="carousel"] .ck-ls__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-system-white);
+  border: 1px solid var(--color-system-gray-200, #e5e5e5);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+[data-layout="carousel"] .ck-ls__viewport:hover .ck-ls__nav {
+  opacity: 1;
+}
+
+[data-layout="carousel"] .ck-ls__nav--prev {
+  left: 8px;
+}
+
+[data-layout="carousel"] .ck-ls__nav--next {
+  right: 8px;
+}
+
+[data-layout="carousel"] .ck-ls__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+[data-layout="carousel"][data-show-arrows="false"] .ck-ls__nav {
+  display: none;
+}
+
+/* ===== GRID LAYOUT ===== */
+[data-layout="grid"] .ck-ls__track {
+  display: grid;
+  grid-template-columns: repeat(var(--ls-grid-cols, 6), 1fr);
+  justify-items: center;
+}
+
+[data-layout="grid"] .ck-ls__nav {
+  display: none;
+}
+
+/* ===== CTA Button ===== */
+.ck-ls__cta {
+  text-align: var(--ls-button-align, center);
+  margin-top: var(--spacing-6);
+}
+
+.ck-ls__cta[hidden] {
+  display: none;
+}
+
+.ck-ls__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-5);
+  background-color: var(--ls-button-bg);
+  color: var(--ls-button-color);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: var(--ls-button-radius);
+  transition: opacity 0.2s;
+}
+
+.ck-ls__button:hover {
+  opacity: 0.9;
+}
+
+.ck-ls__button-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+.ck-ls__button-icon[data-visible="true"] {
+  display: flex;
+}
+
+.ck-ls__button-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+/* ===== Empty State ===== */
+.ck-ls__empty {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--color-system-gray-500, #6b7280);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .ck-logoshowcase {
+    --ls-logo-size: var(--ls-tablet-logo-size, 60px);
+    --ls-spacing: var(--ls-tablet-spacing, 40px);
+  }
+  
+  [data-layout="grid"] .ck-ls__track {
+    grid-template-columns: repeat(var(--ls-grid-cols-tablet, 4), 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ck-logoshowcase {
+    --ls-logo-size: var(--ls-mobile-logo-size, 50px);
+    --ls-spacing: var(--ls-mobile-spacing, 20px);
+  }
+  
+  [data-layout="grid"] .ck-ls__track {
+    grid-template-columns: repeat(var(--ls-grid-cols-mobile, 3), 1fr);
+  }
+}
+
