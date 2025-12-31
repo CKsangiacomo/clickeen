@@ -1,0 +1,892 @@
+
+<div>
+  <h1 class="heading-2" style="margin:0">Dropdown Shadow</h1>
+</div>
+<div class="devstudio-page-section">
+  
+    <div class="dieter-component-row" style="margin-bottom:var(--space-4)">
+      
+    <div class="dieter-component-preview-280-wrapper">
+      <div class="spec-wrapper dieter-spec-wrapper">
+        <span class="spec-line body-xsmall">diet-dropdown-shadow</span><span class="spec-line body-xsmall">data-size='sm'</span>
+      </div>
+      <div class="dieter-preview">
+        <div class="diet-dropdown-shadow diet-popover-host" data-size="sm" data-state="closed">
+  <input
+    id="dropdown-shadow-sm"
+    type="hidden"
+    class="diet-dropdown-shadow__value-field"
+    value=""
+    
+    data-bob-json
+    data-placeholder="Select a shadow"
+  />
+
+  <div
+    class="diet-dropdown-header diet-dropdown-shadow__control"
+    role="button"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-labelledby="dropdown-shadow-sm-label"
+  >
+    
+      <span class="diet-dropdown-header-label label-xs" id="dropdown-shadow-sm-label">Label:</span>
+    
+    <span class="diet-dropdown-header-value body-xs" data-muted="true" data-placeholder="Select a shadow">
+      <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
+      <span class="diet-dropdown-shadow__label">Select a shadow</span>
+    </span>
+    <button
+      class="diet-dropdown-header-icon diet-btn-ic"
+      data-size="sm"
+      data-variant="neutral"
+      type="button"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
+    </button>
+  </div>
+
+  <div
+    class="diet-popover diet-dropdown-shadow__popover"
+    role="listbox"
+    aria-label="Shadow options"
+    data-state="closed"
+  >
+    <div class="diet-popover__header">
+      <span class="diet-popover__header-label label-s">
+        Shadow
+      </span>
+      <button
+        type="button"
+        class="diet-btn-ic diet-popover__header-trigger"
+        data-size="sm"
+        data-variant="neutral"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <span class="diet-btn-ic__icon" data-icon="sparkles"></span>
+      </button>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-dropdown-shadow__panel body-xs">
+        <div class="diet-dropdown-shadow__preview" aria-hidden="true">
+          <div class="diet-dropdown-shadow__shadow-preview"></div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sv" data-role="sv">
+          <div class="diet-dropdown-shadow__sv-canvas">
+            <div class="diet-dropdown-shadow__sv-thumb" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sliders">
+          <div class="diet-dropdown-shadow__slider diet-dropdown-shadow__slider--hue diet-slider" data-size="md">
+            <span class="diet-slider__label">Hue</span>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              class="diet-slider__input diet-dropdown-shadow__hue"
+              aria-label="Hue"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__inputs">
+          <div class="diet-textfield" data-size="md" data-role="hex">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label label-s">Hex:</span>
+              <input
+                type="text"
+                class="diet-textfield__field body-s diet-dropdown-shadow__hex"
+                aria-label="Hex value"
+                placeholder="RRGGBB"
+                inputmode="text"
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="6"
+                pattern="^[0-9a-fA-F]{0,6}$"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__swatches">
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff3b30" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff9500" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffcc00" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#34c759" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#30b0c7" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#007aff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#32ade6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#00c7be" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#5856d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#af52de" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff2d55" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#a2845e" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#212121" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#aeaeb2" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#c7c7cc" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#d1d1d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#e5e5ea" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffffff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__shadow-controls">
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-sm-enabled-label">Enabled</span>
+            <input
+              id="dropdown-shadow-sm-enabled"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__enabled"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-sm-enabled-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-sm-enabled" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-sm-inset-label">Inset</span>
+            <input
+              id="dropdown-shadow-sm-inset"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__inset"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-sm-inset-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-sm-inset" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-sm-x">X</label>
+            <input
+              id="dropdown-shadow-sm-x"
+              class="diet-slider__input diet-dropdown-shadow__x"
+              type="range"
+              min="-50"
+              max="50"
+              value="0"
+              style="--value: 0; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-sm-y">Y</label>
+            <input
+              id="dropdown-shadow-sm-y"
+              class="diet-slider__input diet-dropdown-shadow__y"
+              type="range"
+              min="-50"
+              max="50"
+              value="8"
+              style="--value: 8; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-sm-blur">Blur</label>
+            <input
+              id="dropdown-shadow-sm-blur"
+              class="diet-slider__input diet-dropdown-shadow__blur"
+              type="range"
+              min="0"
+              max="120"
+              value="24"
+              style="--value: 24; --min: 0; --max: 120;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-sm-spread">Spread</label>
+            <input
+              id="dropdown-shadow-sm-spread"
+              class="diet-slider__input diet-dropdown-shadow__spread"
+              type="range"
+              min="-40"
+              max="40"
+              value="0"
+              style="--value: 0; --min: -40; --max: 40;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-sm-opacity">Opacity</label>
+            <input
+              id="dropdown-shadow-sm-opacity"
+              class="diet-slider__input diet-dropdown-shadow__opacity"
+              type="range"
+              min="0"
+              max="100"
+              value="18"
+              style="--value: 18; --min: 0; --max: 100;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-shadow__remove-shadow"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Disable shadow</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      </div>
+    </div>
+    <div class="dieter-component-preview-280-wrapper">
+      <div class="spec-wrapper dieter-spec-wrapper">
+        <span class="spec-line body-xsmall">diet-dropdown-shadow</span><span class="spec-line body-xsmall">data-size='md'</span>
+      </div>
+      <div class="dieter-preview">
+        <div class="diet-dropdown-shadow diet-popover-host" data-size="md" data-state="closed">
+  <input
+    id="dropdown-shadow-md"
+    type="hidden"
+    class="diet-dropdown-shadow__value-field"
+    value=""
+    
+    data-bob-json
+    data-placeholder="Select a shadow"
+  />
+
+  <div
+    class="diet-dropdown-header diet-dropdown-shadow__control"
+    role="button"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-labelledby="dropdown-shadow-md-label"
+  >
+    
+      <span class="diet-dropdown-header-label label-s" id="dropdown-shadow-md-label">Label:</span>
+    
+    <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="Select a shadow">
+      <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
+      <span class="diet-dropdown-shadow__label">Select a shadow</span>
+    </span>
+    <button
+      class="diet-dropdown-header-icon diet-btn-ic"
+      data-size="md"
+      data-variant="neutral"
+      type="button"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
+    </button>
+  </div>
+
+  <div
+    class="diet-popover diet-dropdown-shadow__popover"
+    role="listbox"
+    aria-label="Shadow options"
+    data-state="closed"
+  >
+    <div class="diet-popover__header">
+      <span class="diet-popover__header-label label-s">
+        Shadow
+      </span>
+      <button
+        type="button"
+        class="diet-btn-ic diet-popover__header-trigger"
+        data-size="sm"
+        data-variant="neutral"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <span class="diet-btn-ic__icon" data-icon="sparkles"></span>
+      </button>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-dropdown-shadow__panel body-xs">
+        <div class="diet-dropdown-shadow__preview" aria-hidden="true">
+          <div class="diet-dropdown-shadow__shadow-preview"></div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sv" data-role="sv">
+          <div class="diet-dropdown-shadow__sv-canvas">
+            <div class="diet-dropdown-shadow__sv-thumb" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sliders">
+          <div class="diet-dropdown-shadow__slider diet-dropdown-shadow__slider--hue diet-slider" data-size="md">
+            <span class="diet-slider__label">Hue</span>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              class="diet-slider__input diet-dropdown-shadow__hue"
+              aria-label="Hue"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__inputs">
+          <div class="diet-textfield" data-size="md" data-role="hex">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label label-s">Hex:</span>
+              <input
+                type="text"
+                class="diet-textfield__field body-s diet-dropdown-shadow__hex"
+                aria-label="Hex value"
+                placeholder="RRGGBB"
+                inputmode="text"
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="6"
+                pattern="^[0-9a-fA-F]{0,6}$"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__swatches">
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff3b30" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff9500" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffcc00" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#34c759" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#30b0c7" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#007aff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#32ade6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#00c7be" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#5856d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#af52de" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff2d55" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#a2845e" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#212121" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#aeaeb2" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#c7c7cc" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#d1d1d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#e5e5ea" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffffff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__shadow-controls">
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-md-enabled-label">Enabled</span>
+            <input
+              id="dropdown-shadow-md-enabled"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__enabled"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-md-enabled-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-md-enabled" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-md-inset-label">Inset</span>
+            <input
+              id="dropdown-shadow-md-inset"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__inset"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-md-inset-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-md-inset" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-md-x">X</label>
+            <input
+              id="dropdown-shadow-md-x"
+              class="diet-slider__input diet-dropdown-shadow__x"
+              type="range"
+              min="-50"
+              max="50"
+              value="0"
+              style="--value: 0; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-md-y">Y</label>
+            <input
+              id="dropdown-shadow-md-y"
+              class="diet-slider__input diet-dropdown-shadow__y"
+              type="range"
+              min="-50"
+              max="50"
+              value="8"
+              style="--value: 8; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-md-blur">Blur</label>
+            <input
+              id="dropdown-shadow-md-blur"
+              class="diet-slider__input diet-dropdown-shadow__blur"
+              type="range"
+              min="0"
+              max="120"
+              value="24"
+              style="--value: 24; --min: 0; --max: 120;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-md-spread">Spread</label>
+            <input
+              id="dropdown-shadow-md-spread"
+              class="diet-slider__input diet-dropdown-shadow__spread"
+              type="range"
+              min="-40"
+              max="40"
+              value="0"
+              style="--value: 0; --min: -40; --max: 40;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-md-opacity">Opacity</label>
+            <input
+              id="dropdown-shadow-md-opacity"
+              class="diet-slider__input diet-dropdown-shadow__opacity"
+              type="range"
+              min="0"
+              max="100"
+              value="18"
+              style="--value: 18; --min: 0; --max: 100;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-shadow__remove-shadow"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Disable shadow</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      </div>
+    </div>
+    <div class="dieter-component-preview-280-wrapper">
+      <div class="spec-wrapper dieter-spec-wrapper">
+        <span class="spec-line body-xsmall">diet-dropdown-shadow</span><span class="spec-line body-xsmall">data-size='lg'</span>
+      </div>
+      <div class="dieter-preview">
+        <div class="diet-dropdown-shadow diet-popover-host" data-size="lg" data-state="closed">
+  <input
+    id="dropdown-shadow-lg"
+    type="hidden"
+    class="diet-dropdown-shadow__value-field"
+    value=""
+    
+    data-bob-json
+    data-placeholder="Select a shadow"
+  />
+
+  <div
+    class="diet-dropdown-header diet-dropdown-shadow__control"
+    role="button"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-labelledby="dropdown-shadow-lg-label"
+  >
+    
+      <span class="diet-dropdown-header-label label-m" id="dropdown-shadow-lg-label">Label:</span>
+    
+    <span class="diet-dropdown-header-value body-m" data-muted="true" data-placeholder="Select a shadow">
+      <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
+      <span class="diet-dropdown-shadow__label">Select a shadow</span>
+    </span>
+    <button
+      class="diet-dropdown-header-icon diet-btn-ic"
+      data-size="lg"
+      data-variant="neutral"
+      type="button"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
+    </button>
+  </div>
+
+  <div
+    class="diet-popover diet-dropdown-shadow__popover"
+    role="listbox"
+    aria-label="Shadow options"
+    data-state="closed"
+  >
+    <div class="diet-popover__header">
+      <span class="diet-popover__header-label label-s">
+        Shadow
+      </span>
+      <button
+        type="button"
+        class="diet-btn-ic diet-popover__header-trigger"
+        data-size="sm"
+        data-variant="neutral"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <span class="diet-btn-ic__icon" data-icon="sparkles"></span>
+      </button>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-dropdown-shadow__panel body-xs">
+        <div class="diet-dropdown-shadow__preview" aria-hidden="true">
+          <div class="diet-dropdown-shadow__shadow-preview"></div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sv" data-role="sv">
+          <div class="diet-dropdown-shadow__sv-canvas">
+            <div class="diet-dropdown-shadow__sv-thumb" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__sliders">
+          <div class="diet-dropdown-shadow__slider diet-dropdown-shadow__slider--hue diet-slider" data-size="md">
+            <span class="diet-slider__label">Hue</span>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              class="diet-slider__input diet-dropdown-shadow__hue"
+              aria-label="Hue"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__inputs">
+          <div class="diet-textfield" data-size="md" data-role="hex">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label label-s">Hex:</span>
+              <input
+                type="text"
+                class="diet-textfield__field body-s diet-dropdown-shadow__hex"
+                aria-label="Hex value"
+                placeholder="RRGGBB"
+                inputmode="text"
+                autocapitalize="off"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="6"
+                pattern="^[0-9a-fA-F]{0,6}$"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__swatches">
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff3b30" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff9500" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffcc00" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#34c759" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#30b0c7" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#007aff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#32ade6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#00c7be" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#5856d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#af52de" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ff2d55" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#a2845e" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="diet-dropdown-shadow__swatch-row">
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#212121" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#aeaeb2" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#c7c7cc" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#d1d1d6" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#e5e5ea" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="diet-dropdown-shadow__swatch" data-color="#ffffff" aria-pressed="false">
+              <span class="diet-dropdown-shadow__swatch-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__shadow-controls">
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-lg-enabled-label">Enabled</span>
+            <input
+              id="dropdown-shadow-lg-enabled"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__enabled"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-lg-enabled-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-lg-enabled" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-toggle diet-toggle--block" data-size="sm">
+            <span class="diet-toggle__label label-s" id="dropdown-shadow-lg-inset-label">Inset</span>
+            <input
+              id="dropdown-shadow-lg-inset"
+              class="diet-toggle__input sr-only diet-dropdown-shadow__inset"
+              type="checkbox"
+              role="switch"
+              aria-labelledby="dropdown-shadow-lg-inset-label"
+            />
+            <label class="diet-toggle__switch" for="dropdown-shadow-lg-inset" aria-hidden="true">
+              <span class="diet-toggle__knob"></span>
+            </label>
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-lg-x">X</label>
+            <input
+              id="dropdown-shadow-lg-x"
+              class="diet-slider__input diet-dropdown-shadow__x"
+              type="range"
+              min="-50"
+              max="50"
+              value="0"
+              style="--value: 0; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-lg-y">Y</label>
+            <input
+              id="dropdown-shadow-lg-y"
+              class="diet-slider__input diet-dropdown-shadow__y"
+              type="range"
+              min="-50"
+              max="50"
+              value="8"
+              style="--value: 8; --min: -50; --max: 50;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-lg-blur">Blur</label>
+            <input
+              id="dropdown-shadow-lg-blur"
+              class="diet-slider__input diet-dropdown-shadow__blur"
+              type="range"
+              min="0"
+              max="120"
+              value="24"
+              style="--value: 24; --min: 0; --max: 120;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-lg-spread">Spread</label>
+            <input
+              id="dropdown-shadow-lg-spread"
+              class="diet-slider__input diet-dropdown-shadow__spread"
+              type="range"
+              min="-40"
+              max="40"
+              value="0"
+              style="--value: 0; --min: -40; --max: 40;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+
+          <div class="diet-slider diet-slider--block" data-size="md">
+            <label class="diet-slider__label label-s" for="dropdown-shadow-lg-opacity">Opacity</label>
+            <input
+              id="dropdown-shadow-lg-opacity"
+              class="diet-slider__input diet-dropdown-shadow__opacity"
+              type="range"
+              min="0"
+              max="100"
+              value="18"
+              style="--value: 18; --min: 0; --max: 100;"
+              oninput="this.style.setProperty('--value', this.value)"
+            />
+          </div>
+        </div>
+
+        <div class="diet-dropdown-shadow__actions">
+          <button
+            type="button"
+            class="diet-btn-menuactions diet-dropdown-shadow__remove-shadow"
+            data-size="sm"
+            data-variant="neutral"
+          >
+            <span class="diet-btn-menuactions__label">Disable shadow</span>
+            <span class="diet-btn-menuactions__icon" aria-hidden="true">
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
+              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      </div>
+    </div>
+    </div>
+</div>
