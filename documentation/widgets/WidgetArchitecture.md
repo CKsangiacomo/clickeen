@@ -88,7 +88,7 @@ We apply this same system to all widget-owned surfaces (when present):
 - **Content**: content model and arrays/items (what exists)
 - **Layout**: spacing/arrangement (gap/padding/columns/density/alignment; layout-type selectors)
 - **Appearance**: colors/fills/borders/radius/shadow/dividers per surface
-- **Typography**: role-based font settings per surface/subpart (via `defaults.typography.roles`)
+- **Typography**: role-based font + color settings per surface/subpart (via `defaults.typography.roles`)
 
 This is how we keep the editor cohesive across 100s of widgets: users learn Stage/Pod once, and the same panel taxonomy applies to every other surface in every widget.
 
@@ -149,7 +149,7 @@ Location: `tokyo/widgets/shared/`
 |--------|--------|---------|
 | `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap)` | Apply typography roles to CSS variables |
 | `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply stage/pod layout + appearance |
-| `branding.js` | `window.CKBranding.applyBranding(behavior, el)` | Apply backlink / branding |
+| `branding.js` | (self-managed) | Inject backlink / branding into `.pod` and toggle via `state.behavior.showBacklink` |
 
 ### `postMessage` protocol (Bob → preview iframe)
 
