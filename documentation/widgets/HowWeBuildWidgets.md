@@ -181,6 +181,41 @@ For every new widget design (or new template), explicitly decide these 4 values:
   - Any rich text/HTML controls are applied via a small allowlist sanitizer before `innerHTML`.
 - **Deterministic runtime**: on `ck:state-update`, apply state to DOM, CSS variables, and data attributes (no network work).
 
+---
+
+## Arrays + Items (global taxonomy, required)
+
+Widgets scale cleanly when every author (human or AI) uses the same vocabulary and DOM wiring rules.
+
+### Vocabulary (do not mix terms)
+
+- **Array**: a list in state, written as `path[]` (example: `reviews[]`, `sections[]`, `sections[].faqs[]`, `strips[].logos[]`).
+- **Item**: one element of an array, written as `path[i]` (example: `sections[i].faqs[j]`).
+- **DOM item container**: the DOM element that renders one Item (example: `li.ck-faq__item[data-role="faq-item"]`).
+
+**Rule:** never call an Array an “item”. Widgets often have multiple arrays; each has its own Items.
+
+### Naming and wiring rules
+
+- **`data-role` is for behavior/hooks**: anything `widget.client.js` reads/writes must have a stable `data-role="..."`.
+- **classes are for styling**: use widget-scoped classes (e.g. `.ck-faq__item`) for CSS, not `data-role`.
+- **Every Array must have**:
+  - a stable **DOM array container** (where items are rendered), and
+  - a stable **DOM item container** (the “piece” wrapper for one item).
+
+### Examples (state → DOM)
+
+- **FAQ**
+  - **Array**: `sections[]` → **Item**: `sections[i]`
+  - **Array**: `sections[i].faqs[]` → **Item**: `sections[i].faqs[j]`
+  - **DOM item container (FAQ row)**: `li.ck-faq__item[data-role="faq-item"]`
+
+- **LogoShowcase**
+  - **Array**: `strips[]` → **Item**: `strips[i]` (one strip)
+  - **Array**: `strips[i].logos[]` → **Item**: `strips[i].logos[j]` (one logo)
+
+This taxonomy is what keeps nesting, styling, and runtime updates consistent across 100s of widgets.
+
 ### 2) Core widget skeleton (common to all widgets)
 
 This is the shared structure every widget must implement. Everything else is widget-specific.

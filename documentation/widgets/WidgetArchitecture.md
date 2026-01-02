@@ -38,6 +38,31 @@ Location: `tokyo/widgets/{widgetname}/`
   - **Type**: the content model + runtime behavior (what it is)
   - **Layout**: how that type is arranged/placed (where/how it lives on the page)
 
+---
+
+## Arrays + Items (global taxonomy)
+
+In addition to Stage/Pod and Type/Layout, every widget must describe its content in the same universal units:
+
+- **Array**: a list in state (`path[]`) — e.g. `sections[]`, `sections[].faqs[]`, `reviews[]`, `strips[]`, `strips[].logos[]`
+- **Item**: one element of an array (`path[i]`)
+- **DOM item container**: the DOM element that renders one Item (a stable “piece” wrapper)
+
+**Why this matters:** at scale, widget code stays simple only if insert/remove/reorder ops always target Arrays in state, and DOM updates always target the corresponding Item containers (no brittle DOM traversal).
+
+### Multiple arrays and nesting are normal
+
+Widgets often have more than one array and can be nested:
+- FAQ: `sections[] → sections[i].faqs[]`
+- LogoShowcase: `strips[] → strips[i].logos[]`
+
+### Convention (recommended)
+
+- Use `data-role` for runtime/editor hooks and keep it stable:
+  - array container: `data-role="{widget}-list"` (or similar)
+  - item container: `data-role="{widget}-item"`
+- Use widget-scoped classes for styling (BEM-like), e.g. `.ck-faq__item`.
+
 ### Type = miniwidget (the practical definition)
 
 Treat each Type as a **miniwidget** because it changes the widget across:
