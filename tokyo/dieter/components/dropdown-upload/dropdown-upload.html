@@ -24,7 +24,6 @@
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
       <span class="diet-dropdown-upload__label">{{placeholder}}</span>
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
     </span>
     <button
       class="diet-dropdown-header-icon diet-btn-ic"
@@ -102,118 +101,7 @@
     </div>
   </div>
 </div>
+<<<<<<< Current (Your changes)
 
-<div
-  class="diet-dropdown-upload diet-popover-host"
-  data-size="{{size}}"
-  data-state="closed"
-  data-resolve-url="{{resolveUrl}}"
-  data-grant-url="{{grantUrl}}"
-  data-max-size-mb="{{maxSizeMb}}"
->
-  <input
-    id="{{id}}"
-    type="hidden"
-    class="diet-dropdown-upload__value-field"
-    value="{{value}}"
-    {{#if path}}data-path="{{path}}"{{/if}}
-    data-placeholder="{{placeholder}}"
-  />
-
-  <div
-    class="diet-dropdown-header diet-dropdown-upload__control"
-    role="button"
-    aria-haspopup="dialog"
-    aria-expanded="false"
-    {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
-  >
-    {{#if label}}
-      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
-    {{/if}}
-    <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
-      <span class="diet-dropdown-upload__label">{{placeholder}}</span>
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
-    </span>
-    <button
-      class="diet-dropdown-header-icon diet-btn-ic"
-      data-size="{{size}}"
-      data-variant="neutral"
-      type="button"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
-    </button>
-  </div>
-
-  <div class="diet-popover diet-dropdown-upload__popover" role="dialog" aria-label="{{popoverLabel}}" data-state="closed">
-    <div class="diet-popover__header">
-      <span class="diet-popover__header-label {{#if headerLabelClass}}{{headerLabelClass}}{{else}}label-s{{/if}}">
-        {{#if headerLabel}}{{headerLabel}}{{else}}{{label}}{{/if}}
-      </span>
-      <button
-        type="button"
-        class="diet-btn-ic diet-popover__header-trigger"
-        data-size="sm"
-        data-variant="neutral"
-        aria-hidden="true"
-        tabindex="-1"
-      >
-        <span class="diet-btn-ic__icon" data-icon="paintbrush"></span>
-      </button>
-    </div>
-    <div class="diet-popover__body">
-      <div class="diet-dropdown-upload__panel body-xs" data-has-file="false" data-kind="empty">
-        <div class="diet-dropdown-upload__preview" aria-hidden="true">
-          <div class="diet-dropdown-upload__preview-frame" data-role="frame">
-            <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
-            <div class="diet-dropdown-upload__preview-video" data-role="video">
-              <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
-            </div>
-            <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <div class="diet-dropdown-upload__preview-doc-icon" data-icon="doc.plaintext"></div>
-              <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
-            </div>
-            <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <div class="diet-dropdown-upload__preview-empty-icon" data-icon="square.dashed"></div>
-            </div>
-          </div>
-          <div class="diet-dropdown-upload__preview-meta">
-            <div class="diet-dropdown-upload__preview-name label-s" data-role="name"></div>
-            <div class="diet-dropdown-upload__preview-error label-xs" data-role="error"></div>
-          </div>
-        </div>
-
-        <div class="diet-dropdown-upload__actions">
-          <button type="button" class="diet-btn-txt diet-dropdown-upload__upload-btn" data-size="lg" data-variant="line1">
-            <span class="diet-btn-txt__label">Upload</span>
-          </button>
-          <div class="diet-dropdown-upload__file-controls">
-            <button type="button" class="diet-btn-txt diet-dropdown-upload__replace-btn" data-size="lg" data-variant="line1">
-              <span class="diet-btn-txt__label">Replace</span>
-            </button>
-            <button type="button" class="diet-btn-txt diet-dropdown-upload__remove-btn" data-size="lg" data-variant="neutral">
-              <span class="diet-btn-txt__label">Remove</span>
-            </button>
-          </div>
-        </div>
-
-        <input
-          type="file"
-          class="diet-dropdown-upload__file-input"
-          accept="{{accept}}"
-          aria-hidden="true"
-          tabindex="-1"
-        />
-
-        {{#if template}}
-          <div class="diet-dropdown-upload__extras">
-            {{template}}
-          </div>
-        {{/if}}
-      </div>
-    </div>
-  </div>
-</div>
-
-
+=======
+>>>>>>> Incoming (Background Agent changes)

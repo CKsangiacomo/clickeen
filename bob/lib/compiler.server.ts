@@ -131,7 +131,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         }
 
         const { stencil, spec } = await loadComponentStencil(type);
-        const context = await buildContext(type, attrs, spec);
+        const context = await buildContext(type, attrs, spec, defaults as Record<string, unknown>);
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
           rendered = rendered.replace(/data-path="/g, 'data-bob-path="');

@@ -29,6 +29,70 @@ function encodeHtmlEntities(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function stripIds(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripIds);
+  if (!isPlainObject(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value)) {
+    if (key === 'id') continue;
+    out[key] = stripIds(nested);
+  }
+  return out;
+}
+
+function resolveDefaultItemFromWidgetDefaults(widgetDefaults: unknown, pathAttr: unknown): unknown {
+  if (!isPlainObject(widgetDefaults)) return undefined;
+  if (typeof pathAttr !== 'string') return undefined;
+  const normalizedPath = pathAttr.trim().replace(/__[^.]+__/g, '0');
+  if (!normalizedPath) return undefined;
+
+  const parts = normalizedPath.split('.').filter(Boolean);
+  let cursor: unknown = widgetDefaults;
+  for (const part of parts) {
+    if (Array.isArray(cursor)) {
+      const idx = Number(part);
+      if (!Number.isInteger(idx)) return undefined;
+      cursor = cursor[idx];
+      continue;
+    }
+    if (!isPlainObject(cursor)) return undefined;
+    cursor = cursor[part];
+  }
+
+  const defaultItem = Array.isArray(cursor) ? cursor[0] : cursor;
+  if (!isPlainObject(defaultItem)) return undefined;
+  return stripIds(defaultItem);
+}
+
+function mergeMissingDeep(defaults: unknown, current: unknown): unknown {
+  if (current === undefined || current === null) return defaults;
+
+  if (Array.isArray(defaults) && Array.isArray(current)) {
+    if (defaults.length === 0) return current;
+    return current.map((item, idx) => {
+      const base = defaults[idx] ?? defaults[0];
+      return mergeMissingDeep(base, item);
+    });
+  }
+
+  if (!isPlainObject(defaults) || !isPlainObject(current)) return current;
+
+  const out: Record<string, unknown> = { ...current };
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    const curValue = out[key];
+    if (curValue === undefined || curValue === null) {
+      out[key] = defaultValue;
+      continue;
+    }
+    out[key] = mergeMissingDeep(defaultValue, curValue);
+  }
+  return out;
+}
+
 function normalizeJsonHtmlAttr(raw: string): string {
   const trimmed = String(raw || '').trim();
   if (!trimmed) return '';
@@ -111,10 +175,29 @@ function sanitizeId(input: string): string {
   return input.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 }
 
-async function renderNestedTooldrawerFields(markup: string): Promise<string> {
+async function renderNestedTooldrawerFields(
+  markup: string,
+  widgetDefaults?: Record<string, unknown>,
+): Promise<string> {
   // Allow '>' inside quoted values and handle both self-closing and open/close forms.
   const tdRegex =
     /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
+
+  const coerceRenderedToBobPaths = (rendered: string, path: unknown): string => {
+    const pathStr = typeof path === 'string' ? path.trim() : '';
+    if (!pathStr) return rendered;
+
+    // Match the main compiler pass: Dieter stencils historically use `data-path`,
+    // but Bob binds via `data-bob-path`.
+    let next = rendered.replace(/data-path="/g, 'data-bob-path="');
+
+    // Back-compat: if a stencil doesn't declare any binding attribute, attach one to the first input.
+    if (!/data-bob-path="/.test(next)) {
+      next = next.replace(/<input([^>]*?)(\/?)>/, `<input$1 data-bob-path="${pathStr}"$2>`);
+    }
+
+    return next;
+  };
 
   let out = '';
   let cursor = 0;
@@ -136,8 +219,9 @@ async function renderNestedTooldrawerFields(markup: string): Promise<string> {
     }
 
     const { stencil: nestedStencil, spec: nestedSpec } = await loadComponentStencil(typeInner);
-    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec);
+    const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, widgetDefaults);
     let rendered = renderComponentStencil(nestedStencil, nestedContext);
+    rendered = coerceRenderedToBobPaths(rendered, (nestedContext as Record<string, unknown>).path);
     if (attrsInner.template) {
       const decodedNested = decodeHtmlEntities(attrsInner.template);
       rendered = rendered.replace(/{{\s*template\s*}}/g, decodedNested);
@@ -155,6 +239,7 @@ export async function buildContext(
   component: string,
   attrs: TooldrawerAttrs,
   spec?: ComponentSpec,
+  widgetDefaults?: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const defaults = spec?.defaults?.[0];
   const size = attrs.size || (defaults?.context?.size as string) || 'md';
@@ -183,7 +268,20 @@ export async function buildContext(
   const reorderMode = attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
   const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
   const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
-  const defaultItem = normalizeJsonHtmlAttr(defaultItemRaw);
+  let defaultItem = normalizeJsonHtmlAttr(defaultItemRaw);
+  if (['repeater', 'object-manager'].includes(component)) {
+    const inferred = resolveDefaultItemFromWidgetDefaults(widgetDefaults, attrs.path);
+    if (inferred) {
+      const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(String(defaultItemRaw || '').trim()));
+      try {
+        const parsed = decodedTwice ? (JSON.parse(decodedTwice) as unknown) : undefined;
+        const mergedDefaultItem = mergeMissingDeep(inferred, parsed);
+        defaultItem = encodeHtmlEntities(JSON.stringify(mergedDefaultItem));
+      } catch {
+        defaultItem = defaultItem || encodeHtmlEntities(JSON.stringify(inferred));
+      }
+    }
+  }
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -229,7 +327,7 @@ export async function buildContext(
       },
     );
 
-    templateValue = await renderNestedTooldrawerFields(templateValue);
+    templateValue = await renderNestedTooldrawerFields(templateValue, widgetDefaults);
   }
 
   Object.assign(merged, {

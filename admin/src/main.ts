@@ -8,6 +8,8 @@ import {
   hydrateDropdownActions,
   hydrateDropdownFill,
   hydrateDropdownEdit,
+  hydrateDropdownShadow,
+  hydrateDropdownUpload,
   hydrateMenuactions,
   hydratePopAddLink,
   hydrateSegmented,
@@ -118,6 +120,8 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateTextedit(scope);
   hydrateDropdownActions(scope);
   hydrateDropdownFill(scope);
+  hydrateDropdownShadow(scope);
+  hydrateDropdownUpload(scope);
   hydrateDropdownEdit(scope);
   hydrateTabs(scope);
   hydrateMenuactions(scope);

@@ -79,6 +79,32 @@ function mergeMissing(defaults, current) {
   return { value: out, changed };
 }
 
+function normalizeFaqConfig(config) {
+  if (!isPlainObject(config)) return { value: config, changed: false };
+  if (!Array.isArray(config.sections)) return { value: config, changed: false };
+
+  let changed = false;
+  const sections = config.sections.map((section) => {
+    if (!isPlainObject(section)) return section;
+    if (!Array.isArray(section.faqs)) return section;
+
+    let sectionChanged = false;
+    const faqs = section.faqs.map((faq) => {
+      if (!isPlainObject(faq)) return faq;
+      if (typeof faq.defaultOpen === 'boolean') return faq;
+      sectionChanged = true;
+      return { ...faq, defaultOpen: false };
+    });
+
+    if (!sectionChanged) return section;
+    changed = true;
+    return { ...section, faqs };
+  });
+
+  if (!changed) return { value: config, changed: false };
+  return { value: { ...config, sections }, changed: true };
+}
+
 async function createInstance(args) {
   const res = await fetch(`${parisOrigin}/api/instance`, {
     method: 'POST',
@@ -149,8 +175,17 @@ async function main() {
     const createdRes = await createInstance({ parisDevJwt, widgetType, publicId, config: defaults });
     const existingConfig = createdRes && typeof createdRes === 'object' ? createdRes.config : undefined;
     const merged = mergeMissing(defaults, existingConfig);
-    if (merged.changed) {
-      await updateInstance({ parisDevJwt, publicId, config: merged.value });
+    let nextConfig = merged.value;
+    let changed = merged.changed;
+
+    if (widgetType === 'faq') {
+      const normalized = normalizeFaqConfig(nextConfig);
+      nextConfig = normalized.value;
+      changed = changed || normalized.changed;
+    }
+
+    if (changed) {
+      await updateInstance({ parisDevJwt, publicId, config: nextConfig });
       console.log(`[bootstrap-local-widgets] Patched ${publicId} (added missing defaults)`);
     }
     created += 1;
