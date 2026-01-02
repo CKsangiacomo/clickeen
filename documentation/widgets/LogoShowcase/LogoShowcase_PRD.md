@@ -19,8 +19,9 @@ The widget must be implemented as the standard 5-file Tokyo package:
 - **Always apply platform globals**:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
-  - `CKBranding.applyBranding(state.behavior, root)`
+- **Branding**: handled by `tokyo/widgets/shared/branding.js` (injects/toggles backlink via `state.behavior.showBacklink`; no widget-specific call required).
 - **Width is Stage/Pod**: do not add a custom “widget width” control. Pod width mode/content width covers this.
+- **Desktop/Mobile contract**: Pod settings frame the experience (width mode, padding, content width, radius), but **responsive behavior must still be explicitly defined by the widget** in `widget.html` + `widget.css` for arrays/items/subparts.
 
 ## 2) The 4 types (high level) and how the 4 types differ
 In Clickeen terms, **Type = miniwidget**. A Type is defined by behavior + DOM/CSS structure + relevant controls.
@@ -52,6 +53,17 @@ Type is always selected in the **Content panel** (`state.type`), and it controls
 
 ## 3) ALL THE CONTROLS THAT ARE COMMON FOR THE 4 TYPES (by panel), what they change and how
 This section lists **only controls that apply to every Type**. Type-specific controls are in Section 4.
+
+### Global taxonomy + panel distribution (applies to this widget)
+- **Arrays vs Items** (do not mix terms):
+  - **Array**: `strips[]` and `strips[i].logos[]`
+  - **Item**: `strips[i]` (one strip) and `strips[i].logos[j]` (one logo)
+  - **DOM item container**: the DOM wrapper that renders one logo item (must be stable via `data-role`, see widget HTML contract in implementation).
+- **Panel distribution by surface**:
+  - **Content**: content model and arrays/items (strips/logos + per-item fields) + Type selection
+  - **Layout**: sizing/spacing/arrangement for arrays/items (logo size, gaps, strip gaps)
+  - **Appearance**: “paint” for surfaces (logo look/opacity/radius, tile background/border, header/CTA colors)
+  - **Typography**: role-based text (header title/body)
 
 ### Panel: Content (common)
 - **Type picker**: `type`
