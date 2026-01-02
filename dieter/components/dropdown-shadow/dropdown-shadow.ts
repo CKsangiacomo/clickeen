@@ -18,6 +18,8 @@ type DropdownShadowState = {
   headerValueLabel: HTMLElement | null;
   headerValueChip: HTMLElement | null;
   headerLabel: HTMLElement | null;
+  previewContainer: HTMLElement | null;
+  nativeColorInput: HTMLInputElement | null;
   hueInput: HTMLInputElement;
   hexField: HTMLInputElement;
   svCanvas: HTMLElement;
@@ -30,7 +32,7 @@ type DropdownShadowState = {
   blurInput: HTMLInputElement;
   spreadInput: HTMLInputElement;
   opacityInput: HTMLInputElement;
-  preview: HTMLElement;
+  previewBox: HTMLElement;
   removeShadowAction: HTMLButtonElement;
   removeShadowLabel: HTMLElement | null;
   hsv: { h: number; s: number; v: number };
@@ -80,6 +82,8 @@ function createState(root: HTMLElement): DropdownShadowState | null {
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-shadow__label');
   const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-shadow__chip');
   const headerLabel = root.querySelector<HTMLElement>('.diet-popover__header-label');
+  const previewContainer = root.querySelector<HTMLElement>('.diet-dropdown-shadow__preview');
+  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__native-color');
   const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__hue');
   const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__hex');
   const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-shadow__sv-canvas');
@@ -92,7 +96,7 @@ function createState(root: HTMLElement): DropdownShadowState | null {
   const blurInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__blur');
   const spreadInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__spread');
   const opacityInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__opacity');
-  const preview = root.querySelector<HTMLElement>('.diet-dropdown-shadow__shadow-preview');
+  const previewBox = root.querySelector<HTMLElement>('.diet-dropdown-shadow__shadow-preview');
   const removeShadowAction = root.querySelector<HTMLButtonElement>('.diet-dropdown-shadow__remove-shadow');
   const removeShadowLabel = removeShadowAction?.querySelector<HTMLElement>('.diet-btn-menuactions__label') ?? null;
 
@@ -109,7 +113,7 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     !blurInput ||
     !spreadInput ||
     !opacityInput ||
-    !preview ||
+    !previewBox ||
     !removeShadowAction
   ) {
     return null;
@@ -128,6 +132,8 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     headerValueLabel,
     headerValueChip,
     headerLabel,
+    previewContainer,
+    nativeColorInput,
     hueInput,
     hexField,
     svCanvas,
@@ -140,7 +146,7 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     blurInput,
     spreadInput,
     opacityInput,
-    preview,
+    previewBox,
     removeShadowAction,
     removeShadowLabel,
     hsv: { h: 0, s: 0, v: 0 },
@@ -175,6 +181,7 @@ function installHandlers(state: DropdownShadowState) {
 
   installSvCanvasHandlers(state);
   installSwatchHandlers(state);
+  installNativeColorPicker(state);
 
   state.enabledInput.addEventListener('input', () => {
     state.shadow.enabled = state.enabledInput.checked;
@@ -214,6 +221,28 @@ function installHandlers(state: DropdownShadowState) {
     event.preventDefault();
     if (state.removeShadowAction.disabled) return;
     state.shadow.enabled = false;
+    syncUI(state, { commit: true });
+  });
+}
+
+function installNativeColorPicker(state: DropdownShadowState) {
+  const { previewContainer, nativeColorInput } = state;
+  if (!previewContainer || !nativeColorInput) return;
+
+  previewContainer.addEventListener('click', (event) => {
+    event.preventDefault();
+    nativeColorInput.value = state.shadow.color || '#000000';
+    nativeColorInput.click();
+  });
+
+  nativeColorInput.addEventListener('input', () => {
+    const next = String(nativeColorInput.value || '').trim();
+    if (!next) return;
+    const hsv = parseColor(next, document.documentElement);
+    if (!hsv) return;
+    state.hsv = hsv;
+    // Shadow stores alpha separately; keep it, just update color.
+    state.shadow.color = next;
     syncUI(state, { commit: true });
   });
 }
@@ -315,7 +344,7 @@ function syncUI(state: DropdownShadowState, opts: { commit: boolean }) {
   };
 
   const boxShadow = computeBoxShadow(shadowValue);
-  state.preview.style.boxShadow = boxShadow === 'none' ? 'none' : boxShadow;
+  state.previewBox.style.boxShadow = boxShadow === 'none' ? 'none' : boxShadow;
 
   if (opts.commit) {
     setInputValue(state, shadowValue, true);

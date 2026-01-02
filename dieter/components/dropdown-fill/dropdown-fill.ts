@@ -9,6 +9,8 @@ type DropdownFillState = {
   headerValueLabel: HTMLElement | null;
   headerValueChip: HTMLElement | null;
   headerLabel: HTMLElement | null;
+  preview: HTMLElement | null;
+  nativeColorInput: HTMLInputElement | null;
   colorPreview: HTMLElement | null;
   removeFillAction: HTMLButtonElement | null;
   removeFillLabel: HTMLElement | null;
@@ -63,6 +65,8 @@ function createState(root: HTMLElement): DropdownFillState | null {
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-fill__label');
   const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-fill__chip');
   const headerLabel = root.querySelector<HTMLElement>('.diet-popover__header-label');
+  const preview = root.querySelector<HTMLElement>('.diet-dropdown-fill__preview');
+  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__native-color');
   const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hue');
   const alphaInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__alpha');
   const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__hex');
@@ -97,6 +101,8 @@ function createState(root: HTMLElement): DropdownFillState | null {
     headerValueLabel,
     headerValueChip,
     headerLabel,
+    preview,
+    nativeColorInput,
     colorPreview,
     removeFillAction,
     removeFillLabel,
@@ -157,6 +163,7 @@ function installHandlers(state: DropdownFillState) {
   installSvCanvasHandlers(state);
   installSwatchHandlers(state);
   installImageHandlers(state);
+  installNativeColorPicker(state);
 
   if (state.removeFillAction) {
     state.removeFillAction.addEventListener('click', (event) => {
@@ -166,6 +173,27 @@ function installHandlers(state: DropdownFillState) {
       syncUI(state, { commit: true });
     });
   }
+}
+
+function installNativeColorPicker(state: DropdownFillState) {
+  const { preview, nativeColorInput } = state;
+  if (!preview || !nativeColorInput) return;
+
+  preview.addEventListener('click', (event) => {
+    event.preventDefault();
+    // Keep the native picker in sync with the current color.
+    const hex = formatHex({ ...state.hsv, a: 1 });
+    nativeColorInput.value = hex;
+    nativeColorInput.click();
+  });
+
+  nativeColorInput.addEventListener('input', () => {
+    const rgba = hexToRgba(nativeColorInput.value);
+    if (!rgba) return;
+    // Preserve alpha; native color input only picks RGB.
+    state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a };
+    syncUI(state, { commit: true });
+  });
 }
 
 function installSvCanvasHandlers(state: DropdownFillState) {

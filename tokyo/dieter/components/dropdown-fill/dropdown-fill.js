@@ -120,6 +120,8 @@ var Dieter = (() => {
     const headerValueLabel = root.querySelector(".diet-dropdown-fill__label");
     const headerValueChip = root.querySelector(".diet-dropdown-fill__chip");
     const headerLabel = root.querySelector(".diet-popover__header-label");
+    const preview = root.querySelector(".diet-dropdown-fill__preview");
+    const nativeColorInput = root.querySelector(".diet-dropdown-fill__native-color");
     const hueInput = root.querySelector(".diet-dropdown-fill__hue");
     const alphaInput = root.querySelector(".diet-dropdown-fill__alpha");
     const hexField = root.querySelector(".diet-dropdown-fill__hex");
@@ -151,6 +153,8 @@ var Dieter = (() => {
       headerValueLabel,
       headerValueChip,
       headerLabel,
+      preview,
+      nativeColorInput,
       colorPreview,
       removeFillAction,
       removeFillLabel,
@@ -204,6 +208,7 @@ var Dieter = (() => {
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
     installImageHandlers(state);
+    installNativeColorPicker(state);
     if (state.removeFillAction) {
       state.removeFillAction.addEventListener("click", (event) => {
         event.preventDefault();
@@ -212,6 +217,22 @@ var Dieter = (() => {
         syncUI(state, { commit: true });
       });
     }
+  }
+  function installNativeColorPicker(state) {
+    const { preview, nativeColorInput } = state;
+    if (!preview || !nativeColorInput) return;
+    preview.addEventListener("click", (event) => {
+      event.preventDefault();
+      const hex = formatHex({ ...state.hsv, a: 1 });
+      nativeColorInput.value = hex;
+      nativeColorInput.click();
+    });
+    nativeColorInput.addEventListener("input", () => {
+      const rgba = hexToRgba(nativeColorInput.value);
+      if (!rgba) return;
+      state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a };
+      syncUI(state, { commit: true });
+    });
   }
   function installSvCanvasHandlers(state) {
     const move = (event) => {

@@ -129,6 +129,8 @@ var Dieter = (() => {
     const headerValueLabel = root.querySelector(".diet-dropdown-shadow__label");
     const headerValueChip = root.querySelector(".diet-dropdown-shadow__chip");
     const headerLabel = root.querySelector(".diet-popover__header-label");
+    const previewContainer = root.querySelector(".diet-dropdown-shadow__preview");
+    const nativeColorInput = root.querySelector(".diet-dropdown-shadow__native-color");
     const hueInput = root.querySelector(".diet-dropdown-shadow__hue");
     const hexField = root.querySelector(".diet-dropdown-shadow__hex");
     const svCanvas = root.querySelector(".diet-dropdown-shadow__sv-canvas");
@@ -141,10 +143,10 @@ var Dieter = (() => {
     const blurInput = root.querySelector(".diet-dropdown-shadow__blur");
     const spreadInput = root.querySelector(".diet-dropdown-shadow__spread");
     const opacityInput = root.querySelector(".diet-dropdown-shadow__opacity");
-    const preview = root.querySelector(".diet-dropdown-shadow__shadow-preview");
+    const previewBox = root.querySelector(".diet-dropdown-shadow__shadow-preview");
     const removeShadowAction = root.querySelector(".diet-dropdown-shadow__remove-shadow");
     const removeShadowLabel = removeShadowAction?.querySelector(".diet-btn-menuactions__label") ?? null;
-    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !insetInput || !xInput || !yInput || !blurInput || !spreadInput || !opacityInput || !preview || !removeShadowAction) {
+    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !insetInput || !xInput || !yInput || !blurInput || !spreadInput || !opacityInput || !previewBox || !removeShadowAction) {
       return null;
     }
     const nativeValue = captureNativeValue(input);
@@ -159,6 +161,8 @@ var Dieter = (() => {
       headerValueLabel,
       headerValueChip,
       headerLabel,
+      previewContainer,
+      nativeColorInput,
       hueInput,
       hexField,
       svCanvas,
@@ -171,7 +175,7 @@ var Dieter = (() => {
       blurInput,
       spreadInput,
       opacityInput,
-      preview,
+      previewBox,
       removeShadowAction,
       removeShadowLabel,
       hsv: { h: 0, s: 0, v: 0 },
@@ -201,6 +205,7 @@ var Dieter = (() => {
     state.hexField.addEventListener("blur", () => handleHexInput(state));
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
+    installNativeColorPicker(state);
     state.enabledInput.addEventListener("input", () => {
       state.shadow.enabled = state.enabledInput.checked;
       syncUI(state, { commit: true });
@@ -234,6 +239,24 @@ var Dieter = (() => {
       event.preventDefault();
       if (state.removeShadowAction.disabled) return;
       state.shadow.enabled = false;
+      syncUI(state, { commit: true });
+    });
+  }
+  function installNativeColorPicker(state) {
+    const { previewContainer, nativeColorInput } = state;
+    if (!previewContainer || !nativeColorInput) return;
+    previewContainer.addEventListener("click", (event) => {
+      event.preventDefault();
+      nativeColorInput.value = state.shadow.color || "#000000";
+      nativeColorInput.click();
+    });
+    nativeColorInput.addEventListener("input", () => {
+      const next = String(nativeColorInput.value || "").trim();
+      if (!next) return;
+      const hsv = parseColor(next, document.documentElement);
+      if (!hsv) return;
+      state.hsv = hsv;
+      state.shadow.color = next;
       syncUI(state, { commit: true });
     });
   }
@@ -319,7 +342,7 @@ var Dieter = (() => {
       color: hex
     };
     const boxShadow = computeBoxShadow(shadowValue);
-    state.preview.style.boxShadow = boxShadow === "none" ? "none" : boxShadow;
+    state.previewBox.style.boxShadow = boxShadow === "none" ? "none" : boxShadow;
     if (opts.commit) {
       setInputValue(state, shadowValue, true);
     }
