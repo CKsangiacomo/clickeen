@@ -42,6 +42,10 @@ Location: `tokyo/widgets/{widgetname}/`
 
 By default, **Pod expands/shrinks based on widget content** (content-driven height). Only constrain/lock Pod sizing when a specific Type/Layout requires a fixed viewport experience, and expose that constraint as an explicit setting (typically in the Layout panel).
 
+### Desktop/Mobile contract (Pod frames it; widget CSS defines it)
+
+Pod (width mode, padding, content width, radius, alignment) strongly influences how a widget feels on desktop vs mobile, but **responsive behavior must still be explicitly defined by the widget**. Each widget must specify how its arrays/items/subparts reflow under the Pod’s constraints in `widget.css` (and supporting DOM structure in `widget.html`).
+
 ---
 
 ## Arrays + Items (global taxonomy)

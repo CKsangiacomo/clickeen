@@ -149,6 +149,17 @@ As a default rule, **Pod should expand/shrink based on widget content** (height 
 
 Only constrain/“lock” Pod sizing when a specific **Type/Layout** or an explicit **Layout setting** requires a fixed viewport experience (e.g., carousel/ticker viewport, badge/floating chip). In those cases, expose the constraint as an intentional control in the correct panel (usually Layout) and document it in the widget PRD/`agent.md`.
 
+#### Desktop/Mobile contract (Pod frames it; widget CSS defines it)
+
+Pod settings strongly influence the experience across devices (width mode, content width, padding, radius), but **Pod does not replace responsive widget design**.
+
+When building a widget, you must explicitly define **desktop vs mobile rendering** inside the widget root (`widget.html` + `widget.css`) using the global taxonomy:
+- how each **Array** renders on desktop vs mobile (e.g., grid columns, slider viewport, ticker row height)
+- how each **Item** sizes/reflows (logo size, card density, text wrapping, truncation rules)
+- which **subparts** hide/show on mobile if needed
+
+Rule: **Pod provides the frame; widget CSS specifies the responsive behavior of arrays/items/subparts within that frame.**
+
 #### Stage/Pod layout is not “extra” — it’s part of the main layout
 
 Agents skip Stage/Pod layout because it’s **auto-generated** (not written in the widget’s `spec.json`), so it’s “out of sight” while authoring controls.
