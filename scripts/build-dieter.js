@@ -75,6 +75,7 @@ function writeDieterManifest({ dist, repoRoot }) {
   // Keep this list small and expand only when a component truly depends on others.
   const deps = {
     'dropdown-actions': ['popover', 'button'],
+    'dropdown-border': ['popover', 'button', 'textfield', 'slider', 'toggle'],
     'dropdown-edit': ['popover', 'button', 'popaddlink', 'textfield'],
     'dropdown-fill': ['popover', 'button', 'textfield'],
     'dropdown-shadow': ['popover', 'button', 'textfield', 'slider', 'toggle', 'menuactions'],

@@ -14,8 +14,6 @@ body {
 
 .ck-faq-widget {
   --faq-item-bg: var(--color-system-white);
-  --faq-question-color: var(--color-system-black);
-  --faq-answer-color: color-mix(in oklab, var(--color-system-black), transparent 45%);
 }
 
 .stage {
@@ -69,6 +67,8 @@ body {
   padding: 0;
   background: transparent;
   border-radius: var(--faq-card-radius, var(--control-radius-lg));
+  --faq-card-border-width: 1px;
+  --faq-card-border-color: var(--color-system-gray-5);
 }
 
 .ck-faq__header {
@@ -85,6 +85,7 @@ body {
   font-weight: var(--typo-title-weight, 600);
   font-size: var(--typo-title-size, var(--fs-18));
   line-height: var(--lh-tight);
+  color: var(--typo-title-color);
 }
 
 .ck-faq__list {
@@ -101,12 +102,12 @@ body {
   font-weight: var(--typo-section-weight, 600);
   font-size: var(--typo-section-size, var(--fs-14));
   line-height: var(--lh-tight);
-  color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+  color: var(--typo-section-color);
 }
 
 .ck-faq__item {
   border-radius: var(--faq-item-radius, var(--control-radius-lg));
-  border: var(--faq-card-border, 1px solid var(--color-system-gray-5));
+  border: var(--faq-card-border-width) solid var(--faq-card-border-color);
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
   box-shadow: var(--faq-item-shadow);
   overflow: hidden;
@@ -126,7 +127,7 @@ body {
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
   line-height: var(--lh-tight);
-  color: var(--faq-question-color, var(--color-system-black));
+  color: var(--typo-question-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -188,34 +189,56 @@ body {
   font-style: var(--typo-answer-style, normal);
 }
 
-.ck-faq[data-layout='multicolumn'] .ck-faq__item {
-  height: 100%;
-}
-
 .ck-faq[data-layout='multicolumn'] .ck-faq__q {
   border-bottom: 0;
   padding-bottom: 0;
 }
 
 .ck-faq[data-layout='list'] .ck-faq__item {
-  border: 1px solid var(--color-system-gray-5);
+  --faq-card-border-color: var(--color-system-gray-5);
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__item {
-  border: 1px solid color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
+  --faq-card-border-color: color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
   background: var(--faq-item-bg, var(--color-system-white));
 }
 
 .ck-faq__a {
   padding: 0;
   margin-top: var(--space-2);
-  color: var(--faq-answer-color, color-mix(in oklab, var(--color-system-black), transparent 45%));
+  color: var(--typo-answer-color);
   display: none;
 }
 
 .ck-faq__q[aria-expanded='true'] + .ck-faq__a {
   display: block;
+}
+
+.ck-faq__q-text a,
+.ck-faq__a a {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--faq-link-underline-color);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.ck-faq[data-link-style='color'] .ck-faq__q-text a,
+.ck-faq[data-link-style='color'] .ck-faq__a a {
+  color: var(--faq-link-text-color);
+  text-decoration: none;
+}
+
+.ck-faq[data-link-style='highlight'] .ck-faq__q-text a,
+.ck-faq[data-link-style='highlight'] .ck-faq__a a {
+  text-decoration: none;
+  background: var(--faq-link-highlight-color);
+  border-radius: var(--control-radius-sm);
+  padding: 0 0.16em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .ck-faq__a img.ck-faq__a-img {
@@ -251,6 +274,11 @@ body {
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__list {
   grid-template-columns: repeat(var(--faq-columns-desktop, 2), minmax(0, 1fr));
+  align-items: start;
+}
+
+.ck-faq[data-layout='multicolumn'] .ck-faq__category {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 768px) {

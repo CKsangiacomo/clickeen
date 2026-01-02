@@ -16,22 +16,12 @@
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
   >
     {{#if label}}
-      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
+      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}</span>
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
       <span class="diet-dropdown-fill__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-fill__label">{{placeholder}}</span>
     </span>
-    <button
-      class="diet-dropdown-header-icon diet-btn-ic"
-      data-size="{{size}}"
-      data-variant="neutral"
-      type="button"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
-    </button>
   </div>
 
   <div
@@ -226,7 +216,6 @@
             <span class="diet-btn-menuactions__label">Remove fill</span>
             <span class="diet-btn-menuactions__icon" aria-hidden="true">
               <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--idle" data-icon="square.dashed"></span>
-              <span class="diet-btn-menuactions__icon-layer diet-btn-menuactions__icon-layer--hover" data-icon="hand.point.up"></span>
             </span>
           </button>
         </div>

@@ -422,10 +422,14 @@ var Dieter = (() => {
     if (opts.commit) {
       setInputValue(state, colorString, true);
     }
-    if (alphaPercent === 0) {
-      updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+    const isInvalid = state.root.dataset.invalid === "true";
+    if (isInvalid) {
+      updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
+    } else if (alphaPercent === 0) {
+      updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
     } else {
-      updateHeader(state, { text: "", muted: false, chipColor: colorString });
+      const label = alphaPercent < 100 ? `${alphaPercent}%` : "";
+      updateHeader(state, { text: label, muted: false, chipColor: colorString });
     }
     if (state.colorPreview) {
       state.colorPreview.style.backgroundColor = colorString;
@@ -450,18 +454,25 @@ var Dieter = (() => {
     if (headerValueLabel) headerValueLabel.textContent = opts.text;
     if (headerValue) {
       headerValue.dataset.muted = opts.muted ? "true" : "false";
-      headerValue.classList.toggle("has-chip", !!opts.chipColor);
+      headerValue.classList.toggle("has-chip", !!opts.chipColor || opts.noneChip === true);
     }
     if (headerValueChip) {
-      if (opts.chipColor) {
+      if (opts.noneChip === true) {
+        headerValueChip.style.removeProperty("background");
+        headerValueChip.hidden = false;
+        headerValueChip.classList.add("is-none");
+        headerValueChip.classList.remove("is-white");
+      } else if (opts.chipColor) {
         headerValueChip.style.background = opts.chipColor;
         headerValueChip.hidden = false;
+        headerValueChip.classList.remove("is-none");
         const parsed = parseCssColor(opts.chipColor.trim());
         const isWhite = Boolean(parsed && parsed.r === 255 && parsed.g === 255 && parsed.b === 255);
         headerValueChip.classList.toggle("is-white", isWhite);
       } else {
         headerValueChip.style.background = "transparent";
         headerValueChip.hidden = true;
+        headerValueChip.classList.remove("is-none");
         headerValueChip.classList.remove("is-white");
       }
     }
@@ -495,6 +506,32 @@ var Dieter = (() => {
     const rgba = colorStringToRgba(value, root);
     if (!rgba) return null;
     return rgbToHsv(rgba.r, rgba.g, rgba.b, rgba.a);
+  }
+  function tryParseTransparentColorMix(value, root) {
+    const trimmed = value.trim();
+    if (!/^color-mix\(/i.test(trimmed)) return null;
+    const parsePct = (raw) => {
+      const num = Number.parseFloat(raw);
+      if (!Number.isFinite(num)) return null;
+      if (num < 0 || num > 100) return null;
+      return num / 100;
+    };
+    const tailTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*(.+?)\s*,\s*transparent\s+([0-9.]+)%\s*\)$/i);
+    const headTransparent = trimmed.match(/^color-mix\(\s*in\s+oklab\s*,\s*transparent\s+([0-9.]+)%\s*,\s*(.+?)\s*\)$/i);
+    let colorExpr = null;
+    let transparentWeight = null;
+    if (tailTransparent) {
+      colorExpr = tailTransparent[1]?.trim() ?? null;
+      transparentWeight = parsePct(tailTransparent[2] ?? "");
+    } else if (headTransparent) {
+      transparentWeight = parsePct(headTransparent[1] ?? "");
+      colorExpr = headTransparent[2]?.trim() ?? null;
+    }
+    if (!colorExpr || transparentWeight == null) return null;
+    const base = colorStringToRgba(colorExpr, root);
+    if (!base) return null;
+    const baseWeight = 1 - transparentWeight;
+    return { r: base.r, g: base.g, b: base.b, a: clampNumber(base.a * baseWeight, 0, 1) };
   }
   function normalizeHex(value) {
     const hex = value.trim().replace(/^#/, "").toLowerCase();
@@ -575,11 +612,13 @@ var Dieter = (() => {
   function colorStringToRgba(value, root) {
     const trimmed = value.trim();
     if (!trimmed) return null;
+    const transparentMix = tryParseTransparentColorMix(trimmed, root);
+    if (transparentMix) return transparentMix;
     if (trimmed.startsWith("#")) {
       return hexToRgba(trimmed);
     }
-    if (typeof CSS !== "undefined" && typeof CSS.supports === "function") {
-      if (!CSS.supports("color", trimmed)) return null;
+    if (typeof CSS !== "undefined" && typeof CSS.supports === "function" && !/\bvar\(/i.test(trimmed) && !CSS.supports("color", trimmed)) {
+      return null;
     }
     const computed = getComputedColor(trimmed, root);
     return parseCssColor(computed);

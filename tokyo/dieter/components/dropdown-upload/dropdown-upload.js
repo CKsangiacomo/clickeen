@@ -124,6 +124,7 @@ var Dieter = (() => {
     const input = root.querySelector(".diet-dropdown-upload__value-field");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
     const headerValueLabel = root.querySelector(".diet-dropdown-upload__label");
+    const headerValueChip = root.querySelector(".diet-dropdown-upload__chip");
     const previewPanel = root.querySelector(".diet-dropdown-upload__panel");
     const previewImg = root.querySelector(".diet-dropdown-upload__preview-img");
     const previewName = root.querySelector('[data-role="name"]');
@@ -147,6 +148,7 @@ var Dieter = (() => {
       input,
       headerValue,
       headerValueLabel,
+      headerValueChip,
       previewPanel,
       previewImg,
       previewName,
@@ -293,12 +295,12 @@ var Dieter = (() => {
     const key = String(raw ?? "").trim();
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     if (!key) {
-      updateHeader(state, placeholder, true);
+      updateHeader(state, placeholder, true, true);
       state.root.dataset.hasFile = "false";
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
       return;
     }
-    updateHeader(state, key, false);
+    updateHeader(state, key, false, false);
     state.root.dataset.hasFile = "true";
     void resolveAndPreview(state, key);
   }
@@ -325,9 +327,16 @@ var Dieter = (() => {
   function clearError(state) {
     state.previewError.textContent = "";
   }
-  function updateHeader(state, text, muted) {
+  function updateHeader(state, text, muted, noneChip) {
     if (state.headerValueLabel) state.headerValueLabel.textContent = text;
-    if (state.headerValue) state.headerValue.dataset.muted = muted ? "true" : "false";
+    if (state.headerValue) {
+      state.headerValue.dataset.muted = muted ? "true" : "false";
+      state.headerValue.classList.toggle("has-chip", noneChip === true);
+    }
+    if (state.headerValueChip) {
+      state.headerValueChip.hidden = noneChip !== true;
+      state.headerValueChip.classList.toggle("is-none", noneChip === true);
+    }
   }
   function classifyByNameAndType(name, mimeType) {
     const ext = guessExtFromName(name);

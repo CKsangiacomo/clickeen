@@ -610,13 +610,12 @@ var Dieter = (() => {
     state.editor.innerHTML = sanitized;
     const target = state.headerValue;
     if (sanitized) {
-      target.innerHTML = sanitized;
+      target.textContent = toPreviewText(sanitized);
       target.dataset.muted = "false";
     } else {
       target.textContent = target.dataset.placeholder ?? "";
       target.dataset.muted = "true";
     }
-    highlightPreviewLinks(target);
     state.hiddenInput.value = sanitized;
     updateClearButtons(state);
   }
@@ -625,11 +624,10 @@ var Dieter = (() => {
     const sanitized = sanitizeInline(raw);
     const target = state.headerValue;
     if (sanitized) {
-      target.innerHTML = sanitized;
+      target.textContent = toPreviewText(sanitized);
     } else {
       target.textContent = state.editor.textContent ?? "";
     }
-    highlightPreviewLinks(target);
     const hasValue = raw.length > 0;
     target.dataset.muted = hasValue ? "false" : "true";
     if (!hasValue) {
@@ -638,10 +636,11 @@ var Dieter = (() => {
     state.hiddenInput.value = sanitized;
     state.hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function highlightPreviewLinks(span) {
-    span.querySelectorAll("a").forEach((anchor) => {
-      anchor.setAttribute("data-preview-link", "");
-    });
+  function toPreviewText(sanitized) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = sanitized;
+    const text = tmp.textContent ?? "";
+    return text.replace(/\s+/g, " ").trim();
   }
   function sanitizeInline(html) {
     const wrapper = document.createElement("div");

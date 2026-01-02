@@ -127,6 +127,7 @@ function labelForGroup(key: string | null): string {
 type ShowIfAst =
   | { type: 'path'; value: string }
   | { type: 'literal'; value: string | number | boolean | null | undefined }
+  | { type: 'call'; name: string; args: ShowIfAst[] }
   | { type: 'not'; child: ShowIfAst }
   | { type: 'and' | 'or'; left: ShowIfAst; right: ShowIfAst }
   | { type: 'eq' | 'neq'; left: ShowIfAst; right: ShowIfAst };
@@ -139,6 +140,7 @@ type ShowIfEntry = {
 
 type Token =
   | { t: 'paren'; v: '(' | ')' }
+  | { t: 'comma' }
   | { t: 'op'; v: '&&' | '||' | '==' | '!=' | '!' }
   | { t: 'string'; v: string }
   | { t: 'number'; v: number }
@@ -160,6 +162,11 @@ function tokenizeShowIf(input: string): Token[] {
     }
     if (ch === '(' || ch === ')') {
       tokens.push({ t: 'paren', v: ch });
+      i += 1;
+      continue;
+    }
+    if (ch === ',') {
+      tokens.push({ t: 'comma' });
       i += 1;
       continue;
     }
@@ -261,6 +268,32 @@ function parseShowIf(raw: string): ShowIfAst | null {
       return { type: 'literal', value: tok.v };
     }
     if (tok.t === 'path') {
+      const next = peek();
+      if (next && next.t === 'paren' && next.v === '(') {
+        consume(); // (
+        const args: ShowIfAst[] = [];
+        const nextTok = peek();
+        if (nextTok && nextTok.t === 'paren' && nextTok.v === ')') {
+          consume(); // )
+          return { type: 'call', name: tok.v, args };
+        }
+
+        while (true) {
+          args.push(parseOr());
+          const sep = peek();
+          if (sep && sep.t === 'comma') {
+            consume();
+            continue;
+          }
+          const closing = consume();
+          if (!closing || closing.t !== 'paren' || closing.v !== ')') {
+            throw new Error('Unclosed function call in show-if');
+          }
+          break;
+        }
+        return { type: 'call', name: tok.v, args };
+      }
+
       return { type: 'path', value: tok.v };
     }
     throw new Error(`Unexpected token ${tok.t}`);
@@ -316,7 +349,32 @@ function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
     return val;
   }
   if (node.type === 'literal') return node.value;
+  if (node.type === 'call') {
+    return evalCall(node, data);
+  }
   return evalAst(node, data);
+}
+
+function evalCall(node: Extract<ShowIfAst, { type: 'call' }>, data: Record<string, unknown>): unknown {
+  const name = node.name;
+  if (name === 'contains') {
+    const hay = node.args[0] ? resolveValue(node.args[0], data) : '';
+    const needle = node.args[1] ? resolveValue(node.args[1], data) : '';
+    const hayText =
+      typeof hay === 'string'
+        ? hay
+        : (() => {
+            try {
+              return JSON.stringify(hay) ?? '';
+            } catch {
+              return '';
+            }
+          })();
+    const needleText = typeof needle === 'string' ? needle : String(needle ?? '');
+    return hayText.includes(needleText);
+  }
+
+  throw new Error(`Unknown show-if function "${name}"`);
 }
 
 function evalAst(node: ShowIfAst, data: Record<string, unknown>): boolean {
@@ -327,6 +385,10 @@ function evalAst(node: ShowIfAst, data: Record<string, unknown>): boolean {
     }
     case 'literal':
       return Boolean(node.value);
+    case 'call': {
+      const value = resolveValue(node, data);
+      return Boolean(value);
+    }
     case 'not':
       return !evalAst(node.child, data);
     case 'and':
@@ -600,12 +662,16 @@ export function TdMenuContent({
       }
     };
 
+    const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
+
     const handleContainerEvent = (event: Event) => {
       const detail = (event as any).detail;
       if (detail?.bobIgnore === true) return;
 
       const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
       if (!target) return;
+      // Dropdown Edit can host a PopAddLink input that must not be treated as widget instanceData updates.
+      if (target.closest('.diet-popaddlink')) return;
       const path = resolvePathFromTarget(target);
       if (!path) return;
 
@@ -619,6 +685,66 @@ export function TdMenuContent({
             { op: 'set', path: 'pod.radiusTR', value: source },
             { op: 'set', path: 'pod.radiusBR', value: source },
             { op: 'set', path: 'pod.radiusBL', value: source },
+          ];
+          applyOps(ops);
+          return;
+        }
+        if (path === 'pod.paddingLinked') {
+          const nextLinked = target.checked;
+          const linkedValue = getAt<unknown>(instanceData, 'pod.padding');
+          const topValue = getAt<unknown>(instanceData, 'pod.paddingTop');
+          const source = nextLinked ? topValue : linkedValue;
+          if (!isFiniteNumber(source)) {
+            applySet(path, nextLinked);
+            return;
+          }
+          const ops: WidgetOp[] = [
+            setOp('pod.paddingLinked', nextLinked),
+            ...(nextLinked ? [setOp('pod.padding', source)] : []),
+            setOp('pod.paddingTop', source),
+            setOp('pod.paddingRight', source),
+            setOp('pod.paddingBottom', source),
+            setOp('pod.paddingLeft', source),
+          ];
+          applyOps(ops);
+          return;
+        }
+        if (path === 'stage.paddingLinked') {
+          const nextLinked = target.checked;
+          const linkedValue = getAt<unknown>(instanceData, 'stage.padding');
+          const topValue = getAt<unknown>(instanceData, 'stage.paddingTop');
+          const source = nextLinked ? topValue : linkedValue;
+          if (!isFiniteNumber(source)) {
+            applySet(path, nextLinked);
+            return;
+          }
+          const ops: WidgetOp[] = [
+            setOp('stage.paddingLinked', nextLinked),
+            ...(nextLinked ? [setOp('stage.padding', source)] : []),
+            setOp('stage.paddingTop', source),
+            setOp('stage.paddingRight', source),
+            setOp('stage.paddingBottom', source),
+            setOp('stage.paddingLeft', source),
+          ];
+          applyOps(ops);
+          return;
+        }
+        if (path === 'layout.itemPaddingLinked') {
+          const nextLinked = target.checked;
+          const linkedValue = getAt<unknown>(instanceData, 'layout.itemPadding');
+          const topValue = getAt<unknown>(instanceData, 'layout.itemPaddingTop');
+          const source = nextLinked ? topValue : linkedValue;
+          if (!isFiniteNumber(source)) {
+            applySet(path, nextLinked);
+            return;
+          }
+          const ops: WidgetOp[] = [
+            setOp('layout.itemPaddingLinked', nextLinked),
+            ...(nextLinked ? [setOp('layout.itemPadding', source)] : []),
+            setOp('layout.itemPaddingTop', source),
+            setOp('layout.itemPaddingRight', source),
+            setOp('layout.itemPaddingBottom', source),
+            setOp('layout.itemPaddingLeft', source),
           ];
           applyOps(ops);
           return;

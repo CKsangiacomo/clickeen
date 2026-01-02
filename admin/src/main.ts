@@ -6,6 +6,7 @@ import { getIcon } from './data/icons';
 import {
   hydrateChoiceTiles,
   hydrateDropdownActions,
+  hydrateDropdownBorder,
   hydrateDropdownFill,
   hydrateDropdownEdit,
   hydrateDropdownShadow,
@@ -14,6 +15,7 @@ import {
   hydratePopAddLink,
   hydrateSegmented,
   hydrateTabs,
+  hydrateTextrename,
   hydrateTextedit,
   hydrateTextfield,
 } from '@dieter/components';
@@ -118,7 +120,9 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateChoiceTiles(scope);
   hydrateTextfield(scope);
   hydrateTextedit(scope);
+  hydrateTextrename(scope);
   hydrateDropdownActions(scope);
+  hydrateDropdownBorder(scope);
   hydrateDropdownFill(scope);
   hydrateDropdownShadow(scope);
   hydrateDropdownUpload(scope);

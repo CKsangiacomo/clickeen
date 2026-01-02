@@ -1,17 +1,12 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 
-type ShadowValue = {
+type BorderValue = {
   enabled: boolean;
-  inset: boolean;
-  x: number;
-  y: number;
-  blur: number;
-  spread: number;
+  width: number;
   color: string;
-  alpha: number; // 0..100
 };
 
-type DropdownShadowState = {
+type DropdownBorderState = {
   root: HTMLElement;
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
@@ -26,39 +21,28 @@ type DropdownShadowState = {
   svThumb: HTMLElement;
   swatches: HTMLButtonElement[];
   enabledInput: HTMLInputElement;
-  insetInput: HTMLInputElement;
-  xInput: HTMLInputElement;
-  yInput: HTMLInputElement;
-  blurInput: HTMLInputElement;
-  spreadInput: HTMLInputElement;
-  opacityInput: HTMLInputElement;
-  previewBox: HTMLElement;
+  widthInput: HTMLInputElement;
   hsv: { h: number; s: number; v: number };
-  shadow: ShadowValue;
+  border: BorderValue;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
 
-const DEFAULT_SHADOW: ShadowValue = {
+const DEFAULT_BORDER: BorderValue = {
   enabled: true,
-  inset: false,
-  x: 0,
-  y: 8,
-  blur: 24,
-  spread: 0,
-  color: '#000000',
-  alpha: 18,
+  width: 1,
+  color: '#c7c7cc',
 };
 
-const states = new Map<HTMLElement, DropdownShadowState>();
+const states = new Map<HTMLElement, DropdownBorderState>();
 
 const hydrateHost = createDropdownHydrator({
-  rootSelector: '.diet-dropdown-shadow',
-  triggerSelector: '.diet-dropdown-shadow__control',
+  rootSelector: '.diet-dropdown-border',
+  triggerSelector: '.diet-dropdown-border__control',
 });
 
-export function hydrateDropdownShadow(scope: Element | DocumentFragment): void {
-  const roots = Array.from(scope.querySelectorAll<HTMLElement>('.diet-dropdown-shadow'));
+export function hydrateDropdownBorder(scope: Element | DocumentFragment): void {
+  const roots = Array.from(scope.querySelectorAll<HTMLElement>('.diet-dropdown-border'));
   if (!roots.length) return;
 
   roots.forEach((root) => {
@@ -74,43 +58,23 @@ export function hydrateDropdownShadow(scope: Element | DocumentFragment): void {
   hydrateHost(scope);
 }
 
-function createState(root: HTMLElement): DropdownShadowState | null {
-  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__value-field');
+function createState(root: HTMLElement): DropdownBorderState | null {
+  const input = root.querySelector<HTMLInputElement>('.diet-dropdown-border__value-field');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
-  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-shadow__label');
-  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-shadow__chip');
+  const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-border__label');
+  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-border__chip');
   const headerLabel = root.querySelector<HTMLElement>('.diet-popover__header-label');
-  const previewContainer = root.querySelector<HTMLElement>('.diet-dropdown-shadow__preview');
-  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__native-color');
-  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__hue');
-  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__hex');
-  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-shadow__sv-canvas');
-  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-shadow__sv-thumb');
-  const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-shadow__swatch'));
-  const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__enabled');
-  const insetInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__inset');
-  const xInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__x');
-  const yInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__y');
-  const blurInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__blur');
-  const spreadInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__spread');
-  const opacityInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__opacity');
-  const previewBox = root.querySelector<HTMLElement>('.diet-dropdown-shadow__shadow-preview');
+  const previewContainer = root.querySelector<HTMLElement>('.diet-dropdown-border__preview');
+  const nativeColorInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__native-color');
+  const hueInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hue');
+  const hexField = root.querySelector<HTMLInputElement>('.diet-dropdown-border__hex');
+  const svCanvas = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-canvas');
+  const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-border__sv-thumb');
+  const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-border__swatch'));
+  const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__enabled');
+  const widthInput = root.querySelector<HTMLInputElement>('.diet-dropdown-border__width');
 
-  if (
-    !input ||
-    !hueInput ||
-    !hexField ||
-    !svCanvas ||
-    !svThumb ||
-    !enabledInput ||
-    !insetInput ||
-    !xInput ||
-    !yInput ||
-    !blurInput ||
-    !spreadInput ||
-    !opacityInput ||
-    !previewBox
-  ) {
+  if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !widthInput) {
     return null;
   }
 
@@ -135,21 +99,15 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     svThumb,
     swatches,
     enabledInput,
-    insetInput,
-    xInput,
-    yInput,
-    blurInput,
-    spreadInput,
-    opacityInput,
-    previewBox,
+    widthInput,
     hsv: { h: 0, s: 0, v: 0 },
-    shadow: { ...DEFAULT_SHADOW },
+    border: { ...DEFAULT_BORDER, enabled: false },
     nativeValue,
     internalWrite: false,
   };
 }
 
-function installHandlers(state: DropdownShadowState) {
+function installHandlers(state: DropdownBorderState) {
   if (state.nativeValue) {
     Object.defineProperty(state.input, 'value', {
       configurable: true,
@@ -177,47 +135,32 @@ function installHandlers(state: DropdownShadowState) {
   installNativeColorPicker(state);
 
   state.enabledInput.addEventListener('input', () => {
-    state.shadow.enabled = state.enabledInput.checked;
-    syncUI(state, { commit: true });
-  });
-  state.insetInput.addEventListener('input', () => {
-    state.shadow.inset = state.insetInput.checked;
+    state.border.enabled = state.enabledInput.checked;
+    if (state.border.enabled && (!state.border.color || state.root.dataset.invalid === 'true')) {
+      delete state.root.dataset.invalid;
+      state.border.color = DEFAULT_BORDER.color;
+      state.border.width = DEFAULT_BORDER.width;
+      const parsed = parseColor(state.border.color, document.documentElement);
+      if (parsed) state.hsv = parsed;
+    }
     syncUI(state, { commit: true });
   });
 
-  const onRange =
-    (key: 'x' | 'y' | 'blur' | 'spread' | 'alpha', input: HTMLInputElement) =>
-    () => {
-      const parsed = Number(input.value);
-      if (!Number.isFinite(parsed)) return;
-      if (key === 'alpha') {
-        state.shadow.alpha = clampNumber(parsed, 0, 100);
-      } else if (key === 'blur') {
-        state.shadow.blur = clampNumber(parsed, 0, 120);
-      } else if (key === 'spread') {
-        state.shadow.spread = clampNumber(parsed, -40, 40);
-      } else if (key === 'x') {
-        state.shadow.x = clampNumber(parsed, -50, 50);
-      } else if (key === 'y') {
-        state.shadow.y = clampNumber(parsed, -50, 50);
-      }
-      syncUI(state, { commit: true });
-    };
-
-  state.xInput.addEventListener('input', onRange('x', state.xInput));
-  state.yInput.addEventListener('input', onRange('y', state.yInput));
-  state.blurInput.addEventListener('input', onRange('blur', state.blurInput));
-  state.spreadInput.addEventListener('input', onRange('spread', state.spreadInput));
-  state.opacityInput.addEventListener('input', onRange('alpha', state.opacityInput));
+  state.widthInput.addEventListener('input', () => {
+    const parsed = Number(state.widthInput.value);
+    if (!Number.isFinite(parsed)) return;
+    state.border.width = clampNumber(parsed, 0, 12);
+    syncUI(state, { commit: true });
+  });
 }
 
-function installNativeColorPicker(state: DropdownShadowState) {
+function installNativeColorPicker(state: DropdownBorderState) {
   const { previewContainer, nativeColorInput } = state;
   if (!previewContainer || !nativeColorInput) return;
 
   previewContainer.addEventListener('click', (event) => {
     event.preventDefault();
-    nativeColorInput.value = state.shadow.color || '#000000';
+    nativeColorInput.value = state.border.color || DEFAULT_BORDER.color;
     nativeColorInput.click();
   });
 
@@ -227,13 +170,12 @@ function installNativeColorPicker(state: DropdownShadowState) {
     const hsv = parseColor(next, document.documentElement);
     if (!hsv) return;
     state.hsv = hsv;
-    // Shadow stores alpha separately; keep it, just update color.
-    state.shadow.color = next;
+    state.border.color = next;
     syncUI(state, { commit: true });
   });
 }
 
-function installSvCanvasHandlers(state: DropdownShadowState) {
+function installSvCanvasHandlers(state: DropdownBorderState) {
   const move = (event: PointerEvent) => {
     const rect = state.svCanvas.getBoundingClientRect();
     const x = clampNumber(event.clientX - rect.left, 0, rect.width);
@@ -258,7 +200,7 @@ function installSvCanvasHandlers(state: DropdownShadowState) {
   });
 }
 
-function installSwatchHandlers(state: DropdownShadowState) {
+function installSwatchHandlers(state: DropdownBorderState) {
   state.swatches.forEach((swatch) => {
     swatch.addEventListener('click', (event) => {
       event.preventDefault();
@@ -266,22 +208,23 @@ function installSwatchHandlers(state: DropdownShadowState) {
       const parsed = parseColor(color, state.root);
       if (!parsed) return;
       state.hsv = parsed;
+      state.border.color = color;
       syncUI(state, { commit: true });
     });
   });
 }
 
-function syncFromValue(state: DropdownShadowState, raw: string) {
+function syncFromValue(state: DropdownBorderState, raw: string) {
   const value = String(raw ?? '').trim();
   if (!value) {
-    state.root.dataset.invalid = 'true';
-    state.shadow = { ...DEFAULT_SHADOW, enabled: false };
-    state.hsv = { h: 0, s: 0, v: 0 };
+    delete state.root.dataset.invalid;
+    state.border = { ...DEFAULT_BORDER, enabled: false };
+    state.hsv = parseColor(DEFAULT_BORDER.color, document.documentElement) ?? { h: 0, s: 0, v: 0 };
     syncUI(state, { commit: false });
     return;
   }
 
-  const parsed = parseShadowJson(value);
+  const parsed = parseBorderJson(value);
   if (!parsed) {
     state.root.dataset.invalid = 'true';
     syncUI(state, { commit: false });
@@ -289,16 +232,16 @@ function syncFromValue(state: DropdownShadowState, raw: string) {
   }
 
   delete state.root.dataset.invalid;
-  state.shadow = parsed.shadow;
+  state.border = parsed.border;
   state.hsv = parsed.hsv;
   syncUI(state, { commit: false });
 }
 
-function syncUI(state: DropdownShadowState, opts: { commit: boolean }) {
+function syncUI(state: DropdownBorderState, opts: { commit: boolean }) {
   const { h, s, v } = state.hsv;
   const rgb = hsvToRgb(h, s, v);
   const hex = formatHex({ h, s, v });
-  const placeholder = state.headerValue?.dataset.placeholder ?? '';
+  const previewColor = state.border.enabled ? hex : `color-mix(in oklab, ${hex}, transparent 65%)`;
 
   state.root.style.setProperty('--picker-hue', h.toString());
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
@@ -315,36 +258,27 @@ function syncUI(state: DropdownShadowState, opts: { commit: boolean }) {
   state.svThumb.style.left = left;
   state.svThumb.style.top = top;
 
-  state.enabledInput.checked = state.shadow.enabled;
-  state.insetInput.checked = state.shadow.inset;
+  state.enabledInput.checked = state.border.enabled;
   applyEnabledState(state);
 
-  setRangeValue(state.xInput, state.shadow.x);
-  setRangeValue(state.yInput, state.shadow.y);
-  setRangeValue(state.blurInput, state.shadow.blur);
-  setRangeValue(state.spreadInput, state.shadow.spread);
-  setRangeValue(state.opacityInput, state.shadow.alpha);
+  setRangeValue(state.widthInput, state.border.width);
 
-  const shadowValue: ShadowValue = {
-    ...state.shadow,
-    color: hex,
-  };
-
-  const boxShadow = computeBoxShadow(shadowValue);
-  state.previewBox.style.boxShadow = boxShadow === 'none' ? 'none' : boxShadow;
-
-  if (opts.commit) {
-    setInputValue(state, shadowValue, true);
+  if (state.previewContainer) {
+    const preview = state.previewContainer.querySelector<HTMLElement>('.diet-dropdown-border__color-preview');
+    if (preview) preview.style.background = previewColor;
   }
 
-  const hasShadow = shadowValue.enabled && shadowValue.alpha > 0;
-  if (!hasShadow || state.root.dataset.invalid === 'true') {
-    updateHeader(state, { text: '', muted: true, chipShadow: null, noneChip: true });
+  const borderValue: BorderValue = {
+    ...state.border,
+    color: hex,
+    width: clampNumber(state.border.width, 0, 12),
+  };
+
+  const hasBorder = borderValue.enabled && borderValue.width > 0;
+  if (!hasBorder || state.root.dataset.invalid === 'true') {
+    updateHeader(state, { text: '', muted: true, chipColor: null, noneChip: true });
   } else {
-    const alpha = clampNumber(shadowValue.alpha, 0, 100) / 100;
-    const chipColor = alpha < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(alpha, 2)})` : hex;
-    const label = shadowValue.alpha < 100 ? `${shadowValue.alpha}%` : '';
-    updateHeader(state, { text: label, muted: false, chipShadow: chipColor });
+    updateHeader(state, { text: `${borderValue.width}px`, muted: false, chipColor: hex });
   }
 
   const normalizedCurrent = normalizeHex(hex);
@@ -354,18 +288,16 @@ function syncUI(state: DropdownShadowState, opts: { commit: boolean }) {
     swatch.classList.toggle('is-selected', match);
     swatch.setAttribute('aria-pressed', match ? 'true' : 'false');
   });
+
+  if (opts.commit) {
+    setInputValue(state, borderValue, true);
+  }
 }
 
-function applyEnabledState(state: DropdownShadowState): void {
-  const enabled = Boolean(state.shadow.enabled);
-  state.root.dataset.shadowEnabled = enabled ? 'true' : 'false';
-  const disabled = !enabled;
-  state.insetInput.disabled = disabled;
-  state.xInput.disabled = disabled;
-  state.yInput.disabled = disabled;
-  state.blurInput.disabled = disabled;
-  state.spreadInput.disabled = disabled;
-  state.opacityInput.disabled = disabled;
+function applyEnabledState(state: DropdownBorderState): void {
+  const enabled = Boolean(state.border.enabled);
+  state.root.dataset.borderEnabled = enabled ? 'true' : 'false';
+  state.widthInput.disabled = !enabled;
 }
 
 function setRangeValue(input: HTMLInputElement, value: number) {
@@ -374,14 +306,14 @@ function setRangeValue(input: HTMLInputElement, value: number) {
 }
 
 function updateHeader(
-  state: DropdownShadowState,
-  opts: { text: string; muted: boolean; chipShadow: string | null; noneChip?: boolean },
+  state: DropdownBorderState,
+  opts: { text: string; muted: boolean; chipColor: string | null; noneChip?: boolean },
 ): void {
   const { headerValue, headerValueLabel, headerValueChip } = state;
   if (headerValueLabel) headerValueLabel.textContent = opts.text;
   if (headerValue) {
     headerValue.dataset.muted = opts.muted ? 'true' : 'false';
-    headerValue.classList.toggle('has-chip', !!opts.chipShadow || opts.noneChip === true);
+    headerValue.classList.toggle('has-chip', !!opts.chipColor || opts.noneChip === true);
   }
   if (headerValueChip) {
     if (opts.noneChip === true) {
@@ -389,11 +321,11 @@ function updateHeader(
       headerValueChip.hidden = false;
       headerValueChip.classList.add('is-none');
       headerValueChip.classList.remove('is-white');
-    } else if (opts.chipShadow) {
-      headerValueChip.style.background = opts.chipShadow;
+    } else if (opts.chipColor) {
+      headerValueChip.style.background = opts.chipColor;
       headerValueChip.hidden = false;
       headerValueChip.classList.remove('is-none');
-      const normalized = opts.chipShadow.trim().toLowerCase();
+      const normalized = opts.chipColor.trim().toLowerCase();
       headerValueChip.classList.toggle('is-white', normalized === '#ffffff' || normalized === 'white');
     } else {
       headerValueChip.style.background = 'transparent';
@@ -404,7 +336,7 @@ function updateHeader(
   }
 }
 
-function setInputValue(state: DropdownShadowState, value: ShadowValue, emit: boolean) {
+function setInputValue(state: DropdownBorderState, value: BorderValue, emit: boolean) {
   const json = JSON.stringify(value);
   state.internalWrite = true;
   state.input.value = json;
@@ -415,7 +347,7 @@ function setInputValue(state: DropdownShadowState, value: ShadowValue, emit: boo
   }
 }
 
-function parseShadowJson(raw: string): { shadow: ShadowValue; hsv: { h: number; s: number; v: number } } | null {
+function parseBorderJson(raw: string): { border: BorderValue; hsv: { h: number; s: number; v: number } } | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw) as unknown;
@@ -426,51 +358,23 @@ function parseShadowJson(raw: string): { shadow: ShadowValue; hsv: { h: number; 
 
   const obj = parsed as Record<string, unknown>;
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : null;
-  const inset = typeof obj.inset === 'boolean' ? obj.inset : null;
-  const x = typeof obj.x === 'number' && Number.isFinite(obj.x) ? obj.x : null;
-  const y = typeof obj.y === 'number' && Number.isFinite(obj.y) ? obj.y : null;
-  const blur = typeof obj.blur === 'number' && Number.isFinite(obj.blur) ? obj.blur : null;
-  const spread = typeof obj.spread === 'number' && Number.isFinite(obj.spread) ? obj.spread : null;
-  const alpha = typeof obj.alpha === 'number' && Number.isFinite(obj.alpha) ? obj.alpha : null;
+  const width = typeof obj.width === 'number' && Number.isFinite(obj.width) ? obj.width : null;
   const color = typeof obj.color === 'string' ? obj.color : null;
-  if (
-    enabled == null ||
-    inset == null ||
-    x == null ||
-    y == null ||
-    blur == null ||
-    spread == null ||
-    alpha == null ||
-    color == null
-  ) {
-    return null;
-  }
+  if (enabled == null || width == null || color == null) return null;
 
   const hsv = parseColor(color, document.documentElement);
   if (!hsv) return null;
 
-  const shadow: ShadowValue = {
+  const border: BorderValue = {
     enabled,
-    inset,
-    x: clampNumber(x, -50, 50),
-    y: clampNumber(y, -50, 50),
-    blur: clampNumber(blur, 0, 120),
-    spread: clampNumber(spread, -40, 40),
+    width: clampNumber(width, 0, 12),
     color,
-    alpha: clampNumber(alpha, 0, 100),
   };
 
-  return { shadow, hsv };
+  return { border, hsv };
 }
 
-function computeBoxShadow(shadow: ShadowValue): string {
-  if (!shadow.enabled || shadow.alpha <= 0) return 'none';
-  const alphaMix = clampNumber(100 - shadow.alpha, 0, 100);
-  const shadowColor = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
-  return `${shadow.inset ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${shadowColor}`;
-}
-
-function handleHexInput(state: DropdownShadowState) {
+function handleHexInput(state: DropdownBorderState) {
   const raw = state.hexField.value.trim();
   if (!raw) {
     state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
@@ -483,6 +387,7 @@ function handleHexInput(state: DropdownShadowState) {
     return;
   }
   state.hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+  state.border.color = normalized;
   syncUI(state, { commit: true });
 }
 
@@ -507,11 +412,6 @@ function normalizeHex(value: string): string | null {
 function clampNumber(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
-}
-
-function roundTo(value: number, decimals: number): number {
-  const pow = 10 ** decimals;
-  return Math.round(value * pow) / pow;
 }
 
 function hexToRgba(value: string): { r: number; g: number; b: number } | null {
@@ -606,3 +506,4 @@ function formatHex(hsv: { h: number; s: number; v: number }): string {
   const toHex = (n: number) => n.toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
+

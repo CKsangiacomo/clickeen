@@ -13,7 +13,7 @@
   color: var(--color-system-black);
 }
 
-.diet-dropdown-header {
+.diet-dropdown-edit .diet-dropdown-header {
   position: relative;
   display: flex;
   align-items: center;
@@ -30,58 +30,34 @@
   cursor: pointer;
 }
 
-.diet-dropdown-header:hover {
+.diet-dropdown-edit .diet-dropdown-header:hover {
   background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
 }
 
-.diet-dropdown-header:focus-visible {
+.diet-dropdown-edit .diet-dropdown-header:focus-visible {
   outline: none;
   background: var(--color-system-white);
   border-color: var(--color-system-blue);
 }
 
-.diet-dropdown-header-label {
+.diet-dropdown-edit .diet-dropdown-header-label {
   flex: 0 0 auto;
 }
 
-.diet-dropdown-header-value {
-  flex: 1 1 auto;
+.diet-dropdown-edit .diet-dropdown-header-value {
+  flex: 1 1 0;
+  width: 0;
   min-inline-size: 0;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: start;
   color: var(--color-system-black);
 }
 
-.diet-dropdown-header-value[data-muted='true'] {
+.diet-dropdown-edit .diet-dropdown-header-value[data-muted='true'] {
   color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
-}
-
-.diet-dropdown-header-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: var(--icon-size-12, 0.75rem);
-  block-size: var(--icon-size-12, 0.75rem);
-  border: 0;
-  background: transparent;
-  padding: 0;
-  -webkit-appearance: none;
-  appearance: none;
-  color: color-mix(in oklab, var(--color-system-black), var(--state-muted-mix, 50%));
-  opacity: 0;
-  transition:
-    opacity var(--duration-base, 160ms) ease,
-    color var(--duration-base, 160ms) ease;
-  pointer-events: none;
-}
-
-.diet-dropdown-header:hover .diet-dropdown-header-icon,
-.diet-dropdown-header:focus-visible .diet-dropdown-header-icon,
-.diet-dropdown-header:focus-within .diet-dropdown-header-icon {
-  opacity: 1;
-  color: var(--color-system-blue);
 }
 
 .diet-dropdown-edit__label {
@@ -139,12 +115,8 @@
 }
 
 .diet-dropdown-edit__linksheet {
-  position: absolute;
-  top: 0;
-  inset-inline-end: 0;
-  transform: translateX(calc(100% + var(--space-3, 0.75rem)));
-  z-index: 13;
   display: none;
+  padding-block-start: var(--space-2, 0.75rem);
 }
 
 /* Ensure URL validation strokes carry through when PopAddLink
@@ -195,13 +167,13 @@
   cursor: pointer;
 }
 
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__palette button.diet-btn-ic {
+.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-btn-ic {
   opacity: 0.4;
   cursor: default;
   pointer-events: none;
 }
 
-.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__palette button.diet-btn-ic[data-command='link'] {
+.diet-dropdown-edit.has-linksheet .diet-dropdown-edit__toolbarrow button.diet-btn-ic[data-command='link'] {
   opacity: 1;
   pointer-events: none;
 }
@@ -241,7 +213,7 @@
 
 /* Applied links: subtle green.4 highlight (editor + preview) */
 .diet-dropdown-edit__editor a.diet-dropdown-edit-link,
-.diet-dropdown-header-value a[data-preview-link] {
+.diet-dropdown-edit .diet-dropdown-header-value a[data-preview-link] {
   background: var(--color-system-green-4);
   border-radius: 0.25rem;
   padding: 0 var(--space-0, 0.25rem);

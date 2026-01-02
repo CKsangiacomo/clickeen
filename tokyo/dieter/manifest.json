@@ -1,10 +1,11 @@
 {
   "v": 1,
-  "gitSha": "3b9f543ba2d4cbd31213c0c092dc4f753834e537",
+  "gitSha": "b06eac643cb9b94d3cadf63edcf21f75dcd4abbc",
   "components": [
     "button",
     "choice-tiles",
     "dropdown-actions",
+    "dropdown-border",
     "dropdown-edit",
     "dropdown-fill",
     "dropdown-shadow",
@@ -27,6 +28,7 @@
     "button",
     "choice-tiles",
     "dropdown-actions",
+    "dropdown-border",
     "dropdown-edit",
     "dropdown-fill",
     "dropdown-shadow",
@@ -39,6 +41,7 @@
     "tabs",
     "textedit",
     "textfield",
+    "textrename",
     "toggle"
   ],
   "aliases": {
@@ -59,6 +62,13 @@
     "dropdown-actions": [
       "popover",
       "button"
+    ],
+    "dropdown-border": [
+      "popover",
+      "button",
+      "textfield",
+      "slider",
+      "toggle"
     ],
     "dropdown-edit": [
       "popover",

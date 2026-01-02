@@ -19,6 +19,7 @@ type DropdownUploadState = {
   input: HTMLInputElement;
   headerValue: HTMLElement | null;
   headerValueLabel: HTMLElement | null;
+  headerValueChip: HTMLElement | null;
   previewPanel: HTMLElement;
   previewImg: HTMLImageElement;
   previewName: HTMLElement;
@@ -71,6 +72,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-upload__value-field');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-upload__label');
+  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-upload__chip');
   const previewPanel = root.querySelector<HTMLElement>('.diet-dropdown-upload__panel');
   const previewImg = root.querySelector<HTMLImageElement>('.diet-dropdown-upload__preview-img');
   const previewName = root.querySelector<HTMLElement>('[data-role="name"]');
@@ -109,6 +111,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     input,
     headerValue,
     headerValueLabel,
+    headerValueChip,
     previewPanel,
     previewImg,
     previewName,
@@ -279,13 +282,13 @@ function syncFromValue(state: DropdownUploadState, raw: string) {
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
 
   if (!key) {
-    updateHeader(state, placeholder, true);
+    updateHeader(state, placeholder, true, true);
     state.root.dataset.hasFile = 'false';
     setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
     return;
   }
 
-  updateHeader(state, key, false);
+  updateHeader(state, key, false, false);
   state.root.dataset.hasFile = 'true';
   void resolveAndPreview(state, key);
 }
@@ -321,9 +324,16 @@ function clearError(state: DropdownUploadState) {
   state.previewError.textContent = '';
 }
 
-function updateHeader(state: DropdownUploadState, text: string, muted: boolean) {
+function updateHeader(state: DropdownUploadState, text: string, muted: boolean, noneChip: boolean) {
   if (state.headerValueLabel) state.headerValueLabel.textContent = text;
-  if (state.headerValue) state.headerValue.dataset.muted = muted ? 'true' : 'false';
+  if (state.headerValue) {
+    state.headerValue.dataset.muted = muted ? 'true' : 'false';
+    state.headerValue.classList.toggle('has-chip', noneChip === true);
+  }
+  if (state.headerValueChip) {
+    state.headerValueChip.hidden = noneChip !== true;
+    state.headerValueChip.classList.toggle('is-none', noneChip === true);
+  }
 }
 
 function classifyByNameAndType(name: string, mimeType: string): { kind: Kind; ext: string } {
@@ -357,6 +367,5 @@ function captureNativeValue(input: HTMLInputElement): DropdownUploadState['nativ
     },
   };
 }
-
 
 

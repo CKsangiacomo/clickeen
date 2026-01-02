@@ -186,8 +186,12 @@ export async function buildContext(
   };
 
   const label = attrs.label || (merged.label as string) || 'Label';
-  const placeholder = attrs.placeholder || (merged.placeholder as string) || 'Select a fill';
   const pathAttr = attrs.path || '';
+  // For path-bound ToolDrawer fields we avoid placeholder hint text entirely.
+  // Defaults must always be present in widget instance data; empty placeholder makes drift obvious.
+  const placeholder =
+    attrs.placeholder ??
+    (pathAttr ? '' : ((merged.placeholder as string | undefined) ?? 'Select a fill'));
   const objectType = attrs.objectType || attrs['object-type'] || '';
   const value = pathAttr ? '' : attrs.value || '';
   const optionsRaw = attrs.options ? decodeHtmlEntities(attrs.options) : '';

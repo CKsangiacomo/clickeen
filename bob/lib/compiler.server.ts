@@ -3,7 +3,7 @@ import { RawWidget, parseTooldrawerAttributes, parsePanels } from './compiler.sh
 import { buildWidgetAssets } from './compiler/assets';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
-import { buildStagePodPanelFields } from './compiler/modules/stagePod';
+import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } from './compiler/modules/stagePod';
 import { buildTypographyPanel } from './compiler/modules/typography';
 
 function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
@@ -41,7 +41,7 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
 
   // Inject shared Stage/Pod layout panel if defaults declare stage/pod.
   if (hasStage || hasPod) {
-    const stagePodFields = buildStagePodPanelFields();
+    const stagePodFields = buildStagePodLayoutPanelFields();
     const layoutIdx = filtered.findIndex((line) => line.includes("<bob-panel id='layout'>"));
     if (layoutIdx >= 0) {
       const layoutEndIdx = filtered.findIndex((line, idx) => idx > layoutIdx && line.includes('</bob-panel>'));
@@ -49,6 +49,50 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
       else filtered.push(...stagePodFields);
     } else {
       filtered.push("<bob-panel id='layout'>", ...stagePodFields, '</bob-panel>');
+    }
+  }
+
+  // Inject Pod corner controls into Appearance (shape is an appearance concern).
+  if (hasPod) {
+    const cornerFields = buildStagePodCornerAppearanceFields();
+    if (cornerFields.length > 0) {
+      const appearanceIdx = filtered.findIndex((line) => line.includes("<bob-panel id='appearance'>"));
+      if (appearanceIdx >= 0) {
+        const appearanceEndIdx = filtered.findIndex((line, idx) => idx > appearanceIdx && line.includes('</bob-panel>'));
+        if (appearanceEndIdx >= 0) {
+          const eyebrowIdx = filtered.findIndex(
+            (line, idx) =>
+              idx > appearanceIdx && idx < appearanceEndIdx && line.includes("tooldrawer-eyebrow text='Stage/Pod appearance'"),
+          );
+
+          if (eyebrowIdx >= 0) {
+            const clusterEndIdx = filtered.findIndex(
+              (line, idx) => idx > eyebrowIdx && idx < appearanceEndIdx && line.includes('</tooldrawer-cluster>'),
+            );
+            if (clusterEndIdx >= 0) {
+              filtered.splice(clusterEndIdx, 0, ...cornerFields);
+            } else {
+              filtered.splice(
+                appearanceEndIdx,
+                0,
+                "  <tooldrawer-cluster>",
+                "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
+                ...cornerFields,
+                '  </tooldrawer-cluster>',
+              );
+            }
+          } else {
+            filtered.splice(
+              appearanceEndIdx,
+              0,
+              "  <tooldrawer-cluster>",
+              "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
+              ...cornerFields,
+              '  </tooldrawer-cluster>',
+            );
+          }
+        }
+      }
     }
   }
 
@@ -101,7 +145,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
       html = html.replace(/<tooldrawer-eyebrow([^>]*)\/>/gi, (_full, attrsRaw: string) => {
         const attrs = parseTooldrawerAttributes(attrsRaw || '');
         const text = attrs.text || '';
-        return `<div class="overline" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
+        return `<div class="overline td-eyebrow" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
       });
 
       // Expand spacing-only clusters (grouping controls for better rhythm).

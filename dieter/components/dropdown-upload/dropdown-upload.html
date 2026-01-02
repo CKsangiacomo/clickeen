@@ -20,21 +20,12 @@
     {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
   >
     {{#if label}}
-      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}:</span>
+      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}</span>
     {{/if}}
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
+      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-upload__label">{{placeholder}}</span>
     </span>
-    <button
-      class="diet-dropdown-header-icon diet-btn-ic"
-      data-size="{{size}}"
-      data-variant="neutral"
-      type="button"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
-    </button>
   </div>
 
   <div class="diet-popover diet-dropdown-upload__popover" role="dialog" aria-label="{{popoverLabel}}" data-state="closed">
@@ -101,7 +92,3 @@
     </div>
   </div>
 </div>
-<<<<<<< Current (Your changes)
-
-=======
->>>>>>> Incoming (Background Agent changes)

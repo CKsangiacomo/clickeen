@@ -85,8 +85,12 @@
 
     assertObject(state.appearance, 'state.appearance');
     assertString(state.appearance.itemBackground, 'state.appearance.itemBackground');
-    assertString(state.appearance.questionColor, 'state.appearance.questionColor');
-    assertString(state.appearance.answerColor, 'state.appearance.answerColor');
+    if (!['underline', 'highlight', 'color'].includes(state.appearance.linkStyle)) {
+      throw new Error('[FAQ] state.appearance.linkStyle must be underline|highlight|color');
+    }
+    assertString(state.appearance.linkUnderlineColor, 'state.appearance.linkUnderlineColor');
+    assertString(state.appearance.linkHighlightColor, 'state.appearance.linkHighlightColor');
+    assertString(state.appearance.linkTextColor, 'state.appearance.linkTextColor');
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
@@ -97,6 +101,13 @@
     assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
     assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
     assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
+    assertObject(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
+    assertBoolean(state.appearance.itemCard.border.enabled, 'state.appearance.itemCard.border.enabled');
+    assertNumber(state.appearance.itemCard.border.width, 'state.appearance.itemCard.border.width');
+    assertString(state.appearance.itemCard.border.color, 'state.appearance.itemCard.border.color');
+    if (state.appearance.itemCard.border.width < 0 || state.appearance.itemCard.border.width > 12) {
+      throw new Error('[FAQ] state.appearance.itemCard.border.width must be 0..12');
+    }
     assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
     assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
     assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
@@ -196,42 +207,89 @@
     return wrapper.innerHTML;
   }
 
-  function renderAnswerHtml(text, behavior) {
-    if (text == null) {
-      throw new Error('[FAQ] answer must be a string');
-    }
+  function renderAnswerHtml(html, behavior) {
+    if (html == null) throw new Error('[FAQ] answer must be a string');
+
+    const sanitized = sanitizeInlineHtml(html);
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = sanitized;
 
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = String(text).split(urlRegex);
-    return parts
-      .map((part) => {
+    const textNodes = [];
+    const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const parent = node.parentNode;
+      if (!(parent instanceof HTMLElement) || parent.tagName !== 'A') {
+        if (typeof node.textContent === 'string' && /(https?:\/\/)/i.test(node.textContent)) {
+          textNodes.push(node);
+        }
+      }
+      node = walker.nextNode();
+    }
+
+    function buildUrlNode(url, allowBlockEmbeds) {
+      const trimmed = url.trim();
+      if (!/^https?:\/\/\S+$/i.test(trimmed)) return document.createTextNode(url);
+
+      const lower = trimmed.toLowerCase();
+      const isImage = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(lower);
+      const isYouTube =
+        /youtube\.com\/watch\?v=|youtu\.be\//i.test(lower) || /youtube\.com\/embed\//i.test(lower);
+      const isVimeo = /vimeo\.com\//i.test(lower);
+
+      if (isImage && behavior.displayImages === true) {
+        const img = document.createElement('img');
+        img.className = 'ck-faq__a-img';
+        img.alt = '';
+        img.src = trimmed;
+        return img;
+      }
+
+      if (allowBlockEmbeds === true && behavior.displayVideos === true && (isYouTube || isVimeo)) {
+        const src = isYouTube
+          ? trimmed.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
+          : trimmed;
+        const container = document.createElement('div');
+        container.className = 'ck-faq__a-video';
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        iframe.loading = 'lazy';
+        iframe.setAttribute('allowfullscreen', '');
+        container.appendChild(iframe);
+        return container;
+      }
+
+      const a = document.createElement('a');
+      a.href = trimmed;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
+      a.textContent = trimmed;
+      return a;
+    }
+
+    textNodes.forEach((textNode) => {
+      const raw = textNode.textContent || '';
+      const parts = raw.split(urlRegex);
+      if (parts.length <= 1) return;
+
+      const frag = document.createDocumentFragment();
+      const parent = textNode.parentNode;
+      const allowBlockEmbeds = parent === wrapper;
+      parts.forEach((part) => {
         const url = part.trim();
-        if (!/^https?:\/\/\S+$/i.test(url)) return escapeHtml(part);
+        if (/^https?:\/\/\S+$/i.test(url)) frag.appendChild(buildUrlNode(url, allowBlockEmbeds));
+        else frag.appendChild(document.createTextNode(part));
+      });
+      textNode.parentNode?.replaceChild(frag, textNode);
+    });
 
-        const lower = url.toLowerCase();
-        const isImage = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(lower);
-        const isYouTube =
-          /youtube\.com\/watch\?v=|youtu\.be\//i.test(lower) || /youtube\.com\/embed\//i.test(lower);
-        const isVimeo = /vimeo\.com\//i.test(lower);
-        const safeUrl = escapeHtml(url);
-
-        if (isImage && behavior.displayImages === true) {
-          return `<img src="${safeUrl}" alt="" class="ck-faq__a-img" />`;
-        }
-        if (behavior.displayVideos === true && (isYouTube || isVimeo)) {
-          const src = isYouTube
-            ? url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
-            : url;
-          const safeSrc = escapeHtml(src);
-          return `<div class="ck-faq__a-video"><iframe src="${safeSrc}" loading="lazy" allowfullscreen></iframe></div>`;
-        }
-        return `<a href="${safeUrl}" target="_blank" rel="noreferrer">${safeUrl}</a>`;
-      })
-      .join('');
+    return wrapper.innerHTML;
   }
 
   function collapseAll(listEl) {
-    listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
+    listEl.querySelectorAll('[data-role="faq-question"]').forEach((button) => {
       button.setAttribute('aria-expanded', 'false');
     });
   }
@@ -283,11 +341,20 @@
 
   function applyAppearance(appearance) {
     faqRoot.style.setProperty('--faq-item-bg', appearance.itemBackground);
-    faqRoot.style.setProperty('--faq-question-color', appearance.questionColor);
-    faqRoot.style.setProperty('--faq-answer-color', appearance.answerColor);
+    const border = appearance.itemCard.border;
+    const borderEnabled = border.enabled === true && border.width > 0;
+    faqRoot.style.setProperty('--faq-card-border-width', borderEnabled ? `${border.width}px` : '0px');
+    faqRoot.style.setProperty('--faq-card-border-color', borderEnabled ? border.color : 'transparent');
     faqRoot.style.setProperty('--faq-item-shadow', computeShadowBoxShadow(appearance.itemCard.shadow));
+    faqRoot.setAttribute('data-link-style', appearance.linkStyle);
+    faqRoot.style.setProperty('--faq-link-underline-color', appearance.linkUnderlineColor);
+    faqRoot.style.setProperty('--faq-link-highlight-color', appearance.linkHighlightColor);
+    faqRoot.style.setProperty('--faq-link-text-color', appearance.linkTextColor);
 
-    const tokenize = (value) => (value === 'none' ? '0' : `var(--control-radius-${value})`);
+    const tokenize = (value) => {
+      const normalized = String(value || '').trim();
+      return normalized === 'none' ? '0' : `var(--control-radius-${normalized})`;
+    };
     const radiusCfg = appearance.itemCard;
     const r =
       radiusCfg.radiusLinked === false
@@ -355,7 +422,7 @@
     if (!accordionRuntime.isAccordion) return;
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const button = target.closest('.ck-faq__q');
+    const button = target.closest('[data-role="faq-question"]');
     if (!(button instanceof HTMLElement)) return;
     const isOpen = button.getAttribute('aria-expanded') === 'true';
     const next = !isOpen;
@@ -396,17 +463,20 @@
 
     if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
       accordionRuntime.isAccordion = false;
-      listEl.querySelectorAll('.ck-faq__q').forEach((button) => {
-        setExpanded(button, true);
-        button.setAttribute('tabindex', '-1');
+      listEl.querySelectorAll('[data-role="faq-question"]').forEach((node) => {
+        if (!(node instanceof HTMLButtonElement)) return;
+        node.disabled = true;
+        node.removeAttribute('aria-expanded');
+        node.removeAttribute('tabindex');
       });
       return;
     }
 
-    const buttons = listEl.querySelectorAll('.ck-faq__q');
+    const buttons = listEl.querySelectorAll('[data-role="faq-question"]');
     accordionRuntime.isAccordion = true;
     accordionRuntime.multiOpen = state.behavior.multiOpen === true;
     buttons.forEach((button) => {
+      if (button instanceof HTMLButtonElement) button.disabled = false;
       button.removeAttribute('tabindex');
     });
     collapseAll(listEl);

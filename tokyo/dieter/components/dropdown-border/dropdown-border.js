@@ -19,10 +19,10 @@ var Dieter = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // components/dropdown-shadow/dropdown-shadow.ts
-  var dropdown_shadow_exports = {};
-  __export(dropdown_shadow_exports, {
-    hydrateDropdownShadow: () => hydrateDropdownShadow
+  // components/dropdown-border/dropdown-border.ts
+  var dropdown_border_exports = {};
+  __export(dropdown_border_exports, {
+    hydrateDropdownBorder: () => hydrateDropdownBorder
   });
 
   // components/shared/dropdownToggle.ts
@@ -93,24 +93,19 @@ var Dieter = (() => {
     };
   }
 
-  // components/dropdown-shadow/dropdown-shadow.ts
-  var DEFAULT_SHADOW = {
+  // components/dropdown-border/dropdown-border.ts
+  var DEFAULT_BORDER = {
     enabled: true,
-    inset: false,
-    x: 0,
-    y: 8,
-    blur: 24,
-    spread: 0,
-    color: "#000000",
-    alpha: 18
+    width: 1,
+    color: "#c7c7cc"
   };
   var states = /* @__PURE__ */ new Map();
   var hydrateHost = createDropdownHydrator({
-    rootSelector: ".diet-dropdown-shadow",
-    triggerSelector: ".diet-dropdown-shadow__control"
+    rootSelector: ".diet-dropdown-border",
+    triggerSelector: ".diet-dropdown-border__control"
   });
-  function hydrateDropdownShadow(scope) {
-    const roots = Array.from(scope.querySelectorAll(".diet-dropdown-shadow"));
+  function hydrateDropdownBorder(scope) {
+    const roots = Array.from(scope.querySelectorAll(".diet-dropdown-border"));
     if (!roots.length) return;
     roots.forEach((root) => {
       if (states.has(root)) return;
@@ -124,27 +119,21 @@ var Dieter = (() => {
     hydrateHost(scope);
   }
   function createState(root) {
-    const input = root.querySelector(".diet-dropdown-shadow__value-field");
+    const input = root.querySelector(".diet-dropdown-border__value-field");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
-    const headerValueLabel = root.querySelector(".diet-dropdown-shadow__label");
-    const headerValueChip = root.querySelector(".diet-dropdown-shadow__chip");
+    const headerValueLabel = root.querySelector(".diet-dropdown-border__label");
+    const headerValueChip = root.querySelector(".diet-dropdown-border__chip");
     const headerLabel = root.querySelector(".diet-popover__header-label");
-    const previewContainer = root.querySelector(".diet-dropdown-shadow__preview");
-    const nativeColorInput = root.querySelector(".diet-dropdown-shadow__native-color");
-    const hueInput = root.querySelector(".diet-dropdown-shadow__hue");
-    const hexField = root.querySelector(".diet-dropdown-shadow__hex");
-    const svCanvas = root.querySelector(".diet-dropdown-shadow__sv-canvas");
-    const svThumb = root.querySelector(".diet-dropdown-shadow__sv-thumb");
-    const swatches = Array.from(root.querySelectorAll(".diet-dropdown-shadow__swatch"));
-    const enabledInput = root.querySelector(".diet-dropdown-shadow__enabled");
-    const insetInput = root.querySelector(".diet-dropdown-shadow__inset");
-    const xInput = root.querySelector(".diet-dropdown-shadow__x");
-    const yInput = root.querySelector(".diet-dropdown-shadow__y");
-    const blurInput = root.querySelector(".diet-dropdown-shadow__blur");
-    const spreadInput = root.querySelector(".diet-dropdown-shadow__spread");
-    const opacityInput = root.querySelector(".diet-dropdown-shadow__opacity");
-    const previewBox = root.querySelector(".diet-dropdown-shadow__shadow-preview");
-    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !insetInput || !xInput || !yInput || !blurInput || !spreadInput || !opacityInput || !previewBox) {
+    const previewContainer = root.querySelector(".diet-dropdown-border__preview");
+    const nativeColorInput = root.querySelector(".diet-dropdown-border__native-color");
+    const hueInput = root.querySelector(".diet-dropdown-border__hue");
+    const hexField = root.querySelector(".diet-dropdown-border__hex");
+    const svCanvas = root.querySelector(".diet-dropdown-border__sv-canvas");
+    const svThumb = root.querySelector(".diet-dropdown-border__sv-thumb");
+    const swatches = Array.from(root.querySelectorAll(".diet-dropdown-border__swatch"));
+    const enabledInput = root.querySelector(".diet-dropdown-border__enabled");
+    const widthInput = root.querySelector(".diet-dropdown-border__width");
+    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !widthInput) {
       return null;
     }
     const nativeValue = captureNativeValue(input);
@@ -167,15 +156,9 @@ var Dieter = (() => {
       svThumb,
       swatches,
       enabledInput,
-      insetInput,
-      xInput,
-      yInput,
-      blurInput,
-      spreadInput,
-      opacityInput,
-      previewBox,
+      widthInput,
       hsv: { h: 0, s: 0, v: 0 },
-      shadow: { ...DEFAULT_SHADOW },
+      border: { ...DEFAULT_BORDER, enabled: false },
       nativeValue,
       internalWrite: false
     };
@@ -203,41 +186,29 @@ var Dieter = (() => {
     installSwatchHandlers(state);
     installNativeColorPicker(state);
     state.enabledInput.addEventListener("input", () => {
-      state.shadow.enabled = state.enabledInput.checked;
-      syncUI(state, { commit: true });
-    });
-    state.insetInput.addEventListener("input", () => {
-      state.shadow.inset = state.insetInput.checked;
-      syncUI(state, { commit: true });
-    });
-    const onRange = (key, input) => () => {
-      const parsed = Number(input.value);
-      if (!Number.isFinite(parsed)) return;
-      if (key === "alpha") {
-        state.shadow.alpha = clampNumber(parsed, 0, 100);
-      } else if (key === "blur") {
-        state.shadow.blur = clampNumber(parsed, 0, 120);
-      } else if (key === "spread") {
-        state.shadow.spread = clampNumber(parsed, -40, 40);
-      } else if (key === "x") {
-        state.shadow.x = clampNumber(parsed, -50, 50);
-      } else if (key === "y") {
-        state.shadow.y = clampNumber(parsed, -50, 50);
+      state.border.enabled = state.enabledInput.checked;
+      if (state.border.enabled && (!state.border.color || state.root.dataset.invalid === "true")) {
+        delete state.root.dataset.invalid;
+        state.border.color = DEFAULT_BORDER.color;
+        state.border.width = DEFAULT_BORDER.width;
+        const parsed = parseColor(state.border.color, document.documentElement);
+        if (parsed) state.hsv = parsed;
       }
       syncUI(state, { commit: true });
-    };
-    state.xInput.addEventListener("input", onRange("x", state.xInput));
-    state.yInput.addEventListener("input", onRange("y", state.yInput));
-    state.blurInput.addEventListener("input", onRange("blur", state.blurInput));
-    state.spreadInput.addEventListener("input", onRange("spread", state.spreadInput));
-    state.opacityInput.addEventListener("input", onRange("alpha", state.opacityInput));
+    });
+    state.widthInput.addEventListener("input", () => {
+      const parsed = Number(state.widthInput.value);
+      if (!Number.isFinite(parsed)) return;
+      state.border.width = clampNumber(parsed, 0, 12);
+      syncUI(state, { commit: true });
+    });
   }
   function installNativeColorPicker(state) {
     const { previewContainer, nativeColorInput } = state;
     if (!previewContainer || !nativeColorInput) return;
     previewContainer.addEventListener("click", (event) => {
       event.preventDefault();
-      nativeColorInput.value = state.shadow.color || "#000000";
+      nativeColorInput.value = state.border.color || DEFAULT_BORDER.color;
       nativeColorInput.click();
     });
     nativeColorInput.addEventListener("input", () => {
@@ -246,7 +217,7 @@ var Dieter = (() => {
       const hsv = parseColor(next, document.documentElement);
       if (!hsv) return;
       state.hsv = hsv;
-      state.shadow.color = next;
+      state.border.color = next;
       syncUI(state, { commit: true });
     });
   }
@@ -280,6 +251,7 @@ var Dieter = (() => {
         const parsed = parseColor(color, state.root);
         if (!parsed) return;
         state.hsv = parsed;
+        state.border.color = color;
         syncUI(state, { commit: true });
       });
     });
@@ -287,20 +259,20 @@ var Dieter = (() => {
   function syncFromValue(state, raw) {
     const value = String(raw ?? "").trim();
     if (!value) {
-      state.root.dataset.invalid = "true";
-      state.shadow = { ...DEFAULT_SHADOW, enabled: false };
-      state.hsv = { h: 0, s: 0, v: 0 };
+      delete state.root.dataset.invalid;
+      state.border = { ...DEFAULT_BORDER, enabled: false };
+      state.hsv = parseColor(DEFAULT_BORDER.color, document.documentElement) ?? { h: 0, s: 0, v: 0 };
       syncUI(state, { commit: false });
       return;
     }
-    const parsed = parseShadowJson(value);
+    const parsed = parseBorderJson(value);
     if (!parsed) {
       state.root.dataset.invalid = "true";
       syncUI(state, { commit: false });
       return;
     }
     delete state.root.dataset.invalid;
-    state.shadow = parsed.shadow;
+    state.border = parsed.border;
     state.hsv = parsed.hsv;
     syncUI(state, { commit: false });
   }
@@ -308,7 +280,7 @@ var Dieter = (() => {
     const { h, s, v } = state.hsv;
     const rgb = hsvToRgb(h, s, v);
     const hex = formatHex({ h, s, v });
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
+    const previewColor = state.border.enabled ? hex : `color-mix(in oklab, ${hex}, transparent 65%)`;
     state.root.style.setProperty("--picker-hue", h.toString());
     state.root.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
     state.hueInput.value = h.toString();
@@ -320,31 +292,23 @@ var Dieter = (() => {
     const top = `${(1 - v) * 100}%`;
     state.svThumb.style.left = left;
     state.svThumb.style.top = top;
-    state.enabledInput.checked = state.shadow.enabled;
-    state.insetInput.checked = state.shadow.inset;
+    state.enabledInput.checked = state.border.enabled;
     applyEnabledState(state);
-    setRangeValue(state.xInput, state.shadow.x);
-    setRangeValue(state.yInput, state.shadow.y);
-    setRangeValue(state.blurInput, state.shadow.blur);
-    setRangeValue(state.spreadInput, state.shadow.spread);
-    setRangeValue(state.opacityInput, state.shadow.alpha);
-    const shadowValue = {
-      ...state.shadow,
-      color: hex
-    };
-    const boxShadow = computeBoxShadow(shadowValue);
-    state.previewBox.style.boxShadow = boxShadow === "none" ? "none" : boxShadow;
-    if (opts.commit) {
-      setInputValue(state, shadowValue, true);
+    setRangeValue(state.widthInput, state.border.width);
+    if (state.previewContainer) {
+      const preview = state.previewContainer.querySelector(".diet-dropdown-border__color-preview");
+      if (preview) preview.style.background = previewColor;
     }
-    const hasShadow = shadowValue.enabled && shadowValue.alpha > 0;
-    if (!hasShadow || state.root.dataset.invalid === "true") {
-      updateHeader(state, { text: "", muted: true, chipShadow: null, noneChip: true });
+    const borderValue = {
+      ...state.border,
+      color: hex,
+      width: clampNumber(state.border.width, 0, 12)
+    };
+    const hasBorder = borderValue.enabled && borderValue.width > 0;
+    if (!hasBorder || state.root.dataset.invalid === "true") {
+      updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
     } else {
-      const alpha = clampNumber(shadowValue.alpha, 0, 100) / 100;
-      const chipColor = alpha < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(alpha, 2)})` : hex;
-      const label = shadowValue.alpha < 100 ? `${shadowValue.alpha}%` : "";
-      updateHeader(state, { text: label, muted: false, chipShadow: chipColor });
+      updateHeader(state, { text: `${borderValue.width}px`, muted: false, chipColor: hex });
     }
     const normalizedCurrent = normalizeHex(hex);
     state.swatches.forEach((swatch) => {
@@ -353,17 +317,14 @@ var Dieter = (() => {
       swatch.classList.toggle("is-selected", match);
       swatch.setAttribute("aria-pressed", match ? "true" : "false");
     });
+    if (opts.commit) {
+      setInputValue(state, borderValue, true);
+    }
   }
   function applyEnabledState(state) {
-    const enabled = Boolean(state.shadow.enabled);
-    state.root.dataset.shadowEnabled = enabled ? "true" : "false";
-    const disabled = !enabled;
-    state.insetInput.disabled = disabled;
-    state.xInput.disabled = disabled;
-    state.yInput.disabled = disabled;
-    state.blurInput.disabled = disabled;
-    state.spreadInput.disabled = disabled;
-    state.opacityInput.disabled = disabled;
+    const enabled = Boolean(state.border.enabled);
+    state.root.dataset.borderEnabled = enabled ? "true" : "false";
+    state.widthInput.disabled = !enabled;
   }
   function setRangeValue(input, value) {
     input.value = String(value);
@@ -374,7 +335,7 @@ var Dieter = (() => {
     if (headerValueLabel) headerValueLabel.textContent = opts.text;
     if (headerValue) {
       headerValue.dataset.muted = opts.muted ? "true" : "false";
-      headerValue.classList.toggle("has-chip", !!opts.chipShadow || opts.noneChip === true);
+      headerValue.classList.toggle("has-chip", !!opts.chipColor || opts.noneChip === true);
     }
     if (headerValueChip) {
       if (opts.noneChip === true) {
@@ -382,11 +343,11 @@ var Dieter = (() => {
         headerValueChip.hidden = false;
         headerValueChip.classList.add("is-none");
         headerValueChip.classList.remove("is-white");
-      } else if (opts.chipShadow) {
-        headerValueChip.style.background = opts.chipShadow;
+      } else if (opts.chipColor) {
+        headerValueChip.style.background = opts.chipColor;
         headerValueChip.hidden = false;
         headerValueChip.classList.remove("is-none");
-        const normalized = opts.chipShadow.trim().toLowerCase();
+        const normalized = opts.chipColor.trim().toLowerCase();
         headerValueChip.classList.toggle("is-white", normalized === "#ffffff" || normalized === "white");
       } else {
         headerValueChip.style.background = "transparent";
@@ -406,7 +367,7 @@ var Dieter = (() => {
       state.input.dispatchEvent(new Event("input", { bubbles: true }));
     }
   }
-  function parseShadowJson(raw) {
+  function parseBorderJson(raw) {
     let parsed;
     try {
       parsed = JSON.parse(raw);
@@ -416,35 +377,17 @@ var Dieter = (() => {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
     const obj = parsed;
     const enabled = typeof obj.enabled === "boolean" ? obj.enabled : null;
-    const inset = typeof obj.inset === "boolean" ? obj.inset : null;
-    const x = typeof obj.x === "number" && Number.isFinite(obj.x) ? obj.x : null;
-    const y = typeof obj.y === "number" && Number.isFinite(obj.y) ? obj.y : null;
-    const blur = typeof obj.blur === "number" && Number.isFinite(obj.blur) ? obj.blur : null;
-    const spread = typeof obj.spread === "number" && Number.isFinite(obj.spread) ? obj.spread : null;
-    const alpha = typeof obj.alpha === "number" && Number.isFinite(obj.alpha) ? obj.alpha : null;
+    const width = typeof obj.width === "number" && Number.isFinite(obj.width) ? obj.width : null;
     const color = typeof obj.color === "string" ? obj.color : null;
-    if (enabled == null || inset == null || x == null || y == null || blur == null || spread == null || alpha == null || color == null) {
-      return null;
-    }
+    if (enabled == null || width == null || color == null) return null;
     const hsv = parseColor(color, document.documentElement);
     if (!hsv) return null;
-    const shadow = {
+    const border = {
       enabled,
-      inset,
-      x: clampNumber(x, -50, 50),
-      y: clampNumber(y, -50, 50),
-      blur: clampNumber(blur, 0, 120),
-      spread: clampNumber(spread, -40, 40),
-      color,
-      alpha: clampNumber(alpha, 0, 100)
+      width: clampNumber(width, 0, 12),
+      color
     };
-    return { shadow, hsv };
-  }
-  function computeBoxShadow(shadow) {
-    if (!shadow.enabled || shadow.alpha <= 0) return "none";
-    const alphaMix = clampNumber(100 - shadow.alpha, 0, 100);
-    const shadowColor = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
-    return `${shadow.inset ? "inset " : ""}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${shadowColor}`;
+    return { border, hsv };
   }
   function handleHexInput(state) {
     const raw = state.hexField.value.trim();
@@ -459,6 +402,7 @@ var Dieter = (() => {
       return;
     }
     state.hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+    state.border.color = normalized;
     syncUI(state, { commit: true });
   }
   function parseColor(value, root) {
@@ -477,10 +421,6 @@ var Dieter = (() => {
   function clampNumber(value, min, max) {
     if (!Number.isFinite(value)) return min;
     return Math.min(max, Math.max(min, value));
-  }
-  function roundTo(value, decimals) {
-    const pow = 10 ** decimals;
-    return Math.round(value * pow) / pow;
   }
   function hexToRgba(value) {
     const raw = value.trim().replace(/^#/, "");
@@ -563,6 +503,6 @@ var Dieter = (() => {
     const toHex = (n) => n.toString(16).padStart(2, "0");
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
-  return __toCommonJS(dropdown_shadow_exports);
+  return __toCommonJS(dropdown_border_exports);
 })();
 window.Dieter = { ...__prevDieter, ...Dieter };

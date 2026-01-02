@@ -20,8 +20,11 @@ const dieterManifestCache = new Map<string, Promise<DieterManifest>>();
 
 async function loadDieterManifest(tokyoRoot: string): Promise<DieterManifest> {
   const url = `${tokyoRoot.replace(/\/+$/, '')}/dieter/manifest.json`;
-  const cached = dieterManifestCache.get(url);
-  if (cached) return cached;
+  const shouldCache = process.env.NODE_ENV !== 'development';
+  if (shouldCache) {
+    const cached = dieterManifestCache.get(url);
+    if (cached) return cached;
+  }
 
   const promise = (async () => {
     const res = await fetch(url, { cache: 'no-store' });
@@ -35,7 +38,7 @@ async function loadDieterManifest(tokyoRoot: string): Promise<DieterManifest> {
     return json;
   })();
 
-  dieterManifestCache.set(url, promise);
+  if (shouldCache) dieterManifestCache.set(url, promise);
   return promise;
 }
 
@@ -91,6 +94,7 @@ export async function buildWidgetAssets(args: {
   const assetBase = `${tokyoRoot}/widgets/${args.widgetname}`;
 
   const manifest = await loadDieterManifest(tokyoRoot);
+  const cacheBust = manifest.gitSha && manifest.gitSha !== 'unknown' ? `?v=${encodeURIComponent(manifest.gitSha)}` : '';
 
   const requiredBundles = new Set<string>();
   for (const usage of args.requiredUsages) {
@@ -113,13 +117,13 @@ export async function buildWidgetAssets(args: {
   const orderedNames = Array.from(bundlesWithDeps).sort();
   const jsSet = new Set(manifest.componentsWithJs ?? []);
 
-  const componentStyles = orderedNames.map((name) => `${dieterBase}/components/${name}/${name}.css`);
+  const componentStyles = orderedNames.map((name) => `${dieterBase}/components/${name}/${name}.css${cacheBust}`);
   const componentScripts = orderedNames
     .filter((name) => jsSet.has(name))
-    .map((name) => `${dieterBase}/components/${name}/${name}.js`);
+    .map((name) => `${dieterBase}/components/${name}/${name}.js${cacheBust}`);
 
   const dieterAssets = {
-    styles: [`${dieterBase}/tokens/tokens.css`, ...componentStyles],
+    styles: [`${dieterBase}/tokens/tokens.css${cacheBust}`, ...componentStyles],
     scripts: componentScripts,
   };
 

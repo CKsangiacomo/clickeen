@@ -20,8 +20,10 @@ const toTitle = (slug: string): string => slug.replace(/[-_]/g, ' ').replace(/\b
 
 const BUTTON_IMPORT_REGEX = /@import\s+['"]\.\.\/button\/button\.css['"];\s*/g;
 const MENUACTIONS_IMPORT_REGEX = /@import\s+['"]\.\.\/menuactions\/menuactions\.css['"];\s*/g;
+const POPOVER_IMPORT_REGEX = /@import\s+['"]\.\.\/popover\/popover\.css['"];\s*/g;
 const SLIDER_IMPORT_REGEX = /@import\s+['"]\.\.\/slider\/slider\.css['"];\s*/g;
 const TEXTFIELD_IMPORT_REGEX = /@import\s+['"]\.\.\/textfield\/textfield\.css['"];\s*/g;
+const TOGGLE_IMPORT_REGEX = /@import\s+['"]\.\.\/toggle\/toggle\.css['"];\s*/g;
 
 const inlineCssImports = (css?: string): string | undefined => {
   if (!css) return css;
@@ -41,6 +43,11 @@ const inlineCssImports = (css?: string): string | undefined => {
     result = result.replace(MENUACTIONS_IMPORT_REGEX, menuactionsCss ? `${menuactionsCss}\n` : '');
   }
 
+  if (result.includes("@import '../popover/popover.css';") || result.includes('@import "../popover/popover.css";')) {
+    const popoverCss = cssModules['../../../dieter/components/popover/popover.css'];
+    result = result.replace(POPOVER_IMPORT_REGEX, popoverCss ? `${popoverCss}\n` : '');
+  }
+
   if (result.includes("@import '../slider/slider.css';") || result.includes('@import "../slider/slider.css";')) {
     const sliderCss = cssModules['../../../dieter/components/slider/slider.css'];
     result = result.replace(SLIDER_IMPORT_REGEX, sliderCss ? `${sliderCss}\n` : '');
@@ -49,6 +56,11 @@ const inlineCssImports = (css?: string): string | undefined => {
   if (result.includes("@import '../textfield/textfield.css';") || result.includes('@import "../textfield/textfield.css";')) {
     const textfieldCss = cssModules['../../../dieter/components/textfield/textfield.css'];
     result = result.replace(TEXTFIELD_IMPORT_REGEX, textfieldCss ? `${textfieldCss}\n` : '');
+  }
+
+  if (result.includes("@import '../toggle/toggle.css';") || result.includes('@import "../toggle/toggle.css";')) {
+    const toggleCss = cssModules['../../../dieter/components/toggle/toggle.css'];
+    result = result.replace(TOGGLE_IMPORT_REGEX, toggleCss ? `${toggleCss}\n` : '');
   }
 
   return result;

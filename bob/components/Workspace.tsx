@@ -61,13 +61,15 @@ export function Workspace() {
   }, [hasWidget, compiled, instanceData, device, theme, iframeReady]);
 
   return (
-    <section className="workspace">
-      <iframe
-        ref={iframeRef}
-        title="Widget preview"
-        className="workspace-iframe"
-        sandbox="allow-scripts allow-same-origin"
-      />
+    <section className="workspace" data-device={device}>
+      <div className="workspace-viewport">
+        <iframe
+          ref={iframeRef}
+          title="Widget preview"
+          className="workspace-iframe"
+          sandbox="allow-scripts allow-same-origin"
+        />
+      </div>
 
       <div className="workspace-overlay" aria-hidden={!hasWidget}>
         <div

@@ -128,6 +128,9 @@
     if (!roleConfig || typeof roleConfig !== 'object') {
       throw new Error('[CKTypography] roleConfig is required');
     }
+    if (!window.CSS || typeof window.CSS.supports !== 'function') {
+      throw new Error('[CKTypography] Missing CSS.supports');
+    }
 
     const globalFamily = typography.globalFamily;
     if (typeof globalFamily !== 'string' || !globalFamily.trim()) {
@@ -164,6 +167,7 @@
       const sizePreset = role.sizePreset;
       const weight = role.weight;
       const fontStyle = role.fontStyle;
+      const color = role.color;
 
       if (typeof family !== 'string' || !family.trim()) {
         throw new Error(`[CKTypography] Role "${roleKey}" is missing family`);
@@ -176,6 +180,12 @@
       }
       if (typeof fontStyle !== 'string' || !fontStyle.trim()) {
         throw new Error(`[CKTypography] Role "${roleKey}" is missing fontStyle`);
+      }
+      if (typeof color !== 'string' || !color.trim()) {
+        throw new Error(`[CKTypography] Role "${roleKey}" is missing color`);
+      }
+      if (!window.CSS.supports('color', color)) {
+        throw new Error(`[CKTypography] Role "${roleKey}" has invalid color "${color}"`);
       }
 
       ensureFontLoaded(family);
@@ -237,10 +247,16 @@
         }
       }
 
+      // For numeric scales, interpret values as px so widget CSS can consume `--typo-*-size` as a valid font-size.
+      if (scaleKind === 'number') {
+        sizeValue = `${String(sizeValue).trim()}px`;
+      }
+
       root.style.setProperty(`--typo-${varKey}-family`, family);
       root.style.setProperty(`--typo-${varKey}-size`, sizeValue);
       root.style.setProperty(`--typo-${varKey}-weight`, weight);
       root.style.setProperty(`--typo-${varKey}-style`, fontStyle);
+      root.style.setProperty(`--typo-${varKey}-color`, color);
     });
   }
 

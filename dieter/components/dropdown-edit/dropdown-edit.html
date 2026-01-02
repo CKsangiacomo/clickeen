@@ -2,16 +2,6 @@
   <div class="diet-dropdown-header diet-dropdown-edit__control" role="button" aria-haspopup="dialog" aria-expanded="false">
     <span class="diet-dropdown-header-label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}">{{label}}:</span>
     <span class="diet-dropdown-header-value {{#if bodyClass}}{{bodyClass}}{{else}}body-s{{/if}}" data-muted="true" data-placeholder="{{placeholder}}">{{placeholder}}</span>
-    <button
-      class="diet-dropdown-header-icon diet-btn-ic"
-      data-size="{{size}}"
-      data-variant="neutral"
-      type="button"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="diet-btn-ic__icon" data-icon="hand.point.up"></span>
-    </button>
   </div>
 
   <div class="diet-popover" role="dialog" aria-label="{{label}}">
@@ -104,48 +94,48 @@
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="diet-dropdown-edit__linksheet" aria-hidden="true">
-    <div class="diet-popaddlink diet-popover" data-state="empty">
-      <div class="diet-popover__header">
-        <span class="diet-popover__header-label label-s">Add URL</span>
-        <button
-          type="button"
-          class="diet-btn-ic diet-popover__header-trigger diet-popaddlink__close"
-          data-size="xs"
-          data-variant="neutral"
-          aria-hidden="true"
-          tabindex="-1"
-        >
-          <span class="diet-btn-ic__icon" data-icon="multiply"></span>
-        </button>
-      </div>
-      <div class="diet-popover__body">
-        <div class="diet-textfield" data-size="md">
-          <label class="diet-textfield__control">
-            <span class="diet-textfield__display-label label-s">URL:</span>
-            <input
-              type="text"
-              class="diet-textfield__field body-s diet-popaddlink__input"
-              aria-label="URL"
-              placeholder="https://example.com"
-            />
-          </label>
-          <span class="diet-textfield__helper caption diet-popaddlink__helper"></span>
-        </div>
-        <div class="diet-popaddlink__actions">
-          <button
-            type="button"
-            class="diet-btn-txt diet-popaddlink__apply"
-            data-size="md"
-            data-variant="primary"
-          >
-            <span class="diet-btn-txt__label">Apply</span>
-          </button>
+          <div class="diet-dropdown-edit__linksheet" aria-hidden="true">
+            <div class="diet-popaddlink diet-popover" data-state="empty">
+              <div class="diet-popover__header">
+                <span class="diet-popover__header-label label-s">Add URL</span>
+                <button
+                  type="button"
+                  class="diet-btn-ic diet-popover__header-trigger diet-popaddlink__close"
+                  data-size="xs"
+                  data-variant="neutral"
+                  aria-hidden="true"
+                  tabindex="-1"
+                >
+                  <span class="diet-btn-ic__icon" data-icon="multiply"></span>
+                </button>
+              </div>
+              <div class="diet-popover__body">
+                <div class="diet-textfield" data-size="md">
+                  <label class="diet-textfield__control">
+                    <span class="diet-textfield__display-label label-s">URL:</span>
+                    <input
+                      type="text"
+                      class="diet-textfield__field body-s diet-popaddlink__input"
+                      aria-label="URL"
+                      placeholder="https://example.com"
+                    />
+                  </label>
+                  <span class="diet-textfield__helper caption diet-popaddlink__helper"></span>
+                </div>
+                <div class="diet-popaddlink__actions">
+                  <button
+                    type="button"
+                    class="diet-btn-txt diet-popaddlink__apply"
+                    data-size="md"
+                    data-variant="primary"
+                  >
+                    <span class="diet-btn-txt__label">Apply</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

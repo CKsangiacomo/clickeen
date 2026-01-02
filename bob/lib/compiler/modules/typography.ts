@@ -74,6 +74,9 @@ export function buildTypographyPanel(args: {
     lines.push(
       `    <tooldrawer-field type='dropdown-actions' size='md' path='typography.roles.${role.key}.weight' label='Weight' placeholder='Choose weight' value='{{typography.roles.${role.key}.weight}}' options='${weightOptions}' />`,
     );
+    lines.push(
+      `    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.${role.key}.color' label='Color' value='{{typography.roles.${role.key}.color}}' />`,
+    );
     lines.push('  </tooldrawer-cluster>');
   });
   lines.push('</bob-panel>');

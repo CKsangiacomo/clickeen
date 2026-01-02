@@ -1,0 +1,41 @@
+{
+  "component": "dropdown-border",
+  "syntax": "<tooldrawer-field type='dropdown-border' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "optional": true },
+    "headerLabel": { "optional": true },
+    "headerIcon": { "optional": true },
+    "placeholder": { "optional": true, "default": "Select a border" },
+    "value": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "defaults": [
+    {
+      "id": "dropdown-border",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-dropdown-border", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "dropdown-border-{{size}}",
+        "label": "Label",
+        "placeholder": "Select a border",
+        "value": "",
+        "path": "",
+        "popoverLabel": "Border options",
+        "labelClass": "label-s",
+        "bodyClass": "body-s",
+        "headerLabel": "Border",
+        "headerIcon": "square",
+        "headerLabelClass": "label-s"
+      },
+      "sizeContext": {
+        "sm": { "labelClass": "label-xs", "bodyClass": "body-xs" },
+        "md": { "labelClass": "label-s", "bodyClass": "body-s" },
+        "lg": { "labelClass": "label-m", "bodyClass": "body-m" }
+      }
+    }
+  ]
+}
+
