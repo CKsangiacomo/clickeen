@@ -143,6 +143,12 @@ stage (outer page section)         ← state.stage.*
 
 If you remember one thing: **pod.background is the widget’s surface**; stage.background is the outer section behind it.
 
+#### Pod sizing rule (default: content-driven)
+
+As a default rule, **Pod should expand/shrink based on widget content** (height is “auto” / content-driven). This keeps widgets responsive by default (longer text, more items, localization, mobile widths).
+
+Only constrain/“lock” Pod sizing when a specific **Type/Layout** or an explicit **Layout setting** requires a fixed viewport experience (e.g., carousel/ticker viewport, badge/floating chip). In those cases, expose the constraint as an intentional control in the correct panel (usually Layout) and document it in the widget PRD/`agent.md`.
+
 #### Stage/Pod layout is not “extra” — it’s part of the main layout
 
 Agents skip Stage/Pod layout because it’s **auto-generated** (not written in the widget’s `spec.json`), so it’s “out of sight” while authoring controls.

@@ -38,6 +38,10 @@ Location: `tokyo/widgets/{widgetname}/`
   - **Type**: the content model + runtime behavior (what it is)
   - **Layout**: how that type is arranged/placed (where/how it lives on the page)
 
+### Pod sizing rule (default: content-driven)
+
+By default, **Pod expands/shrinks based on widget content** (content-driven height). Only constrain/lock Pod sizing when a specific Type/Layout requires a fixed viewport experience, and expose that constraint as an explicit setting (typically in the Layout panel).
+
 ---
 
 ## Arrays + Items (global taxonomy)
