@@ -350,8 +350,8 @@ All widgets use a consistent wrapper structure:
 ```
 
 Layout options applied via `CKStagePod.applyStagePod()`:
-- **Stage:** background, padding (linked/unlinked), alignment
-- **Pod:** background, padding (linked/unlinked), corner radius (linked/per-corner), width mode (wrap/full/fixed)
+- **Stage:** background, canvas sizing mode (`wrap`/`fill`/`viewport`/`fixed`), alignment, padding per device (`desktop` + `mobile`, linked or per-side)
+- **Pod:** background, padding per device (`desktop` + `mobile`, linked or per-side), corner radius (linked/per-corner), width mode (wrap/full/fixed)
 
 ### Preview Protocol
 
@@ -393,7 +393,7 @@ Located in `bob/lib/compiler/modules/`:
 | Module | Trigger | Generated Panel |
 |--------|---------|-----------------|
 | `typography.ts` | `defaults.typography.roles` exists | Typography panel with font family, size preset, style, weight per role |
-| `stagePod.ts` | `defaults.stage` or `defaults.pod` exists | Stage/Pod layout panel with padding, radius, width, alignment controls |
+| `stagePod.ts` | `defaults.stage` or `defaults.pod` exists | Stage/Pod layout panel with stage canvas mode + per-device padding + radius/width/alignment controls |
 
 ### Stencil System
 

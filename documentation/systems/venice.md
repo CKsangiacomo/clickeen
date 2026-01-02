@@ -14,6 +14,7 @@ When debugging reality, treat runtime code and deployed Cloudflare config as tru
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 **Planned / not fully wired yet:**
 - Loader script routes (`/embed/v{semver}/loader.js`, `/embed/latest/loader.js`) — loader modules exist but aren’t exposed as `route.ts` yet.
+- Indexable embed mode (inline, host-DOM) for SEO + GEO — see `documentation/systems/seo-geo.md`.
 
 ## Critical Concept: Widget Definition vs Instance
 
@@ -88,6 +89,13 @@ This keeps widget definitions portable and prevents hard-coded Tokyo origins ins
 - No patch-script injection or per-widget DOM patching in Venice.
 - No “validation/coercion” of instance config inside Venice.
 - No per-widget branching logic in Venice.
+
+## SEO + GEO (Cross-Cutting)
+
+SEO and GEO require an embed mode where schema and deep links live in the host DOM.
+This is not compatible with iframe-only embedding as a moat strategy.
+
+See: `documentation/systems/seo-geo.md`
 
 ## References
 

@@ -125,6 +125,27 @@ Browser → Venice /e/{publicId} → Venice loads instance JSON (Paris) + widget
 → Venice injects window.CK_WIDGET.state → browser runs widget.client.js → applyState(window.CK_WIDGET.state)
 ```
 
+### Embed modes (iframe vs indexable inline)
+
+Clickeen supports two embed modes (platform contract):
+
+1) **Safe embed (iframe)** — shipped today
+- CSS isolation, predictable behavior on arbitrary host pages.
+- Venice returns a full HTML document (`GET /e/{publicId}`) intended for iframing.
+
+2) **Indexable embed (inline)** — required for SEO + GEO moat (planned)
+- Renders markup into the host DOM (no iframe), so:
+  - Schema.org JSON-LD applies to the host page (SEO).
+  - Per-question anchors can be cited and deep-linked (GEO).
+- Requires strict CSS scoping (no `html/body/:root` styling from widgets).
+
+Default strategy:
+- Indexable embed should render UI inside **Shadow DOM** for CSS isolation.
+- iframe remains an explicit fallback for origin-level isolation requirements.
+- In practice, embed mode is chosen per instance (e.g. `state.seoGeo.enabled` toggles SEO/GEO mode on/off).
+
+See: `documentation/systems/seo-geo.md`
+
 ---
 
 ## System responsibilities

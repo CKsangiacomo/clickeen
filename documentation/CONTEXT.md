@@ -177,7 +177,7 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 - **Stage** = workspace backdrop (container surrounding the widget)
 - **Pod** = widget surface (actual widget container)
 - All widgets use `.stage > .pod > [data-ck-widget]` wrapper structure
-- Layout options: background (fill picker), padding (linked or per-side), corner radius (linked or per-corner), pod width mode (wrap/full/fixed), pod alignment
+- Layout options: stage canvas mode (`wrap`/`fill`/`viewport`/`fixed`), background (fill picker), padding per device (`desktop` + `mobile`, linked or per-side), corner radius (linked or per-corner), pod width mode (wrap/full/fixed), pod alignment
 
 ### Compiler Modules
 

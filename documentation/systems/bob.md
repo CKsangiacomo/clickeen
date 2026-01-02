@@ -138,6 +138,7 @@ Use them to catch accidental compiler drift during refactors.
 1. Injects `panelHtml` into `.tdmenucontent__fields`.
 2. Loads Dieter assets declared by `compiled.assets.dieter` (styles + scripts).
 3. Runs Dieter hydrators within the injected scope.
+4. Applies i18n to the injected DOM (if `data-i18n-key` is present).
 
 ### Binding contract (compiled HTML → ops)
 Compiled controls expose paths through `data-bob-path`. ToolDrawer:
@@ -217,6 +218,35 @@ This is the foundation for both strict manual editing and future Copilot editing
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
 
 The iframe is sandboxed (`allow-scripts allow-same-origin`).
+
+---
+
+## i18n (Editor chrome + widget UI strings)
+
+Bob supports localization via Tokyo-hosted catalogs and DOM attributes.
+
+### Catalog structure (Tokyo)
+- Base URL: `${NEXT_PUBLIC_TOKYO_URL}/i18n`
+- Manifest: `/i18n/manifest.json`
+- Hashed bundles: `/i18n/{locale}/{bundle}.{hash}.json`
+
+Namespaces (contract):
+- `coreui.*` — shared editor/product chrome
+- `{widgetName}.*` — widget-specific strings (e.g. `faq.*`)
+
+### How translations are applied
+Compiled Dieter stencils can emit:
+- `data-i18n-key="coreui.actions.save"`
+- `data-i18n-params="{'item':{'$t':'faq.item','count':1}}"` (JSON string)
+
+At runtime, Bob:
+- Resolves locale (`?locale=`, `ck_locale` cookie, then `navigator.language`, then `en`)
+- Loads `coreui` + current widget bundle
+- Replaces text content for elements with `[data-i18n-key]`
+
+Implementation:
+- Loader: `bob/lib/i18n/loader.ts`
+- DOM applier: `bob/lib/i18n/dom.ts`
 
 ---
 

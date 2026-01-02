@@ -63,21 +63,18 @@ This is what drives Bob’s standard Stage/Pod panels and provides the state sha
   "stage": {
     "background": "transparent",
     "alignment": "center",
-    "paddingLinked": true,
-    "padding": 0,
-    "paddingTop": 0,
-    "paddingRight": 0,
-    "paddingBottom": 0,
-    "paddingLeft": 0
+    "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+    "padding": {
+      "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+    }
   },
   "pod": {
     "background": "transparent",
-    "paddingLinked": true,
-    "padding": 24,
-    "paddingTop": 24,
-    "paddingRight": 24,
-    "paddingBottom": 24,
-    "paddingLeft": 24,
+    "padding": {
+      "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
+      "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
+    },
     "widthMode": "wrap",
     "contentWidth": 960,
     "radiusLinked": true,
@@ -175,16 +172,16 @@ Treat Stage/Pod layout as the **first part of layout** for every widget:
 
 If the user request is about spacing or container shape, it is almost always Stage/Pod:
 
-- “More breathing room around the widget” → increase **stage.padding**
-- “More space inside the widget card” → increase **pod.padding**
+- “More breathing room around the widget” → increase **stage padding** (desktop/mobile)
+- “More space inside the widget card” → increase **pod padding** (desktop/mobile)
 - “Make it narrower / max width” → set **pod.widthMode** + **pod.contentWidth**
 - “Make corners rounder” → set **pod.radius**
 
 For every new widget design (or new template), explicitly decide these 4 values:
 
-- `stage.padding`
+- `stage.canvas.mode` + stage padding (desktop/mobile)
 - `pod.widthMode` + (if fixed) `pod.contentWidth`
-- `pod.padding`
+- pod padding (desktop/mobile)
 - `pod.radius`
 
 ---

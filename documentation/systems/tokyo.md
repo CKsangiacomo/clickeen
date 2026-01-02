@@ -26,6 +26,7 @@
 Consumers should treat Tokyo as the **software plane**:
 - Widget definitions are fetched over HTTP (even locally) using `NEXT_PUBLIC_TOKYO_URL`
 - Dieter build artifacts are served from Tokyo (`tokyo/dieter/**`)
+- i18n bundles are served from Tokyo (`tokyo/i18n/**`)
 
 ## Dieter bundling manifest (executed)
 
@@ -47,6 +48,22 @@ Shape (as implemented today):
 
 - ToolDrawer `type="..."` drives required bundles.
 - CSS classnames never add bundles (classnames are not a dependency graph).
+
+## i18n bundles (executed)
+
+Tokyo serves built localization catalogs for editor/runtime surfaces:
+- Build output path: `tokyo/i18n/{locale}/{bundle}.{hash}.json`
+- Manifest: `tokyo/i18n/manifest.json`
+
+Rules:
+- Catalog filenames are content-hashed (safe for `Cache-Control: immutable` at the CDN).
+- `manifest.json` is the indirection layer that maps `{ locale, bundle } → filename` and is intended to be short-TTL.
+- Bundles are scoped by namespace:
+  - `coreui.*` (shared product/editor chrome)
+  - `{widgetName}.*` (widget-specific terminology/labels)
+
+Local dev:
+- `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
 
 ## Links
 - Back: ../../CONTEXT.md
