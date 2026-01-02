@@ -216,6 +216,26 @@ Widgets scale cleanly when every author (human or AI) uses the same vocabulary a
 
 This taxonomy is what keeps nesting, styling, and runtime updates consistent across 100s of widgets.
 
+### Stage/Pod is the model for all other settings (panel distribution rule)
+
+Stage/Pod already proves the core product principle: **settings belong in the panel that matches what they are**, and are grouped by the surface they affect.
+
+We must use the **same system** for widget-owned surfaces:
+
+- **Surfaces** (when present):
+  - **Widget root surface** (the widget itself, inside Pod)
+  - **Array container surface** (where items are laid out: list/grid/track)
+  - **Item surface** (the repeated “piece” container)
+  - **Subpart surfaces** (optional: e.g. question text, answer text, icon, badge)
+
+- **Panel distribution** (always the same across all widgets):
+  - **Content panel**: chooses Type/mode and edits the content model (including Arrays/Items and per-item fields).
+  - **Layout panel**: spacing + arrangement (gap, padding, columns, density, alignment; container layout mode; any layout-type selectors).
+  - **Appearance panel**: colors/fills/borders/radius/shadow/dividers for each surface.
+  - **Typography panel**: font roles and text styling (titles/questions/body/captions), driven by `defaults.typography.roles`.
+
+**Why this matters:** it keeps Bob’s ToolDrawer predictable at scale. Users learn one system (Stage/Pod) and it applies everywhere; AIs can implement widgets by following the same panel and grouping template instead of inventing bespoke control layouts.
+
 ### 2) Core widget skeleton (common to all widgets)
 
 This is the shared structure every widget must implement. Everything else is widget-specific.

@@ -63,6 +63,27 @@ Widgets often have more than one array and can be nested:
   - item container: `data-role="{widget}-item"`
 - Use widget-scoped classes for styling (BEM-like), e.g. `.ck-faq__item`.
 
+---
+
+## Panel distribution (Stage/Pod is the template)
+
+Stage/Pod is the canonical example of how Clickeen exposes settings: **the same kind of setting always lives in the same panel**, and settings are grouped by **which surface** they affect.
+
+We apply this same system to all widget-owned surfaces (when present):
+
+- **Widget root surface** (inside Pod)
+- **Array container surface** (list/grid/track container that lays out items)
+- **Item surface** (the repeated “piece” container)
+- **Subpart surfaces** (optional: specific inner roles like title, body, icon, badge)
+
+**Panel rule (consistent across all widgets):**
+- **Content**: content model and arrays/items (what exists)
+- **Layout**: spacing/arrangement (gap/padding/columns/density/alignment; layout-type selectors)
+- **Appearance**: colors/fills/borders/radius/shadow/dividers per surface
+- **Typography**: role-based font settings per surface/subpart (via `defaults.typography.roles`)
+
+This is how we keep the editor cohesive across 100s of widgets: users learn Stage/Pod once, and the same panel taxonomy applies to every other surface in every widget.
+
 ### Type = miniwidget (the practical definition)
 
 Treat each Type as a **miniwidget** because it changes the widget across:
