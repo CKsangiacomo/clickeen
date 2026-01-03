@@ -137,7 +137,7 @@ Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g
 
 ---
 
-## The Three Strategic Moats
+## The Four Strategic Moats
 
 ### 1. AI-Native Architecture
 
@@ -226,6 +226,45 @@ Clickeen is architected by a designer. Our design-led culture creates a product 
 
 - **Zero-Friction Experience**: We don't just offer a free builder; we make it instant, intuitive, and delightful. Our obsession with speed and simplicity creates a "time to value" that feels effortless compared to competitors.
 - **Delight as a Weapon**: We treat motion, timing, and a "no jank" policy as core requirements, not afterthoughts. This commitment to high-fidelity craftsmanship creates a product that feels better to use.
+
+### 4. Multi-Tenant from Day 1 (The Figma Model)
+
+Clickeen is multi-tenant with no artificial caps on collaboration. This is the Figma model: make it easy for teams to adopt, and stickiness compounds.
+
+**The Model:**
+- **Unlimited viewers at every tier** (including Free) — viewers can comment, not edit
+- **Editor seats are the upgrade driver** — capped in Free/Tier 1, unlimited in Tier 2/3
+- **Widgets belong to workspaces, not individuals** — team-owned, portable
+
+**Why This Is A Moat:**
+
+| Traditional SaaS | Clickeen |
+|------------------|----------|
+| "Contact sales for team features" | Invite your team. It just works. |
+| 5-seat limit → sales call → negotiation | Self-serve collaboration from day 1 |
+| Adding team members = friction | Adding team members = stickiness |
+
+**Switching Costs Compound:**
+```
+Day 1:  Marketer creates FAQ widget
+Day 7:  Shares with PM → PM comments
+Day 14: Designer joins as editor
+Day 30: 15 people viewing/commenting, 3 editors
+Day 90: 20 widgets across the team
+
+Switching cost: MASSIVE
+```
+
+**Viral Within Organizations:**
+- Every viewer is a potential editor
+- Every editor is a potential workspace owner
+- Every workspace is a potential upgrade
+
+**AI + Multi-Tenant = Leverage:**
+- Traditional: 5-seat limit → sales call → $150K/year sales rep
+- Clickeen: Invite 50 viewers → SDR Copilot nudges → self-serve upgrade → $0.001/conversation
+
+See: `documentation/systems/multitenancy.md`
 
 ---
 
