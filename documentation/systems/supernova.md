@@ -1,19 +1,50 @@
-# Supernova — Modern Web Effects System
+# Supernova — NextGen Web Design
 
 ## What Supernova Is
 
-**Supernova** is Clickeen's premium effects layer that brings modern web technologies to widgets—technologies that exist but are inaccessible to most websites because they're too complex to implement.
+**Supernova** is Clickeen's premium visual technology layer—the cutting-edge design capabilities that make web experiences mindblowing.
 
-> "Incumbents ship widgets from 2010. Clickeen ships Supernova."
+> "Supernova is the technological expression of Clickeen's design moat."
+
+### The Core Idea
+
+**Clickeen's moat is Design.** Supernova is how we give that advantage to users.
+
+- Competitors ship functional widgets that look like 2010.
+- Clickeen ships widgets that make the web beautiful.
+- Supernova unlocks the NextGen technologies that define the modern web.
+
+### What Supernova Includes
+
+| Category | Technologies | What It Does |
+|----------|--------------|--------------|
+| **Motion** | GSAP, Framer Motion, CSS animations | Movement that delights |
+| **Effects** | Three.js, WebGL, particles, shaders | Depth, atmosphere, wow |
+| **Micro-interactions** | Lottie, spring physics, magnetic | Polish, responsiveness |
+| **Generative Images** | Flux, Midjourney, DALL-E | AI-created visuals, backgrounds, graphics |
+| **Generative Video** | Sora, Runway, Pika | AI-created video backgrounds, demos |
+| **Future Visual Tech** | WebGPU, View Transitions, spatial | Whatever comes next |
+
+**All visual. All about beauty. All under one premium umbrella.**
+
+### What Supernova Is NOT
+
+| Feature | Where It Lives | Why Not Supernova |
+|---------|----------------|-------------------|
+| Translation | Auto-translate (Tier 2+) | Localization, not design |
+| Content generation | SDR Copilot | Words, not visuals |
+| SEO/GEO | Tier 1+ | Indexability, not beauty |
+| Analytics | Separate feature | Data, not design |
 
 ### The Problem We're Solving
 
-**Modern web capabilities exist but go unused:**
+**NextGen visual technologies exist but go unused:**
 - GSAP (butter-smooth animations, ScrollTrigger, morphing)
 - Three.js / WebGL (3D, particles, shaders)
 - Lottie (designer-grade vector animations)
 - Framer Motion (physics-based micro-interactions)
 - Canvas effects (liquid, noise, particles)
+- Generative AI (Flux, Sora, Runway for images/video)
 - View Transitions API (page-level cinema)
 
 **Why 99% of websites don't use these:**
@@ -22,13 +53,14 @@
 3. Hard to maintain (libraries update, things break)
 4. Performance concerns (bundle size, Core Web Vitals)
 5. No design system integration (custom one-offs)
+6. Generative AI is expensive and hard to integrate
 
 **Clickeen's unique position:**
 - We control the embed surface (Shadow DOM = isolated, predictable)
 - We control the runtime (ship any library, lazy-loaded)
 - We control the CDN (Cloudflare Edge = performance optimized)
 - We control the editor (expose controls, no code required)
-- We control the AI (generate/customize effects dynamically)
+- We control the AI integration (generate visuals, cache on R2)
 
 ---
 
@@ -94,6 +126,36 @@ Supernova is the top-tier differentiator. Lower tiers get full functionality but
 | `drag-physics` | Cards can be thrown, bounce | Framer Motion |
 | `cursor-trail` | Custom cursor with trailing effect | Custom |
 
+### 4) Generative Images (AI-created visuals)
+
+| Effect | Description | Provider |
+|--------|-------------|----------|
+| `gen-background` | AI-generated background image | Flux, DALL-E |
+| `gen-pattern` | AI-generated repeating pattern | Midjourney, Flux |
+| `gen-icon` | AI-generated custom icons | DALL-E, Ideogram |
+| `gen-hero` | AI-generated hero imagery | Flux, Midjourney |
+| `gen-avatar` | AI-generated placeholder avatars | Flux |
+
+**How it works:**
+- User describes what they want or picks from presets
+- AI generates image → cached on R2 (zero egress)
+- Served from edge with immutable cache headers
+- Generation cost incurred once, served forever
+
+### 5) Generative Video (AI-created motion)
+
+| Effect | Description | Provider |
+|--------|-------------|----------|
+| `gen-video-bg` | AI-generated video background loop | Sora, Runway |
+| `gen-demo` | AI-generated product demo clip | Sora, Pika |
+| `gen-transition` | AI-generated transition between states | Runway |
+
+**How it works:**
+- User provides prompt or selects from templates
+- AI generates video → encoded and cached on R2/Stream
+- Served via Cloudflare Stream (adaptive bitrate)
+- Generation cost incurred once, served forever
+
 ---
 
 ## Widget Examples
@@ -146,6 +208,31 @@ tokyo/supernova/
     magnetic.js           # Magnetic hover effect
     spring.js             # Spring physics utilities
 ```
+
+### Generative Assets (R2)
+
+```
+r2://supernova-assets/
+  {workspaceId}/
+    images/
+      {assetId}.webp      # Generated images (optimized)
+    video/
+      {assetId}/
+        manifest.mpd      # DASH manifest (adaptive)
+        segments/         # Video segments
+```
+
+**Generation flow:**
+1. User requests generation (prompt or preset)
+2. Paris calls external API (Flux, Sora, etc.)
+3. Result saved to R2 with workspace-scoped key
+4. AssetId stored in widget state (`supernova.generatedAssets[]`)
+5. Venice serves from R2 with immutable cache headers
+
+**Cost model:**
+- Generation cost: $0.01-0.50 per image, $0.10-2.00 per video
+- Serving cost: $0 (R2 zero egress)
+- Generation happens once; served forever
 
 ### Manifest Schema
 
@@ -365,13 +452,24 @@ All Supernova effects automatically disable when user prefers reduced motion. Th
 
 ## The Moat
 
+### Supernova Is The Design Moat, Technologized
+
+Clickeen's strategic moat #3 is **Design-Led Culture**. Supernova is how we weaponize that moat:
+
+| Layer | What It Means |
+|-------|---------------|
+| **Free tier** | Clean, solid, well-designed (already better than competitors' paid) |
+| **Supernova tier** | Mindblowing — motion, effects, AI-generated visuals, the full arsenal |
+
 ### Why Competitors Can't Copy This
 
 | Requirement | Clickeen | Incumbents |
 |-------------|----------|------------|
+| **Design DNA** | Architect is a designer | Engineering-led, functional but dated |
 | **Embed isolation** | Shadow DOM | Legacy iframe/inline |
 | **CDN architecture** | Cloudflare Edge, zero egress | Traditional CDN, cost per byte |
-| **Lazy loading infra** | Context-aware at edge | One-size-fits-all |
+| **Generative AI infra** | R2 caching, one-time gen cost | Would need new infra |
+| **Lazy loading** | Context-aware at edge | One-size-fits-all |
 | **Tier gating** | State-level, server-enforced | Would need rewrite |
 | **Codebase** | Modern, designed for this | 15 years of tech debt |
 
@@ -380,9 +478,11 @@ All Supernova effects automatically disable when user prefers reduced motion. Th
 > "Your competitors use widgets that look like 2010.
 > You paste one line and go Supernova."
 
-> "GSAP. Three.js. WebGL. Lottie.
-> Technology that exists but nobody uses because it's too hard.
-> With Clickeen Supernova, paste one line. Go Supernova."
+> "GSAP. Three.js. Flux. Sora.
+> The technologies that define the modern web.
+> With Clickeen Supernova, paste one line. Make it beautiful."
+
+> "Supernova: The technologies that make the web beautiful."
 
 ---
 
