@@ -567,6 +567,68 @@ To achieve 100⁵ scale, you need:
 
 ---
 
+## The Supernova Moat (Modern Web Effects)
+
+Incumbent widget companies ship widgets coded in 2010. They look, feel, and behave like 2010.
+
+Meanwhile, the modern web has incredible capabilities that 99% of websites don't use:
+- GSAP (butter-smooth animations, ScrollTrigger, morphing)
+- Three.js / WebGL (3D, particles, shaders)
+- Lottie (designer-grade vector animations)
+- Framer Motion (physics-based micro-interactions)
+- View Transitions API (page-level cinema)
+
+**Why don't websites use these?**
+1. Too complex to implement (need specialized developers)
+2. Easy to break (conflicts with existing code)
+3. Hard to maintain (libraries update, things break)
+4. Performance concerns (bundle size, Core Web Vitals)
+
+**Clickeen's unique position:**
+- We control the embed surface (Shadow DOM = isolated, predictable)
+- We control the runtime (ship any library, lazy-loaded)
+- We control the CDN (Cloudflare Edge = instant, zero-cost delivery)
+- We control the editor (expose controls, no code required)
+
+**Supernova is Clickeen's premium effects layer.** Paste one line of code, get modern web experiences that would normally require a specialized frontend team.
+
+| Widget | Incumbent (2010) | Clickeen Supernova |
+|--------|------------------|-------------------|
+| **Logo Showcase** | Static grid, basic hover | Infinite smooth scroll, magnetic hover, morph on click |
+| **FAQ Accordion** | Height slides open | Spring physics, elastic icon, staggered content reveal |
+| **Countdown** | Numbers change | 3D flip with shadows, confetti burst on zero |
+| **Testimonials** | Fade carousel | Physics card stack, drag with momentum, Lottie reactions |
+
+### Why Cloudflare Makes This Viable
+
+Traditional thinking: "Large bundle = slow site"
+
+Cloudflare reality: **Bundle size is a non-issue** when:
+- Libraries are cached at 300+ global PoPs (sub-10ms latency)
+- Egress is free (R2 zero-cost delivery)
+- HTTP/3 parallelizes everything
+- Workers can serve device-appropriate variants
+- Effects load after content (no LCP impact)
+
+We can ship Three.js (150KB gzipped) to desktop users and a CSS-only fallback to mobile—decided at the edge, before the response.
+
+### Why Competitors Can't Follow
+
+| Requirement | Clickeen | Incumbents |
+|-------------|----------|------------|
+| Embed isolation | Shadow DOM | Legacy iframe/inline |
+| CDN architecture | Cloudflare Edge | Traditional CDN (cost per byte) |
+| Lazy loading infra | Context-aware at edge | One-size-fits-all |
+| Codebase | Modern, designed for this | 15 years of tech debt |
+
+### The Pitch
+
+> "Your competitors use widgets that look like 2010. You paste one line and go **Supernova**."
+
+See: `documentation/systems/supernova.md` for full architecture.
+
+---
+
 ## Uncharted Territory: What This Actually Enables
 
 If the system works, the implications go far beyond "a better widget company." This is speculative, but worth documenting.
