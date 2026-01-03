@@ -867,16 +867,16 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 
 | Block | Content from markdown | Images |
 |-------|----------------------|--------|
-| `HeroWidget` | `## Headline`, `## Subheadline` | `assets/hero.png` |
+| `widget-landing/hero` | `## Headline`, `## Subheadline` | `assets/hero.png` |
 | `PlatformStrip` | — | `tokyo/assets/platforms/*.svg` |
-| `StepsProcess` | — | (hardcoded 3 icons) |
+| `widget-landing/steps` | — | (hardcoded 3 icons) |
 | `UseCaseGrid` | — | (crawls `hubs/*.md` + `spokes/*.md`) |
 | `TemplateGallery` | `## Templates` | `assets/templates/*.png` |
-| `FeatureGrid` | `## Features` | — |
-| `StatsStrip` | `## Stats` | — |
-| `FaqSection` | `## Meta FAQ` | — |
+| `widget-landing/features` | `## Features` | — |
+| `widget-landing/stats` | `## Stats` | — |
+| `widget-landing/meta-faq` | `## Meta FAQ` | — |
 | `ComparisonStrip` | — | (crawls `comparisons/*.md`) |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 | `Minibob` | — | (embed) |
 
 ### Hub page (`hubs/*.md`)
@@ -888,7 +888,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `PainPoints` | `## Pain points` | — |
 | `PlatformCards` | `## Platforms` | `tokyo/assets/platforms/*.svg` |
 | `Minibob` | `## Starter questions` | — |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Spoke page (`spokes/*.md`)
 
@@ -901,7 +901,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `Examples` | `## Examples` | `assets/{spoke}/*.png` |
 | `Minibob` | `## Starter questions` | — |
 | `RelatedLinks` | — | (crawls sibling spokes) |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Comparison page (`comparisons/*.md`)
 
@@ -912,7 +912,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `ComparisonTable` | `## Comparison table` | — |
 | `Advantages` | `## Our advantages` | — |
 | `Minibob` | — | — |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Templates page (`templates.md`)
 
@@ -921,7 +921,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `Breadcrumb` | — | — |
 | `HeroTemplates` | `## Headline`, `## Subheadline` | — |
 | `TemplateGrid` | `## Templates` | `{{instance:templates/*.json}}` |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Examples page (`examples.md`)
 
@@ -930,7 +930,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `Breadcrumb` | — | — |
 | `HeroExamples` | `## Headline`, `## Subheadline` | — |
 | `ExampleGrid` | `## Examples` | `{{instance:examples/*.json}}` (localized) |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Features page (`features.md`)
 
@@ -940,7 +940,7 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `HeroFeatures` | `## Headline` | — |
 | `FeatureCards` | `## Features` (nested `###`) | — |
 | `ComparisonTable` | `## Comparison` | — |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Pricing page (`pricing.md`)
 
@@ -949,13 +949,13 @@ Each page type is composed of specific blocks. Builder parses markdown sections 
 | `Breadcrumb` | — | — |
 | `HeroPricing` | `## Headline`, `## Subheadline` | — |
 | `PricingCards` | `## Plans` (nested `###`) | — |
-| `FaqSection` | `## FAQ` | — |
-| `CtaBlock` | `## CTA` | — |
+| `widget-landing/meta-faq` | `## FAQ` | — |
+| `widget-landing/cta` | `## CTA` | — |
 
 ### Builder logic
 
 ```javascript
-// scripts/prague-build.js
+// scripts/prague-build.mjs
 
 for (const file of crawl('tokyo/widgets/*/pages/**/*.md')) {
   
@@ -1329,26 +1329,19 @@ prague/
           index.astro
           [slug].astro
     
-    blocks/                   # "Blocks" not "components" (avoid Dieter confusion)
-      HeroWidget.astro        # Widget landing hero with live preview
-      HeroSpoke.astro         # Platform/use-case specific hero
-      PlatformStrip.astro     # Logo grid of supported platforms
-      StepsProcess.astro      # 3-step embed process
-      UseCaseGrid.astro       # Cards linking to hubs/spokes
-      TemplateGallery.astro   # Template preview cards
-      FeatureGrid.astro       # Checkmark feature list
-      StatsStrip.astro        # "10,000+ created" numbers
-      FaqSection.astro        # Meta FAQ about the widget
-      ComparisonStrip.astro   # "Why Clickeen vs X?"
-      ComparisonTable.astro   # Side-by-side feature table
-      CtaBlock.astro          # Final conversion CTA
-      InstallSteps.astro      # Platform-specific install guide
-      RelatedLinks.astro      # Links to sibling spokes
-      Breadcrumb.astro        # Navigation breadcrumb
-      Minibob.astro           # Island — loads embed (only JS)
-      Footer.astro            # Site footer
-      Nav.astro               # Site navigation
-      LanguageSelector.astro  # Locale picker
+    blocks/                    # Prague "sections" (not Dieter components)
+      site/
+        nav.astro              # Site navigation
+        footer.astro           # Site footer
+      widget-landing/
+        hero.astro             # Widget landing hero + preview slot
+        stats.astro            # "10,000+ created" numbers
+        steps.astro            # 3-step embed process
+        features.astro         # Feature cards/grid
+        meta-faq.astro         # Meta FAQ about the widget (SSR <details>)
+        cta.astro              # Final conversion CTA
+      playground/
+        carousel.astro         # "We won't die" overflow test
     
     lib/
       markdown.ts            # Parse markdown → sections
@@ -1362,6 +1355,16 @@ prague/
     favicon.ico
     # Static assets
 ```
+
+### Layout system (core)
+
+Prague uses a **flex-first** layout utility layer with a single breakpoint (desktop/mobile).
+See: `documentation/systems/prague-layout.md`.
+
+### Block catalog (core)
+
+Prague pages are composed from reusable blocks with strict prop contracts.
+See: `documentation/systems/prague-blocks.md`.
 
 ### Block design rules
 

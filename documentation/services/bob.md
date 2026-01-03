@@ -213,9 +213,10 @@ This is the foundation for both strict manual editing and future Copilot editing
 ## Preview (Workspace)
 
 `bob/components/Workspace.tsx`:
-- Loads the widget runtime iframe at `compiled.assets.htmlUrl`.
+- Loads the widget runtime iframe at `compiled.assets.htmlUrl` (default) or `/bob/preview-shadow?publicId=...` when `instanceData.seoGeo.enabled === true` (Shadow DOM preview path).
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
+- Supports **workspace modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
 
 The iframe is sandboxed (`allow-scripts allow-same-origin`).
 
