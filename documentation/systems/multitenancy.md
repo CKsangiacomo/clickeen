@@ -8,17 +8,52 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 
 ## The Model
 
-| Tier | Viewers | Editors/Seats | Widgets | Content Caps |
-|------|---------|---------------|---------|--------------|
-| **Free** | ∞ | Limited (e.g., 1-2) | Limited | Limited |
-| **Tier 1** | ∞ | Capped (e.g., 5) | More | Higher |
-| **Tier 2** | ∞ | ∞ | ∞ | ∞ |
-| **Tier 3** | ∞ | ∞ | ∞ | ∞ |
+| Tier | Viewers | Editors | Widget Types | Instances | Content | Features |
+|------|---------|---------|--------------|-----------|---------|----------|
+| **Free** | ∞ | 1 | 1 | 1 | Limited | Limited |
+| **Tier 1** | ∞ | 3-5 | All | 5-10 | Higher caps | + SEO/GEO |
+| **Tier 2** | ∞ | ∞ | All | ∞ | ∞ | + Auto-translate |
+| **Tier 3** | ∞ | ∞ | All | ∞ | ∞ | + Supernova |
+
+### Tier Details
+
+**Free:**
+- 1 editor (solo use)
+- 1 widget type (e.g., only FAQ)
+- 1 instance (can't embed on multiple pages)
+- Limited content (e.g., max 4 FAQs per section, max 2 sections)
+- Limited features (no SEO/GEO, no auto-translate)
+- No Supernova
+- "Made with Clickeen" branding
+
+**Tier 1:**
+- 3-5 editors
+- All widget types
+- 5-10 instances
+- Higher content caps (e.g., 10 FAQs per section)
+- SEO/GEO enabled
+- No auto-translate, no Supernova
+- Branding optional
+
+**Tier 2:**
+- Unlimited editors
+- All widget types
+- Unlimited instances
+- Unlimited content
+- All features including auto-translate (up to 10 locales)
+- No Supernova
+- No branding
+
+**Tier 3:**
+- Everything in Tier 2
+- Unlimited auto-translate locales
+- Supernova effects enabled
+- Priority support
 
 **Key rules:**
 - **Viewers are always unlimited** at every tier (including Free)
 - **Viewers can comment** (feedback loop, collaboration without editing)
-- **Editor seats are the upgrade driver** for Free → Tier 1 → Tier 2
+- **Upgrade drivers:** instances → Tier 1, team size → Tier 2, effects → Tier 3
 - **No caps on collaboration** once you hit Tier 2
 
 ---
@@ -141,18 +176,27 @@ type Comment = {
 
 ---
 
-## Tier Gating (Seats)
+## Tier Gating (Full Matrix)
 
-| Tier | Max Editors | Max Viewers |
-|------|-------------|-------------|
-| **Free** | 1-2 | ∞ |
-| **Tier 1** | 5 | ∞ |
-| **Tier 2** | ∞ | ∞ |
-| **Tier 3** | ∞ | ∞ |
+| Capability | Free | Tier 1 | Tier 2 | Tier 3 |
+|------------|------|--------|--------|--------|
+| **Viewers** | ∞ | ∞ | ∞ | ∞ |
+| **Editors** | 1 | 3-5 | ∞ | ∞ |
+| **Widget types** | 1 | All | All | All |
+| **Instances** | 1 | 5-10 | ∞ | ∞ |
+| **Content** | Limited | Higher | ∞ | ∞ |
+| **SEO/GEO** | ❌ | ✅ | ✅ | ✅ |
+| **Auto-translate** | ❌ | ❌ | ✅ (10 locales) | ✅ (∞) |
+| **Supernova** | ❌ | ❌ | ❌ | ✅ |
+| **Branding** | Required | Optional | None | None |
 
 **Upgrade triggers:**
-- "Invite as editor" blocked when at seat limit
-- Message: *"You've reached your editor limit. Upgrade to add more."*
+- "I need another widget type" → Tier 1
+- "I need more instances" → Tier 1
+- "I want SEO/GEO" → Tier 1
+- "Add another editor" blocked at seat limit → Tier 2
+- "I want auto-translate" → Tier 2
+- "I want Supernova effects" → Tier 3
 - Viewers are never blocked
 
 ---
