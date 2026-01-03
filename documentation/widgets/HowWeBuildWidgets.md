@@ -24,10 +24,15 @@ These exist for **every** widget and should be treated as fixed infrastructure:
   - Role contract: `family`, `sizePreset`, `sizeCustom`, `fontStyle`, `weight`, `color`
 - **Branding** (backlink)
   - Runtime: handled by `tokyo/widgets/shared/branding.js` (auto-injects the badge + listens to `ck:state-update`; driven by `state.behavior.showBacklink`)
+- **Auto-translate** (paid feature, opt-in per widget)
+  - State: `state.behavior.autoTranslate`, `state.behavior.supportedLocales[]`, `state.behavior.fallbackLocale`
+  - Runtime: Venice detects visitor locale (`cf-ipcountry` → `Accept-Language` → fallback) → fetches localized content from D1 cache
+  - Editor UI: Toggle + locale picker in Behavior section (grayed out for free users)
+  - Plan gating: Free = disabled, Pro = up to 10 locales, Business = unlimited
 - **Preview protocol** (Bob → iframe)
   - Message: `{ type: 'ck:state-update', widgetname, state }`
 
-Widgets use these platform-provided “globals” as-is. They are the shared wheel.
+Widgets use these platform-provided "globals" as-is. They are the shared wheel.
 
 ### 0) Stage/Pod block (canonical, never changes)
 

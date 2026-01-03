@@ -146,6 +146,58 @@ Default strategy:
 
 See: `documentation/systems/seo-geo.md`
 
+### Auto-translate by visitor region (paid feature)
+
+Widgets can automatically translate content based on visitor's geographic location. This is a **per-widget opt-in setting** available only on **Pro/Business plans**.
+
+**How it works:**
+
+1. User creates widget with content in one language (source)
+2. User enables `behavior.autoTranslate` and selects `supportedLocales`
+3. Background job translates content to all supported locales (cached in D1)
+4. At runtime, Venice detects visitor locale (Cloudflare `cf-ipcountry` → `Accept-Language` → fallback)
+5. Widget renders in visitor's locale
+
+**Widget state:**
+
+```json
+{
+  "behavior": {
+    "autoTranslate": false,        // default: off
+    "supportedLocales": [],        // e.g. ["en", "de", "es", "ja"]
+    "fallbackLocale": "en"
+  }
+}
+```
+
+**Plan gating:**
+
+| Plan | Auto-translate |
+|------|----------------|
+| Free (Minibob) | ❌ Disabled |
+| Free (Bob) | ❌ Disabled, "Upgrade to Pro" |
+| Pro | ✓ Up to 10 locales |
+| Business | ✓ Unlimited locales |
+
+**Runtime flow (Venice):**
+
+```javascript
+// 1. Detect visitor locale
+const country = request.headers.get('cf-ipcountry'); // "DE", "JP", etc.
+const acceptLang = request.headers.get('accept-language');
+const locale = resolveLocale(country, acceptLang, widget.supportedLocales, widget.fallbackLocale);
+
+// 2. Fetch localized content from D1 cache
+const content = await d1.get(`${widgetId}:${locale}:content`);
+
+// 3. Render with localized content
+render(widget, content);
+```
+
+**Why this is a moat:**
+- Competitors: One widget = one language (N widgets × N locales = N² work)
+- Clickeen: One widget = all languages (widget state is JSON → translates automatically)
+
 ---
 
 ## System responsibilities
