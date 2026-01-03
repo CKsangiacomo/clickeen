@@ -1,0 +1,65 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import Nav from '../../../../blocks/site/nav.astro';
+import Footer from '../../../../blocks/site/footer.astro';
+import Minibob from '../../../../blocks/site/minibob.astro';
+import Hero from '../../../../blocks/widget-landing/hero.astro';
+import Stats from '../../../../blocks/widget-landing/stats.astro';
+import Steps from '../../../../blocks/widget-landing/steps.astro';
+import Features from '../../../../blocks/widget-landing/features.astro';
+import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
+import Cta from '../../../../blocks/widget-landing/cta.astro';
+import { loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
+
+const { locale, widget } = Astro.params;
+
+export function getStaticPaths() {
+  return [{ params: { locale: 'en', widget: 'faq' } }];
+}
+
+const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
+if (!md) {
+  return new Response('Not found', { status: 404 });
+}
+
+const sections = parseMarkdownSections(md);
+const headline = sections.get('headline') ?? `${widget} widget`;
+const subheadline = sections.get('subheadline') ?? '';
+
+const stats = parsePipeBullets(sections.get('stats') ?? '').map(([value, label]) => ({ value, label })).filter((s) => s.value && s.label);
+const steps = parsePipeBullets(sections.get('steps') ?? '').map(([title, body]) => ({ title, body })).filter((s) => s.title && s.body);
+const features = parsePipeBullets(sections.get('features') ?? '').map(([title, body]) => ({ title, body })).filter((s) => s.title && s.body);
+const metaFaq = parsePipeBullets(sections.get('meta faq') ?? '').map(([question, answer]) => ({ question, answer })).filter((i) => i.question && i.answer);
+
+const ctaLines = (sections.get('cta') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+const ctaHeadline = ctaLines[0] ?? `Create your ${widget} widget`;
+const ctaSubheadline = ctaLines[1] ?? 'Start free. Publish when you’re ready.';
+---
+
+<Base title={`${headline} — Clickeen`} locale={locale}>
+  <main>
+    <Nav
+      title="Clickeen"
+      homeHref={`/${locale}/`}
+      items={[
+        { label: 'Widgets', href: `/${locale}/widgets/${widget}` },
+        { label: 'Templates', href: `/${locale}/widgets/${widget}/templates` },
+        { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing` },
+      ]}
+      cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
+    />
+    <Hero headline={headline} subheadline={subheadline} />
+    {stats.length ? <Stats stats={stats} /> : null}
+    {steps.length ? <Steps steps={steps} /> : null}
+    {features.length ? <Features items={features} /> : null}
+    {metaFaq.length ? <MetaFaq items={metaFaq} /> : null}
+    <Minibob widget={widget} locale={locale} />
+    <Cta
+      headline={ctaHeadline}
+      subheadline={ctaSubheadline}
+      primaryLabel="Create free"
+      primaryHref={`/${locale}/create`}
+    />
+    <Footer locale={locale} />
+  </main>
+</Base>

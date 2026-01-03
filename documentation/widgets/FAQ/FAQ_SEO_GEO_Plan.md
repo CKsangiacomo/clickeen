@@ -7,7 +7,7 @@ This plan turns the FAQ widget into a moat:
 This doc is the committed version of the working plan (the `CurrentlyExecuting/` folder is gitignored).
 
 See also:
-- Cross-cutting architecture: `documentation/systems/seo-geo.md`
+- Cross-cutting architecture: `documentation/capabilities/seo-geo.md`
 - Widget architecture: `documentation/widgets/WidgetArchitecture.md`
 
 ---

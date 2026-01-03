@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { applyI18nToDom } from '../lib/i18n/dom';
 
 declare global {
   interface Window {
@@ -110,6 +112,7 @@ type TdMenuContentProps = {
     styles: string[];
     scripts: string[];
   };
+  header?: ReactNode;
 };
 
 const GROUP_LABELS: Record<string, string> = {
@@ -563,6 +566,7 @@ export function TdMenuContent({
   undoLastOps,
   dieterAssets,
   lastUpdate,
+  header,
 }: TdMenuContentProps) {
   const session = useWidgetSession();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -624,6 +628,12 @@ export function TdMenuContent({
       .then(() => {
         if (container) {
           runHydrators(container);
+          applyI18nToDom(container, session.compiled?.widgetname ?? null).catch((err) => {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[TdMenuContent] i18n apply failed', err);
+            }
+          });
           showIfEntriesRef.current = buildShowIfEntries(container);
           setRenderKey((n) => n + 1);
         }
@@ -634,7 +644,7 @@ export function TdMenuContent({
           console.error('[TdMenuContent] Failed to load Dieter assets', err);
         }
       });
-  }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts]);
+  }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts, session.compiled?.widgetname]);
 
   // Bind controls: render values from instanceData, emit strict ops, honor showIf
   useEffect(() => {
@@ -918,6 +928,7 @@ export function TdMenuContent({
   return (
     <div className="tdmenucontent">
       <div className="heading-3">{panelId}</div>
+      {header}
       <div className="tdmenucontent__fields" ref={containerRef} />
     </div>
   );

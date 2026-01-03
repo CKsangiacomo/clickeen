@@ -45,6 +45,23 @@ function normalizeJsonHtmlAttr(raw: string): string {
   }
 }
 
+function normalizeJsonDataAttr(raw: string): string {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return '';
+
+  // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
+  const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
+
+  try {
+    const parsed = JSON.parse(decodedTwice) as unknown;
+    // This string is injected into HTML attribute context (e.g. data-i18n-params="..."),
+    // so it must be entity-encoded to avoid breaking quotes.
+    return encodeHtmlEntities(JSON.stringify(parsed));
+  } catch {
+    return encodeHtmlEntities(decodedTwice);
+  }
+}
+
 function parseBooleanAttr(value: string | undefined): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
@@ -207,6 +224,19 @@ export async function buildContext(
   const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
   const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
   const defaultItem = normalizeJsonHtmlAttr(defaultItemRaw);
+  const labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
+  const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
+  const labelParams = normalizeJsonDataAttr(labelParamsRaw);
+  const addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
+  const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
+  const addLabelParams = normalizeJsonDataAttr(addLabelParamsRaw);
+  const reorderLabelKey =
+    attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
+  const reorderLabelParamsRaw =
+    attrs.reorderLabelParams || attrs['reorder-label-params'] || (merged.reorderLabelParams as string) || '';
+  const reorderLabelParams = normalizeJsonDataAttr(reorderLabelParamsRaw);
+  const reorderTitleKey =
+    attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -257,6 +287,8 @@ export async function buildContext(
 
   Object.assign(merged, {
     label,
+    labelKey,
+    labelParams,
     placeholder,
     value,
     path: pathAttr,
@@ -273,6 +305,8 @@ export async function buildContext(
     optionsRaw,
     objectType,
     addLabel: attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item',
+    addLabelKey,
+    addLabelParams,
     labelPath: attrs.labelPath || (merged.labelPath as string) || '',
     labelInputLabel: attrs.labelInputLabel || (merged.labelInputLabel as string) || label || 'Title',
     labelPlaceholder: attrs.labelPlaceholder || (merged.labelPlaceholder as string) || '',
@@ -280,7 +314,10 @@ export async function buildContext(
     toggleLabel: attrs.toggleLabel || (merged.toggleLabel as string) || '',
     togglePath: attrs.togglePath || (merged.togglePath as string) || '',
     reorderLabel,
+    reorderLabelKey,
+    reorderLabelParams,
     reorderTitle,
+    reorderTitleKey,
     reorderLabelPath,
     reorderMode,
     reorderThreshold,

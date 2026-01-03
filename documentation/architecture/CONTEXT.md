@@ -7,8 +7,8 @@ This is the technical reference for working in the Clickeen codebase. For strate
 **Debugging order (when something is unclear):**
 1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
 2. Deployed Cloudflare config — environment variables/bindings can differ by stage
-3. `documentation/systems/` + `documentation/widgets/` — best-effort guides (may drift)
-4. `documentation/clickeen-platform-architecture.md` + this file — concepts and glossary
+3. `documentation/services/` + `documentation/widgets/` — best-effort guides (may drift)
+4. `documentation/architecture/Overview.md` + this file — concepts and glossary
 
 Docs are not “single source of truth”. If docs and code disagree, prefer code/schema and update the docs.
 

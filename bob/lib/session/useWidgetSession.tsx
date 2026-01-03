@@ -27,12 +27,14 @@ type SessionError =
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
+  host: 'canvas' | 'column' | 'banner' | 'floating';
 };
 
 type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   isDirty: boolean;
+  isMinibob: boolean;
   preview: PreviewSettings;
   selectedPath: string | null;
   lastUpdate: UpdateMeta | null;
@@ -58,13 +60,19 @@ type WidgetBootstrapMessage = {
 const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
+  host: 'canvas',
 };
 
 function useWidgetSessionInternal() {
+  const isMinibob =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('minibob') === 'true';
+
   const [state, setState] = useState<SessionState>(() => ({
     compiled: null,
     instanceData: {},
     isDirty: false,
+    isMinibob,
     preview: DEFAULT_PREVIEW,
     selectedPath: null,
     lastUpdate: null,
@@ -84,6 +92,23 @@ function useWidgetSessionInternal() {
         };
         setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
         return result;
+      }
+
+      if (isMinibob) {
+        const blockedIndex = ops.findIndex((op) => {
+          if (!op || typeof op !== 'object') return false;
+          if ((op as any).op !== 'set') return false;
+          if ((op as any).path !== 'seoGeo.enabled') return false;
+          return (op as any).value === true;
+        });
+        if (blockedIndex >= 0) {
+          const result: ApplyWidgetOpsResult = {
+            ok: false,
+            errors: [{ opIndex: blockedIndex, path: 'seoGeo.enabled', message: 'SEO/GEO optimization cannot be enabled in Minibob' }],
+          };
+          setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+          return result;
+        }
       }
 
       const applied = applyWidgetOps({
@@ -112,7 +137,7 @@ function useWidgetSessionInternal() {
 
       return applied;
     },
-    [state.compiled, state.instanceData]
+    [state.compiled, state.instanceData, isMinibob]
   );
 
   const undoLastOps = useCallback(() => {
@@ -163,6 +188,12 @@ function useWidgetSessionInternal() {
           ? structuredClone(defaults)
           : structuredClone(incoming);
 
+      if (isMinibob) {
+        const asAny = resolved as any;
+        if (!asAny.seoGeo || typeof asAny.seoGeo !== 'object') asAny.seoGeo = {};
+        asAny.seoGeo.enabled = false;
+      }
+
       setState((prev) => ({
         ...prev,
         compiled,
@@ -197,7 +228,7 @@ function useWidgetSessionInternal() {
         meta: null,
       }));
     }
-  }, []);
+  }, [isMinibob]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
     const trimmed = key.trim();
@@ -258,6 +289,7 @@ function useWidgetSessionInternal() {
       compiled: state.compiled,
       instanceData: state.instanceData,
       isDirty: state.isDirty,
+      isMinibob: state.isMinibob,
       preview: state.preview,
       selectedPath: state.selectedPath,
       lastUpdate: state.lastUpdate,

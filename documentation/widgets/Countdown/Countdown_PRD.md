@@ -89,5 +89,5 @@ See `CurrentlyExecuting/Countdown_Widget_Refactor_Plan.md` for detailed P0/P1 it
 
 ---
 Links:
-- `documentation/CONTEXT.md` (canonical concepts)
+- `documentation/architecture/CONTEXT.md` (canonical concepts)
 - `documentation/widgets/WidgetArchitecture.md` (widget system)

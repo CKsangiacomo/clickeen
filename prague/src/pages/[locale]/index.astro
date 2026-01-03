@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const { locale } = Astro.params;
+
+export function getStaticPaths() {
+  return [{ params: { locale: 'en' } }];
+}
+---
+
+<Base title="Clickeen" locale={locale}>
+  <main>
+    <section class="ck-canvas">
+      <div class="ck-inline ck-stack">
+        <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">Clickeen</h1>
+        <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
+          Prague stub. Next: widget gallery.
+        </p>
+      </div>
+    </section>
+  </main>
+</Base>

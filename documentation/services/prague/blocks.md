@@ -107,7 +107,7 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 
 ### 2.6 Meta FAQ (about the widget)
 
-`MetaFaq`
+`widget-landing/meta-faq`
 - Props: `{ items: { question: string, answer: string }[] }`
 - Implementation: semantic `<details>` + `<summary>` (SSR only)
 
@@ -116,7 +116,7 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 `widget-landing/cta`
 - Props: `{ headline: string, subheadline?: string, primaryLabel: string, primaryHref: string }`
 
-### 2.8 Minibob island (later)
+### 2.8 Minibob island
 
 `site/minibob`
 - Island: the only Prague section that ships JS.
@@ -136,7 +136,7 @@ Page templates are just a list of blocks in a fixed order. Example (widget landi
 - widget-landing/features
 - widget-landing/meta-faq
 - widget-landing/cta
-- Minibob (later)
+- site/minibob
 
 ## 4) Content mapping (Tokyo → Prague)
 

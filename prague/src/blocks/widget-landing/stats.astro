@@ -1,0 +1,22 @@
+---
+type Props = {
+  title?: string;
+  stats: { value: string; label: string }[];
+};
+
+const { title, stats } = Astro.props;
+---
+
+<section class="ck-canvas" style="padding-block: var(--space-8);">
+  <div class="ck-inline">
+    {title ? <div class="heading-3" style="margin-bottom: var(--space-5);">{title}</div> : null}
+    <div class="ck-row" style="justify-content: space-between; gap: var(--space-6);">
+      {stats.map((s) => (
+        <div class="ck-stack" style="gap: var(--space-1);">
+          <div class="heading-3">{s.value}</div>
+          <div class="caption">{s.label}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

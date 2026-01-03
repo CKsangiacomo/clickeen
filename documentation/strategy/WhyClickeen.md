@@ -3,8 +3,8 @@
 STATUS: INFORMATIVE — STRATEGY & VISION
 This page explains what we're building and why. It is not a spec.
 For technical implementation, see:
-- `documentation/CONTEXT.md` — Architecture, systems, glossary, implementation status
-- `documentation/systems/` — System PRDs (Venice, Paris, Bob, etc.)
+- `documentation/architecture/CONTEXT.md` — Architecture, glossary, implementation status
+- `documentation/services/` — Service PRDs (Venice, Paris, Bob, etc.)
 - `documentation/widgets/` — Widget PRDs
 
 ---
@@ -47,7 +47,7 @@ Clickeen is not a company that "uses AI." It's a **company designed to be run by
 
 **The San Francisco system is not a feature—it's the operating system for the company's workforce.**
 
-See: `documentation/systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
+See: `documentation/ai/overview.md`, `ai/learning.md`, `ai/infrastructure.md`
 
 ### The AI Workforce Economics (Why This Is Pure Gold)
 
@@ -267,7 +267,7 @@ Switching cost: MASSIVE
 - Traditional: 5-seat limit → sales call → $150K/year sales rep
 - Clickeen: Invite 50 viewers → SDR Copilot nudges → self-serve upgrade → $0.001/conversation
 
-See: `documentation/systems/multitenancy.md`
+See: `documentation/capabilities/multitenancy.md`
 
 ---
 
@@ -336,7 +336,7 @@ Rule of thumb: when in doubt, choose the path that delivers value faster with le
 - **Phase 3 (Future):** Clickeen Landing Pages
 - **Phase 4 (Future):** Clickeen Creatives (Ads/Social)
 
-Scope: implement Phase 1 only unless `documentation/CONTEXT.md` explicitly expands scope.
+Scope: implement Phase 1 only unless `documentation/architecture/CONTEXT.md` explicitly expands scope.
 
 **Phase-1 Success Metrics:**
 - 10,000+ free users with embedded widgets
@@ -667,7 +667,7 @@ We can ship Three.js (150KB gzipped) to desktop users and a CSS-only fallback to
 
 > "Your competitors use widgets that look like 2010. You paste one line and go **Supernova**."
 
-See: `documentation/systems/supernova.md` for full architecture.
+See: `documentation/capabilities/supernova.md` for full architecture.
 
 ---
 

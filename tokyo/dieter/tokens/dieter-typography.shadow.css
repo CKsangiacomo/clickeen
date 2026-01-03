@@ -1,0 +1,106 @@
+:host {
+  /* Base font family */
+  --font-ui: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Base sizes */
+  --fs-body: 1rem;        /* 16px default body */
+  --fs-ui: 0.9375rem;     /* 15px default UI */
+  --lh-body: 1.5;
+
+  /* Size scale */
+  --fs-10: 0.625rem;      /* 10px (labels only) */
+  --fs-11: 0.6875rem;     /* 11px */
+  --fs-12: 0.75rem;       /* 12px */
+  --fs-13: 0.8125rem;     /* 13px */
+  --fs-14: 0.875rem;      /* 14px */
+  --fs-15: 0.9375rem;     /* 15px */
+  --fs-16: 1rem;          /* 16px */
+  --fs-18: 1.125rem;      /* 18px */
+  --fs-20: 1.25rem;       /* 20px */
+  --fs-24: 1.5rem;        /* 24px */
+  --fs-32: 2rem;          /* 32px */
+  --fs-fluid-title: clamp(1.5rem, 1.1rem + 1.6vw, 3rem);
+
+  /* Line heights */
+  --lh-tight: 1.15;
+  --lh-normal: 1.4;
+  --lh-loose: 1.5;
+  --lh-body-ui: 1.45;
+}
+
+/* Body text */
+.body-xxs { font: 400 var(--fs-10)/var(--lh-tight) var(--font-ui); }
+.body-xs { font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui); }
+.body-s { font: 400 var(--fs-13)/var(--lh-body-ui) var(--font-ui); }
+.body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
+.body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
+.body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+
+p, .body, .body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
+.body-small, .body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }
+.body-large, .body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+
+/* Headings */
+h1, .heading-1 {
+  font: 700 var(--fs-32)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+h2, .heading-2 {
+  font: 600 var(--fs-24)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+h3, .heading-3 {
+  font: 600 var(--fs-20)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+h4, .heading-4 {
+  font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.005em;
+  color: inherit;
+}
+
+h5, .heading-5 {
+  font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.005em;
+  color: inherit;
+}
+
+h6, .heading-6 {
+  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.005em;
+  color: inherit;
+}
+
+/* UI Labels & Captions */
+.label-xxs { font: 500 var(--fs-10)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-xs { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-s { font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-m { font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-l { font: 500 var(--fs-15)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-xl { font: 500 var(--fs-16)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+.label-xxl { font: 500 var(--fs-18)/var(--lh-tight) var(--font-ui); letter-spacing: -0.02em; color: var(--color-system-black); }
+
+.caption { font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui); color: color-mix(in oklab, var(--color-system-black), transparent 55%); }
+.caption-small { font: 500 var(--fs-10)/1.1 var(--font-ui); color: color-mix(in oklab, var(--color-system-black), transparent 55%); }
+
+/* Overline/Eyebrow */
+.overline {
+  font: 700 var(--fs-10)/1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-system-gray);
+}
+
+.overline-small {
+  font: 600 var(--fs-10)/1.1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
+}

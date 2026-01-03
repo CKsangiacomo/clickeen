@@ -1,7 +1,7 @@
 /* Dieter Toggle — token-first CSS-only switch (checkbox-based)
    Contract:
    - Root: .diet-toggle (inline-flex container)
-   - Size: data-size="sm|md|lg" → 20/24/28px rails via control tokens
+   - Size: data-size="sm|md|lg" → 16/20/24px rails (independent of row height)
    - Label: .diet-toggle__label (leading text, may be visually hidden by .sr-only)
    - Input: .diet-toggle__input.sr-only[type=checkbox][role=switch]
    - Switch (visible control): .diet-toggle__switch[for]
@@ -34,17 +34,17 @@
 
 /* Size mapping → derive rail height and local gaps */
 .diet-toggle[data-size="sm"] {
-  --tog-h: var(--control-size-sm, 1.25rem);
+  --tog-h: var(--control-size-xs, 1rem);
   --tog-gap: var(--control-inline-gap-xs, 0.25rem);
   min-block-size: var(--control-size-sm, 1.25rem);
 }
 .diet-toggle[data-size="md"] {
-  --tog-h: var(--control-size-md, 1.5rem);
+  --tog-h: var(--control-size-sm, 1.25rem);
   --tog-gap: var(--control-inline-gap-sm, 0.375rem);
   min-block-size: var(--control-size-md, 1.5rem);
 }
 .diet-toggle[data-size="lg"] {
-  --tog-h: var(--control-size-lg, 1.75rem);
+  --tog-h: var(--control-size-md, 1.5rem);
   --tog-gap: var(--control-inline-gap-sm, 0.375rem);
   min-block-size: var(--control-size-lg, 1.75rem);
 }

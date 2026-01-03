@@ -1,0 +1,30 @@
+---
+type Props = {
+  title: string;
+  locale?: string;
+};
+
+const { title, locale } = Astro.props;
+
+const TOKYO_URL =
+  import.meta.env.PUBLIC_TOKYO_URL ||
+  (import.meta.env.DEV ? 'http://localhost:4000' : 'https://tokyo.clickeen.com');
+const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
+---
+
+<!doctype html>
+<html lang={locale ?? 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/styles/fallback-tokens.css" />
+    <link rel="stylesheet" href={TOKENS_HREF} />
+    <link rel="stylesheet" href="/styles/layout.css" />
+    <link rel="stylesheet" href="/styles/primitives.css" />
+    <link rel="stylesheet" href="/styles/base.css" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

@@ -162,6 +162,29 @@ function copyComponentStatics(source, destination) {
   }
 }
 
+function generateShadowTokenCss(distTokensDir) {
+  if (!fs.existsSync(distTokensDir)) return;
+
+  const files = fs.readdirSync(distTokensDir).filter((name) => name.endsWith('.css'));
+
+  files.forEach((name) => {
+    if (name.endsWith('.shadow.css')) return;
+    const full = path.join(distTokensDir, name);
+    const content = fs.readFileSync(full, 'utf8');
+    if (!content.includes(':root')) return;
+    const shadow = content.replace(/:root\b/g, ':host');
+    const outName = name.replace(/\.css$/, '.shadow.css');
+    fs.writeFileSync(path.join(distTokensDir, outName), shadow);
+  });
+
+  const wrapperPath = path.join(distTokensDir, 'tokens.css');
+  if (fs.existsSync(wrapperPath)) {
+    const wrapper = fs.readFileSync(wrapperPath, 'utf8');
+    const shadowWrapper = wrapper.replace(/(\.css)(['"]?\)\s*;)/g, '.shadow.css$2');
+    fs.writeFileSync(path.join(distTokensDir, 'tokens.shadow.css'), shadowWrapper);
+  }
+}
+
 function runNodeScript(scriptRelPath) {
   const p = path.resolve(__dirname, scriptRelPath);
   const res = spawnSync(process.execPath, [p], { stdio: 'inherit' });
@@ -246,6 +269,7 @@ async function main() {
   if (fs.existsSync(tokensDirSrc)) {
     copyRecursiveSync(tokensDirSrc, path.join(dist, 'tokens'));
   }
+  generateShadowTokenCss(path.join(dist, 'tokens'));
   // Keep legacy /dieter/tokens.css working even though the actual token files live under /dieter/tokens/*.
   fs.writeFileSync(tokensDst, "@import url('./tokens/tokens.css');\n");
 

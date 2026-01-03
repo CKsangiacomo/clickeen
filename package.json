@@ -8,12 +8,14 @@
     "bob",
     "dieter",
     "paris",
+    "prague",
     "sanfrancisco",
     "venice"
   ],
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
+    "build": "pnpm build:i18n && turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
@@ -25,11 +27,13 @@
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:paris": "pnpm --filter @clickeen/paris dev",
+    "dev:prague": "pnpm --filter @clickeen/prague dev",
     "dev:sanfrancisco": "pnpm --filter @clickeen/sanfrancisco dev",
     "dev:venice": "pnpm --filter @clickeen/venice dev",
     "build:bob": "pnpm --filter @clickeen/bob build",
     "build:admin": "pnpm --filter @clickeen/devstudio build",
-    "build:dieter": "pnpm --filter @ck/dieter build"
+    "build:dieter": "pnpm --filter @ck/dieter build",
+    "build:prague": "pnpm --filter @clickeen/prague build"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

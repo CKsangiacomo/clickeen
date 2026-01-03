@@ -6,6 +6,7 @@
  * Serves:
  *   - GET /healthz        → 200 ok
  *   - GET /dieter/**      → static files from tokyo/dieter/**
+ *   - GET /i18n/**        → static files from tokyo/i18n/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
@@ -108,7 +109,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (serveStatic(req, res, '/dieter/') || serveStatic(req, res, '/widgets/')) {
+  if (serveStatic(req, res, '/dieter/') || serveStatic(req, res, '/i18n/') || serveStatic(req, res, '/widgets/')) {
     return;
   }
 

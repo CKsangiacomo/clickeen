@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "gitSha": "unknown",
+  "locales": {
+    "en": {
+      "dir": "ltr"
+    }
+  },
+  "bundles": {
+    "en": {
+      "coreui": "coreui.571a8867.json",
+      "faq": "faq.4607c587.json"
+    }
+  }
+}

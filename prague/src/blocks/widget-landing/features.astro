@@ -1,0 +1,28 @@
+---
+type Props = {
+  title?: string;
+  items: { title: string; body?: string }[];
+};
+
+const { title = 'Features', items } = Astro.props;
+---
+
+<section class="ck-canvas">
+  <div class="ck-inline ck-stack">
+    <div class="heading-3">{title}</div>
+    <div class="ck-row" style="align-items: stretch; gap: var(--space-4);">
+      {items.map((item) => (
+        <div class="ck-card" style="flex: 1 1 0; min-width: 260px;">
+          <div class="ck-stack" style="padding: var(--space-6); gap: var(--space-2);">
+            <div class="label-l">{item.title}</div>
+            {item.body ? (
+              <div class="body-s" style="color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
+                {item.body}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

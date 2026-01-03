@@ -1,0 +1,61 @@
+/* Prague UI Primitives (token-first, Dieter foundation only)
+   This file defines tiny, reusable atoms (buttons, cards, badges, media frames).
+*/
+
+.ck-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--control-radius-xl);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 84%);
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  font: 600 var(--fs-13)/1 var(--font-ui);
+  gap: var(--space-2);
+}
+
+.ck-btn--primary {
+  background: var(--color-system-black);
+  color: var(--color-system-white);
+}
+
+.ck-btn--secondary {
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  box-shadow: var(--shadow-inset-control);
+}
+
+.ck-btn--ghost {
+  background: transparent;
+  color: var(--color-system-black);
+}
+
+.ck-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  background: color-mix(in oklab, var(--color-system-white), transparent 15%);
+  font: 600 var(--fs-11)/1 var(--font-ui);
+  color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+}
+
+.ck-card {
+  border-radius: var(--control-radius-4xl);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  background: var(--color-system-white);
+  box-shadow: var(--shadow-elevated);
+}
+
+.ck-media {
+  border-radius: var(--control-radius-4xl);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  background: var(--color-system-white);
+  box-shadow: var(--shadow-elevated);
+  overflow: hidden;
+}
+

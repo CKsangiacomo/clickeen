@@ -143,39 +143,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
-  background-image:
-    linear-gradient(45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    0 10px,
-    10px -10px,
-    -10px 0px;
+  background: var(--color-system-gray-6);
   border: none;
-  border-radius: var(--control-radius-md);
   min-height: 0;
   overflow: hidden;
-}
-
-.workspace-viewport {
-  inline-size: 100%;
-  block-size: 100%;
-  min-inline-size: 0;
-  min-block-size: 0;
-}
-
-.workspace[data-device='mobile'] .workspace-viewport {
-  inline-size: min(390px, 100%);
-  block-size: min(844px, 100%);
-  border-radius: var(--control-radius-6xl);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 85%);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
-  overflow: hidden;
-  background: var(--color-system-white);
 }
 
 .workspace-iframe {
@@ -184,6 +155,73 @@ body {
   border: 0;
   background: transparent;
   display: block;
+}
+
+.workspace[data-host='canvas'][data-canvas-resize='true'] .workspace-iframe {
+  inline-size: min(var(--workspace-canvas-width, 1200px), 100%);
+  block-size: min(var(--workspace-canvas-height, 100%), 100%);
+  border-radius: var(--control-radius-xl);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  box-shadow: 0 18px 64px rgba(0, 0, 0, 0.12);
+  background: var(--color-system-gray-6-step5);
+  background-image: none;
+}
+
+.workspace[data-device='mobile'] .workspace-iframe {
+  inline-size: min(390px, 100%);
+  block-size: min(844px, 100%);
+  border-radius: var(--control-radius-6xl);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 85%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  background: var(--color-system-white);
+  background-image: none;
+}
+
+.workspace[data-device='desktop'][data-host='column'],
+.workspace[data-device='desktop'][data-host='banner'],
+.workspace[data-device='desktop'][data-host='floating'] {
+  padding: var(--space-6);
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace[data-device='desktop'][data-host='column'] {
+  justify-content: flex-start;
+}
+
+.workspace[data-device='desktop'][data-host='banner'] {
+  align-items: flex-start;
+}
+
+.workspace[data-device='desktop'][data-host='floating'] {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.workspace[data-host='column'] .workspace-iframe,
+.workspace[data-host='banner'] .workspace-iframe,
+.workspace[data-host='floating'] .workspace-iframe {
+  background: var(--color-system-white);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.workspace[data-host='column'] .workspace-iframe {
+  inline-size: min(720px, 100%);
+  block-size: min(860px, 100%);
+}
+
+.workspace[data-host='banner'] .workspace-iframe {
+  inline-size: 100%;
+  block-size: min(360px, 100%);
+}
+
+.workspace[data-host='floating'] .workspace-iframe {
+  inline-size: min(420px, 100%);
+  block-size: min(680px, 100%);
 }
 
 .workspace-overlay {

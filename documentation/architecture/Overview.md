@@ -131,7 +131,7 @@ Each release proceeds in 3 steps:
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
   - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId`, `GET /api/instances` (dev tooling), `POST /api/ai/grant`, `POST /api/ai/outcome`.
-  - Planned surfaces (not implemented here yet) are described in `documentation/systems/paris.md`.
+  - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
 
 #### Venice (Workers)
 - Planned public embed surface (third-party websites only talk to Venice).

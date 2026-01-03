@@ -1,0 +1,28 @@
+---
+type Props = {
+  title?: string;
+  plans: { name: string; price: string; bullets: string[] }[];
+};
+
+const { title = 'Pricing', plans } = Astro.props;
+---
+
+<section class="ck-canvas">
+  <div class="ck-inline ck-stack">
+    <div class="heading-3">{title}</div>
+    <div class="ck-row" style="align-items: stretch; gap: var(--space-4);">
+      {plans.map((plan) => (
+        <div class="ck-card" style="flex: 1 1 0; min-width: 260px;">
+          <div class="ck-stack" style="padding: var(--space-7); gap: var(--space-3);">
+            <div class="label-l">{plan.name}</div>
+            <div class="heading-2">{plan.price}</div>
+            <ul class="body-s" style="margin: 0; padding-left: 1.1em; color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
+              {plan.bullets.map((b) => <li>{b}</li>)}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+

@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.app-base.json",
+  "compilerOptions": {
+    "types": ["astro/client"]
+  }
+}
+

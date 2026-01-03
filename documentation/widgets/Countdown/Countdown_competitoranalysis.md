@@ -1832,7 +1832,7 @@ Vertical stack of four Dieter icon buttons:
 
 **Critical references:**
 Tokenization patterns
-- `documentation/systems/bob.md` - Preview system architecture
+- `documentation/services/bob.md` - Preview system architecture
 - `documentation/widgets/WidgetArchitecture.md` - Canonical widget + editor contracts
 - `tokyo/widgets/faq/spec.json` - Reference widget definition patterns (repeaters, clusters, strict controls)
 - `documentation/widgets/LogoShowcase/LogoShowcase.md` - Color picker, themes

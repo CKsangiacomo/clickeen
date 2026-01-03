@@ -76,8 +76,12 @@ echo "[dev-up] Building Dieter directly into tokyo/dieter"
   pnpm --filter @ck/dieter build
 )
 
-echo "[dev-up] Killing stale listeners on 3000,3001,3002,4000,5173 (if any)"
-for p in 3000 3001 3002 4000 5173; do
+echo "[dev-up] Building i18n bundles into tokyo/i18n"
+node "$ROOT_DIR/scripts/i18n/build.mjs"
+node "$ROOT_DIR/scripts/i18n/validate.mjs"
+
+echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173 (if any)"
+for p in 3000 3001 3002 3003 4000 4321 5173; do
   PIDS=$(lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null || true)
   if [ -n "$PIDS" ]; then
     echo "[dev-up] Killing $PIDS on port $p"
@@ -85,8 +89,8 @@ for p in 3000 3001 3002 4000 5173; do
   fi
 done
 
-echo "[dev-up] Cleaning Bob build artifacts (.next) to avoid stale chunk mismatches"
-rm -rf "$ROOT_DIR/bob/.next" || true
+echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
+rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
 
 # Local dev always uses the local Tokyo CDN stub.
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
@@ -137,6 +141,22 @@ fi
 
 echo "[dev-up] Bootstrapping local widget instances from Tokyo defaults (no seeds)"
 PARIS_ORIGIN="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" node "$ROOT_DIR/scripts/bootstrap-local-widgets.mjs"
+
+echo "[dev-up] Starting Venice embed runtime (3003)"
+(
+  cd "$ROOT_DIR/venice"
+  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/venice.dev.log" 2>&1 &
+  VENICE_PID=$!
+  echo "[dev-up] Venice PID: $VENICE_PID"
+)
+for i in {1..30}; do
+  if curl -sf "http://localhost:3003/dieter/tokens/tokens.css" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+if ! curl -sf "http://localhost:3003/dieter/tokens/tokens.css" >/dev/null 2>&1; then
+  echo "[dev-up] Timeout waiting for Venice @ http://localhost:3003"
+  exit 1
+fi
 
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] Starting SanFrancisco Worker (3002)"
@@ -198,6 +218,22 @@ if ! curl -sf "http://localhost:5173" >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "[dev-up] Starting Prague marketing site (4321)"
+(
+  cd "$ROOT_DIR/prague"
+  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/prague.dev.log" 2>&1 &
+  PRAGUE_PID=$!
+  echo "[dev-up] Prague PID: $PRAGUE_PID"
+)
+for i in {1..30}; do
+  if curl -sf "http://localhost:4321" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+if ! curl -sf "http://localhost:4321" >/dev/null 2>&1; then
+  echo "[dev-up] Timeout waiting for Prague @ http://localhost:4321"
+  exit 1
+fi
+
 echo "[dev-up] URLs:"
 echo "  Tokyo:    http://localhost:4000/healthz"
 echo "  Paris:     http://localhost:3001"
@@ -206,3 +242,4 @@ if [ -n "$SF_BASE_URL" ]; then
 fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
+echo "  Prague:    http://localhost:4321/en/widgets/faq"

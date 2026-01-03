@@ -32,6 +32,15 @@
     throw new Error('[FAQ] Missing [data-role="faq-list"]');
   }
 
+  const resolvedPublicId = (() => {
+    const attr = widgetRoot.getAttribute('data-ck-public-id');
+    if (typeof attr === 'string' && attr.trim()) return attr.trim();
+    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
+    const candidate = global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
+    return candidate || '';
+  })();
+  if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
+
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') {
       throw new Error(`[FAQ] ${path} must be a boolean`);
@@ -133,13 +142,21 @@
     assertObject(state.pod, 'state.pod');
     assertObject(state.typography, 'state.typography');
 
+    assertObject(state.geo, 'state.geo');
+    if (!['direct-first', 'detailed'].includes(state.geo.answerFormat)) {
+      throw new Error('[FAQ] state.geo.answerFormat must be direct-first|detailed');
+    }
+    assertBoolean(state.geo.enableDeepLinks, 'state.geo.enableDeepLinks');
+
     assertArray(state.sections, 'state.sections');
     state.sections.forEach((section, idx) => {
       assertObject(section, `state.sections[${idx}]`);
+      assertString(section.id, `state.sections[${idx}].id`);
       assertString(section.title, `state.sections[${idx}].title`);
       assertArray(section.faqs, `state.sections[${idx}].faqs`);
       section.faqs.forEach((faq, j) => {
         assertObject(faq, `state.sections[${idx}].faqs[${j}]`);
+        assertString(faq.id, `state.sections[${idx}].faqs[${j}].id`);
         assertString(faq.question, `state.sections[${idx}].faqs[${j}].question`);
         assertString(faq.answer, `state.sections[${idx}].faqs[${j}].answer`);
         assertBoolean(faq.defaultOpen, `state.sections[${idx}].faqs[${j}].defaultOpen`);
@@ -299,6 +316,7 @@
   }
 
   function renderItems(sections, behavior, displayCategoryTitles) {
+    const publicId = resolvedPublicId;
     const markup = sections
       .map((section) => {
         const header = displayCategoryTitles
@@ -311,15 +329,21 @@
           .map((item) => {
             const qText = sanitizeInlineHtml(item.question);
             const answerHtml = renderAnswerHtml(item.answer, behavior);
+            const anchorId = publicId ? `faq-q-${publicId}-${item.id}` : `faq-q-${item.id}`;
+            const answerId = publicId ? `faq-a-${publicId}-${item.id}` : `faq-a-${item.id}`;
             return `
-              <li class="ck-faq__item" data-role="faq-item">
-                <button class="ck-faq__q" data-role="faq-question" type="button" aria-expanded="false">
+              <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
+                <button class="ck-faq__q" data-role="faq-question" type="button" aria-expanded="false" aria-controls="${escapeHtml(
+                  answerId,
+                )}">
                   <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
                   <span class="ck-faq__q-icon diet-btn-ic" data-size="md" data-variant="neutral" aria-hidden="true">
                     <span class="diet-btn-ic__icon"></span>
                   </span>
                 </button>
-                <div class="ck-faq__a" data-role="faq-answer" role="region">${answerHtml}</div>
+                <div class="ck-faq__a" data-role="faq-answer" role="region" id="${escapeHtml(
+                  answerId,
+                )}">${answerHtml}</div>
               </li>
             `;
           })

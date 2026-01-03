@@ -1,0 +1,16 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import CarouselDemo from '../../../../blocks/playground/carousel.astro';
+
+const { locale } = Astro.params;
+
+export function getStaticPaths() {
+  return [{ params: { locale: 'en' } }];
+}
+---
+
+<Base title="Carousel Playground — Prague" locale={locale}>
+  <main>
+    <CarouselDemo />
+  </main>
+</Base>

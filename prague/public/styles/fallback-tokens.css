@@ -1,0 +1,40 @@
+/* Fallback Dieter tokens for Prague dev.
+   Purpose: prevent "unstyled HTML" when Tokyo tokens are unreachable.
+   Real tokens (from Tokyo) load after this and override everything here. */
+
+:root {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+
+  --color-system-black: #0b0b0d;
+  --color-system-white: #ffffff;
+  --color-system-gray-6: #f2f2f4;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 40px;
+  --space-10: 48px;
+
+  --fs-11: 11px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-fluid-title: clamp(36px, 4vw, 56px);
+
+  --lh-tight: 1.05;
+  --lh-body-ui: 1.45;
+
+  --control-radius-xl: 999px;
+  --control-radius-3xl: 18px;
+  --control-radius-4xl: 24px;
+
+  --shadow-inset-control: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-floating: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+

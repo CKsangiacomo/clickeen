@@ -1,0 +1,27 @@
+---
+type Props = {
+  title?: string;
+  steps: { title: string; body: string }[];
+};
+
+const { title = 'How it works', steps } = Astro.props;
+---
+
+<section class="ck-canvas">
+  <div class="ck-inline ck-stack">
+    <div class="heading-3">{title}</div>
+    <div class="ck-row" style="align-items: stretch; gap: var(--space-4);">
+      {steps.map((step, i) => (
+        <div class="ck-card" style="flex: 1 1 0; min-width: 240px;">
+          <div class="ck-stack" style="padding: var(--space-6); gap: var(--space-3);">
+            <div class="ck-badge">Step {i + 1}</div>
+            <div class="label-l">{step.title}</div>
+            <div class="body-s" style="color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
+              {step.body}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

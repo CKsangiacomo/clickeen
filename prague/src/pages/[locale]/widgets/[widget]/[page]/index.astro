@@ -1,0 +1,120 @@
+---
+import Base from '../../../../../layouts/Base.astro';
+import Nav from '../../../../../blocks/site/nav.astro';
+import Footer from '../../../../../blocks/site/footer.astro';
+import Minibob from '../../../../../blocks/site/minibob.astro';
+
+import Hero from '../../../../../blocks/widget-landing/hero.astro';
+import Features from '../../../../../blocks/widget-landing/features.astro';
+import Cta from '../../../../../blocks/widget-landing/cta.astro';
+import MetaFaq from '../../../../../blocks/widget-landing/meta-faq.astro';
+
+import TemplatesGrid from '../../../../../blocks/widget-templates/grid.astro';
+import ExamplesGrid from '../../../../../blocks/widget-examples/grid.astro';
+import PricingPlans from '../../../../../blocks/widget-pricing/plans.astro';
+
+import { listWidgets, listWidgetPages, loadWidgetPageMarkdown, parseMarkdownSections } from '../../../../../lib/markdown';
+
+const { locale, widget, page } = Astro.params;
+
+export async function getStaticPaths() {
+  const widgets = await listWidgets();
+  const locales = ['en'];
+  const out: { params: { locale: string; widget: string; page: string } }[] = [];
+
+  for (const w of widgets) {
+    const pages = await listWidgetPages(w);
+    for (const l of locales) {
+      for (const p of pages) out.push({ params: { locale: l, widget: w, page: p } });
+    }
+  }
+
+  return out;
+}
+
+const md = await loadWidgetPageMarkdown({ widget, page });
+if (!md) return new Response('Not found', { status: 404 });
+
+const sections = parseMarkdownSections(md);
+const headline = sections.get('headline') ?? `${widget} ${page}`;
+const subheadline = sections.get('subheadline') ?? '';
+---
+
+<Base title={`${headline} — Clickeen`} locale={locale}>
+  <main>
+    <Nav
+      title="Clickeen"
+      homeHref={`/${locale}/`}
+      items={[
+        { label: 'Overview', href: `/${locale}/widgets/${widget}` },
+        { label: 'Templates', href: `/${locale}/widgets/${widget}/templates` },
+        { label: 'Examples', href: `/${locale}/widgets/${widget}/examples` },
+        { label: 'Features', href: `/${locale}/widgets/${widget}/features` },
+        { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing` },
+      ]}
+      cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
+    />
+
+    <Hero headline={headline} subheadline={subheadline} />
+
+    {page === 'templates' ? (
+      <TemplatesGrid
+        items={[
+          { title: 'Simple accordion', body: 'Clean and compact.' },
+          { title: 'Card layout', body: 'Prominent questions with spacing.' },
+          { title: 'Minimal', body: 'Bare essentials, fast to scan.' },
+        ]}
+      />
+    ) : null}
+
+    {page === 'examples' ? (
+      <ExamplesGrid
+        items={[
+          { title: 'SaaS pricing FAQ', body: 'Direct answers, short and citeable.' },
+          { title: 'Ecommerce returns FAQ', body: 'Policy clarity + trust.' },
+          { title: 'Support FAQ', body: 'Reduces tickets with self-serve.' },
+        ]}
+      />
+    ) : null}
+
+    {page === 'features' ? (
+      <Features
+        items={[
+          { title: 'Fast embed', body: 'Edge-cached payloads, minimal runtime work.' },
+          { title: 'SEO/GEO mode', body: 'Semantic HTML + schema + deep links when enabled.' },
+          { title: 'Localization', body: 'Same page structure, localized per locale.' },
+        ]}
+      />
+    ) : null}
+
+    {page === 'pricing' ? (
+      <>
+        <PricingPlans
+          plans={[
+            { name: 'Free', price: '$0', bullets: ['Create 1 widget', 'Basic customization', 'Branding on'] },
+            { name: 'Pro', price: '$9', bullets: ['Remove branding', 'Templates', 'Analytics (basic)'] },
+            { name: 'Business', price: '$29', bullets: ['Teams', 'Advanced analytics', 'Priority support'] },
+          ]}
+        />
+        <MetaFaq
+          title="Pricing FAQ"
+          items={[
+            { question: 'Can I switch plans anytime?', answer: 'Yes — upgrade or downgrade anytime.' },
+            { question: 'Is there a free trial?', answer: 'Free is free forever. No credit card required.' },
+          ]}
+        />
+      </>
+    ) : null}
+
+    <Cta
+      headline={`Create your ${widget} widget`}
+      subheadline="Start free. Publish when you’re ready."
+      primaryLabel="Create free"
+      primaryHref={`/${locale}/create`}
+    />
+
+    <Minibob widget={widget} locale={locale} />
+
+    <Footer locale={locale} />
+  </main>
+</Base>

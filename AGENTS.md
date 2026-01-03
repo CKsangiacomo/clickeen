@@ -6,8 +6,8 @@ This repo is an AI-native build: agents (AI or human) write the code. We win on 
 
 ### 1) Understand the System First
 Before touching code, read the relevant context:
-- `documentation/CONTEXT.md` (what we’re building)
-- `documentation/WhyClickeen.md` (why it matters)
+- `documentation/architecture/CONTEXT.md` (what we're building)
+- `documentation/strategy/WhyClickeen.md` (why it matters)
 - The relevant PRD/architecture doc for the area you’re changing
 
 ### 2) No Smoke and Mirrors
@@ -66,7 +66,7 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - Use conventional-style messages seen in history (`feat: ...`, `chore: ...`, `fix: ...`); include scope when helpful (e.g., `feat(bob): add widget toolbar`).
 - PRs need a concise summary, linked issue/PRD, screenshots or recordings for UI changes, and notes on env or migration steps.
 - Call out Dieter token changes and downstream impact (Bob/Admin/Paris) in the description.
-- Update relevant docs (`documentation/CONTEXT.md`, feature PRDs) when behavior shifts.
+- Update relevant docs (`documentation/architecture/CONTEXT.md`, feature PRDs) when behavior shifts.
 
 ### Security & Configuration Tips
 - Store secrets in per-app `.env.local` files; keep keys out of version control (Supabase/Redis, Edge Config, etc.).

@@ -1,0 +1,23 @@
+---
+type Props = {
+  locale: string;
+};
+
+const { locale } = Astro.props;
+---
+
+<footer class="ck-canvas" style="padding-block: var(--space-10);">
+  <div class="ck-inline ck-stack" style="gap: var(--space-6);">
+    <div class="ck-row" style="justify-content: space-between; gap: var(--space-6);">
+      <div class="label-m">Clickeen</div>
+      <div class="ck-row" style="gap: var(--space-5);">
+        <a class="label-s" href={`/${locale}/pricing`} style="text-decoration: none; color: inherit;">Pricing</a>
+        <a class="label-s" href={`/${locale}/widgets/faq`} style="text-decoration: none; color: inherit;">Widgets</a>
+      </div>
+    </div>
+    <div class="caption" style="color: color-mix(in oklab, var(--color-system-black), transparent 55%);">
+      © {new Date().getFullYear()} Clickeen. All rights reserved.
+    </div>
+  </div>
+</footer>
+

@@ -1,0 +1,45 @@
+---
+type Props = {
+  headline: string;
+  subheadline?: string;
+};
+
+const { headline, subheadline } = Astro.props;
+---
+
+<section class="ck-canvas">
+  <div class="ck-inline">
+    <div class="ck-split ck-split--center">
+      <div class="ck-split__a ck-stack">
+        <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">{headline}</h1>
+        {subheadline ? (
+          <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
+            {subheadline}
+          </p>
+        ) : null}
+        <div class="ck-row">
+          <a class="ck-btn ck-btn--primary" href="#minibob">Create free</a>
+          <a class="ck-btn ck-btn--ghost" href="#templates">See templates</a>
+        </div>
+      </div>
+      <div class="ck-split__b" aria-hidden="true">
+        <div class="ck-media ck-heroPreview">Live widget preview (stub)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-heroPreview {
+    width: 100%;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
+  }
+
+  @media (max-width: 900px) {
+    .ck-heroPreview { min-height: 220px; }
+  }
+</style>

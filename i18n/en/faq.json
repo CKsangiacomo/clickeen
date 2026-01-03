@@ -1,0 +1,8 @@
+{
+  "faq.item": {
+    "one": "Q&A block",
+    "other": "Q&A blocks"
+  },
+  "faq.actions.addItem": "Add {item}"
+}
+

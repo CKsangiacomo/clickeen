@@ -7,10 +7,17 @@ export function Workspace() {
   const { compiled, instanceData, preview, setPreview, meta } = session;
   const device = preview.device;
   const theme = preview.theme;
+  const host = preview.host;
   const hasWidget = Boolean(compiled);
+  const seoGeoEnabled = Boolean((instanceData as any)?.seoGeo?.enabled);
+  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'wrap');
+  const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
+  const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
+  const publicId = meta?.publicId ? String(meta.publicId) : '';
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
   const [iframeRevision, setIframeRevision] = useState(0);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const displayName =
     meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
 
@@ -26,15 +33,19 @@ export function Workspace() {
 
     const handleLoad = () => setIframeReady(true);
     iframe.addEventListener('load', handleLoad);
-    // Dev ergonomics: prevent stale Tokyo assets in the preview iframe (HTML/CSS/JS caching can make edits look like "nothing changed").
-    const baseUrl = compiled.assets.htmlUrl;
+    const baseUrl =
+      seoGeoEnabled && publicId
+        ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=${encodeURIComponent(
+            theme,
+          )}&device=${encodeURIComponent(device)}`
+        : compiled.assets.htmlUrl;
     const sep = baseUrl.includes('?') ? '&' : '?';
     iframe.src = `${baseUrl}${sep}ck_preview_rev=${iframeRevision}`;
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
     };
-  }, [hasWidget, compiled, compiled?.assets.htmlUrl, iframeRevision]);
+  }, [hasWidget, compiled, compiled?.assets.htmlUrl, iframeRevision, seoGeoEnabled, publicId, theme, device]);
 
   // Reload iframe when a new widget/instance is loaded (so HTML/CSS/JS changes are picked up immediately).
   useEffect(() => {
@@ -60,16 +71,56 @@ export function Workspace() {
     iframeWindow.postMessage(message, '*');
   }, [hasWidget, compiled, instanceData, device, theme, iframeReady]);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const iframeWindow = iframeRef.current?.contentWindow;
+      if (!iframeWindow) return;
+      if (event.source !== iframeWindow) return;
+      const data = event.data as any;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'ck:resize') return;
+      const h = Number(data.height);
+      if (!Number.isFinite(h) || h <= 0) return;
+      setMeasuredHeight(Math.min(6000, Math.max(120, Math.round(h))));
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  useEffect(() => {
+    // When switching instances/devices/modes, allow the iframe to re-measure.
+    setMeasuredHeight(null);
+  }, [meta?.publicId, device, theme, host, stageMode]);
+
+  const isDesktopCanvas = host === 'canvas' && device === 'desktop';
+  const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');
+  const resolvedCanvasHeight =
+    isDesktopCanvas && stageMode === 'fixed' && Number.isFinite(stageFixedHeight) && stageFixedHeight > 0
+      ? stageFixedHeight
+      : measuredHeight;
+  const canvasHeightPx = shouldResizeCanvas && resolvedCanvasHeight ? `${resolvedCanvasHeight}px` : null;
+  const canvasWidthPx =
+    shouldResizeCanvas && stageMode === 'fixed' && Number.isFinite(stageFixedWidth) && stageFixedWidth > 0
+      ? `${stageFixedWidth}px`
+      : null;
+  const shouldRenderCanvasCard = Boolean(shouldResizeCanvas && (canvasHeightPx || canvasWidthPx));
+
   return (
-    <section className="workspace" data-device={device}>
-      <div className="workspace-viewport">
-        <iframe
-          ref={iframeRef}
-          title="Widget preview"
-          className="workspace-iframe"
-          sandbox="allow-scripts allow-same-origin"
-        />
-      </div>
+    <section
+      className="workspace"
+      data-device={device}
+      data-host={host}
+      data-canvas-resize={shouldRenderCanvasCard ? 'true' : undefined}
+      style={
+        shouldRenderCanvasCard
+          ? ({
+              ...(canvasHeightPx ? { ['--workspace-canvas-height' as any]: canvasHeightPx } : null),
+              ...(canvasWidthPx ? { ['--workspace-canvas-width' as any]: canvasWidthPx } : null),
+            } as any)
+          : undefined
+      }
+    >
+      <iframe ref={iframeRef} title="Widget preview" className="workspace-iframe" sandbox="allow-scripts allow-same-origin" />
 
       <div className="workspace-overlay" aria-hidden={!hasWidget}>
         <div

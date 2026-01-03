@@ -3,8 +3,13 @@
 
   const STYLE_ID = 'ck-branding-style';
 
-  function ensureStyle() {
-    if (document.getElementById(STYLE_ID)) return;
+  function ensureStyle(scope) {
+    if (!scope) return;
+    const existing =
+      scope instanceof ShadowRoot
+        ? scope.querySelector(`#${STYLE_ID}`)
+        : document.getElementById(STYLE_ID);
+    if (existing) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
@@ -55,6 +60,10 @@
         text-decoration: underline;
       }
     `;
+    if (scope instanceof ShadowRoot) {
+      scope.appendChild(style);
+      return;
+    }
     document.head.appendChild(style);
   }
 
@@ -66,6 +75,16 @@
     const align = alignRaw === 'center' ? 'center' : 'right';
     const anchor = anchorRaw === 'outside' ? 'outside' : 'inside';
     return { align, anchor };
+  }
+
+  function resolveContext() {
+    const scriptEl = document.currentScript;
+    if (scriptEl instanceof HTMLElement) {
+      const widgetRoot = scriptEl.closest('[data-ck-widget]');
+      const rootNode = scriptEl.getRootNode();
+      return { widgetRoot: widgetRoot instanceof HTMLElement ? widgetRoot : null, rootNode };
+    }
+    return { widgetRoot: null, rootNode: document };
   }
 
   function ensureBranding(widgetRoot) {
@@ -110,23 +129,39 @@
   }
 
   function applyInitial() {
-    ensureStyle();
+    const { widgetRoot, rootNode } = resolveContext();
+    ensureStyle(rootNode);
+
+    if (widgetRoot) {
+      ensureBranding(widgetRoot);
+      const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
+      if (initialState) applyVisibility(widgetRoot, initialState);
+      return;
+    }
+
+    // Fallback for legacy/light-DOM documents.
     const roots = Array.from(document.querySelectorAll('[data-ck-widget]'));
     roots.forEach((root) => ensureBranding(root));
-
     const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
-    if (initialState) {
-      roots.forEach((root) => applyVisibility(root, initialState));
-    }
+    if (initialState) roots.forEach((root) => applyVisibility(root, initialState));
   }
 
   window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data || data.type !== 'ck:state-update') return;
-    ensureStyle();
+    const { widgetRoot, rootNode } = resolveContext();
+    ensureStyle(rootNode);
 
     const widgetname = data.widgetname;
     const state = data.state;
+
+    if (widgetRoot) {
+      if (!widgetname || widgetRoot.dataset.ckWidget === widgetname) {
+        applyVisibility(widgetRoot, state);
+      }
+      return;
+    }
+
     const roots = widgetname
       ? Array.from(document.querySelectorAll(`[data-ck-widget="${widgetname}"]`))
       : Array.from(document.querySelectorAll('[data-ck-widget]'));

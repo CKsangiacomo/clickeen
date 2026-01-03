@@ -308,8 +308,8 @@ Execution responses must not block on logging/indexing. The queue pipeline is in
 
 This section is a planning artifact. The shipped reality is captured in:
 - “Runtime Reality (what’s actually shipped)” (above)
-- `documentation/systems/sanfrancisco-infrastructure.md`
-- `documentation/systems/sanfrancisco-learning.md`
+- `documentation/ai/infrastructure.md`
+- `documentation/ai/learning.md`
 
 ### Milestone 0 — Documentation cleanup
 Status: shipped (ongoing)
@@ -360,5 +360,5 @@ Definition of done:
 - Where AI usage is recorded for billing: Paris-only ledger via an internal San Francisco→Paris report, or a later aggregation pipeline.
 
 ## Links
-- Paris system PRD: `documentation/systems/paris.md`
-- Bob system PRD: `documentation/systems/bob.md`
+- Paris system PRD: `documentation/services/paris.md`
+- Bob system PRD: `documentation/services/bob.md`

@@ -1,18 +1,54 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  function resolvePadding(cfg, prefix) {
-    const linked = cfg[`${prefix}Linked`];
-    if (linked === false) {
+  const resizeObservers = new WeakMap();
+
+  function toNumber(value, fallback) {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function resolveBox(box) {
+    if (!box || typeof box !== 'object') {
+      return { top: 0, right: 0, bottom: 0, left: 0 };
+    }
+    const linked = box.linked !== false;
+    if (!linked) {
       return {
-        top: cfg[`${prefix}Top`],
-        right: cfg[`${prefix}Right`],
-        bottom: cfg[`${prefix}Bottom`],
-        left: cfg[`${prefix}Left`],
+        top: toNumber(box.top, 0),
+        right: toNumber(box.right, 0),
+        bottom: toNumber(box.bottom, 0),
+        left: toNumber(box.left, 0),
       };
     }
-    const all = cfg[prefix];
+    const all = toNumber(box.all, 0);
     return { top: all, right: all, bottom: all, left: all };
+  }
+
+  function resolvePaddingV2(cfg) {
+    const padding = cfg && typeof cfg === 'object' ? cfg.padding : null;
+    if (padding && typeof padding === 'object' && ('desktop' in padding || 'mobile' in padding)) {
+      return {
+        desktop: resolveBox(padding.desktop),
+        mobile: resolveBox(padding.mobile),
+      };
+    }
+
+    // Back-compat: stage.paddingLinked + stage.padding[Top/Right/Bottom/Left]
+    const linked = cfg && typeof cfg === 'object' ? cfg.paddingLinked : true;
+    const base =
+      linked === false
+        ? {
+            top: toNumber(cfg.paddingTop, 0),
+            right: toNumber(cfg.paddingRight, 0),
+            bottom: toNumber(cfg.paddingBottom, 0),
+            left: toNumber(cfg.paddingLeft, 0),
+          }
+        : (() => {
+            const all = toNumber(cfg.padding, 0);
+            return { top: all, right: all, bottom: all, left: all };
+          })();
+    return { desktop: base, mobile: base };
   }
 
   function resolveRadius(cfg) {
@@ -29,6 +65,31 @@
     return { tl: all, tr: all, br: all, bl: all };
   }
 
+  function applyPaddingVars(el, key, pad) {
+    el.style.setProperty(`--${key}-top`, `${pad.top}px`);
+    el.style.setProperty(`--${key}-right`, `${pad.right}px`);
+    el.style.setProperty(`--${key}-bottom`, `${pad.bottom}px`);
+    el.style.setProperty(`--${key}-left`, `${pad.left}px`);
+  }
+
+  function resolveCanvas(stageCfg) {
+    const canvas = stageCfg && typeof stageCfg === 'object' ? stageCfg.canvas : null;
+    if (!canvas || typeof canvas !== 'object') return { mode: 'wrap', width: 0, height: 0 };
+    return {
+      mode: String(canvas.mode || 'wrap'),
+      width: toNumber(canvas.width, 0),
+      height: toNumber(canvas.height, 0),
+    };
+  }
+
+  function postResize(stageEl) {
+    if (!(stageEl instanceof HTMLElement)) return;
+    if (typeof window === 'undefined' || !window.parent || window.parent === window) return;
+    const rect = stageEl.getBoundingClientRect();
+    const height = Math.max(0, Math.ceil(rect.height));
+    window.parent.postMessage({ type: 'ck:resize', height }, '*');
+  }
+
   function applyStagePod(stageCfg, podCfg, scopeEl) {
     if (!(scopeEl instanceof HTMLElement)) {
       throw new Error('[CKStagePod] scope must be an HTMLElement');
@@ -40,9 +101,15 @@
       throw new Error('[CKStagePod] Missing .stage/.pod wrappers for scope');
     }
 
-    stageEl.style.setProperty('--stage-bg', stageCfg.background);
-    const stagePad = resolvePadding(stageCfg, 'padding');
-    stageEl.style.padding = `${stagePad.top}px ${stagePad.right}px ${stagePad.bottom}px ${stagePad.left}px`;
+    stageEl.style.setProperty('--stage-bg', stageCfg.background || 'transparent');
+    const stagePads = resolvePaddingV2(stageCfg);
+    applyPaddingVars(stageEl, 'stage-pad-desktop', stagePads.desktop);
+    applyPaddingVars(stageEl, 'stage-pad-mobile', stagePads.mobile);
+
+    const canvas = resolveCanvas(stageCfg);
+    stageEl.setAttribute('data-canvas-mode', canvas.mode);
+    stageEl.style.setProperty('--stage-fixed-width', canvas.width > 0 ? `${canvas.width}px` : 'auto');
+    stageEl.style.setProperty('--stage-fixed-height', canvas.height > 0 ? `${canvas.height}px` : 'auto');
 
     const alignMap = {
       left: { justify: 'flex-start', alignItems: 'center' },
@@ -55,15 +122,24 @@
     stageEl.style.justifyContent = resolved.justify;
     stageEl.style.alignItems = resolved.alignItems;
 
-    podEl.style.setProperty('--pod-bg', podCfg.background);
-    const podPad = resolvePadding(podCfg, 'padding');
-    podEl.style.padding = `${podPad.top}px ${podPad.right}px ${podPad.bottom}px ${podPad.left}px`;
+    podEl.style.setProperty('--pod-bg', podCfg.background || 'transparent');
+    const podPads = resolvePaddingV2(podCfg);
+    applyPaddingVars(podEl, 'pod-pad-desktop', podPads.desktop);
+    applyPaddingVars(podEl, 'pod-pad-mobile', podPads.mobile);
 
     const radii = resolveRadius(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
+
+    // Notify parent (Bob preview) of height changes so iframe can wrap to content when needed.
+    requestAnimationFrame(() => postResize(stageEl));
+    if (!resizeObservers.has(stageEl) && typeof ResizeObserver !== 'undefined') {
+      const obs = new ResizeObserver(() => postResize(stageEl));
+      obs.observe(stageEl);
+      resizeObservers.set(stageEl, obs);
+    }
   }
 
   window.CKStagePod = { applyStagePod };

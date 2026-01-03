@@ -144,7 +144,7 @@ Default strategy:
 - iframe remains an explicit fallback for origin-level isolation requirements.
 - In practice, embed mode is chosen per instance (e.g. `state.seoGeo.enabled` toggles SEO/GEO mode on/off).
 
-See: `documentation/systems/seo-geo.md`
+See: `documentation/capabilities/seo-geo.md`
 
 ### Auto-translate by visitor region (paid feature)
 

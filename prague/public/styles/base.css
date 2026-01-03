@@ -1,0 +1,10 @@
+/* Prague uses Dieter foundation tokens (spacing/typography/colors). */
+:root { }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--color-system-gray-6);
+  color: var(--color-system-black);
+}

@@ -1041,7 +1041,7 @@ Every page embeds Minibob with SDR Copilot.
 
 ### Shadow DOM embed (SEO/GEO mode)
 
-Per `documentation/systems/seo-geo.md`:
+Per `documentation/capabilities/seo-geo.md`:
 - Widget UI renders into Shadow DOM (CSS isolation)
 - Schema JSON-LD injected into `<head>`
 - Deep links work via hash fragments
@@ -1359,12 +1359,12 @@ prague/
 ### Layout system (core)
 
 Prague uses a **flex-first** layout utility layer with a single breakpoint (desktop/mobile).
-See: `documentation/systems/prague-layout.md`.
+See: `documentation/services/prague/layout.md`.
 
 ### Block catalog (core)
 
 Prague pages are composed from reusable blocks with strict prop contracts.
-See: `documentation/systems/prague-blocks.md`.
+See: `documentation/services/prague/blocks.md`.
 
 ### Block design rules
 
@@ -1502,7 +1502,7 @@ pnpm build
 
 ## 18) Links
 
-- `documentation/Agents/GTMAgent.PRD.md` — Markdown file generator
-- `documentation/Agents/SDR_Copilot.PRD.md` — Conversion agent
-- `documentation/systems/seo-geo.md` — SEO/GEO platform architecture
-- `documentation/CONTEXT.md` — Platform overview
+- `documentation/ai/gtm.md` — Markdown file generator
+- `documentation/ai/sdr-copilot.md` — Conversion agent
+- `documentation/capabilities/seo-geo.md` — SEO/GEO platform architecture
+- `documentation/architecture/CONTEXT.md` — Platform overview

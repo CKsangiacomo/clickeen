@@ -1,0 +1,73 @@
+/* Prague Layout Primitives (flex-first)
+   Contract (do not violate):
+   - `ck-canvas` is the full-bleed block surface (width = 100%).
+   - `ck-inline` is the optional inline wrapper (max width + gutters).
+   - These wrappers MUST NOT set overflow/positioning/centering. Blocks own behavior.
+   - One breakpoint: desktop vs mobile.
+*/
+
+:root {
+  --prague-max: 1560px;
+  --prague-gutter: var(--space-6);
+  --prague-section-pad: var(--space-10);
+  --prague-gap: var(--space-6);
+}
+
+/* Canvas + Inline (Prague analogue of stage/pod without the names) */
+.ck-canvas {
+  width: 100%;
+  padding-block: var(--prague-section-pad);
+}
+
+.ck-inline {
+  max-width: var(--prague-max);
+  margin-inline: auto;
+  padding-inline: var(--prague-gutter);
+}
+
+/* Section rhythm */
+/* Flex primitives */
+.ck-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--prague-gap);
+  min-width: 0;
+}
+
+.ck-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.ck-split {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-9);
+  min-width: 0;
+}
+.ck-split > * { min-width: 0; }
+.ck-split__a { flex: 1 1 0; }
+.ck-split__b { flex: 0 0 min(560px, 40vw); }
+
+.ck-split--center { align-items: center; }
+
+/* Mobile breakpoint (single breakpoint system) */
+@media (max-width: 900px) {
+  :root {
+    --prague-gutter: var(--space-5);
+    --prague-section-pad: calc(var(--space-8) + var(--space-2));
+    --prague-gap: var(--space-5);
+  }
+
+  .ck-split {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-6);
+  }
+  .ck-split__b { flex-basis: auto; }
+}
