@@ -170,14 +170,14 @@ Widgets can automatically translate content based on visitor's geographic locati
 }
 ```
 
-**Plan gating:**
+**Tier gating:**
 
-| Plan | Auto-translate |
+| Tier | Auto-translate |
 |------|----------------|
-| Free (Minibob) | ❌ Disabled |
-| Free (Bob) | ❌ Disabled, "Upgrade to Pro" |
-| Pro | ✓ Up to 10 locales |
-| Business | ✓ Unlimited locales |
+| Free | ❌ Disabled |
+| Tier 1 | ❌ Disabled, "Upgrade" message |
+| Tier 2 | ✓ Up to 10 locales |
+| Tier 3 | ✓ Unlimited locales |
 
 **Runtime flow (Venice):**
 

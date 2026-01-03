@@ -27,8 +27,8 @@ These exist for **every** widget and should be treated as fixed infrastructure:
 - **Auto-translate** (paid feature, opt-in per widget)
   - State: `state.behavior.autoTranslate`, `state.behavior.supportedLocales[]`, `state.behavior.fallbackLocale`
   - Runtime: Venice detects visitor locale (`cf-ipcountry` → `Accept-Language` → fallback) → fetches localized content from D1 cache
-  - Editor UI: Toggle + locale picker in Behavior section (grayed out for free users)
-  - Plan gating: Free = disabled, Pro = up to 10 locales, Business = unlimited
+  - Editor UI: Toggle + locale picker in Behavior section (grayed out for lower tiers)
+  - Tier gating: Free/Tier 1 = disabled, Tier 2 = up to 10 locales, Tier 3 = unlimited
 - **Preview protocol** (Bob → iframe)
   - Message: `{ type: 'ck:state-update', widgetname, state }`
 

@@ -182,8 +182,18 @@ SEO settings are part of widget instance state (`state.seo`), owned by the widge
 
 ## SEO/GEO optimization gating (product rule)
 
-The “Enable SEO/GEO Optimization” toggle is intentionally gated:
-- **Bob (editor):** toggle exists in Settings, off by default, and only enabled for users on a plan.
+The "Enable SEO/GEO Optimization" toggle is intentionally gated:
+
+| Tier | SEO/GEO Access |
+|------|----------------|
+| Free | ❌ Disabled |
+| Tier 1 | ✅ Enabled |
+| Tier 2 | ✅ Enabled |
+| Tier 3 | ✅ Enabled |
+
+SEO/GEO is a Tier 1+ feature — it's one of the key reasons "serious" users upgrade from Free.
+
+- **Bob (editor):** toggle exists in Settings, off by default, and only enabled for Tier 1+.
 - **Minibob:** toggle cannot be turned on (Minibob is a demo surface; no SEO/GEO advanced mode).
 
 Server-side enforcement (required):

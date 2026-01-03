@@ -34,12 +34,14 @@
 
 ## Plan Gating
 
-| Plan | Supernova Access |
+| Tier | Supernova Access |
 |------|------------------|
-| **Free (Minibob)** | ❌ Disabled, "Upgrade" message |
-| **Free (Bob)** | ❌ Disabled, "Upgrade to Pro" |
-| **Pro** | ✅ Standard Supernova effects |
-| **Business** | ✅ Full Supernova + custom effects |
+| **Free** | ❌ Disabled, "Upgrade" message |
+| **Tier 1** | ❌ Disabled |
+| **Tier 2** | ❌ Disabled |
+| **Tier 3** | ✅ Full Supernova effects |
+
+Supernova is the top-tier differentiator. Lower tiers get full functionality but standard visuals; Tier 3 adds the "wow factor."
 
 **State shape:**
 
@@ -295,8 +297,8 @@ if (isMobile(ua) || saveData === 'on') {
 
 ### Plan Gating UX
 
-For free users, the toggle shows:
-> ☐ Enable Supernova — *Upgrade to Pro*
+For users below Tier 3, the toggle shows:
+> ☐ Enable Supernova — *Upgrade to unlock*
 
 Clicking opens upgrade modal with Supernova showcase.
 
@@ -370,7 +372,7 @@ All Supernova effects automatically disable when user prefers reduced motion. Th
 | **Embed isolation** | Shadow DOM | Legacy iframe/inline |
 | **CDN architecture** | Cloudflare Edge, zero egress | Traditional CDN, cost per byte |
 | **Lazy loading infra** | Context-aware at edge | One-size-fits-all |
-| **Plan gating** | State-level, server-enforced | Would need rewrite |
+| **Tier gating** | State-level, server-enforced | Would need rewrite |
 | **Codebase** | Modern, designed for this | 15 years of tech debt |
 
 ### The Pitch
