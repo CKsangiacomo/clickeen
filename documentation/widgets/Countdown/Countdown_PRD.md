@@ -11,6 +11,85 @@ For deep competitor feature inventory, see `documentation/widgets/Countdown/Coun
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates content.
 
+## Subject Policy — Flags / Caps / Budgets (Matrices)
+
+X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+
+Notes:
+- This widget is not yet a Tokyo 5-file package in this repo; **exact state paths are TBD** until `tokyo/widgets/countdown/spec.json` exists.
+- Use `?` in the matrices where product decisions are not finalized yet; replace `?` with `A/B` or numbers before implementation.
+
+### Matrix A — Flags (ALLOW/BLOCK)
+
+```text
+Legend: A=ALLOW, B=BLOCK, ?=TBD
+
+Row                | DS | MB | F  | T1 | T2 | T3
+------------------ |----|----|----|----|----|----
+seoGeoEnabled      | A  | ?  | ?  | ?  | ?  | ?
+removeBranding     | A  | ?  | ?  | ?  | ?  | ?
+modePersonalAllowed| A  | ?  | ?  | ?  | ?  | ?
+modeNumberAllowed  | A  | ?  | ?  | ?  | ?  | ?
+```
+
+**Flag key (details)**
+
+```text
+Flag key
+Row               | Path                         | Enforcement | Upsell | Meaning
+----------------- | ---------------------------- | ----------- | ------ | -------------------------
+seoGeoEnabled     | seoGeo.enabled (TBD)         | OPS+LOAD    | UP     | SEO/GEO optimization toggle
+removeBranding    | behavior.showBacklink=false (TBD) | UI+OPS  | UP     | Remove branding
+modePersonalAllowed | timer.mode='personal' (TBD) | UI+OPS     | UP     | Personal countdown mode
+modeNumberAllowed   | timer.mode='number' (TBD)   | UI+OPS     | UP     | Number counter mode
+```
+
+### Matrix B — Caps (numbers)
+
+```text
+Legend: ∞ means “no cap”, ? means “TBD”
+
+Row            |  DS |  MB |   F |  T1 |  T2 |  T3
+-------------- |-----|-----|-----|-----|-----|-----
+maxActions     |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
+maxMessageChars|   ∞ |   ? |   ? |   ? |   ∞ |   ∞
+```
+
+**Cap key (details)**
+
+```text
+Cap key
+Row           | Path | Enforcement      | Violation | Upsell | Meaning
+------------- | ---- | --------------- | --------- | ------ | -------------------------
+maxActions    | (TBD)| OPS(set/insert)  | REJECT    | UP     | Max CTA buttons (during + after)
+maxMessageChars | (TBD) | OPS(set)     | REJECT    | UP     | Max custom message length (chars)
+```
+
+### Matrix C — Budgets (numbers)
+
+```text
+Legend: ∞ means “no budget limit”
+
+Row          |  DS |  MB |   F |  T1 |  T2 |  T3
+------------ |-----|-----|-----|-----|-----|-----
+copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
+edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
+uploads      |   ∞ |   5 |   ∞ |   ∞ |   ∞ |   ∞
+```
+
+**Budget key (details)**
+
+Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
+
+```text
+Budget key
+Row          | Consumed when              | Counts as          | Upsell | Notes
+------------ | -------------------------- | ------------------ | ------ | -------------------------
+copilotTurns | Copilot prompt submit      | 1 per user prompt  | UP     | —
+edits        | any successful edit        | 1 per state change | UP     | continue editing your widget by creating a free account
+uploads      | — (Countdown has no uploads) | —               | —      | —
+```
+
 ## 1) Where the widget lives
 - Widget definition (the software): `tokyo/widgets/countdown/`
   - `spec.json` (defaults + ToolDrawer markup)

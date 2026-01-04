@@ -30,11 +30,22 @@ type PreviewSettings = {
   host: 'canvas' | 'column' | 'banner' | 'floating';
 };
 
+type SubjectMode = 'devstudio' | 'minibob';
+
+type SessionPolicy = {
+  subjectMode: SubjectMode;
+  flags: {
+    seoGeo: boolean;
+  };
+};
+
 type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   isDirty: boolean;
-  isMinibob: boolean;
+  subjectMode: SubjectMode;
+  policy: SessionPolicy;
+  isMinibob: boolean; // derived from subjectMode (kept for backward compatibility)
   preview: PreviewSettings;
   selectedPath: string | null;
   lastUpdate: UpdateMeta | null;
@@ -55,6 +66,7 @@ type WidgetBootstrapMessage = {
   instanceData?: Record<string, unknown> | null;
   publicId?: string;
   label?: string;
+  subjectMode?: SubjectMode;
 };
 
 const DEFAULT_PREVIEW: PreviewSettings = {
@@ -63,15 +75,38 @@ const DEFAULT_PREVIEW: PreviewSettings = {
   host: 'canvas',
 };
 
+function resolveSubjectModeFromUrl(): SubjectMode {
+  if (typeof window === 'undefined') return 'devstudio';
+  const params = new URLSearchParams(window.location.search);
+  const subject = (params.get('subject') || '').trim().toLowerCase();
+  if (subject === 'minibob') return 'minibob';
+  if (subject === 'devstudio') return 'devstudio';
+  // Backward compat: existing Minibob param.
+  if (params.get('minibob') === 'true') return 'minibob';
+  return 'devstudio';
+}
+
+function resolvePolicy(subjectMode: SubjectMode): SessionPolicy {
+  return {
+    subjectMode,
+    flags: {
+      // In Minibob, SEO/GEO is always disabled.
+      seoGeo: subjectMode !== 'minibob',
+    },
+  };
+}
+
 function useWidgetSessionInternal() {
-  const isMinibob =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('minibob') === 'true';
+  const initialSubjectMode = resolveSubjectModeFromUrl();
+  const initialPolicy = resolvePolicy(initialSubjectMode);
+  const isMinibob = initialSubjectMode === 'minibob';
 
   const [state, setState] = useState<SessionState>(() => ({
     compiled: null,
     instanceData: {},
     isDirty: false,
+    subjectMode: initialSubjectMode,
+    policy: initialPolicy,
     isMinibob,
     preview: DEFAULT_PREVIEW,
     selectedPath: null,
@@ -94,7 +129,8 @@ function useWidgetSessionInternal() {
         return result;
       }
 
-      if (isMinibob) {
+      // Policy enforcement (subject-mode based).
+      if (state.policy.flags.seoGeo !== true) {
         const blockedIndex = ops.findIndex((op) => {
           if (!op || typeof op !== 'object') return false;
           if ((op as any).op !== 'set') return false;
@@ -104,7 +140,7 @@ function useWidgetSessionInternal() {
         if (blockedIndex >= 0) {
           const result: ApplyWidgetOpsResult = {
             ok: false,
-            errors: [{ opIndex: blockedIndex, path: 'seoGeo.enabled', message: 'SEO/GEO optimization cannot be enabled in Minibob' }],
+            errors: [{ opIndex: blockedIndex, path: 'seoGeo.enabled', message: 'SEO/GEO optimization cannot be enabled for this subject' }],
           };
           setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
           return result;
@@ -137,7 +173,7 @@ function useWidgetSessionInternal() {
 
       return applied;
     },
-    [state.compiled, state.instanceData, isMinibob]
+    [state.compiled, state.instanceData, state.policy.flags.seoGeo]
   );
 
   const undoLastOps = useCallback(() => {
@@ -188,7 +224,9 @@ function useWidgetSessionInternal() {
           ? structuredClone(defaults)
           : structuredClone(incoming);
 
-      if (isMinibob) {
+      const nextSubjectMode: SubjectMode = message.subjectMode || state.subjectMode;
+      const nextPolicy = resolvePolicy(nextSubjectMode);
+      if (nextPolicy.flags.seoGeo !== true) {
         const asAny = resolved as any;
         if (!asAny.seoGeo || typeof asAny.seoGeo !== 'object') asAny.seoGeo = {};
         asAny.seoGeo.enabled = false;
@@ -199,6 +237,9 @@ function useWidgetSessionInternal() {
         compiled,
         instanceData: resolved,
         isDirty: false,
+        subjectMode: nextSubjectMode,
+        policy: nextPolicy,
+        isMinibob: nextSubjectMode === 'minibob',
         selectedPath: null,
         error: null,
         lastUpdate: {
@@ -228,7 +269,7 @@ function useWidgetSessionInternal() {
         meta: null,
       }));
     }
-  }, [isMinibob]);
+  }, [state.subjectMode]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
     const trimmed = key.trim();

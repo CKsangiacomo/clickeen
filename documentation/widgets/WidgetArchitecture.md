@@ -46,6 +46,11 @@ By default, **Pod expands/shrinks based on widget content** (content-driven heig
 
 Pod (width mode, padding, content width, radius, alignment) strongly influences how a widget feels on desktop vs mobile, but **responsive behavior must still be explicitly defined by the widget**. Each widget must specify how its arrays/items/subparts reflow under the Pod’s constraints in `widget.css` (and supporting DOM structure in `widget.html`).
 
+**Global breakpoint rule (strict):**
+- Clickeen uses exactly **one** breakpoint: `900px` (desktop vs mobile).
+- Stage/Pod padding + widget layout reflow must switch at the same breakpoint.
+- Never ship a widget with multiple breakpoints (e.g. `640px` for Stage/Pod and `768px` for layout). That drift creates “half-mobile” states and breaks previews.
+
 ---
 
 ## Arrays + Items (global taxonomy)
@@ -125,78 +130,15 @@ Browser → Venice /e/{publicId} → Venice loads instance JSON (Paris) + widget
 → Venice injects window.CK_WIDGET.state → browser runs widget.client.js → applyState(window.CK_WIDGET.state)
 ```
 
-### Embed modes (iframe vs indexable inline)
+### Embed contract (execution truth)
 
-Clickeen supports two embed modes (platform contract):
+- The shipped embed contract is **iframe-safe embed** via `GET /e/{publicId}`.
+- Venice serves an embed document that:
+  - fetches instance config from Paris,
+  - fetches widget files from Tokyo,
+  - injects `window.CK_WIDGET` and returns HTML intended for iframing.
 
-1) **Safe embed (iframe)** — shipped today
-- CSS isolation, predictable behavior on arbitrary host pages.
-- Venice returns a full HTML document (`GET /e/{publicId}`) intended for iframing.
-
-2) **Indexable embed (inline)** — required for SEO + GEO moat (planned)
-- Renders markup into the host DOM (no iframe), so:
-  - Schema.org JSON-LD applies to the host page (SEO).
-  - Per-question anchors can be cited and deep-linked (GEO).
-- Requires strict CSS scoping (no `html/body/:root` styling from widgets).
-
-Default strategy:
-- Indexable embed should render UI inside **Shadow DOM** for CSS isolation.
-- iframe remains an explicit fallback for origin-level isolation requirements.
-- In practice, embed mode is chosen per instance (e.g. `state.seoGeo.enabled` toggles SEO/GEO mode on/off).
-
-See: `documentation/capabilities/seo-geo.md`
-
-### Auto-translate by visitor region (paid feature)
-
-Widgets can automatically translate content based on visitor's geographic location. This is a **per-widget opt-in setting** available only on **Pro/Business plans**.
-
-**How it works:**
-
-1. User creates widget with content in one language (source)
-2. User enables `behavior.autoTranslate` and selects `supportedLocales`
-3. Background job translates content to all supported locales (cached in D1)
-4. At runtime, Venice detects visitor locale (Cloudflare `cf-ipcountry` → `Accept-Language` → fallback)
-5. Widget renders in visitor's locale
-
-**Widget state:**
-
-```json
-{
-  "behavior": {
-    "autoTranslate": false,        // default: off
-    "supportedLocales": [],        // e.g. ["en", "de", "es", "ja"]
-    "fallbackLocale": "en"
-  }
-}
-```
-
-**Tier gating:**
-
-| Tier | Auto-translate |
-|------|----------------|
-| Free | ❌ Disabled |
-| Tier 1 | ❌ Disabled, "Upgrade" message |
-| Tier 2 | ✓ Up to 10 locales |
-| Tier 3 | ✓ Unlimited locales |
-
-**Runtime flow (Venice):**
-
-```javascript
-// 1. Detect visitor locale
-const country = request.headers.get('cf-ipcountry'); // "DE", "JP", etc.
-const acceptLang = request.headers.get('accept-language');
-const locale = resolveLocale(country, acceptLang, widget.supportedLocales, widget.fallbackLocale);
-
-// 2. Fetch localized content from D1 cache
-const content = await d1.get(`${widgetId}:${locale}:content`);
-
-// 3. Render with localized content
-render(widget, content);
-```
-
-**Why this is a moat:**
-- Competitors: One widget = one language (N widgets × N locales = N² work)
-- Clickeen: One widget = all languages (widget state is JSON → translates automatically)
+Any new embed capability must be specified as a PRD (not embedded as “future behavior” inside this contract doc).
 
 ---
 
@@ -224,6 +166,18 @@ Location: `tokyo/widgets/shared/`
 | `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply stage/pod layout + appearance |
 | `branding.js` | (self-managed) | Inject backlink / branding into `.pod` and toggle via `state.behavior.showBacklink` |
 
+### Global runtime constants (shipped)
+
+When widget code executes inside the **host page** (Shadow DOM embed), origin-relative URLs like `/dieter/...` resolve on the customer’s domain and will 404.
+
+Venice embed loaders set a stable asset origin that widgets must use:
+
+```js
+window.CK_ASSET_ORIGIN = "https://venice.clickeen.com" // (example)
+```
+
+Widgets may read this to build absolute asset URLs for Dieter icons and other proxied assets (`/dieter/*`, `/widgets/*`).
+
 ### `postMessage` protocol (Bob → preview iframe)
 
 ```javascript
@@ -246,3 +200,16 @@ window.addEventListener('message', (event) => {
   applyState(msg.state);
 });
 ```
+
+### `postMessage` protocol (preview iframe → Bob)
+
+Widgets may request iframe resizing in the editor preview using:
+
+```js
+{ type: 'ck:resize', height: 1234 }
+```
+
+**Strict rules (to avoid feedback loops / flashing):**
+- Only emit `ck:resize` when the Stage sizing requires parent participation (wrap-to-content or fixed size with auto height).
+- Coalesce to max 1 message per animation frame and ignore <= 1px changes.
+- Never emit `ck:resize` for full-viewport stage sizing.

@@ -13,7 +13,7 @@ if (!BOB_URL) {
   throw new Error('[prague] PUBLIC_BOB_URL is required (e.g. http://localhost:3000)');
 }
 
-const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?minibob=true&locale=${encodeURIComponent(locale)}`;
+const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?minibob=true&subject=minibob&locale=${encodeURIComponent(locale)}`;
 const compiledUrl = `${BOB_URL.replace(/\/+$/, '')}/api/widgets/${encodeURIComponent(widget)}/compiled`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
@@ -67,6 +67,7 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
             compiled: compiled,
             instanceData: compiled && compiled.defaults ? structuredClone(compiled.defaults) : {},
             label: compiled && compiled.displayName ? compiled.displayName : widget,
+            subjectMode: 'minibob',
           };
           iframe.contentWindow.postMessage(msg, '*');
         })

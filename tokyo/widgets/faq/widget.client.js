@@ -32,6 +32,10 @@
     throw new Error('[FAQ] Missing [data-role="faq-list"]');
   }
 
+  const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
+  const assetOrigin = (assetOriginRaw || window.location.origin).replace(/\/$/, '');
+  widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
+
   const resolvedPublicId = (() => {
     const attr = widgetRoot.getAttribute('data-ck-public-id');
     if (typeof attr === 'string' && attr.trim()) return attr.trim();
@@ -433,8 +437,8 @@
     if (!pair) {
       throw new Error(`[FAQ] Unknown accordion icon style "${iconStyle}"`);
     }
-    faqRoot.style.setProperty('--faq-icon-expand', `url("/dieter/icons/svg/${pair.expand}.svg")`);
-    faqRoot.style.setProperty('--faq-icon-collapse', `url("/dieter/icons/svg/${pair.collapse}.svg")`);
+    faqRoot.style.setProperty('--faq-icon-expand', `url("${assetOrigin}/dieter/icons/svg/${pair.expand}.svg")`);
+    faqRoot.style.setProperty('--faq-icon-collapse', `url("${assetOrigin}/dieter/icons/svg/${pair.collapse}.svg")`);
   }
 
   const accordionRuntime = {

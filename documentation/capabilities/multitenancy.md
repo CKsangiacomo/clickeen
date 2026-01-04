@@ -245,6 +245,52 @@ Free user → invites team as viewers → viewers comment
 
 ## Technical Notes
 
+## Dev Subjects (DevStudio + MiniBob) — Durable policy architecture
+
+While we are building (before full auth/billing enforcement ships), we still need deterministic gating/caps across surfaces.
+
+**Durable architecture:**
+- **Input**: a single `subjectMode` that describes the calling surface.
+- **Output**: a single `policy` object (flags + caps + budgets) used by Bob for gating and ops validation.
+
+**Budgets (MiniBob + Free conversion gates):**
+- Budgets are per-session counters for actions we want to keep bounded in demo/free usage (example: uploads, Copilot turns).
+- When a budget is exhausted, Bob blocks the action and shows a conversion gate (e.g. “Create a free account to continue”).
+- Budgets are defined by the subject policy (e.g. `minibob` vs `devstudio`), not by individual widgets.
+
+**How this appears in widget PRDs (required):**
+- Every widget PRD must include **three matrices** (Flags / Caps / Budgets) with **six profiles** on the X-axis:
+  - `DevStudio`, `MiniBob`, `Free`, `Tier 1`, `Tier 2`, `Tier 3`
+- Matrices must be formatted as **fixed-width ASCII grids** in code blocks (so they read like real matrices and don’t wrap).
+- Full semantics live in the Key tables under each matrix (path, enforcement, upsell marker).
+- Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md`
+
+**Upsell popup standard (durable):**
+- Every gated action uses the same **Upsell** popup.
+- The PRD should not include custom copy per row; it should specify **only** whether the action is gated by upsell:
+  - `Upsell = UP` (gated) or `Upsell = —` (not gated)
+- The system chooses the destination and CTA deterministically:
+  - If the viewer has no account/session (MiniBob / anonymous): upsell takes them to **Create Free Account**
+  - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
+- PRDs do **not** need to encode “free vs paid” in the key table; it is derived from the **matrix deltas** and current viewer profile.
+
+**Current dev subjects:**
+- `devstudio`: internal “everything enabled” subject used by DevStudio.
+- `minibob`: internal “demo” subject used by Prague MiniBob.
+
+**How the subject is set today (shipped in Bob):**
+- Bob accepts the subject via either:
+  - URL: `?subject=minibob|devstudio` (preferred), plus backward compatibility with `?minibob=true`
+  - Bootstrap message: `postMessage { type:'devstudio:load-instance', subjectMode:'minibob'|'devstudio', ... }`
+
+**What Bob enforces today (example):**
+- For `minibob`, `seoGeo.enabled` cannot be turned on and is forced off on load.
+- This enforcement is done in one place (session/ops gate) so we don’t scatter `if (minibob)` checks.
+
+**Why this scales:**
+- New surfaces add a new `subjectMode` without changing widget code.
+- Later, real workspaces/roles/plans become another subject source, but Bob still consumes a single resolved `policy`.
+
 ### Paris Enforcement
 
 - Workspace plan includes `maxEditors`

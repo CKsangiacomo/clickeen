@@ -5,6 +5,113 @@ STATUS: DRAFT
 ## 1) High level description of what the widget does
 LogoShowcase renders a **header** + one or more **strips** of logos (each strip contains an ordered list of logos, optionally clickable) in one of four **Types** (Grid / Slider / Carousel / Ticker). Users edit the widget in Bob; the widget runtime applies the saved state deterministically on `{ type: 'ck:state-update' }`.
 
+## Subject Policy — Flags / Caps / Budgets (Matrices)
+
+X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+
+### Matrix A — Flags (ALLOW/BLOCK)
+
+```text
+Legend: A=ALLOW, B=BLOCK
+
+Row                   | DS | MB | F  | T1 | T2 | T3
+--------------------- |----|----|----|----|----|----
+seoGeoEnabled         | A  | B  | B  | A  | A  | A
+removeBranding        | A  | B  | B  | A  | A  | A
+typeGridAllowed       | A  | A  | B  | A  | A  | A
+typeSliderAllowed     | A  | A  | B  | A  | A  | A
+typeCarouselAllowed   | A  | B  | B  | A  | A  | A
+typeTickerAllowed     | A  | B  | B  | A  | A  | A
+sliderAutoplayAllowed | A  | B  | B  | A  | A  | A
+```
+
+**Flag key (details)**
+
+```text
+Flag key
+Row                 | Path                        | Enforcement | Upsell | Meaning
+------------------- | --------------------------- | ----------- | ------ | -------------------------
+seoGeoEnabled       | seoGeo.enabled              | OPS+LOAD    | UP     | SEO/GEO optimization toggle
+removeBranding      | behavior.showBacklink=false | UI+OPS      | UP     | Remove branding
+typeGridAllowed     | type='grid'                 | UI+OPS      | UP     | Grid type
+typeSliderAllowed   | type='slider'               | UI+OPS      | UP     | Slider type
+typeCarouselAllowed | type='carousel'             | UI+OPS      | UP     | Carousel type
+typeTickerAllowed   | type='ticker'               | UI+OPS      | UP     | Ticker type
+sliderAutoplayAllowed | typeConfig.slider.autoSlide | UI+OPS    | UP     | Slider autoplay
+```
+
+### Matrix B — Caps (numbers)
+
+```text
+Legend: ∞ means “no cap”
+
+Row                  |  DS |  MB |   F |  T1 |  T2 |  T3
+-------------------- |-----|-----|-----|-----|-----|-----
+maxStrips            |   ∞ |   1 |   0 |  10 |   ∞ |   ∞
+maxLogosPerStrip     |   ∞ |   6 |   0 |  20 |   ∞ |   ∞
+maxCaptionChars      |   ∞ |  40 |   0 | 120 |   ∞ |   ∞
+maxHeaderTextHtmlChars|  ∞ | 140 |   0 | 300 |   ∞ |   ∞
+```
+
+**Cap key (details)**
+
+```text
+Cap key
+Row                 | Path                    | Enforcement  | Violation | Upsell | Meaning
+------------------- | ----------------------- | ------------ | --------- | ------ | -------------------------
+maxStrips           | strips[]                | OPS(insert)  | REJECT    | UP     | Max strips
+maxLogosPerStrip    | strips[i].logos[]       | OPS(insert)  | REJECT    | UP     | Max logos per strip
+maxCaptionChars     | strips[i].logos[j].caption | OPS(set)  | REJECT    | UP     | Max caption length (chars)
+maxHeaderTextHtmlChars | header.textHtml      | OPS(set)     | REJECT    | UP     | Max header subtitle length (chars)
+```
+
+### Matrix C — Budgets (numbers)
+
+```text
+Legend: ∞ means “no budget limit”
+
+Row          |  DS |  MB |   F |  T1 |  T2 |  T3
+------------ |-----|-----|-----|-----|-----|-----
+uploads      |   ∞ |   5 |  10 |  50 | 200 |   ∞
+copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
+edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
+```
+
+**Budget key (details)**
+
+Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
+
+```text
+Budget key
+Row          | Consumed when                           | Counts as            | Upsell | Notes
+------------ | -------------------------------------- | -------------------- | ------ | -------------------------
+uploads      | choose file for strips[i].logos[j].logoFill | 1 per file chosen | UP     | in-editor (Data URL) selection
+copilotTurns | Copilot prompt submit                   | 1 per user prompt    | UP     | —
+edits        | any successful edit                     | 1 per state change   | UP     | continue editing your widget by creating a free account
+```
+
+### Non-negotiable widget implementation patterns (LogoShowcase-specific; do not copy another widget)
+These are required patterns to keep editor UX deterministic and prevent dead controls:
+- **Runtime skeleton**:
+  - Scope all queries within `[data-ck-widget="logoshowcase"]` (no global selectors for internals).
+  - Validate state types up front (throw clear errors; no merges).
+  - Handle `{ type: 'ck:state-update' }` by updating DOM/CSS only (no network work).
+- **DOM contract (stable `data-role` hooks)**:
+  - Root: `[data-ck-widget="logoshowcase"]` and `[data-role="logoshowcase"]`
+  - Header: `[data-role="header"]`, title `[data-role="title"]`, subtitle `[data-role="subtitle"]`, CTA `[data-role="cta"]`
+  - Strips container: `[data-role="strips"]`
+  - Strip item container (generated): `[data-role="strip"]`
+  - Logos list per strip: `[data-role="logos"]`
+  - Logo tile (generated): `[data-role="logo"]`
+  - Logo visual surface (tile inner): `[data-role="logo-visual"]` (receives `logoFill` as background)
+  - Optional caption: `[data-role="logo-caption"]`
+- **Editor arrays pattern**:
+  - Use `object-manager` + nested `repeater` templates for `strips[] → strips[i].logos[]` so editing/reorder is standard and stable.
+- **Appearance schemas (must match Dieter controls)**:
+  - Border uses `appearance.itemCard.border` object (wired to `dropdown-border`)
+  - Shadow uses `appearance.itemCard.shadow` object (wired to `dropdown-shadow`)
+  - Radius uses `appearance.itemCard.radiusLinked` and `appearance.itemCard.radius*` (linked/unlinked)
+
 ### What ships (authoritative widget definition)
 The widget must be implemented as the standard 5-file Tokyo package:
 - `tokyo/widgets/logoshowcase/spec.json`
@@ -27,6 +134,39 @@ The widget must be implemented as the standard 5-file Tokyo package:
 In Clickeen terms, **Type = miniwidget**. A Type is defined by behavior + DOM/CSS structure + relevant controls.
 Type is always selected in the **Content panel** (`state.type`), and it controls what appears under it (Section 4).
 
+### Motion implementation (required, editor-only, works forever)
+All motion types must reuse one shared “strip motion engine” so behavior is consistent and doesn’t accrete one-off logic.
+
+**Shared DOM requirements for motion types** (inside each strip):
+- `[data-role="strip-viewport"]` (the scroll viewport)
+- `[data-role="strip-track"]` (the horizontal track)
+- Each logo tile element inside the track is a stable `[data-role="logo"]`
+
+**Shared sizing rule (deterministic, no extra controls)**:
+- Define a single computed tile width derived from logo height:
+  - `--ls-tile-w: clamp(96px, calc(var(--ls-logo-h) * 3), 240px)`
+  - `--ls-tile-w-mobile: clamp(80px, calc(var(--ls-logo-h-mobile) * 3), 200px)`
+- Each `[data-role="logo"]` uses `flex: 0 0 var(--ls-tile-w)` (mobile uses `--ls-tile-w-mobile` under 640px).
+
+**Shared paging math** (used by Slider + Carousel):
+- `viewportW = stripViewport.clientWidth`
+- `tileW = resolved px width of the tile (desktop/mobile var)`
+- `gap = spacing.gap` (or `spacing.mobileGap`)
+- Compute:
+  - `perPage = max(1, floor((viewportW + gap) / (tileW + gap)))`
+  - `stepPx = perPage * (tileW + gap)`
+  - `pageCount = ceil(itemCount / perPage)`
+- Scroll position is the source of truth:
+  - `pageIndex = clamp(round(stripViewport.scrollLeft / stepPx), 0, pageCount - 1)`
+
+**Shared resize rule**:
+- Attach `ResizeObserver` to each `[data-role="strip-viewport"]`.
+- On resize, recompute `perPage/stepPx/pageCount` and snap to the nearest `pageIndex`.
+
+**Shared update rule under `ck:state-update`**:
+- Render DOM first (logos list) then (re)bind motion behavior for that strip.
+- No global timers; each strip manages its own interval and cleans up on the next update.
+
 ### Type: `grid`
 - **User sees**: each strip renders as a multi-row grid; all items are visible; no motion.
 - **Behavior**: no motion, no navigation.
@@ -39,17 +179,39 @@ Type is always selected in the **Content panel** (`state.type`), and it controls
 - **Autoplay**: optional. If enabled, advances one page every `autoSlideDelayMs`. When it reaches the end, it wraps to the start (autoplay never “dies”).
 - **Structure**: viewport + track translating in discrete steps.
 
+**Implementation rule (simple + deterministic)**:
+- Implement navigation by changing `stripViewport.scrollLeft` using a deterministic animation that respects `transitionMs`:
+  - `animateScrollLeft(stripViewport, pageIndex * stepPx, transitionMs)` (requestAnimationFrame; cancel previous animation per strip)
+- Dots count equals `pageCount` (computed).
+- When `allowSwipe=true`, enable `scroll-snap-type: x mandatory` and `scroll-snap-align: start` on tiles.
+- When `allowSwipe=false`, set `overflow-x: hidden` on the viewport so manual scrolling doesn’t fight the state machine.
+
 ### Type: `carousel` (automatic discrete loop)
 - **User sees**: each strip is its own one-row, automatically advancing loop.
 - **Behavior**: discrete stepping loop (delay + transition), pauses on hover.
 - **Navigation**: none (not part of this PRD).
 - **Structure**: viewport + track + loop controller.
 
+**Implementation rule (reuse slider paging)**:
+- Carousel is “slider with autoplay always on and no UI”.
+- Every `autoSlideDelayMs`, advance `pageIndex = (pageIndex + 1) % pageCount` and scroll.
+- If `pauseOnHover=true`, pause the interval while the strip is hovered.
+
 ### Type: `ticker` (continuous marquee)
 - **User sees**: each strip is its own one-row, continuously moving marquee.
 - **Behavior**: continuous motion at steady speed, pauses on hover.
 - **Navigation**: none.
 - **Structure**: duplicated list (A+B) + CSS animation translate.
+
+**Implementation rule (CSS animation + measured duration)**:
+- Render two copies of the logos list back-to-back inside `[data-role="strip-track"]`:
+  - `<div data-role="ticker-a">...</div><div data-role="ticker-b">...</div>`
+- Measure `distancePx = tickerA.scrollWidth` after render.
+- Set CSS vars:
+  - `--ls-ticker-distance: <distancePx>px`
+  - `--ls-ticker-duration: <distancePx / speed> seconds` (speed = `typeConfig.ticker.speed` interpreted as px/sec)
+- Use keyframes translating from `0` to `-var(--ls-ticker-distance)` (direction flips sign).
+- If `pauseOnHover=true`, set `animation-play-state: paused` on hover.
 
 ## 3) ALL THE CONTROLS THAT ARE COMMON FOR THE 4 TYPES (by panel), what they change and how
 This section lists **only controls that apply to every Type**. Type-specific controls are in Section 4.
@@ -69,6 +231,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
 - **Type picker**: `type`
   - **changes**: selects which miniwidget renders
   - **how**:
+    - Use `dropdown-actions` for the Type picker (4 options). Do not use `choice-tiles` (it only supports 2–3 options).
     - Bob uses `show-if="type == '...'"` to show type-specific controls under the picker
     - runtime sets `data-type="<type>"` on widget root
 
@@ -79,20 +242,21 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - each strip contains its own `[data-role="logos"]` list
 
 - **Logos list inside each strip (CRUD + reorder)**: `strips[i].logos[]`
-  - **changes**: which logos are rendered inside that strip, the uploaded asset key used for the image, link behavior, and hover caption text
+  - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-    - `strips[i].logos[j].fileKey` → `<img src>` (fileKey is a path-like string that is directly usable as `img.src`, e.g. `/assets/upl_.../logo.svg`)
-    - `strips[i].logos[j].name` → `<img alt>` (and optional caption fallback if caption empty)
+    - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-fill`)
+      - Editor-time value is typically a Data URL (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
+    - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
     - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
     - `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`)
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
   - **Editor control**:
-    - `strips[i].logos[j].fileKey` is edited using the global Dieter component `dropdown-upload`
-      - value stored is a **fileKey string**, not a URL
-      - allowlist is specified per usage (LogoShowcase allowlist: `.svg,.png,.jpg,.jpeg,.webp`)
+    - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-fill` in image mode
+      - value stored is a **CSS fill string** (same contract as other image fills)
       - the popover may embed additional per-logo controls via `template="..."` (see Section 4)
+      - selecting an image while editing is in-memory only (Data URL fill)
 
 - **Header enable + content**: `header.enabled`, `header.title`, `header.textHtml`, `header.alignment`
   - **changes**: whether header exists, text, and alignment
@@ -100,6 +264,12 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - runtime toggles `[data-role="header"]` visibility
     - `header.title` → `[data-role="title"].textContent`
     - `header.textHtml` → sanitized HTML into `[data-role="subtitle"]`
+      - Allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br`
+      - All other tags are unwrapped (keep text content; do not keep attributes)
+      - Links:
+        - Only allow `href` that starts with `http://` or `https://`
+        - Strip all other attributes
+        - If `target="_blank"`, force `rel="noopener"`; otherwise omit `rel`
     - `header.alignment` → `data-align` attribute on header root (`left|center|right`)
 
 - **CTA enable + content**: `cta.enabled`, `cta.label`, `cta.href`, `cta.style`
@@ -125,7 +295,14 @@ This section lists **only controls that apply to every Type**. Type-specific con
 
 - **Random order**: `behavior.randomOrder`
   - **changes**: logo ordering within each strip
-  - **how**: runtime deterministically shuffles `strips[i].logos[]` render order per strip (seed rule defined in Defaults)
+  - **how**: runtime deterministically shuffles `strips[i].logos[]` render order per strip
+    - No `Math.random()` in runtime.
+    - Shuffle must be stable across unrelated `ck:state-update` changes; it may only change when the strip's logo id list changes or when `behavior.randomOrder` toggles.
+    - Deterministic seed input (per strip):
+      - `seedString = strip.id + '|' + logos.map(l => l.id).join(',')`
+    - Deterministic PRNG:
+      - Convert `seedString` to an integer seed via a stable string hash (e.g., FNV-1a 32-bit).
+      - Use a simple PRNG (e.g., xorshift32) to drive a Fisher–Yates shuffle.
 
 - **Stage/Pod layout (platform)**: `stage.*`, `pod.*`
   - **changes**: container padding, width mode, radius, alignment
@@ -146,13 +323,12 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: logo opacity
   - **how**: root CSS var `--ls-logo-opacity`
 
-- **Logo radius**: `appearance.logoRadius`
-  - **changes**: rounding on logo tile/image
-  - **how**: root CSS var `--ls-logo-radius`
-
-- **Per-logo tile styling**: `appearance.itemBackground`, `appearance.borderWidth`, `appearance.borderColor`
-  - **changes**: background/border for each logo tile wrapper
-  - **how**: root CSS vars `--ls-item-bg`, `--ls-border-w`, `--ls-border-color`
+- **Per-logo tile styling (platform schemas; Dieter-backed)**:
+  - **Fill**: `appearance.itemBackground` (`dropdown-fill`)
+  - **Border**: `appearance.itemCard.border` (object schema; `dropdown-border`)
+  - **Shadow**: `appearance.itemCard.shadow` (object schema; `dropdown-shadow`)
+  - **Radius**: `appearance.itemCard.radiusLinked` + `appearance.itemCard.radius*` (linked/unlinked)
+  - **how**: runtime applies these via CSS variables on the logo tile wrapper
 
 - **Header colors**: `appearance.titleColor`, `appearance.textColor`
   - **changes**: header title/body colors
@@ -176,24 +352,23 @@ Type is always selected in **Content**. Under the Type picker, show only the con
 
 ### Shared rule for cross-panel behavior
 When a Type does not use a setting, the corresponding control must be **hidden** (not shown) and the runtime must not “approximate” behavior.
-If a future Type removes a feature entirely (e.g., no CTA), then switching into that Type must **force-disable** the feature (`cta.enabled=false`) via a deterministic op emitted by the type picker.
+If a Type removes a feature entirely (e.g., no CTA), then switching into that Type must **force-disable** the feature (`cta.enabled=false`) via a deterministic op emitted by the type picker.
 
-### Shared rule: Type sets recommended Pod defaults (required)
-Type selection must also set a **recommended Pod preset** for that Type, by emitting deterministic WidgetOps that update `pod.*`.
-- This is required because competitor widgets treat “width” as part of the experience, and in Clickeen “width” belongs to Stage/Pod.
-- Users can still override Pod later; the Type preset is the starting point.
+### Shared rule: Type recommends Pod defaults (no implicit editor mutations)
+Type selection defines a **recommended Pod preset** for that Type (documented below as per-type defaults).
+- Changing type does not silently mutate unrelated state.
+- Users can still change Pod in the standard Stage/Pod panel.
 
 ### Content panel structure (always, for all types)
 Below the Type picker, always show:
-- **Strips** (`strips[]`) using `repeater` (each item is one strip)
-- Inside each strip item, **Logos** (`strips[i].logos[]`) using `object-manager`
+- **Strips** (`strips[]`) using `object-manager`
+- Inside each strip item, **Logos** (`strips[i].logos[]`) using `repeater`
 
 #### Logo item editor (required, global pattern)
-Each logo item must use `dropdown-upload` for the file, and nest additional actions in the popover using `template`:
-- **File**: `dropdown-upload` bound to `strips[i].logos[j].fileKey`
-  - `accept=".svg,.png,.jpg,.jpeg,.webp"`
-  - `grantUrl="/api/assets/grant"`
-  - `resolveUrl="/api/assets/resolve"`
+Each logo item must use `dropdown-fill` (image mode) for the logo image, and nest additional actions in the popover using `template`:
+- **Logo image**: `dropdown-fill` bound to `strips[i].logos[j].logoFill`
+  - stored value is a CSS fill string (`url("...") center center / cover no-repeat` or `transparent`)
+  - while editing, selected files are represented as Data URLs in state (in-memory)
   - `template="..."` includes:
     - `textfield` for `strips[i].logos[j].href`
     - `toggle` for `strips[i].logos[j].nofollow`
@@ -211,7 +386,7 @@ Then, below the strips editor, show the Type-specific controls listed in each Ty
   - `spacing.rowGap`
 
 #### Other panels when `grid` is selected
-- **Pod preset (applied on type change)**:
+- **Recommended Pod preset**:
   - `pod.widthMode='wrap'`
   - `pod.contentWidth=960`
   - `pod.padding=24` (linked)
@@ -239,7 +414,7 @@ Then, below the strips editor, show the Type-specific controls listed in each Ty
   - `typeConfig.slider.pauseOnHover`
 
 #### Other panels when `slider` is selected
-- **Pod preset (applied on type change)**:
+- **Recommended Pod preset**:
   - `pod.widthMode='full'`
   - `pod.padding=16` (linked)
   - `pod.radius='none'` (linked) by default (full-width strips typically feel better without a card radius)
@@ -265,7 +440,7 @@ Then, below the strips editor, show the Type-specific controls listed in each Ty
   - `typeConfig.carousel.pauseOnHover`
 
 #### Other panels when `carousel` is selected
-- **Pod preset (applied on type change)**:
+- **Recommended Pod preset**:
   - `pod.widthMode='full'`
   - `pod.padding=16` (linked)
   - `pod.radius='none'` (linked)
@@ -287,7 +462,7 @@ Then, below the strips editor, show the Type-specific controls listed in each Ty
   - `typeConfig.ticker.pauseOnHover`
 
 #### Other panels when `ticker` is selected
-- **Pod preset (applied on type change)**:
+- **Recommended Pod preset**:
   - `pod.widthMode='full'`
   - `pod.padding=0` (linked) by default (ticker is typically edge-to-edge)
   - `pod.radius='none'` (linked)
@@ -310,11 +485,9 @@ If any item below is undecided, the implementer must stop and ask; do not guess.
   - CSS filter approximation (works for raster, imperfect), OR
   - SVG-only tint (best quality, requires SVG assets), OR
   - other deterministic approach (must be specified)
-- **Random order seed**: deterministic seed rule (recommended: stable per instance, e.g. `publicId`)
-- **Assets APIs required for `dropdown-upload`**:
-  - `POST /api/assets/grant` must return `{ uploadUrl, fileKey }` where `fileKey` is the value stored in widget state
-  - `GET /api/assets/resolve?key=<fileKey>` must return `{ previewUrl?, mimeType?, ext?, fileName? }` for editor preview
-  - `fileKey` must be a path-like string that can be used directly as `img.src` without extra network work in the widget runtime (keeps runtime deterministic)
+Embed/persistence is a separate phase/system from widget editing:
+- This PRD specifies **editor-time behavior**: `logoFill` stores Data URL fills in memory via `dropdown-fill`.
+- The embed/persistence contract is specified in Venice docs/PRDs and is executed independently of the widget editor implementation.
 
 ### Global defaults (apply to all types)
 The full defaults object (used verbatim as `spec.json.defaults`):
@@ -326,7 +499,14 @@ The full defaults object (used verbatim as `spec.json.defaults`):
     {
       "id": "s1",
       "logos": [
-        { "id": "l1", "name": "Acme", "fileKey": "/assets/logo1.svg", "href": "", "nofollow": false, "caption": "" }
+        {
+          "id": "l1",
+          "name": "Acme",
+          "logoFill": "transparent",
+          "href": "",
+          "nofollow": false,
+          "caption": ""
+        }
       ]
     }
   ],
@@ -350,11 +530,17 @@ The full defaults object (used verbatim as `spec.json.defaults`):
     "logoLook": "original",
     "logoCustomColor": "var(--color-system-black)",
     "logoOpacity": 0.9,
-    "logoRadius": "md",
     "itemBackground": "transparent",
-    "borderColor": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
-    "borderWidth": 0,
-    "shadow": "none",
+    "itemCard": {
+      "radiusLinked": true,
+      "radius": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "radiusBR": "4xl",
+      "radiusBL": "4xl",
+      "border": { "enabled": false, "width": 1, "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)" },
+      "shadow": { "enabled": false, "inset": false, "x": 0, "y": 8, "blur": 24, "spread": 0, "color": "#000000", "alpha": 18 }
+    },
     "titleColor": "var(--color-system-black)",
     "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
     "ctaBackground": "var(--color-system-blue)",
@@ -374,21 +560,18 @@ The full defaults object (used verbatim as `spec.json.defaults`):
   "stage": {
     "background": "transparent",
     "alignment": "center",
-    "paddingLinked": true,
-    "padding": 0,
-    "paddingTop": 0,
-    "paddingRight": 0,
-    "paddingBottom": 0,
-    "paddingLeft": 0
+    "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+    "padding": {
+      "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+    }
   },
   "pod": {
     "background": "transparent",
-    "paddingLinked": true,
-    "padding": 24,
-    "paddingTop": 24,
-    "paddingRight": 24,
-    "paddingBottom": 24,
-    "paddingLeft": 24,
+    "padding": {
+      "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
+      "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
+    },
     "widthMode": "wrap",
     "contentWidth": 960,
     "radiusLinked": true,
@@ -402,8 +585,22 @@ The full defaults object (used verbatim as `spec.json.defaults`):
     "globalFamily": "Inter",
     "roleScales": {},
     "roles": {
-      "title": { "scale": "md", "style": "regular", "weight": 700 },
-      "body": { "scale": "sm", "style": "regular", "weight": 400 }
+      "title": {
+        "family": "Inter",
+        "sizePreset": "m",
+        "sizeCustom": "24px",
+        "fontStyle": "normal",
+        "weight": "700",
+        "color": "var(--color-system-black)"
+      },
+      "body": {
+        "family": "Inter",
+        "sizePreset": "m",
+        "sizeCustom": "14px",
+        "fontStyle": "normal",
+        "weight": "400",
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+      }
     }
   }
 }
@@ -418,7 +615,7 @@ Defaults differ by Type primarily via **Pod presets** (because width/containment
 
 Implementation requirement:
 - The defaults object uses the `grid` Pod preset because `type='grid'` by default.
-- When the user switches Types, the Type picker must apply the corresponding Pod preset via WidgetOps (as specified in Section 4).
+- The editor does not auto-apply Pod preset ops on type change; the presets are recommendations reflected in the per-type defaults above.
 
 ---
 

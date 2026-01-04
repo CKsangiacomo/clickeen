@@ -28,7 +28,7 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 
 ## Core Architecture Principles
 
-> Full details: [Clickeen_Architecture_Tenets.md](./Clickeen_Architecture_Tenets.md)
+> Full details: [Tenets.md](./Tenets.md)
 
 | Principle | Rule |
 |-----------|------|

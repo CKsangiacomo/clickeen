@@ -35,6 +35,7 @@ const script = `(() => {
   window.Clickeen = window.Clickeen || window.ckeenBus;
 
   const origin = new URL(scriptEl.src, window.location.href).origin;
+  window.CK_ASSET_ORIGIN = origin;
   const embedUrl = (params = {}) => {
     const url = new URL(origin + '/e/' + encodeURIComponent(publicId));
     const combined = { theme, device, ...params };

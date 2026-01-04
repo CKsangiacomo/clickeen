@@ -81,7 +81,11 @@ export function Workspace() {
       if (data.type !== 'ck:resize') return;
       const h = Number(data.height);
       if (!Number.isFinite(h) || h <= 0) return;
-      setMeasuredHeight(Math.min(6000, Math.max(120, Math.round(h))));
+      const next = Math.min(6000, Math.max(120, Math.round(h)));
+      setMeasuredHeight((prev) => {
+        if (prev != null && Math.abs(prev - next) <= 1) return prev;
+        return next;
+      });
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);

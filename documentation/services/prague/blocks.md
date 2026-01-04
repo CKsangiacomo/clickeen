@@ -128,6 +128,7 @@ prague/src/blocks/widget-landing/hero-stacked.astro
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
   - It must bootstrap Bob via `postMessage` → `devstudio:load-instance` (same mechanism DevStudio uses).
+  - It must identify itself as the `minibob` subject (so Bob applies the MiniBob policy: flags/caps/budgets).
 
 ## 3) Page templates (composition)
 

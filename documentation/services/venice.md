@@ -4,11 +4,13 @@ When debugging reality, treat runtime code and deployed Cloudflare config as tru
 
 ## AIs Quick Scan
 
-**Purpose:** Public embed origin that serves widgets to third‑party sites by assembling:
-- **Tokyo widget files** (the widget software/runtime), and
-- **Paris instance config** (the widget data).
+**Purpose:** Public embed origin for third‑party sites.
 
-**Critical invariant:** Venice must not introduce a second widget implementation. The widget’s rendering logic lives in the widget package (Tokyo). Venice’s job is **embed assembly + policy** (asset proxying, cache headers, tokens/entitlements, sandboxing) so the **public embed matches what Bob’s Workspace preview shows** for the same widget package + state.
+Venice serves an embed by combining:
+- **Tokyo widget files** (the widget package/runtime), and
+- **Paris instance config** (the instance state).
+
+**Core rule (Phase 1):** The widget package owns rendering. Venice owns **embed assembly + delivery** (asset proxying, bootstrapping `window.CK_WIDGET`, cache policy, sandboxing, tokens/entitlements) so the public embed matches Bob’s Workspace preview for the same widget package + state.
 **Owner:** `venice/` (Next.js route handlers running on the Edge runtime).
 **Dependencies:** Paris (instance API), Tokyo (widget assets), Dieter (tokens/components).
 **Shipped in this repo snapshot:**
@@ -38,10 +40,11 @@ When debugging reality, treat runtime code and deployed Cloudflare config as tru
 
 All third-party embed traffic terminates at Venice:
 - Browsers never call Paris directly.
-- Venice is a generic assembler/proxy:
-  - no per-widget branching logic (no widget-specific rendering code paths)
-  - no config healing/coercion (treat `config` as data; fail visible if invalid)
-  - generic assembly is allowed (asset proxying, base URL handling, bootstrapping `window.CK_WIDGET`, cache policy, embed sandboxing)
+- Venice is a widget-agnostic embed assembler:
+  - loads widget files from Tokyo
+  - loads instance config from Paris
+  - serves an embed-safe document (base URL, sandboxing) and bootstraps `window.CK_WIDGET`
+  - applies embed delivery policy (cache headers, tokens/entitlements)
 
 ### Primary Render Route: `GET /e/:publicId`
 
@@ -86,16 +89,19 @@ Venice exposes a stable asset origin for widget packages:
 
 This keeps widget definitions portable and prevents hard-coded Tokyo origins inside widget HTML/CSS/JS.
 
+**Asset origin constant (shipped):**
+
+Venice embed loaders set:
+```js
+window.CK_ASSET_ORIGIN = new URL(document.currentScript.src, window.location.href).origin
+```
+
+Widgets can use this when they need absolute URLs (e.g. Dieter icon `mask-image` URLs) while still relying on Venice as the stable proxy origin.
+
 ### Usage Pixel + Submissions (Present but Not Implemented End-to-End)
 
 - `GET /embed/pixel` forwards to Paris `POST /api/usage` (Paris returns 501 in this repo snapshot).
 - `POST /s/:publicId` forwards to Paris `POST /api/submit/:publicId` (Paris returns 501 in this repo snapshot).
-
-## Explicit Non-Goals (Current Model)
-
-- No patch-script injection or per-widget DOM patching in Venice.
-- No “validation/coercion” of instance config inside Venice.
-- No per-widget branching logic in Venice.
 
 ## SEO + GEO (Cross-Cutting)
 

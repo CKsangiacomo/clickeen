@@ -1,7 +1,15 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const resizeObservers = new WeakMap();
+  const resizeState = new WeakMap();
+
+  function getResizeState(stageEl) {
+    const existing = resizeState.get(stageEl);
+    if (existing) return existing;
+    const next = { obs: null, raf: 0, lastHeight: null };
+    resizeState.set(stageEl, next);
+    return next;
+  }
 
   function toNumber(value, fallback) {
     const n = typeof value === 'number' ? value : Number(value);
@@ -70,9 +78,16 @@
   function postResize(stageEl) {
     if (!(stageEl instanceof HTMLElement)) return;
     if (typeof window === 'undefined' || !window.parent || window.parent === window) return;
-    const rect = stageEl.getBoundingClientRect();
-    const height = Math.max(0, Math.ceil(rect.height));
-    window.parent.postMessage({ type: 'ck:resize', height }, '*');
+    const state = getResizeState(stageEl);
+    if (state.raf) return;
+    state.raf = requestAnimationFrame(() => {
+      state.raf = 0;
+      const rect = stageEl.getBoundingClientRect();
+      const height = Math.max(0, Math.ceil(rect.height));
+      if (state.lastHeight != null && Math.abs(height - state.lastHeight) <= 1) return;
+      state.lastHeight = height;
+      window.parent.postMessage({ type: 'ck:resize', height }, '*');
+    });
   }
 
   function applyStagePod(stageCfg, podCfg, scopeEl) {
@@ -118,12 +133,25 @@
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
 
-    // Notify parent (Bob preview) of height changes so iframe can wrap to content when needed.
-    requestAnimationFrame(() => postResize(stageEl));
-    if (!resizeObservers.has(stageEl) && typeof ResizeObserver !== 'undefined') {
-      const obs = new ResizeObserver(() => postResize(stageEl));
-      obs.observe(stageEl);
-      resizeObservers.set(stageEl, obs);
+    // Notify parent (Bob preview) of height changes only when the parent needs it (wrap-to-content or auto-height fixed).
+    const shouldReport =
+      typeof window !== 'undefined' &&
+      window.parent &&
+      window.parent !== window &&
+      (canvas.mode === 'wrap' || (canvas.mode === 'fixed' && !(canvas.height > 0)));
+    const state = getResizeState(stageEl);
+    if (!shouldReport) {
+      if (state.obs) {
+        state.obs.disconnect();
+        state.obs = null;
+      }
+      return;
+    }
+
+    postResize(stageEl);
+    if (!state.obs && typeof ResizeObserver !== 'undefined') {
+      state.obs = new ResizeObserver(() => postResize(stageEl));
+      state.obs.observe(stageEl);
     }
   }
 

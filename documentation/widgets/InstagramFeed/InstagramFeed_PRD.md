@@ -32,6 +32,85 @@ Why this is the core framework:
 How it differs from other widgets:
 - It’s a data-backed content widget: it depends on an external “posts” dataset that is rendered by the chosen Type.
 
+## Subject Policy — Flags / Caps / Budgets (Matrices)
+
+X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+
+Notes:
+- This widget is not yet a Tokyo 5-file package in this repo; **exact state paths are TBD** until `tokyo/widgets/instagramfeed/spec.json` exists.
+- Use `?` in the matrices where product decisions are not finalized yet; replace `?` with `A/B` or numbers before implementation.
+
+### Matrix A — Flags (ALLOW/BLOCK)
+
+```text
+Legend: A=ALLOW, B=BLOCK, ?=TBD
+
+Row                 | DS | MB | F  | T1 | T2 | T3
+------------------- |----|----|----|----|----|----
+seoGeoEnabled        | A  | ?  | ?  | ?  | ?  | ?
+removeBranding       | A  | ?  | ?  | ?  | ?  | ?
+layoutCarouselAllowed| A  | ?  | ?  | ?  | ?  | ?
+layoutMasonryAllowed | A  | ?  | ?  | ?  | ?  | ?
+```
+
+**Flag key (details)**
+
+```text
+Flag key
+Row                 | Path                   | Enforcement | Upsell | Meaning
+------------------- | ---------------------- | ----------- | ------ | -------------------------
+seoGeoEnabled       | seoGeo.enabled (TBD)   | OPS+LOAD    | UP     | SEO/GEO optimization toggle
+removeBranding      | behavior.showBacklink=false | UI+OPS  | UP     | Remove branding
+layoutCarouselAllowed | layout.mode='carousel' | UI+OPS    | UP     | Carousel layout
+layoutMasonryAllowed  | layout.mode='masonry'  | UI+OPS    | UP     | Masonry layout
+```
+
+### Matrix B — Caps (numbers)
+
+```text
+Legend: ∞ means “no cap”, ? means “TBD”
+
+Row            |  DS |  MB |   F |  T1 |  T2 |  T3
+-------------- |-----|-----|-----|-----|-----|-----
+maxPosts       |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
+maxHidePostIds |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
+```
+
+**Cap key (details)**
+
+```text
+Cap key
+Row           | Path              | Enforcement  | Violation | Upsell | Meaning
+------------- | ----------------- | ------------ | --------- | ------ | -------------------------
+maxPosts      | source.maxPosts   | OPS(set)     | REJECT    | UP     | Max posts (cap in editor)
+maxHidePostIds| source.hidePostIds[] | OPS(insert)| REJECT    | UP     | Max hidden post IDs
+```
+
+### Matrix C — Budgets (numbers)
+
+```text
+Legend: ∞ means “no budget limit”
+
+Row          |  DS |  MB |   F |  T1 |  T2 |  T3
+------------ |-----|-----|-----|-----|-----|-----
+copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
+edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
+uploads      |   ∞ |   5 |   ∞ |   ∞ |   ∞ |   ∞
+```
+
+**Budget key (details)**
+
+Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
+
+```text
+Budget key
+Row          | Consumed when                 | Counts as          | Upsell | Notes
+------------ | ----------------------------- | ------------------ | ------ | -------------------------
+copilotTurns | Copilot prompt submit         | 1 per user prompt  | UP     | —
+edits        | any successful edit           | 1 per state change | UP     | continue editing your widget by creating a free account
+uploads      | — (InstagramFeed has no uploads) | —               | —      | —
+```
+
 ---
 
 ## Overview

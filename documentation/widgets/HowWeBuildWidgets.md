@@ -24,13 +24,8 @@ These exist for **every** widget and should be treated as fixed infrastructure:
   - Role contract: `family`, `sizePreset`, `sizeCustom`, `fontStyle`, `weight`, `color`
 - **Branding** (backlink)
   - Runtime: handled by `tokyo/widgets/shared/branding.js` (auto-injects the badge + listens to `ck:state-update`; driven by `state.behavior.showBacklink`)
-- **Auto-translate** (paid feature, opt-in per widget)
-  - State: `state.behavior.autoTranslate`, `state.behavior.supportedLocales[]`, `state.behavior.fallbackLocale`
-  - Runtime: Venice detects visitor locale (`cf-ipcountry` → `Accept-Language` → fallback) → fetches localized content from D1 cache
-  - Editor UI: Toggle + locale picker in Behavior section (grayed out for lower tiers)
-  - Tier gating: Free/Tier 1 = disabled, Tier 2 = up to 10 locales, Tier 3 = unlimited
 - **Preview protocol** (Bob → iframe)
-  - Message: `{ type: 'ck:state-update', widgetname, state }`
+  - Message: `{ type: 'ck:state-update', widgetname, state, device, theme }`
 
 Widgets use these platform-provided "globals" as-is. They are the shared wheel.
 
@@ -100,7 +95,9 @@ This is what drives Bob’s standard Stage/Pod panels and provides the state sha
     <div class="ck-widget" data-ck-widget="mywidget" data-role="root">
       <!-- widget content -->
 
+      <script src="../shared/typography.js" defer></script>
       <script src="../shared/stagePod.js" defer></script>
+      <script src="../shared/branding.js" defer></script>
       <script src="./widget.client.js" defer></script>
     </div>
   </div>
@@ -579,8 +576,30 @@ Notes for agents:
     "layout": { "mode": "default" },
     "appearance": { "headingColor": "var(--color-system-black)" },
     "settings": {},
-    "stage": { "background": "transparent", "alignment": "center", "paddingLinked": true, "padding": 0 },
-    "pod": { "background": "transparent", "paddingLinked": true, "padding": 24, "widthMode": "wrap", "contentWidth": 960, "radiusLinked": true, "radius": "4xl" },
+    "stage": {
+      "background": "transparent",
+      "alignment": "center",
+      "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+      "padding": {
+        "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
+        "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+      }
+    },
+    "pod": {
+      "background": "transparent",
+      "padding": {
+        "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
+        "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
+      },
+      "widthMode": "wrap",
+      "contentWidth": 960,
+      "radiusLinked": true,
+      "radius": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "radiusBR": "4xl",
+      "radiusBL": "4xl"
+    },
     "typography": { "globalFamily": "Inter", "roleScales": {}, "roles": {} },
     "behavior": { "showBacklink": true }
   },

@@ -41,6 +41,7 @@ Then DevStudio posts into Bob:
 ```js
 {
   type: 'devstudio:load-instance',
+  subjectMode, // 'devstudio' | 'minibob' (dev subjects)
   widgetname,
   compiled,
   instanceData,
@@ -53,6 +54,13 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Requires `compiled.controls[]` (must be present and non-empty)
 - Uses `compiled.defaults` when `instanceData` is null
 - Stores `{ compiled, instanceData }` in React state
+
+### Dev subjects and policy (durable)
+Bob resolves a single subject mode and computes a single policy object:
+- **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=minibob|devstudio` (with backward compatibility for `?minibob=true`).
+- **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
+
+Example enforcement (today): `minibob` cannot enable `seoGeo.enabled`.
 
 ### Intended product shape (still aligned)
 The intended “two API calls per session” model is:

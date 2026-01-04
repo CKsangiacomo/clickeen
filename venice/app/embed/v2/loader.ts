@@ -20,6 +20,7 @@ const script = `(() => {
 
   const origin = new URL(scriptEl.src, window.location.href).origin;
   const locale = (navigator.language || 'en').split('-')[0] || 'en';
+  window.CK_ASSET_ORIGIN = origin;
 
   // Minimal event bus with buffering
   const bus = { listeners: {}, queue: [], ready: false };

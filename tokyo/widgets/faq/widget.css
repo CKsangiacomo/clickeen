@@ -14,6 +14,7 @@ body {
 
 .ck-faq-widget {
   --faq-item-bg: var(--color-system-white);
+  --ck-asset-origin: '';
 }
 
 .stage {
@@ -28,10 +29,6 @@ body {
     var(--stage-pad-desktop-left, 0);
 }
 
-.stage[data-canvas-mode='fill'] {
-  min-height: 100%;
-}
-
 .stage[data-canvas-mode='viewport'] {
   min-height: 100vh;
 }
@@ -42,7 +39,7 @@ body {
   margin-inline: auto;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .stage {
     padding: var(--stage-pad-mobile-top, var(--stage-pad-desktop-top, 0)) var(--stage-pad-mobile-right, var(--stage-pad-desktop-right, 0))
       var(--stage-pad-mobile-bottom, var(--stage-pad-desktop-bottom, 0))
@@ -60,7 +57,7 @@ body {
   margin: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .pod {
     padding: var(--pod-pad-mobile-top, var(--pod-pad-desktop-top, 0)) var(--pod-pad-mobile-right, var(--pod-pad-desktop-right, 0))
       var(--pod-pad-mobile-bottom, var(--pod-pad-desktop-bottom, 0))
@@ -180,8 +177,8 @@ body {
 
 .ck-faq__q-icon .diet-btn-ic__icon {
   background-color: currentColor;
-  -webkit-mask-image: var(--faq-icon-expand, url('/dieter/icons/svg/plus.svg'));
-  mask-image: var(--faq-icon-expand, url('/dieter/icons/svg/plus.svg'));
+  -webkit-mask-image: var(--faq-icon-expand, url(var(--ck-asset-origin)/dieter/icons/svg/plus.svg));
+  mask-image: var(--faq-icon-expand, url(var(--ck-asset-origin)/dieter/icons/svg/plus.svg));
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -191,8 +188,8 @@ body {
 }
 
 .ck-faq__q[aria-expanded='true'] .ck-faq__q-icon .diet-btn-ic__icon {
-  -webkit-mask-image: var(--faq-icon-collapse, url('/dieter/icons/svg/minus.svg'));
-  mask-image: var(--faq-icon-collapse, url('/dieter/icons/svg/minus.svg'));
+  -webkit-mask-image: var(--faq-icon-collapse, url(var(--ck-asset-origin)/dieter/icons/svg/minus.svg));
+  mask-image: var(--faq-icon-collapse, url(var(--ck-asset-origin)/dieter/icons/svg/minus.svg));
 }
 
 .ck-faq[data-layout='list'] .ck-faq__q,
@@ -319,7 +316,7 @@ body {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .ck-faq__header {
     flex-direction: column;
     align-items: flex-start;

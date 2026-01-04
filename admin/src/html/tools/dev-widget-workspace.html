@@ -420,6 +420,7 @@ async function sendInstanceToIframe(publicId) {
   target.postMessage(
     {
       type: 'devstudio:load-instance',
+      subjectMode: 'devstudio',
       publicId,
       widgetname: slug,
       compiled,
