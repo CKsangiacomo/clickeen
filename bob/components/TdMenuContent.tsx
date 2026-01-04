@@ -651,13 +651,177 @@ export function TdMenuContent({
     const container = containerRef.current;
     if (!container) return;
 
+    const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
+
+    const coerceFiniteNumber = (value: unknown): number | null => {
+      if (isFiniteNumber(value)) return value;
+      if (typeof value === 'string') {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+      }
+      return null;
+    };
+
+    const expandLinkedOps = (ops: WidgetOp[]): WidgetOp[] => {
+      const expanded: WidgetOp[] = [];
+
+      for (const op of ops) {
+        if (op.op !== 'set' || typeof op.path !== 'string') {
+          expanded.push(op);
+          continue;
+        }
+
+        if (typeof op.value === 'boolean') {
+          const radiusLinkMatch = op.path.match(/^(pod|appearance\.itemCard)\.radiusLinked$/);
+          if (radiusLinkMatch) {
+            const nextLinked = op.value;
+            const base = radiusLinkMatch[1];
+            const linkedPath = `${base}.radius`;
+            const tlPath = `${base}.radiusTL`;
+            const trPath = `${base}.radiusTR`;
+            const brPath = `${base}.radiusBR`;
+            const blPath = `${base}.radiusBL`;
+
+            const linkedValue = getAt<unknown>(instanceData, linkedPath);
+            const tlValue = getAt<unknown>(instanceData, tlPath);
+            const source = nextLinked ? tlValue : linkedValue;
+            if (typeof source !== 'string' || !source.trim()) {
+              expanded.push(op);
+              continue;
+            }
+
+            expanded.push(
+              setOp(op.path, nextLinked),
+              ...(nextLinked ? [setOp(linkedPath, source)] : []),
+              setOp(tlPath, source),
+              setOp(trPath, source),
+              setOp(brPath, source),
+              setOp(blPath, source),
+            );
+            continue;
+          }
+
+          const v2PaddingMatch = op.path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.linked$/);
+          if (v2PaddingMatch) {
+            const nextLinked = op.value;
+            const rootKey = v2PaddingMatch[1];
+            const deviceKey = v2PaddingMatch[2];
+            const base = `${rootKey}.padding.${deviceKey}`;
+            const allPath = `${base}.all`;
+            const topPath = `${base}.top`;
+            const rightPath = `${base}.right`;
+            const bottomPath = `${base}.bottom`;
+            const leftPath = `${base}.left`;
+
+            const linkedValue = getAt<unknown>(instanceData, allPath);
+            const topValue = getAt<unknown>(instanceData, topPath);
+            const source = nextLinked ? topValue : linkedValue;
+            const n = coerceFiniteNumber(source);
+            if (n == null) {
+              expanded.push(op);
+              continue;
+            }
+
+            expanded.push(
+              setOp(op.path, nextLinked),
+              ...(nextLinked ? [setOp(allPath, n)] : []),
+              setOp(topPath, n),
+              setOp(rightPath, n),
+              setOp(bottomPath, n),
+              setOp(leftPath, n),
+            );
+            continue;
+          }
+
+          if (op.path === 'layout.itemPaddingLinked') {
+            const nextLinked = op.value;
+            const linkedValue = getAt<unknown>(instanceData, 'layout.itemPadding');
+            const topValue = getAt<unknown>(instanceData, 'layout.itemPaddingTop');
+            const source = nextLinked ? topValue : linkedValue;
+            const n = coerceFiniteNumber(source);
+            if (n == null) {
+              expanded.push(op);
+              continue;
+            }
+
+            expanded.push(
+              setOp(op.path, nextLinked),
+              ...(nextLinked ? [setOp('layout.itemPadding', n)] : []),
+              setOp('layout.itemPaddingTop', n),
+              setOp('layout.itemPaddingRight', n),
+              setOp('layout.itemPaddingBottom', n),
+              setOp('layout.itemPaddingLeft', n),
+            );
+            continue;
+          }
+        }
+
+        const v2PaddingAllMatch = op.path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.all$/);
+        if (v2PaddingAllMatch) {
+          const rootKey = v2PaddingAllMatch[1];
+          const deviceKey = v2PaddingAllMatch[2];
+          const base = `${rootKey}.padding.${deviceKey}`;
+          const linkedValue = getAt<unknown>(instanceData, `${base}.linked`);
+          const linked = linkedValue !== false;
+          const n = coerceFiniteNumber(op.value);
+          if (linked && n != null) {
+            expanded.push(
+              setOp(op.path, n),
+              setOp(`${base}.top`, n),
+              setOp(`${base}.right`, n),
+              setOp(`${base}.bottom`, n),
+              setOp(`${base}.left`, n),
+            );
+            continue;
+          }
+        }
+
+        const radiusValueMatch = op.path.match(/^(pod|appearance\.itemCard)\.radius$/);
+        if (radiusValueMatch) {
+          const base = radiusValueMatch[1];
+          const linkedValue = getAt<unknown>(instanceData, `${base}.radiusLinked`);
+          const linked = linkedValue !== false;
+          if (linked && typeof op.value === 'string' && op.value.trim()) {
+            expanded.push(
+              op,
+              setOp(`${base}.radiusTL`, op.value),
+              setOp(`${base}.radiusTR`, op.value),
+              setOp(`${base}.radiusBR`, op.value),
+              setOp(`${base}.radiusBL`, op.value),
+            );
+            continue;
+          }
+        }
+
+        if (op.path === 'layout.itemPadding') {
+          const linkedValue = getAt<unknown>(instanceData, 'layout.itemPaddingLinked');
+          const linked = linkedValue !== false;
+          const n = coerceFiniteNumber(op.value);
+          if (linked && n != null) {
+            expanded.push(
+              setOp(op.path, n),
+              setOp('layout.itemPaddingTop', n),
+              setOp('layout.itemPaddingRight', n),
+              setOp('layout.itemPaddingBottom', n),
+              setOp('layout.itemPaddingLeft', n),
+            );
+            continue;
+          }
+        }
+
+        expanded.push(op);
+      }
+
+      return expanded;
+    };
+
     const handleBobOpsEvent = (event: Event) => {
       // Dieter controls may emit an explicit ops bundle (e.g. typography family -> {family,weight,style}).
       const detail = (event as any).detail;
       const ops = detail?.ops as WidgetOp[] | undefined;
       if (!Array.isArray(ops) || ops.length === 0) return;
       event.stopPropagation();
-      const applied = applyOps(ops);
+      const applied = applyOps(expandLinkedOps(ops));
       if (!applied.ok && process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Failed to apply ops event', applied.errors);
@@ -665,14 +829,12 @@ export function TdMenuContent({
     };
 
     const applySet = (path: string, rawValue: unknown) => {
-      const applied = applyOps([{ op: 'set', path, value: rawValue }]);
+      const applied = applyOps(expandLinkedOps([{ op: 'set', path, value: rawValue }]));
       if (!applied.ok && process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Failed to apply set op', applied.errors);
       }
     };
-
-    const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
 
     const handleContainerEvent = (event: Event) => {
       const detail = (event as any).detail;
@@ -686,55 +848,62 @@ export function TdMenuContent({
       if (!path) return;
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        if (path === 'pod.radiusLinked' && target.checked) {
-          const source = getAt<unknown>(instanceData, 'pod.radiusTL');
+        const radiusLinkMatch = path.match(/^(pod|appearance\.itemCard)\.radiusLinked$/);
+        if (radiusLinkMatch) {
+          const nextLinked = target.checked;
+          const base = radiusLinkMatch[1];
+          const linkedPath = `${base}.radius`;
+          const tlPath = `${base}.radiusTL`;
+          const trPath = `${base}.radiusTR`;
+          const brPath = `${base}.radiusBR`;
+          const blPath = `${base}.radiusBL`;
+
+          const linkedValue = getAt<unknown>(instanceData, linkedPath);
+          const tlValue = getAt<unknown>(instanceData, tlPath);
+          const source = nextLinked ? tlValue : linkedValue;
+          if (typeof source !== 'string' || !source.trim()) {
+            applySet(path, nextLinked);
+            return;
+          }
+
           const ops: WidgetOp[] = [
-            { op: 'set', path: 'pod.radiusLinked', value: true },
-            { op: 'set', path: 'pod.radius', value: source },
-            { op: 'set', path: 'pod.radiusTL', value: source },
-            { op: 'set', path: 'pod.radiusTR', value: source },
-            { op: 'set', path: 'pod.radiusBR', value: source },
-            { op: 'set', path: 'pod.radiusBL', value: source },
+            setOp(path, nextLinked),
+            ...(nextLinked ? [setOp(linkedPath, source)] : []),
+            setOp(tlPath, source),
+            setOp(trPath, source),
+            setOp(brPath, source),
+            setOp(blPath, source),
           ];
           applyOps(ops);
           return;
         }
-        if (path === 'pod.paddingLinked') {
+        const v2PaddingMatch = path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.linked$/);
+        if (v2PaddingMatch) {
           const nextLinked = target.checked;
-          const linkedValue = getAt<unknown>(instanceData, 'pod.padding');
-          const topValue = getAt<unknown>(instanceData, 'pod.paddingTop');
+          const rootKey = v2PaddingMatch[1];
+          const deviceKey = v2PaddingMatch[2];
+          const base = `${rootKey}.padding.${deviceKey}`;
+          const allPath = `${base}.all`;
+          const topPath = `${base}.top`;
+          const rightPath = `${base}.right`;
+          const bottomPath = `${base}.bottom`;
+          const leftPath = `${base}.left`;
+
+          const linkedValue = getAt<unknown>(instanceData, allPath);
+          const topValue = getAt<unknown>(instanceData, topPath);
           const source = nextLinked ? topValue : linkedValue;
-          if (!isFiniteNumber(source)) {
+          const n = coerceFiniteNumber(source);
+          if (n == null) {
             applySet(path, nextLinked);
             return;
           }
           const ops: WidgetOp[] = [
-            setOp('pod.paddingLinked', nextLinked),
-            ...(nextLinked ? [setOp('pod.padding', source)] : []),
-            setOp('pod.paddingTop', source),
-            setOp('pod.paddingRight', source),
-            setOp('pod.paddingBottom', source),
-            setOp('pod.paddingLeft', source),
-          ];
-          applyOps(ops);
-          return;
-        }
-        if (path === 'stage.paddingLinked') {
-          const nextLinked = target.checked;
-          const linkedValue = getAt<unknown>(instanceData, 'stage.padding');
-          const topValue = getAt<unknown>(instanceData, 'stage.paddingTop');
-          const source = nextLinked ? topValue : linkedValue;
-          if (!isFiniteNumber(source)) {
-            applySet(path, nextLinked);
-            return;
-          }
-          const ops: WidgetOp[] = [
-            setOp('stage.paddingLinked', nextLinked),
-            ...(nextLinked ? [setOp('stage.padding', source)] : []),
-            setOp('stage.paddingTop', source),
-            setOp('stage.paddingRight', source),
-            setOp('stage.paddingBottom', source),
-            setOp('stage.paddingLeft', source),
+            setOp(path, nextLinked),
+            ...(nextLinked ? [setOp(allPath, n)] : []),
+            setOp(topPath, n),
+            setOp(rightPath, n),
+            setOp(bottomPath, n),
+            setOp(leftPath, n),
           ];
           applyOps(ops);
           return;
@@ -744,17 +913,18 @@ export function TdMenuContent({
           const linkedValue = getAt<unknown>(instanceData, 'layout.itemPadding');
           const topValue = getAt<unknown>(instanceData, 'layout.itemPaddingTop');
           const source = nextLinked ? topValue : linkedValue;
-          if (!isFiniteNumber(source)) {
+          const n = coerceFiniteNumber(source);
+          if (n == null) {
             applySet(path, nextLinked);
             return;
           }
           const ops: WidgetOp[] = [
             setOp('layout.itemPaddingLinked', nextLinked),
-            ...(nextLinked ? [setOp('layout.itemPadding', source)] : []),
-            setOp('layout.itemPaddingTop', source),
-            setOp('layout.itemPaddingRight', source),
-            setOp('layout.itemPaddingBottom', source),
-            setOp('layout.itemPaddingLeft', source),
+            ...(nextLinked ? [setOp('layout.itemPadding', n)] : []),
+            setOp('layout.itemPaddingTop', n),
+            setOp('layout.itemPaddingRight', n),
+            setOp('layout.itemPaddingBottom', n),
+            setOp('layout.itemPaddingLeft', n),
           ];
           applyOps(ops);
           return;

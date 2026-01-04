@@ -17,11 +17,13 @@ type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 type DropdownUploadState = {
   root: HTMLElement;
   input: HTMLInputElement;
+  headerLabel: HTMLElement | null;
+  baseHeaderLabelText: string;
   headerValue: HTMLElement | null;
   headerValueLabel: HTMLElement | null;
-  headerValueChip: HTMLElement | null;
   previewPanel: HTMLElement;
   previewImg: HTMLImageElement;
+  previewVideoEl: HTMLVideoElement;
   previewName: HTMLElement;
   previewExt: HTMLElement;
   previewError: HTMLElement;
@@ -32,28 +34,34 @@ type DropdownUploadState = {
   resolveUrl: string;
   grantUrl: string;
   accept: string;
-  maxSizeMb?: number;
+  maxImageKb?: number;
+  maxVideoKb?: number;
+  maxOtherKb?: number;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
 
+// IMPORTANT: keep this at module scope.
+// DevStudio (and some Bob flows) may call hydrators more than once over the same DOM.
+// `createDropdownHydrator` uses an internal registry to avoid double-binding, but only
+// if the same hydrator instance is reused.
+const hydrateHost = createDropdownHydrator({
+  rootSelector: '.diet-dropdown-upload',
+  triggerSelector: '.diet-dropdown-upload__control',
+  onOpen: (root) => {
+    const state = states.get(root);
+    if (!state) return;
+    const key = (state.input.value || '').trim();
+    if (!key) return;
+    void resolveAndPreview(state, key);
+  },
+});
+
 export function hydrateDropdownUpload(scope: Element | DocumentFragment): void {
   const roots = Array.from(scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload'));
   if (!roots.length) return;
-
-  const hydrateHost = createDropdownHydrator({
-    rootSelector: '.diet-dropdown-upload',
-    triggerSelector: '.diet-dropdown-upload__control',
-    onOpen: (root) => {
-      const state = states.get(root);
-      if (!state) return;
-      const key = (state.input.value || '').trim();
-      if (!key) return;
-      void resolveAndPreview(state, key);
-    },
-  });
 
   roots.forEach((root) => {
     if (states.has(root)) return;
@@ -70,11 +78,12 @@ export function hydrateDropdownUpload(scope: Element | DocumentFragment): void {
 
 function createState(root: HTMLElement): DropdownUploadState | null {
   const input = root.querySelector<HTMLInputElement>('.diet-dropdown-upload__value-field');
+  const headerLabel = root.querySelector<HTMLElement>('.diet-dropdown-header-label');
   const headerValue = root.querySelector<HTMLElement>('.diet-dropdown-header-value');
   const headerValueLabel = root.querySelector<HTMLElement>('.diet-dropdown-upload__label');
-  const headerValueChip = root.querySelector<HTMLElement>('.diet-dropdown-upload__chip');
   const previewPanel = root.querySelector<HTMLElement>('.diet-dropdown-upload__panel');
   const previewImg = root.querySelector<HTMLImageElement>('.diet-dropdown-upload__preview-img');
+  const previewVideoEl = root.querySelector<HTMLVideoElement>('[data-role="videoEl"]');
   const previewName = root.querySelector<HTMLElement>('[data-role="name"]');
   const previewExt = root.querySelector<HTMLElement>('[data-role="ext"]');
   const previewError = root.querySelector<HTMLElement>('[data-role="error"]');
@@ -87,6 +96,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     !input ||
     !previewPanel ||
     !previewImg ||
+    !previewVideoEl ||
     !previewName ||
     !previewExt ||
     !previewError ||
@@ -101,19 +111,25 @@ function createState(root: HTMLElement): DropdownUploadState | null {
   const resolveUrl = (input.dataset.resolveUrl || '/api/assets/resolve').trim();
   const grantUrl = (input.dataset.grantUrl || '/api/assets/grant').trim();
   const accept = (input.dataset.accept || fileInput.getAttribute('accept') || 'image/*').trim();
-  const maxSizeMbRaw = (input.dataset.maxSizeMb || '').trim();
-  const maxSizeMb = maxSizeMbRaw ? Number(maxSizeMbRaw) : undefined;
+  const maxImageKbRaw = (input.dataset.maxImageKb || '').trim();
+  const maxVideoKbRaw = (input.dataset.maxVideoKb || '').trim();
+  const maxOtherKbRaw = (input.dataset.maxOtherKb || '').trim();
+  const maxImageKb = maxImageKbRaw ? Number(maxImageKbRaw) : undefined;
+  const maxVideoKb = maxVideoKbRaw ? Number(maxVideoKbRaw) : undefined;
+  const maxOtherKb = maxOtherKbRaw ? Number(maxOtherKbRaw) : undefined;
 
   if (accept) fileInput.setAttribute('accept', accept);
 
   return {
     root,
     input,
+    headerLabel,
+    baseHeaderLabelText: (headerLabel?.textContent || '').trim(),
     headerValue,
     headerValueLabel,
-    headerValueChip,
     previewPanel,
     previewImg,
+    previewVideoEl,
     previewName,
     previewExt,
     previewError,
@@ -124,7 +140,9 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     resolveUrl,
     grantUrl,
     accept,
-    maxSizeMb: Number.isFinite(maxSizeMb as number) ? (maxSizeMb as number) : undefined,
+    maxImageKb: Number.isFinite(maxImageKb as number) ? (maxImageKb as number) : undefined,
+    maxVideoKb: Number.isFinite(maxVideoKb as number) ? (maxVideoKb as number) : undefined,
+    maxOtherKb: Number.isFinite(maxOtherKb as number) ? (maxOtherKb as number) : undefined,
     nativeValue: captureNativeValue(input),
     internalWrite: false,
   };
@@ -171,6 +189,8 @@ function installHandlers(state: DropdownUploadState) {
     // Optimistic local preview while upload happens.
     const objectUrl = URL.createObjectURL(file);
     const { kind, ext } = classifyByNameAndType(file.name, file.type);
+    // Update header immediately with the user-facing filename.
+    setHeaderWithFile(state, file.name, false);
     setPreview(state, {
       kind,
       previewUrl: kind === 'image' ? objectUrl : undefined,
@@ -190,9 +210,17 @@ function installHandlers(state: DropdownUploadState) {
 }
 
 function validateFileSelection(state: DropdownUploadState, file: File): string | null {
-  if (state.maxSizeMb && Number.isFinite(state.maxSizeMb)) {
-    const maxBytes = state.maxSizeMb * 1024 * 1024;
-    if (file.size > maxBytes) return `File too large (max ${state.maxSizeMb}MB)`;
+  // Enforce per-kind caps (current product policy: images 512KB, video 1.5MB, other defaults to video cap).
+  const { kind } = classifyByNameAndType(file.name, file.type);
+  const capKb =
+    kind === 'image'
+      ? state.maxImageKb
+      : kind === 'video'
+        ? state.maxVideoKb
+        : state.maxOtherKb;
+  if (capKb && Number.isFinite(capKb)) {
+    const maxBytes = capKb * 1024;
+    if (file.size > maxBytes) return `File too large (max ${capKb}KB)`;
   }
 
   const accept = state.accept;
@@ -282,13 +310,14 @@ function syncFromValue(state: DropdownUploadState, raw: string) {
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
 
   if (!key) {
-    updateHeader(state, placeholder, true, true);
+    setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
     setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
     return;
   }
 
-  updateHeader(state, key, false, false);
+  // We only have a fileKey here; show a neutral loading label until resolve provides filename.
+  setHeaderWithFile(state, 'Loading…', true);
   state.root.dataset.hasFile = 'true';
   void resolveAndPreview(state, key);
 }
@@ -309,10 +338,20 @@ function setPreview(
   state.previewName.textContent = args.name || '';
   state.previewExt.textContent = args.ext ? args.ext.toUpperCase() : '';
 
+  // Keep the header value in sync with the preview name (user-facing).
+  if (args.hasFile && args.name) setHeaderWithFile(state, args.name, false);
+
   if (args.kind === 'image' && args.previewUrl) {
     state.previewImg.src = args.previewUrl;
   } else {
     state.previewImg.removeAttribute('src');
+  }
+
+  if (args.kind === 'video' && args.previewUrl) {
+    state.previewVideoEl.src = args.previewUrl;
+    state.previewVideoEl.load();
+  } else {
+    state.previewVideoEl.removeAttribute('src');
   }
 }
 
@@ -324,15 +363,21 @@ function clearError(state: DropdownUploadState) {
   state.previewError.textContent = '';
 }
 
-function updateHeader(state: DropdownUploadState, text: string, muted: boolean, noneChip: boolean) {
-  if (state.headerValueLabel) state.headerValueLabel.textContent = text;
+function setHeaderEmpty(state: DropdownUploadState, placeholder: string) {
+  if (state.headerLabel) state.headerLabel.textContent = placeholder;
+  if (state.headerValueLabel) state.headerValueLabel.textContent = '';
   if (state.headerValue) {
-    state.headerValue.dataset.muted = muted ? 'true' : 'false';
-    state.headerValue.classList.toggle('has-chip', noneChip === true);
+    state.headerValue.hidden = true;
+    state.headerValue.dataset.muted = 'true';
   }
-  if (state.headerValueChip) {
-    state.headerValueChip.hidden = noneChip !== true;
-    state.headerValueChip.classList.toggle('is-none', noneChip === true);
+}
+
+function setHeaderWithFile(state: DropdownUploadState, rightText: string, muted: boolean) {
+  if (state.headerLabel) state.headerLabel.textContent = state.baseHeaderLabelText || 'File';
+  if (state.headerValueLabel) state.headerValueLabel.textContent = rightText;
+  if (state.headerValue) {
+    state.headerValue.hidden = false;
+    state.headerValue.dataset.muted = muted ? 'true' : 'false';
   }
 }
 
@@ -344,7 +389,11 @@ function classifyByNameAndType(name: string, mimeType: string): { kind: Kind; ex
   if (isImage) return { kind: 'image', ext: extLower };
   const isVideo = mt.startsWith('video/') || ['mp4', 'webm', 'mov', 'm4v'].includes(extLower);
   if (isVideo) return { kind: 'video', ext: extLower };
-  const isDoc = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip'].includes(extLower);
+  const isDoc =
+    mt === 'application/pdf' ||
+    mt === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    mt === 'application/vnd.ms-excel' ||
+    ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip', 'csv', 'lottie', 'json'].includes(extLower);
   if (isDoc) return { kind: 'doc', ext: extLower };
   return { kind: 'unknown', ext: extLower };
 }

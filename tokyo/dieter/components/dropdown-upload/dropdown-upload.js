@@ -95,20 +95,20 @@ var Dieter = (() => {
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
+  var hydrateHost = createDropdownHydrator({
+    rootSelector: ".diet-dropdown-upload",
+    triggerSelector: ".diet-dropdown-upload__control",
+    onOpen: (root) => {
+      const state = states.get(root);
+      if (!state) return;
+      const key = (state.input.value || "").trim();
+      if (!key) return;
+      void resolveAndPreview(state, key);
+    }
+  });
   function hydrateDropdownUpload(scope) {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-upload"));
     if (!roots.length) return;
-    const hydrateHost = createDropdownHydrator({
-      rootSelector: ".diet-dropdown-upload",
-      triggerSelector: ".diet-dropdown-upload__control",
-      onOpen: (root) => {
-        const state = states.get(root);
-        if (!state) return;
-        const key = (state.input.value || "").trim();
-        if (!key) return;
-        void resolveAndPreview(state, key);
-      }
-    });
     roots.forEach((root) => {
       if (states.has(root)) return;
       const state = createState(root);
@@ -122,11 +122,12 @@ var Dieter = (() => {
   }
   function createState(root) {
     const input = root.querySelector(".diet-dropdown-upload__value-field");
+    const headerLabel = root.querySelector(".diet-dropdown-header-label");
     const headerValue = root.querySelector(".diet-dropdown-header-value");
     const headerValueLabel = root.querySelector(".diet-dropdown-upload__label");
-    const headerValueChip = root.querySelector(".diet-dropdown-upload__chip");
     const previewPanel = root.querySelector(".diet-dropdown-upload__panel");
     const previewImg = root.querySelector(".diet-dropdown-upload__preview-img");
+    const previewVideoEl = root.querySelector('[data-role="videoEl"]');
     const previewName = root.querySelector('[data-role="name"]');
     const previewExt = root.querySelector('[data-role="ext"]');
     const previewError = root.querySelector('[data-role="error"]');
@@ -134,23 +135,29 @@ var Dieter = (() => {
     const replaceButton = root.querySelector(".diet-dropdown-upload__replace-btn");
     const removeButton = root.querySelector(".diet-dropdown-upload__remove-btn");
     const fileInput = root.querySelector(".diet-dropdown-upload__file-input");
-    if (!input || !previewPanel || !previewImg || !previewName || !previewExt || !previewError || !uploadButton || !replaceButton || !removeButton || !fileInput) {
+    if (!input || !previewPanel || !previewImg || !previewVideoEl || !previewName || !previewExt || !previewError || !uploadButton || !replaceButton || !removeButton || !fileInput) {
       return null;
     }
     const resolveUrl = (input.dataset.resolveUrl || "/api/assets/resolve").trim();
     const grantUrl = (input.dataset.grantUrl || "/api/assets/grant").trim();
     const accept = (input.dataset.accept || fileInput.getAttribute("accept") || "image/*").trim();
-    const maxSizeMbRaw = (input.dataset.maxSizeMb || "").trim();
-    const maxSizeMb = maxSizeMbRaw ? Number(maxSizeMbRaw) : void 0;
+    const maxImageKbRaw = (input.dataset.maxImageKb || "").trim();
+    const maxVideoKbRaw = (input.dataset.maxVideoKb || "").trim();
+    const maxOtherKbRaw = (input.dataset.maxOtherKb || "").trim();
+    const maxImageKb = maxImageKbRaw ? Number(maxImageKbRaw) : void 0;
+    const maxVideoKb = maxVideoKbRaw ? Number(maxVideoKbRaw) : void 0;
+    const maxOtherKb = maxOtherKbRaw ? Number(maxOtherKbRaw) : void 0;
     if (accept) fileInput.setAttribute("accept", accept);
     return {
       root,
       input,
+      headerLabel,
+      baseHeaderLabelText: (headerLabel?.textContent || "").trim(),
       headerValue,
       headerValueLabel,
-      headerValueChip,
       previewPanel,
       previewImg,
+      previewVideoEl,
       previewName,
       previewExt,
       previewError,
@@ -161,7 +168,9 @@ var Dieter = (() => {
       resolveUrl,
       grantUrl,
       accept,
-      maxSizeMb: Number.isFinite(maxSizeMb) ? maxSizeMb : void 0,
+      maxImageKb: Number.isFinite(maxImageKb) ? maxImageKb : void 0,
+      maxVideoKb: Number.isFinite(maxVideoKb) ? maxVideoKb : void 0,
+      maxOtherKb: Number.isFinite(maxOtherKb) ? maxOtherKb : void 0,
       nativeValue: captureNativeValue(input),
       internalWrite: false
     };
@@ -201,6 +210,7 @@ var Dieter = (() => {
       clearError(state);
       const objectUrl = URL.createObjectURL(file);
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
+      setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
         previewUrl: kind === "image" ? objectUrl : void 0,
@@ -218,9 +228,11 @@ var Dieter = (() => {
     });
   }
   function validateFileSelection(state, file) {
-    if (state.maxSizeMb && Number.isFinite(state.maxSizeMb)) {
-      const maxBytes = state.maxSizeMb * 1024 * 1024;
-      if (file.size > maxBytes) return `File too large (max ${state.maxSizeMb}MB)`;
+    const { kind } = classifyByNameAndType(file.name, file.type);
+    const capKb = kind === "image" ? state.maxImageKb : kind === "video" ? state.maxVideoKb : state.maxOtherKb;
+    if (capKb && Number.isFinite(capKb)) {
+      const maxBytes = capKb * 1024;
+      if (file.size > maxBytes) return `File too large (max ${capKb}KB)`;
     }
     const accept = state.accept;
     if (!accept) return null;
@@ -295,12 +307,12 @@ var Dieter = (() => {
     const key = String(raw ?? "").trim();
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     if (!key) {
-      updateHeader(state, placeholder, true, true);
+      setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
       return;
     }
-    updateHeader(state, key, false, false);
+    setHeaderWithFile(state, "Loading\u2026", true);
     state.root.dataset.hasFile = "true";
     void resolveAndPreview(state, key);
   }
@@ -315,10 +327,17 @@ var Dieter = (() => {
     state.previewPanel.dataset.kind = args.kind;
     state.previewName.textContent = args.name || "";
     state.previewExt.textContent = args.ext ? args.ext.toUpperCase() : "";
+    if (args.hasFile && args.name) setHeaderWithFile(state, args.name, false);
     if (args.kind === "image" && args.previewUrl) {
       state.previewImg.src = args.previewUrl;
     } else {
       state.previewImg.removeAttribute("src");
+    }
+    if (args.kind === "video" && args.previewUrl) {
+      state.previewVideoEl.src = args.previewUrl;
+      state.previewVideoEl.load();
+    } else {
+      state.previewVideoEl.removeAttribute("src");
     }
   }
   function setError(state, message) {
@@ -327,15 +346,20 @@ var Dieter = (() => {
   function clearError(state) {
     state.previewError.textContent = "";
   }
-  function updateHeader(state, text, muted, noneChip) {
-    if (state.headerValueLabel) state.headerValueLabel.textContent = text;
+  function setHeaderEmpty(state, placeholder) {
+    if (state.headerLabel) state.headerLabel.textContent = placeholder;
+    if (state.headerValueLabel) state.headerValueLabel.textContent = "";
     if (state.headerValue) {
-      state.headerValue.dataset.muted = muted ? "true" : "false";
-      state.headerValue.classList.toggle("has-chip", noneChip === true);
+      state.headerValue.hidden = true;
+      state.headerValue.dataset.muted = "true";
     }
-    if (state.headerValueChip) {
-      state.headerValueChip.hidden = noneChip !== true;
-      state.headerValueChip.classList.toggle("is-none", noneChip === true);
+  }
+  function setHeaderWithFile(state, rightText, muted) {
+    if (state.headerLabel) state.headerLabel.textContent = state.baseHeaderLabelText || "File";
+    if (state.headerValueLabel) state.headerValueLabel.textContent = rightText;
+    if (state.headerValue) {
+      state.headerValue.hidden = false;
+      state.headerValue.dataset.muted = muted ? "true" : "false";
     }
   }
   function classifyByNameAndType(name, mimeType) {
@@ -346,7 +370,7 @@ var Dieter = (() => {
     if (isImage) return { kind: "image", ext: extLower };
     const isVideo = mt.startsWith("video/") || ["mp4", "webm", "mov", "m4v"].includes(extLower);
     if (isVideo) return { kind: "video", ext: extLower };
-    const isDoc = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "zip"].includes(extLower);
+    const isDoc = mt === "application/pdf" || mt === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || mt === "application/vnd.ms-excel" || ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "zip", "csv", "lottie", "json"].includes(extLower);
     if (isDoc) return { kind: "doc", ext: extLower };
     return { kind: "unknown", ext: extLower };
   }

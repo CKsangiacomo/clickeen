@@ -33,22 +33,7 @@
         mobile: resolveBox(padding.mobile),
       };
     }
-
-    // Back-compat: stage.paddingLinked + stage.padding[Top/Right/Bottom/Left]
-    const linked = cfg && typeof cfg === 'object' ? cfg.paddingLinked : true;
-    const base =
-      linked === false
-        ? {
-            top: toNumber(cfg.paddingTop, 0),
-            right: toNumber(cfg.paddingRight, 0),
-            bottom: toNumber(cfg.paddingBottom, 0),
-            left: toNumber(cfg.paddingLeft, 0),
-          }
-        : (() => {
-            const all = toNumber(cfg.padding, 0);
-            return { top: all, right: all, bottom: all, left: all };
-          })();
-    return { desktop: base, mobile: base };
+    throw new Error('[CKStagePod] stage/pod.padding must define desktop + mobile padding objects');
   }
 
   function resolveRadius(cfg) {

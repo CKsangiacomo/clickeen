@@ -9,7 +9,9 @@
     data-resolve-url="{{resolveUrl}}"
     data-grant-url="{{grantUrl}}"
     data-accept="{{accept}}"
-    data-max-size-mb="{{maxSizeMb}}"
+    data-max-image-kb="{{maxImageKb}}"
+    data-max-video-kb="{{maxVideoKb}}"
+    data-max-other-kb="{{maxOtherKb}}"
   />
 
   <div
@@ -17,13 +19,12 @@
     role="button"
     aria-haspopup="dialog"
     aria-expanded="false"
-    {{#if label}}aria-labelledby="{{id}}-label"{{/if}}
+    aria-labelledby="{{id}}-label"
   >
-    {{#if label}}
-      <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">{{label}}</span>
-    {{/if}}
+    <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">
+      {{#if label}}{{label}}{{else}}{{placeholder}}{{/if}}
+    </span>
     <span class="diet-dropdown-header-value {{bodyClass}}" data-muted="true" data-placeholder="{{placeholder}}">
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-upload__label">{{placeholder}}</span>
     </span>
   </div>
@@ -51,14 +52,39 @@
           <div class="diet-dropdown-upload__preview-frame">
             <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
             <div class="diet-dropdown-upload__preview-video" data-role="video">
+              <video
+                class="diet-dropdown-upload__preview-video-el"
+                data-role="videoEl"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
             </div>
             <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <div class="diet-dropdown-upload__preview-doc-icon" data-icon="doc.plaintext"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="document"></span>
+              </button>
               <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
             </div>
             <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <div class="diet-dropdown-upload__preview-empty-icon" data-icon="square.dashed"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-empty-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="square.dashed"></span>
+              </button>
             </div>
           </div>
           <div class="diet-dropdown-upload__preview-meta">

@@ -1,4 +1,5 @@
 import { resolveVeniceBaseUrl } from '../../../lib/env/venice';
+import Script from 'next/script';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -13,8 +14,9 @@ export default async function PreviewShadowPage(props: { searchParams?: Promise<
   return (
     <main style={{ margin: 0, padding: 0 }}>
       <div style={{ width: '100%', minHeight: 420 }} />
-      <script
+      <Script
         src={loaderSrc}
+        strategy="afterInteractive"
         data-public-id={publicId}
         data-trigger="immediate"
         data-force-shadow="true"

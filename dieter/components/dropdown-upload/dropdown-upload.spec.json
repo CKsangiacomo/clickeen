@@ -1,6 +1,6 @@
 {
   "component": "dropdown-upload",
-  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxSizeMb='{{MAX_SIZE_MB}}' grantUrl='{{GRANT_URL}}' resolveUrl='{{RESOLVE_URL}}' template='{{TEMPLATE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' maxImageKb='{{MAX_IMAGE_KB}}' maxVideoKb='{{MAX_VIDEO_KB}}' maxOtherKb='{{MAX_OTHER_KB}}' grantUrl='{{GRANT_URL}}' resolveUrl='{{RESOLVE_URL}}' template='{{TEMPLATE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -8,8 +8,13 @@
     "headerLabel": { "optional": true },
     "placeholder": { "optional": true, "default": "Upload file" },
     "value": { "optional": true },
-    "accept": { "optional": true, "default": "image/*" },
-    "maxSizeMb": { "optional": true, "type": "number" },
+    "accept": {
+      "optional": true,
+      "default": "image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+    },
+    "maxImageKb": { "optional": true, "type": "number", "default": 512 },
+    "maxVideoKb": { "optional": true, "type": "number", "default": 1536 },
+    "maxOtherKb": { "optional": true, "type": "number", "default": 1536 },
     "grantUrl": { "optional": true, "default": "/api/assets/grant" },
     "resolveUrl": { "optional": true, "default": "/api/assets/resolve" },
     "template": { "optional": true }
@@ -32,8 +37,10 @@
         "bodyClass": "body-s",
         "headerLabel": "File",
         "headerLabelClass": "label-s",
-        "accept": "image/*",
-        "maxSizeMb": 5,
+        "accept": "image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        "maxImageKb": 512,
+        "maxVideoKb": 1536,
+        "maxOtherKb": 1536,
         "grantUrl": "/api/assets/grant",
         "resolveUrl": "/api/assets/resolve",
         "template": ""

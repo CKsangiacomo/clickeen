@@ -442,6 +442,12 @@
     multiOpen: false,
   };
 
+  // Avoid DOM churn on unrelated state updates (e.g. stage sizing). The state object sent
+  // via postMessage is always cloned, so we use a stable signature of the fields that
+  // actually affect list markup.
+  let lastItemsSignature = '';
+  let lastAccordionSignature = '';
+
   listEl.addEventListener('click', (event) => {
     if (!accordionRuntime.isAccordion) return;
     const target = event.target;
@@ -479,7 +485,16 @@
 
     applyAppearance(state.appearance);
     applyLayout(state.layout);
-    renderItems(state.sections, state.behavior, state.displayCategoryTitles === true);
+    const nextItemsSignature = JSON.stringify([
+      state.sections,
+      state.displayCategoryTitles === true,
+      state.behavior.displayVideos === true,
+      state.behavior.displayImages === true,
+    ]);
+    if (nextItemsSignature !== lastItemsSignature) {
+      lastItemsSignature = nextItemsSignature;
+      renderItems(state.sections, state.behavior, state.displayCategoryTitles === true);
+    }
 
     const hasAny = state.sections.some((section) => section.faqs.length > 0);
     faqRoot.setAttribute('data-state', hasAny ? 'ready' : 'empty');
@@ -487,34 +502,54 @@
 
     if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
       accordionRuntime.isAccordion = false;
-      listEl.querySelectorAll('[data-role="faq-question"]').forEach((node) => {
-        if (!(node instanceof HTMLButtonElement)) return;
-        node.disabled = true;
-        node.removeAttribute('aria-expanded');
-        node.removeAttribute('tabindex');
-      });
+      const sig = JSON.stringify([state.layout.type]);
+      if (sig !== lastAccordionSignature) {
+        lastAccordionSignature = sig;
+        listEl.querySelectorAll('[data-role="faq-question"]').forEach((node) => {
+          if (!(node instanceof HTMLButtonElement)) return;
+          node.disabled = true;
+          node.removeAttribute('aria-expanded');
+          node.removeAttribute('tabindex');
+        });
+      }
       return;
     }
 
     const buttons = listEl.querySelectorAll('[data-role="faq-question"]');
     accordionRuntime.isAccordion = true;
     accordionRuntime.multiOpen = state.behavior.multiOpen === true;
-    buttons.forEach((button) => {
-      if (button instanceof HTMLButtonElement) button.disabled = false;
-      button.removeAttribute('tabindex');
-    });
-    collapseAll(listEl);
-
-    if (state.behavior.expandAll === true) {
-      buttons.forEach((button) => setExpanded(button, true));
-    } else if (state.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
-      const flat = state.sections.flatMap((section) => section.faqs);
-      buttons.forEach((button, idx) => {
-        if (flat[idx]?.defaultOpen === true) setExpanded(button, true);
+    const sig = JSON.stringify([
+      state.layout.type,
+      state.behavior.multiOpen === true,
+      state.behavior.expandAll === true,
+      state.behavior.expandFirst === true,
+      state.sections.map((section) => section.faqs.map((faq) => faq.defaultOpen === true)),
+    ]);
+    if (sig !== lastAccordionSignature) {
+      lastAccordionSignature = sig;
+      buttons.forEach((button) => {
+        if (button instanceof HTMLButtonElement) button.disabled = false;
+        button.removeAttribute('tabindex');
       });
-    } else if (state.behavior.expandFirst === true) {
-      const first = buttons[0];
-      if (first) setExpanded(first, true);
+      collapseAll(listEl);
+
+      if (state.behavior.expandAll === true) {
+        buttons.forEach((button) => setExpanded(button, true));
+      } else if (state.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
+        const flat = state.sections.flatMap((section) => section.faqs);
+        buttons.forEach((button, idx) => {
+          if (flat[idx]?.defaultOpen === true) setExpanded(button, true);
+        });
+      } else if (state.behavior.expandFirst === true) {
+        const first = buttons[0];
+        if (first) setExpanded(first, true);
+      }
+    } else {
+      // Keep the currently expanded/collapsed state as-is; no churn on stage/pod changes.
+      buttons.forEach((button) => {
+        if (button instanceof HTMLButtonElement) button.disabled = false;
+        button.removeAttribute('tabindex');
+      });
     }
   }
 

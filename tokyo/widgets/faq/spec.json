@@ -73,7 +73,7 @@
       "background": "var(--color-system-gray-5)",
       "alignment": "center",
       "canvas": {
-        "mode": "wrap",
+        "mode": "viewport",
         "width": 0,
         "height": 0
       },

@@ -20,7 +20,7 @@ const alignmentOptions =
   );
 
 const canvasOptions =
-  '[{\"label\":\"Wrap to pod\",\"value\":\"wrap\"},{\"label\":\"Viewport height\",\"value\":\"viewport\"},{\"label\":\"Fixed size\",\"value\":\"fixed\"}]'.replace(
+  '[{\"label\":\"Full\",\"value\":\"viewport\"},{\"label\":\"Wrap to pod\",\"value\":\"wrap\"},{\"label\":\"Fixed size\",\"value\":\"fixed\"}]'.replace(
     /"/g,
     '&quot;',
   );

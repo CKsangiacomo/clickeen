@@ -21,8 +21,10 @@
     data-placeholder="Upload file"
     data-resolve-url="/api/assets/resolve"
     data-grant-url="/api/assets/grant"
-    data-accept="image/*"
-    data-max-size-mb="5"
+    data-accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+    data-max-image-kb="512"
+    data-max-video-kb="1536"
+    data-max-other-kb="1536"
   />
 
   <div
@@ -32,11 +34,10 @@
     aria-expanded="false"
     aria-labelledby="dropdown-upload-sm-label"
   >
-    
-      <span class="diet-dropdown-header-label label-xs" id="dropdown-upload-sm-label">File</span>
-    
+    <span class="diet-dropdown-header-label label-xs" id="dropdown-upload-sm-label">
+      File
+    </span>
     <span class="diet-dropdown-header-value body-xs" data-muted="true" data-placeholder="Upload file">
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-upload__label">Upload file</span>
     </span>
   </div>
@@ -64,14 +65,39 @@
           <div class="diet-dropdown-upload__preview-frame">
             <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
             <div class="diet-dropdown-upload__preview-video" data-role="video">
+              <video
+                class="diet-dropdown-upload__preview-video-el"
+                data-role="videoEl"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
             </div>
             <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <div class="diet-dropdown-upload__preview-doc-icon" data-icon="doc.plaintext"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="document"></span>
+              </button>
               <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
             </div>
             <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <div class="diet-dropdown-upload__preview-empty-icon" data-icon="square.dashed"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-empty-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="square.dashed"></span>
+              </button>
             </div>
           </div>
           <div class="diet-dropdown-upload__preview-meta">
@@ -94,7 +120,7 @@
           </div>
         </div>
 
-        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*" aria-hidden="true" tabindex="-1" />
+        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-hidden="true" tabindex="-1" />
 
         
       </div>
@@ -119,8 +145,10 @@
     data-placeholder="Upload file"
     data-resolve-url="/api/assets/resolve"
     data-grant-url="/api/assets/grant"
-    data-accept="image/*"
-    data-max-size-mb="5"
+    data-accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+    data-max-image-kb="512"
+    data-max-video-kb="1536"
+    data-max-other-kb="1536"
   />
 
   <div
@@ -130,11 +158,10 @@
     aria-expanded="false"
     aria-labelledby="dropdown-upload-md-label"
   >
-    
-      <span class="diet-dropdown-header-label label-s" id="dropdown-upload-md-label">File</span>
-    
+    <span class="diet-dropdown-header-label label-s" id="dropdown-upload-md-label">
+      File
+    </span>
     <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="Upload file">
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-upload__label">Upload file</span>
     </span>
   </div>
@@ -162,14 +189,39 @@
           <div class="diet-dropdown-upload__preview-frame">
             <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
             <div class="diet-dropdown-upload__preview-video" data-role="video">
+              <video
+                class="diet-dropdown-upload__preview-video-el"
+                data-role="videoEl"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
             </div>
             <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <div class="diet-dropdown-upload__preview-doc-icon" data-icon="doc.plaintext"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="document"></span>
+              </button>
               <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
             </div>
             <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <div class="diet-dropdown-upload__preview-empty-icon" data-icon="square.dashed"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-empty-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="square.dashed"></span>
+              </button>
             </div>
           </div>
           <div class="diet-dropdown-upload__preview-meta">
@@ -192,7 +244,7 @@
           </div>
         </div>
 
-        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*" aria-hidden="true" tabindex="-1" />
+        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-hidden="true" tabindex="-1" />
 
         
       </div>
@@ -217,8 +269,10 @@
     data-placeholder="Upload file"
     data-resolve-url="/api/assets/resolve"
     data-grant-url="/api/assets/grant"
-    data-accept="image/*"
-    data-max-size-mb="5"
+    data-accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+    data-max-image-kb="512"
+    data-max-video-kb="1536"
+    data-max-other-kb="1536"
   />
 
   <div
@@ -228,11 +282,10 @@
     aria-expanded="false"
     aria-labelledby="dropdown-upload-lg-label"
   >
-    
-      <span class="diet-dropdown-header-label label-m" id="dropdown-upload-lg-label">File</span>
-    
+    <span class="diet-dropdown-header-label label-m" id="dropdown-upload-lg-label">
+      File
+    </span>
     <span class="diet-dropdown-header-value body-m" data-muted="true" data-placeholder="Upload file">
-      <span class="diet-dropdown-upload__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-upload__label">Upload file</span>
     </span>
   </div>
@@ -260,14 +313,39 @@
           <div class="diet-dropdown-upload__preview-frame">
             <img class="diet-dropdown-upload__preview-img" data-role="img" alt="" />
             <div class="diet-dropdown-upload__preview-video" data-role="video">
+              <video
+                class="diet-dropdown-upload__preview-video-el"
+                data-role="videoEl"
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
               <div class="diet-dropdown-upload__preview-video-badge label-s">Video</div>
             </div>
             <div class="diet-dropdown-upload__preview-doc" data-role="doc">
-              <div class="diet-dropdown-upload__preview-doc-icon" data-icon="doc.plaintext"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-doc-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="document"></span>
+              </button>
               <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
             </div>
             <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-              <div class="diet-dropdown-upload__preview-empty-icon" data-icon="square.dashed"></div>
+              <button
+                type="button"
+                class="diet-btn-ic diet-dropdown-upload__preview-empty-icon"
+                data-size="xl"
+                data-variant="neutral"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <span class="diet-btn-ic__icon" data-icon="square.dashed"></span>
+              </button>
             </div>
           </div>
           <div class="diet-dropdown-upload__preview-meta">
@@ -290,7 +368,7 @@
           </div>
         </div>
 
-        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*" aria-hidden="true" tabindex="-1" />
+        <input type="file" class="diet-dropdown-upload__file-input" accept="image/*,video/*,.svg,.lottie,application/json,application/pdf,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-hidden="true" tabindex="-1" />
 
         
       </div>

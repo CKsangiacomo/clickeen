@@ -221,7 +221,7 @@ fi
 echo "[dev-up] Starting Prague marketing site (4321)"
 (
   cd "$ROOT_DIR/prague"
-  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/prague.dev.log" 2>&1 &
+  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/prague.dev.log" 2>&1 &
   PRAGUE_PID=$!
   echo "[dev-up] Prague PID: $PRAGUE_PID"
 )

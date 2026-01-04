@@ -10,7 +10,7 @@ export function Workspace() {
   const host = preview.host;
   const hasWidget = Boolean(compiled);
   const seoGeoEnabled = Boolean((instanceData as any)?.seoGeo?.enabled);
-  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'wrap');
+  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
   const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
   const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
   const publicId = meta?.publicId ? String(meta.publicId) : '';
@@ -90,7 +90,7 @@ export function Workspace() {
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.
     setMeasuredHeight(null);
-  }, [meta?.publicId, device, theme, host, stageMode]);
+  }, [meta?.publicId, device, theme, host]);
 
   const isDesktopCanvas = host === 'canvas' && device === 'desktop';
   const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');
