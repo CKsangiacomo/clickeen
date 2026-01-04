@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "next-on-pages --outdir .cloudflare/output/static",
+    "build:cf": "node ../scripts/build-bob-cf.mjs",
     "start": "next start",
     "lint": "next lint"
   },

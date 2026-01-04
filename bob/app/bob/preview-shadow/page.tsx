@@ -1,6 +1,8 @@
 import { resolveVeniceBaseUrl } from '../../../lib/env/venice';
 import Script from 'next/script';
 
+export const runtime = 'edge';
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 export default async function PreviewShadowPage(props: { searchParams?: Promise<SearchParams> }) {
