@@ -31,6 +31,12 @@ export function getStaticPaths() {
       headline="Accordion FAQ widget for website"
       subheadline="Answer questions before they're asked. Reduce support tickets. Boost SEO."
     />
+    <Minibob
+      widget="faq"
+      locale={locale}
+      heading="Try it live"
+      subhead="Edit a demo instance in Minibob. Publish when you’re ready."
+    />
     <Stats stats={[
       { value: '2,078,753', label: 'Customers' },
       { value: '60s', label: 'Setup time' },
@@ -52,7 +58,6 @@ export function getStaticPaths() {
       primaryLabel="Create free"
       primaryHref="/"
     />
-    <Minibob widget="faq" locale={locale} />
     <Footer locale={locale} />
   </main>
 </Base>

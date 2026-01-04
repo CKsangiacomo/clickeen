@@ -34,6 +34,13 @@ const metaFaq = parsePipeBullets(sections.get('meta faq') ?? '').map(([question,
 const ctaLines = (sections.get('cta') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 const ctaHeadline = ctaLines[0] ?? `Create your ${widget} widget`;
 const ctaSubheadline = ctaLines[1] ?? 'Start free. Publish when you’re ready.';
+
+const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+if (minibobLines.length < 2) {
+  throw new Error(`[Prague] Missing '## Minibob' (2 lines) in tokyo/widgets/${widget}/pages/landing.md`);
+}
+const minibobHeading = minibobLines[0];
+const minibobSubhead = minibobLines[1];
 ---
 
 <Base title={`${headline} — Clickeen`} locale={locale}>
@@ -49,11 +56,11 @@ const ctaSubheadline = ctaLines[1] ?? 'Start free. Publish when you’re ready.'
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
     <Hero headline={headline} subheadline={subheadline} />
+    <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
     {stats.length ? <Stats stats={stats} /> : null}
     {steps.length ? <Steps steps={steps} /> : null}
     {features.length ? <Features items={features} /> : null}
     {metaFaq.length ? <MetaFaq items={metaFaq} /> : null}
-    <Minibob widget={widget} locale={locale} />
     <Cta
       headline={ctaHeadline}
       subheadline={ctaSubheadline}

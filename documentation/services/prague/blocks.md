@@ -121,6 +121,9 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 `site/minibob`
 - Island: the only Prague section that ships JS.
 - Responsibility: embed Bob in Minibob mode and bootstrap a demo instance.
+- Structure (non-negotiable):
+  - Stage: heading + subhead (from markdown)
+  - Pod: iframe only (Minibob takes full available width)
 - Contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
@@ -151,3 +154,4 @@ Example keys for `landing.md`:
 - `## Features` (list)
 - `## Meta FAQ` (Q/A pairs)
 - `## CTA`
+- `## Minibob` (2 lines: heading, subhead)

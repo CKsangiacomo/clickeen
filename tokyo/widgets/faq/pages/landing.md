@@ -29,3 +29,7 @@ Answer questions before they’re asked. Reduce support tickets. Boost SEO.
 ## CTA
 Create your FAQ widget
 Start free. Publish when you’re ready.
+
+## Minibob
+Try it live
+Edit a demo instance in Minibob. Publish when you’re ready.

@@ -2,11 +2,11 @@
 type Props = {
   widget: string;
   locale: string;
-  title?: string;
-  subtitle?: string;
+  heading: string;
+  subhead: string;
 };
 
-const { widget, locale, title = 'Try it live', subtitle = 'Edit a demo instance in Minibob. Publish when you’re ready.' } = Astro.props;
+const { widget, locale, heading, subhead } = Astro.props;
 
 const BOB_URL =
   import.meta.env.PUBLIC_BOB_URL || (import.meta.env.DEV ? 'http://localhost:3000' : 'https://app.clickeen.com');
@@ -17,28 +17,21 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
 
 <section id="minibob" class="ck-canvas">
+  <div class="ck-minibobStage">
+    <div class="heading-3">{heading}</div>
+    <div class="body-m ck-minibobStage__subhead">{subhead}</div>
+  </div>
+
   <div class="ck-inline">
-    <div class="ck-card ck-minibob">
-      <div class="ck-split ck-split--center ck-minibob__inner">
-        <div class="ck-split__a ck-stack" style="gap: var(--space-2);">
-          <div class="heading-3">{title}</div>
-          <div class="body-m" style="color: color-mix(in oklab, var(--color-system-black), transparent 50%);">
-            {subtitle}
-          </div>
-        </div>
-        <div class="ck-split__b ck-minibob__frame">
-          <iframe
-            id={iframeId}
-            class="ck-minibob__iframe"
-            title="Minibob"
-            src={iframeSrc}
-            loading="lazy"
-            referrerpolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-          />
-        </div>
-      </div>
-    </div>
+    <iframe
+      id={iframeId}
+      class="ck-minibob__iframe"
+      title="Minibob"
+      src={iframeSrc}
+      loading="lazy"
+      referrerpolicy="no-referrer"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+    />
   </div>
 </section>
 
@@ -94,27 +87,37 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 </script>
 
 <style>
-  .ck-minibob__inner {
-    padding: var(--space-8);
-    gap: var(--space-8);
+  #minibob.ck-canvas {
+    background: var(--color-system-white);
   }
 
-  .ck-minibob__frame {
-    flex: 0 0 min(640px, 48vw);
+  .ck-minibobStage {
+    max-width: var(--prague-max);
+    margin-inline: auto;
+    padding-inline: var(--prague-gutter);
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    text-align: center;
+  }
+
+  .ck-minibobStage__subhead {
+    color: color-mix(in oklab, var(--color-system-black), transparent 50%);
+    margin: 0;
   }
 
   .ck-minibob__iframe {
     width: 100%;
-    height: 420px;
+    height: clamp(520px, 70vh, 860px);
     border: 0;
-    border-radius: var(--control-radius-4xl);
-    box-shadow: var(--shadow-floating);
+    border-radius: var(--control-radius-lg);
+    box-shadow: none;
     background: var(--color-system-white);
   }
 
   @media (max-width: 900px) {
-    .ck-minibob__inner { padding: var(--space-6); gap: var(--space-6); }
-    .ck-minibob__frame { flex-basis: auto; }
-    .ck-minibob__iframe { height: 520px; }
+    .ck-minibobStage { margin-bottom: var(--space-5); }
+    .ck-minibob__iframe { height: 640px; }
   }
 </style>

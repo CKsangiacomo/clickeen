@@ -219,7 +219,7 @@ body {
   margin-bottom: var(--space-6);
   background: var(--color-system-white);
   padding: 32px;
-  border-radius: 18px;
+  border-radius: var(--radius-4, 0.5rem);
 }
 
 .devstudio-page-section:last-child {

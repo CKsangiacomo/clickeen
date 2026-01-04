@@ -38,6 +38,13 @@ if (!md) return new Response('Not found', { status: 404 });
 const sections = parseMarkdownSections(md);
 const headline = sections.get('headline') ?? `${widget} ${page}`;
 const subheadline = sections.get('subheadline') ?? '';
+
+const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+if (minibobLines.length < 2) {
+  throw new Error(`[Prague] Missing '## Minibob' (2 lines) in tokyo/widgets/${widget}/pages/${page}.md`);
+}
+const minibobHeading = minibobLines[0];
+const minibobSubhead = minibobLines[1];
 ---
 
 <Base title={`${headline} — Clickeen`} locale={locale}>
@@ -56,6 +63,8 @@ const subheadline = sections.get('subheadline') ?? '';
     />
 
     <Hero headline={headline} subheadline={subheadline} />
+
+    <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
 
     {page === 'templates' ? (
       <TemplatesGrid
@@ -112,8 +121,6 @@ const subheadline = sections.get('subheadline') ?? '';
       primaryLabel="Create free"
       primaryHref={`/${locale}/create`}
     />
-
-    <Minibob widget={widget} locale={locale} />
 
     <Footer locale={locale} />
   </main>
