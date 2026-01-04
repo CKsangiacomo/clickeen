@@ -226,13 +226,19 @@ body {
   padding-bottom: 0;
 }
 
-.ck-faq[data-layout='list'] .ck-faq__item {
+.ck-faq[data-layout='list'] {
   --faq-card-border-color: var(--color-system-gray-5);
+}
+
+.ck-faq[data-layout='multicolumn'] {
+  --faq-card-border-color: color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
+}
+
+.ck-faq[data-layout='list'] .ck-faq__item {
   background: var(--faq-item-bg, var(--color-system-gray-6-step5));
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__item {
-  --faq-card-border-color: color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
   background: var(--faq-item-bg, var(--color-system-white));
 }
 
