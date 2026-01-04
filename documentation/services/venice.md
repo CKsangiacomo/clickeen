@@ -4,7 +4,11 @@ When debugging reality, treat runtime code and deployed Cloudflare config as tru
 
 ## AIs Quick Scan
 
-**Purpose:** Public embed origin that renders widgets by combining Tokyo widget files (the software) with Paris instance config (the data).
+**Purpose:** Public embed origin that serves widgets to third‑party sites by assembling:
+- **Tokyo widget files** (the widget software/runtime), and
+- **Paris instance config** (the widget data).
+
+**Critical invariant:** Venice must not introduce a second widget implementation. The widget’s rendering logic lives in the widget package (Tokyo). Venice’s job is **embed assembly + policy** (asset proxying, cache headers, tokens/entitlements, sandboxing) so the **public embed matches what Bob’s Workspace preview shows** for the same widget package + state.
 **Owner:** `venice/` (Next.js route handlers running on the Edge runtime).
 **Dependencies:** Paris (instance API), Tokyo (widget assets), Dieter (tokens/components).
 **Shipped in this repo snapshot:**
@@ -34,7 +38,10 @@ When debugging reality, treat runtime code and deployed Cloudflare config as tru
 
 All third-party embed traffic terminates at Venice:
 - Browsers never call Paris directly.
-- Venice is a generic assembler/proxy (no per-widget logic, no coercion of config).
+- Venice is a generic assembler/proxy:
+  - no per-widget branching logic (no widget-specific rendering code paths)
+  - no config healing/coercion (treat `config` as data; fail visible if invalid)
+  - generic assembly is allowed (asset proxying, base URL handling, bootstrapping `window.CK_WIDGET`, cache policy, embed sandboxing)
 
 ### Primary Render Route: `GET /e/:publicId`
 
