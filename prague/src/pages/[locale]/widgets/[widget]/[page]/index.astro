@@ -33,11 +33,13 @@ export async function getStaticPaths() {
 }
 
 const md = await loadWidgetPageMarkdown({ widget, page });
-if (!md) return new Response('Not found', { status: 404 });
 
 const sections = parseMarkdownSections(md);
-const headline = sections.get('headline') ?? `${widget} ${page}`;
-const subheadline = sections.get('subheadline') ?? '';
+const headline = sections.get('headline');
+const subheadline = sections.get('subheadline');
+if (!headline || !subheadline) {
+  throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/${page}.md (Headline/Subheadline)`);
+}
 
 const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 if (minibobLines.length < 2) {

@@ -9,31 +9,50 @@ import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
 import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
-import { loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
+import { listWidgets, loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
 
 const { locale, widget } = Astro.params;
 
-export function getStaticPaths() {
-  return [{ params: { locale: 'en', widget: 'faq' } }];
+export async function getStaticPaths() {
+  const widgets = await listWidgets();
+  const locales = ['en'];
+  return locales.flatMap((l) => widgets.map((w) => ({ params: { locale: l, widget: w } })));
 }
 
 const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
-if (!md) {
-  return new Response('Not found', { status: 404 });
-}
 
 const sections = parseMarkdownSections(md);
-const headline = sections.get('headline') ?? `${widget} widget`;
-const subheadline = sections.get('subheadline') ?? '';
+const headline = sections.get('headline');
+const subheadline = sections.get('subheadline');
+if (!headline || !subheadline) {
+  throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
+}
 
-const stats = parsePipeBullets(sections.get('stats') ?? '').map(([value, label]) => ({ value, label })).filter((s) => s.value && s.label);
-const steps = parsePipeBullets(sections.get('steps') ?? '').map(([title, body]) => ({ title, body })).filter((s) => s.title && s.body);
-const features = parsePipeBullets(sections.get('features') ?? '').map(([title, body]) => ({ title, body })).filter((s) => s.title && s.body);
-const metaFaq = parsePipeBullets(sections.get('meta faq') ?? '').map(([question, answer]) => ({ question, answer })).filter((i) => i.question && i.answer);
+const statsRaw = sections.get('stats');
+const stepsRaw = sections.get('steps');
+const featuresRaw = sections.get('features');
+const metaFaqRaw = sections.get('meta faq');
+if (!statsRaw || !stepsRaw || !featuresRaw || !metaFaqRaw) {
+  throw new Error(
+    `[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Stats/Steps/Features/Meta FAQ)`,
+  );
+}
 
-const ctaLines = (sections.get('cta') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-const ctaHeadline = ctaLines[0] ?? `Create your ${widget} widget`;
-const ctaSubheadline = ctaLines[1] ?? 'Start free. Publish when you’re ready.';
+const stats = parsePipeBullets(statsRaw).map(([value, label]) => ({ value, label }));
+const steps = parsePipeBullets(stepsRaw).map(([title, body]) => ({ title, body }));
+const features = parsePipeBullets(featuresRaw).map(([title, body]) => ({ title, body }));
+const metaFaq = parsePipeBullets(metaFaqRaw).map(([question, answer]) => ({ question, answer }));
+
+const ctaRaw = sections.get('cta');
+if (!ctaRaw) {
+  throw new Error(`[Prague] Missing '## CTA' in tokyo/widgets/${widget}/pages/landing.md`);
+}
+const ctaLines = ctaRaw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+if (ctaLines.length < 2) {
+  throw new Error(`[Prague] Missing '## CTA' (2 lines) in tokyo/widgets/${widget}/pages/landing.md`);
+}
+const ctaHeadline = ctaLines[0];
+const ctaSubheadline = ctaLines[1];
 
 const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 if (minibobLines.length < 2) {

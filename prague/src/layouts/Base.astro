@@ -6,10 +6,13 @@ type Props = {
 
 const { title, locale } = Astro.props;
 
-const TOKYO_URL =
-  import.meta.env.PUBLIC_TOKYO_URL ||
-  (import.meta.env.DEV ? 'http://localhost:4000' : 'https://tokyo.clickeen.com');
+const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
+if (!TOKYO_URL) {
+  throw new Error('[prague] PUBLIC_TOKYO_URL is required (e.g. https://tokyo-dev.pages.dev)');
+}
 const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
+
+const isDevProject = (process.env.CF_PAGES_PROJECT_NAME || '').endsWith('-dev');
 ---
 
 <!doctype html>
@@ -17,8 +20,8 @@ const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    {isDevProject ? <meta name="robots" content="noindex,nofollow" /> : null}
     <title>{title}</title>
-    <link rel="stylesheet" href="/styles/fallback-tokens.css" />
     <link rel="stylesheet" href={TOKENS_HREF} />
     <link rel="stylesheet" href="/styles/layout.css" />
     <link rel="stylesheet" href="/styles/primitives.css" />

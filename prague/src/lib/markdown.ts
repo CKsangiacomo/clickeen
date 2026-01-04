@@ -1,39 +1,42 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(process.cwd(), '..');
+const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.url)));
+const TOKYO_WIDGETS_DIR = path.join(REPO_ROOT, 'tokyo', 'widgets');
 
-export async function loadWidgetPageMarkdown(opts: { widget: string; page: string }): Promise<string | null> {
+function isRealWidgetDir(name: string): boolean {
+  if (!name) return false;
+  if (name.startsWith('_')) return false;
+  if (name === 'shared') return false;
+  return true;
+}
+
+export async function loadWidgetPageMarkdown(opts: { widget: string; page: string }): Promise<string> {
   const filePath = path.join(REPO_ROOT, 'tokyo', 'widgets', opts.widget, 'pages', `${opts.page}.md`);
-  try {
-    return await fs.readFile(filePath, 'utf8');
-  } catch {
-    return null;
-  }
+  return await fs.readFile(filePath, 'utf8');
 }
 
 export async function listWidgets(): Promise<string[]> {
-  const dir = path.join(REPO_ROOT, 'tokyo', 'widgets');
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    return entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  } catch {
-    return [];
-  }
+  const entries = await fs.readdir(TOKYO_WIDGETS_DIR, { withFileTypes: true });
+  return entries
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .filter(isRealWidgetDir)
+    .sort();
 }
 
 export async function listWidgetPages(widget: string): Promise<string[]> {
-  const dir = path.join(REPO_ROOT, 'tokyo', 'widgets', widget, 'pages');
-  try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    return entries
-      .filter((e) => e.isFile() && e.name.endsWith('.md'))
-      .map((e) => e.name.slice(0, -3))
-      .filter((slug) => slug !== 'landing')
-      .sort();
-  } catch {
-    return [];
+  if (!isRealWidgetDir(widget)) {
+    throw new Error(`[prague] Invalid widget directory: ${widget}`);
   }
+  const dir = path.join(TOKYO_WIDGETS_DIR, widget, 'pages');
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  return entries
+    .filter((e) => e.isFile() && e.name.endsWith('.md'))
+    .map((e) => e.name.slice(0, -3))
+    .filter((slug) => slug !== 'landing')
+    .sort();
 }
 
 export function parseMarkdownSections(md: string): Map<string, string> {

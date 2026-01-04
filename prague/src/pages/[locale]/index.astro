@@ -1,22 +1,74 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Nav from '../../blocks/site/nav.astro';
+import Footer from '../../blocks/site/footer.astro';
+import { listWidgets, loadWidgetPageMarkdown, parseMarkdownSections } from '../../lib/markdown';
 
 const { locale } = Astro.params;
 
 export function getStaticPaths() {
   return [{ params: { locale: 'en' } }];
 }
+
+const widgets = await listWidgets();
+if (!widgets.length) {
+  throw new Error('[prague] No widgets found in tokyo/widgets (expected at least one)');
+}
+
+const widgetCards = await Promise.all(
+  widgets.map(async (widget) => {
+    const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
+    const sections = parseMarkdownSections(md);
+    const headline = sections.get('headline');
+    const subheadline = sections.get('subheadline');
+    if (!headline || !subheadline) {
+      throw new Error(`[prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
+    }
+    return { widget, headline, subheadline };
+  }),
+);
 ---
 
 <Base title="Clickeen" locale={locale}>
   <main>
-    <section class="ck-canvas">
-      <div class="ck-inline ck-stack">
-        <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">Clickeen</h1>
-        <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
-          Prague stub. Next: widget gallery.
-        </p>
+    <Nav
+      title="Clickeen"
+      homeHref={`/${locale}/`}
+      items={[{ label: 'Widgets', href: `/${locale}/widgets/${widgetCards[0].widget}` }]}
+      cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
+    />
+
+    <section class="ck-canvas" style="padding-top: 0;">
+      <div class="ck-inline ck-stack" style="gap: var(--space-8);">
+        <div class="ck-stack" style="gap: var(--space-2);">
+          <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">Widgets</h1>
+          <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
+            Pick a widget to explore templates, pricing, and try it live.
+          </p>
+        </div>
+
+        <div class="ck-stack" style="gap: var(--space-4);">
+          {widgetCards.map((w) => (
+            <a
+              class="ck-card"
+              href={`/${locale}/widgets/${w.widget}`}
+              style="display: block; padding: var(--space-6); text-decoration: none; color: inherit;"
+            >
+              <div class="ck-stack" style="gap: var(--space-2);">
+                <div class="label-m" style="text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.65;">
+                  {w.widget}
+                </div>
+                <div class="heading-3" style="margin: 0;">{w.headline}</div>
+                <div class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
+                  {w.subheadline}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
+
+    <Footer locale={locale} />
   </main>
 </Base>
