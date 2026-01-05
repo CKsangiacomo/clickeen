@@ -117,6 +117,7 @@ Top-level groups:
 - `appearance.*` — paint (fills, borders, colors)
 - `behavior.*` — backlink + small toggles
 - `actions.*` — “during” CTA + “after end” behavior
+- `ai.*` — AI context (Copilot-only; runtime may ignore)
 - `seoGeo.*` — embed optimization toggle (policy-gated)
 - `typography.*` — roles (compiler-injected)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
@@ -156,6 +157,7 @@ Panels:
 - **Typography**: injected (roles: `heading`, `timer`, `label`, `button`)
 - **Behavior**: `behavior.showBacklink` + small toggles
 - **Actions**: `actions.*` (CTA during + after-end behavior)
+- **Settings**: `ai.websiteUrl` (policy-gated)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
 ## 7) Defaults (authoritative `spec.json.defaults`)
@@ -163,6 +165,7 @@ The implementer must translate this PRD into a complete defaults object in `toky
 Defaults must include:
 - `seoGeo: { enabled: false }`
 - `behavior: { showBacklink: true }`
+- `ai: { websiteUrl: "" }`
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 
 ## Links

@@ -234,6 +234,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **Layout**: sizing/spacing/arrangement for arrays/items (logo size, gaps, strip gaps)
   - **Appearance**: “paint” for surfaces (logo look/opacity/radius, tile background/border, header/CTA colors)
   - **Typography**: role-based text (header title/body)
+  - **Settings**: AI website URL (Copilot-only; policy-gated)
 
 ### Panel: Content (common)
 - **Type picker**: `type`
@@ -402,6 +403,11 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
   - **Tier 1+**: add **Alt** (`alt`) + **Title** (`title`) fields (same tier as SEO/GEO)
 - Save behavior: the modal writes standard ops (`set`) to the underlying paths above; there is no special persistence logic.
 
+#### AI behavior (Copilot, uses `ai.websiteUrl`)
+If `ai.websiteUrl` is present and policy allows it, Copilot may:
+- Propose or rewrite LogoShowcase copy (header/CTA) based on the website URL.
+- For **Tier 1+** (same plan as SEO/GEO), propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
+
 ### Type = `grid`
 #### Content panel (below Type picker)
 - **Grid columns**
@@ -521,6 +527,7 @@ The full defaults object (used verbatim as `spec.json.defaults`):
 
 ```json
 {
+  "ai": { "websiteUrl": "" },
   "header": { "enabled": true, "title": "Some of our clients", "textHtml": "", "alignment": "center" },
   "strips": [
     {

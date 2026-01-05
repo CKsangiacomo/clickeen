@@ -160,6 +160,7 @@ Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `layout.*` — layout type, responsive columns, gap
 - `appearance.*` — item background + question/answer colors + accordion icon choice
 - `behavior.*` — accordion toggles + media toggles + backlink
+- `ai.*` — AI context (Copilot-only; runtime may ignore)
 - `typography.*` — global family + per-role selections (compiler-injected panel)
 - `stage.*` + `pod.*` — stage/pod layout and appearance
 
@@ -168,7 +169,12 @@ Panels defined in `tokyo/widgets/faq/spec.json`:
 - `content` — section manager + Q/A editing + show title controls
 - `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
 - `appearance` — widget appearance + stage/pod appearance
-- `settings` — media toggles + backlink
+- `settings` — website URL (AI) + media toggles + backlink
+
+## 5.1) AI behavior (Copilot, uses `ai.websiteUrl`)
+If `ai.websiteUrl` is present and policy allows it, Copilot may:
+- Rewrite or propose FAQ content (sections/questions/answers) based on the website URL.
+- Preserve the widget’s deterministic render: this is content generation only; runtime does not “fetch the website”.
 
 Compiler-injected (because defaults include `typography.roles`):
 - `typography` — standardized typography controls (compiler strips any author-defined typography panel)
