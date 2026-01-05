@@ -55,6 +55,11 @@ const hydrateHost = createDropdownHydrator({
     if (!state) return;
     const key = (state.input.value || '').trim();
     if (!key) return;
+    // Editor invariant: do not persist during editing.
+    // If the value is already a URL/data URL, render directly without any network calls.
+    if (isDataUrl(key)) return previewFromDataUrl(state, key);
+    if (looksLikeUrl(key)) return previewFromUrl(state, key);
+    // Fallback for older persisted values that are fileKeys.
     void resolveAndPreview(state, key);
   },
 });
@@ -186,25 +191,31 @@ function installHandlers(state: DropdownUploadState) {
     }
     clearError(state);
 
-    // Optimistic local preview while upload happens.
+    // Optimistic local preview while reading happens (no persistence in edit loop).
     const objectUrl = URL.createObjectURL(file);
     const { kind, ext } = classifyByNameAndType(file.name, file.type);
+    state.root.dataset.localName = file.name;
+    state.root.dataset.localExt = ext || '';
+    state.root.dataset.localKind = kind;
     // Update header immediately with the user-facing filename.
     setHeaderWithFile(state, file.name, false);
     setPreview(state, {
       kind,
-      previewUrl: kind === 'image' ? objectUrl : undefined,
+      previewUrl: kind === 'image' || kind === 'video' ? objectUrl : undefined,
       name: file.name,
       ext,
       hasFile: true,
     });
 
     try {
-      const grant = await requestGrant(state, file);
-      await uploadToSignedUrl(grant.uploadUrl, file);
-      setFileKey(state, grant.fileKey, true);
+      const dataUrl = await readFileAsDataUrl(file);
+      // Editor-time invariant: store a local value so preview renders with no network/persistence.
+      // For images we store a CSS fill string (same contract as dropdown-fill); for other kinds we store the data URL.
+      const value =
+        kind === 'image' ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
+      setFileKey(state, value, true);
     } catch (e) {
-      setError(state, e instanceof Error ? e.message : 'Upload failed');
+      setError(state, e instanceof Error ? e.message : 'File read failed');
     }
   });
 }
@@ -246,6 +257,57 @@ function validateFileSelection(state: DropdownUploadState, file: File): string |
   });
 
   return ok ? null : 'File type not allowed';
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('File read failed'));
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') return reject(new Error('File read failed'));
+      resolve(result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function extractPrimaryUrl(raw: string): string | null {
+  const v = (raw || '').trim();
+  if (!v) return null;
+  if (/^data:/i.test(v) || /^blob:/i.test(v) || /^https?:\/\//i.test(v)) return v;
+  // CSS fill string, e.g. url("data:...") center center / cover no-repeat
+  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (m && m[2]) return m[2];
+  return null;
+}
+
+function isDataUrl(raw: string): boolean {
+  const url = extractPrimaryUrl(raw);
+  return Boolean(url && /^data:/i.test(url));
+}
+
+function looksLikeUrl(raw: string): boolean {
+  const url = extractPrimaryUrl(raw);
+  return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url)));
+}
+
+function previewFromUrl(state: DropdownUploadState, raw: string) {
+  const url = extractPrimaryUrl(raw);
+  if (!url) return;
+  const name = state.root.dataset.localName || 'Uploaded file';
+  const ext = (state.root.dataset.localExt || guessExtFromName(name) || '').toLowerCase();
+  const kind = classifyByNameAndType(name, '').kind;
+  setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
+}
+
+function previewFromDataUrl(state: DropdownUploadState, raw: string) {
+  const url = extractPrimaryUrl(raw) || '';
+  const mime = (url.split(';')[0] || '').slice('data:'.length);
+  const name = state.root.dataset.localName || 'Uploaded file';
+  const ext = (state.root.dataset.localExt || guessExtFromName(name) || '').toLowerCase();
+  const kind = classifyByNameAndType(name, mime).kind;
+  setPreview(state, { kind, previewUrl: kind === 'doc' ? undefined : url, name, ext, hasFile: true });
 }
 
 async function requestGrant(state: DropdownUploadState, file: File): Promise<GrantResponse> {
@@ -313,12 +375,27 @@ function syncFromValue(state: DropdownUploadState, raw: string) {
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
     setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
+    delete state.root.dataset.localName;
+    delete state.root.dataset.localExt;
+    delete state.root.dataset.localKind;
     return;
   }
 
-  // We only have a fileKey here; show a neutral loading label until resolve provides filename.
-  setHeaderWithFile(state, 'Loading…', true);
   state.root.dataset.hasFile = 'true';
+  // Editor-time: local data URL (no network).
+  if (isDataUrl(key)) {
+    setHeaderWithFile(state, state.root.dataset.localName || 'Uploaded file', false);
+    previewFromDataUrl(state, key);
+    return;
+  }
+  // Persisted state may store a direct URL; render it (no resolve).
+  if (looksLikeUrl(key)) {
+    setHeaderWithFile(state, state.root.dataset.localName || key, false);
+    previewFromUrl(state, key);
+    return;
+  }
+  // Fallback: older persisted values are fileKeys that require resolve.
+  setHeaderWithFile(state, 'Loading…', true);
   void resolveAndPreview(state, key);
 }
 

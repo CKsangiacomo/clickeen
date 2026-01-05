@@ -103,6 +103,8 @@ var Dieter = (() => {
       if (!state) return;
       const key = (state.input.value || "").trim();
       if (!key) return;
+      if (isDataUrl(key)) return previewFromDataUrl(state, key);
+      if (looksLikeUrl(key)) return previewFromUrl(state, key);
       void resolveAndPreview(state, key);
     }
   });
@@ -210,20 +212,23 @@ var Dieter = (() => {
       clearError(state);
       const objectUrl = URL.createObjectURL(file);
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
+      state.root.dataset.localName = file.name;
+      state.root.dataset.localExt = ext || "";
+      state.root.dataset.localKind = kind;
       setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
-        previewUrl: kind === "image" ? objectUrl : void 0,
+        previewUrl: kind === "image" || kind === "video" ? objectUrl : void 0,
         name: file.name,
         ext,
         hasFile: true
       });
       try {
-        const grant = await requestGrant(state, file);
-        await uploadToSignedUrl(grant.uploadUrl, file);
-        setFileKey(state, grant.fileKey, true);
+        const dataUrl = await readFileAsDataUrl(file);
+        const value = kind === "image" ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
+        setFileKey(state, value, true);
       } catch (e) {
-        setError(state, e instanceof Error ? e.message : "Upload failed");
+        setError(state, e instanceof Error ? e.message : "File read failed");
       }
     });
   }
@@ -252,6 +257,50 @@ var Dieter = (() => {
       return typeLower === rule.toLowerCase();
     });
     return ok ? null : "File type not allowed";
+  }
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("File read failed"));
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== "string") return reject(new Error("File read failed"));
+        resolve(result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function extractPrimaryUrl(raw) {
+    const v = (raw || "").trim();
+    if (!v) return null;
+    if (/^data:/i.test(v) || /^blob:/i.test(v) || /^https?:\/\//i.test(v)) return v;
+    const m = v.match(/url\\(\\s*(['"]?)([^'")]+)\\1\\s*\\)/i);
+    if (m && m[2]) return m[2];
+    return null;
+  }
+  function isDataUrl(raw) {
+    const url = extractPrimaryUrl(raw);
+    return Boolean(url && /^data:/i.test(url));
+  }
+  function looksLikeUrl(raw) {
+    const url = extractPrimaryUrl(raw);
+    return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url)));
+  }
+  function previewFromUrl(state, raw) {
+    const url = extractPrimaryUrl(raw);
+    if (!url) return;
+    const name = state.root.dataset.localName || "Uploaded file";
+    const ext = (state.root.dataset.localExt || guessExtFromName(name) || "").toLowerCase();
+    const kind = classifyByNameAndType(name, "").kind;
+    setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
+  }
+  function previewFromDataUrl(state, raw) {
+    const url = extractPrimaryUrl(raw) || "";
+    const mime = (url.split(";")[0] || "").slice("data:".length);
+    const name = state.root.dataset.localName || "Uploaded file";
+    const ext = (state.root.dataset.localExt || guessExtFromName(name) || "").toLowerCase();
+    const kind = classifyByNameAndType(name, mime).kind;
+    setPreview(state, { kind, previewUrl: kind === "doc" ? void 0 : url, name, ext, hasFile: true });
   }
   async function requestGrant(state, file) {
     const res = await fetch(state.grantUrl, {
@@ -310,10 +359,23 @@ var Dieter = (() => {
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
+      delete state.root.dataset.localName;
+      delete state.root.dataset.localExt;
+      delete state.root.dataset.localKind;
+      return;
+    }
+    state.root.dataset.hasFile = "true";
+    if (isDataUrl(key)) {
+      setHeaderWithFile(state, state.root.dataset.localName || "Uploaded file", false);
+      previewFromDataUrl(state, key);
+      return;
+    }
+    if (looksLikeUrl(key)) {
+      setHeaderWithFile(state, state.root.dataset.localName || key, false);
+      previewFromUrl(state, key);
       return;
     }
     setHeaderWithFile(state, "Loading\u2026", true);
-    state.root.dataset.hasFile = "true";
     void resolveAndPreview(state, key);
   }
   function setFileKey(state, fileKey, emit) {

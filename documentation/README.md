@@ -40,9 +40,10 @@ documentation/
 │   ├── overview.md          # San Francisco platform
 │   ├── infrastructure.md    # Cloudflare infra
 │   ├── learning.md          # How agents learn
-│   ├── sdr-copilot.md       # SDR Copilot agent
-│   ├── ux-writer.md         # UX Writer agent
-│   └── gtm.md               # GTM agent
+│   ├── agents/
+│   │   ├── sdr-copilot.md   # SDR Copilot agent
+│   │   ├── ux-writer.md     # UX Writer agent
+│   │   ├── gtm.md           # GTM agent
 │
 └── widgets/                  # WIDGET SPECS
     ├── HowWeBuildWidgets.md # Implementation playbook

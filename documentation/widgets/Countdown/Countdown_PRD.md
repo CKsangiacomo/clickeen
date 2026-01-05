@@ -1,68 +1,66 @@
 # content.countdown — Countdown Widget PRD
 
-STATUS: NORMATIVE — IN PROGRESS (Refactor)
+STATUS: PRD
 
-This is the canonical PRD for the Countdown widget in the current Clickeen model.
-For deep competitor feature inventory, see `documentation/widgets/Countdown/Countdown_competitoranalysis.md`.
+## What this widget does (1 sentence)
+Renders a configurable countdown / personal countdown / number counter with optional CTA and “after end” behavior, edited in Bob and rendered deterministically in the embed.
 
 ## 0) Non-negotiables (Architecture)
-1. **Starter designs are instances**: there is no separate preset system; curated designs are Clickeen-owned instances that users clone.
+1. **Starter designs are instances**: curated designs are Clickeen-owned instances that users clone.
 2. **No silent fixups**: editor + runtime must not invent state, merge defaults, coerce invalid values, or generate IDs at render time.
 3. **Deterministic render**: the same instance state produces the same output every time.
-4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates content.
+4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates text/visibility.
 
 ## Subject Policy — Flags / Caps / Budgets (Matrices)
 
 X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
 
-Notes:
-- This widget is not yet a Tokyo 5-file package in this repo; **exact state paths are TBD** until `tokyo/widgets/countdown/spec.json` exists.
-- Use `?` in the matrices where product decisions are not finalized yet; replace `?` with `A/B` or numbers before implementation.
-
 ### Matrix A — Flags (ALLOW/BLOCK)
 
 ```text
-Legend: A=ALLOW, B=BLOCK, ?=TBD
+Legend: A=ALLOW, B=BLOCK
 
-Row                | DS | MB | F  | T1 | T2 | T3
------------------- |----|----|----|----|----|----
-seoGeoEnabled      | A  | ?  | ?  | ?  | ?  | ?
-removeBranding     | A  | ?  | ?  | ?  | ?  | ?
-modePersonalAllowed| A  | ?  | ?  | ?  | ?  | ?
-modeNumberAllowed  | A  | ?  | ?  | ?  | ?  | ?
+Row                 | DS | MB | F  | T1 | T2 | T3
+------------------- |----|----|----|----|----|----
+seoGeoEnabled       | A  | B  | B  | A  | A  | A
+removeBranding      | A  | B  | B  | A  | A  | A
+modeDateAllowed     | A  | A  | A  | A  | A  | A
+modePersonalAllowed | A  | B  | B  | A  | A  | A
+modeNumberAllowed   | A  | B  | B  | A  | A  | A
 ```
 
 **Flag key (details)**
 
 ```text
 Flag key
-Row               | Path                         | Enforcement | Upsell | Meaning
------------------ | ---------------------------- | ----------- | ------ | -------------------------
-seoGeoEnabled     | seoGeo.enabled (TBD)         | OPS+LOAD    | UP     | SEO/GEO optimization toggle
-removeBranding    | behavior.showBacklink=false (TBD) | UI+OPS  | UP     | Remove branding
-modePersonalAllowed | timer.mode='personal' (TBD) | UI+OPS     | UP     | Personal countdown mode
-modeNumberAllowed   | timer.mode='number' (TBD)   | UI+OPS     | UP     | Number counter mode
+Row                 | Path                     | Enforcement | Upsell | Meaning
+------------------- | ------------------------ | ----------- | ------ | -------------------------
+seoGeoEnabled       | seoGeo.enabled           | OPS+LOAD    | UP     | SEO/GEO optimization toggle
+removeBranding      | behavior.showBacklink=false | UI+OPS   | UP     | Remove branding
+modeDateAllowed     | timer.mode='date'        | UI+OPS      | —      | Countdown to a date/time
+modePersonalAllowed | timer.mode='personal'    | UI+OPS      | UP     | Personal countdown (per-visitor start)
+modeNumberAllowed   | timer.mode='number'      | UI+OPS      | UP     | Number counter (count up/down)
 ```
 
 ### Matrix B — Caps (numbers)
 
 ```text
-Legend: ∞ means “no cap”, ? means “TBD”
+Legend: ∞ means “no cap”
 
-Row            |  DS |  MB |   F |  T1 |  T2 |  T3
--------------- |-----|-----|-----|-----|-----|-----
-maxActions     |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
-maxMessageChars|   ∞ |   ? |   ? |   ? |   ∞ |   ∞
+Row              |  DS |  MB |   F |  T1 |  T2 |  T3
+---------------- |-----|-----|-----|-----|-----|-----
+maxActions       |   ∞ |   1 |   1 |   2 |   ∞ |   ∞
+maxMessageChars  |   ∞ |  80 | 140 | 300 |   ∞ |   ∞
 ```
 
 **Cap key (details)**
 
 ```text
 Cap key
-Row           | Path | Enforcement      | Violation | Upsell | Meaning
-------------- | ---- | --------------- | --------- | ------ | -------------------------
-maxActions    | (TBD)| OPS(set/insert)  | REJECT    | UP     | Max CTA buttons (during + after)
-maxMessageChars | (TBD) | OPS(set)     | REJECT    | UP     | Max custom message length (chars)
+Row             | Path                         | Enforcement | Violation | Upsell | Meaning
+--------------- | ---------------------------- | ---------- | --------- | ------ | -------------------------
+maxActions      | actions.during.enabled + actions.after.* | UI+OPS | REJECT | UP | Max enabled actions (CTA and/or after-action)
+maxMessageChars | actions.after.messageText    | OPS(set)    | REJECT    | UP     | Max “after end” message length (chars)
 ```
 
 ### Matrix C — Budgets (numbers)
@@ -87,86 +85,84 @@ Row          | Consumed when              | Counts as          | Upsell | Notes
 ------------ | -------------------------- | ------------------ | ------ | -------------------------
 copilotTurns | Copilot prompt submit      | 1 per user prompt  | UP     | —
 edits        | any successful edit        | 1 per state change | UP     | continue editing your widget by creating a free account
-uploads      | — (Countdown has no uploads) | —               | —      | —
+uploads      | — (Countdown has no uploads) | —                | —      | —
 ```
 
-## 1) Where the widget lives
-- Widget definition (the software): `tokyo/widgets/countdown/`
-  - `spec.json` (defaults + ToolDrawer markup)
-  - `widget.html` (semantic scaffold)
-  - `widget.css` (scoped styles; Dieter tokens)
-  - `widget.client.js` (applyState)
-- Canonical state shape for editing is `tokyo/widgets/countdown/spec.json` → `defaults`.
+## 1) Where the widget lives (authoritative)
+Widget definition (the software): `tokyo/widgets/countdown/`
+- `spec.json` — defaults + ToolDrawer markup
+- `widget.html` — semantic scaffold + stable `data-role` hooks
+- `widget.css` — scoped styles (Dieter tokens)
+- `widget.client.js` — deterministic `applyState(state)`
+- `agent.md` — AI editing contract (editable paths + enums + array semantics)
 
-## 2) Scope (Phase-1)
-Target: **70%+ core parity** with a clean path to full parity.
-Execution plan: `CurrentlyExecuting/Countdown_Widget_Refactor_Plan.md`.
+## 2) Types available (core framework)
+In Clickeen terms, **Type = miniwidget**.
 
-## 2.1) Functional scope (what the widget must do)
-### Timer modes
-- **Countdown to date**: count down to a specific date/time + timezone.
-- **Personal countdown**: starts on first view per visitor; supports optional repeat.
-- **Number counter**: counts up/down toward a target over a duration.
+Countdown has 3 Types (selected by `timer.mode`):
+- `date` — countdown to a specific date/time + timezone
+- `personal` — per-visitor countdown starting at first view (optional repeat)
+- `number` — count up/down toward a target over a duration
 
-### Optional actions
-- **Button during**: optional CTA button (text, URL, style, open-in-new-tab).
-- **After action**: what happens at end (hide, do nothing, show button, message).
+Rule: `timer.mode` is the only Type axis. Everything else is a normal control binding.
 
-### Layout / placement
-- Layout types as declared in `tokyo/widgets/countdown/spec.json` (`layout.type`).
-- Consistent spacing via `layout.gap`.
+## 3) Canonical state (authoritative)
+Defaults are the state contract. No runtime merges.
 
-### Visual system
-- Theme presets + individual colors.
-- Timer style + separators + animation.
-- Visibility toggles for units + labels and time format.
-- Typography roles: `heading`, `timer`, `label`, `button`.
+Top-level groups:
+- `timer.*` — type + mode settings + headline
+- `layout.*` — arrangement and spacing
+- `appearance.*` — paint (fills, borders, colors)
+- `behavior.*` — backlink + small toggles
+- `actions.*` — “during” CTA + “after end” behavior
+- `seoGeo.*` — embed optimization toggle (policy-gated)
+- `typography.*` — roles (compiler-injected)
+- `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
 
-## 3) Model: starter designs (curated instances)
-Competitor “gallery presets” are implemented as **curated instances**:
-- Clickeen team creates `ck-countdown-*` source instances using Bob/DevStudio.
-- Prague shows those source instances in a gallery.
-- “Use this” clones the source instance config into the user’s workspace and opens Bob on the cloned instance.
+## 4) DOM contract (stable hooks)
+All runtime selectors must be scoped within `[data-ck-widget="countdown"]`.
 
-This keeps one system (instances) and avoids separate preset CRUD, versioning, or migration logic.
+Required roles (minimum):
+- Root: `[data-ck-widget="countdown"]`
+- Heading: `[data-role="heading"]`
+- Timer container: `[data-role="timer"]`
+- Unit tiles: `[data-role="unit"][data-unit="days|hours|minutes|seconds"]`
+  - value: `[data-role="value"]`
+  - label: `[data-role="label"]`
+- CTA: `[data-role="cta"]` (anchor/button)
+- After-end message: `[data-role="after-message"]`
 
-## 4) Canonical state (current)
-The Countdown instance state is grouped as:
-- `timer.*` — mode + mode-specific settings (date/personal/number) + heading
-- `actions.*` — during/after behavior (CTA + after-action)
-- `layout.*` — placement + widget layout values
-- `theme.*` — preset + colors + timer style + animation + separator + time format
-- `typography.*` — global family + per-role selections (compiler-injected panel)
-- `stage.*` + `pod.*` — stage/pod layout and appearance (compiler-injected panel)
-- `settings.*` — language + advanced fields (e.g. custom CSS/JS)
-- `behavior.*` — backlink on/off
+## 5) Runtime requirements (deterministic)
+`widget.client.js` must:
+- Validate state shape up front (throw clear errors; no merges).
+- Set `data-mode="<date|personal|number>"` on root.
+- Update all text/visibility via stable `data-role` hooks.
+- Drive all visual differences via CSS vars + `data-*`.
+- Apply platform globals:
+  - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
+  - `CKTypography.applyTypography(state.typography, root, roleMap)`
 
-Source of truth: `tokyo/widgets/countdown/spec.json`.
+Personal countdown persistence rule (deterministic):
+- Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` once we have it, otherwise `publicId` injected by embed; do not invent random ids).
+- If the key is missing: set it once and reuse.
 
-## 5) ToolDrawer panels (current)
-Panels are defined in `tokyo/widgets/countdown/spec.json` and augmented by compiler modules:
-- `content` — `timer.*`
-- `layout` — `layout.*` + stage/pod controls (injected because defaults include `stage`/`pod`)
-- `appearance` — `theme.preset` + color picks
-- `style` — `theme.*` style controls (timer style, animation, separator, time format, unit visibility)
-- `typography` — injected because defaults include `typography.roles` (compiler strips any author-defined typography panel)
-- `behavior` — `actions.*` + `behavior.showBacklink`
-- `advanced` — `settings.*`
+## 6) ToolDrawer panels (required mapping)
+Panels:
+- **Content**: `timer.*` (mode picker + mode settings)
+- **Layout**: `layout.*` + Stage/Pod controls (injected via defaults)
+- **Appearance**: `appearance.*` (colors/borders/shadows where applicable)
+- **Typography**: injected (roles: `heading`, `timer`, `label`, `button`)
+- **Behavior**: `behavior.showBacklink` + small toggles
+- **Actions**: `actions.*` (CTA during + after-end behavior)
+- **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
-## 6) Runtime requirements
-Widget runtime (`tokyo/widgets/countdown/widget.client.js`) must:
-- Query within the widget root (no global selectors for internals)
-- Apply state deterministically (no default merges; missing required state is an editor bug)
-- Use shared runtime modules when applicable (`tokyo/widgets/shared/*`)
+## 7) Defaults (authoritative `spec.json.defaults`)
+The implementer must translate this PRD into a complete defaults object in `tokyo/widgets/countdown/spec.json`.
+Defaults must include:
+- `seoGeo: { enabled: false }`
+- `behavior: { showBacklink: true }`
+- Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 
-## 7) Acceptance criteria (refactor)
-See `CurrentlyExecuting/Countdown_Widget_Refactor_Plan.md` for detailed P0/P1 items; the minimum is:
-- Correct timer math (carry-down for hidden units; no modulo bugs)
-- Correct layout behavior (fixed top/bottom bars, not sticky)
-- Deterministic personal countdown persistence (per-instance key)
-- Clean DOM/CSS contract (stable wrapper elements referenced by CSS and JS)
-
----
-Links:
-- `documentation/architecture/CONTEXT.md` (canonical concepts)
-- `documentation/widgets/WidgetArchitecture.md` (widget system)
+## Links
+- `documentation/architecture/CONTEXT.md`
+- `documentation/widgets/WidgetBuildProcess.md`

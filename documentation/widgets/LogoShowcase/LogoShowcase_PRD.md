@@ -18,8 +18,8 @@ Row                   | DS | MB | F  | T1 | T2 | T3
 --------------------- |----|----|----|----|----|----
 seoGeoEnabled         | A  | B  | B  | A  | A  | A
 removeBranding        | A  | B  | B  | A  | A  | A
-typeGridAllowed       | A  | A  | B  | A  | A  | A
-typeSliderAllowed     | A  | A  | B  | A  | A  | A
+typeGridAllowed       | A  | A  | A  | A  | A  | A
+typeSliderAllowed     | A  | A  | A  | A  | A  | A
 typeCarouselAllowed   | A  | B  | B  | A  | A  | A
 typeTickerAllowed     | A  | B  | B  | A  | A  | A
 sliderAutoplayAllowed | A  | B  | B  | A  | A  | A
@@ -47,10 +47,10 @@ Legend: ∞ means “no cap”
 
 Row                  |  DS |  MB |   F |  T1 |  T2 |  T3
 -------------------- |-----|-----|-----|-----|-----|-----
-maxStrips            |   ∞ |   1 |   0 |  10 |   ∞ |   ∞
-maxLogosPerStrip     |   ∞ |   6 |   0 |  20 |   ∞ |   ∞
-maxCaptionChars      |   ∞ |  40 |   0 | 120 |   ∞ |   ∞
-maxHeaderTextHtmlChars|  ∞ | 140 |   0 | 300 |   ∞ |   ∞
+maxStrips            |   ∞ |   1 |   2 |  10 |   ∞ |   ∞
+maxLogosPerStrip     |   ∞ |   6 |  10 |  20 |   ∞ |   ∞
+maxCaptionChars      |   ∞ |  40 |  80 | 120 |   ∞ |   ∞
+maxHeaderTextHtmlChars|  ∞ | 140 | 200 | 300 |   ∞ |   ∞
 ```
 
 **Cap key (details)**
@@ -85,7 +85,7 @@ Budgets are **per-session counters**. When a budget reaches 0, the consuming act
 Budget key
 Row          | Consumed when                           | Counts as            | Upsell | Notes
 ------------ | -------------------------------------- | -------------------- | ------ | -------------------------
-uploads      | choose file for strips[i].logos[j].logoFill | 1 per file chosen | UP     | in-editor (Data URL) selection
+uploads      | choose file for strips[i].logos[j].logoFill (dropdown-upload) | 1 per file chosen | UP     | in-editor (Data URL) selection
 copilotTurns | Copilot prompt submit                   | 1 per user prompt    | UP     | —
 edits        | any successful edit                     | 1 per state change   | UP     | continue editing your widget by creating a free account
 ```
@@ -245,15 +245,15 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-    - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-fill`)
-      - Editor-time value is typically a Data URL (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
+    - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
+      - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
     - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
     - `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`)
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
   - **Editor control**:
-    - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-fill` in image mode
+    - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
       - value stored is a **CSS fill string** (same contract as other image fills)
       - the popover may embed additional per-logo controls via `template="..."` (see Section 4)
       - selecting an image while editing is in-memory only (Data URL fill)
@@ -312,12 +312,11 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - `pod.widthMode='full'` makes the widget span the available width (good for Slider/Carousel/Ticker).
 
 ### Panel: Appearance (common)
-- **Logo look**: `appearance.logoLook`, `appearance.logoCustomColor`
-  - **changes**: original vs grayscale vs custom tint
+- **Logo look**: `appearance.logoLook`
+  - **changes**: original vs grayscale
   - **how**:
     - original: no filter
     - grayscale: apply grayscale filter
-    - customColor: apply the chosen tint implementation (must be defined in Defaults “Decisions required”)
 
 - **Logo opacity**: `appearance.logoOpacity`
   - **changes**: logo opacity
@@ -352,7 +351,7 @@ Type is always selected in **Content**. Under the Type picker, show only the con
 
 ### Shared rule for cross-panel behavior
 When a Type does not use a setting, the corresponding control must be **hidden** (not shown) and the runtime must not “approximate” behavior.
-If a Type removes a feature entirely (e.g., no CTA), then switching into that Type must **force-disable** the feature (`cta.enabled=false`) via a deterministic op emitted by the type picker.
+Type changes must not emit “side effect ops”. Hidden features may remain in state, but the runtime must **ignore** them deterministically for that Type.
 
 ### Shared rule: Type recommends Pod defaults (no implicit editor mutations)
 Type selection defines a **recommended Pod preset** for that Type (documented below as per-type defaults).
@@ -365,8 +364,8 @@ Below the Type picker, always show:
 - Inside each strip item, **Logos** (`strips[i].logos[]`) using `repeater`
 
 #### Logo item editor (required, global pattern)
-Each logo item must use `dropdown-fill` (image mode) for the logo image, and nest additional actions in the popover using `template`:
-- **Logo image**: `dropdown-fill` bound to `strips[i].logos[j].logoFill`
+Each logo item must use `dropdown-upload` for the logo image, and nest additional actions in the popover using `template`:
+- **Logo image**: `dropdown-upload` bound to `strips[i].logos[j].logoFill`
   - stored value is a CSS fill string (`url("...") center center / cover no-repeat` or `transparent`)
   - while editing, selected files are represented as Data URLs in state (in-memory)
   - `template="..."` includes:
@@ -481,13 +480,15 @@ Defaults are the authoritative state shape. They must be complete (no missing pa
 
 ### Decisions required (blockers) — must be resolved in defaults
 If any item below is undecided, the implementer must stop and ask; do not guess.
-- **Tint implementation** for `appearance.logoLook='customColor'`:
-  - CSS filter approximation (works for raster, imperfect), OR
-  - SVG-only tint (best quality, requires SVG assets), OR
-  - other deterministic approach (must be specified)
-Embed/persistence is a separate phase/system from widget editing:
-- This PRD specifies **editor-time behavior**: `logoFill` stores Data URL fills in memory via `dropdown-fill`.
-- The embed/persistence contract is specified in Venice docs/PRDs and is executed independently of the widget editor implementation.
+We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
+
+### Asset handling (scope for this PRD)
+This PRD is for **editor-time widget UX** (Tokyo 5 files + Bob preview). It is not blocked on asset persistence.
+- **Editor-time (Bob)**: `dropdown-upload` stores an in-memory CSS fill string (typically a Data URL fill) so preview can render immediately.
+- **Persistence/publish**: handled in a later phase. When persistence ships, we will store stable asset references (URL/fileKey) instead of Data URLs.
+
+### `dropdown-upload` contract (editor-time)
+In the editor loop, `dropdown-upload` must not persist assets. It stores an in-memory value for preview, and persistence is handled later on Save/Publish.
 
 ### Global defaults (apply to all types)
 The full defaults object (used verbatim as `spec.json.defaults`):
@@ -528,7 +529,6 @@ The full defaults object (used verbatim as `spec.json.defaults`):
   },
   "appearance": {
     "logoLook": "original",
-    "logoCustomColor": "var(--color-system-black)",
     "logoOpacity": 0.9,
     "itemBackground": "transparent",
     "itemCard": {
@@ -620,26 +620,7 @@ Implementation requirement:
 ---
 
 ## Appendix A: Why EACH PRD must be written like this (the rule)
-This PRD format prevents repeated failures by forcing a complete, deterministic mapping from “what the user sees” → “what the controls are” → “what paths change” → “how runtime applies state”.
-
-1) **High-level widget behavior first** ensures the implementer understands the user-visible contract before touching schema.
-
-2) **Types second** prevents the most common failure mode: implementing a single layout and pretending it covers multiple types. Type is a miniwidget; it must be defined up front.
-
-3) **Common controls by panel with “what they change and how”** eliminates “dead controls” and stops drift:
-   - every common control has a state path
-   - every path has a binding mechanism (DOM/text, CSS var, data-attr, or shared module)
-   - controls are placed deterministically in panels
-
-4) **Type-specific spec in Content panel + cross-panel implications** prevents “wrong controls showing” and “stale config” bugs:
-   - Type selection becomes the single gate for type-specific controls
-   - the PRD explicitly states what disappears/appears when type changes
-   - if a type removes a feature, the PRD forces an explicit disable op
-
-5) **Defaults last** enforces “no fallbacks” and keeps compilation + runtime deterministic:
-   - all state paths exist
-   - all types have defined config objects
-   - editors and runtimes don’t invent missing state
+This rationale is universal across widgets. See `documentation/widgets/WidgetBuildProcess.md` (Step -1) for the canonical “why” and the required policy matrix template.
 
 ## Appendix B: Competitor analysis artifacts (source material)
 Captured under `documentation/widgets/LogoShowcase/CompetitorAnalysis/`:

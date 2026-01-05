@@ -24,8 +24,8 @@ Traditional SaaS companies need 30-100+ people to operate at scale. Clickeen ope
 **Every agent learns automatically** from outcomes—improving prompts, accumulating golden examples, and evolving over time. Day 1 agents are mediocre. Day 100 agents are excellent.
 
 See also:
-- `sanfrancisco-learning.md` — How agents learn from outcomes
-- `sanfrancisco-infrastructure.md` — Sessions, jobs, state management
+- `learning.md` — How agents learn from outcomes
+- `infrastructure.md` — Sessions, jobs, state management
 
 ---
 

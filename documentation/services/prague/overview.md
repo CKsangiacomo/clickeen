@@ -480,7 +480,7 @@ Prague crawls `tokyo/widgets/{widget}/pages/` and renders whatever files exist.
 tokyo/widgets/faq/
   spec.json               # Widget state schema (for Bob)
   product.md              # PM brief: what, why, features, differentiators
-  sdr-copilot.md          # SDR Copilot contract (free users, Minibob)
+  agents/sdr-copilot.md   # SDR Copilot contract (free users, Minibob)
   cs-copilot.md           # CS Copilot contract (paid users, Bob)
   seo.md                  # Keywords, schema patterns, meta templates
   
@@ -1502,7 +1502,7 @@ pnpm build
 
 ## 18) Links
 
-- `documentation/ai/gtm.md` — Markdown file generator
-- `documentation/ai/sdr-copilot.md` — Conversion agent
+- `documentation/ai/agents/gtm.md` — Markdown file generator
+- `documentation/ai/agents/sdr-copilot.md` — Conversion agent
 - `documentation/capabilities/seo-geo.md` — SEO/GEO platform architecture
 - `documentation/architecture/CONTEXT.md` — Platform overview
