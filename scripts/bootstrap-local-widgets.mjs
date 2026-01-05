@@ -6,6 +6,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const widgetsDir = path.join(repoRoot, 'tokyo', 'widgets');
 const parisOrigin = (process.env.PARIS_ORIGIN || process.env.PARIS_BASE_URL || 'http://localhost:3001').replace(/\/+$/, '');
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+const FORCE_DEFAULTS = ['1', 'true', 'yes'].includes(String(process.env.BOOTSTRAP_FORCE_DEFAULTS || '').trim().toLowerCase());
 
 function readParisDevJwt() {
   const envValue = typeof process.env.PARIS_DEV_JWT === 'string' ? process.env.PARIS_DEV_JWT.trim() : '';
@@ -44,6 +45,29 @@ function loadWidgetDefaults(widgetType) {
     throw new Error(`[bootstrap-local-widgets] ${widgetType}/spec.json is missing defaults object`);
   }
   return defaults;
+}
+
+async function getInstance(args) {
+  const res = await fetch(
+    `${parisOrigin}/api/workspaces/${encodeURIComponent(DEV_WORKSPACE_ID)}/instance/${encodeURIComponent(args.publicId)}?subject=devstudio`,
+    {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${args.parisDevJwt}`,
+      },
+    }
+  );
+
+  const text = await res.text().catch(() => '');
+  let json = null;
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = null;
+    }
+  }
+  return { res, json, text };
 }
 
 async function createInstance(args) {
@@ -113,16 +137,36 @@ async function main() {
   }
 
   let created = 0;
+  let updated = 0;
+  let skippedExisting = 0;
   for (const widgetType of eligible) {
     const publicId = `wgt_${widgetType}_main`;
     const defaults = loadWidgetDefaults(widgetType);
-    await createInstance({ parisDevJwt, widgetType, publicId, config: defaults });
-    await updateInstance({ parisDevJwt, publicId, config: defaults });
-    console.log(`[bootstrap-local-widgets] Synced ${publicId} to ${widgetType}/spec.json defaults`);
-    created += 1;
+
+    const existing = await getInstance({ parisDevJwt, publicId });
+    if (existing.res.status === 404) {
+      await createInstance({ parisDevJwt, widgetType, publicId, config: defaults });
+      console.log(`[bootstrap-local-widgets] Created ${publicId} from ${widgetType}/spec.json defaults`);
+      created += 1;
+      continue;
+    }
+
+    if (!existing.res.ok) {
+      throw new Error(`HTTP ${existing.res.status} ${existing.text}`.trim());
+    }
+
+    if (FORCE_DEFAULTS) {
+      await updateInstance({ parisDevJwt, publicId, config: defaults });
+      console.log(`[bootstrap-local-widgets] Updated ${publicId} to ${widgetType}/spec.json defaults (BOOTSTRAP_FORCE_DEFAULTS=1)`);
+      updated += 1;
+      continue;
+    }
+
+    console.log(`[bootstrap-local-widgets] Kept existing ${publicId} (no overwrite)`);
+    skippedExisting += 1;
   }
 
-  console.log(`[bootstrap-local-widgets] OK (${created} instances)`);
+  console.log(`[bootstrap-local-widgets] OK (created=${created}, updated=${updated}, kept=${skippedExisting})`);
 }
 
 main().catch((err) => {

@@ -150,7 +150,7 @@ echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
 
-echo "[dev-up] Bootstrapping local widget instances from Tokyo defaults (no seeds)"
+echo "[dev-up] Ensuring local widget instances exist (no overwrite; set BOOTSTRAP_FORCE_DEFAULTS=1 to force defaults)"
 PARIS_ORIGIN="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" node "$ROOT_DIR/scripts/bootstrap-local-widgets.mjs"
 
 echo "[dev-up] Starting Venice embed runtime (3003)"
