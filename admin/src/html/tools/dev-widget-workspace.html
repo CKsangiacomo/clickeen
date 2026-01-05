@@ -206,6 +206,20 @@
 </div>
 
 <script type="module">
+// This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
+// DevStudio swaps DOM but does not automatically remove global event listeners.
+// Use an AbortController keyed on `window` so re-entering this tool page doesn't
+// accumulate listeners and spam postMessage loops.
+const CK_DEV_WIDGET_WORKSPACE_ABORT_KEY = '__CK_DEV_WIDGET_WORKSPACE_ABORT__';
+try {
+  const prev = window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY];
+  if (prev && typeof prev.abort === 'function') prev.abort();
+} catch {}
+const abortController = new AbortController();
+try {
+  window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
+} catch {}
+
 function requireBobOrigin() {
   const params = new URLSearchParams(window.location.search);
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -235,14 +249,22 @@ const compiledCache = new Map();
 
 iframe.src = `${BOB_ORIGIN}/bob?subject=devstudio`;
 
+let isPosting = false;
 window.addEventListener('message', (event) => {
   if (event.origin !== BOB_ORIGIN) return;
+  if (event.source !== iframe.contentWindow) return;
   const data = event.data;
   if (data && data.type === 'bob:session-ready' && currentPublicId) {
     console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
-    sendInstanceToIframe(currentPublicId);
+    if (isPosting) return;
+    isPosting = true;
+    Promise.resolve(sendInstanceToIframe(currentPublicId))
+      .catch((error) => console.error('[DevStudio] Failed to send instance to Bob', error))
+      .finally(() => {
+        isPosting = false;
+      });
   }
-});
+}, { signal: abortController.signal });
 
 function attachDropdown() {
   const header = document.querySelector('.devstudio-page__header');
@@ -454,7 +476,7 @@ function setOpen(nextState) {
 
 control.addEventListener('click', () => {
   setOpen(!isOpen);
-});
+}, { signal: abortController.signal });
 
 control.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' || event.key === ' ') {
@@ -468,7 +490,7 @@ control.addEventListener('keydown', (event) => {
   } else if (event.key === 'Escape') {
     setOpen(false);
   }
-});
+}, { signal: abortController.signal });
 
 menu.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
@@ -505,13 +527,13 @@ menu.addEventListener('keydown', (event) => {
       target.click();
     }
   }
-});
+}, { signal: abortController.signal });
 
 document.addEventListener('click', (event) => {
   if (!dropdown.contains(event.target)) {
     setOpen(false);
   }
-});
+}, { signal: abortController.signal });
 	
 	(async () => {
 	  try {

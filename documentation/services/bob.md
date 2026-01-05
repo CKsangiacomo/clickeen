@@ -55,6 +55,15 @@ Bob listens in `bob/lib/session/useWidgetSession.tsx` and:
 - Uses `compiled.defaults` when `instanceData` is null
 - Stores `{ compiled, instanceData }` in React state
 
+### Hybrid dev (DevStudio in cloud, Bob local)
+DevStudio’s widget workspace supports overriding the embedded Bob origin with a query param:
+
+- `?bob=http://localhost:3000` (example)
+
+This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob runs locally.
+
+Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurable via `?bob=`” comment).
+
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
 - **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=minibob|devstudio` (with backward compatibility for `?minibob=true`).
