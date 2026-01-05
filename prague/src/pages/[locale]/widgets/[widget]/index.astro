@@ -1,6 +1,6 @@
 ---
 import Base from '../../../../layouts/Base.astro';
-import Nav from '../../../../blocks/site/nav.astro';
+import Nav from '../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../blocks/site/footer.astro';
 import Minibob from '../../../../blocks/site/minibob.astro';
 import Hero from '../../../../blocks/widget-landing/hero.astro';
@@ -66,12 +66,8 @@ const minibobSubhead = minibobLines[1];
   <main>
     <Nav
       title="Clickeen"
+      locale={locale}
       homeHref={`/${locale}/`}
-      items={[
-        { label: 'Widgets', href: `/${locale}/widgets/${widget}` },
-        { label: 'Templates', href: `/${locale}/widgets/${widget}/templates` },
-        { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing` },
-      ]}
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
     <Hero headline={headline} subheadline={subheadline} />

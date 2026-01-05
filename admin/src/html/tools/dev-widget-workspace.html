@@ -309,6 +309,17 @@ async function fetchInstances() {
   const res = await fetch(`${PARIS_API}/instances?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&_t=${Date.now()}`, {
     cache: 'no-store',
   });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    let detail = text;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object' && parsed.error) {
+        detail = parsed.error?.reasonKey ? String(parsed.error.reasonKey) : JSON.stringify(parsed.error);
+      }
+    } catch {}
+    throw new Error(`[DevStudio] Failed to fetch instances (HTTP ${res.status})${detail ? `: ${detail}` : ''}`);
+  }
   const data = await res.json();
   const payload = Array.isArray(data.instances) ? data.instances : [];
   instances = payload.map((inst) => ({

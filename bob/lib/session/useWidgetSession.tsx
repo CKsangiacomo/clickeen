@@ -264,10 +264,10 @@ function useWidgetSessionInternal() {
       const defaults = compiled.defaults as Record<string, unknown>;
 
       let resolved: Record<string, unknown> = {};
-      let nextPolicy: Policy = state.policy;
       let nextWorkspaceId = message.workspaceId;
 
       const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
+      let nextPolicy: Policy = resolveDevPolicy(nextSubjectMode);
 
       const incoming = message.instanceData as Record<string, unknown> | null | undefined;
       if (incoming != null && (!incoming || typeof incoming !== 'object' || Array.isArray(incoming))) {
@@ -347,7 +347,7 @@ function useWidgetSessionInternal() {
         meta: null,
       }));
     }
-  }, [state.policy]);
+  }, []);
 
   const dismissUpsell = useCallback(() => {
     setState((prev) => ({ ...prev, upsell: null }));

@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Nav from '../../blocks/site/nav.astro';
+import Nav from '../../blocks/site/nav/Nav.astro';
 import Footer from '../../blocks/site/footer.astro';
 import { listWidgets, loadWidgetPageMarkdown, parseMarkdownSections } from '../../lib/markdown';
 
@@ -33,8 +33,8 @@ const widgetCards = await Promise.all(
   <main>
     <Nav
       title="Clickeen"
+      locale={locale}
       homeHref={`/${locale}/`}
-      items={[{ label: 'Widgets', href: `/${locale}/widgets/${widgetCards[0].widget}` }]}
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
 

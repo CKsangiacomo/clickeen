@@ -25,16 +25,27 @@ fi
 echo "[dev-up] Loading local Supabase connection values"
 ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
 ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
+DEV_UP_USE_REMOTE_SUPABASE="${DEV_UP_USE_REMOTE_SUPABASE:-}"
 # Avoid depending on ripgrep (rg) in dev environments; plain grep is sufficient.
 # shellcheck disable=SC2046
 eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
-SUPABASE_URL=${SUPABASE_URL:-${API_URL:-}}
-SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-${SECRET_KEY:-}}
-if [ -n "$ORIG_SUPABASE_URL" ]; then
-  SUPABASE_URL="$ORIG_SUPABASE_URL"
-fi
-if [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
-  SUPABASE_SERVICE_ROLE_KEY="$ORIG_SUPABASE_SERVICE_ROLE_KEY"
+# Prefer the local Supabase values from `supabase status`; only fall back to existing env vars
+# (and even then, only when DEV_UP_USE_REMOTE_SUPABASE=1 below).
+SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
+SUPABASE_SERVICE_ROLE_KEY=${SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
+if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
+  if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
+    if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
+      echo "[dev-up] DEV_UP_USE_REMOTE_SUPABASE=1 requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in $ROOT_DIR/.env.local"
+      exit 1
+    fi
+    SUPABASE_URL="$ORIG_SUPABASE_URL"
+    SUPABASE_SERVICE_ROLE_KEY="$ORIG_SUPABASE_SERVICE_ROLE_KEY"
+    echo "[dev-up] Using Supabase values from $ROOT_DIR/.env.local (remote mode)"
+  else
+    echo "[dev-up] Using local Supabase (ignoring SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from $ROOT_DIR/.env.local)"
+    echo "[dev-up] To use remote Supabase in local dev, set DEV_UP_USE_REMOTE_SUPABASE=1"
+  fi
 fi
 if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   echo "[dev-up] Failed to resolve SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from Supabase status"

@@ -1,19 +1,8 @@
 ---
 import Base from '../../../../../layouts/Base.astro';
-import Nav from '../../../../../blocks/site/nav.astro';
+import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
-import Minibob from '../../../../../blocks/site/minibob.astro';
-
-import Hero from '../../../../../blocks/widget-landing/hero.astro';
-import Features from '../../../../../blocks/widget-landing/features.astro';
-import Cta from '../../../../../blocks/widget-landing/cta.astro';
-import MetaFaq from '../../../../../blocks/widget-landing/meta-faq.astro';
-
-import TemplatesGrid from '../../../../../blocks/widget-templates/grid.astro';
-import ExamplesGrid from '../../../../../blocks/widget-examples/grid.astro';
-import PricingPlans from '../../../../../blocks/widget-pricing/plans.astro';
-
-import { listWidgets, listWidgetPages, loadWidgetPageMarkdown, parseMarkdownSections } from '../../../../../lib/markdown';
+import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
 
 const { locale, widget, page } = Astro.params;
 
@@ -32,97 +21,34 @@ export async function getStaticPaths() {
   return out;
 }
 
-const md = await loadWidgetPageMarkdown({ widget, page });
-
-const sections = parseMarkdownSections(md);
-const headline = sections.get('headline');
-const subheadline = sections.get('subheadline');
-if (!headline || !subheadline) {
-  throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/${page}.md (Headline/Subheadline)`);
+function titleCase(s: string) {
+  if (!s) return s;
+  return s.slice(0, 1).toUpperCase() + s.slice(1);
 }
 
-const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-if (minibobLines.length < 2) {
-  throw new Error(`[Prague] Missing '## Minibob' (2 lines) in tokyo/widgets/${widget}/pages/${page}.md`);
-}
-const minibobHeading = minibobLines[0];
-const minibobSubhead = minibobLines[1];
+const widgetLabel = titleCase(widget);
+const pageLabel = titleCase(page);
 ---
 
-<Base title={`${headline} — Clickeen`} locale={locale}>
+<Base title={`${widgetLabel} — ${pageLabel} — Clickeen`} locale={locale}>
   <main>
     <Nav
       title="Clickeen"
+      locale={locale}
       homeHref={`/${locale}/`}
-      items={[
-        { label: 'Overview', href: `/${locale}/widgets/${widget}` },
-        { label: 'Templates', href: `/${locale}/widgets/${widget}/templates` },
-        { label: 'Examples', href: `/${locale}/widgets/${widget}/examples` },
-        { label: 'Features', href: `/${locale}/widgets/${widget}/features` },
-        { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing` },
-      ]}
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
 
-    <Hero headline={headline} subheadline={subheadline} />
-
-    <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
-
-    {page === 'templates' ? (
-      <TemplatesGrid
-        items={[
-          { title: 'Simple accordion', body: 'Clean and compact.' },
-          { title: 'Card layout', body: 'Prominent questions with spacing.' },
-          { title: 'Minimal', body: 'Bare essentials, fast to scan.' },
-        ]}
-      />
-    ) : null}
-
-    {page === 'examples' ? (
-      <ExamplesGrid
-        items={[
-          { title: 'SaaS pricing FAQ', body: 'Direct answers, short and citeable.' },
-          { title: 'Ecommerce returns FAQ', body: 'Policy clarity + trust.' },
-          { title: 'Support FAQ', body: 'Reduces tickets with self-serve.' },
-        ]}
-      />
-    ) : null}
-
-    {page === 'features' ? (
-      <Features
-        items={[
-          { title: 'Fast embed', body: 'Edge-cached payloads, minimal runtime work.' },
-          { title: 'SEO/GEO mode', body: 'Semantic HTML + schema + deep links when enabled.' },
-          { title: 'Localization', body: 'Same page structure, localized per locale.' },
-        ]}
-      />
-    ) : null}
-
-    {page === 'pricing' ? (
-      <>
-        <PricingPlans
-          plans={[
-            { name: 'Free', price: '$0', bullets: ['Create 1 widget', 'Basic customization', 'Branding on'] },
-            { name: 'Pro', price: '$9', bullets: ['Remove branding', 'Templates', 'Analytics (basic)'] },
-            { name: 'Business', price: '$29', bullets: ['Teams', 'Advanced analytics', 'Priority support'] },
-          ]}
-        />
-        <MetaFaq
-          title="Pricing FAQ"
-          items={[
-            { question: 'Can I switch plans anytime?', answer: 'Yes — upgrade or downgrade anytime.' },
-            { question: 'Is there a free trial?', answer: 'Free is free forever. No credit card required.' },
-          ]}
-        />
-      </>
-    ) : null}
-
-    <Cta
-      headline={`Create your ${widget} widget`}
-      subheadline="Start free. Publish when you’re ready."
-      primaryLabel="Create free"
-      primaryHref={`/${locale}/create`}
-    />
+    <section class="ck-canvas" style="padding-top: 0;">
+      <div class="ck-inline ck-stack" style="gap: var(--space-3);">
+        <h1 class="heading-2" style="margin: 0;">
+          {widgetLabel} — {pageLabel}
+        </h1>
+        <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
+          Coming soon.
+        </p>
+      </div>
+    </section>
 
     <Footer locale={locale} />
   </main>

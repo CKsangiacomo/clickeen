@@ -1,6 +1,6 @@
 ---
 import Base from '../../../../layouts/Base.astro';
-import Nav from '../../../../blocks/site/nav.astro';
+import Nav from '../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../blocks/site/footer.astro';
 import Minibob from '../../../../blocks/site/minibob.astro';
 import Hero from '../../../../blocks/widget-landing/hero.astro';
@@ -20,6 +20,7 @@ export function getStaticPaths() {
   <main>
     <Nav
       title="Clickeen"
+      locale={locale}
       homeHref={`/${locale}/`}
       items={[
         { label: 'Widgets', href: `/${locale}/widgets/faq` },

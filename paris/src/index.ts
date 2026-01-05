@@ -208,6 +208,22 @@ async function loadWorkspaceById(env: Env, workspaceId: string): Promise<Workspa
   return rows?.[0] ?? null;
 }
 
+async function requireWorkspace(env: Env, workspaceId: string) {
+  try {
+    const workspace = await loadWorkspaceById(env, workspaceId);
+    if (!workspace) {
+      return { ok: false as const, response: ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404) };
+    }
+    return { ok: true as const, workspace };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false as const,
+      response: ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500),
+    };
+  }
+}
+
 function resolveEditorPolicyFromRequest(req: Request, workspace: WorkspaceRow) {
   const url = new URL(req.url);
   const subject = (url.searchParams.get('subject') || '').trim().toLowerCase();
@@ -578,8 +594,8 @@ async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: str
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
-  const workspace = await loadWorkspaceById(env, workspaceId);
-  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
 
   // Reuse the legacy shape for now (DevStudio tooling consumes it), but scope it to a workspace.
   const url = new URL(req.url);
@@ -591,8 +607,9 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
-  const workspace = await loadWorkspaceById(env, workspaceId);
-  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -671,8 +688,9 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
-  const workspace = await loadWorkspaceById(env, workspaceId);
-  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
@@ -762,8 +780,9 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
-  const workspace = await loadWorkspaceById(env, workspaceId);
-  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
 
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;

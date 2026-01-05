@@ -1,0 +1,197 @@
+---
+import { resolveWidgetsMegaMenu } from './widgetsMegaMenu';
+
+type Props = {
+  title: string;
+  locale: string;
+  homeHref?: string;
+  // Legacy escape hatch: some pages may still pass items, but the scalable default is system-owned nav.
+  items?: { label: string; href: string }[];
+  cta?: { label: string; href: string; variant?: 'primary' | 'secondary' | 'ghost' };
+};
+
+const { title, locale, homeHref = `/${locale}/`, items: itemsProp, cta } = Astro.props;
+const ctaVariant = cta?.variant ?? 'secondary';
+
+const pathname = Astro.url.pathname;
+
+type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+const widgetMatch = pathname.match(/^\/[^/]+\/widgets\/([^/]+)(?:\/([^/]+))?\/?$/);
+const widget = widgetMatch?.[1] ?? null;
+const widgetPage = (widgetMatch?.[2] ?? 'overview') as WidgetSubpage;
+const isWidgetPage = Boolean(widget);
+
+const widgetTabs = widget
+  ? ([
+      { label: 'Overview', href: `/${locale}/widgets/${widget}`, key: 'overview' },
+      { label: 'Templates', href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
+      { label: 'Examples', href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
+      { label: 'Features', href: `/${locale}/widgets/${widget}/features`, key: 'features' },
+      { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
+    ] as const)
+  : [];
+
+const mega = await resolveWidgetsMegaMenu({ locale });
+
+const primaryItems =
+  itemsProp ??
+  ([
+    { label: 'Widgets', href: mega.allWidgetsHref },
+  ] as const);
+---
+
+<header class="ck-canvas" style="padding-block: var(--space-5);">
+  <div class="ck-inline">
+    <div class="ck-row ck-siteNav" style="justify-content: space-between; gap: var(--space-6);">
+      <a href={homeHref} class="ck-brand" aria-label={title}>
+        <img class="ck-brand__logo" src="/brand/clickeen-logo-full.svg" alt={title} />
+      </a>
+
+      <nav aria-label="Primary">
+        <div class="ck-row" style="gap: var(--space-5);">
+          {primaryItems.map((item) =>
+            item.label === 'Widgets' ? (
+              <div class="ck-navWidgets">
+                <a
+                  href={item.href}
+                  class="label-s ck-navWidgets__trigger"
+                  aria-haspopup="true"
+                  style="text-decoration: none; color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
+                >
+                  Widgets
+                </a>
+
+                <div class="ck-navWidgets__menu" role="dialog" aria-label="Widgets menu">
+                  <div class="ck-navWidgets__grid">
+                    {mega.items.map((w) => (
+                      <a class="ck-navWidgets__item" href={w.href}>
+                        <div class="label-s" style="color: inherit;">{w.headline}</div>
+                        {w.subheadline ? (
+                          <div class="caption ck-navWidgets__sub">{w.subheadline}</div>
+                        ) : null}
+                      </a>
+                    ))}
+                  </div>
+
+                  <div class="ck-navWidgets__footer">
+                    <a class="ck-btn ck-btn--secondary" href={mega.allWidgetsHref}>View all widgets</a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <a
+                href={item.href}
+                class="label-s"
+                style="text-decoration: none; color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
+              >
+                {item.label}
+              </a>
+            ),
+          )}
+        </div>
+      </nav>
+
+      {cta ? (
+        <a class={`ck-btn ck-btn--${ctaVariant}`} href={cta.href}>
+          {cta.label}
+        </a>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+    </div>
+
+    {isWidgetPage ? (
+      <div class="ck-row" style="gap: var(--space-4); margin-top: var(--space-4);">
+        {widgetTabs.map((t) => {
+          const isActive = t.key === widgetPage;
+          return (
+            <a
+              href={t.href}
+              class="label-s"
+              aria-current={isActive ? 'page' : undefined}
+              style={[
+                'text-decoration: none;',
+                'padding: 6px 10px;',
+                'border-radius: var(--control-radius-md);',
+                isActive
+                  ? 'color: var(--color-system-black); background: color-mix(in oklab, var(--color-system-black), transparent 92%);'
+                  : 'color: color-mix(in oklab, var(--color-system-black), transparent 35%);',
+              ].join(' ')}
+            >
+              {t.label}
+            </a>
+          );
+        })}
+      </div>
+    ) : null}
+  </div>
+</header>
+
+<style>
+  .ck-siteNav { position: relative; }
+  .ck-brand { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
+  .ck-brand__logo { height: 22px; width: auto; display: block; }
+
+  .ck-navWidgets { position: relative; }
+
+  .ck-navWidgets__menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(920px, calc(100vw - 48px));
+    background: var(--color-system-white);
+    border-radius: var(--control-radius-xl);
+    padding: var(--space-6);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.12);
+    z-index: 50;
+  }
+
+  .ck-navWidgets:hover .ck-navWidgets__menu,
+  .ck-navWidgets:focus-within .ck-navWidgets__menu {
+    display: block;
+  }
+
+  .ck-navWidgets__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .ck-navWidgets__item {
+    display: block;
+    padding: var(--space-3);
+    border-radius: var(--control-radius-lg);
+    text-decoration: none;
+    color: var(--color-system-black);
+    background: color-mix(in oklab, var(--color-system-black), transparent 96%);
+  }
+
+  .ck-navWidgets__item:hover {
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+  }
+
+  .ck-navWidgets__sub {
+    margin-top: 4px;
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  .ck-navWidgets__footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-5);
+  }
+
+  @media (max-width: 900px) {
+    .ck-brand__logo { height: 20px; }
+    .ck-navWidgets__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 640px) {
+    .ck-navWidgets__grid { grid-template-columns: 1fr; }
+    .ck-navWidgets__menu { left: 0; transform: none; width: calc(100vw - 24px); }
+  }
+</style>
+
+
