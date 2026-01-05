@@ -20,6 +20,16 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
+async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function GET(request: NextRequest) {
   const reqUrl = new URL(request.url);
   const workspaceId = (reqUrl.searchParams.get('workspaceId') || '').trim();
@@ -38,7 +48,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'GET',
       headers,
       cache: 'no-store',
@@ -54,9 +64,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const status = error instanceof Error && error.name === 'AbortError' ? 504 : 502;
     return NextResponse.json(
       { error: 'PARIS_PROXY_ERROR', message },
-      { status: 502, headers: CORS_HEADERS }
+      { status, headers: CORS_HEADERS }
     );
   }
 }
@@ -97,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.text();
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         ...headers,
@@ -117,9 +128,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const status = error instanceof Error && error.name === 'AbortError' ? 504 : 502;
     return NextResponse.json(
       { error: 'PARIS_PROXY_ERROR', message },
-      { status: 502, headers: CORS_HEADERS }
+      { status, headers: CORS_HEADERS }
     );
   }
 }
