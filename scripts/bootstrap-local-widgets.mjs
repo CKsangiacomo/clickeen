@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const widgetsDir = path.join(repoRoot, 'tokyo', 'widgets');
 const parisOrigin = (process.env.PARIS_ORIGIN || process.env.PARIS_BASE_URL || 'http://localhost:3001').replace(/\/+$/, '');
+const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
 
 function readParisDevJwt() {
   const envValue = typeof process.env.PARIS_DEV_JWT === 'string' ? process.env.PARIS_DEV_JWT.trim() : '';
@@ -46,7 +47,7 @@ function loadWidgetDefaults(widgetType) {
 }
 
 async function createInstance(args) {
-  const res = await fetch(`${parisOrigin}/api/instance`, {
+  const res = await fetch(`${parisOrigin}/api/workspaces/${encodeURIComponent(DEV_WORKSPACE_ID)}/instances?subject=devstudio`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -72,14 +73,17 @@ async function createInstance(args) {
 }
 
 async function updateInstance(args) {
-  const res = await fetch(`${parisOrigin}/api/instance/${encodeURIComponent(args.publicId)}`, {
+  const res = await fetch(
+    `${parisOrigin}/api/workspaces/${encodeURIComponent(DEV_WORKSPACE_ID)}/instance/${encodeURIComponent(args.publicId)}?subject=devstudio`,
+    {
     method: 'PUT',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${args.parisDevJwt}`,
     },
     body: JSON.stringify({ config: args.config }),
-  });
+    },
+  );
 
   const text = await res.text().catch(() => '');
   if (!res.ok) {

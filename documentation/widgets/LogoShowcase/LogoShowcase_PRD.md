@@ -19,12 +19,6 @@ Row                   | DS | MB | F  | T1 | T2 | T3
 seoGeoEnabled         | A  | B  | B  | A  | A  | A
 removeBranding        | A  | B  | B  | A  | A  | A
 websiteUrlAllowed     | A  | B  | A  | A  | A  | A
-typeGridAllowed       | A  | A  | A  | A  | A  | A
-typeSliderAllowed     | A  | A  | A  | A  | A  | A
-typeCarouselAllowed   | A  | A  | A  | A  | A  | A
-typeTickerAllowed     | A  | A  | A  | A  | A  | A
-sliderAutoplayAllowed | A  | A  | A  | A  | A  | A
-logoDetailsPopup      | A  | B  | A  | A  | A  | A
 logoLinksAllowed      | A  | B  | A  | A  | A  | A
 logoMetaAllowed       | A  | B  | B  | A  | A  | A
 ```
@@ -37,15 +31,9 @@ Row                 | Path                        | Enforcement | Upsell | Meani
 ------------------- | --------------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled              | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS      | UP     | Remove branding
-websiteUrlAllowed   | ai.websiteUrl               | UI+OPS      | UP     | Website URL for Copilot/AI content generation
-typeGridAllowed     | type='grid'                 | UI+OPS      | UP     | Grid type
-typeSliderAllowed   | type='slider'               | UI+OPS      | UP     | Slider type
-typeCarouselAllowed | type='carousel'             | UI+OPS      | UP     | Carousel type
-typeTickerAllowed   | type='ticker'               | UI+OPS      | UP     | Ticker type
-sliderAutoplayAllowed | typeConfig.slider.autoSlide | UI+OPS    | UP     | Slider autoplay
-logoDetailsPopup    | (UI feature)               | UI          | UP     | Bulk “Logo details…” popup (plan-gated columns)
+websiteUrlAllowed   | workspace.websiteUrl        | UI+OPS      | UP     | Website URL for Copilot/AI content generation (workspace setting; not widget instance state)
 logoLinksAllowed    | strips[i].logos[j].href / targetBlank / nofollow | UI+OPS | UP | Link URL + clickable behavior (Free+)
-logoMetaAllowed     | strips[i].logos[j].alt / title | UI+OPS     | UP     | Alt/title meta (same plan as SEO/GEO: Tier 1+)
+logoMetaAllowed     | strips[i].logos[j].alt / title | UI+OPS+LOAD | UP     | Alt/title meta (Tier 1+). When blocked (MiniBob/Free), must be forced empty on load + ops rejected.
 ```
 
 ### Matrix B — Caps (numbers)
@@ -234,7 +222,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **Layout**: sizing/spacing/arrangement for arrays/items (logo size, gaps, strip gaps)
   - **Appearance**: “paint” for surfaces (logo look/opacity/radius, tile background/border, header/CTA colors)
   - **Typography**: role-based text (header title/body)
-  - **Settings**: AI website URL (Copilot-only; policy-gated)
+  - **Settings**: website URL (Copilot-only; policy-gated; workspace setting)
 
 ### Panel: Content (common)
 - **Type picker**: `type`
@@ -263,6 +251,12 @@ This section lists **only controls that apply to every Type**. Type-specific con
 - `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image) (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
 - `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
+
+**Policy enforcement rule (required; no subject checks in runtime):**
+- If `logoLinksAllowed` is blocked for the session:
+  - Bob must force-clear `href/targetBlank/nofollow` on load, and reject any ops that set them.
+- If `logoMetaAllowed` is blocked for the session:
+  - Bob must force-clear `alt/title` on load, and reject any ops that set them.
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
@@ -390,8 +384,10 @@ Then, below the strips editor, show the Type-specific controls listed in each Ty
 We keep `object-manager` + nested `repeater` for strips/logos. The modal is **additive** and exists only to edit per-logo “details” at scale.
 
 - Entry point: a single button near the strips/logos editor: **“Logo details…”**
-  - **MiniBob**: not available (button is locked and triggers Upsell)
-  - **Free+**: enabled
+  - Always visible.
+  - Gated on interaction via the Upsell popup:
+    - If `logoLinksAllowed` and `logoMetaAllowed` are both blocked: clicking opens Upsell and does nothing else.
+    - Otherwise: open modal.
 - Modal content: a table with **one row per logo**, including:
   - **Logo**: thumbnail + `name`
   - **URL**: `href` textfield
@@ -403,8 +399,16 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
   - **Tier 1+**: add **Alt** (`alt`) + **Title** (`title`) fields (same tier as SEO/GEO)
 - Save behavior: the modal writes standard ops (`set`) to the underlying paths above; there is no special persistence logic.
 
-#### AI behavior (Copilot, uses `ai.websiteUrl`)
-If `ai.websiteUrl` is present and policy allows it, Copilot may:
+**Implementation note (scales across many widgets):**
+- This modal should be implemented as a reusable Bob primitive (generic “bulk edit table” for an array-of-items), configured by:
+  - row source: flattened `strips[].logos[]`
+  - columns: a list of `{ label, path, controlType }`, with per-column gating driven by policy flags (`logoLinksAllowed`, `logoMetaAllowed`)
+  - save: emits standard ops (`set`) only
+
+#### AI behavior (Copilot, uses `websiteUrl`)
+`websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config.
+
+If `websiteUrl` is present and policy allows it, Copilot may:
 - Propose or rewrite LogoShowcase copy (header/CTA) based on the website URL.
 - For **Tier 1+** (same plan as SEO/GEO), propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
 
@@ -527,7 +531,6 @@ The full defaults object (used verbatim as `spec.json.defaults`):
 
 ```json
 {
-  "ai": { "websiteUrl": "" },
   "header": { "enabled": true, "title": "Some of our clients", "textHtml": "", "alignment": "center" },
   "strips": [
     {

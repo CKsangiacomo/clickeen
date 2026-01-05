@@ -7,6 +7,9 @@
     "deploy": "wrangler deploy"
   },
   "type": "module",
+  "dependencies": {
+    "@clickeen/ck-policy": "workspace:*"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",
     "wrangler": "^4.54.0"

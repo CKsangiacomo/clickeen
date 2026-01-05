@@ -6,6 +6,7 @@ Michael is Clickeen’s **minimal** persistence layer. It stores exactly what we
 
 The schema is defined by:
 - `supabase/migrations/20251228000000__base.sql`
+- `supabase/migrations/20260105000000__workspaces.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -25,9 +26,33 @@ One row per instance. This is the **canonical config state tree**.
 Core columns:
 - `id` (uuid) — internal (never exposed outside DB/services)
 - `widget_id` (uuid) — FK to `widgets.id`
+- `workspace_id` (uuid) — FK to `workspaces.id` (instances are workspace-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
+
+### `workspaces`
+One row per workspace/team (Figma model). Workspaces own instances.
+
+Core columns:
+- `id` (uuid) — internal
+- `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
+- `name` (text)
+- `slug` (text) — URL-safe workspace slug
+- `website_url` (text, nullable) — workspace setting gated by `context.websiteUrl.enabled`
+
+### `workspace_members`
+One row per user membership (roles).
+
+Core columns:
+- `workspace_id` (uuid) — FK to `workspaces.id`
+- `user_id` (uuid) — FK to `auth.users.id`
+- `role` (text) — `viewer` | `editor` | `admin` | `owner`
+
+### `comments` (provisioned)
+A workspace moat: viewers can comment without editing (Figma model).
+
+This table exists even if the full UI/UX ships later.
 
 ## Hard Invariants (strict editor philosophy)
 
@@ -87,9 +112,14 @@ Local DB is Supabase CLI + Docker:
 
 ## What Michael Does NOT Do (by design)
 
-- No workspaces / memberships / entitlements
-- No usage analytics tables
-- No embed tokens table
-- No schema/template migration system
+- No billing tables (Stripe, invoices, etc.)
+- No embed tokens table (yet)
+- No schema/template migration system (templates are instances)
 
 Those concerns are intentionally outside Michael’s scope right now so the editor stays strict and the platform stays simple.
+
+## Deterministic dev workspaces
+
+Migration `supabase/migrations/20260105000000__workspaces.sql` inserts two deterministic workspaces for dev:
+- `ck-dev` (`00000000-0000-0000-0000-000000000001`) — internal dev workspace (tier3)
+- `ck-demo` (`00000000-0000-0000-0000-000000000002`) — MiniBob demo workspace (free)

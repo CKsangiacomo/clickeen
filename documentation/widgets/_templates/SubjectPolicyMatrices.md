@@ -24,7 +24,7 @@ Row            | Path                        | Enforcement | Upsell | Meaning
 -------------- | --------------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled  | seoGeo.enabled              | OPS+LOAD    | UP     | (example) SEO/GEO optimization toggle
 removeBranding | behavior.showBacklink=false | UI+OPS      | UP     | (example) Remove branding
-websiteUrlAllowed | ai.websiteUrl            | UI+OPS      | UP     | (example) Website URL for Copilot/AI content generation
+websiteUrlAllowed | websiteUrl               | UI+OPS      | UP     | (example) Website URL for Copilot/AI content generation
 ```
 
 #### Matrix B — Caps (numbers)

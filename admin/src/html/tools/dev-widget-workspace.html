@@ -220,6 +220,7 @@ function requireBobOrigin() {
 
 const BOB_ORIGIN = requireBobOrigin();
 const PARIS_API = `${BOB_ORIGIN}/api/paris`;
+const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
 let currentPublicId = null;
 let instances = [];
 let isOpen = false;
@@ -232,7 +233,7 @@ const iframe = document.getElementById('bob-iframe');
 const currentLabel = document.getElementById('current-instance-label');
 const compiledCache = new Map();
 
-iframe.src = `${BOB_ORIGIN}/bob`;
+iframe.src = `${BOB_ORIGIN}/bob?subject=devstudio`;
 
 window.addEventListener('message', (event) => {
   if (event.origin !== BOB_ORIGIN) return;
@@ -294,9 +295,10 @@ async function ensureCompiledWidget(widgetname) {
 }
 
 async function fetchInstanceConfig(publicId) {
-  const res = await fetch(`${PARIS_API}/instance/${encodeURIComponent(publicId)}?_t=${Date.now()}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
+    { cache: 'no-store' },
+  );
   if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
   const json = await res.json();
   return json?.config ?? null;
@@ -304,7 +306,9 @@ async function fetchInstanceConfig(publicId) {
 
 async function fetchInstances() {
   console.log('[DevStudio] Fetching instances from Paris');
-  const res = await fetch(`${PARIS_API}/instances?_t=${Date.now()}`, { cache: 'no-store' });
+  const res = await fetch(`${PARIS_API}/instances?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&_t=${Date.now()}`, {
+    cache: 'no-store',
+  });
   const data = await res.json();
   const payload = Array.isArray(data.instances) ? data.instances : [];
   instances = payload.map((inst) => ({
@@ -422,6 +426,7 @@ async function sendInstanceToIframe(publicId) {
       type: 'devstudio:load-instance',
       subjectMode: 'devstudio',
       publicId,
+      workspaceId: DEV_WORKSPACE_ID,
       widgetname: slug,
       compiled,
       instanceData: config ?? null,

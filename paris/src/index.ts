@@ -1,3 +1,6 @@
+import { can, resolvePolicy } from '@clickeen/ck-policy';
+import type { Policy, PolicyProfile } from '@clickeen/ck-policy';
+
 type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -15,12 +18,21 @@ type InstanceRow = {
   created_at: string;
   updated_at?: string | null;
   widget_id: string | null;
+  workspace_id?: string | null;
 };
 
 type WidgetRow = {
   id: string;
   type: string | null;
   name: string | null;
+};
+
+type WorkspaceRow = {
+  id: string;
+  tier: 'free' | 'tier1' | 'tier2' | 'tier3';
+  name: string;
+  slug: string;
+  website_url: string | null;
 };
 
 type UpdatePayload = {
@@ -31,10 +43,26 @@ type UpdatePayload = {
 type CreateInstancePayload = {
   widgetType: string;
   publicId: string;
+  workspaceId: string;
   config: Record<string, unknown>;
   status?: 'published' | 'unpublished';
   widgetName?: string;
 };
+
+type CkErrorKind = 'DENY' | 'VALIDATION' | 'AUTH' | 'NOT_FOUND' | 'INTERNAL';
+
+type CkErrorResponse = {
+  error: {
+    kind: CkErrorKind;
+    reasonKey: string;
+    upsell?: 'UP';
+    detail?: string;
+    paths?: string[];
+  };
+};
+
+const CK_DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+const CK_DEMO_WORKSPACE_ID = '00000000-0000-0000-0000-000000000002';
 
 type GrantSubject =
   | { kind: 'anon'; sessionId: string }
@@ -66,6 +94,10 @@ function json(body: unknown, init?: ResponseInit) {
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (!headers.has('Access-Control-Allow-Origin')) headers.set('Access-Control-Allow-Origin', '*');
   return new Response(JSON.stringify(body), { ...init, headers });
+}
+
+function ckError(error: CkErrorResponse['error'], status: number) {
+  return json({ error } satisfies CkErrorResponse, { status });
 }
 
 function requireEnv(env: Env, key: keyof Env) {
@@ -147,6 +179,57 @@ async function readJson(res: Response) {
   } catch {
     return text;
   }
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+function assertWorkspaceId(value: unknown) {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  if (!trimmed || !isUuid(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+async function loadWorkspaceById(env: Env, workspaceId: string): Promise<WorkspaceRow | null> {
+  const params = new URLSearchParams({
+    select: 'id,tier,name,slug,website_url',
+    id: `eq.${workspaceId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load workspace (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as WorkspaceRow[];
+  return rows?.[0] ?? null;
+}
+
+function resolveEditorPolicyFromRequest(req: Request, workspace: WorkspaceRow) {
+  const url = new URL(req.url);
+  const subject = (url.searchParams.get('subject') || '').trim().toLowerCase();
+
+  let profile: PolicyProfile;
+  let role: Policy['role'];
+
+  if (subject === 'devstudio') {
+    profile = 'devstudio';
+    role = 'owner';
+  } else if (subject === 'minibob') {
+    profile = 'minibob';
+    role = 'editor';
+  } else if (subject === 'workspace') {
+    profile = workspace.tier;
+    role = 'editor';
+  } else {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422) };
+  }
+
+  const policy = resolvePolicy({ profile, role });
+  return { ok: true as const, policy };
 }
 
 async function handleHealthz() {
@@ -355,10 +438,16 @@ async function handleInstances(req: Request, env: Env) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
+  const url = new URL(req.url);
+  const workspaceIdResult = assertWorkspaceId(url.searchParams.get('workspaceId'));
+  if (!workspaceIdResult.ok) return workspaceIdResult.response;
+  const workspaceId = workspaceIdResult.value;
+
   const params = new URLSearchParams({
-    select: 'public_id,status,config,created_at,widget_id',
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
     order: 'created_at.desc',
     limit: '50',
+    workspace_id: `eq.${workspaceId}`,
   });
 
   const instRes = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
@@ -405,8 +494,24 @@ async function handleInstances(req: Request, env: Env) {
 
 async function loadInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,status,config,created_at,updated_at,widget_id',
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
     public_id: `eq.${publicId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load instance (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as InstanceRow[];
+  return rows?.[0] ?? null;
+}
+
+async function loadInstanceByWorkspaceAndPublicId(env: Env, workspaceId: string, publicId: string): Promise<InstanceRow | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
+    public_id: `eq.${publicId}`,
+    workspace_id: `eq.${workspaceId}`,
     limit: '1',
   });
   const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
@@ -465,7 +570,298 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     widgetType: widget.type ?? null,
     config: instance.config,
     updatedAt: instance.updated_at ?? null,
+    workspaceId: instance.workspace_id ?? null,
   });
+}
+
+async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspace = await loadWorkspaceById(env, workspaceId);
+  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+
+  // Reuse the legacy shape for now (DevStudio tooling consumes it), but scope it to a workspace.
+  const url = new URL(req.url);
+  url.searchParams.set('workspaceId', workspaceId);
+  return handleInstances(new Request(url.toString(), { method: 'GET', headers: req.headers }), env);
+}
+
+async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: string, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspace = await loadWorkspaceById(env, workspaceId);
+  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const widgetId = instance.widget_id;
+  const widget = widgetId ? await loadWidget(env, widgetId) : null;
+  if (!widget) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+
+  return json({
+    publicId: instance.public_id,
+    status: instance.status,
+    widgetType: widget.type ?? null,
+    config: instance.config,
+    updatedAt: instance.updated_at ?? null,
+    policy: policyResult.policy,
+    workspace: {
+      id: workspace.id,
+      tier: workspace.tier,
+      websiteUrl: workspace.website_url,
+    },
+  });
+}
+
+function enforceConfigAgainstPolicy(policy: Policy, config: Record<string, unknown>) {
+  const seoGeoEnabled = Boolean((config as any)?.seoGeo?.enabled === true);
+  if (seoGeoEnabled && policy.flags['embed.seoGeo.enabled'] !== true) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.upsell.reason.embed.seoGeo',
+        upsell: 'UP',
+        paths: ['config.seoGeo.enabled'],
+      },
+      403
+    );
+  }
+  return null;
+}
+
+function enforceFaqCaps(policy: Policy, widgetType: string | null, config: Record<string, unknown>) {
+  if (widgetType !== 'faq') return null;
+
+  const sections = Array.isArray((config as any).sections) ? ((config as any).sections as unknown[]) : [];
+  const sectionCount = sections.length;
+  const faqCounts = sections.map((section) => (Array.isArray((section as any)?.faqs) ? (section as any).faqs.length : 0));
+  const qaTotal = faqCounts.reduce((sum, n) => sum + n, 0);
+  const qaMaxInSection = faqCounts.reduce((max, n) => Math.max(max, n), 0);
+
+  const denyCap = (capKey: keyof Policy['caps'], current: number, path: string) => {
+    const max = policy.caps[capKey];
+    if (max == null) return null;
+    if (current <= max) return null;
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.upsell.reason.capReached',
+        upsell: 'UP',
+        detail: `${String(capKey)} exceeded (max=${max}, current=${current}).`,
+        paths: [path],
+      },
+      403
+    );
+  };
+
+  return (
+    denyCap('widget.faq.sections.max', sectionCount, 'config.sections') ||
+    denyCap('widget.faq.qa.max', qaTotal, 'config.sections[*].faqs') ||
+    denyCap('widget.faq.qaPerSection.max', qaMaxInSection, 'config.sections[*].faqs')
+  );
+}
+
+async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId: string, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspace = await loadWorkspaceById(env, workspaceId);
+  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const publishGate = can(policyResult.policy, 'instance.publish');
+  if (!publishGate.allow) {
+    return ckError(
+      { kind: 'DENY', reasonKey: publishGate.reasonKey, upsell: 'UP', detail: publishGate.detail },
+      403
+    );
+  }
+
+  let payload: UpdatePayload;
+  try {
+    payload = (await req.json()) as UpdatePayload;
+  } catch {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
+  }
+
+  const configResult = payload.config !== undefined ? assertConfig(payload.config) : { ok: true as const, value: undefined };
+  if (!configResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.config.invalid' }, 422);
+  }
+
+  const statusResult = assertStatus(payload.status);
+  if (!statusResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' }, 422);
+  }
+
+  const config = configResult.value;
+  const status = statusResult.value;
+
+  if (config === undefined && status === undefined) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
+  }
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const widgetId = instance.widget_id;
+  const widget = widgetId ? await loadWidget(env, widgetId) : null;
+  if (!widget) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+
+  if (config !== undefined) {
+    const issues = configNonPersistableUrlIssues(config);
+    if (issues.length) {
+      return ckError(
+        {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+          detail: issues[0]?.message,
+          paths: issues.map((i) => i.path),
+        },
+        422
+      );
+    }
+
+    const denyByPolicy = enforceConfigAgainstPolicy(policyResult.policy, config);
+    if (denyByPolicy) return denyByPolicy;
+
+    const denyByCaps = enforceFaqCaps(policyResult.policy, widget.type ?? null, config);
+    if (denyByCaps) return denyByCaps;
+  }
+
+  const update: Record<string, unknown> = {};
+  if (config !== undefined) update.config = config;
+  if (status !== undefined) update.status = status;
+
+  const patchRes = await supabaseFetch(
+    env,
+    `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(update),
+    }
+  );
+  if (!patchRes.ok) {
+    const details = await readJson(patchRes);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+
+  return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
+}
+
+async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspace = await loadWorkspaceById(env, workspaceId);
+  if (!workspace) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.workspace.notFound' }, 404);
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const createGate = can(policyResult.policy, 'instance.create');
+  if (!createGate.allow) {
+    return ckError({ kind: 'DENY', reasonKey: createGate.reasonKey, upsell: 'UP', detail: createGate.detail }, 403);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
+  }
+
+  if (!isRecord(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const widgetTypeResult = assertWidgetType((payload as any).widgetType);
+  const publicIdResult = assertPublicId((payload as any).publicId);
+  const configResult = assertConfig((payload as any).config);
+  const statusResult = assertStatus((payload as any).status);
+
+  if (!widgetTypeResult.ok || !publicIdResult.ok || !configResult.ok || !statusResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const widgetType = widgetTypeResult.value;
+  const publicId = publicIdResult.value;
+  const config = configResult.value;
+  const status = statusResult.value ?? 'unpublished';
+
+  const existing = await loadInstanceByPublicId(env, publicId);
+  if (existing) {
+    if (existing.workspace_id && existing.workspace_id !== workspaceId) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.conflict' }, 409);
+    }
+    return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
+  }
+
+  const issues = configNonPersistableUrlIssues(config);
+  if (issues.length) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+        detail: issues[0]?.message,
+        paths: issues.map((i) => i.path),
+      },
+      422
+    );
+  }
+
+  const denyByPolicy = enforceConfigAgainstPolicy(policyResult.policy, config);
+  if (denyByPolicy) return denyByPolicy;
+
+  let widget = await loadWidgetByType(env, widgetType);
+  if (!widget) {
+    const widgetName = asTrimmedString((payload as any).widgetName);
+    const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        type: widgetType,
+        name: widgetName ?? (titleCase(widgetType) || widgetType),
+      }),
+    });
+    if (!insertRes.ok) {
+      const details = await readJson(insertRes);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    }
+    const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
+    widget = created?.[0] ?? null;
+  }
+
+  if (!widget?.id) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+  }
+
+  const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      workspace_id: workspaceId,
+      widget_id: widget.id,
+      public_id: publicId,
+      status,
+      config,
+    }),
+  });
+  if (!instanceInsert.ok) {
+    const details = await readJson(instanceInsert);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+
+  return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
 }
 
 function titleCase(input: string): string {
@@ -501,6 +897,13 @@ async function handleCreateInstance(req: Request, env: Env) {
   const publicIdResult = assertPublicId((payload as any).publicId);
   if (!publicIdResult.ok) issues.push(...publicIdResult.issues);
 
+  const workspaceIdRaw = asTrimmedString((payload as any).workspaceId);
+  if (!workspaceIdRaw) {
+    issues.push({ path: 'workspaceId', message: 'workspaceId is required' });
+  } else if (!isUuid(workspaceIdRaw)) {
+    issues.push({ path: 'workspaceId', message: 'workspaceId must be a uuid' });
+  }
+
   const configResult = assertConfig((payload as any).config);
   if (!configResult.ok) issues.push(...configResult.issues);
   if (configResult.ok) issues.push(...configNonPersistableUrlIssues(configResult.value));
@@ -514,11 +917,17 @@ async function handleCreateInstance(req: Request, env: Env) {
 
   const widgetType = widgetTypeResult.value;
   const publicId = publicIdResult.value;
+  const workspaceId = workspaceIdRaw as string;
   const config = configResult.value;
   const status = statusResult.value ?? 'unpublished';
 
   const existing = await loadInstanceByPublicId(env, publicId);
-  if (existing) return handleGetInstance(req, env, publicId);
+  if (existing) {
+    if (existing.workspace_id && existing.workspace_id !== workspaceId) {
+      return json({ error: 'WORKSPACE_MISMATCH' }, { status: 409 });
+    }
+    return handleGetInstance(req, env, publicId);
+  }
 
   let widget = await loadWidgetByType(env, widgetType);
   if (!widget) {
@@ -548,6 +957,7 @@ async function handleCreateInstance(req: Request, env: Env) {
     body: JSON.stringify({
       widget_id: widget.id,
       public_id: publicId,
+      workspace_id: workspaceId,
       status,
       config,
     }),
@@ -618,6 +1028,11 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
+  const url = new URL(req.url);
+  const workspaceIdResult = assertWorkspaceId(url.searchParams.get('workspaceId'));
+  if (!workspaceIdResult.ok) return workspaceIdResult.response;
+  const workspaceId = workspaceIdResult.value;
+
   let payload: UpdatePayload;
   try {
     payload = (await req.json()) as UpdatePayload;
@@ -648,7 +1063,7 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
     });
   }
 
-  const instance = await loadInstanceByPublicId(env, publicId);
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance) return json({ error: 'NOT_FOUND' }, { status: 404 });
   const widgetId = instance.widget_id;
   if (!widgetId) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
@@ -660,7 +1075,7 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
 
     const patchRes = await supabaseFetch(
       env,
-      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}`,
+      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
       {
         method: 'PATCH',
         headers: {
@@ -705,6 +1120,25 @@ export default {
       if (pathname === '/api/ai/outcome') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleAiOutcome(req, env);
+      }
+
+      const workspaceInstancesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instances$/);
+      if (workspaceInstancesMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancesMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        if (req.method === 'GET') return handleWorkspaceInstances(req, env, workspaceIdResult.value);
+        if (req.method === 'POST') return handleWorkspaceCreateInstance(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstanceMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instance\/([^/]+)$/);
+      if (workspaceInstanceMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstanceMatch[2]);
+        if (req.method === 'GET') return handleWorkspaceGetInstance(req, env, workspaceIdResult.value, publicId);
+        if (req.method === 'PUT') return handleWorkspaceUpdateInstance(req, env, workspaceIdResult.value, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 
       if (pathname === '/api/instances') {

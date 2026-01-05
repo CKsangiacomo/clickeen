@@ -6,6 +6,7 @@ packages:
   - prague
   - sanfrancisco
   - venice
+  - tooling/ck-policy
   - tooling/sf-symbols
 
 onlyBuiltDependencies:

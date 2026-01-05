@@ -13,6 +13,8 @@ import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
+import type { Policy } from '@clickeen/ck-policy';
+import { can, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
 
 type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -22,7 +24,8 @@ type UpdateMeta = {
 
 type SessionError =
   | { source: 'load'; message: string }
-  | { source: 'ops'; errors: WidgetOpError[] };
+  | { source: 'ops'; errors: WidgetOpError[] }
+  | { source: 'publish'; message: string; paths?: string[] };
 
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -32,20 +35,13 @@ type PreviewSettings = {
 
 type SubjectMode = 'devstudio' | 'minibob';
 
-type SessionPolicy = {
-  subjectMode: SubjectMode;
-  flags: {
-    seoGeo: boolean;
-  };
-};
-
 type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   isDirty: boolean;
-  subjectMode: SubjectMode;
-  policy: SessionPolicy;
-  isMinibob: boolean; // derived from subjectMode (kept for backward compatibility)
+  policy: Policy;
+  upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
+  isPublishing: boolean;
   preview: PreviewSettings;
   selectedPath: string | null;
   lastUpdate: UpdateMeta | null;
@@ -54,6 +50,7 @@ type SessionState = {
   copilotThreads: Record<string, CopilotThread>;
   meta: {
     publicId?: string;
+    workspaceId?: string;
     widgetname?: string;
     label?: string;
   } | null;
@@ -64,7 +61,9 @@ type WidgetBootstrapMessage = {
   widgetname: string;
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
+  policy?: Policy;
   publicId?: string;
+  workspaceId?: string;
   label?: string;
   subjectMode?: SubjectMode;
 };
@@ -74,6 +73,21 @@ const DEFAULT_PREVIEW: PreviewSettings = {
   theme: 'light',
   host: 'canvas',
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function assertPolicy(value: unknown): Policy {
+  if (!isRecord(value)) throw new Error('[useWidgetSession] policy must be an object');
+  if (value.v !== 1) throw new Error('[useWidgetSession] policy.v must be 1');
+  if (typeof value.profile !== 'string' || !value.profile) throw new Error('[useWidgetSession] policy.profile must be a string');
+  if (typeof value.role !== 'string' || !value.role) throw new Error('[useWidgetSession] policy.role must be a string');
+  if (!isRecord(value.flags)) throw new Error('[useWidgetSession] policy.flags must be an object');
+  if (!isRecord(value.caps)) throw new Error('[useWidgetSession] policy.caps must be an object');
+  if (!isRecord(value.budgets)) throw new Error('[useWidgetSession] policy.budgets must be an object');
+  return value as Policy;
+}
 
 function resolveSubjectModeFromUrl(): SubjectMode {
   if (typeof window === 'undefined') return 'devstudio';
@@ -86,28 +100,21 @@ function resolveSubjectModeFromUrl(): SubjectMode {
   return 'devstudio';
 }
 
-function resolvePolicy(subjectMode: SubjectMode): SessionPolicy {
-  return {
-    subjectMode,
-    flags: {
-      // In Minibob, SEO/GEO is always disabled.
-      seoGeo: subjectMode !== 'minibob',
-    },
-  };
+function resolveDevPolicy(profile: SubjectMode): Policy {
+  return resolveCkPolicy({ profile, role: 'editor' });
 }
 
 function useWidgetSessionInternal() {
   const initialSubjectMode = resolveSubjectModeFromUrl();
-  const initialPolicy = resolvePolicy(initialSubjectMode);
-  const isMinibob = initialSubjectMode === 'minibob';
+  const initialPolicy = resolveDevPolicy(initialSubjectMode);
 
   const [state, setState] = useState<SessionState>(() => ({
     compiled: null,
     instanceData: {},
     isDirty: false,
-    subjectMode: initialSubjectMode,
     policy: initialPolicy,
-    isMinibob,
+    upsell: null,
+    isPublishing: false,
     preview: DEFAULT_PREVIEW,
     selectedPath: null,
     lastUpdate: null,
@@ -129,21 +136,61 @@ function useWidgetSessionInternal() {
         return result;
       }
 
-      // Policy enforcement (subject-mode based).
-      if (state.policy.flags.seoGeo !== true) {
-        const blockedIndex = ops.findIndex((op) => {
-          if (!op || typeof op !== 'object') return false;
-          if ((op as any).op !== 'set') return false;
-          if ((op as any).path !== 'seoGeo.enabled') return false;
-          return (op as any).value === true;
-        });
-        if (blockedIndex >= 0) {
-          const result: ApplyWidgetOpsResult = {
-            ok: false,
-            errors: [{ opIndex: blockedIndex, path: 'seoGeo.enabled', message: 'SEO/GEO optimization cannot be enabled for this subject' }],
-          };
-          setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
-          return result;
+      // Policy enforcement (gate on interaction; fail-closed).
+      const denyOps = (
+        opIndex: number,
+        path: string | undefined,
+        decision: { reasonKey: string; detail?: string }
+      ) => {
+        const result: ApplyWidgetOpsResult = {
+          ok: false,
+          errors: [{ opIndex, path, message: decision.reasonKey }],
+        };
+        setState((prev) => ({
+          ...prev,
+          error: null,
+          upsell: {
+            reasonKey: decision.reasonKey,
+            detail: decision.detail,
+            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+          },
+        }));
+        return result;
+      };
+
+      for (let idx = 0; idx < ops.length; idx += 1) {
+        const op = ops[idx] as any;
+        if (!op || typeof op !== 'object') continue;
+
+        if (op.op === 'set' && op.path === 'seoGeo.enabled' && op.value === true) {
+          const decision = can(state.policy, 'embed.seoGeo.toggle');
+          if (!decision.allow) return denyOps(idx, 'seoGeo.enabled', decision);
+        }
+
+        if (op.op === 'insert' && op.path === 'sections') {
+          const currentSections = Array.isArray((state.instanceData as any).sections)
+            ? ((state.instanceData as any).sections as unknown[]).length
+            : 0;
+          const decision = can(state.policy, 'widget.faq.section.add', { currentSections });
+          if (!decision.allow) return denyOps(idx, op.path, decision);
+        }
+
+        if (op.op === 'insert' && typeof op.path === 'string' && /^sections\\.(\\d+)\\.faqs$/.test(op.path)) {
+          const match = op.path.match(/^sections\\.(\\d+)\\.faqs$/);
+          const sectionIndex = match ? Number(match[1]) : -1;
+          const sections = Array.isArray((state.instanceData as any).sections)
+            ? ((state.instanceData as any).sections as any[])
+            : [];
+          const currentQaInSection =
+            sectionIndex >= 0 && sectionIndex < sections.length && Array.isArray(sections[sectionIndex]?.faqs)
+              ? sections[sectionIndex].faqs.length
+              : 0;
+          const currentQaTotal = sections.reduce(
+            (sum, section) => sum + (Array.isArray(section?.faqs) ? section.faqs.length : 0),
+            0
+          );
+          const decision = can(state.policy, 'widget.faq.qa.add', { currentQaInSection, currentQaTotal });
+          if (!decision.allow) return denyOps(idx, op.path, decision);
         }
       }
 
@@ -164,6 +211,7 @@ function useWidgetSessionInternal() {
         instanceData: applied.data,
         isDirty: true,
         error: null,
+        upsell: null,
         lastUpdate: {
           source: 'ops',
           path: ops[0]?.path || '',
@@ -173,7 +221,7 @@ function useWidgetSessionInternal() {
 
       return applied;
     },
-    [state.compiled, state.instanceData, state.policy.flags.seoGeo]
+    [state.compiled, state.instanceData, state.policy]
   );
 
   const undoLastOps = useCallback(() => {
@@ -200,7 +248,7 @@ function useWidgetSessionInternal() {
     });
   }, []);
 
-  const loadInstance = useCallback((message: WidgetBootstrapMessage) => {
+  const loadInstance = useCallback(async (message: WidgetBootstrapMessage) => {
     try {
       const compiled = message.compiled;
       if (!compiled) {
@@ -215,18 +263,47 @@ function useWidgetSessionInternal() {
       }
       const defaults = compiled.defaults as Record<string, unknown>;
 
+      let resolved: Record<string, unknown> = {};
+      let nextPolicy: Policy = state.policy;
+      let nextWorkspaceId = message.workspaceId;
+
+      const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
+
       const incoming = message.instanceData as Record<string, unknown> | null | undefined;
       if (incoming != null && (!incoming || typeof incoming !== 'object' || Array.isArray(incoming))) {
         throw new Error('[useWidgetSession] instanceData must be an object');
       }
-      const resolved =
-        incoming == null
-          ? structuredClone(defaults)
-          : structuredClone(incoming);
 
-      const nextSubjectMode: SubjectMode = message.subjectMode || state.subjectMode;
-      const nextPolicy = resolvePolicy(nextSubjectMode);
-      if (nextPolicy.flags.seoGeo !== true) {
+      if (message.policy && typeof message.policy === 'object') {
+        nextPolicy = assertPolicy(message.policy);
+      }
+
+      if (incoming == null && message.publicId && message.workspaceId && !message.policy) {
+        const url = `/api/paris/instance/${encodeURIComponent(message.publicId)}?workspaceId=${encodeURIComponent(
+          message.workspaceId
+        )}&subject=${encodeURIComponent(nextSubjectMode)}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`[useWidgetSession] Failed to load instance from Paris (HTTP ${res.status})`);
+        const json = (await res.json().catch(() => null)) as any;
+        if (!json || typeof json !== 'object') {
+          throw new Error('[useWidgetSession] Paris returned invalid JSON');
+        }
+        if (json.error) {
+          const reasonKey = json.error?.reasonKey ? String(json.error.reasonKey) : 'coreui.errors.unknown';
+          throw new Error(reasonKey);
+        }
+        resolved = json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
+          ? structuredClone(json.config)
+          : structuredClone(defaults);
+        if (json.policy && typeof json.policy === 'object') nextPolicy = assertPolicy(json.policy);
+        else nextPolicy = resolveDevPolicy(nextSubjectMode);
+        nextWorkspaceId = message.workspaceId;
+      } else {
+        resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
+        if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
+      }
+
+      if (nextPolicy.flags['embed.seoGeo.enabled'] !== true) {
         const asAny = resolved as any;
         if (!asAny.seoGeo || typeof asAny.seoGeo !== 'object') asAny.seoGeo = {};
         asAny.seoGeo.enabled = false;
@@ -237,11 +314,10 @@ function useWidgetSessionInternal() {
         compiled,
         instanceData: resolved,
         isDirty: false,
-        subjectMode: nextSubjectMode,
         policy: nextPolicy,
-        isMinibob: nextSubjectMode === 'minibob',
         selectedPath: null,
         error: null,
+        upsell: null,
         lastUpdate: {
           source: 'load',
           path: '',
@@ -250,6 +326,7 @@ function useWidgetSessionInternal() {
         undoSnapshot: null,
         meta: {
           publicId: message.publicId,
+          workspaceId: nextWorkspaceId,
           widgetname: compiled.widgetname,
           label: message.label ?? compiled.displayName,
         },
@@ -266,10 +343,149 @@ function useWidgetSessionInternal() {
         instanceData: {},
         isDirty: false,
         error: { source: 'load', message: messageText },
+        upsell: null,
         meta: null,
       }));
     }
-  }, [state.subjectMode]);
+  }, [state.policy]);
+
+  const dismissUpsell = useCallback(() => {
+    setState((prev) => ({ ...prev, upsell: null }));
+  }, []);
+
+  const publish = useCallback(async () => {
+    const publicId = state.meta?.publicId;
+    const workspaceId = state.meta?.workspaceId;
+    if (!publicId || !workspaceId) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'publish', message: 'coreui.errors.publish.missingInstanceContext' },
+      }));
+      return;
+    }
+
+    const gate = can(state.policy, 'instance.publish');
+    if (!gate.allow) {
+      setState((prev) => ({
+        ...prev,
+        error: null,
+        upsell: {
+          reasonKey: gate.reasonKey,
+          detail: gate.detail,
+          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+        },
+      }));
+      return;
+    }
+
+    const subject = state.policy.profile === 'devstudio' || state.policy.profile === 'minibob' ? state.policy.profile : 'workspace';
+
+    setState((prev) => ({ ...prev, isPublishing: true, error: null }));
+    try {
+      const res = await fetch(
+        `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
+          workspaceId
+        )}&subject=${encodeURIComponent(subject)}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ config: state.instanceData, status: 'published' }),
+        }
+      );
+
+      const json = (await res.json().catch(() => null)) as any;
+      if (!res.ok) {
+        const err = json?.error;
+        if (err?.kind === 'DENY' && err?.upsell === 'UP') {
+          setState((prev) => ({
+            ...prev,
+            isPublishing: false,
+            error: null,
+            upsell: {
+              reasonKey: err.reasonKey || 'coreui.errors.unknown',
+              detail: err.detail,
+              cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+            },
+          }));
+          return;
+        }
+        if (err?.kind === 'VALIDATION') {
+          setState((prev) => ({
+            ...prev,
+            isPublishing: false,
+            error: { source: 'publish', message: err.reasonKey || 'coreui.errors.publish.failed', paths: err.paths },
+          }));
+          return;
+        }
+        setState((prev) => ({
+          ...prev,
+          isPublishing: false,
+          error: { source: 'publish', message: err?.reasonKey || 'coreui.errors.publish.failed' },
+        }));
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isPublishing: false,
+        isDirty: false,
+        error: null,
+        upsell: null,
+        instanceData: json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.instanceData,
+        policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
+      }));
+    } catch (err) {
+      const messageText = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
+    }
+  }, [state.instanceData, state.meta?.publicId, state.meta?.workspaceId, state.policy]);
+
+  const loadFromUrlParams = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const workspaceId = (params.get('workspaceId') || '').trim();
+    const publicId = (params.get('publicId') || '').trim();
+    if (!workspaceId || !publicId) return;
+
+    const subject = resolveSubjectModeFromUrl();
+    const instanceUrl = `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
+      workspaceId
+    )}&subject=${encodeURIComponent(subject)}`;
+    const instanceRes = await fetch(instanceUrl, { cache: 'no-store' });
+    if (!instanceRes.ok) {
+      throw new Error(`[useWidgetSession] Failed to load instance (HTTP ${instanceRes.status})`);
+    }
+    const instanceJson = (await instanceRes.json().catch(() => null)) as any;
+    if (!instanceJson || typeof instanceJson !== 'object') {
+      throw new Error('[useWidgetSession] Paris returned invalid JSON');
+    }
+    if (instanceJson.error) {
+      const reasonKey = instanceJson.error?.reasonKey ? String(instanceJson.error.reasonKey) : 'coreui.errors.unknown';
+      throw new Error(reasonKey);
+    }
+    const widgetType = typeof instanceJson.widgetType === 'string' ? instanceJson.widgetType : '';
+    if (!widgetType) {
+      throw new Error('[useWidgetSession] Missing widgetType in instance payload');
+    }
+
+    const compiledRes = await fetch(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, { cache: 'no-store' });
+    if (!compiledRes.ok) {
+      throw new Error(`[useWidgetSession] Failed to compile widget ${widgetType} (HTTP ${compiledRes.status})`);
+    }
+    const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
+    if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
+    await loadInstance({
+      type: 'devstudio:load-instance',
+      widgetname: widgetType,
+      compiled,
+      instanceData: instanceJson.config,
+      policy: instanceJson.policy,
+      publicId: instanceJson.publicId ?? publicId,
+      workspaceId,
+      label: instanceJson.publicId ?? publicId,
+      subjectMode: subject,
+    });
+  }, [loadInstance]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
     const trimmed = key.trim();
@@ -322,15 +538,29 @@ function useWidgetSessionInternal() {
     if (window.parent) {
       window.parent.postMessage({ type: 'bob:session-ready' }, '*');
     }
+    loadFromUrlParams().catch((err) => {
+      const messageText = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        compiled: null,
+        instanceData: {},
+        isDirty: false,
+        error: { source: 'load', message: messageText },
+        upsell: null,
+        meta: null,
+      }));
+    });
     return () => window.removeEventListener('message', handleMessage);
-  }, [loadInstance]);
+  }, [loadFromUrlParams, loadInstance]);
 
   const value = useMemo(
     () => ({
       compiled: state.compiled,
       instanceData: state.instanceData,
       isDirty: state.isDirty,
-      isMinibob: state.isMinibob,
+      isMinibob: state.policy.profile === 'minibob',
+      upsell: state.upsell,
+      isPublishing: state.isPublishing,
       preview: state.preview,
       selectedPath: state.selectedPath,
       lastUpdate: state.lastUpdate,
@@ -341,6 +571,8 @@ function useWidgetSessionInternal() {
       applyOps,
       undoLastOps,
       commitLastOps,
+      publish,
+      dismissUpsell,
       setSelectedPath,
       setPreview,
       loadInstance,
@@ -352,6 +584,8 @@ function useWidgetSessionInternal() {
       applyOps,
       undoLastOps,
       commitLastOps,
+      publish,
+      dismissUpsell,
       loadInstance,
       setPreview,
       setSelectedPath,

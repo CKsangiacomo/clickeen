@@ -23,6 +23,7 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 - 1 instance (can't embed on multiple pages)
 - Limited content (e.g., max 4 FAQs per section, max 2 sections)
 - Limited features (no SEO/GEO, no auto-translate)
+- Website URL for AI (Copilot context) enabled
 - No Supernova
 - "Made with Clickeen" branding
 
@@ -32,6 +33,7 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 - 5-10 instances
 - Higher content caps (e.g., 10 FAQs per section)
 - SEO/GEO enabled
+- Website URL for AI (Copilot context) enabled
 - No auto-translate, no Supernova
 - Branding optional
 
@@ -186,6 +188,7 @@ type Comment = {
 | **Instances** | 1 | 5-10 | ∞ | ∞ |
 | **Content** | Limited | Higher | ∞ | ∞ |
 | **SEO/GEO** | ❌ | ✅ | ✅ | ✅ |
+| **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ |
 | **Auto-translate** | ❌ | ❌ | ✅ (10 locales) | ✅ (∞) |
 | **Supernova** | ❌ | ❌ | ❌ | ✅ |
 | **Branding** | Required | Optional | None | None |
@@ -285,6 +288,7 @@ While we are building (before full auth/billing enforcement ships), we still nee
 
 **What Bob enforces today (example):**
 - For `minibob`, `seoGeo.enabled` cannot be turned on and is forced off on load.
+- For `minibob`, `websiteUrl` is blocked (Settings UI gated) so anonymous demo sessions don’t provide website context to Copilot.
 - This enforcement is done in one place (session/ops gate) so we don’t scatter `if (minibob)` checks.
 
 **Why this scales:**

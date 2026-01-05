@@ -38,7 +38,7 @@ Row                 | Path                     | Enforcement | Upsell | Meaning
 ------------------- | ------------------------ | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled           | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS   | UP     | Remove branding
-websiteUrlAllowed   | ai.websiteUrl            | UI+OPS      | UP     | Website URL for Copilot/AI content generation
+websiteUrlAllowed   | workspace.websiteUrl     | UI+OPS      | UP     | Website URL for Copilot/AI content generation (workspace setting; not widget instance state)
 modeDateAllowed     | timer.mode='date'        | UI+OPS      | —      | Countdown to a date/time
 modePersonalAllowed | timer.mode='personal'    | UI+OPS      | UP     | Personal countdown (per-visitor start)
 modeNumberAllowed   | timer.mode='number'      | UI+OPS      | UP     | Number counter (count up/down)
@@ -117,10 +117,11 @@ Top-level groups:
 - `appearance.*` — paint (fills, borders, colors)
 - `behavior.*` — backlink + small toggles
 - `actions.*` — “during” CTA + “after end” behavior
-- `ai.*` — AI context (Copilot-only; runtime may ignore)
 - `seoGeo.*` — embed optimization toggle (policy-gated)
 - `typography.*` — roles (compiler-injected)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
+
+Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config; Copilot may use it as context.
 
 ## 4) DOM contract (stable hooks)
 All runtime selectors must be scoped within `[data-ck-widget="countdown"]`.
@@ -157,7 +158,7 @@ Panels:
 - **Typography**: injected (roles: `heading`, `timer`, `label`, `button`)
 - **Behavior**: `behavior.showBacklink` + small toggles
 - **Actions**: `actions.*` (CTA during + after-end behavior)
-- **Settings**: `ai.websiteUrl` (policy-gated)
+- **Settings**: workspace website URL setting (policy-gated; not widget instance state)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
 ## 7) Defaults (authoritative `spec.json.defaults`)
@@ -165,7 +166,6 @@ The implementer must translate this PRD into a complete defaults object in `toky
 Defaults must include:
 - `seoGeo: { enabled: false }`
 - `behavior: { showBacklink: true }`
-- `ai: { websiteUrl: "" }`
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 
 ## Links

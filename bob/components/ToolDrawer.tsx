@@ -111,12 +111,18 @@ export function ToolDrawer() {
                 }}
               >
                 <div className="label-s" style={{ color: 'var(--color-system-red, #ff3b30)' }}>
-                  {sessionError.source === 'load' ? 'Instance load error' : 'Edit rejected'}
+                  {sessionError.source === 'load'
+                    ? 'Instance load error'
+                    : sessionError.source === 'publish'
+                      ? 'Publish rejected'
+                      : 'Edit rejected'}
                 </div>
                 <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>
                   {sessionError.source === 'load'
                     ? sessionError.message
-                    : sessionError.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n')}
+                    : sessionError.source === 'publish'
+                      ? [sessionError.message, ...(sessionError.paths || [])].filter(Boolean).join('\n')
+                      : sessionError.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n')}
                 </pre>
               </div>
             ) : null}

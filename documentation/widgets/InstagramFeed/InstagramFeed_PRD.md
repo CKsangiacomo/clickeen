@@ -39,7 +39,7 @@ X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, 
 Notes:
 - This widget is not yet a Tokyo 5-file package in this repo; **exact state paths are TBD** until `tokyo/widgets/instagramfeed/spec.json` exists.
 - Use `?` in the matrices where product decisions are not finalized yet; replace `?` with `A/B` or numbers before implementation.
-- Cross-widget standard (not TBD): `ai.websiteUrl` exists for Copilot/AI content generation and is policy-gated (MiniBob blocked, Free+ allowed).
+- Cross-widget standard (not TBD): `websiteUrl` exists for Copilot/AI content generation and is policy-gated (MiniBob blocked, Free+ allowed).
 
 ### Matrix A — Flags (ALLOW/BLOCK)
 
@@ -63,7 +63,7 @@ Row                 | Path                   | Enforcement | Upsell | Meaning
 ------------------- | ---------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled (TBD)   | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS  | UP     | Remove branding
-websiteUrlAllowed   | ai.websiteUrl          | UI+OPS      | UP     | Website URL for Copilot/AI content generation
+websiteUrlAllowed   | websiteUrl             | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 layoutCarouselAllowed | layout.mode='carousel' | UI+OPS    | UP     | Carousel layout
 layoutMasonryAllowed  | layout.mode='masonry'  | UI+OPS    | UP     | Masonry layout
 ```

@@ -82,6 +82,9 @@ importers:
 
   bob:
     dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../tooling/ck-policy
       gsap:
         specifier: ^3.13.0
         version: 3.13.0
@@ -127,6 +130,10 @@ importers:
         version: 6.1.86
 
   paris:
+    dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../tooling/ck-policy
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -159,6 +166,8 @@ importers:
       wrangler:
         specifier: ^4.54.0
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
+
+  tooling/ck-policy: {}
 
   tooling/sf-symbols:
     dependencies:

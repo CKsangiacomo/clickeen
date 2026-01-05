@@ -5,13 +5,26 @@ import path from 'node:path';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 
 const TEXT_EXTS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.json', '.html', '.css', '.md']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.git',
+  '.next',
+  '.next-dev',
+  '.turbo',
+  '.cloudflare',
+  '.vercel',
+  '.wrangler',
+  '.astro',
+  'dist',
+  'build',
+]);
 
 function walk(dir, out) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      if (SKIP_DIRS.has(entry.name)) continue;
       walk(full, out);
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name);

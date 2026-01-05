@@ -2,8 +2,24 @@
 
 import { TopDrawer } from '../../components/TopDrawer';
 import { ToolDrawer } from '../../components/ToolDrawer';
+import { UpsellPopup } from '../../components/UpsellPopup';
 import { Workspace } from '../../components/Workspace';
 import { WidgetSessionProvider } from '../../lib/session/useWidgetSession';
+import { useWidgetSession } from '../../lib/session/useWidgetSession';
+
+function UpsellPopupHost() {
+  const session = useWidgetSession();
+  const upsell = session.upsell;
+  return (
+    <UpsellPopup
+      open={Boolean(upsell)}
+      reasonKey={upsell?.reasonKey ?? ''}
+      detail={upsell?.detail}
+      cta={upsell?.cta ?? 'upgrade'}
+      onClose={session.dismissUpsell}
+    />
+  );
+}
 
 export default function BobRoutePage() {
   return (
@@ -34,7 +50,7 @@ export default function BobRoutePage() {
           <Workspace />
         </div>
       </div>
+      <UpsellPopupHost />
     </WidgetSessionProvider>
   );
 }
-

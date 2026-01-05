@@ -13,8 +13,9 @@ if (!BOB_URL) {
   throw new Error('[prague] PUBLIC_BOB_URL is required (e.g. http://localhost:3000)');
 }
 
-const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?minibob=true&subject=minibob&locale=${encodeURIComponent(locale)}`;
-const compiledUrl = `${BOB_URL.replace(/\/+$/, '')}/api/widgets/${encodeURIComponent(widget)}/compiled`;
+const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+const publicId = `wgt_${widget}_main`;
+const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
 
@@ -36,58 +37,6 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
     />
   </div>
 </section>
-
-<script is:inline data-iframe-id={iframeId} data-widget={widget} data-compiled-url={compiledUrl}>
-  (function () {
-    var script = document.currentScript;
-    if (!script) return;
-    var iframeId = script.getAttribute('data-iframe-id');
-    var widget = script.getAttribute('data-widget');
-    var compiledUrl = script.getAttribute('data-compiled-url');
-    if (!iframeId || !widget || !compiledUrl) return;
-
-    var iframe = document.getElementById(iframeId);
-    if (!iframe) return;
-
-    var hasSent = false;
-    function trySend() {
-      if (hasSent) return;
-      if (!iframe.contentWindow) return;
-      hasSent = true;
-
-      fetch(compiledUrl)
-        .then(function (r) {
-          if (!r.ok) throw new Error('Failed to load compiled widget');
-          return r.json();
-        })
-        .then(function (compiled) {
-          var msg = {
-            type: 'devstudio:load-instance',
-            widgetname: widget,
-            compiled: compiled,
-            instanceData: compiled && compiled.defaults ? structuredClone(compiled.defaults) : {},
-            label: compiled && compiled.displayName ? compiled.displayName : widget,
-            subjectMode: 'minibob',
-          };
-          iframe.contentWindow.postMessage(msg, '*');
-        })
-        .catch(function (err) {
-          // Fail-visible in dev: leave Minibob empty rather than silently breaking the page.
-          if (typeof console !== 'undefined') console.error('[prague/minibob] bootstrap failed', err);
-          hasSent = false;
-        });
-    }
-
-    function onMessage(e) {
-      if (!e || !e.data || typeof e.data !== 'object') return;
-      if (e.data.type !== 'bob:session-ready') return;
-      trySend();
-    }
-
-    window.addEventListener('message', onMessage);
-    iframe.addEventListener('load', trySend);
-  })();
-</script>
 
 <style>
   #minibob.ck-canvas {

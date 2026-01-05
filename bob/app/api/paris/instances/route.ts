@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
@@ -9,8 +9,17 @@ const PARIS_BASE_URL =
 
 const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 
-export async function GET() {
-  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/instances`;
+export async function GET(request: NextRequest) {
+  const reqUrl = new URL(request.url);
+  const workspaceId = (reqUrl.searchParams.get('workspaceId') || '').trim();
+  if (!workspaceId) {
+    return NextResponse.json(
+      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } },
+      { status: 422, headers: { 'Access-Control-Allow-Origin': '*' } }
+    );
+  }
+
+  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances`;
 
   const headers: HeadersInit = {};
   if (PARIS_DEV_JWT) {

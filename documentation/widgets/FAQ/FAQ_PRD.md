@@ -57,7 +57,7 @@ seoGeoEnabled       | seoGeo.enabled               | OPS+LOAD    | UP     | SEO/
 removeBranding      | behavior.showBacklink=false  | UI+OPS      | UP     | Remove branding
 answerImagesAllowed | behavior.displayImages       | UI+OPS      | —      | Answer images
 answerVideosAllowed | behavior.displayVideos       | UI+OPS      | UP     | Answer videos
-websiteUrlAllowed   | ai.websiteUrl                | UI+OPS      | UP     | Website URL for Copilot/AI content generation
+websiteUrlAllowed   | websiteUrl                   | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 ```
 
 ### Matrix B — Caps (numbers)
@@ -171,8 +171,8 @@ Panels defined in `tokyo/widgets/faq/spec.json`:
 - `appearance` — widget appearance + stage/pod appearance
 - `settings` — website URL (AI) + media toggles + backlink
 
-## 5.1) AI behavior (Copilot, uses `ai.websiteUrl`)
-If `ai.websiteUrl` is present and policy allows it, Copilot may:
+## 5.1) AI behavior (Copilot, uses `websiteUrl`)
+If `websiteUrl` is present and policy allows it, Copilot may:
 - Rewrite or propose FAQ content (sections/questions/answers) based on the website URL.
 - Preserve the widget’s deterministic render: this is content generation only; runtime does not “fetch the website”.
 
