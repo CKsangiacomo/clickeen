@@ -108,7 +108,7 @@ A “template” is just a `widget_instances` row whose `public_id` uses the `tm
 
 Local DB is Supabase CLI + Docker:
 - `supabase db reset` applies `supabase/migrations/*`
-- then run `pnpm bootstrap:local` to create `wgt_*_main` instances from Tokyo `spec.json` defaults (no SQL seeds)
+- instances are created explicitly from DevStudio Local (superadmin), not by scripts
 
 ## What Michael Does NOT Do (by design)
 
