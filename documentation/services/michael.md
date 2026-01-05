@@ -96,6 +96,20 @@ Instances created by users (usually by cloning either a `main` instance or a tem
 Examples:
 - `wgt_faq_u_4f8k2m1x`
 
+### D) Website creative instance (Prague CMS visual)
+Instances owned by the Clickeen workspace that are embedded inside Prague marketing blocks (via Venice).
+
+**Naming (v1)**
+- `wgt_web_{creativeKey}.{locale}`
+
+Where:
+- `creativeKey` is locale-free and stable: `{widgetType}.{page}.{blockSlot}` (allowed chars: `a-z 0-9 . -`)
+- `locale` is a BCP47-ish tag like `en` or `en-us` (lowercase)
+
+Examples:
+- `wgt_web_faq.overview.hero.en`
+- `wgt_web_faq.templates.card.1.en`
+
 ## “Instances ARE Templates” (how templates work)
 
 Competitors build a separate “template system”.

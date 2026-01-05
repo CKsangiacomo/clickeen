@@ -369,7 +369,12 @@ function assertWidgetType(widgetType: unknown) {
 function assertPublicId(publicId: unknown) {
   const value = asTrimmedString(publicId);
   if (!value) return { ok: false as const, issues: [{ path: 'publicId', message: 'publicId is required' }] };
-  if (!/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/.test(value)) {
+  const okLegacy = /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/.test(value);
+  const okWebsiteCreative =
+    /^wgt_web_[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2}(?:-[a-z]{2})?$/.test(
+      value
+    );
+  if (!okLegacy && !okWebsiteCreative) {
     return { ok: false as const, issues: [{ path: 'publicId', message: 'invalid publicId format' }] };
   }
   return { ok: true as const, value };
