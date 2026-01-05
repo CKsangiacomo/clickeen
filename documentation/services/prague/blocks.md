@@ -51,7 +51,7 @@ This is where we win (or die). The filesystem is the taxonomy.
 Examples:
 
 ```
-prague/src/blocks/site/nav.astro
+prague/src/blocks/site/nav/Nav.astro
 prague/src/blocks/site/footer.astro
 prague/src/blocks/widget-landing/hero.astro
 prague/src/blocks/widget-landing/features.astro
@@ -60,8 +60,20 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 
 ### 2.1 Navigation
 
-`site/nav`
-- Props: `{ title: string, homeHref?: string, items: { label: string, href: string }[], cta?: { label: string, href: string } }`
+`site/nav/Nav.astro` (system-owned)
+- Primary nav is derived from the URL and `resolveWidgetsMegaMenu()` (no page-authored `items[]` in the scalable path).
+- The **Widgets** nav item behaves as:
+  - Hover: opens the mega menu
+  - Click: navigates to `/{locale}/widgets/`
+- Widget secondary tabs are also derived from the URL:
+  - `/[locale]/widgets/[widget]` → Overview
+  - `/[locale]/widgets/[widget]/templates|examples|features|pricing`
+
+`site/nav/widgetsMegaMenu.ts`
+- Resolves mega menu content from the canonical widget registry + each widget’s `pages/landing.md`:
+  - `headline` comes from `## Headline`
+  - `subheadline` comes from `## Subheadline`
+  - Source: `tokyo/widgets/{widget}/pages/landing.md`
  
 `site/footer`
 - Props: `{ locale: string }`

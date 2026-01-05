@@ -26,7 +26,7 @@ export async function resolveWidgetsMegaMenu(params: { locale: string }) {
   }
 
   return {
-    allWidgetsHref: `/${locale}/`,
+    allWidgetsHref: `/${locale}/widgets/`,
     items,
   };
 }
