@@ -1,17 +1,5 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 
-type ResolveResponse = {
-  previewUrl?: string;
-  mimeType?: string;
-  ext?: string;
-  fileName?: string;
-};
-
-type GrantResponse = {
-  uploadUrl: string;
-  fileKey: string;
-};
-
 type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type DropdownUploadState = {
@@ -31,8 +19,6 @@ type DropdownUploadState = {
   replaceButton: HTMLButtonElement;
   removeButton: HTMLButtonElement;
   fileInput: HTMLInputElement;
-  resolveUrl: string;
-  grantUrl: string;
   accept: string;
   maxImageKb?: number;
   maxVideoKb?: number;
@@ -53,14 +39,7 @@ const hydrateHost = createDropdownHydrator({
   onOpen: (root) => {
     const state = states.get(root);
     if (!state) return;
-    const key = (state.input.value || '').trim();
-    if (!key) return;
-    // Editor invariant: do not persist during editing.
-    // If the value is already a URL/data URL, render directly without any network calls.
-    if (isDataUrl(key)) return previewFromDataUrl(state, key);
-    if (looksLikeUrl(key)) return previewFromUrl(state, key);
-    // Fallback for older persisted values that are fileKeys.
-    void resolveAndPreview(state, key);
+    syncFromValue(state, state.input.value);
   },
 });
 
@@ -113,8 +92,6 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     return null;
   }
 
-  const resolveUrl = (input.dataset.resolveUrl || '/api/assets/resolve').trim();
-  const grantUrl = (input.dataset.grantUrl || '/api/assets/grant').trim();
   const accept = (input.dataset.accept || fileInput.getAttribute('accept') || 'image/*').trim();
   const maxImageKbRaw = (input.dataset.maxImageKb || '').trim();
   const maxVideoKbRaw = (input.dataset.maxVideoKb || '').trim();
@@ -142,8 +119,6 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     replaceButton,
     removeButton,
     fileInput,
-    resolveUrl,
-    grantUrl,
     accept,
     maxImageKb: Number.isFinite(maxImageKb as number) ? (maxImageKb as number) : undefined,
     maxVideoKb: Number.isFinite(maxVideoKb as number) ? (maxVideoKb as number) : undefined,
@@ -214,7 +189,9 @@ function installHandlers(state: DropdownUploadState) {
       const value =
         kind === 'image' ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
       setFileKey(state, value, true);
+      URL.revokeObjectURL(objectUrl);
     } catch (e) {
+      URL.revokeObjectURL(objectUrl);
       setError(state, e instanceof Error ? e.message : 'File read failed');
     }
   });
@@ -310,68 +287,12 @@ function previewFromDataUrl(state: DropdownUploadState, raw: string) {
   setPreview(state, { kind, previewUrl: kind === 'doc' ? undefined : url, name, ext, hasFile: true });
 }
 
-async function requestGrant(state: DropdownUploadState, file: File): Promise<GrantResponse> {
-  const res = await fetch(state.grantUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      filename: file.name,
-      contentType: file.type || 'application/octet-stream',
-      sizeBytes: file.size,
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text ? `Grant failed: ${text}` : `Grant failed (${res.status})`);
-  }
-
-  const json = (await res.json()) as unknown;
-  if (!json || typeof json !== 'object') throw new Error('Grant failed: invalid response');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const uploadUrl = (json as any).uploadUrl;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fileKey = (json as any).fileKey;
-  if (typeof uploadUrl !== 'string' || typeof fileKey !== 'string') throw new Error('Grant failed: missing fields');
-  return { uploadUrl, fileKey };
-}
-
-async function uploadToSignedUrl(uploadUrl: string, file: File): Promise<void> {
-  const res = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
-  });
-  if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-}
-
-async function resolveAndPreview(state: DropdownUploadState, fileKey: string): Promise<void> {
-  clearError(state);
-  const url = new URL(state.resolveUrl, window.location.origin);
-  url.searchParams.set('key', fileKey);
-  const res = await fetch(url.toString(), { method: 'GET' });
-  if (!res.ok) {
-    setError(state, `Resolve failed (${res.status})`);
-    return;
-  }
-  const data = (await res.json()) as ResolveResponse;
-  const name = data.fileName || fileKey;
-  const ext = (data.ext || guessExtFromName(name) || '').toLowerCase();
-  const kind = classifyByNameAndType(name, data.mimeType || '').kind;
-  setPreview(state, {
-    kind,
-    previewUrl: data.previewUrl,
-    name,
-    ext,
-    hasFile: true,
-  });
-}
-
 function syncFromValue(state: DropdownUploadState, raw: string) {
   const key = String(raw ?? '').trim();
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
 
   if (!key) {
+    clearError(state);
     setHeaderEmpty(state, placeholder);
     state.root.dataset.hasFile = 'false';
     setPreview(state, { kind: 'empty', previewUrl: undefined, name: '', ext: '', hasFile: false });
@@ -382,6 +303,7 @@ function syncFromValue(state: DropdownUploadState, raw: string) {
   }
 
   state.root.dataset.hasFile = 'true';
+  clearError(state);
   // Editor-time: local data URL (no network).
   if (isDataUrl(key)) {
     setHeaderWithFile(state, state.root.dataset.localName || 'Uploaded file', false);
@@ -394,9 +316,10 @@ function syncFromValue(state: DropdownUploadState, raw: string) {
     previewFromUrl(state, key);
     return;
   }
-  // Fallback: older persisted values are fileKeys that require resolve.
-  setHeaderWithFile(state, 'Loading…', true);
-  void resolveAndPreview(state, key);
+
+  setPreview(state, { kind: 'unknown', previewUrl: undefined, name: '', ext: '', hasFile: true });
+  setHeaderWithFile(state, 'Invalid value', true);
+  setError(state, 'Unsupported value. Expected a URL (http/https) or an editor-only data URL.');
 }
 
 function setFileKey(state: DropdownUploadState, fileKey: string, emit: boolean) {
@@ -493,5 +416,3 @@ function captureNativeValue(input: HTMLInputElement): DropdownUploadState['nativ
     },
   };
 }
-
-

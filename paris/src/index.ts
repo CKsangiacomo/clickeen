@@ -503,6 +503,7 @@ async function handleCreateInstance(req: Request, env: Env) {
 
   const configResult = assertConfig((payload as any).config);
   if (!configResult.ok) issues.push(...configResult.issues);
+  if (configResult.ok) issues.push(...configNonPersistableUrlIssues(configResult.value));
 
   const statusResult = assertStatus((payload as any).status);
   if (!statusResult.ok) issues.push(...statusResult.issues);
@@ -566,6 +567,45 @@ function assertConfig(config: unknown) {
   return { ok: true as const, value: config as Record<string, unknown> };
 }
 
+function containsNonPersistableUrl(value: string): boolean {
+  // Reject any persisted reference to data/blob URLs.
+  // Avoid false positives like "metadata:" by requiring string-start or a delimiter.
+  return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
+}
+
+function configNonPersistableUrlIssues(config: unknown): Array<{ path: string; message: string }> {
+  const issues: Array<{ path: string; message: string }> = [];
+
+  const visit = (node: unknown, path: string) => {
+    if (typeof node === 'string') {
+      if (containsNonPersistableUrl(node)) {
+        issues.push({
+          path,
+          message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+        });
+      }
+      return;
+    }
+
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        visit(node[i], `${path}[${i}]`);
+      }
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? `${path}.${key}` : `${path}[${JSON.stringify(key)}]`;
+      visit(value, nextPath);
+    }
+  };
+
+  visit(config, 'config');
+  return issues;
+}
+
 function assertStatus(status: unknown) {
   if (status === undefined) return { ok: true as const, value: undefined };
   if (status !== 'published' && status !== 'unpublished') {
@@ -590,6 +630,9 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
   const configResult =
     payload.config !== undefined ? assertConfig(payload.config) : { ok: true as const, value: undefined };
   if (!configResult.ok) issues.push(...configResult.issues);
+  if (configResult.ok && configResult.value !== undefined) {
+    issues.push(...configNonPersistableUrlIssues(configResult.value));
+  }
 
   const statusResult = assertStatus(payload.status);
   if (!statusResult.ok) issues.push(...statusResult.issues);

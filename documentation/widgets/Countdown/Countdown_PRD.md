@@ -24,6 +24,7 @@ Row                 | DS | MB | F  | T1 | T2 | T3
 ------------------- |----|----|----|----|----|----
 seoGeoEnabled       | A  | B  | B  | A  | A  | A
 removeBranding      | A  | B  | B  | A  | A  | A
+websiteUrlAllowed   | A  | B  | A  | A  | A  | A
 modeDateAllowed     | A  | A  | A  | A  | A  | A
 modePersonalAllowed | A  | B  | B  | A  | A  | A
 modeNumberAllowed   | A  | B  | B  | A  | A  | A
@@ -37,6 +38,7 @@ Row                 | Path                     | Enforcement | Upsell | Meaning
 ------------------- | ------------------------ | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled           | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS   | UP     | Remove branding
+websiteUrlAllowed   | ai.websiteUrl            | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 modeDateAllowed     | timer.mode='date'        | UI+OPS      | —      | Countdown to a date/time
 modePersonalAllowed | timer.mode='personal'    | UI+OPS      | UP     | Personal countdown (per-visitor start)
 modeNumberAllowed   | timer.mode='number'      | UI+OPS      | UP     | Number counter (count up/down)

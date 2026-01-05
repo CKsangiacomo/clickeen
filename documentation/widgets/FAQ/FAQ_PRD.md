@@ -44,6 +44,7 @@ seoGeoEnabled        | A  | B  | B  | A  | A  | A
 removeBranding       | A  | B  | B  | A  | A  | A
 answerImagesAllowed  | A  | A  | A  | A  | A  | A
 answerVideosAllowed  | A  | B  | A  | A  | A  | A
+websiteUrlAllowed    | A  | B  | A  | A  | A  | A
 ```
 
 **Flag key (details)**
@@ -56,6 +57,7 @@ seoGeoEnabled       | seoGeo.enabled               | OPS+LOAD    | UP     | SEO/
 removeBranding      | behavior.showBacklink=false  | UI+OPS      | UP     | Remove branding
 answerImagesAllowed | behavior.displayImages       | UI+OPS      | —      | Answer images
 answerVideosAllowed | behavior.displayVideos       | UI+OPS      | UP     | Answer videos
+websiteUrlAllowed   | ai.websiteUrl                | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 ```
 
 ### Matrix B — Caps (numbers)

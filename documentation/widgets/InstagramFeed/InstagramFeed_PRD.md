@@ -49,6 +49,7 @@ Row                 | DS | MB | F  | T1 | T2 | T3
 ------------------- |----|----|----|----|----|----
 seoGeoEnabled        | A  | ?  | ?  | ?  | ?  | ?
 removeBranding       | A  | ?  | ?  | ?  | ?  | ?
+websiteUrlAllowed    | A  | B  | A  | A  | A  | A
 layoutCarouselAllowed| A  | ?  | ?  | ?  | ?  | ?
 layoutMasonryAllowed | A  | ?  | ?  | ?  | ?  | ?
 ```
@@ -61,6 +62,7 @@ Row                 | Path                   | Enforcement | Upsell | Meaning
 ------------------- | ---------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled (TBD)   | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS  | UP     | Remove branding
+websiteUrlAllowed   | ai.websiteUrl          | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 layoutCarouselAllowed | layout.mode='carousel' | UI+OPS    | UP     | Carousel layout
 layoutMasonryAllowed  | layout.mode='masonry'  | UI+OPS    | UP     | Masonry layout
 ```

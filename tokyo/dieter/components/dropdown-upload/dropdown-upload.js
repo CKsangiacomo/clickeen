@@ -101,11 +101,7 @@ var Dieter = (() => {
     onOpen: (root) => {
       const state = states.get(root);
       if (!state) return;
-      const key = (state.input.value || "").trim();
-      if (!key) return;
-      if (isDataUrl(key)) return previewFromDataUrl(state, key);
-      if (looksLikeUrl(key)) return previewFromUrl(state, key);
-      void resolveAndPreview(state, key);
+      syncFromValue(state, state.input.value);
     }
   });
   function hydrateDropdownUpload(scope) {
@@ -140,8 +136,6 @@ var Dieter = (() => {
     if (!input || !previewPanel || !previewImg || !previewVideoEl || !previewName || !previewExt || !previewError || !uploadButton || !replaceButton || !removeButton || !fileInput) {
       return null;
     }
-    const resolveUrl = (input.dataset.resolveUrl || "/api/assets/resolve").trim();
-    const grantUrl = (input.dataset.grantUrl || "/api/assets/grant").trim();
     const accept = (input.dataset.accept || fileInput.getAttribute("accept") || "image/*").trim();
     const maxImageKbRaw = (input.dataset.maxImageKb || "").trim();
     const maxVideoKbRaw = (input.dataset.maxVideoKb || "").trim();
@@ -167,8 +161,6 @@ var Dieter = (() => {
       replaceButton,
       removeButton,
       fileInput,
-      resolveUrl,
-      grantUrl,
       accept,
       maxImageKb: Number.isFinite(maxImageKb) ? maxImageKb : void 0,
       maxVideoKb: Number.isFinite(maxVideoKb) ? maxVideoKb : void 0,
@@ -227,7 +219,9 @@ var Dieter = (() => {
         const dataUrl = await readFileAsDataUrl(file);
         const value = kind === "image" ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
         setFileKey(state, value, true);
+        URL.revokeObjectURL(objectUrl);
       } catch (e) {
+        URL.revokeObjectURL(objectUrl);
         setError(state, e instanceof Error ? e.message : "File read failed");
       }
     });
@@ -274,7 +268,7 @@ var Dieter = (() => {
     const v = (raw || "").trim();
     if (!v) return null;
     if (/^data:/i.test(v) || /^blob:/i.test(v) || /^https?:\/\//i.test(v)) return v;
-    const m = v.match(/url\\(\\s*(['"]?)([^'")]+)\\1\\s*\\)/i);
+    const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
     if (m && m[2]) return m[2];
     return null;
   }
@@ -302,60 +296,11 @@ var Dieter = (() => {
     const kind = classifyByNameAndType(name, mime).kind;
     setPreview(state, { kind, previewUrl: kind === "doc" ? void 0 : url, name, ext, hasFile: true });
   }
-  async function requestGrant(state, file) {
-    const res = await fetch(state.grantUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filename: file.name,
-        contentType: file.type || "application/octet-stream",
-        sizeBytes: file.size
-      })
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(text ? `Grant failed: ${text}` : `Grant failed (${res.status})`);
-    }
-    const json = await res.json();
-    if (!json || typeof json !== "object") throw new Error("Grant failed: invalid response");
-    const uploadUrl = json.uploadUrl;
-    const fileKey = json.fileKey;
-    if (typeof uploadUrl !== "string" || typeof fileKey !== "string") throw new Error("Grant failed: missing fields");
-    return { uploadUrl, fileKey };
-  }
-  async function uploadToSignedUrl(uploadUrl, file) {
-    const res = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type || "application/octet-stream" },
-      body: file
-    });
-    if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-  }
-  async function resolveAndPreview(state, fileKey) {
-    clearError(state);
-    const url = new URL(state.resolveUrl, window.location.origin);
-    url.searchParams.set("key", fileKey);
-    const res = await fetch(url.toString(), { method: "GET" });
-    if (!res.ok) {
-      setError(state, `Resolve failed (${res.status})`);
-      return;
-    }
-    const data = await res.json();
-    const name = data.fileName || fileKey;
-    const ext = (data.ext || guessExtFromName(name) || "").toLowerCase();
-    const kind = classifyByNameAndType(name, data.mimeType || "").kind;
-    setPreview(state, {
-      kind,
-      previewUrl: data.previewUrl,
-      name,
-      ext,
-      hasFile: true
-    });
-  }
   function syncFromValue(state, raw) {
     const key = String(raw ?? "").trim();
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     if (!key) {
+      clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
@@ -365,6 +310,7 @@ var Dieter = (() => {
       return;
     }
     state.root.dataset.hasFile = "true";
+    clearError(state);
     if (isDataUrl(key)) {
       setHeaderWithFile(state, state.root.dataset.localName || "Uploaded file", false);
       previewFromDataUrl(state, key);
@@ -375,8 +321,9 @@ var Dieter = (() => {
       previewFromUrl(state, key);
       return;
     }
-    setHeaderWithFile(state, "Loading\u2026", true);
-    void resolveAndPreview(state, key);
+    setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });
+    setHeaderWithFile(state, "Invalid value", true);
+    setError(state, "Unsupported value. Expected a URL (http/https) or an editor-only data URL.");
   }
   function setFileKey(state, fileKey, emit) {
     state.internalWrite = true;

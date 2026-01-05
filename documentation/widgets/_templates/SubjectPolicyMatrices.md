@@ -13,6 +13,7 @@ Row            | DS | MB | F  | T1 | T2 | T3
 -------------- |----|----|----|----|----|----
 seoGeoEnabled  | A  | B  | B  | A  | A  | A
 removeBranding | A  | B  | B  | A  | A  | A
+websiteUrlAllowed | A | B  | A  | A  | A  | A
 ```
 
 **Flag key (details)**
@@ -23,6 +24,7 @@ Row            | Path                        | Enforcement | Upsell | Meaning
 -------------- | --------------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled  | seoGeo.enabled              | OPS+LOAD    | UP     | (example) SEO/GEO optimization toggle
 removeBranding | behavior.showBacklink=false | UI+OPS      | UP     | (example) Remove branding
+websiteUrlAllowed | ai.websiteUrl            | UI+OPS      | UP     | (example) Website URL for Copilot/AI content generation
 ```
 
 #### Matrix B — Caps (numbers)

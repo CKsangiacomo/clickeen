@@ -100,6 +100,7 @@ Gate: for each Type/Layout, you can name the **DOM/CSS difference** and the **st
 #### Step 2 — Write `spec.json.defaults` (state shape)
 Create the full state shape:
 - Platform globals when applicable: `stage`, `pod`, `typography`, `behavior`
+- AI context (cross-widget): `ai.websiteUrl` (used by Copilot/AI only; runtime can ignore)
 - Arrays/items defaults + piece defaults
 - Type/Layout fields + per-type/per-layout subtrees
 
@@ -143,6 +144,7 @@ Now add editor controls by panel, scoped by Type/Layout:
 - **Layout**: layout selector + arrangement controls (`show-if` by Layout)
 - **Appearance**: surface controls for root/array/item/pieces (and Stage/Pod appearance group)
 - **Typography**: auto-generated from `defaults.typography.roles` (don’t hand-author)
+- **Settings (common)**: Website URL field (policy-gated)
 
 Gate: every control has a real binding target (CSS var / data attr / DOM update).
 

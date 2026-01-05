@@ -18,11 +18,15 @@ Row                   | DS | MB | F  | T1 | T2 | T3
 --------------------- |----|----|----|----|----|----
 seoGeoEnabled         | A  | B  | B  | A  | A  | A
 removeBranding        | A  | B  | B  | A  | A  | A
+websiteUrlAllowed     | A  | B  | A  | A  | A  | A
 typeGridAllowed       | A  | A  | A  | A  | A  | A
 typeSliderAllowed     | A  | A  | A  | A  | A  | A
-typeCarouselAllowed   | A  | B  | B  | A  | A  | A
-typeTickerAllowed     | A  | B  | B  | A  | A  | A
-sliderAutoplayAllowed | A  | B  | B  | A  | A  | A
+typeCarouselAllowed   | A  | A  | A  | A  | A  | A
+typeTickerAllowed     | A  | A  | A  | A  | A  | A
+sliderAutoplayAllowed | A  | A  | A  | A  | A  | A
+logoDetailsPopup      | A  | B  | A  | A  | A  | A
+logoLinksAllowed      | A  | B  | A  | A  | A  | A
+logoMetaAllowed       | A  | B  | B  | A  | A  | A
 ```
 
 **Flag key (details)**
@@ -33,11 +37,15 @@ Row                 | Path                        | Enforcement | Upsell | Meani
 ------------------- | --------------------------- | ----------- | ------ | -------------------------
 seoGeoEnabled       | seoGeo.enabled              | OPS+LOAD    | UP     | SEO/GEO optimization toggle
 removeBranding      | behavior.showBacklink=false | UI+OPS      | UP     | Remove branding
+websiteUrlAllowed   | ai.websiteUrl               | UI+OPS      | UP     | Website URL for Copilot/AI content generation
 typeGridAllowed     | type='grid'                 | UI+OPS      | UP     | Grid type
 typeSliderAllowed   | type='slider'               | UI+OPS      | UP     | Slider type
 typeCarouselAllowed | type='carousel'             | UI+OPS      | UP     | Carousel type
 typeTickerAllowed   | type='ticker'               | UI+OPS      | UP     | Ticker type
 sliderAutoplayAllowed | typeConfig.slider.autoSlide | UI+OPS    | UP     | Slider autoplay
+logoDetailsPopup    | (UI feature)               | UI          | UP     | Bulk “Logo details…” popup (plan-gated columns)
+logoLinksAllowed    | strips[i].logos[j].href / targetBlank / nofollow | UI+OPS | UP | Link URL + clickable behavior (Free+)
+logoMetaAllowed     | strips[i].logos[j].alt / title | UI+OPS     | UP     | Alt/title meta (same plan as SEO/GEO: Tier 1+)
 ```
 
 ### Matrix B — Caps (numbers)
@@ -248,14 +256,17 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
       - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
-    - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
-    - `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`)
+- `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s) (**editable via Logo details popup for Free+; not editable in MiniBob**)
+- `strips[i].logos[j].targetBlank=true` → set `target="_blank"` (**editable via Logo details popup for Free+; not editable in MiniBob**)
+- `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`) (**editable via Logo details popup for Free+; not editable in MiniBob**)
+- `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image) (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
+- `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
       - value stored is a **CSS fill string** (same contract as other image fills)
-      - the popover may embed additional per-logo controls via `template="..."` (see Section 4)
+    - the popover template stays minimal (caption/name only; see Section 4)
       - selecting an image while editing is in-memory only (Data URL fill)
 
 - **Header enable + content**: `header.enabled`, `header.title`, `header.textHtml`, `header.alignment`
@@ -364,17 +375,32 @@ Below the Type picker, always show:
 - Inside each strip item, **Logos** (`strips[i].logos[]`) using `repeater`
 
 #### Logo item editor (required, global pattern)
-Each logo item must use `dropdown-upload` for the logo image, and nest additional actions in the popover using `template`:
+Each logo item must use `dropdown-upload` for the logo image, and keep the per-item UI minimal.
 - **Logo image**: `dropdown-upload` bound to `strips[i].logos[j].logoFill`
   - stored value is a CSS fill string (`url("...") center center / cover no-repeat` or `transparent`)
   - while editing, selected files are represented as Data URLs in state (in-memory)
-  - `template="..."` includes:
-    - `textfield` for `strips[i].logos[j].href`
-    - `toggle` for `strips[i].logos[j].nofollow`
+  - `template="..."` includes (allowed in all subjects):
     - `textfield` for `strips[i].logos[j].caption`
-    - (optional) `textfield` for `strips[i].logos[j].name` if we want name editable in the same popover
+    - (optional) `textfield` for `strips[i].logos[j].name`
 
 Then, below the strips editor, show the Type-specific controls listed in each Type section below.
+
+#### Bulk “Logo details” modal (required UX for per-logo settings)
+We keep `object-manager` + nested `repeater` for strips/logos. The modal is **additive** and exists only to edit per-logo “details” at scale.
+
+- Entry point: a single button near the strips/logos editor: **“Logo details…”**
+  - **MiniBob**: not available (button is locked and triggers Upsell)
+  - **Free+**: enabled
+- Modal content: a table with **one row per logo**, including:
+  - **Logo**: thumbnail + `name`
+  - **URL**: `href` textfield
+  - **Open in new tab**: checkbox → `targetBlank`
+  - **Nofollow**: checkbox → `nofollow`
+  - **Caption**: `caption` textfield
+- Plan-gated columns inside the same modal:
+  - **Free**: URL + targetBlank + nofollow + caption (no alt/title UI)
+  - **Tier 1+**: add **Alt** (`alt`) + **Title** (`title`) fields (same tier as SEO/GEO)
+- Save behavior: the modal writes standard ops (`set`) to the underlying paths above; there is no special persistence logic.
 
 ### Type = `grid`
 #### Content panel (below Type picker)
@@ -505,7 +531,10 @@ The full defaults object (used verbatim as `spec.json.defaults`):
           "name": "Acme",
           "logoFill": "transparent",
           "href": "",
+          "targetBlank": false,
           "nofollow": false,
+          "alt": "",
+          "title": "",
           "caption": ""
         }
       ]
