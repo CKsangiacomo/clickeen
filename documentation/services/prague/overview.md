@@ -1359,9 +1359,9 @@ See: `documentation/services/prague/blocks.md`.
 ### Environment variables
 
 ```
-TOKYO_URL=https://tokyo.clickeen.com
-BOB_URL=https://app.clickeen.com
-VENICE_URL=https://embed.clickeen.com
+PUBLIC_TOKYO_URL=https://tokyo.clickeen.com
+PUBLIC_BOB_URL=https://app.clickeen.com
+PUBLIC_VENICE_URL=https://embed.clickeen.com
 ```
 
 ---

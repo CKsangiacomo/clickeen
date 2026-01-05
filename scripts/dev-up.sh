@@ -100,6 +100,14 @@ for p in 3000 3001 3002 3003 4000 4321 5173; do
   fi
 done
 
+# Wrangler/workerd can get stuck in a broken state without holding the LISTEN socket
+# (e.g. after a crash/reload loop). Kill them by commandline as a backstop.
+echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002)"
+pkill -f "wrangler.*dev.*--port 3001" || true
+pkill -f "wrangler.*dev.*--port 3002" || true
+pkill -f "workerd serve.*entry=localhost:3001" || true
+pkill -f "workerd serve.*entry=localhost:3002" || true
+
 echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
 rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
 
