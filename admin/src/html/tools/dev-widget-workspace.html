@@ -41,6 +41,31 @@
     margin: 0;
   }
 
+  #superadmin-actions {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  #superadmin-actions .diet-btn-txt {
+    box-shadow: var(--shadow-floating);
+  }
+
+  #superadmin-actions .dev-widget-workspace__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 6px 10px;
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: color-mix(in oklab, var(--color-system-blue), transparent 92%);
+    color: var(--color-system-blue);
+    font: 600 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
   .dev-widget-workspace-header #instance-dropdown {
     margin-left: auto;
     min-inline-size: 240px;
@@ -166,6 +191,18 @@
 
 <header class="devstudio-page__header" style="flex-shrink: 0;">
   <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
+  <div id="superadmin-actions">
+    <span class="dev-widget-workspace__badge">Superadmin</span>
+    <button type="button" class="diet-btn-txt" id="superadmin-update-defaults" data-size="md" data-variant="secondary">
+      <span class="diet-btn-txt__label">Update default config</span>
+    </button>
+    <button type="button" class="diet-btn-txt" id="superadmin-create-template" data-size="md" data-variant="secondary">
+      <span class="diet-btn-txt__label">Create template instance</span>
+    </button>
+    <button type="button" class="diet-btn-txt" id="superadmin-create-prague" data-size="md" data-variant="secondary">
+      <span class="diet-btn-txt__label">Create Prague creative</span>
+    </button>
+  </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
     <div
       id="instance-dropdown-control"
@@ -238,6 +275,7 @@ const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
 let currentPublicId = null;
 let instances = [];
 let isOpen = false;
+const isLocalDevStudio = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 const dropdown = document.getElementById('instance-dropdown');
 const control = document.getElementById('instance-dropdown-control');
@@ -246,6 +284,12 @@ const menu = document.getElementById('instance-dropdown-menu');
 const iframe = document.getElementById('bob-iframe');
 const currentLabel = document.getElementById('current-instance-label');
 const compiledCache = new Map();
+const superadminActions = document.getElementById('superadmin-actions');
+const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
+const superadminCreateTemplate = document.getElementById('superadmin-create-template');
+const superadminCreatePrague = document.getElementById('superadmin-create-prague');
+
+const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 
 iframe.src = `${BOB_ORIGIN}/bob?subject=devstudio`;
 
@@ -354,7 +398,11 @@ async function fetchInstances() {
 
   const uniqueWidgetnames = Array.from(new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)));
   if (instances.length === 0) {
-    throw new Error('[DevStudio] Supabase returned zero instances for dev workspace');
+    currentPublicId = null;
+    currentLabel.textContent = 'No instances yet';
+    valueField.value = '';
+    dropdown.style.display = 'none';
+    return;
   }
 
   const compileResults = await Promise.allSettled(
@@ -426,6 +474,168 @@ function switchInstance(publicId) {
     console.error('[DevStudio] Failed to send instance to Bob', error);
   });
 }
+
+function requireSuperadminKey() {
+  if (!isLocalDevStudio) {
+    throw new Error('[DevStudio] Superadmin actions are only available on DevStudio Local.');
+  }
+  const existing = sessionStorage.getItem(SUPERADMIN_KEY_STORAGE);
+  if (existing && existing.trim()) return existing.trim();
+  const entered = window.prompt('Superadmin key (stored in sessionStorage):');
+  const key = (entered || '').trim();
+  if (!key) throw new Error('[DevStudio] Missing superadmin key');
+  sessionStorage.setItem(SUPERADMIN_KEY_STORAGE, key);
+  return key;
+}
+
+async function superadminFetch(url, init) {
+  const key = requireSuperadminKey();
+  const headers = new Headers(init?.headers || {});
+  headers.set('x-ck-superadmin-key', key);
+  return fetch(url, { ...init, headers });
+}
+
+function requireWidgetSlugForAction() {
+  const current = instances.find((inst) => inst.publicId === currentPublicId);
+  const fallback = current?.widgetSlug || normalizeWidgetname(current?.widgetname) || 'faq';
+  const entered = window.prompt('Widget type (slug):', fallback);
+  const slug = normalizeWidgetname(entered);
+  if (!slug) throw new Error('[DevStudio] Missing widget type');
+  return slug;
+}
+
+function slugifyKey(raw) {
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+async function createWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
+  const res = await superadminFetch(
+    `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ widgetType, publicId, config, status }),
+    }
+  );
+  const text = await res.text().catch(() => '');
+  if (!res.ok) throw new Error(`[DevStudio] Create instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+  return text ? JSON.parse(text) : null;
+}
+
+async function updateWorkspaceInstance({ workspaceId, publicId, config, status }) {
+  const res = await superadminFetch(
+    `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ config, status }),
+    }
+  );
+  const text = await res.text().catch(() => '');
+  if (!res.ok) throw new Error(`[DevStudio] Update instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+  return text ? JSON.parse(text) : null;
+}
+
+async function ensureDefaultsMainInstance(widgetSlug) {
+  const compiled = await ensureCompiledWidget(widgetSlug);
+  const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
+  if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+
+  const publicId = `wgt_${widgetSlug}_main`;
+  await createWorkspaceInstance({
+    workspaceId: DEV_WORKSPACE_ID,
+    widgetType: widgetSlug,
+    publicId,
+    config: defaults,
+    status: 'unpublished',
+  });
+  await updateWorkspaceInstance({
+    workspaceId: DEV_WORKSPACE_ID,
+    publicId,
+    config: defaults,
+    status: 'unpublished',
+  });
+  return publicId;
+}
+
+async function createTemplateInstance({ widgetSlug, sourceConfig, kind }) {
+  const keyLabel = kind === 'prague' ? 'Prague creative key' : 'Template key';
+  const rawKey = window.prompt(keyLabel);
+  const key = slugifyKey(rawKey);
+  if (!key) throw new Error('[DevStudio] Missing key');
+
+  const suffix = kind === 'prague' ? `tmpl_prague_${key}` : `tmpl_${key}`;
+  const publicId = `wgt_${widgetSlug}_${suffix}`;
+
+  await createWorkspaceInstance({
+    workspaceId: DEV_WORKSPACE_ID,
+    widgetType: widgetSlug,
+    publicId,
+    config: sourceConfig,
+    status: 'unpublished',
+  });
+  return publicId;
+}
+
+async function refreshInstancesAndSelect(publicId) {
+  await fetchInstances();
+  if (!publicId) return;
+  const found = instances.find((inst) => inst.publicId === publicId);
+  if (found) {
+    switchInstance(publicId);
+  }
+}
+
+if (isLocalDevStudio && superadminActions) {
+  superadminActions.style.display = 'inline-flex';
+}
+
+superadminUpdateDefaults?.addEventListener('click', async () => {
+  try {
+    const widgetSlug = requireWidgetSlugForAction();
+    const publicId = await ensureDefaultsMainInstance(widgetSlug);
+    await refreshInstancesAndSelect(publicId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+superadminCreateTemplate?.addEventListener('click', async () => {
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    const instance = instances.find((inst) => inst.publicId === currentPublicId);
+    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
+    const config = await fetchInstanceConfig(currentPublicId);
+    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {}, kind: 'template' });
+    await refreshInstancesAndSelect(publicId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+superadminCreatePrague?.addEventListener('click', async () => {
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    const instance = instances.find((inst) => inst.publicId === currentPublicId);
+    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
+    const config = await fetchInstanceConfig(currentPublicId);
+    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {}, kind: 'prague' });
+
+    const envKey = `PUBLIC_MINIBOB_PUBLIC_ID_${widgetSlug.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+    const message = `Created ${publicId}.\n\nTo use on Prague: set ${envKey}=${publicId} (Cloudflare Pages env var for Prague).`;
+    try {
+      await navigator.clipboard.writeText(publicId);
+    } catch {}
+    alert(message);
+    await refreshInstancesAndSelect(publicId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
 
 async function sendInstanceToIframe(publicId) {
   if (!publicId) {
