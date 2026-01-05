@@ -836,6 +836,40 @@ export function TdMenuContent({
       }
     };
 
+    const revertTargetValue = (target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, path: string) => {
+      const prevValue = getAt<unknown>(instanceData, path);
+
+      if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+        target.checked = prevValue === true;
+        return;
+      }
+
+      const nextValue =
+        target instanceof HTMLInputElement && target.dataset.bobJson != null
+          ? (() => {
+              try {
+                return prevValue == null ? '[]' : JSON.stringify(prevValue);
+              } catch {
+                return '[]';
+              }
+            })()
+          : prevValue == null
+            ? ''
+            : String(prevValue);
+
+      if ('value' in target) {
+        (target as HTMLInputElement).value = nextValue;
+      }
+
+      if (target instanceof HTMLInputElement) {
+        target.dispatchEvent(
+          new CustomEvent('external-sync', {
+            detail: { value: nextValue, source: 'bob-deny', bobIgnore: true },
+          })
+        );
+      }
+    };
+
     const handleContainerEvent = (event: Event) => {
       const detail = (event as any).detail;
       if (detail?.bobIgnore === true) return;
@@ -946,7 +980,14 @@ export function TdMenuContent({
             }
             return;
           }
-          applySet(path, parsed);
+          const applied = applyOps(expandLinkedOps([{ op: 'set', path, value: parsed }]));
+          if (!applied.ok) {
+            revertTargetValue(target, path);
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[TdMenuContent] Denied JSON input for path', path, applied.errors);
+            }
+          }
           return;
         }
 

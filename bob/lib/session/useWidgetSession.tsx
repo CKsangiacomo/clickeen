@@ -158,6 +158,12 @@ function useWidgetSessionInternal() {
         return result;
       };
 
+      const denyCap = (opIndex: number, path: string | undefined, capKey: string, max: number) =>
+        denyOps(opIndex, path, {
+          reasonKey: 'coreui.upsell.reason.capReached',
+          detail: `${capKey} reached (max=${max}).`,
+        });
+
       for (let idx = 0; idx < ops.length; idx += 1) {
         const op = ops[idx] as any;
         if (!op || typeof op !== 'object') continue;
@@ -191,6 +197,47 @@ function useWidgetSessionInternal() {
           );
           const decision = can(state.policy, 'widget.faq.qa.add', { currentQaInSection, currentQaTotal });
           if (!decision.allow) return denyOps(idx, op.path, decision);
+        }
+
+        // Dieter array controls (object-manager/repeater) mutate arrays via `set` of the full array value
+        // (not `insert`), so we must enforce caps on the resulting array length (fail-closed).
+        if (op.op === 'set' && op.path === 'sections' && Array.isArray(op.value)) {
+          const max = state.policy.caps['widget.faq.sections.max'];
+          if (typeof max === 'number' && Number.isFinite(max) && op.value.length > max) {
+            return denyCap(idx, op.path, 'widget.faq.sections.max', max);
+          }
+        }
+
+        if (op.op === 'set' && typeof op.path === 'string' && Array.isArray(op.value)) {
+          const matchDot = op.path.match(/^sections\.(\d+)\.faqs$/);
+          const matchBracket = op.path.match(/^sections\[(\d+)\]\.faqs$/);
+          const sectionIndex = matchDot ? Number(matchDot[1]) : matchBracket ? Number(matchBracket[1]) : -1;
+          if (sectionIndex >= 0) {
+            const sections = Array.isArray((state.instanceData as any).sections)
+              ? ((state.instanceData as any).sections as any[])
+              : [];
+            const currentQaTotal = sections.reduce(
+              (sum, section) => sum + (Array.isArray(section?.faqs) ? section.faqs.length : 0),
+              0
+            );
+            const currentQaInSection =
+              sectionIndex >= 0 && sectionIndex < sections.length && Array.isArray(sections[sectionIndex]?.faqs)
+                ? sections[sectionIndex].faqs.length
+                : 0;
+
+            const nextQaInSection = (op.value as unknown[]).length;
+            const nextQaTotal = currentQaTotal - currentQaInSection + nextQaInSection;
+
+            const maxTotal = state.policy.caps['widget.faq.qa.max'];
+            if (typeof maxTotal === 'number' && Number.isFinite(maxTotal) && nextQaTotal > maxTotal) {
+              return denyCap(idx, op.path, 'widget.faq.qa.max', maxTotal);
+            }
+
+            const maxPerSection = state.policy.caps['widget.faq.qaPerSection.max'];
+            if (typeof maxPerSection === 'number' && Number.isFinite(maxPerSection) && nextQaInSection > maxPerSection) {
+              return denyCap(idx, op.path, 'widget.faq.qaPerSection.max', maxPerSection);
+            }
+          }
         }
       }
 
