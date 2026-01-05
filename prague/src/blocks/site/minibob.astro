@@ -14,8 +14,13 @@ if (!BOB_URL) {
 }
 
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-const publicId = `wgt_${widget}_main`;
-const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
+const widgetKey = widget.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+const env = import.meta.env;
+const workspaceId =
+  (env[`PUBLIC_MINIBOB_WORKSPACE_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_WORKSPACE_ID ?? DEV_WORKSPACE_ID).trim();
+const publicId =
+  (env[`PUBLIC_MINIBOB_PUBLIC_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_PUBLIC_ID ?? `wgt_${widget}_main`).trim();
+const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
 

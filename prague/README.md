@@ -11,6 +11,11 @@ Prague is strict: these env vars are required at build/runtime (because they are
 - `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
 - `PUBLIC_BOB_URL` — base URL for Bob (used by the MiniBob iframe embed)
 
+Optional (to pin a specific Minibob demo instance):
+
+- `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>` (e.g. `PUBLIC_MINIBOB_PUBLIC_ID_FAQ`) or `PUBLIC_MINIBOB_PUBLIC_ID` (fallback)
+- `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>` or `PUBLIC_MINIBOB_WORKSPACE_ID` (fallback)
+
 Local defaults (when running `scripts/dev-up.sh`):
 
 - `PUBLIC_TOKYO_URL=http://localhost:4000`

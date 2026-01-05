@@ -139,8 +139,11 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 - Contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
-  - It must bootstrap Bob via `postMessage` → `devstudio:load-instance` (same mechanism DevStudio uses).
   - It must identify itself as the `minibob` subject (so Bob applies the MiniBob policy: flags/caps/budgets).
+  - It must pass `workspaceId` + `publicId` via the iframe URL query params (Bob loads them on mount).
+  - It may override the default `publicId` via env:
+    - `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>` (e.g. `PUBLIC_MINIBOB_PUBLIC_ID_FAQ`)
+    - fallback: `PUBLIC_MINIBOB_PUBLIC_ID`
 
 ## 3) Page templates (composition)
 
