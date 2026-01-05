@@ -121,8 +121,15 @@ A “template” is just a `widget_instances` row whose `public_id` uses the `tm
 ## Local Dev (Docker Supabase)
 
 Local DB is Supabase CLI + Docker:
-- `supabase db reset` applies `supabase/migrations/*`
+- `supabase db reset` applies `supabase/migrations/*` **and wipes local data** (destructive)
 - instances are created explicitly from DevStudio Local (superadmin), not by scripts
+
+**Data contract (don’t fight UUID churn):**
+- After a reset, internal UUIDs (`widgets.id`, `widget_instances.id`, `widget_instances.widget_id`) will change. That’s normal.
+- The durable contract for a widget instance is:
+  - `widget_instances.public_id` (stable string ID)
+  - `widget_instances.workspace_id` (required)
+  - `widget_instances.config` (the JSON blob you care about)
 
 ## What Michael Does NOT Do (by design)
 

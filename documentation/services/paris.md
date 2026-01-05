@@ -8,7 +8,7 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `POST /api/instance` (create), `GET/PUT /api/instance/:publicId`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
 
@@ -16,7 +16,7 @@ If you find a mismatch, update this document; execution continues even if docs d
 
 Paris in this repo is a **dev-focused Worker** with a deliberately small surface:
 - All current endpoints are gated by `PARIS_DEV_JWT` (dev-only auth; not the final production model).
-- Instance creation is implemented (`POST /api/instance`) for local/dev bootstrapping.
+- Instance creation is implemented (`POST /api/instance`) for **internal DevStudio Local** workflows (superadmin), not as a user-facing product API.
 - Instance reads/writes use Supabase REST with the service role.
 - AI is handled via:
   - `POST /api/ai/grant` (mint short-lived signed grants)
@@ -176,10 +176,10 @@ Required env vars:
 `publicId` in every payload maps 1:1 to `widget_instances.public_id`; each instance row also references its parent widget via `widget_instances.widget_id → widgets.id`. Widget type is `widgets.type` (surfaced as `widgetType`).
 
 - `POST /api/instance`
-  - Dev/local bootstrapping endpoint (requires dev auth). Creates the widget row if missing and then creates the instance row.
-  - Accepts `{ widgetType, publicId, config, status? }`.
+  - Internal DevStudio Local superadmin endpoint (requires dev auth). Creates the widget row if missing and then creates the instance row.
+  - Accepts `{ widgetType, publicId, workspaceId, config, status?, widgetName? }`.
 - `GET /api/instances`
-  - Dev tooling list (requires dev auth).
+  - Dev tooling list (requires dev auth). Typically called with `?workspaceId=<uuid>`.
 - `GET /api/instance/:publicId`
   - Loads the latest instance snapshot (dev auth in this repo snapshot). Returns 200 payload or 404 `NOT_FOUND`.
   - _Example response (200):_
@@ -246,7 +246,8 @@ Required env vars:
 | `updatedAt` | `widget_instances.updated_at` |
 
 **publicId generation (Phase-1)**
-- In this repo snapshot, `publicId` is provided by the caller (DevStudio bootstrap, future product services) and persisted in Michael.
+- `publicId` is provided by the caller (internal services / DevStudio Local superadmin flows) and persisted in Michael.
+- The stable contract is `widget_instances.public_id` + `widget_instances.config` (+ `workspace_id`), not internal UUIDs.
 
 ### Usage & submissions (not shipped here)
 - `POST /api/usage` and `POST /api/submit/:publicId` exist only as explicit `501 NOT_IMPLEMENTED` placeholders in this repo snapshot.
@@ -292,7 +293,7 @@ const supabase = createClient(
 ### Bob
 - `GET /api/instance/:publicId` on mount (load)
 - `PUT /api/instance/:publicId` on publish
-- `POST /api/instance` exists for dev/local bootstrapping (idempotent create-or-get)
+- `POST /api/instance` exists for DevStudio Local superadmin flows (idempotent create-or-get; requires dev auth)
 
 ## Errors (This Repo Snapshot)
 

@@ -22,6 +22,7 @@ documentation/
 ├── services/                 # RUNTIME SYSTEMS
 │   ├── bob.md               # Editor
 │   ├── dieter.md            # Design system
+│   ├── devstudio.md         # Internal tools (admin)
 │   ├── tokyo.md             # Asset CDN
 │   ├── paris.md             # API/database
 │   ├── venice.md            # Embed runtime

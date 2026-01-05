@@ -262,11 +262,15 @@ pnpm test
 node scripts/compile-all-widgets.mjs
 ```
 
+**Local instance data (important):**
+- Instances are **not** created by scripts anymore.
+- In local dev, create/update instances explicitly from DevStudio Local (`http://localhost:5173/#/dieter/dev-widget-workspace`) via the superadmin actions.
+
 ### Environments (Canonical)
 
 | Environment | Bob | Paris | Tokyo | San Francisco | DevStudio |
 |---|---|---|---|---|---|
-| **Local** | `http://localhost:3000` | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:8787` | `http://localhost:5173` |
+| **Local** | `http://localhost:3000` | `http://localhost:3001` | `http://localhost:4000` | (optional) `http://localhost:3002` | `http://localhost:5173` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://paris.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.dev.clickeen.com` |
 | **UAT** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |
 | **Limited GA** | `https://app.clickeen.com` | `https://paris.clickeen.com` | `https://tokyo.clickeen.com` | `https://sanfrancisco.clickeen.com` | (optional) internal-only |

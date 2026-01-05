@@ -64,6 +64,11 @@ This allows a fast loop where DevStudio runs from Cloudflare Pages while Bob run
 
 Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurable via `?bob=`” comment).
 
+### Instance writes (DevStudio Local only)
+- DevStudio is an internal harness that can create/update instances, but **writes happen only in DevStudio Local**.
+- The DevStudio tool page exposes superadmin actions only on `localhost`/`127.0.0.1` and uses Bob’s `/api/paris/*` proxy to call Paris.
+- `POST /api/instance` in Paris is **dev-auth gated** (requires `PARIS_DEV_JWT`) and is intended for these internal flows, not for end users.
+
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
 - **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=minibob|devstudio` (with backward compatibility for `?minibob=true`).
@@ -296,7 +301,8 @@ bash scripts/dev-up.sh
 It:
 - Builds Dieter into `tokyo/dieter`
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
+- Starts Tokyo (4000), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
+- Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 
 ### Deterministic compilation gate (executed)
 
