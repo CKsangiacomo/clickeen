@@ -489,10 +489,26 @@ function requireSuperadminKey() {
 }
 
 async function superadminFetch(url, init) {
-  const key = requireSuperadminKey();
   const headers = new Headers(init?.headers || {});
+  const attempt = async () => fetch(url, { ...init, headers });
+
+  const res = await attempt();
+  if (res.status !== 403) return res;
+
+  // Only prompt for a superadmin key if Bob is enforcing it (via CK_SUPERADMIN_KEY).
+  // Retry once with the provided key.
+  try {
+    const clone = res.clone();
+    const data = await clone.json().catch(() => null);
+    const reasonKey = data?.error?.reasonKey;
+    if (reasonKey !== 'coreui.errors.superadmin.invalid') return res;
+  } catch {
+    return res;
+  }
+
+  const key = requireSuperadminKey();
   headers.set('x-ck-superadmin-key', key);
-  return fetch(url, { ...init, headers });
+  return attempt();
 }
 
 function requireWidgetSlugForAction() {
