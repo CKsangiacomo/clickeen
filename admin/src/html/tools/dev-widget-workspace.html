@@ -187,6 +187,99 @@
     background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
     color: var(--color-system-blue);
   }
+
+  #website-creative-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  #website-creative-modal[hidden] {
+    display: none;
+  }
+
+  .ck-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--color-system-black), transparent 55%);
+    backdrop-filter: blur(2px);
+  }
+
+  .ck-modal__panel {
+    position: relative;
+    inline-size: min(640px, 100%);
+    max-block-size: min(80vh, 720px);
+    overflow: auto;
+    border-radius: var(--radius-8);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: var(--color-system-white);
+    box-shadow: var(--shadow-floating-lg);
+    padding: 20px;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ck-modal__body {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .ck-modal__field {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .ck-modal__select {
+    min-block-size: var(--control-size-lg);
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
+    padding-inline: var(--control-padding-inline);
+    background: var(--role-surface-bg);
+    box-shadow: var(--shadow-floating);
+  }
+
+  .ck-modal__segmented {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+  }
+
+  .ck-modal__segmented-btn.diet-btn-txt {
+    box-shadow: var(--shadow-floating);
+  }
+
+  .ck-modal__preview {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-6);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 4%);
+  }
+
+  .ck-modal__preview-row {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .ck-modal__code {
+    font: 500 var(--fs-12)/var(--lh-tight) var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    padding: 8px 10px;
+    border-radius: var(--radius-4);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 30%);
+    background: var(--color-system-white);
+  }
+
+  .ck-modal__footer {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+    align-items: center;
+  }
 </style>
 
 <header class="devstudio-page__header" style="flex-shrink: 0;">
@@ -200,7 +293,7 @@
       <span class="diet-btn-txt__label">Create template instance</span>
     </button>
     <button type="button" class="diet-btn-txt" id="superadmin-create-prague" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Create Prague creative</span>
+      <span class="diet-btn-txt__label">Create website creative</span>
     </button>
   </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
@@ -233,6 +326,53 @@
   </div>
 </header>
 
+<div id="website-creative-modal" hidden>
+  <div class="ck-modal__backdrop" data-modal-dismiss="true"></div>
+  <div class="ck-modal__panel" role="dialog" aria-modal="true" aria-label="Create website creative">
+    <div class="ck-modal__header">
+      <h2 class="heading-3" style="margin:0">Create website creative</h2>
+    </div>
+    <div class="ck-modal__body">
+      <div class="ck-modal__field">
+        <label class="label-s" for="website-creative-widget">Widget type</label>
+        <select id="website-creative-widget" class="ck-modal__select body-s"></select>
+      </div>
+      <div class="ck-modal__field">
+        <label class="label-s" for="website-creative-page">Page</label>
+        <div id="website-creative-page" class="ck-modal__segmented" role="radiogroup" aria-label="Page"></div>
+      </div>
+      <div class="ck-modal__field">
+        <label class="label-s" for="website-creative-slot">Block slot</label>
+        <select id="website-creative-slot" class="ck-modal__select body-s"></select>
+      </div>
+      <div class="ck-modal__field">
+        <label class="label-s" for="website-creative-locale">Locale</label>
+        <select id="website-creative-locale" class="ck-modal__select body-s">
+          <option value="en">en</option>
+        </select>
+      </div>
+      <div class="ck-modal__preview">
+        <div class="ck-modal__preview-row">
+          <span class="label-xs" style="color: color-mix(in oklab, var(--color-text), transparent 40%);">creativeKey</span>
+          <code class="ck-modal__code" id="website-creative-preview-key"></code>
+        </div>
+        <div class="ck-modal__preview-row">
+          <span class="label-xs" style="color: color-mix(in oklab, var(--color-text), transparent 40%);">publicId</span>
+          <code class="ck-modal__code" id="website-creative-preview-id"></code>
+        </div>
+      </div>
+    </div>
+    <div class="ck-modal__footer">
+      <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" id="website-creative-cancel">
+        <span class="diet-btn-txt__label">Cancel</span>
+      </button>
+      <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" id="website-creative-submit">
+        <span class="diet-btn-txt__label">Create / Open</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
   <iframe
     id="bob-iframe"
@@ -243,6 +383,13 @@
 </div>
 
 <script type="module">
+import {
+  CREATIVE_PAGES,
+  CREATIVE_SLOTS_BY_PAGE,
+  composeWebsiteCreativeKey,
+  composeWebsiteCreativePublicId,
+} from '../../data/pragueWebsiteCreativeRegistry';
+
 // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
 // DevStudio swaps DOM but does not automatically remove global event listeners.
 // Use an AbortController keyed on `window` so re-entering this tool page doesn't
@@ -272,6 +419,9 @@ function requireBobOrigin() {
 const BOB_ORIGIN = requireBobOrigin();
 const PARIS_API = `${BOB_ORIGIN}/api/paris`;
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+// v1: website creatives live in the single Clickeen-owned workspace in dev, which is ck-dev.
+// In prod this will point at the Clickeen marketing workspace.
+const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
 let currentPublicId = null;
 let instances = [];
 let isOpen = false;
@@ -288,6 +438,16 @@ const superadminActions = document.getElementById('superadmin-actions');
 const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
 const superadminCreateTemplate = document.getElementById('superadmin-create-template');
 const superadminCreatePrague = document.getElementById('superadmin-create-prague');
+
+const websiteCreativeModal = document.getElementById('website-creative-modal');
+const websiteCreativeWidgetEl = document.getElementById('website-creative-widget');
+const websiteCreativePageEl = document.getElementById('website-creative-page');
+const websiteCreativeSlotEl = document.getElementById('website-creative-slot');
+const websiteCreativeLocaleEl = document.getElementById('website-creative-locale');
+const websiteCreativePreviewKeyEl = document.getElementById('website-creative-preview-key');
+const websiteCreativePreviewIdEl = document.getElementById('website-creative-preview-id');
+const websiteCreativeCancelEl = document.getElementById('website-creative-cancel');
+const websiteCreativeSubmitEl = document.getElementById('website-creative-submit');
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 
@@ -556,6 +716,30 @@ async function updateWorkspaceInstance({ workspaceId, publicId, config, status }
   return text ? JSON.parse(text) : null;
 }
 
+async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
+  const res = await superadminFetch(
+    `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ widgetType, publicId, config, status }),
+    }
+  );
+  if (res.ok) {
+    const text = await res.text().catch(() => '');
+    return text ? JSON.parse(text) : null;
+  }
+
+  // If the instance already exists, update it to the desired config/status.
+  const text = await res.text().catch(() => '');
+  if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
+    await updateWorkspaceInstance({ workspaceId, publicId, config, status });
+    return { ok: true, existed: true };
+  }
+
+  throw new Error(`[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+}
+
 async function exportInstanceDataFromBob({ timeoutMs = 2500 } = {}) {
   const target = iframe.contentWindow;
   if (!target) throw new Error('[DevStudio] Bob iframe not ready');
@@ -622,23 +806,168 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
   return publicId;
 }
 
-async function createTemplateInstance({ widgetSlug, sourceConfig, kind }) {
-  const keyLabel = kind === 'prague' ? 'Prague creative key' : 'Template key';
-  const rawKey = window.prompt(keyLabel);
+async function createTemplateInstance({ widgetSlug, sourceConfig }) {
+  const rawKey = window.prompt('Template key');
   const key = slugifyKey(rawKey);
   if (!key) throw new Error('[DevStudio] Missing key');
 
-  const suffix = kind === 'prague' ? `tmpl_prague_${key}` : `tmpl_${key}`;
-  const publicId = `wgt_${widgetSlug}_${suffix}`;
-
+  const publicId = `wgt_${widgetSlug}_tmpl_${key}`;
   await createWorkspaceInstance({
-    workspaceId: DEV_WORKSPACE_ID,
+    workspaceId: CLICKEEN_WORKSPACE_ID,
     widgetType: widgetSlug,
     publicId,
     config: sourceConfig,
     status: 'unpublished',
   });
   return publicId;
+}
+
+let cachedWidgetTypes = null;
+async function fetchWidgetTypes() {
+  if (cachedWidgetTypes) return cachedWidgetTypes;
+  const res = await fetch(`${PARIS_API}/widgets?_t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`[DevStudio] Failed to load widget types (HTTP ${res.status})`);
+  const json = await res.json().catch(() => null);
+  const types = Array.isArray(json?.widgets) ? json.widgets.map((w) => w?.type).filter(Boolean) : [];
+  cachedWidgetTypes = Array.from(new Set(types));
+  return cachedWidgetTypes;
+}
+
+function ensureWebsiteCreativeModalElements() {
+  if (!(websiteCreativeModal instanceof HTMLElement)) throw new Error('[DevStudio] Missing website creative modal');
+  if (!(websiteCreativeWidgetEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing widget select');
+  if (!(websiteCreativePageEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing page selector');
+  if (!(websiteCreativeSlotEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing slot select');
+  if (!(websiteCreativeLocaleEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing locale select');
+  if (!(websiteCreativePreviewKeyEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing creativeKey preview');
+  if (!(websiteCreativePreviewIdEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing publicId preview');
+  if (!(websiteCreativeCancelEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing cancel button');
+  if (!(websiteCreativeSubmitEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing submit button');
+}
+
+function openWebsiteCreativeModal({ defaultWidgetType }) {
+  ensureWebsiteCreativeModalElements();
+  const modal = websiteCreativeModal;
+
+  return new Promise(async (resolve, reject) => {
+    let activePage = 'overview';
+
+    const cleanup = () => {
+      modal.hidden = true;
+      websiteCreativePageEl.innerHTML = '';
+      websiteCreativeWidgetEl.onchange = null;
+      websiteCreativeSlotEl.onchange = null;
+      websiteCreativeLocaleEl.onchange = null;
+      websiteCreativeCancelEl.onclick = null;
+      websiteCreativeSubmitEl.onclick = null;
+    };
+
+    const recomputePreview = () => {
+      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
+      const slot = (websiteCreativeSlotEl.value || '').trim();
+      const locale = (websiteCreativeLocaleEl.value || 'en').trim();
+      const creativeKey = widgetType && slot ? composeWebsiteCreativeKey({ widgetType, page: activePage, slot }) : '';
+      const publicId = creativeKey ? composeWebsiteCreativePublicId({ creativeKey, locale }) : '';
+      websiteCreativePreviewKeyEl.textContent = creativeKey;
+      websiteCreativePreviewIdEl.textContent = publicId;
+      websiteCreativeSubmitEl.toggleAttribute('disabled', !publicId);
+    };
+
+    const renderSlots = () => {
+      const slots = CREATIVE_SLOTS_BY_PAGE[activePage] || [];
+      websiteCreativeSlotEl.innerHTML = slots.map((slot) => `<option value="${slot}">${slot}</option>`).join('');
+      if (!slots.length) {
+        websiteCreativeSlotEl.innerHTML = `<option value="">(no slots yet)</option>`;
+      }
+      recomputePreview();
+    };
+
+    const renderPages = () => {
+      websiteCreativePageEl.innerHTML = CREATIVE_PAGES.map((page) => {
+        const enabled = (CREATIVE_SLOTS_BY_PAGE[page] || []).length > 0;
+        const selected = page === activePage;
+        return `
+          <button
+            type="button"
+            class="diet-btn-txt ck-modal__segmented-btn"
+            data-size="md"
+            data-variant="${selected ? 'primary' : 'secondary'}"
+            data-page="${page}"
+            ${enabled ? '' : 'disabled'}
+            aria-pressed="${selected ? 'true' : 'false'}"
+          >
+            <span class="diet-btn-txt__label">${page}</span>
+          </button>
+        `;
+      }).join('');
+
+      websiteCreativePageEl.querySelectorAll('[data-page]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const next = btn.getAttribute('data-page');
+          if (!next) return;
+          activePage = next;
+          renderPages();
+          renderSlots();
+        });
+      });
+    };
+
+    try {
+      const widgetTypes = await fetchWidgetTypes().catch(() => []);
+      const fallbackType = (defaultWidgetType || 'faq').trim();
+      const options = Array.from(new Set([fallbackType, ...widgetTypes])).filter(Boolean);
+      websiteCreativeWidgetEl.innerHTML = options.map((type) => `<option value="${type}">${type}</option>`).join('');
+      websiteCreativeWidgetEl.value = fallbackType;
+    } catch (err) {
+      cleanup();
+      reject(err);
+      return;
+    }
+
+    renderPages();
+    renderSlots();
+
+    const dismiss = (error) => {
+      cleanup();
+      reject(error || new Error('[DevStudio] Canceled'));
+    };
+
+    websiteCreativeWidgetEl.onchange = recomputePreview;
+    websiteCreativeSlotEl.onchange = recomputePreview;
+    websiteCreativeLocaleEl.onchange = recomputePreview;
+
+    websiteCreativeCancelEl.onclick = () => dismiss(new Error('[DevStudio] Canceled'));
+    websiteCreativeSubmitEl.onclick = () => {
+      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
+      const slot = (websiteCreativeSlotEl.value || '').trim();
+      const locale = (websiteCreativeLocaleEl.value || 'en').trim();
+      if (!widgetType) return dismiss(new Error('[DevStudio] Missing widget type'));
+      if (!slot) return dismiss(new Error('[DevStudio] Missing slot'));
+      cleanup();
+      resolve({ widgetType, page: activePage, slot, locale });
+    };
+
+    modal.querySelectorAll('[data-modal-dismiss]').forEach((node) => {
+      node.addEventListener('click', () => dismiss(new Error('[DevStudio] Canceled')), { once: true });
+    });
+
+    modal.hidden = false;
+    recomputePreview();
+  });
+}
+
+async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, locale, baselineConfig }) {
+  const res = await superadminFetch(
+    `${PARIS_API}/website-creative?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ widgetType, page, slot, locale, baselineConfig }),
+    }
+  );
+  const text = await res.text().catch(() => '');
+  if (!res.ok) throw new Error(`[DevStudio] Ensure website creative failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+  return text ? JSON.parse(text) : null;
 }
 
 async function refreshInstancesAndSelect(publicId) {
@@ -670,7 +999,7 @@ superadminCreateTemplate?.addEventListener('click', async () => {
     const instance = instances.find((inst) => inst.publicId === currentPublicId);
     const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
     const config = await fetchInstanceConfig(currentPublicId);
-    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {}, kind: 'template' });
+    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {} });
     await refreshInstancesAndSelect(publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
@@ -679,18 +1008,30 @@ superadminCreateTemplate?.addEventListener('click', async () => {
 
 superadminCreatePrague?.addEventListener('click', async () => {
   try {
-    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
     const instance = instances.find((inst) => inst.publicId === currentPublicId);
-    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-    const config = await fetchInstanceConfig(currentPublicId);
-    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {}, kind: 'prague' });
+    const defaultWidgetType = instance?.widgetSlug || requireWidgetSlugForAction();
 
-    const envKey = `PUBLIC_MINIBOB_PUBLIC_ID_${widgetSlug.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
-    const message = `Created ${publicId}.\n\nTo use on Prague: set ${envKey}=${publicId} (Cloudflare Pages env var for Prague).`;
-    try {
-      await navigator.clipboard.writeText(publicId);
-    } catch {}
-    alert(message);
+    const selection = await openWebsiteCreativeModal({ defaultWidgetType });
+
+    const compiled = await ensureCompiledWidget(selection.widgetType);
+    const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
+    if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+
+    const result = await ensureWebsiteCreative({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      widgetType: selection.widgetType,
+      page: selection.page,
+      slot: selection.slot,
+      locale: selection.locale,
+      baselineConfig: defaults,
+    });
+
+    const publicId = result?.publicId || composeWebsiteCreativePublicId({
+      creativeKey: composeWebsiteCreativeKey({ widgetType: selection.widgetType, page: selection.page, slot: selection.slot }),
+      locale: selection.locale,
+    });
+
+    try { await navigator.clipboard.writeText(publicId); } catch {}
     await refreshInstancesAndSelect(publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));

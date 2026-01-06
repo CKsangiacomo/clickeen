@@ -100,7 +100,7 @@ Gate: for each Type/Layout, you can name the **DOM/CSS difference** and the **st
 #### Step 2 — Write `spec.json.defaults` (state shape)
 Create the full state shape:
 - Platform globals when applicable: `stage`, `pod`, `typography`, `behavior`
-- AI context (cross-widget): `websiteUrl` (used by Copilot/AI only; runtime can ignore)
+- Copilot context (cross-widget): `websiteUrl` (used by Copilot only; runtime can ignore)
 - Arrays/items defaults + piece defaults
 - Type/Layout fields + per-type/per-layout subtrees
 

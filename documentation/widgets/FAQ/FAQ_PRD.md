@@ -160,7 +160,7 @@ Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `layout.*` — layout type, responsive columns, gap
 - `appearance.*` — item background + question/answer colors + accordion icon choice
 - `behavior.*` — accordion toggles + media toggles + backlink
-- `ai.*` — AI context (Copilot-only; runtime may ignore)
+- `context.*` — Copilot context (editor-only; runtime may ignore)
 - `typography.*` — global family + per-role selections (compiler-injected panel)
 - `stage.*` + `pod.*` — stage/pod layout and appearance
 

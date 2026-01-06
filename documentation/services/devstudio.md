@@ -18,9 +18,28 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
-- In **DevStudio Local only**, shows superadmin actions (create template instance, create Prague creative, update defaults).
+- In **DevStudio Local only**, shows superadmin actions (update defaults, create template instance, create **website creative**).
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
+
+### Website creatives (Prague CMS visuals)
+
+DevStudio Local includes a superadmin action: **Create website creative**.
+
+- **Dropdown options source (registry)**: Prague-owned TS registry
+  - `prague/src/lib/websiteCreativeRegistry.ts`
+  - v1: `overview` has creative slots `hero` + `features` (others empty until Prague expands the registry).
+- **Deterministic identity (v1)**:
+  - `creativeKey = {widgetType}.{page}.{slot}` (locale-free)
+  - `publicId = wgt_web_{creativeKey}.{locale}` (locale-specific; DevStudio defaults `locale=en`)
+- **How DevStudio executes it**
+  - DevStudio requests widget types via Bob’s Paris proxy:
+    - `GET /api/paris/widgets`
+  - DevStudio ensures the website creative via Bob’s Paris proxy (workspace-owned):
+    - `POST /api/paris/website-creative?workspaceId=<workspaceId>`
+    - Body includes: `{ widgetType, page, slot, locale, baselineConfig }`
+  - Baseline config is seeded from compiled defaults:
+    - `GET /api/widgets/{widgetType}/compiled` (Bob compile endpoint)
 
 ## Troubleshooting
 

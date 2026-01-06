@@ -25,6 +25,7 @@ type WidgetRow = {
   id: string;
   type: string | null;
   name: string | null;
+  catalog?: unknown;
 };
 
 type WorkspaceRow = {
@@ -245,7 +246,7 @@ function resolveEditorPolicyFromRequest(req: Request, workspace: WorkspaceRow) {
   }
 
   const policy = resolvePolicy({ profile, role });
-  return { ok: true as const, policy };
+  return { ok: true as const, policy, profile };
 }
 
 async function handleHealthz() {
@@ -561,7 +562,7 @@ async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null>
 
 async function loadWidgetByType(env: Env, widgetType: string): Promise<WidgetRow | null> {
   const params = new URLSearchParams({
-    select: 'id,type,name',
+    select: 'id,type,name,catalog',
     type: `eq.${widgetType}`,
     limit: '1',
   });
@@ -572,6 +573,233 @@ async function loadWidgetByType(env: Env, widgetType: string): Promise<WidgetRow
   }
   const rows = (await res.json()) as WidgetRow[];
   return rows?.[0] ?? null;
+}
+
+async function handleListWidgets(req: Request, env: Env) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const params = new URLSearchParams({
+    select: 'type,name',
+    order: 'type.asc',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widgets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ type?: string | null; name?: string | null }>;
+  return json(
+    {
+      widgets: rows
+        .map((row) => ({ type: typeof row.type === 'string' ? row.type : null, name: typeof row.name === 'string' ? row.name : null }))
+        .filter((row) => Boolean(row.type)),
+    },
+    { status: 200 },
+  );
+}
+
+const WEBSITE_CREATIVE_PAGES = new Set(['overview', 'templates', 'examples', 'features']);
+
+function assertWebsiteCreativePage(value: unknown) {
+  const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (!trimmed || !WEBSITE_CREATIVE_PAGES.has(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function assertWebsiteCreativeSlot(value: unknown) {
+  const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (!trimmed || !/^[a-z0-9][a-z0-9_-]*$/.test(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.slot.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function normalizeWebsiteLocale(value: unknown): string {
+  const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (!trimmed) return 'en';
+  if (!/^[a-z]{2}(?:-[a-z0-9]{2,})*$/.test(trimmed)) return 'en';
+  return trimmed;
+}
+
+type WebsiteCreativeEnsurePayload = {
+  widgetType: string;
+  page: string;
+  slot: string;
+  locale?: string;
+  baselineConfig: Record<string, unknown>;
+};
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function ensureCatalogShape(existing: unknown): Record<string, unknown> {
+  const out: any = isJsonObject(existing) ? JSON.parse(JSON.stringify(existing)) : {};
+  if (out.v !== 1) out.v = 1;
+  if (!isJsonObject(out.locales)) out.locales = {};
+  if (!isJsonObject(out.locales.en)) out.locales.en = {};
+  if (!isJsonObject(out.locales.en.pages)) out.locales.en.pages = {};
+  for (const page of WEBSITE_CREATIVE_PAGES) {
+    if (!isJsonObject(out.locales.en.pages[page])) out.locales.en.pages[page] = {};
+    if (!Array.isArray(out.locales.en.pages[page].blocks)) out.locales.en.pages[page].blocks = [];
+  }
+  return out as Record<string, unknown>;
+}
+
+async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, workspaceId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  if ((env.ENV_STAGE || '').toLowerCase() !== 'local') {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+  if (policyResult.profile !== 'devstudio') {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.subject.invalid' }, 422);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
+  }
+  if (!isJsonObject(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const widgetTypeResult = assertWidgetType((payload as any).widgetType);
+  if (!widgetTypeResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+
+  const pageResult = assertWebsiteCreativePage((payload as any).page);
+  if (!pageResult.ok) return pageResult.response;
+
+  const slotResult = assertWebsiteCreativeSlot((payload as any).slot);
+  if (!slotResult.ok) return slotResult.response;
+
+  const locale = normalizeWebsiteLocale((payload as any).locale);
+  const baselineConfigResult = assertConfig((payload as any).baselineConfig);
+  if (!baselineConfigResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+
+  const widgetType = widgetTypeResult.value;
+  const page = pageResult.value;
+  const slot = slotResult.value;
+  const creativeKey = `${widgetType}.${page}.${slot}`;
+  const publicId = `wgt_web_${creativeKey}.${locale}`;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
+
+  const baselineConfig = baselineConfigResult.value;
+  const issues = configNonPersistableUrlIssues(baselineConfig);
+  if (issues.length) {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+        detail: issues[0]?.message,
+        paths: issues.map((i) => `baselineConfig.${i.path}`),
+      },
+      422,
+    );
+  }
+
+  const denyByPolicy = enforceConfigAgainstPolicy(policyResult.policy, baselineConfig);
+  if (denyByPolicy) return denyByPolicy;
+  const denyFaqCaps = enforceFaqCaps(policyResult.policy, widgetType, baselineConfig);
+  if (denyFaqCaps) return denyFaqCaps;
+
+  // 1) Ensure instance exists.
+  const existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (!existing) {
+    let widget = await loadWidgetByType(env, widgetType);
+    if (!widget) {
+      const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          type: widgetType,
+          name: titleCase(widgetType) || widgetType,
+        }),
+      });
+      if (!insertRes.ok) {
+        const details = await readJson(insertRes);
+        return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      }
+      const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
+      widget = created?.[0] ?? null;
+    }
+
+    if (!widget?.id) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+    }
+
+    const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        workspace_id: workspaceId,
+        widget_id: widget.id,
+        public_id: publicId,
+        status: 'unpublished',
+        config: baselineConfig,
+      }),
+    });
+    if (!instanceInsert.ok) {
+      const details = await readJson(instanceInsert);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    }
+  }
+
+  // 2) Attach creativeKey into the widget catalog (en locale, v1 shape).
+  const widget = await loadWidgetByType(env, widgetType);
+  if (!widget?.id) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Widget row missing after ensure' }, 500);
+  }
+  const catalog = ensureCatalogShape(widget.catalog);
+  const pages = (catalog as any).locales.en.pages;
+  const pageModel = pages[page];
+  const blocks: any[] = Array.isArray(pageModel.blocks) ? pageModel.blocks : [];
+  const idx = blocks.findIndex((block) => block && typeof block === 'object' && block.id === slot);
+  const nextBlock = {
+    id: slot,
+    kind: slot,
+    text: {},
+    visual: { creativeKey },
+  };
+  if (idx >= 0) {
+    const current = blocks[idx];
+    blocks[idx] = {
+      ...(isJsonObject(current) ? current : {}),
+      id: slot,
+      kind: (current as any)?.kind ?? slot,
+      visual: { creativeKey },
+    };
+  } else {
+    blocks.push(nextBlock);
+  }
+  pageModel.blocks = blocks;
+
+  const patchWidget = await supabaseFetch(env, `/rest/v1/widgets?type=eq.${encodeURIComponent(widgetType)}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ catalog }),
+  });
+  if (!patchWidget.ok) {
+    const details = await readJson(patchWidget);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+
+  return json({ creativeKey, publicId }, { status: 200 });
 }
 
 async function handleGetInstance(req: Request, env: Env, publicId: string) {
@@ -939,10 +1167,10 @@ async function handleCreateInstance(req: Request, env: Env) {
 
   if (issues.length) return json(issues, { status: 422 });
 
-  const widgetType = widgetTypeResult.value;
-  const publicId = publicIdResult.value;
+  const widgetType = widgetTypeResult.value!;
+  const publicId = publicIdResult.value!;
   const workspaceId = workspaceIdRaw as string;
-  const config = configResult.value;
+  const config = configResult.value!;
   const status = statusResult.value ?? 'unpublished';
 
   const existing = await loadInstanceByPublicId(env, publicId);
@@ -1163,6 +1391,19 @@ export default {
         if (req.method === 'GET') return handleWorkspaceGetInstance(req, env, workspaceIdResult.value, publicId);
         if (req.method === 'PUT') return handleWorkspaceUpdateInstance(req, env, workspaceIdResult.value, publicId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceWebsiteCreativeMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/website-creative$/);
+      if (workspaceWebsiteCreativeMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceWebsiteCreativeMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        if (req.method === 'POST') return handleWorkspaceEnsureWebsiteCreative(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      if (pathname === '/api/widgets') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleListWidgets(req, env);
       }
 
       if (pathname === '/api/instances') {
