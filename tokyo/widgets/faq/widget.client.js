@@ -33,7 +33,15 @@
   }
 
   const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
-  const assetOrigin = (assetOriginRaw || window.location.origin).replace(/\/$/, '');
+  const scriptOrigin = (() => {
+    if (!(scriptEl instanceof HTMLScriptElement)) return '';
+    try {
+      return new URL(scriptEl.src, window.location.href).origin;
+    } catch {
+      return '';
+    }
+  })();
+  const assetOrigin = (assetOriginRaw || scriptOrigin || window.location.origin).replace(/\/$/, '');
   widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
 
   const resolvedPublicId = (() => {

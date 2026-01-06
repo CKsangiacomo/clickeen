@@ -177,8 +177,9 @@ body {
 
 .ck-faq__q-icon .diet-btn-ic__icon {
   background-color: currentColor;
-  -webkit-mask-image: var(--faq-icon-expand, url(var(--ck-asset-origin)/dieter/icons/svg/plus.svg));
-  mask-image: var(--faq-icon-expand, url(var(--ck-asset-origin)/dieter/icons/svg/plus.svg));
+  /* Default to same-origin Dieter icons. Runtime may override via --faq-icon-expand/--faq-icon-collapse. */
+  -webkit-mask-image: var(--faq-icon-expand, url("/dieter/icons/svg/plus.svg"));
+  mask-image: var(--faq-icon-expand, url("/dieter/icons/svg/plus.svg"));
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -188,8 +189,8 @@ body {
 }
 
 .ck-faq__q[aria-expanded='true'] .ck-faq__q-icon .diet-btn-ic__icon {
-  -webkit-mask-image: var(--faq-icon-collapse, url(var(--ck-asset-origin)/dieter/icons/svg/minus.svg));
-  mask-image: var(--faq-icon-collapse, url(var(--ck-asset-origin)/dieter/icons/svg/minus.svg));
+  -webkit-mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
+  mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
 }
 
 .ck-faq[data-layout='list'] .ck-faq__q,
