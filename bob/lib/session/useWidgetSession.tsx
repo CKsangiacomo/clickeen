@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
@@ -68,6 +69,21 @@ type WidgetBootstrapMessage = {
   subjectMode?: SubjectMode;
 };
 
+type DevstudioExportInstanceDataMessage = {
+  type: 'devstudio:export-instance-data';
+  requestId: string;
+};
+
+type BobExportInstanceDataResponseMessage = {
+  type: 'bob:export-instance-data';
+  requestId: string;
+  ok: boolean;
+  error?: string;
+  instanceData?: Record<string, unknown>;
+  meta?: SessionState['meta'];
+  isDirty?: boolean;
+};
+
 const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
@@ -123,6 +139,9 @@ function useWidgetSessionInternal() {
     copilotThreads: {},
     meta: null,
   }));
+
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -572,13 +591,35 @@ function useWidgetSessionInternal() {
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      const data = event.data as WidgetBootstrapMessage | undefined;
-      if (!data || data.type !== 'devstudio:load-instance') return;
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('[useWidgetSession] load-instance payload', data);
+      const data = event.data as (WidgetBootstrapMessage | DevstudioExportInstanceDataMessage) | undefined;
+      if (!data || typeof data !== 'object') return;
+
+      if (data.type === 'devstudio:load-instance') {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('[useWidgetSession] load-instance payload', data);
+        }
+        loadInstance(data);
+        return;
       }
-      loadInstance(data);
+
+      if (data.type === 'devstudio:export-instance-data') {
+        const requestId = typeof data.requestId === 'string' ? data.requestId : '';
+        if (!requestId) return;
+        const snapshot = stateRef.current;
+
+        const reply: BobExportInstanceDataResponseMessage = {
+          type: 'bob:export-instance-data',
+          requestId,
+          ok: true,
+          instanceData: snapshot.instanceData,
+          meta: snapshot.meta,
+          isDirty: snapshot.isDirty,
+        };
+
+        const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+        window.parent?.postMessage(reply, targetOrigin);
+      }
     }
 
     window.addEventListener('message', handleMessage);

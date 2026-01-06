@@ -556,23 +556,67 @@ async function updateWorkspaceInstance({ workspaceId, publicId, config, status }
   return text ? JSON.parse(text) : null;
 }
 
-async function ensureDefaultsMainInstance(widgetSlug) {
-  const compiled = await ensureCompiledWidget(widgetSlug);
-  const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
-  if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+async function exportInstanceDataFromBob({ timeoutMs = 2500 } = {}) {
+  const target = iframe.contentWindow;
+  if (!target) throw new Error('[DevStudio] Bob iframe not ready');
+  const requestId = crypto.randomUUID();
+
+  return await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('[DevStudio] Timed out requesting instance data from Bob'));
+    }, timeoutMs);
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      window.removeEventListener('message', onMessage);
+    };
+
+    const onMessage = (event) => {
+      if (event.origin !== BOB_ORIGIN) return;
+      const data = event.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'bob:export-instance-data') return;
+      if (data.requestId !== requestId) return;
+      cleanup();
+      if (data.ok !== true) {
+        reject(new Error(data.error || '[DevStudio] Bob failed to export instance data'));
+        return;
+      }
+      resolve(data);
+    };
+
+    window.addEventListener('message', onMessage);
+    target.postMessage({ type: 'devstudio:export-instance-data', requestId }, BOB_ORIGIN);
+  });
+}
+
+async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
+  const exported = await exportInstanceDataFromBob();
+  const config = exported?.instanceData;
+  if (!config || typeof config !== 'object') {
+    throw new Error('[DevStudio] Bob export did not include instanceData');
+  }
 
   const publicId = `wgt_${widgetSlug}_main`;
+  const exportedPublicId = exported?.meta?.publicId;
+  if (exportedPublicId && exportedPublicId !== publicId) {
+    const ok = window.confirm(
+      `Save the currently loaded editor state (${exportedPublicId}) into default instance (${publicId})?`
+    );
+    if (!ok) throw new Error('[DevStudio] Canceled');
+  }
   await createWorkspaceInstance({
     workspaceId: DEV_WORKSPACE_ID,
     widgetType: widgetSlug,
     publicId,
-    config: defaults,
+    config,
     status: 'unpublished',
   });
   await updateWorkspaceInstance({
     workspaceId: DEV_WORKSPACE_ID,
     publicId,
-    config: defaults,
+    config,
     status: 'unpublished',
   });
   return publicId;
@@ -613,7 +657,7 @@ if (isLocalDevStudio && superadminActions) {
 superadminUpdateDefaults?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
-    const publicId = await ensureDefaultsMainInstance(widgetSlug);
+    const publicId = await updateDefaultsMainInstanceFromEditor(widgetSlug);
     await refreshInstancesAndSelect(publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
