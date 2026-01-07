@@ -1,0 +1,17 @@
+{
+  "name": "@clickeen/pitch",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8790",
+    "deploy": "node scripts/ensure-vectorize.mjs && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251228.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^4.54.0"
+  }
+}
+
+

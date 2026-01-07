@@ -51,13 +51,15 @@ The Pitch Agent represents Piero to investors via a Custom GPT. Investors receiv
 
 ## San Francisco Integration
 
-The Pitch Agent lives in San Francisco as part of the AI workforce.
+The Pitch Agent lives in a **dedicated Pitch Worker** (separate from San Francisco) so pitch infra can never block core AI deploys.
 
-### New Endpoints
+### Endpoints (Pitch Worker)
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|
+| `/healthz` | GET | None | health check |
 | `/v1/pitch/search` | GET | None (public) | GPT searches docs |
+| `/v1/pitch/answer` | GET | None (public) | GPT gets a retrieval-only answer + citations |
 | `/v1/pitch/upsert` | POST | `X-API-Key` header | Index docs from GitHub Action |
 
 ### Why No Grant?
@@ -78,6 +80,11 @@ A simple API key for upsert is sufficient. Search is fully public.
 **Name:** `clickeen-pitch-docs`
 **Dimensions:** 1536 (text-embedding-3-small)
 **Metric:** cosine
+
+**Provisioning note (execution):**
+- Pitch is deployed from `pitch/` (package `@clickeen/pitch`).
+- Deploy is idempotent: it creates the Vectorize index if missing, then deploys:
+  - `pnpm --filter @clickeen/pitch deploy`
 
 **Binding in `sanfrancisco/wrangler.toml`:**
 

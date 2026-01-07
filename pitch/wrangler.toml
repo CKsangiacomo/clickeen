@@ -1,0 +1,13 @@
+name = "pitch-dev"
+main = "src/index.ts"
+compatibility_date = "2025-12-28"
+
+[vars]
+ENVIRONMENT = "dev"
+PITCH_MODEL = "gpt-5.2"
+
+[[vectorize]]
+binding = "PITCH_DOCS"
+index_name = "clickeen-pitch-docs"
+
+
