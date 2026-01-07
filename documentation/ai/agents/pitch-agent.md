@@ -84,7 +84,7 @@ A simple API key for upsert is sufficient. Search is fully public.
 **Provisioning note (execution):**
 - Pitch is deployed from `pitch/` (package `@clickeen/pitch`).
 - Deploy is idempotent: it creates the Vectorize index if missing, then deploys:
-  - `pnpm --filter @clickeen/pitch deploy`
+  - `pnpm --filter @clickeen/pitch run deploy`
 
 **Binding in `sanfrancisco/wrangler.toml`:**
 
@@ -569,4 +569,3 @@ Professional but human. Confident but not arrogant. Match their energy.
 - `documentation/ai/overview.md` — San Francisco architecture
 - `documentation/ai/infrastructure.md` — San Francisco operations
 - `documentation/strategy/WhyClickeen.md` — Vision and moats
-
