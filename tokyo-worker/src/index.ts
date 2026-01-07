@@ -1,5 +1,5 @@
 type Env = {
-  TOKYO_DEV_JWT: string;
+  CK_CLOUD_TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
 };
 
@@ -23,7 +23,7 @@ function asBearerToken(header: string | null): string | null {
 }
 
 function requireDevAuth(req: Request, env: Env): Response | null {
-  const expected = (env.TOKYO_DEV_JWT || '').trim();
+  const expected = (env.CK_CLOUD_TOKYO_DEV_JWT || '').trim();
   if (!expected) {
     return json({ error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } }, { status: 500 });
   }
@@ -175,4 +175,3 @@ export default {
     }
   },
 };
-
