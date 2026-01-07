@@ -14,10 +14,9 @@ export function resolveTokyoBaseUrl(): string {
       process.env.CF_PAGES_COMMIT_SHA ||
       process.env.CF_PAGES_URL)
   ) {
-    return 'https://tokyo-dev.pages.dev';
+    return 'https://tokyo.dev.clickeen.com';
   }
 
   // Local default.
   return 'http://localhost:4000';
 }
-

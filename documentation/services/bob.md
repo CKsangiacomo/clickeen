@@ -67,7 +67,7 @@ Source: `admin/src/html/tools/dev-widget-workspace.html` (see the “configurabl
 ### Instance writes (DevStudio Local only)
 - DevStudio is an internal harness that can create/update instances, but **writes happen only in DevStudio Local**.
 - The DevStudio tool page exposes superadmin actions only on `localhost`/`127.0.0.1` and uses Bob’s `/api/paris/*` proxy to call Paris.
-- `POST /api/instance` in Paris is **dev-auth gated** (requires `PARIS_DEV_JWT`) and is intended for these internal flows, not for end users.
+- Instance create/update in Paris is **dev-auth gated** (requires `PARIS_DEV_JWT`) and is intended for internal DevStudio flows, not for end users (current shipped path: `/api/workspaces/:workspaceId/*`, reached via Bob’s `/api/paris/*` proxy).
 
 ### Dev subjects and policy (durable)
 Bob resolves a single subject mode and computes a single policy object:
@@ -79,7 +79,7 @@ Example enforcement (today): `minibob` cannot enable `seoGeo.enabled`.
 ### Intended product shape (still aligned)
 The intended “two API calls per session” model is:
 1. `GET /api/widgets/[widgetname]/compiled` (Bob → Tokyo spec → compile)
-2. `GET /api/paris/instance/:publicId` (Bob proxy → Paris)
+2. `GET /api/paris/instance/:publicId` (Bob proxy → Paris workspace endpoint)
 …then edits happen in memory until Publish.
 
 ---

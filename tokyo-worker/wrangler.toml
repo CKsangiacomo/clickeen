@@ -1,9 +1,8 @@
-name = "tokyo-dev"
+name = "tokyo-assets-dev"
 main = "src/index.ts"
 compatibility_date = "2025-12-28"
 workers_dev = true
 
 [[r2_buckets]]
 binding = "TOKYO_R2"
-bucket_name = "tokyo-dev"
-
+bucket_name = "tokyo-assets-dev"

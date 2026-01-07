@@ -8,7 +8,7 @@ const { title, locale } = Astro.props;
 
 const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
 if (!TOKYO_URL) {
-  throw new Error('[prague] PUBLIC_TOKYO_URL is required (e.g. https://tokyo-dev.pages.dev)');
+  throw new Error('[prague] PUBLIC_TOKYO_URL is required (e.g. https://tokyo.dev.clickeen.com)');
 }
 const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
 

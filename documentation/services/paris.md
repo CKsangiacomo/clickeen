@@ -8,7 +8,7 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
 
@@ -28,8 +28,8 @@ If you need the exact shipped behavior, inspect `paris/src/index.ts`.
 
 **Bob makes EXACTLY 2 calls to Paris per editing session:**
 
-1. **Load** - `GET /api/instance/:publicId` when Bob mounts → gets instance snapshot (`config` + `status`)
-2. **Publish** - `PUT /api/instance/:publicId` when user clicks Publish → saves working copy
+1. **Load** - `GET /api/workspaces/:workspaceId/instance/:publicId` when Bob mounts → gets instance snapshot (`config` + `status`)
+2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId` when user clicks Publish → saves working copy
 
 **Between load and publish:**
 - User edits in ToolDrawer → Bob updates React state (NO API calls to Paris)
@@ -62,7 +62,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 **Widget Instance config = THE DATA** (Michael tables: `widget_instances`, `widgets`):
 - ONE user’s specific instance config (`widget_instances.config`)
 - Associated widget type is `widgets.type` (surfaced as `widgetType`)
-- **EDITABLE by users** (via Bob → Paris `PUT /api/instance/:publicId`)
+- **EDITABLE by users** (via Bob → Paris `PUT /api/workspaces/:workspaceId/instance/:publicId`)
 
 **What Paris returns for an instance:**
 ```json
@@ -82,6 +82,13 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `PUT /api/instance/:publicId` — Updates instance `config`/`status` (dev auth in this repo snapshot; production will be workspace-auth)
 - `GET /api/instances` — Dev tooling list (requires dev auth)
 - `POST /api/instance` — Creates the instance if missing; otherwise returns the existing snapshot (idempotent)
+
+**Workspace-scoped endpoints (dev tooling + promotion):**
+- `GET /api/workspaces/:workspaceId/instances` — Lists instances in a specific workspace (requires dev auth).
+- `POST /api/workspaces/:workspaceId/instances` — Creates the instance in that workspace if missing; if the `publicId` already exists in the same workspace it returns the existing snapshot (idempotent). If the `publicId` exists in a *different* workspace, returns 409 `PUBLIC_ID_CONFLICT`.
+- `GET /api/workspaces/:workspaceId/instance/:publicId` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
+- `PUT /api/workspaces/:workspaceId/instance/:publicId` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
+- `POST /api/workspaces/:workspaceId/website-creative` — Ensures a website creative exists for that workspace (intentionally **local-only**; not a cloud-dev workflow).
 
 # Paris — HTTP API Service (Phase-1)
 
@@ -114,7 +121,7 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
 
 - Source in-repo: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
-- Venice embed rendering should load widget runtime assets from Tokyo; Paris only provides instance config via `/api/instance/:publicId`
+- Venice embed rendering should load widget runtime assets from Tokyo; Venice currently fetches the instance snapshot from Paris via `/api/instance/:publicId` (unscoped). Editor/dev tooling uses the workspace-scoped endpoints.
 
 ### AI Gateway (Grants + Outcomes) (shipped in dev/local)
 

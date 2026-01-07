@@ -10,7 +10,9 @@
 
 Clickeen is an experiment: build software from the ground up so AI can truly operate it—not assist, operate.
 
-The product today is embeddable widgets. But widgets are the wedge. They prove the architecture works: AI-operable codebase, AI workforce, geography as non-concept, content as touchpoint.
+The product today is embeddable widgets (Phase A). But widgets are just the proof of concept—they prove the architecture works. The architecture itself is the product: AI-operable codebase, AI workforce, geography as non-concept, content as touchpoint, 100⁵ composable primitives.
+
+If Phase A works, the same architecture extends to emails, landing pages, creatives (Phase B), then connections between outputs (Phase C), then... we don't know (Phase D).
 
 ---
 
@@ -40,13 +42,21 @@ Each enables the others. They compound.
 
 ---
 
-## What's the wedge and what's the endgame?
+## What are the phases?
 
-**Wedge:** Widgets. High ROI, embed distribution, fast time-to-value, viral PLG loop.
+Widgets are not the destination. They're Phase A—the proof of concept.
 
-**Endgame:** If the architecture works, it expands: emails, landing pages, creatives—all composable, all AI-operable, all global by default.
+**Phase A: The Widget Company (Current)**
+Prove the architecture works. AI-operable codebase, AI workforce, geography as non-concept, 100⁵ composable architecture. If it works: already profitable, could hit 1-3M ARR quickly with viral PLG.
 
-Beyond that? If we prove software can be built for AI to operate, the implications are unprecedented. We're honest about that uncertainty.
+**Phase B: Extend Outputs**
+Same architecture, more formats: emails, landing pages, creatives (ads, social). Adding an output gives *every widget* that capability automatically. Multiplicative.
+
+**Phase C: Connect the Outputs**
+Light versions of social media management, CRM, marketing automation. Competitive frame: Keap, Thryve, SMB/midmarket SaaS—but AI-native from scratch.
+
+**Phase D: Unknown**
+If A-C work, the implications snowball beyond what we can model. We genuinely don't know where this goes.
 
 ---
 

@@ -63,8 +63,10 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 ### The Two-API-Call Pattern
 
 Bob makes EXACTLY 2 calls to Paris per editing session:
-1. **Load**: `GET /api/instance/:publicId` when Bob mounts
-2. **Publish**: `PUT /api/instance/:publicId` when user clicks Publish
+1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId` when Bob mounts
+2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId` when user clicks Publish
+
+In the browser these typically flow through Bob’s same-origin proxy (`/api/paris/instance/:publicId?workspaceId=...`) which forwards to the workspace-scoped Paris endpoints.
 
 Between load and publish:
 - All edits happen in Bob's React state (in memory)
@@ -123,6 +125,7 @@ Examples:
 | **Michael** | Database | Supabase Postgres | `supabase/` |
 | **Dieter** | Design system | Build artifacts in Tokyo | `dieter/` |
 | **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
+| **Tokyo Worker** | Workspace asset upload + serving (dev) | Cloudflare Workers + R2 | `tokyo-worker/` |
 | **Atlas** | Edge config cache (read-only) | Cloudflare KV | — |
 
 ---
@@ -140,6 +143,8 @@ Examples:
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images.
+
+**Tokyo Worker** — Cloudflare Worker that uploads/serves workspace assets from Tokyo R2 (dev surfaces only in this repo snapshot).
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 

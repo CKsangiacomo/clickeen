@@ -100,16 +100,44 @@ Each redefinition enables the others. They're not separate innovations—they're
 
 ---
 
-## The Wedge
+## The Four Phases
 
-Widgets are the entry point:
-- High ROI (conversion optimization)
-- Embed distribution (viral by design)
-- Fast time to value (paste one line, see it work)
+Widgets are not the destination. They're Phase A—the proof of concept.
 
-Each widget is a PLG loop. Every free widget displays "Made with Clickeen." The viral loop compounds.
+### Phase A: The Widget Company (Current)
 
-But widgets are not the destination. They're proof that the architecture works. If it works for widgets, the patterns apply to any domain.
+Prove the architecture works:
+- AI-operable codebase
+- AI workforce
+- Geography as non-concept
+- Content as touchpoint
+- 100⁵ composable architecture
+
+High ROI, viral PLG, fast time-to-value. If it works: already profitable, could hit 1-3M ARR quickly.
+
+### Phase B: Extend Outputs
+
+Same architecture, more output formats:
+- Emails (composable blocks)
+- Landing pages (composed of widgets)
+- Creatives (ads, social posts)
+
+Adding an output format gives *every widget* that capability automatically. Multiplicative, not additive.
+
+### Phase C: Connect the Outputs
+
+Make outputs work together. Light versions of:
+- Social media management
+- CRM
+- Marketing automation
+
+Competitive frame: Keap, Thryve, SMB/midmarket SaaS—but built AI-native from scratch.
+
+### Phase D: Unknown
+
+If Phases A-C work, the implications snowball beyond what we can model. AI-operable codebase proven at scale, AI workforce running GTM, composable primitives connecting into workflows.
+
+We genuinely don't know where this goes. That's the frontier bet.
 
 ---
 

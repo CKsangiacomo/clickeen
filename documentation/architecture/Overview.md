@@ -98,7 +98,7 @@ Each release proceeds in 3 steps:
 | Primitive | Used by | Why |
 |---|---|---|
 | **Pages** | Prague, Bob, DevStudio | Static + Next.js-style app surfaces; simple deploy model |
-| **Workers** | Paris, Venice, San Francisco (and optional Tokyo assets worker) | Edge HTTP services; consistent global runtime |
+| **Workers** | Paris, Venice, San Francisco (and Tokyo assets worker) | Edge HTTP services; consistent global runtime |
 | **R2** | Tokyo (assets), San Francisco (raw logs) | Cheap object storage, zero egress for CDN patterns |
 | **KV** | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs |
 | **D1** | San Francisco (indexes) | Queryable learning metadata; low-ops SQL |
@@ -130,14 +130,14 @@ Each release proceeds in 3 steps:
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId`, `GET /api/instances` (dev tooling), `POST /api/ai/grant`, `POST /api/ai/outcome`.
+  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (embed/unscoped), `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId` (editor/dev tooling), `GET /api/instances` (dev tooling), `POST /api/ai/grant`, `POST /api/ai/outcome`.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
 
 #### Venice (Workers)
 - Planned public embed surface (third-party websites only talk to Venice).
 - **Current repo snapshot:** `venice/` is a placeholder workspace; embed UX/runtime is not shipped yet.
 
-#### Tokyo (R2 + optional worker)
+#### Tokyo (R2 + worker)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
 
@@ -209,7 +209,7 @@ Each release proceeds in 3 steps:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EDITING FLOW                                  │
 │                                                                         │
-│  ┌─────────┐    GET /api/instance/:publicId    ┌─────────┐             │
+│  ┌─────────┐    GET /api/workspaces/:workspaceId/instance/:publicId    ┌─────────┐             │
 │  │   Bob   │ ◄──────────────────────────────── │  Paris  │             │
 │  │ Builder │                                   │   API   │             │
 │  └────┬────┘                                   └────┬────┘             │
@@ -225,7 +225,7 @@ Each release proceeds in 3 steps:
 │       │ User clicks Publish                         │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌─────────┐             │
-│            PUT /api/instance/:publicId         │ Michael │             │
+│            PUT /api/workspaces/:workspaceId/instance/:publicId         │ Michael │             │
 │                                                │   DB    │             │
 │                                                └─────────┘             │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -300,10 +300,10 @@ Config exists in EXACTLY 2 places during editing:
 
 **The Pattern:**
 ```
-1. Load:    GET /api/instance/:publicId  → Bob gets published config
+1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId  → Bob gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: PUT /api/instance/:publicId  → Saves to Michael
+4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId  → Saves to Michael
 ```
 
 **Between load and publish:** Zero database writes. 10,000 users editing = 10,000 in-memory states, zero server load.
@@ -466,12 +466,12 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Bob GET /api/instance/:publicId
+User opens widget → Bob GET /api/workspaces/:workspaceId/instance/:publicId
                   → Paris reads from Michael
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Publish
-                  → Bob PUT /api/instance/:publicId
+                  → Bob PUT /api/workspaces/:workspaceId/instance/:publicId
                   → Paris writes to Michael
 ```
 
@@ -479,7 +479,7 @@ User opens widget → Bob GET /api/instance/:publicId
 
 ```
 Visitor loads embed → Venice GET /e/:publicId (planned)
-	                    → Venice calls Paris for instance
+	                    → Venice calls Paris for instance (`GET /api/instance/:publicId`)
 	                    → Paris reads from Michael
 	                    → Venice renders SSR HTML (planned: from Tokyo assets)
 	                    → Venice fires usage pixel

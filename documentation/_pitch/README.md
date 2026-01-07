@@ -22,7 +22,18 @@ This single foundation enables a cascade of redefinitions:
 | Global | Retrofit i18n, expand into markets | Geography doesn't exist |
 | Software dev | Humans code, humans maintain | Humans architect, AI builds and operates |
 
-**These compound.** Each enables the others. Widgets are the wedge—they prove the architecture works.
+**These compound.** Each enables the others.
+
+## The Four Phases
+
+| Phase | What | Purpose |
+|-------|------|---------|
+| **A** | Widget company | Prove the architecture works. Could hit 1-3M ARR. |
+| **B** | Extend outputs | Emails, landing pages, creatives. Multiplicative, not additive. |
+| **C** | Connect outputs | Light social, CRM, marketing automation. Compete with Keap/Thryve. |
+| **D** | Unknown | If A-C work, implications snowball beyond what we can model. |
+
+**Widgets are Phase A—the proof of concept.** The architecture is the product.
 
 ## Contents
 
@@ -62,22 +73,26 @@ Pitch Agent ingestion should:
 
 When updating these docs or answering questions:
 
-1. **Not a widget company.** Widgets are the wedge. The architecture is the product.
+1. **Widgets are Phase A.** The proof of concept. The architecture is the product.
 
-2. **AI ≠ copilots.** AI workforce that operates, not assists. This only works because the codebase is built for it.
+2. **Four phases:** A (widgets), B (extend outputs), C (connect outputs), D (unknown). Each builds on the last.
 
-3. **The core insight:** Everyone builds copilots because that's all legacy allows. We're building the codebase itself to be AI-operable.
+3. **AI ≠ copilots.** AI workforce that operates, not assists. This only works because the codebase is built for it.
 
-4. **Multiple redefinitions:** AI-managed systems, touchpoints, GTM, global, software development. They compound.
+4. **The core insight:** Everyone builds copilots because that's all legacy allows. We're building the codebase itself to be AI-operable.
 
-5. **100⁵ architecture:** Combinatorial, not additive. Every system multiplies across dimensions.
+5. **Multiple redefinitions:** AI-managed systems, touchpoints, GTM, global, software development. They compound.
 
-6. **Geography as non-concept:** Not "global from day one" as achievement. The absence of locale assumptions.
+6. **100⁵ architecture:** Combinatorial, not additive. Every system multiplies across dimensions. This is why Phase B is multiplicative.
 
-7. **Content as touchpoint:** The widget is the pixel. First-party by design.
+7. **Geography as non-concept:** Not "global from day one" as achievement. The absence of locale assumptions.
 
-8. **Honest uncertainty:** "If this works, the implications are unprecedented" is more compelling than false certainty.
+8. **Content as touchpoint:** The widget is the pixel. First-party by design.
 
-9. **The playbook is the moat:** No one else is doing this work. The patterns being invented are the defensibility.
+9. **Phase C competitive frame:** Keap, Thryve, SMB/midmarket SaaS—but AI-native from scratch.
 
-10. **Two different questions:** Others ask "How do we add AI to our product?" We ask "How do we build a product that AI can operate?"
+10. **Phase D is honestly unknown:** If A-C work, implications snowball. "We don't know where this goes" is the honest answer.
+
+11. **The playbook is the moat:** No one else is doing this work. The patterns being invented are the defensibility.
+
+12. **Two different questions:** Others ask "How do we add AI to our product?" We ask "How do we build a product that AI can operate?"

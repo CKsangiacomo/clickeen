@@ -307,21 +307,66 @@ Rule of thumb: when in doubt, choose the path that delivers value faster with le
 
 ---
 
-## Phase Boundaries
+## The Four Phases
 
-- **Phase 1 (Current):** Widget platform with viral distribution
-- **Phase 2 (Future):** Clickeen Emails
-- **Phase 3 (Future):** Clickeen Landing Pages
-- **Phase 4 (Future):** Clickeen Creatives (Ads/Social)
+Widgets are not the destination. They're Phase A—the proof that the architecture works.
 
-Scope: implement Phase 1 only unless `documentation/architecture/CONTEXT.md` explicitly expands scope.
+### Phase A: The Widget Company (Current)
 
-**Phase-1 Success Metrics:**
-- Free users with embedded widgets (target: significant traction)
-- Paying customers (target: ~1% conversion from free)
+**Purpose:** Prove the core architecture can be built this way.
+
+- AI-operable codebase
+- AI workforce (sales, support, marketing)
+- Geography as non-concept
+- Content as touchpoint
+- 100⁵ composable architecture
+
+**If it works:** Already profitable, high velocity. Could reach 1-3M ARR quickly with viral PLG mechanics.
+
+**Success metrics:**
+- Free users with embedded widgets
+- ~1% conversion to paid
 - Unique domains running widgets
-- <5 minutes from landing page to embedded widget
-- Embeds lean: preferred ≤80KB gzipped, never exceeding 200KB gzipped
+- <5 minutes from landing to embedded widget
+- Embeds ≤80KB gzipped
+
+### Phase B: Extend Outputs
+
+**Purpose:** Same architecture, more output formats.
+
+- Emails (composable blocks, same widgets)
+- Landing pages (composed of widgets)
+- Creatives (ads, social posts)
+
+**Why it works:** The 100⁵ architecture means adding an output format gives *every widget* that capability automatically. Not additive—multiplicative.
+
+### Phase C: Connect the Outputs
+
+**Purpose:** Make outputs work together. Light versions of:
+
+- Social media management
+- CRM
+- Marketing automation
+
+**Competitive frame:** Keap, Thryve, SMB/midmarket SaaS. But built AI-native from scratch, not legacy with AI bolted on.
+
+**Why it works:** If Phases A and B prove the AI-operable codebase works, Phase C is extending the same architecture to connections between outputs. The primitives are already composable.
+
+### Phase D: Unknown
+
+**Purpose:** We genuinely don't know.
+
+If Phases A-C work:
+- AI-operable codebase proven at scale
+- AI workforce running GTM
+- Global by default across all outputs
+- Composable primitives connecting into workflows
+
+The implications snowball beyond what we can model. This is the "if it works, we don't know where it goes" territory.
+
+---
+
+**Current scope:** Phase A only unless `documentation/architecture/CONTEXT.md` explicitly expands scope.
 
 ---
 

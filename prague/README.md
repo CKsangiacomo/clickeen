@@ -25,9 +25,9 @@ Local defaults (when running `scripts/dev-up.sh`):
 
 Cloudflare (dev):
 
-- `PUBLIC_TOKYO_URL=https://tokyo-dev.pages.dev`
-- `PUBLIC_BOB_URL=https://bob-dev.pages.dev`
-- `PUBLIC_VENICE_URL=<your venice dev deploy base URL>` (must serve `GET /e/:publicId`)
+- `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com`
+- `PUBLIC_BOB_URL=https://bob.dev.clickeen.com`
+- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /e/:publicId`)
 
 If you're not using `scripts/dev-up.sh`, create `prague/.env.local` with the values you want.
 

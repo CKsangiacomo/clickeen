@@ -6,6 +6,10 @@ Cloudflare Worker API service (dev).
 
 - `GET /api/healthz`
 - `GET /api/instances`
+- `GET /api/workspaces/:workspaceId/instances`
+- `POST /api/workspaces/:workspaceId/instances`
+- `GET /api/workspaces/:workspaceId/instance/:publicId`
+- `PUT /api/workspaces/:workspaceId/instance/:publicId`
 - `GET /api/instance/:publicId`
 - `PUT /api/instance/:publicId`
   - body supports: `{ config?: object, status?: 'published'|'unpublished' }`
