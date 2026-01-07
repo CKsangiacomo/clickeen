@@ -142,6 +142,18 @@ importers:
         specifier: ^4.54.0
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
 
+  pitch:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20251228.0
+        version: 4.20251228.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      wrangler:
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
+
   prague:
     dependencies:
       '@astrojs/cloudflare':
