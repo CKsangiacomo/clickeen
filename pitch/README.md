@@ -2,9 +2,44 @@
 
 Dedicated Cloudflare Worker that powers the **Investor Pitch Agent** (retrieval-first, citations).
 
-## Why this is separate from San Francisco
+## Auto-Deploy
 
-Pitch infra (Vectorize index + docs ingestion) must **never** block core AI deploys. Keeping Pitch as its own Worker makes deploy failure isolated.
+**Pushing to `main` automatically:**
+1. Ensures Vectorize index exists
+2. Deploys the Worker
+3. Syncs all pitch docs to Vectorize
+
+Triggers on changes to: `pitch/**`, `documentation/_pitch/**`, `documentation/strategy/*.md`
+
+### Required GitHub Secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Deploy worker |
+| `CLOUDFLARE_ACCOUNT_ID` | Deploy worker |
+| `PITCH_SERVICE_KEY` | Auth for doc sync |
+
+### Required Cloudflare Secrets (set once)
+
+```bash
+cd pitch
+echo "sk-..." | npx wrangler secret put OPENAI_API_KEY
+echo "your-service-key" | npx wrangler secret put PITCH_SERVICE_KEY
+```
+
+## Manual Deploy
+
+```bash
+# Full deploy + sync
+cd pitch
+PITCH_API_URL=https://pitch-dev.clickeen.workers.dev \
+PITCH_SERVICE_KEY=your-key \
+pnpm deploy:full
+
+# Or step by step
+pnpm deploy      # ensure vectorize + deploy worker
+pnpm sync-docs   # sync docs to vectorize
+```
 
 ## Routes
 
@@ -13,18 +48,12 @@ Pitch infra (Vectorize index + docs ingestion) must **never** block core AI depl
 - `GET /v1/pitch/answer?query=...&locale=en&top_k=...`
 - `POST /v1/pitch/upsert` (requires `X-API-Key: PITCH_SERVICE_KEY`)
 
-## Required env vars
-
-- `OPENAI_API_KEY` (embeddings + answer generation)
-- `PITCH_SERVICE_KEY` (for upsert)
-- Optional: `PITCH_MODEL` (default is set in `wrangler.toml`)
-
 ## Vectorize
 
 This Worker binds Vectorize index:
 - `clickeen-pitch-docs` (1536 dims, cosine)
 
-Deploy script creates it if missing.
+Created automatically on first deploy.
 
 ## Conversation Logging
 
@@ -54,4 +83,11 @@ No extra infrastructure needed.
 pnpm --filter @clickeen/pitch dev
 ```
 
+By default this runs on `http://localhost:8790`. To sync docs locally:
+
+```bash
+PITCH_API_URL=http://localhost:8790 \
+PITCH_SERVICE_KEY=your-key \
+pnpm --filter @clickeen/pitch sync-docs
+```
 

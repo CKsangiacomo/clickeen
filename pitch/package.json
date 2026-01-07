@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local --port 8790",
-    "deploy": "node scripts/ensure-vectorize.mjs && wrangler deploy"
+    "deploy": "node scripts/ensure-vectorize.mjs && wrangler deploy",
+    "sync-docs": "node scripts/sync-docs.mjs",
+    "deploy:full": "pnpm deploy && sleep 3 && pnpm sync-docs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",
