@@ -1,223 +1,229 @@
 {
   "widgetname": "faq",
   "defaults": {
-    "title": "Frequently Asked Questions",
-    "showTitle": true,
-    "displayCategoryTitles": true,
-    "layout": {
-      "type": "accordion",
-      "columns": {
-        "desktop": 2,
-        "mobile": 1
-      },
-      "gap": 16,
-      "itemPaddingLinked": true,
-      "itemPadding": 16,
-      "itemPaddingTop": 16,
-      "itemPaddingRight": 16,
-      "itemPaddingBottom": 16,
-      "itemPaddingLeft": 16
-    },
-    "appearance": {
-      "itemBackground": "var(--color-system-white)",
-      "iconStyle": "plus",
-      "linkStyle": "underline",
-      "linkUnderlineColor": "var(--color-system-blue)",
-      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkTextColor": "var(--color-system-blue)",
-      "itemCard": {
-        "radiusLinked": true,
-        "radius": "4xl",
-        "radiusTL": "4xl",
-        "radiusTR": "4xl",
-        "radiusBR": "4xl",
-        "radiusBL": "4xl",
-        "border": {
-          "enabled": true,
-          "width": 1,
-          "color": "var(--color-system-gray-5)"
-        },
-        "shadow": {
-          "enabled": true,
-          "inset": false,
-          "x": 0,
-          "y": 8,
-          "blur": 24,
-          "spread": 0,
-          "color": "#000000",
-          "alpha": 18
-        }
-      }
-    },
-    "behavior": {
-      "expandFirst": false,
-      "expandAll": false,
-      "multiOpen": false,
-      "displayVideos": true,
-      "displayImages": true,
-      "showBacklink": true
-    },
-    "seoGeo": {
-      "enabled": false
-    },
-    "seo": {
-      "enableSchema": true,
-      "canonicalUrl": "",
-      "businessType": "online-service"
-    },
     "geo": {
       "answerFormat": "direct-first",
       "enableDeepLinks": true
     },
+    "pod": {
+      "radius": "4xl",
+      "padding": {
+        "mobile": {
+          "all": 28,
+          "top": 28,
+          "left": 28,
+          "right": 28,
+          "bottom": 28,
+          "linked": true
+        },
+        "desktop": {
+          "all": 52,
+          "top": 52,
+          "left": 52,
+          "right": 52,
+          "bottom": 52,
+          "linked": true
+        }
+      },
+      "radiusBL": "4xl",
+      "radiusBR": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "widthMode": "full",
+      "background": "var(--color-system-white)",
+      "contentWidth": 960,
+      "radiusLinked": true
+    },
+    "seo": {
+      "businessType": "online-service",
+      "canonicalUrl": "",
+      "enableSchema": true
+    },
     "stage": {
-      "background": "var(--color-system-gray-5)",
-      "alignment": "center",
       "canvas": {
         "mode": "viewport",
         "width": 0,
         "height": 0
       },
       "padding": {
-        "desktop": {
-          "linked": true,
-          "all": 80,
-          "top": 80,
-          "right": 80,
-          "bottom": 80,
-          "left": 80
-        },
         "mobile": {
-          "linked": true,
           "all": 24,
           "top": 24,
+          "left": 24,
           "right": 24,
           "bottom": 24,
-          "left": 24
-        }
-      }
-    },
-    "pod": {
-      "background": "var(--color-system-white)",
-      "padding": {
+          "linked": true
+        },
         "desktop": {
-          "linked": true,
-          "all": 40,
-          "top": 40,
-          "right": 40,
-          "bottom": 40,
-          "left": 40
-        },
-        "mobile": {
-          "linked": true,
-          "all": 16,
-          "top": 16,
-          "right": 16,
-          "bottom": 16,
-          "left": 16
+          "all": 80,
+          "top": 80,
+          "left": 80,
+          "right": 80,
+          "bottom": 80,
+          "linked": true
         }
       },
-      "widthMode": "full",
-      "contentWidth": 960,
-      "radiusLinked": true,
-      "radius": "4xl",
-      "radiusTL": "4xl",
-      "radiusTR": "4xl",
-      "radiusBR": "4xl",
-      "radiusBL": "4xl"
+      "alignment": "center",
+      "background": "var(--color-system-gray-5)"
     },
-    "typography": {
-      "globalFamily": "Inter",
-      "roleScales": {
-        "title": {
-          "xs": "18px",
-          "s": "20px",
-          "m": "24px",
-          "l": "28px",
-          "xl": "32px"
-        },
-        "section": {
-          "xs": "12px",
-          "s": "13px",
-          "m": "14px",
-          "l": "16px",
-          "xl": "18px"
-        },
-        "question": {
-          "xs": "14px",
-          "s": "15px",
-          "m": "16px",
-          "l": "18px",
-          "xl": "20px"
-        },
-        "answer": {
-          "xs": "13px",
-          "s": "14px",
-          "m": "15px",
-          "l": "17px",
-          "xl": "19px"
-        }
+    "title": "Frequently Asked Questions",
+    "layout": {
+      "gap": 16,
+      "type": "accordion",
+      "columns": {
+        "mobile": 1,
+        "desktop": 2
       },
-      "roles": {
-        "title": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "24px",
-          "fontStyle": "normal",
-          "weight": "600",
-          "color": "var(--color-system-black)"
-        },
-        "section": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "14px",
-          "fontStyle": "normal",
-          "weight": "600",
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
-        },
-        "question": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "16px",
-          "fontStyle": "normal",
-          "weight": "600",
-          "color": "var(--color-system-black)"
-        },
-        "answer": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "15px",
-          "fontStyle": "normal",
-          "weight": "400",
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
-        }
-      }
+      "itemPadding": 20,
+      "itemPaddingTop": 20,
+      "itemPaddingLeft": 20,
+      "itemPaddingRight": 20,
+      "itemPaddingBottom": 20,
+      "itemPaddingLinked": true
+    },
+    "seoGeo": {
+      "enabled": false
+    },
+    "behavior": {
+      "expandAll": false,
+      "multiOpen": false,
+      "expandFirst": false,
+      "showBacklink": true,
+      "displayImages": true,
+      "displayVideos": true
     },
     "sections": [
       {
         "id": "s1",
-        "title": "All Questions",
         "faqs": [
           {
             "id": "q1",
-            "question": "What is Clickeen?",
             "answer": "Embeddable widgets with conversions built in.",
+            "question": "What is Clickeen?",
             "defaultOpen": false
           },
           {
             "id": "q2",
-            "question": "Is there a free plan?",
             "answer": "Yes, one active widget with core features.",
+            "question": "Is there a free plan?",
             "defaultOpen": false
           },
           {
             "id": "q3",
-            "question": "How do I install a widget?",
             "answer": "Copy the embed code and paste it before </body> on your site.",
+            "question": "How do I install a widget?",
+            "defaultOpen": false
+          },
+          {
+            "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+            "answer": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use.",
+            "question": "Why should I use Clickeen",
             "defaultOpen": false
           }
-        ]
+        ],
+        "title": "All Questions"
       }
-    ]
+    ],
+    "showTitle": true,
+    "appearance": {
+      "itemCard": {
+        "border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": true
+        },
+        "radius": "2xl",
+        "shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": true
+        },
+        "radiusBL": "2xl",
+        "radiusBR": "2xl",
+        "radiusTL": "2xl",
+        "radiusTR": "2xl",
+        "radiusLinked": true
+      },
+      "iconStyle": "plus",
+      "linkStyle": "underline",
+      "linkTextColor": "var(--color-system-blue)",
+      "itemBackground": "var(--color-system-white)",
+      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+      "linkUnderlineColor": "var(--color-system-blue)"
+    },
+    "typography": {
+      "roles": {
+        "title": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "24px",
+          "sizePreset": "m"
+        },
+        "answer": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": "15px",
+          "sizePreset": "m"
+        },
+        "section": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
+          "sizePreset": "m"
+        },
+        "question": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "16px",
+          "sizePreset": "m"
+        }
+      },
+      "roleScales": {
+        "title": {
+          "l": "28px",
+          "m": "24px",
+          "s": "20px",
+          "xl": "32px",
+          "xs": "18px"
+        },
+        "answer": {
+          "l": "17px",
+          "m": "15px",
+          "s": "14px",
+          "xl": "19px",
+          "xs": "13px"
+        },
+        "section": {
+          "l": "16px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "18px",
+          "xs": "12px"
+        },
+        "question": {
+          "l": "18px",
+          "m": "16px",
+          "s": "15px",
+          "xl": "20px",
+          "xs": "14px"
+        }
+      },
+      "globalFamily": "Inter"
+    },
+    "displayCategoryTitles": false
   },
   "html": [
     "<bob-panel id='content'>",

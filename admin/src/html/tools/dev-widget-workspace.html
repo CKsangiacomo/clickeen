@@ -1458,14 +1458,14 @@ superadminCreatePrague?.addEventListener('click', async () => {
         workspaceId: CLICKEEN_WORKSPACE_ID,
         publicId: currentCreative.publicId,
         config,
-        status: 'unpublished',
+        status: 'published',
       });
       await maybeAutoPromoteToCloud({
         workspaceId: CLICKEEN_WORKSPACE_ID,
         publicId: currentCreative.publicId,
         widgetType: currentCreative.widgetType,
         config,
-        status: 'unpublished',
+        status: 'published',
       });
       await refreshInstancesAndSelect(currentCreative.publicId);
       return;
@@ -1499,12 +1499,21 @@ superadminCreatePrague?.addEventListener('click', async () => {
     });
 
     try { await navigator.clipboard.writeText(publicId); } catch {}
+
+    // Venice is the public embed runtime; it only serves published instances.
+    // Ensure the newly created/overwritten website creative is published in the local sandbox.
+    await updateWorkspaceInstance({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      publicId,
+      config: baselineConfig,
+      status: 'published',
+    });
     await maybeAutoPromoteToCloud({
       workspaceId: CLICKEEN_WORKSPACE_ID,
       publicId,
       widgetType: selection.widgetType,
       config: baselineConfig,
-      status: 'unpublished',
+      status: 'published',
     });
     await refreshInstancesAndSelect(publicId);
   } catch (err) {

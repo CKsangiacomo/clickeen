@@ -130,7 +130,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
-    `/api/instance/${encodeURIComponent(publicId)}`,
+    `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
     {
       method: 'GET',
       headers: forwardHeaders,

@@ -771,15 +771,37 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
 }
 
 async function handleGetInstance(req: Request, env: Env, publicId: string) {
-  const auth = assertDevAuth(req, env);
-  if (!auth.ok) return auth.response;
+  // This is the legacy "publicId-only" instance endpoint.
+  // It is used by Venice (public embed runtime) and must be readable without dev auth,
+  // but it must never leak drafts.
+  //
+  // If a valid dev bearer token is provided, allow reading draft/unpublished for dev workflows.
+  // Otherwise, treat the request as public and only return published instances.
+  const expected = requireEnv(env, 'PARIS_DEV_JWT');
+  const token = asBearerToken(req.headers.get('Authorization'));
+  const isDev = Boolean(token && token === expected);
 
   const instance = await loadInstanceByPublicId(env, publicId);
   if (!instance) return json({ error: 'NOT_FOUND' }, { status: 404 });
 
+  if (!isDev && instance.status !== 'published') {
+    // Treat unpublished as not-found for public surfaces (Venice, marketing pages, etc).
+    return json({ error: 'NOT_FOUND' }, { status: 404 });
+  }
+
   const widgetId = instance.widget_id;
   const widget = widgetId ? await loadWidget(env, widgetId) : null;
   if (!widget) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
+
+  if (!isDev) {
+    return json({
+      publicId: instance.public_id,
+      status: instance.status,
+      widgetType: widget.type ?? null,
+      config: instance.config,
+      updatedAt: instance.updated_at ?? null,
+    });
+  }
 
   return json({
     publicId: instance.public_id,
