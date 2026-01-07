@@ -19,8 +19,31 @@ What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
 - In **DevStudio Local only**, shows superadmin actions (update defaults, create template instance, create **website creative**).
+- Optional: **auto-promote** the resulting instance config to **cloud-dev Paris** (so `prague-dev` sees the change).
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
+
+### Auto-promote to cloud-dev (portable-only)
+
+DevStudio Local can optionally promote instance changes to cloud-dev after a superadmin action completes.
+
+Rules (executed):
+- Opt-in only (default OFF); enabling requires explicit confirmation.
+- Promotion refuses if config contains any `data:` / `blob:` URLs.
+- Local Tokyo asset URLs (`http://localhost:4000/workspace-assets/*` and `http://localhost:4000/widgets/*`) can be promoted by uploading bytes to cloud Tokyo and rewriting URLs (requires local-only secrets; never in browser).
+- Promotion upserts the instance row directly into cloud Paris (create-or-update), rather than calling the local-only website-creative ensure endpoint.
+- Promotion exists to keep `prague-dev` consistent while keeping secrets out of the browser; refusal prevents pushing broken configs that would not load outside your machine.
+
+Implementation:
+- UI + client call site: `admin/src/html/tools/dev-widget-workspace.html`
+- Local server middleware: `admin/vite.config.ts` (`POST /api/promote-instance`)
+
+Required local env vars (DevStudio Local only):
+- `CK_SUPERADMIN_KEY` — required by `POST /api/promote-instance` as `x-ck-superadmin-key` (prevents drive-by requests to localhost)
+- `CK_CLOUD_PARIS_DEV_JWT` (preferred) or `PARIS_DEV_JWT` (fallback) — Bearer token for cloud Paris dev-auth
+- `CK_CLOUD_PARIS_BASE_URL` (optional) — defaults to `https://paris.dev.clickeen.com`
+- `CK_CLOUD_TOKYO_DEV_JWT` — Bearer token for cloud Tokyo upload (only needed when promoting instances that reference local Tokyo assets)
+- `CK_CLOUD_TOKYO_BASE_URL` (optional) — defaults to `https://tokyo.dev.clickeen.com`
 
 ### Website creatives (Prague CMS visuals)
 
@@ -30,7 +53,7 @@ DevStudio Local includes a superadmin action: **Create/update website creative**
   - `tokyo/widgets/{widgetType}/pages/{overview|templates|examples|features}.json`
   - DevStudio loads the selected `{page}.json` and lists only blocks where `visual: true`
   - Slot key is `block.id` (can contain dots; e.g. `feature.left.50`)
-- **Deterministic identity (v1)**:
+- **Deterministic identity**:
   - `creativeKey = {widgetType}.{page}.{block.id}` (locale-free)
   - `publicId = wgt_web_{creativeKey}.{locale}` (locale-specific; DevStudio defaults `locale=en`)
 - **How DevStudio executes it**

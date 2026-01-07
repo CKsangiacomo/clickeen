@@ -286,6 +286,14 @@
   <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
   <div id="superadmin-actions">
     <span class="dev-widget-workspace__badge">Superadmin</span>
+    <label class="body-s" style="display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: var(--control-radius-lg); border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%); background: var(--color-system-white); box-shadow: var(--shadow-floating);">
+      <input id="auto-promote-cloud" type="checkbox" />
+      <span>Auto-promote to cloud-dev</span>
+      <span id="auto-promote-status" class="caption" style="margin-left: 6px; color: color-mix(in oklab, var(--color-text), transparent 45%);"></span>
+    </label>
+    <button type="button" class="diet-btn-txt" id="auto-promote-retry" data-size="md" data-variant="secondary" disabled>
+      <span class="diet-btn-txt__label">Retry promote</span>
+    </button>
     <button type="button" class="diet-btn-txt" id="superadmin-update-defaults" data-size="md" data-variant="secondary">
       <span class="diet-btn-txt__label">Update default config</span>
     </button>
@@ -533,6 +541,10 @@ const superadminActions = document.getElementById('superadmin-actions');
 const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
 const superadminCreateTemplate = document.getElementById('superadmin-create-template');
 const superadminCreatePrague = document.getElementById('superadmin-create-prague');
+const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
+const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
+const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
+let lastPromotePayload = null;
 
 const websiteCreativeModal = document.getElementById('website-creative-modal');
 const websiteCreativeWidgetEl = document.getElementById('website-creative-widget');
@@ -546,8 +558,70 @@ const websiteCreativeCancelEl = document.getElementById('website-creative-cancel
 const websiteCreativeSubmitEl = document.getElementById('website-creative-submit');
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
+const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
 
 iframe.src = `${BOB_ORIGIN}/bob?subject=devstudio`;
+
+function setAutoPromoteStatus(text, kind = 'idle') {
+  if (!(autoPromoteCloudStatus instanceof HTMLElement)) return;
+  autoPromoteCloudStatus.textContent = text || '';
+  if (kind === 'ok') autoPromoteCloudStatus.style.color = 'var(--color-system-green)';
+  else if (kind === 'error') autoPromoteCloudStatus.style.color = 'var(--color-system-red)';
+  else autoPromoteCloudStatus.style.color = 'color-mix(in oklab, var(--color-text), transparent 45%)';
+}
+
+function isAutoPromoteEnabled() {
+  try {
+    return localStorage.getItem(AUTO_PROMOTE_CLOUD_STORAGE) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setAutoPromoteEnabled(next) {
+  try {
+    localStorage.setItem(AUTO_PROMOTE_CLOUD_STORAGE, next ? '1' : '0');
+  } catch {}
+}
+
+async function maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status }) {
+  if (!isLocalDevStudio) return { ok: false, skipped: true };
+  if (!(autoPromoteCloudToggle instanceof HTMLInputElement) || autoPromoteCloudToggle.checked !== true) {
+    return { ok: false, skipped: true };
+  }
+
+  setAutoPromoteStatus('Promoting…');
+  try {
+    const key = requireSuperadminKey();
+    lastPromotePayload = { workspaceId, publicId, widgetType, config, status };
+    if (autoPromoteRetryBtn instanceof HTMLButtonElement) autoPromoteRetryBtn.disabled = false;
+    const res = await fetch('/api/promote-instance?_t=' + Date.now(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-ck-superadmin-key': key },
+      body: JSON.stringify({ workspaceId, publicId, widgetType, config, status }),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const err = json?.error;
+      const reasonKey = err?.reasonKey ? String(err.reasonKey) : `HTTP ${res.status}`;
+      const detail = err?.detail ? String(err.detail) : '';
+      const paths = Array.isArray(err?.paths) ? err.paths.map(String) : [];
+      const extra = paths.length ? `\n\nPaths:\n- ${paths.join('\n- ')}` : '';
+      throw new Error(`${reasonKey}${detail ? `: ${detail}` : ''}${extra}`);
+    }
+
+    const target = json?.target || 'cloud-dev';
+    const action = json?.action ? String(json.action) : 'ok';
+    setAutoPromoteStatus(`${target}: ${action}`, 'ok');
+    return { ok: true, action, target };
+  } catch (err) {
+    setAutoPromoteStatus('Promote failed', 'error');
+    const details = err instanceof Error ? err.message : String(err);
+    const hint = lastPromotePayload && lastPromotePayload.publicId ? `\n\npublicId: ${lastPromotePayload.publicId}` : '';
+    alert(`${details}${hint}`);
+    return { ok: false, error: err };
+  }
+}
 
 let isPosting = false;
 window.addEventListener('message', (event) => {
@@ -1024,7 +1098,7 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
     config,
     status: 'unpublished',
   });
-  return publicId;
+  return { publicId, config };
 }
 
 async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
@@ -1280,11 +1354,60 @@ if (isLocalDevStudio && superadminActions) {
   superadminActions.style.display = 'inline-flex';
 }
 
+if (isLocalDevStudio && autoPromoteCloudToggle instanceof HTMLInputElement) {
+  autoPromoteCloudToggle.checked = isAutoPromoteEnabled();
+  const localLabel = `local (${BOB_ORIGIN}) → cloud (paris.dev.clickeen.com)`;
+  setAutoPromoteStatus(isAutoPromoteEnabled() ? localLabel : 'local only');
+  autoPromoteCloudToggle.addEventListener('change', () => {
+    const next = autoPromoteCloudToggle.checked === true;
+    if (next) {
+      const ok = window.confirm(
+        'Enable auto-promote to cloud-dev?\n\nThis writes to the shared cloud-dev database (used by prague-dev).'
+      );
+      if (!ok) {
+        autoPromoteCloudToggle.checked = false;
+        setAutoPromoteEnabled(false);
+        return;
+      }
+      setAutoPromoteEnabled(true);
+      setAutoPromoteStatus(localLabel);
+      return;
+    }
+    setAutoPromoteEnabled(false);
+    setAutoPromoteStatus('local only');
+  });
+} else {
+  setAutoPromoteStatus('');
+}
+
+// Dev convenience: allow retrying the last promotion without re-running the entire superadmin action.
+try {
+  window.__ckRetryPromote = async () => {
+    if (!lastPromotePayload) throw new Error('No prior promotion payload');
+    return maybeAutoPromoteToCloud(lastPromotePayload);
+  };
+} catch {}
+
+if (isLocalDevStudio && autoPromoteRetryBtn instanceof HTMLButtonElement) {
+  autoPromoteRetryBtn.addEventListener('click', () => {
+    window.__ckRetryPromote?.().catch((err) => {
+      alert(err instanceof Error ? err.message : String(err));
+    });
+  });
+}
+
 superadminUpdateDefaults?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
-    const publicId = await updateDefaultsMainInstanceFromEditor(widgetSlug);
-    await refreshInstancesAndSelect(publicId);
+    const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
+    await maybeAutoPromoteToCloud({
+      workspaceId: DEV_WORKSPACE_ID,
+      publicId: result.publicId,
+      widgetType: widgetSlug,
+      config: result.config,
+      status: 'unpublished',
+    });
+    await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }
@@ -1297,6 +1420,13 @@ superadminCreateTemplate?.addEventListener('click', async () => {
     const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
     const config = await fetchInstanceConfig(currentPublicId);
     const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {} });
+    await maybeAutoPromoteToCloud({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      publicId,
+      widgetType: widgetSlug,
+      config: config ?? {},
+      status: 'unpublished',
+    });
     await refreshInstancesAndSelect(publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
@@ -1327,6 +1457,13 @@ superadminCreatePrague?.addEventListener('click', async () => {
       await updateWorkspaceInstance({
         workspaceId: CLICKEEN_WORKSPACE_ID,
         publicId: currentCreative.publicId,
+        config,
+        status: 'unpublished',
+      });
+      await maybeAutoPromoteToCloud({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        publicId: currentCreative.publicId,
+        widgetType: currentCreative.widgetType,
         config,
         status: 'unpublished',
       });
@@ -1362,6 +1499,13 @@ superadminCreatePrague?.addEventListener('click', async () => {
     });
 
     try { await navigator.clipboard.writeText(publicId); } catch {}
+    await maybeAutoPromoteToCloud({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      publicId,
+      widgetType: selection.widgetType,
+      config: baselineConfig,
+      status: 'unpublished',
+    });
     await refreshInstancesAndSelect(publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));

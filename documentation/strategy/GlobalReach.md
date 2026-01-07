@@ -5,25 +5,56 @@
 
 ---
 
-## Overview
+## Geography Is a Non-Concept
 
-Clickeen launches **globally from day one**. This isn't a stretch goal—it's the default state of the architecture.
+Most software is built with geography baked into its DNA:
+- Hardcoded date formats (US-first)
+- Language assumed, then translated
+- "US servers" vs "EU servers"
+- `if (locale === 'de') { ... }` sprinkled through the codebase
+- "Going global" means retrofitting i18n as a project
 
-Traditional SaaS companies treat international expansion as a project:
-- "Let's localize for Germany" (6-month initiative)
-- "Let's enter Japan" (hire local team, build local infrastructure)
-- "Let's support Spanish" (translation agency, review cycles)
+**Clickeen was designed without geography.**
 
-**Clickeen treats global as a property of the system:**
-- Edge-first infrastructure = global by default
-- AI agents = localization is instant
-- Zero egress CDN = same cost for 1 country or 50
+```
+Request comes in:
+├── locale = "ja"
+├── widgetType = "faq"
+├── userId = "abc123"
+
+System doesn't think: "Oh, this is the Japanese version"
+System thinks: "locale is ja. Render accordingly."
+
+There is no "English version" that other versions are derived from.
+There is no "primary market."
+There is no retrofitting.
+There is no geography.
+```
+
+**This isn't "launching globally from day one." It's the absence of locale assumptions in the architecture.**
+
+Traditional companies expand into markets. Clickeen exists in all markets by default—because limiting to one market would require *extra code*.
 
 ---
 
-## Why Global is Free (Infrastructure)
+## What This Requires (The Hard Part)
 
-### Cloudflare Architecture
+| Requirement | What it means | Why it's hard |
+|-------------|---------------|---------------|
+| **Locale as runtime parameter** | Like `userId`, not a build-time decision | No shortcuts, no "default to English" |
+| **No hardcoded formats** | Dates, numbers, currencies derived from locale | Every format must be parameterized |
+| **AI agents operate natively** | Not "translate from English"—operate in locale | Agents must understand cultural nuance |
+| **Typography for all scripts** | CJK, RTL, Cyrillic from day 1 | Font fallback chains, layout adaptation |
+| **Multi-currency payments** | Stripe configured for all markets | Currency + payment method per region |
+| **Edge-first infrastructure** | Cloudflare Workers at 300+ PoPs | No "US servers" concept |
+
+**Every shortcut that assumes geography breaks the model.**
+
+---
+
+## Why the Architecture Makes This Free
+
+### Cloudflare Edge
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -33,76 +64,67 @@ Traditional SaaS companies treat international expansion as a project:
 │    Zero egress on R2                                                   │
 │    Workers run at edge automatically                                   │
 │                                                                         │
-│    Cost for US-only:        $1,260/month                               │
-│    Cost for global (50 countries): $1,260/month                        │
-│                                                                         │
-│    SAME COST. Global is the default.                                   │
+│    Limiting to US-only would require extra geo-blocking code.          │
+│    Global is the default state.                                        │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Limiting to US-only would require extra geo-blocking code.**
-
 The architecture doesn't distinguish between "US traffic" and "global traffic." Every request goes to the nearest edge location automatically.
 
-### Cost at 1M Users (Global)
+### AI Localization
 
-| Component | Monthly Cost |
-|-----------|--------------|
-| Cloudflare Workers (1.2B requests) | $585 |
-| Cloudflare R2 (5TB egress) | **$0** |
-| Supabase | $150 |
-| Cloudflare Queues + Cron (jobs) | $150 |
-| AI APIs (San Francisco) | $250 |
-| Email | $100 |
-| **Total** | **~$1,260/month** |
+```
+Traditional localization:
+├── Identify target market                     (weeks)
+├── Hire translators/agency                    (weeks)
+├── Extract strings, send for translation      (days)
+├── Receive translations                       (weeks)
+├── Review with native speakers                (days)
+├── Integrate translations                     (days)
+├── QA in context                              (days)
+├── Deploy                                     (days)
+├── Maintain multiple versions                 (ongoing)
+│
+└── Timeline: 6-12 weeks per language. Cost: $10-50k per language.
 
-**Zero additional cost for global reach.** Cloudflare doesn't charge per-region.
+Clickeen model:
+├── San Francisco Translator agent processes (seconds)
+├── Native speaker review (one-time, optional)
+│
+└── Timeline: Hours to days. Cost: negligible.
+```
 
----
-
-## Market Prioritization
-
-### Gold Markets (Priority)
-
-| Market | Languages | Notes |
-|--------|-----------|-------|
-| 🇺🇸 USA | English | Default, largest |
-| 🇨🇦 Canada | English, French | Bilingual, high-value |
-| 🇦🇺 Australia | English | No extra work |
-| 🇬🇧 UK | English | No extra work |
-| 🇪🇺 EU | German, French, Italian, Dutch, Spanish | High purchasing power |
-| 🇯🇵 Japan | Japanese | High-value, quality-conscious |
-| 🇧🇷 Brazil | Portuguese | Huge SMB market |
-| 🇦🇷 Argentina | Spanish | Strong tech culture, price in USD (ARS volatile) |
-| 🇲🇽 Latin America | Spanish | Mexico, Colombia, Chile, Peru |
-| 🇮🇳 India | English, Hindi | 1.4B population, English-first |
-| 🇹🇼 Taiwan | Traditional Chinese | High-value, no GFW issues |
-
-### Africa (Emerging Gold)
-
-| Market | Languages | Notes |
-|--------|-----------|-------|
-| 🇳🇬 Nigeria | English | 220M pop, booming tech/SMB scene |
-| 🇿🇦 South Africa | English | Established economy, gateway to Africa |
-| 🇰🇪 Kenya | English | Tech hub, M-Pesa, innovation culture |
-| 🇬🇭 Ghana | English | Growing tech ecosystem |
-| 🇸🇳 Francophone West Africa | French | Senegal, Ivory Coast, Cameroon |
-| 🇲🇦 Morocco | French | Bridge to Africa + EU ties |
-
-**Africa is linguistically "free"** — English + French already cover major markets. Main work: payment methods (M-Pesa, Flutterwave, local options).
-
-### On Hold (Geopolitical)
-
-| Market | Reason |
-|--------|--------|
-| 🇨🇳 China | Great Firewall, regulations, geopolitical risk |
-| 🇷🇺 Russia | Sanctions, payment restrictions, geopolitical risk |
+**If the AI workforce model works, localization becomes a property of the system—not a project.**
 
 ---
 
-## Language Prioritization
+## The Agent Roster for Globalization
 
-### Phase 1 (GA): 5 Languages = 2B+ People
+| Agent | Responsibility |
+|-------|----------------|
+| `UI-Translator` | Product UI strings with terminology consistency |
+| `Marketing-Copywriter` | Culturally-adapted copy (not translations) |
+| `Content-Writer` | SEO content using local keywords, not translated keywords |
+| `Support-Agent` | Multi-language support conversations |
+
+**What each agent does differently than translation:**
+
+- **UI-Translator:** Not just translation—**localization** with UI context. Handles pluralization rules per language. Adapts date/time/number formats.
+
+- **Marketing-Copywriter:** Creates culturally-adapted copy. Understands local market pain points. Uses local idioms. Different tone per culture (direct for US, polite for Japan, etc.).
+
+- **Content-Writer:** Creates SEO content for each market. Uses local keywords (not translated keywords). Writes about locally-relevant topics.
+
+---
+
+## Market & Language Prioritization
+
+Even with geography as a non-concept, prioritization still matters for:
+- Payment method integration
+- Quality review of AI output
+- SEO and marketing focus
+
+### Phase 1: 5 Languages = 2B+ People
 
 | Language | Markets Covered |
 |----------|-----------------|
@@ -111,8 +133,6 @@ The architecture doesn't distinguish between "US traffic" and "global traffic." 
 | Portuguese | Brazil |
 | German | Germany, Austria, Switzerland |
 | French | France, Canada, Belgium, Francophone Africa, Morocco |
-
-**5 languages cover ~2 billion people and most high-value markets.**
 
 ### Phase 2: Extended Reach
 
@@ -138,81 +158,12 @@ The architecture doesn't distinguish between "US traffic" and "global traffic." 
 | Turkish | Turkey (emerging market) |
 | Arabic | Middle East (requires RTL support) |
 
----
+### On Hold (Geopolitical)
 
-## AI-Powered Localization
-
-### The Death of Traditional Localization
-
-```
-Traditional localization process:
-┌────────────────────────────────────────────────────────────────┐
-│  1. Identify target market                     (weeks)        │
-│  2. Hire translators/agency                    (weeks)        │
-│  3. Extract strings, send for translation      (days)         │
-│  4. Receive translations                       (weeks)        │
-│  5. Review with native speakers                (days)         │
-│  6. Integrate translations                     (days)         │
-│  7. QA in context                              (days)         │
-│  8. Deploy                                     (days)         │
-│  9. Maintain multiple versions                 (ongoing)      │
-│                                                                │
-│  Timeline: 6-12 weeks per language                            │
-│  Cost: $10-50k per language                                   │
-└────────────────────────────────────────────────────────────────┘
-
-Clickeen localization:
-┌────────────────────────────────────────────────────────────────┐
-│  1. San Francisco Translator agent processes strings (seconds)   │
-│  2. Native speaker review (one-time, optional)   (days)       │
-│  3. Done                                                       │
-│                                                                │
-│  Timeline: Hours to days                                       │
-│  Cost: ~$2 per language (AI tokens)                           │
-└────────────────────────────────────────────────────────────────┘
-```
-
-### The Agent Roster for Globalization
-
-| Agent | LLM | Responsibility | Cost Profile |
-|-------|-----|----------------|--------------|
-| `UI-Translator` | Claude Sonnet | Product UI strings | Low volume, high quality |
-| `Marketing-Copywriter` | GPT-4o | Funnels, PLG copy | Medium volume |
-| `Content-Writer` | DeepSeek + Claude | Blog, SEO content | High volume, low cost |
-| `Content-Manager` | Claude Haiku | Orchestration, scheduling | Low cost |
-| `Support-Agent` | Claude Haiku | Multi-language support | Medium volume |
-
-### What Each Agent Does
-
-**UI-Translator:**
-- Not just translation—**localization** with UI context
-- Maintains terminology consistency across app
-- Handles pluralization rules per language
-- Adapts date/time/number formats
-
-**Marketing-Copywriter:**
-- Creates culturally-adapted copy (not translations)
-- Understands local market pain points
-- Uses local idioms and references
-- Different tone per culture (direct for US, polite for Japan, etc.)
-
-**Content-Writer:**
-- Creates SEO content for each market
-- Uses local keywords (not translated keywords)
-- Writes about locally-relevant topics
-- Produces blog posts, help articles, tutorials
-
-### Cost at Scale
-
-| Content Type | Volume/month | Cost/unit | Monthly Cost |
-|--------------|--------------|-----------|--------------|
-| Blog posts (8 langs × 4) | 32 | $0.10 | $3.20 |
-| Help articles (updates) | 50 | $0.05 | $2.50 |
-| Marketing copy (updates) | 20 | $0.20 | $4.00 |
-| UI string updates | 100 | $0.02 | $2.00 |
-| **Total** | | | **~$12/month** |
-
-**Content localization at scale is essentially free with AI.**
+| Market | Reason |
+|--------|--------|
+| 🇨🇳 China | Great Firewall, regulations, geopolitical risk |
+| 🇷🇺 Russia | Sanctions, payment restrictions, geopolitical risk |
 
 ---
 
@@ -220,7 +171,7 @@ Clickeen localization:
 
 ### The Challenge
 
-Google Fonts we curated (17 fonts) are Latin-script focused. Asian, Cyrillic, and Arabic scripts need different fonts.
+Curated Google Fonts (17 fonts) are Latin-script focused. Asian, Cyrillic, and Arabic scripts need different fonts.
 
 ### Font Strategy
 
@@ -363,32 +314,6 @@ EU businesses require VAT-compliant invoices:
 
 ---
 
-## The Economics Summary
-
-### Traditional Global Expansion
-
-| Item | Cost |
-|------|------|
-| Localization agency (per language) | $10-50k |
-| Local marketing team | $200k+/year |
-| Regional infrastructure | $50k+/year |
-| Local support team | $100k+/year |
-| **Total for 8 markets** | **$2-5M/year** |
-
-### Clickeen Global Expansion
-
-| Item | Cost |
-|------|------|
-| AI localization (all languages) | ~$150/year |
-| Infrastructure (Cloudflare global) | $0 additional |
-| AI marketing agents | Included in San Francisco |
-| AI support agents | Included in San Francisco |
-| **Total for 8+ markets** | **~$150/year** |
-
-**Difference: ~10,000x cheaper.**
-
----
-
 ## The Vision: Localization as Invisible Property
 
 In the Clickeen model, "localization" isn't a project. It's not even a feature. It's an **invisible property of the system.**
@@ -423,7 +348,7 @@ The system doesn't launch in markets. The system is everywhere, always, adapting
 | AI localization agents | ✅ San Francisco | ❌ Human translators |
 | Zero-egress CDN | ✅ R2 | ❌ Paying per-GB globally |
 | Global payments | ✅ Stripe everywhere | ⚠️ Often regional |
-| Content agents | ✅ Per-market SEO | ❌ Hire local teams |
+| No locale assumptions | ✅ Designed without geography | ❌ Would require rewrite |
 
 **Traditional companies expand into markets. Clickeen exists in all markets by default.**
 

@@ -179,6 +179,15 @@ importers:
         specifier: ^4.54.0
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
 
+  tokyo-worker:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20251228.0
+        version: 4.20251228.0
+      wrangler:
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
+
   tooling/ck-policy: {}
 
   tooling/sf-symbols:

@@ -6,6 +6,7 @@ packages:
   - pitch
   - prague
   - sanfrancisco
+  - tokyo-worker
   - venice
   - tooling/ck-policy
   - tooling/sf-symbols

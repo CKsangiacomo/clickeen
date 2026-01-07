@@ -141,6 +141,420 @@ export default defineConfig({
       },
     },
     {
+      name: 'devstudio-promote-instance',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+          if (pathname !== '/api/promote-instance' || req.method !== 'POST') return next();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+
+          const host = String(req.headers.host || '').trim().toLowerCase();
+          const allowHosts = new Set(['localhost:5173', '127.0.0.1:5173']);
+          if (!allowHosts.has(host)) {
+            res.statusCode = 403;
+            res.end(JSON.stringify({ error: { kind: 'DENY', reasonKey: 'devstudio.errors.promote.localOnly' } }));
+            return;
+          }
+
+          const expectedSuperadminKey = (process.env.CK_SUPERADMIN_KEY || '').trim();
+          if (!expectedSuperadminKey) {
+            res.statusCode = 500;
+            res.end(
+              JSON.stringify({
+                error: {
+                  kind: 'INTERNAL',
+                  reasonKey: 'devstudio.errors.promote.missingSuperadminKey',
+                  detail: 'Missing CK_SUPERADMIN_KEY in DevStudio Local env.',
+                },
+              }),
+            );
+            return;
+          }
+          const providedKey = String(req.headers['x-ck-superadmin-key'] || '').trim();
+          if (!providedKey || providedKey !== expectedSuperadminKey) {
+            res.statusCode = 403;
+            res.end(JSON.stringify({ error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } }));
+            return;
+          }
+
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk.toString();
+          });
+          req.on('end', async () => {
+            let payload: any;
+            try {
+              payload = body ? JSON.parse(body) : null;
+            } catch {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
+              return;
+            }
+
+            const workspaceId = String(payload?.workspaceId || '').trim();
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workspaceId)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }));
+              return;
+            }
+
+            const publicId = String(payload?.publicId || '').trim();
+            if (!publicId || publicId.length > 200 || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(publicId)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
+              return;
+            }
+
+            const widgetType = String(payload?.widgetType || '').trim().toLowerCase();
+            if (!widgetType || !/^[a-z0-9][a-z0-9_-]*$/.test(widgetType)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }));
+              return;
+            }
+
+            const status = String(payload?.status || 'unpublished').trim();
+            if (status !== 'unpublished' && status !== 'published') {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' } }));
+              return;
+            }
+
+            const config = payload?.config;
+            if (!config || typeof config !== 'object' || Array.isArray(config)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.config.invalid' } }));
+              return;
+            }
+
+            const containsNonPersistableUrl = (value: string): boolean => {
+              return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
+            };
+            const containsLocalOnlyUrl = (value: string): boolean => {
+              return /(?:^|[\s("'=,])https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(?::\d+)?\//i.test(value);
+            };
+
+            const issues: Array<{ path: string; message: string }> = [];
+            const localUrlRefs: Array<{ path: string; raw: string; primaryUrl: string }> = [];
+
+            const extractPrimaryUrl = (raw: string): string | null => {
+              const v = String(raw || '').trim();
+              if (!v) return null;
+              if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
+              const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+              if (m && m[2]) return m[2];
+              return null;
+            };
+
+            const replacePrimaryUrl = (raw: string, nextUrl: string): string => {
+              const v = String(raw || '');
+              const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+              if (m && m[2]) return v.replace(m[2], nextUrl);
+              return nextUrl;
+            };
+
+            const isLocalPromotableUrl = (candidate: string): boolean => {
+              try {
+                const u = new URL(candidate);
+                const host = u.host.toLowerCase();
+                if (host !== 'localhost:4000' && host !== '127.0.0.1:4000') return false;
+                return u.pathname.startsWith('/workspace-assets/') || u.pathname.startsWith('/widgets/');
+              } catch {
+                return false;
+              }
+            };
+
+            const filenameFromUrl = (candidate: string): string => {
+              try {
+                const u = new URL(candidate);
+                const parts = u.pathname.split('/').filter(Boolean);
+                const last = parts[parts.length - 1] || '';
+                return last && last.includes('.') ? last : 'upload.bin';
+              } catch {
+                return 'upload.bin';
+              }
+            };
+
+            const readJson = async (response: globalThis.Response) => {
+              const text = await response.text().catch(() => '');
+              try {
+                return text ? JSON.parse(text) : null;
+              } catch {
+                return null;
+              }
+            };
+
+            const visit = (node: any, nodePath: string) => {
+              if (typeof node === 'string') {
+                if (containsNonPersistableUrl(node)) {
+                  issues.push({
+                    path: nodePath,
+                    message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+                  });
+                  return;
+                }
+                if (containsLocalOnlyUrl(node)) {
+                  const primaryUrl = extractPrimaryUrl(node);
+                  if (primaryUrl && isLocalPromotableUrl(primaryUrl)) {
+                    localUrlRefs.push({ path: nodePath, raw: node, primaryUrl });
+                    return;
+                  }
+                  issues.push({
+                    path: nodePath,
+                    message: 'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/* or /widgets/*).',
+                  });
+                }
+                return;
+              }
+              if (!node || typeof node !== 'object') return;
+              if (Array.isArray(node)) {
+                for (let i = 0; i < node.length; i += 1) visit(node[i], `${nodePath}[${i}]`);
+                return;
+              }
+              for (const [key, value] of Object.entries(node)) {
+                const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
+                  ? `${nodePath}.${key}`
+                  : `${nodePath}[${JSON.stringify(key)}]`;
+                visit(value, nextPath);
+              }
+            };
+            visit(config, 'config');
+
+            if (issues.length) {
+              res.statusCode = 422;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'devstudio.errors.promote.nonPortableUrl',
+                    detail: issues[0]?.message,
+                    paths: issues.map((i) => i.path),
+                  },
+                }),
+              );
+              return;
+            }
+
+            // If the config references local Tokyo assets, upload them to cloud Tokyo and rewrite URLs.
+            let configToPromote: Record<string, unknown> = config;
+            if (localUrlRefs.length) {
+              const cloudTokyoBase = (process.env.CK_CLOUD_TOKYO_BASE_URL || 'https://tokyo.dev.clickeen.com').trim().replace(/\/+$/, '');
+              const tokyoJwt = (process.env.CK_CLOUD_TOKYO_DEV_JWT || '').trim();
+              if (!tokyoJwt) {
+                res.statusCode = 500;
+                res.end(
+                  JSON.stringify({
+                    error: {
+                      kind: 'INTERNAL',
+                      reasonKey: 'devstudio.errors.promote.missingCloudTokyoAuth',
+                      detail: 'Missing CK_CLOUD_TOKYO_DEV_JWT in DevStudio Local env (required to promote instances that reference local assets).',
+                      paths: localUrlRefs.map((r) => r.path),
+                    },
+                  }),
+                );
+                return;
+              }
+
+              // Config is JSON-only; clone before rewriting.
+              configToPromote = JSON.parse(JSON.stringify(config));
+
+              const cache = new Map<string, string>();
+
+              const uploadToCloudTokyo = async (sourceUrl: string): Promise<string> => {
+                if (cache.has(sourceUrl)) return cache.get(sourceUrl)!;
+                const localRes = await fetch(sourceUrl);
+                if (!localRes.ok) {
+                  throw new Error(`Failed to fetch local asset (HTTP ${localRes.status}): ${sourceUrl}`);
+                }
+                const contentType = (localRes.headers.get('content-type') || '').trim() || 'application/octet-stream';
+                const bytes = await localRes.arrayBuffer();
+                const uploadRes = await fetch(`${cloudTokyoBase}/workspace-assets/upload?_t=${Date.now()}`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${tokyoJwt}`,
+                    'content-type': contentType,
+                    'x-workspace-id': workspaceId,
+                    'x-filename': filenameFromUrl(sourceUrl),
+                    'x-variant': 'original',
+                  },
+                  body: bytes,
+                });
+                if (!uploadRes.ok) {
+                  const text = await uploadRes.text().catch(() => '');
+                  throw new Error(text || `Cloud Tokyo upload failed (HTTP ${uploadRes.status})`);
+                }
+                const json = await readJson(uploadRes);
+                const url = typeof json?.url === 'string' ? json.url.trim() : '';
+                if (!url) throw new Error('Cloud Tokyo upload response missing url');
+                cache.set(sourceUrl, url);
+                return url;
+              };
+
+              const rewrite = async (node: any): Promise<void> => {
+                if (typeof node === 'string') {
+                  const primaryUrl = extractPrimaryUrl(node);
+                  if (!primaryUrl || !isLocalPromotableUrl(primaryUrl)) return;
+                  const uploadedUrl = await uploadToCloudTokyo(primaryUrl);
+                  return uploadedUrl as any;
+                }
+                if (!node || typeof node !== 'object') return;
+                if (Array.isArray(node)) {
+                  for (let i = 0; i < node.length; i += 1) {
+                    const v = node[i];
+                    if (typeof v === 'string') {
+                      const primaryUrl = extractPrimaryUrl(v);
+                      if (primaryUrl && isLocalPromotableUrl(primaryUrl)) {
+                        const uploadedUrl = await uploadToCloudTokyo(primaryUrl);
+                        node[i] = replacePrimaryUrl(v, uploadedUrl);
+                      }
+                    } else {
+                      await rewrite(v);
+                    }
+                  }
+                  return;
+                }
+                for (const [k, v] of Object.entries(node)) {
+                  if (typeof v === 'string') {
+                    const primaryUrl = extractPrimaryUrl(v);
+                    if (primaryUrl && isLocalPromotableUrl(primaryUrl)) {
+                      const uploadedUrl = await uploadToCloudTokyo(primaryUrl);
+                      (node as any)[k] = replacePrimaryUrl(v, uploadedUrl);
+                    }
+                  } else {
+                    await rewrite(v);
+                  }
+                }
+              };
+
+              try {
+                await rewrite(configToPromote);
+              } catch (error) {
+                res.statusCode = 502;
+                res.end(
+                  JSON.stringify({
+                    error: {
+                      kind: 'UPSTREAM',
+                      reasonKey: 'devstudio.errors.promote.assetUploadFailed',
+                      detail: error instanceof Error ? error.message : String(error),
+                      paths: localUrlRefs.map((r) => r.path),
+                    },
+                  }),
+                );
+                return;
+              }
+            }
+
+            const cloudParisBase = (process.env.CK_CLOUD_PARIS_BASE_URL || 'https://paris.dev.clickeen.com').trim().replace(/\/+$/, '');
+            const jwt = (process.env.CK_CLOUD_PARIS_DEV_JWT || process.env.PARIS_DEV_JWT || '').trim();
+            if (!jwt) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'devstudio.errors.promote.missingCloudAuth',
+                    detail: 'Missing CK_CLOUD_PARIS_DEV_JWT (or PARIS_DEV_JWT) in DevStudio Local env.',
+                  },
+                }),
+              );
+              return;
+            }
+
+            const headers = {
+              'content-type': 'application/json',
+              Authorization: `Bearer ${jwt}`,
+            } as Record<string, string>;
+
+            const subject = 'devstudio';
+            const updateUrl = `${cloudParisBase}/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(publicId)}?subject=${encodeURIComponent(subject)}`;
+            const createUrl = `${cloudParisBase}/api/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=${encodeURIComponent(subject)}`;
+
+            const readText = async (response: globalThis.Response) => response.text().catch(() => '');
+
+            try {
+              const updateRes = await fetch(updateUrl, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ config: configToPromote, status }),
+              });
+              const updateText = await readText(updateRes);
+              if (updateRes.ok) {
+                res.statusCode = 200;
+                res.end(JSON.stringify({ ok: true, target: 'cloud-dev', action: 'updated', cloudParisBase }));
+                return;
+              }
+
+              // Cloud Paris update path is authoritative. If the instance doesn't exist, create it.
+              // Do not attempt to overwrite in cross-workspace conflict scenarios.
+              if (updateRes.status !== 404) {
+                res.statusCode = 502;
+                res.end(
+                  JSON.stringify({
+                    error: {
+                      kind: 'UPSTREAM',
+                      reasonKey: 'devstudio.errors.promote.updateFailed',
+                      detail: updateText || `Cloud Paris update failed (HTTP ${updateRes.status})`,
+                    },
+                  }),
+                );
+                return;
+              }
+
+              const createRes = await fetch(createUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ widgetType, publicId, config: configToPromote, status }),
+              });
+
+              const createText = await readText(createRes);
+              if (!createRes.ok) {
+                if (createRes.status === 409) {
+                  res.statusCode = 409;
+                  res.end(
+                    JSON.stringify({
+                      error: {
+                        kind: 'VALIDATION',
+                        reasonKey: 'coreui.errors.publicId.conflict',
+                        detail: createText || 'publicId exists in a different workspace',
+                      },
+                    }),
+                  );
+                  return;
+                }
+                res.statusCode = 502;
+                res.end(
+                  JSON.stringify({
+                    error: {
+                      kind: 'UPSTREAM',
+                      reasonKey: 'devstudio.errors.promote.createFailed',
+                      detail: createText || `Cloud Paris create failed (HTTP ${createRes.status})`,
+                    },
+                  }),
+                );
+                return;
+              }
+
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, target: 'cloud-dev', action: 'created', cloudParisBase }));
+            } catch (error) {
+              res.statusCode = 502;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'UPSTREAM',
+                    reasonKey: 'devstudio.errors.promote.networkFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
+          });
+        });
+      },
+    },
+    {
       name: 'rebuild-icons-api',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {

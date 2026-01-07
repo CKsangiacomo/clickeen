@@ -69,5 +69,13 @@ Local dev:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
 
+Cloud-dev:
+- `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:
+  - `POST /workspace-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-workspace-id`)
+  - `GET /workspace-assets/**` (public, cacheable; content-addressed by `assetId`)
+
+Security rule (executed):
+- `TOKYO_DEV_JWT` must never be used from a browser. DevStudio promotion uses it server-side (local Vite middleware).
+
 ## Links
 - Back: ../../CONTEXT.md
