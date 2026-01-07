@@ -58,3 +58,6 @@ tooling/sf-symbols/pnpm-lock.yaml
 # Misc
 .cache/
 artifacts/
+
+# User-uploaded assets (local dev only; served by Tokyo dev server)
+tokyo/workspace-assets/

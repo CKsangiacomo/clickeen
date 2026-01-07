@@ -1,0 +1,27 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "visual": true,
+      "copy": {
+        "headline": "FAQ Widget",
+        "subheadline": "Answer questions instantly — and reduce support tickets."
+      }
+    },
+    {
+      "id": "features",
+      "kind": "features",
+      "visual": true,
+      "copy": {
+        "title": "Why teams choose Clickeen FAQ",
+        "items": [
+          { "title": "Fast setup", "body": "Launch in minutes with a clean default design." },
+          { "title": "Fully customizable", "body": "Change layout, colors, typography, and behavior." },
+          { "title": "Built for scale", "body": "Deterministic state + strict policy enforcement." }
+        ]
+      }
+    }
+  ]
+}

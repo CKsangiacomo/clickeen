@@ -887,6 +887,34 @@ function filterOpsByGroup(ops: WidgetOp[], groupKey: string, controls: ControlSu
 function maybeClarify(dict: GlobalDictionary, input: WidgetCopilotInput): string | null {
   const prompt = input.prompt;
 
+  // If user says "based on my website" but doesn't include a URL, don't guess or pivot to styling.
+  // Ask for a single page URL (we only fetch one page, no crawling).
+  if (/\b(based on|from)\b[\s\S]{0,40}\b(my )?website\b/i.test(prompt)) {
+    const hasUrl = extractUrlCandidates(prompt).length > 0;
+    if (!hasUrl) {
+      return 'Paste a URL to a single page that contains the content you want to base the FAQs on (for example: https://example.com/faq).';
+    }
+  }
+
+  // "Rewrite the questions" is ambiguous:
+  // - rewrite existing Q/A text already present in currentConfig
+  // - generate new FAQs based on the user's website/source page
+  // Ask one tight clarification to avoid guessing or falling back to unrelated styling changes.
+  if (/\b(rewrite|rephrase|modernize|refresh)\b/i.test(prompt) && /\b(faq|question|questions|answer|answers)\b/i.test(prompt)) {
+    const sections = (input.currentConfig as any)?.sections;
+    const hasExistingFaqs =
+      Array.isArray(sections) &&
+      sections.some((s) => Array.isArray((s as any)?.faqs) && (s as any).faqs.some((f: any) => typeof f?.question === 'string'));
+
+    if (hasExistingFaqs) {
+      return (
+        'Do you want me to rewrite the existing FAQ questions/answers that are already in this widget (keeping the same meaning), ' +
+        'or generate new FAQs based on your website?\n' +
+        'Reply “rewrite existing” to update what’s already here, or paste a URL if you want new FAQs.'
+      );
+    }
+  }
+
   // Overbroad requests tend to produce brittle edits (and are hard to map to controls deterministically).
   // Ask the user to pick a starting area.
   if (/\b(adjust|change|update|make)\b[\s\S]{0,30}\b(everything|all of it|the whole thing|all settings)\b/i.test(prompt)) {
@@ -980,6 +1008,7 @@ function systemPrompt(): string {
     `  - content: ${content?.description ?? 'inside the widget'}`,
     `- If user says "background" and both stage + pod backgrounds exist, ask which scope they mean.`,
     `- If user says "font(s)" without specifying a target, default to changing all available typography roles (title, section titles, questions, answers).`,
+    `- If user asks to rewrite FAQ questions/answers, rewrite the existing questions/answers in currentConfig (do NOT require a URL unless user explicitly asks to base it on their website).`,
     `- If user asks for a "modern/classic/playful font", pick from enumValues using these candidates:`,
     `  - modern: ${(modern?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
     `  - classic: ${(classic?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
@@ -1175,7 +1204,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
       }
 
-      const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(8_000, Math.max(1_500, timeoutMs - 1_000)) });
+      const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(12_000, Math.max(1_500, timeoutMs - 1_000)) });
       if (!fetchRes.ok) {
         const msg =
           `I tried to read ${url.toString()} but couldn't: ${fetchRes.message}` +

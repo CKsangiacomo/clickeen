@@ -1,0 +1,64 @@
+---
+type Props = {
+  widgetType: string;
+  page: string;
+  blockId: string;
+  locale: string;
+  height?: string;
+  title?: string;
+};
+
+const { widgetType, page, blockId, locale, height = '360px', title = 'Widget preview' } = Astro.props;
+
+const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
+const creativeKey = `${widgetType}.${page}.${blockId}`;
+const publicId = `wgt_web_${creativeKey}.${locale}`;
+const iframeSrc = VENICE_URL
+  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}`
+  : null;
+---
+
+<div class="ck-websiteCreative">
+  {iframeSrc ? (
+    <iframe
+      class="ck-websiteCreative__iframe"
+      title={title}
+      src={iframeSrc}
+      style={`height: ${height};`}
+      loading="lazy"
+      referrerpolicy="no-referrer"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+    />
+  ) : (
+    <div class="ck-media ck-websiteCreative__stub">
+      Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {publicId}
+    </div>
+  )}
+</div>
+
+<style>
+  .ck-websiteCreative {
+    width: 100%;
+    border-radius: var(--control-radius-lg);
+    overflow: hidden;
+    background: var(--color-system-white);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
+  }
+
+  .ck-websiteCreative__iframe {
+    width: 100%;
+    border: 0;
+    display: block;
+    background: var(--color-system-white);
+  }
+
+  .ck-websiteCreative__stub {
+    min-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
+    padding: var(--space-6);
+    text-align: center;
+  }
+</style>

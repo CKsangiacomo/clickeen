@@ -46,6 +46,14 @@ All third-party embed traffic terminates at Venice:
   - serves an embed-safe document (base URL, sandboxing) and bootstraps `window.CK_WIDGET`
   - applies embed delivery policy (cache headers, tokens/entitlements)
 
+### Published-Only Rule (Hard Contract)
+
+Venice must **never** serve unpublished instances.
+
+- `GET /e/:publicId` returns `404` when `instance.status !== 'published'`.
+- Venice must not use any dev-auth bypass (no `PARIS_DEV_JWT` behavior).
+- Dev previews belong in Bob; Prague and third-party embeds must iframe Venice only.
+
 ### Primary Render Route: `GET /e/:publicId`
 
 **Purpose:** Return complete widget HTML suitable for iframing on third-party sites.
@@ -74,6 +82,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
 - `device=desktop|mobile` (optional, defaults to `desktop`)
+- `locale=<bcp47-ish>` (optional, defaults to `en`; passed through in `window.CK_WIDGET.locale`)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Cache strategy (shipped):**
@@ -115,3 +124,19 @@ See: `documentation/capabilities/seo-geo.md`
 - Runtime truth: `venice/app/e/[publicId]/route.ts`
 - Asset proxies: `venice/app/widgets/[...path]/route.ts`, `venice/app/dieter/[...path]/route.ts`
 - Widget contract: `documentation/widgets/WidgetArchitecture.md`
+
+## Deployment (Cloudflare Pages)
+
+Venice is a Next.js Edge app. The supported deploy surface is Cloudflare Pages using `@cloudflare/next-on-pages`.
+
+**Build output:** `venice/.vercel/output/static`
+
+**Recommended Pages settings**
+- Root directory: repo root (monorepo)
+- Build command: `pnpm --filter @clickeen/venice build:cf`
+- Build output directory: `venice/.vercel/output/static`
+- Environment variables (set once per environment):
+  - `PARIS_URL` (Paris base URL)
+  - `TOKYO_URL` (Tokyo base URL)
+
+Venice fails fast in deployed environments if `PARIS_URL` or `TOKYO_URL` is missing (to avoid stale/incorrect hardcoded endpoints).

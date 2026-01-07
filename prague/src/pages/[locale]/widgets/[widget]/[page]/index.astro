@@ -3,12 +3,13 @@ import Base from '../../../../../layouts/Base.astro';
 import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
 import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
+import { listPragueLocales } from '../../../../../lib/locales';
 
 const { locale, widget, page } = Astro.params;
 
 export async function getStaticPaths() {
   const widgets = await listWidgets();
-  const locales = ['en'];
+  const locales = listPragueLocales();
   const out: { params: { locale: string; widget: string; page: string } }[] = [];
 
   for (const w of widgets) {

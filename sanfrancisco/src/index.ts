@@ -5,6 +5,9 @@ import { executeSdrCopilot } from './agents/sdrCopilot';
 import { executeEditorFaqAnswer } from './agents/editorFaqAnswer';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
+import { handlePitchSearch } from './pitch/search';
+import { handlePitchUpsert } from './pitch/upsert';
+import { handlePitchAnswer } from './pitch/answer';
 
 const MAX_INFLIGHT_PER_ISOLATE = 8;
 let inflight = 0;
@@ -413,6 +416,9 @@ export default {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
+      if (request.method === 'GET' && url.pathname === '/v1/pitch/search') return await handlePitchSearch(request, env);
+      if (request.method === 'GET' && url.pathname === '/v1/pitch/answer') return await handlePitchAnswer(request, env);
+      if (request.method === 'POST' && url.pathname === '/v1/pitch/upsert') return await handlePitchUpsert(request, env);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {

@@ -173,6 +173,7 @@ var Dieter = (() => {
       fileInput,
       imageSrc: null,
       imageName: null,
+      localObjectUrl: null,
       nativeValue,
       internalWrite: false,
       hsv: { h: 0, s: 0, v: 0, a: 0 }
@@ -275,20 +276,22 @@ var Dieter = (() => {
     if (removeButton) {
       removeButton.addEventListener("click", (event) => {
         event.preventDefault();
+        if (state.localObjectUrl) {
+          URL.revokeObjectURL(state.localObjectUrl);
+          state.localObjectUrl = null;
+        }
         setImageSrc(state, null, { commit: true });
       });
     }
     if (fileInput) {
-      fileInput.addEventListener("change", () => {
+      fileInput.addEventListener("change", async () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         state.imageName = file.name || null;
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = typeof reader.result === "string" ? reader.result : null;
-          setImageSrc(state, result, { commit: true });
-        };
-        reader.readAsDataURL(file);
+        if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
+        const objectUrl = URL.createObjectURL(file);
+        state.localObjectUrl = objectUrl;
+        setImageSrc(state, objectUrl, { commit: true });
       });
     }
   }
@@ -301,9 +304,19 @@ var Dieter = (() => {
     }
   }
   function setImageSrc(state, src, opts) {
+    const prev = state.imageSrc;
+    if (state.localObjectUrl && prev && prev === state.localObjectUrl && src !== prev) {
+      URL.revokeObjectURL(state.localObjectUrl);
+      state.localObjectUrl = null;
+    }
     state.imageSrc = src;
     if (opts.commit) {
-      const cssValue = src ? `url("${src}") center center / cover no-repeat` : "transparent";
+      const priorValue = String(state.input.value || "").trim();
+      const hasPriorUrl = /\burl\(\s*/i.test(priorValue);
+      const fallbackRaw = !hasPriorUrl && priorValue ? priorValue : "var(--color-system-white)";
+      const fallback = fallbackRaw.trim() === "transparent" ? "var(--color-system-white)" : fallbackRaw;
+      const fallbackLayer = /^-?(?:repeating-)?(?:linear|radial|conic)-gradient\(/i.test(fallback) ? fallback : `linear-gradient(${fallback}, ${fallback})`;
+      const cssValue = src ? `url("${src}") center center / cover no-repeat, ${fallbackLayer}` : "transparent";
       setInputValue(state, cssValue, true);
     }
     if (state.imagePanel) {
@@ -369,9 +382,10 @@ var Dieter = (() => {
   }
   function syncFromValue(state, raw) {
     const value = String(raw ?? "").trim();
-    const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
-    if (urlMatch && urlMatch[1]) {
-      setImageSrc(state, urlMatch[1], { commit: false });
+    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    if (urlMatch && urlMatch[2]) {
+      delete state.root.dataset.invalid;
+      setImageSrc(state, urlMatch[2], { commit: false });
       return;
     }
     if (!value) {
@@ -547,9 +561,9 @@ var Dieter = (() => {
     return null;
   }
   function extractFileName(value) {
-    const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
-    if (urlMatch && urlMatch[1]) {
-      const raw = urlMatch[1];
+    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    if (urlMatch && urlMatch[2]) {
+      const raw = urlMatch[2];
       const parts = raw.split("/").filter(Boolean);
       const last = parts[parts.length - 1];
       if (last) return last.split("?")[0];

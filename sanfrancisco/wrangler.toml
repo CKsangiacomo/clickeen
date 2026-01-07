@@ -4,6 +4,7 @@ compatibility_date = "2025-12-28"
 
 [vars]
 ENVIRONMENT = "dev"
+PITCH_MODEL = "gpt-5.2"
 
 [[kv_namespaces]]
 binding = "SF_KV"
@@ -24,3 +25,7 @@ queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
 queue = "sanfrancisco-events-dev"
+
+[[vectorize]]
+binding = "PITCH_DOCS"
+index_name = "clickeen-pitch-docs"

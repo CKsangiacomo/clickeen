@@ -30,6 +30,7 @@ type DropdownFillState = {
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
   imageName: string | null;
+  localObjectUrl: string | null;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
@@ -121,6 +122,7 @@ function createState(root: HTMLElement): DropdownFillState | null {
     fileInput,
     imageSrc: null,
     imageName: null,
+    localObjectUrl: null,
     nativeValue,
     internalWrite: false,
     hsv: { h: 0, s: 0, v: 0, a: 0 },
@@ -240,20 +242,25 @@ function installImageHandlers(state: DropdownFillState) {
   if (removeButton) {
     removeButton.addEventListener('click', (event) => {
       event.preventDefault();
+      if (state.localObjectUrl) {
+        URL.revokeObjectURL(state.localObjectUrl);
+        state.localObjectUrl = null;
+      }
       setImageSrc(state, null, { commit: true });
     });
   }
   if (fileInput) {
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
       state.imageName = file.name || null;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = typeof reader.result === 'string' ? reader.result : null;
-        setImageSrc(state, result, { commit: true });
-      };
-      reader.readAsDataURL(file);
+
+      if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
+      const objectUrl = URL.createObjectURL(file);
+      state.localObjectUrl = objectUrl;
+      // Locked editor contract: keep uploads in-memory until publish.
+      // We commit the object URL into the field so stage/pod preview updates immediately.
+      setImageSrc(state, objectUrl, { commit: true });
     });
   }
 }
@@ -268,9 +275,21 @@ function setInputValue(state: DropdownFillState, value: string, emit: boolean) {
 }
 
 function setImageSrc(state: DropdownFillState, src: string | null, opts: { commit: boolean }) {
+  const prev = state.imageSrc;
+  if (state.localObjectUrl && prev && prev === state.localObjectUrl && src !== prev) {
+    URL.revokeObjectURL(state.localObjectUrl);
+    state.localObjectUrl = null;
+  }
   state.imageSrc = src;
   if (opts.commit) {
-    const cssValue = src ? `url("${src}") center center / cover no-repeat` : 'transparent';
+    const priorValue = String(state.input.value || '').trim();
+    const hasPriorUrl = /\burl\(\s*/i.test(priorValue);
+    const fallbackRaw = !hasPriorUrl && priorValue ? priorValue : 'var(--color-system-white)';
+    const fallback = fallbackRaw.trim() === 'transparent' ? 'var(--color-system-white)' : fallbackRaw;
+    const fallbackLayer = /^-?(?:repeating-)?(?:linear|radial|conic)-gradient\(/i.test(fallback)
+      ? fallback
+      : `linear-gradient(${fallback}, ${fallback})`;
+    const cssValue = src ? `url("${src}") center center / cover no-repeat, ${fallbackLayer}` : 'transparent';
     setInputValue(state, cssValue, true);
   }
   if (state.imagePanel) {
@@ -342,9 +361,10 @@ function handleAlphaField(state: DropdownFillState) {
 function syncFromValue(state: DropdownFillState, raw: string) {
   const value = String(raw ?? '').trim();
 
-  const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
-  if (urlMatch && urlMatch[1]) {
-    setImageSrc(state, urlMatch[1], { commit: false });
+  const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (urlMatch && urlMatch[2]) {
+    delete state.root.dataset.invalid;
+    setImageSrc(state, urlMatch[2], { commit: false });
     return;
   }
 
@@ -558,9 +578,9 @@ function normalizeHex(value: string): string | null {
 }
 
 function extractFileName(value: string): string | null {
-  const urlMatch = value.match(/url\\(['"]?(.*?)['"]?\\)/i);
-  if (urlMatch && urlMatch[1]) {
-    const raw = urlMatch[1];
+  const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (urlMatch && urlMatch[2]) {
+    const raw = urlMatch[2];
     const parts = raw.split('/').filter(Boolean);
     const last = parts[parts.length - 1];
     if (last) return last.split('?')[0];

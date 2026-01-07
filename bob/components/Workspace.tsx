@@ -21,6 +21,34 @@ export function Workspace() {
   const displayName =
     meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
 
+  const iframeBackdrop = (() => {
+    const raw = (instanceData as any)?.stage?.background;
+    if (typeof raw !== 'string') return undefined;
+    const value = raw.trim();
+    if (!value) return undefined;
+
+    // If the background is an image fill with a fallback layer like:
+    //   url("...") center / cover no-repeat, linear-gradient(<fallback>, <fallback>)
+    // use the fallback for the iframe element background to avoid a grey flash before the iframe receives state.
+    if (/\burl\(\s*/i.test(value)) {
+      const fallbackMatch = value.match(/,\s*linear-gradient\(\s*([^,]+?)\s*,/i);
+      if (fallbackMatch?.[1]) {
+        const fallback = fallbackMatch[1].trim();
+        return fallback === 'transparent' ? 'var(--color-system-white)' : fallback;
+      }
+      return 'var(--color-system-white)';
+    }
+
+    // Plain colors/gradients can be applied directly.
+    if (
+      /^(?:#|var\(|rgba?\(|hsla?\(|color-mix\(|-?(?:repeating-)?(?:linear|radial|conic)-gradient\()/i.test(value)
+    ) {
+      return value === 'transparent' ? 'var(--color-system-white)' : value;
+    }
+
+    return undefined;
+  })();
+
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
@@ -124,7 +152,13 @@ export function Workspace() {
           : undefined
       }
     >
-      <iframe ref={iframeRef} title="Widget preview" className="workspace-iframe" sandbox="allow-scripts allow-same-origin" />
+      <iframe
+        ref={iframeRef}
+        title="Widget preview"
+        className="workspace-iframe"
+        sandbox="allow-scripts allow-same-origin"
+        style={iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
+      />
 
       <div className="workspace-overlay" aria-hidden={!hasWidget}>
         <div

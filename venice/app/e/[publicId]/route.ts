@@ -22,6 +22,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
+  const locale = (() => {
+    const raw = (url.searchParams.get('locale') || '').trim();
+    if (!raw) return 'en';
+    // v1: keep it strict and deterministic; prefer BCP-47-ish tokens (en, en-US).
+    const normalized = raw.replace(/_/g, '-');
+    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalized)) return 'en';
+    return normalized.toLowerCase();
+  })();
   const ts = url.searchParams.get('ts');
 
   const headers: Record<string, string> = {
@@ -61,8 +69,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   }
 
   const instance = body as InstanceResponse;
+  // Venice is the public embed runtime. It must never serve unpublished instances.
+  // (Dev/auth preview belongs to Bob; Prague and third-party sites only iframe Venice.)
+  if (instance.status !== 'published') {
+    const html = renderErrorPage({
+      publicId,
+      status: 404,
+      message: 'Widget unavailable',
+    });
+    headers['Cache-Control'] = 'no-store';
+    headers['Vary'] = 'Authorization, X-Embed-Token';
+    return new NextResponse(html, { status: 404, headers });
+  }
   const nonce = crypto.randomUUID();
-  const responseHtml = await renderInstancePage({ instance, theme, device, nonce });
+  const responseHtml = await renderInstancePage({ instance, theme, device, locale, nonce });
 
   // Conditional request handling
   let etag: string | undefined;
@@ -141,11 +161,13 @@ async function renderInstancePage({
   instance,
   theme,
   device,
+  locale,
   nonce,
 }: {
   instance: InstanceResponse;
   theme: string;
   device: string;
+  locale: string;
   nonce: string;
 }) {
   const widgetType = instance.widgetType ? String(instance.widgetType) : '';
@@ -170,11 +192,14 @@ async function renderInstancePage({
     status: instance.status,
     theme,
     device,
+    locale,
     state: instance.config,
   }).replace(/</g, '\\u003c');
 
   return `<!doctype html>
-<html lang="en" data-theme="${escapeHtml(theme)}" data-device="${escapeHtml(device)}">
+<html lang="${escapeHtml(locale)}" data-theme="${escapeHtml(theme)}" data-device="${escapeHtml(device)}" data-locale="${escapeHtml(
+    locale,
+  )}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

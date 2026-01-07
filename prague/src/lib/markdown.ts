@@ -17,6 +17,40 @@ export async function loadWidgetPageMarkdown(opts: { widget: string; page: strin
   return await fs.readFile(filePath, 'utf8');
 }
 
+export async function loadWidgetPageJson(opts: { widget: string; page: string }): Promise<unknown | null> {
+  const filePath = path.join(REPO_ROOT, 'tokyo', 'widgets', opts.widget, 'pages', `${opts.page}.json`);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw) as unknown;
+  } catch (err: any) {
+    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) return null;
+    throw err;
+  }
+}
+
+export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown | null> {
+  if (!opts.locale || opts.locale === 'en') {
+    return await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  }
+  const filePath = path.join(
+    REPO_ROOT,
+    'tokyo',
+    'widgets',
+    opts.widget,
+    'pages',
+    '.locales',
+    opts.locale,
+    `${opts.page}.json`,
+  );
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw) as unknown;
+  } catch (err: any) {
+    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) return null;
+    throw err;
+  }
+}
+
 export async function listWidgets(): Promise<string[]> {
   const entries = await fs.readdir(TOKYO_WIDGETS_DIR, { withFileTypes: true });
   return entries

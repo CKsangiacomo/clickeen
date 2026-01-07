@@ -81,8 +81,14 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 ### 2.2 Hero
 
 `widget-landing/hero`
-- Props: `{ headline: string, subheadline?: string }`
-- Owns: H1 + subhead + primary/secondary CTA + preview slot
+- Props: `{ headline: string, subheadline?: string, websiteCreative?: { widgetType: string, locale: string, height?: string, title?: string } }`
+- Owns: H1 + subhead + primary/secondary CTA + **deterministic hero visual**
+
+**Contract (non-negotiable):**
+- This is **not** a generic “slot”. The hero visual (when enabled) is always the website creative for:
+  - `wgt_web_{widgetType}.overview.hero.{locale}`
+- Pages enable the hero visual via the canonical page spec:
+  - `tokyo/widgets/{widgetType}/pages/overview.json` → block `{ id: "hero", kind: "hero", visual: true }`
 
 ### 2.3 Proof
 
@@ -159,8 +165,14 @@ Page templates are just a list of blocks in a fixed order. Example (widget landi
 
 ## 4) Content mapping (Tokyo → Prague)
 
-Content lives in `tokyo/widgets/{widget}/pages/*.md`.
-Prague loads/derives block props from markdown sections (at build time).
+Prague is **JSON-first** for canonical widget pages and uses markdown for long-tail pages.
+
+- Canonical widget pages:
+  - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features}.json`
+  - Prague renders `blocks[]` by `kind` and uses `visual: true` to embed website creatives deterministically.
+- Long-tail pages (hubs/spokes/comparisons, etc.):
+  - Source of truth: `tokyo/widgets/{widget}/pages/**/*.md`
+  - Prague loads/derives block props from markdown sections (at build time) using the deterministic parser.
 
 Example keys for `landing.md`:
 - `## Headline`

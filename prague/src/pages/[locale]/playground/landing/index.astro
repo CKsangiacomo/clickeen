@@ -8,11 +8,12 @@ import Stats from '../../../../blocks/widget-landing/stats.astro';
 import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
+import { listPragueLocales } from '../../../../lib/locales';
 
 const { locale } = Astro.params;
 
 export function getStaticPaths() {
-  return [{ params: { locale: 'en' } }];
+  return listPragueLocales().map((locale) => ({ params: { locale } }));
 }
 ---
 
@@ -22,10 +23,6 @@ export function getStaticPaths() {
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
-      items={[
-        { label: 'Widgets', href: `/${locale}/widgets/faq` },
-        { label: 'Pricing', href: `/${locale}/pricing` },
-      ]}
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
     <Hero

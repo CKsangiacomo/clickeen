@@ -275,7 +275,8 @@ export async function POST(req: Request) {
       mode: 'ops',
       sessionId,
       instancePublicId,
-      budgets: { maxTokens: 420, timeoutMs: 25_000, maxRequests: 2 },
+      // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.
+      budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
     });
     if (!grantRes.ok) {
       return NextResponse.json(

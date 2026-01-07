@@ -1,0 +1,36 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "visual": true,
+      "copy": {
+        "headline": "Widget de preguntas frecuentes",
+        "subheadline": "Responde preguntas al instante — y reduce los tickets de soporte."
+      }
+    },
+    {
+      "id": "features",
+      "kind": "features",
+      "visual": true,
+      "copy": {
+        "title": "Por qué los equipos eligen Clickeen FAQ",
+        "items": [
+          {
+            "title": "Configuración rápida",
+            "body": "Lánzalo en minutos con un diseño predeterminado y limpio."
+          },
+          {
+            "title": "Totalmente personalizable",
+            "body": "Cambia el diseño, los colores, la tipografía y el comportamiento."
+          },
+          {
+            "title": "Diseñado para escalar",
+            "body": "Estado determinista + aplicación estricta de políticas."
+          }
+        ]
+      }
+    }
+  ]
+}

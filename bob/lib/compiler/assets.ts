@@ -90,8 +90,10 @@ export async function buildWidgetAssets(args: {
   optionalUsages: Set<string>;
 }): Promise<CompiledWidget['assets']> {
   const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
-  const dieterBase = `${tokyoRoot}/dieter`;
-  const assetBase = `${tokyoRoot}/widgets/${args.widgetname}`;
+  // Serve widget + Dieter assets through Bob so the preview iframe runs same-origin.
+  // This enables in-memory `blob:` URLs (locked editor contract) to render inside the preview.
+  const dieterBase = `/dieter`;
+  const assetBase = `/widgets/${args.widgetname}`;
 
   const manifest = await loadDieterManifest(tokyoRoot);
   const cacheBust = manifest.gitSha && manifest.gitSha !== 'unknown' ? `?v=${encodeURIComponent(manifest.gitSha)}` : '';

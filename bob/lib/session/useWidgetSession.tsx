@@ -16,6 +16,7 @@ import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
 import type { Policy } from '@clickeen/ck-policy';
 import { can, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
+import { persistConfigAssetsToTokyo } from '../assets/persistConfigAssetsToTokyo';
 
 type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -72,6 +73,7 @@ type WidgetBootstrapMessage = {
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
+  persistAssets?: boolean;
 };
 
 type BobExportInstanceDataResponseMessage = {
@@ -448,6 +450,7 @@ function useWidgetSessionInternal() {
 
     setState((prev) => ({ ...prev, isPublishing: true, error: null }));
     try {
+      const persisted = await persistConfigAssetsToTokyo(state.instanceData, { workspaceId });
       const res = await fetch(
         `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
           workspaceId
@@ -455,7 +458,7 @@ function useWidgetSessionInternal() {
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ config: state.instanceData, status: 'published' }),
+          body: JSON.stringify({ config: persisted, status: 'published' }),
         }
       );
 
@@ -607,18 +610,43 @@ function useWidgetSessionInternal() {
         const requestId = typeof data.requestId === 'string' ? data.requestId : '';
         if (!requestId) return;
         const snapshot = stateRef.current;
+        const persistAssets = (data as DevstudioExportInstanceDataMessage).persistAssets === true;
 
-        const reply: BobExportInstanceDataResponseMessage = {
-          type: 'bob:export-instance-data',
-          requestId,
-          ok: true,
-          instanceData: snapshot.instanceData,
-          meta: snapshot.meta,
-          isDirty: snapshot.isDirty,
-        };
+        (async () => {
+          try {
+            const instanceData = persistAssets
+              ? (() => {
+                  const workspaceId = snapshot.meta?.workspaceId;
+                  if (!workspaceId) {
+                    throw new Error('[Bob] Missing workspaceId for asset persistence');
+                  }
+                  return persistConfigAssetsToTokyo(snapshot.instanceData, { workspaceId });
+                })()
+              : snapshot.instanceData;
 
-        const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-        window.parent?.postMessage(reply, targetOrigin);
+            const reply: BobExportInstanceDataResponseMessage = {
+              type: 'bob:export-instance-data',
+              requestId,
+              ok: true,
+              instanceData: await Promise.resolve(instanceData),
+              meta: snapshot.meta,
+              isDirty: snapshot.isDirty,
+            };
+
+            const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+            window.parent?.postMessage(reply, targetOrigin);
+          } catch (err) {
+            const messageText = err instanceof Error ? err.message : String(err);
+            const reply: BobExportInstanceDataResponseMessage = {
+              type: 'bob:export-instance-data',
+              requestId,
+              ok: false,
+              error: messageText,
+            };
+            const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+            window.parent?.postMessage(reply, targetOrigin);
+          }
+        })();
       }
     }
 

@@ -32,7 +32,9 @@
     "build:bob": "pnpm --filter @clickeen/bob build",
     "build:admin": "pnpm --filter @clickeen/devstudio build",
     "build:dieter": "pnpm --filter @ck/dieter build",
-    "build:prague": "pnpm --filter @clickeen/prague build"
+    "build:prague": "pnpm --filter @clickeen/prague build",
+    "prague:localize": "node scripts/prague-localize.mjs",
+    "build:prague:global": "pnpm prague:localize && pnpm build:prague"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

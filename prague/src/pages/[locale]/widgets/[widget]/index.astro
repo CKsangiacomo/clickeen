@@ -9,21 +9,36 @@ import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
 import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
-import { listWidgets, loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
+import { listWidgets, loadWidgetPageJsonForLocale, loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
+import { listPragueLocales } from '../../../../lib/locales';
 
 const { locale, widget } = Astro.params;
 
 export async function getStaticPaths() {
   const widgets = await listWidgets();
-  const locales = ['en'];
+  const locales = listPragueLocales();
   return locales.flatMap((l) => widgets.map((w) => ({ params: { locale: l, widget: w } })));
 }
 
 const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
+const overviewJson = await loadWidgetPageJsonForLocale({ widget, page: 'overview', locale });
+const heroCopyFromJson =
+  Boolean(overviewJson)
+  && typeof overviewJson === 'object'
+  && Array.isArray((overviewJson as any).blocks)
+  ? (overviewJson as any).blocks.find((b: any) => b && b.id === 'hero' && b.kind === 'hero')?.copy
+  : null;
+const heroHeadlineFromJson = heroCopyFromJson && typeof heroCopyFromJson === 'object' ? (heroCopyFromJson as any).headline : null;
+const heroSubheadlineFromJson = heroCopyFromJson && typeof heroCopyFromJson === 'object' ? (heroCopyFromJson as any).subheadline : null;
+const heroWantsCreative =
+  Boolean(overviewJson)
+  && typeof overviewJson === 'object'
+  && Array.isArray((overviewJson as any).blocks)
+  && (overviewJson as any).blocks.some((b: any) => b && b.id === 'hero' && b.visual === true);
 
 const sections = parseMarkdownSections(md);
-const headline = sections.get('headline');
-const subheadline = sections.get('subheadline');
+const headline = (heroHeadlineFromJson && String(heroHeadlineFromJson)) || sections.get('headline');
+const subheadline = (heroSubheadlineFromJson && String(heroSubheadlineFromJson)) || sections.get('subheadline');
 if (!headline || !subheadline) {
   throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
 }
@@ -70,7 +85,15 @@ const minibobSubhead = minibobLines[1];
       homeHref={`/${locale}/`}
       cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
     />
-    <Hero headline={headline} subheadline={subheadline} />
+    <Hero
+      headline={headline}
+      subheadline={subheadline}
+      websiteCreative={
+        heroWantsCreative
+          ? { widgetType: widget, locale, height: '360px', title: `${widget} overview hero` }
+          : undefined
+      }
+    />
     <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
     {stats.length ? <Stats stats={stats} /> : null}
     {steps.length ? <Steps steps={steps} /> : null}

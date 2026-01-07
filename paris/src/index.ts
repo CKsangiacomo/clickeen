@@ -611,7 +611,9 @@ function assertWebsiteCreativePage(value: unknown) {
 
 function assertWebsiteCreativeSlot(value: unknown) {
   const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (!trimmed || !/^[a-z0-9][a-z0-9_-]*$/.test(trimmed)) {
+  // Website creative block ids are dot-separated slot keys (e.g. "feature.left.50").
+  // Lock: lowercase segments matching [a-z0-9][a-z0-9_-]*, separated by dots.
+  if (!trimmed || !/^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$/.test(trimmed)) {
     return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.slot.invalid' }, 422) };
   }
   return { ok: true as const, value: trimmed };
@@ -629,25 +631,9 @@ type WebsiteCreativeEnsurePayload = {
   page: string;
   slot: string;
   locale?: string;
-  baselineConfig: Record<string, unknown>;
+  baselineConfig?: Record<string, unknown>;
+  overwrite?: boolean;
 };
-
-function isJsonObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}
-
-function ensureCatalogShape(existing: unknown): Record<string, unknown> {
-  const out: any = isJsonObject(existing) ? JSON.parse(JSON.stringify(existing)) : {};
-  if (out.v !== 1) out.v = 1;
-  if (!isJsonObject(out.locales)) out.locales = {};
-  if (!isJsonObject(out.locales.en)) out.locales.en = {};
-  if (!isJsonObject(out.locales.en.pages)) out.locales.en.pages = {};
-  for (const page of WEBSITE_CREATIVE_PAGES) {
-    if (!isJsonObject(out.locales.en.pages[page])) out.locales.en.pages[page] = {};
-    if (!Array.isArray(out.locales.en.pages[page].blocks)) out.locales.en.pages[page].blocks = [];
-  }
-  return out as Record<string, unknown>;
-}
 
 async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, workspaceId: string) {
   const auth = assertDevAuth(req, env);
@@ -673,7 +659,7 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   } catch {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
   }
-  if (!isJsonObject(payload)) {
+  if (!isRecord(payload)) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
@@ -687,8 +673,7 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   if (!slotResult.ok) return slotResult.response;
 
   const locale = normalizeWebsiteLocale((payload as any).locale);
-  const baselineConfigResult = assertConfig((payload as any).baselineConfig);
-  if (!baselineConfigResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  const overwrite = (payload as any).overwrite === true;
 
   const widgetType = widgetTypeResult.value;
   const page = pageResult.value;
@@ -699,7 +684,17 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
 
+  // 1) Ensure instance exists (and optionally reset config to baseline).
+  const existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (existing && !overwrite) {
+    // No-op open path: do not validate or mutate baseline config if we're only opening an existing creative.
+    return json({ creativeKey, publicId }, { status: 200 });
+  }
+
+  const baselineConfigResult = assertConfig((payload as any).baselineConfig);
+  if (!baselineConfigResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   const baselineConfig = baselineConfigResult.value;
+
   const issues = configNonPersistableUrlIssues(baselineConfig);
   if (issues.length) {
     return ckError(
@@ -718,8 +713,6 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   const denyFaqCaps = enforceFaqCaps(policyResult.policy, widgetType, baselineConfig);
   if (denyFaqCaps) return denyFaqCaps;
 
-  // 1) Ensure instance exists.
-  const existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!existing) {
     let widget = await loadWidgetByType(env, widgetType);
     if (!widget) {
@@ -758,45 +751,20 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
       const details = await readJson(instanceInsert);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
-  }
-
-  // 2) Attach creativeKey into the widget catalog (en locale, v1 shape).
-  const widget = await loadWidgetByType(env, widgetType);
-  if (!widget?.id) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: 'Widget row missing after ensure' }, 500);
-  }
-  const catalog = ensureCatalogShape(widget.catalog);
-  const pages = (catalog as any).locales.en.pages;
-  const pageModel = pages[page];
-  const blocks: any[] = Array.isArray(pageModel.blocks) ? pageModel.blocks : [];
-  const idx = blocks.findIndex((block) => block && typeof block === 'object' && block.id === slot);
-  const nextBlock = {
-    id: slot,
-    kind: slot,
-    text: {},
-    visual: { creativeKey },
-  };
-  if (idx >= 0) {
-    const current = blocks[idx];
-    blocks[idx] = {
-      ...(isJsonObject(current) ? current : {}),
-      id: slot,
-      kind: (current as any)?.kind ?? slot,
-      visual: { creativeKey },
-    };
   } else {
-    blocks.push(nextBlock);
-  }
-  pageModel.blocks = blocks;
-
-  const patchWidget = await supabaseFetch(env, `/rest/v1/widgets?type=eq.${encodeURIComponent(widgetType)}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ catalog }),
-  });
-  if (!patchWidget.ok) {
-    const details = await readJson(patchWidget);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    const patchRes = await supabaseFetch(
+      env,
+      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ config: baselineConfig }),
+      },
+    );
+    if (!patchRes.ok) {
+      const details = await readJson(patchRes);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    }
   }
 
   return json({ creativeKey, publicId }, { status: 200 });

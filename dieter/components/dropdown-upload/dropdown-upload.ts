@@ -23,6 +23,7 @@ type DropdownUploadState = {
   maxImageKb?: number;
   maxVideoKb?: number;
   maxOtherKb?: number;
+  localObjectUrl: string | null;
   nativeValue?: { get: () => string; set: (next: string) => void };
   internalWrite: boolean;
 };
@@ -123,6 +124,7 @@ function createState(root: HTMLElement): DropdownUploadState | null {
     maxImageKb: Number.isFinite(maxImageKb as number) ? (maxImageKb as number) : undefined,
     maxVideoKb: Number.isFinite(maxVideoKb as number) ? (maxVideoKb as number) : undefined,
     maxOtherKb: Number.isFinite(maxOtherKb as number) ? (maxOtherKb as number) : undefined,
+    localObjectUrl: null,
     nativeValue: captureNativeValue(input),
     internalWrite: false,
   };
@@ -152,6 +154,10 @@ function installHandlers(state: DropdownUploadState) {
   state.replaceButton.addEventListener('click', pickFile);
   state.removeButton.addEventListener('click', (event) => {
     event.preventDefault();
+    if (state.localObjectUrl) {
+      URL.revokeObjectURL(state.localObjectUrl);
+      state.localObjectUrl = null;
+    }
     setFileKey(state, '', true);
   });
 
@@ -166,8 +172,9 @@ function installHandlers(state: DropdownUploadState) {
     }
     clearError(state);
 
-    // Optimistic local preview while reading happens (no persistence in edit loop).
+    if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
     const objectUrl = URL.createObjectURL(file);
+    state.localObjectUrl = objectUrl;
     const { kind, ext } = classifyByNameAndType(file.name, file.type);
     state.root.dataset.localName = file.name;
     state.root.dataset.localExt = ext || '';
@@ -182,18 +189,10 @@ function installHandlers(state: DropdownUploadState) {
       hasFile: true,
     });
 
-    try {
-      const dataUrl = await readFileAsDataUrl(file);
-      // Editor-time invariant: store a local value so preview renders with no network/persistence.
-      // For images we store a CSS fill string (same contract as dropdown-fill); for other kinds we store the data URL.
-      const value =
-        kind === 'image' ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
-      setFileKey(state, value, true);
-      URL.revokeObjectURL(objectUrl);
-    } catch (e) {
-      URL.revokeObjectURL(objectUrl);
-      setError(state, e instanceof Error ? e.message : 'File read failed');
-    }
+    // Locked editor contract: keep uploads in-memory until publish.
+    // Persisting is handled by the editor publish flow, which will convert blob/data
+    // URLs into stable URLs.
+    setFileKey(state, objectUrl, true);
   });
 }
 
@@ -234,19 +233,6 @@ function validateFileSelection(state: DropdownUploadState, file: File): string |
   });
 
   return ok ? null : 'File type not allowed';
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('File read failed'));
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result !== 'string') return reject(new Error('File read failed'));
-      resolve(result);
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 function extractPrimaryUrl(raw: string): string | null {

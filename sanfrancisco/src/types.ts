@@ -95,8 +95,13 @@ export type Env = {
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
+  OPENAI_API_KEY?: string;
+  PITCH_SERVICE_KEY?: string;
+  PITCH_MODEL?: string;
   SF_KV: KVNamespace;
   SF_EVENTS: Queue<InteractionEvent>;
   SF_D1: D1Database;
   SF_R2: R2Bucket;
+  // Cloudflare Vectorize binding (typed loosely to avoid depending on Vectorize TS types).
+  PITCH_DOCS?: any;
 };

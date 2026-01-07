@@ -11,6 +11,7 @@ export function ToolDrawer() {
   const session = useWidgetSession();
   const compiled = session.compiled;
   const sessionError = session.error;
+  const workspaceId = session.meta?.workspaceId ? String(session.meta.workspaceId) : '';
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
@@ -21,6 +22,18 @@ export function ToolDrawer() {
       setActivePanel(compiled.panels[0].id as PanelId);
     }
   }, [compiled?.widgetname, compiled?.panels]);
+
+  useEffect(() => {
+    // Provide a stable place for Dieter upload controls (dropdown-fill/dropdown-upload) to find
+    // the active workspace for asset persistence. This avoids having to thread IDs through every stencil.
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    if (!workspaceId) {
+      delete (root.dataset as any).ckWorkspaceId;
+      return;
+    }
+    (root.dataset as any).ckWorkspaceId = workspaceId;
+  }, [workspaceId]);
 
   const panelsById = useMemo(() => {
     const map: Record<string, CompiledPanel> = {};

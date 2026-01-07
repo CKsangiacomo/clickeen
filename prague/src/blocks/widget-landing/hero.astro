@@ -1,10 +1,21 @@
 ---
+import WebsiteCreativeEmbed from '../site/WebsiteCreativeEmbed.astro';
+
 type Props = {
   headline: string;
   subheadline?: string;
+  // Contract-locked: the hero preview (when enabled) is ALWAYS the website creative for:
+  //   wgt_web_{widgetType}.overview.hero.{locale}
+  // This is not a generic slot and cannot visualize arbitrary content.
+  websiteCreative?: {
+    widgetType: string;
+    locale: string;
+    height?: string;
+    title?: string;
+  };
 };
 
-const { headline, subheadline } = Astro.props;
+const { headline, subheadline, websiteCreative } = Astro.props;
 ---
 
 <section class="ck-canvas">
@@ -23,7 +34,18 @@ const { headline, subheadline } = Astro.props;
         </div>
       </div>
       <div class="ck-split__b" aria-hidden="true">
-        <div class="ck-media ck-heroPreview">Live widget preview (stub)</div>
+        {websiteCreative ? (
+          <WebsiteCreativeEmbed
+            widgetType={websiteCreative.widgetType}
+            page="overview"
+            blockId="hero"
+            locale={websiteCreative.locale}
+            height={websiteCreative.height ?? '360px'}
+            title={websiteCreative.title ?? 'Widget preview'}
+          />
+        ) : (
+          <div class="ck-media ck-heroPreview">Live widget preview (stub)</div>
+        )}
       </div>
     </div>
   </div>

@@ -24,22 +24,27 @@ Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
 ### Website creatives (Prague CMS visuals)
 
-DevStudio Local includes a superadmin action: **Create website creative**.
+DevStudio Local includes a superadmin action: **Create/update website creative**.
 
-- **Dropdown options source (registry)**: Prague-owned TS registry
-  - `prague/src/lib/websiteCreativeRegistry.ts`
-  - v1: `overview` has creative slots `hero` + `features` (others empty until Prague expands the registry).
+- **Dropdown options source (canonical)**: widget page specs in Tokyo (checked-in JSON)
+  - `tokyo/widgets/{widgetType}/pages/{overview|templates|examples|features}.json`
+  - DevStudio loads the selected `{page}.json` and lists only blocks where `visual: true`
+  - Slot key is `block.id` (can contain dots; e.g. `feature.left.50`)
 - **Deterministic identity (v1)**:
-  - `creativeKey = {widgetType}.{page}.{slot}` (locale-free)
+  - `creativeKey = {widgetType}.{page}.{block.id}` (locale-free)
   - `publicId = wgt_web_{creativeKey}.{locale}` (locale-specific; DevStudio defaults `locale=en`)
 - **How DevStudio executes it**
   - DevStudio requests widget types via Bob’s Paris proxy:
     - `GET /api/paris/widgets`
   - DevStudio ensures the website creative via Bob’s Paris proxy (workspace-owned):
     - `POST /api/paris/website-creative?workspaceId=<workspaceId>`
-    - Body includes: `{ widgetType, page, slot, locale, baselineConfig }`
+    - Body includes: `{ widgetType, page, slot, locale, baselineConfig, overwrite? }`
   - Baseline config is seeded from compiled defaults:
     - `GET /api/widgets/{widgetType}/compiled` (Bob compile endpoint)
+
+Notes:
+- If the currently selected instance is already a website creative (`publicId` starts with `wgt_web_`), clicking the button saves the current Bob editor state back into that same instance (no new instance).
+- Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
 
 ## Troubleshooting
 
@@ -47,4 +52,3 @@ If the instance dropdown shows “Error loading instances”:
 - Check Bob: `http://localhost:3000`
 - Check Paris: `http://localhost:3001/api/healthz`
 - If Paris is wedged, re-run `bash scripts/dev-up.sh` (it kills stale `wrangler/workerd` processes before starting services).
-

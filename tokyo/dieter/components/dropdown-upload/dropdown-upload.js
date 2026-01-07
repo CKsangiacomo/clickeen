@@ -165,6 +165,7 @@ var Dieter = (() => {
       maxImageKb: Number.isFinite(maxImageKb) ? maxImageKb : void 0,
       maxVideoKb: Number.isFinite(maxVideoKb) ? maxVideoKb : void 0,
       maxOtherKb: Number.isFinite(maxOtherKb) ? maxOtherKb : void 0,
+      localObjectUrl: null,
       nativeValue: captureNativeValue(input),
       internalWrite: false
     };
@@ -191,6 +192,10 @@ var Dieter = (() => {
     state.replaceButton.addEventListener("click", pickFile);
     state.removeButton.addEventListener("click", (event) => {
       event.preventDefault();
+      if (state.localObjectUrl) {
+        URL.revokeObjectURL(state.localObjectUrl);
+        state.localObjectUrl = null;
+      }
       setFileKey(state, "", true);
     });
     state.fileInput.addEventListener("change", async () => {
@@ -202,7 +207,9 @@ var Dieter = (() => {
         return;
       }
       clearError(state);
+      if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
       const objectUrl = URL.createObjectURL(file);
+      state.localObjectUrl = objectUrl;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
       state.root.dataset.localExt = ext || "";
@@ -215,15 +222,7 @@ var Dieter = (() => {
         ext,
         hasFile: true
       });
-      try {
-        const dataUrl = await readFileAsDataUrl(file);
-        const value = kind === "image" ? `url("${dataUrl}") center center / cover no-repeat` : dataUrl;
-        setFileKey(state, value, true);
-        URL.revokeObjectURL(objectUrl);
-      } catch (e) {
-        URL.revokeObjectURL(objectUrl);
-        setError(state, e instanceof Error ? e.message : "File read failed");
-      }
+      setFileKey(state, objectUrl, true);
     });
   }
   function validateFileSelection(state, file) {
@@ -251,18 +250,6 @@ var Dieter = (() => {
       return typeLower === rule.toLowerCase();
     });
     return ok ? null : "File type not allowed";
-  }
-  function readFileAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("File read failed"));
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result !== "string") return reject(new Error("File read failed"));
-        resolve(result);
-      };
-      reader.readAsDataURL(file);
-    });
   }
   function extractPrimaryUrl(raw) {
     const v = (raw || "").trim();

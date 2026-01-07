@@ -1,11 +1,14 @@
-const DEFAULT_TOKYO_BASE = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:4000'
-  : 'https://tokyo.clickeen.com';
-
 export function getTokyoBase() {
   const configured = process.env.TOKYO_URL || process.env.TOKYO_BASE_URL || process.env.NEXT_PUBLIC_TOKYO_URL;
-  if (!configured) return DEFAULT_TOKYO_BASE;
-  return configured.replace(/\/$/, '');
+  if (configured) return configured.replace(/\/$/, '');
+
+  // Local dev default.
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:4000';
+  }
+
+  // Fail-fast in deployed environments: Tokyo base is an infrastructure contract and must be explicit.
+  throw new Error('[Venice] Missing TOKYO_URL (base URL for Tokyo widget assets)');
 }
 
 export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
@@ -21,4 +24,3 @@ export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
     clearTimeout(timer);
   }
 }
-

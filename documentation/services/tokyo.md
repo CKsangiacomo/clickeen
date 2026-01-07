@@ -64,6 +64,10 @@ Rules:
 
 Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
+- `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
+- `tokyo/dev-server.mjs` supports local upload endpoints:
+  - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
+  - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
 
 ## Links
 - Back: ../../CONTEXT.md

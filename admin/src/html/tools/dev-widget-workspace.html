@@ -293,7 +293,7 @@
       <span class="diet-btn-txt__label">Create template instance</span>
     </button>
     <button type="button" class="diet-btn-txt" id="superadmin-create-prague" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Create website creative</span>
+      <span class="diet-btn-txt__label">Create/update website creative</span>
     </button>
   </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
@@ -328,9 +328,9 @@
 
 <div id="website-creative-modal" hidden>
   <div class="ck-modal__backdrop" data-modal-dismiss="true"></div>
-  <div class="ck-modal__panel" role="dialog" aria-modal="true" aria-label="Create website creative">
+  <div class="ck-modal__panel" role="dialog" aria-modal="true" aria-label="Create/update website creative">
     <div class="ck-modal__header">
-      <h2 class="heading-3" style="margin:0">Create website creative</h2>
+      <h2 class="heading-3" style="margin:0">Create/update website creative</h2>
     </div>
     <div class="ck-modal__body">
       <div class="ck-modal__field">
@@ -351,6 +351,15 @@
           <option value="en">en</option>
         </select>
       </div>
+      <div class="ck-modal__field">
+        <label class="label-s" for="website-creative-overwrite">
+          <input id="website-creative-overwrite" type="checkbox" />
+          Overwrite existing instance config
+        </label>
+        <span class="caption" style="color: color-mix(in oklab, var(--color-text), transparent 45%);">
+          When enabled, this resets the existing website-creative instance to the widget defaults (wipes edits).
+        </span>
+      </div>
       <div class="ck-modal__preview">
         <div class="ck-modal__preview-row">
           <span class="label-xs" style="color: color-mix(in oklab, var(--color-text), transparent 40%);">creativeKey</span>
@@ -367,7 +376,7 @@
         <span class="diet-btn-txt__label">Cancel</span>
       </button>
       <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" id="website-creative-submit">
-        <span class="diet-btn-txt__label">Create / Open</span>
+        <span class="diet-btn-txt__label">Create / Update / Open</span>
       </button>
     </div>
   </div>
@@ -383,12 +392,88 @@
 </div>
 
 <script type="module">
-import {
-  CREATIVE_PAGES,
-  CREATIVE_SLOTS_BY_PAGE,
-  composeWebsiteCreativeKey,
-  composeWebsiteCreativePublicId,
-} from '../../data/pragueWebsiteCreativeRegistry';
+const WEBSITE_CREATIVE_PAGES = ['overview', 'templates', 'examples', 'features'];
+
+function composeWebsiteCreativeKey({ widgetType, page, blockId }) {
+  return `${widgetType}.${page}.${blockId}`;
+}
+
+function composeWebsiteCreativePublicId({ creativeKey, locale }) {
+  return `wgt_web_${creativeKey}.${locale}`;
+}
+
+const widgetPageJsonCache = new Map();
+
+async function loadWidgetPageJson({ widgetType, page }) {
+  const normalizedWidgetType = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
+  const normalizedPage = String(page || '').trim().toLowerCase();
+  const cacheKey = `${normalizedWidgetType}:${normalizedPage}`;
+  if (widgetPageJsonCache.has(cacheKey)) return widgetPageJsonCache.get(cacheKey);
+
+  const promise = (async () => {
+    const res = await fetch(
+      `/tokyo/widgets/${encodeURIComponent(normalizedWidgetType)}/pages/${encodeURIComponent(normalizedPage)}.json?_t=${Date.now()}`,
+      { cache: 'no-store' },
+    );
+
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      throw new Error(`[DevStudio] Failed to load widget page JSON (${normalizedWidgetType}/${normalizedPage}) (HTTP ${res.status})`);
+    }
+
+    const json = await res.json().catch(() => null);
+    if (!json || typeof json !== 'object') {
+      throw new Error(`[DevStudio] Invalid widget page JSON (${normalizedWidgetType}/${normalizedPage})`);
+    }
+    if (json.v !== 1) {
+      throw new Error(`[DevStudio] Unsupported widget page JSON version (${normalizedWidgetType}/${normalizedPage}): ${String(json.v)}`);
+    }
+    if (!Array.isArray(json.blocks)) {
+      throw new Error(`[DevStudio] Widget page JSON missing blocks[] (${normalizedWidgetType}/${normalizedPage})`);
+    }
+
+    const blocks = json.blocks
+      .map((b) => (b && typeof b === 'object' && !Array.isArray(b) ? b : null))
+      .filter(Boolean)
+      .map((b) => {
+        const id = typeof b.id === 'string' ? b.id.trim() : '';
+        const kind = typeof b.kind === 'string' ? b.kind.trim() : '';
+        const copy = b.copy && typeof b.copy === 'object' && !Array.isArray(b.copy) ? b.copy : {};
+        const visual = b.visual === true;
+        return id && kind ? { id, kind, copy, visual } : null;
+      })
+      .filter(Boolean);
+
+    return { v: 1, blocks };
+  })();
+
+  widgetPageJsonCache.set(cacheKey, promise);
+  return promise;
+}
+
+function parseWebsiteCreativePublicId(publicId) {
+  const raw = String(publicId || '').trim();
+  if (!raw.startsWith('wgt_web_')) return null;
+  const suffix = raw.slice('wgt_web_'.length);
+  const lastDot = suffix.lastIndexOf('.');
+  if (lastDot <= 0) return null;
+  const creativeKey = suffix.slice(0, lastDot);
+  const locale = suffix.slice(lastDot + 1);
+  if (!locale) return null;
+
+  const firstDot = creativeKey.indexOf('.');
+  if (firstDot <= 0) return null;
+  const widgetType = creativeKey.slice(0, firstDot);
+  const rest = creativeKey.slice(firstDot + 1);
+
+  const secondDot = rest.indexOf('.');
+  if (secondDot <= 0) return null;
+  const page = rest.slice(0, secondDot);
+  const blockId = rest.slice(secondDot + 1);
+  if (!widgetType || !page || !blockId) return null;
+
+  return { widgetType, page, blockId, locale, creativeKey, publicId: raw };
+}
 
 // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
 // DevStudio swaps DOM but does not automatically remove global event listeners.
@@ -418,6 +503,16 @@ function requireBobOrigin() {
 
 const BOB_ORIGIN = requireBobOrigin();
 const PARIS_API = `${BOB_ORIGIN}/api/paris`;
+
+function resolveTokyoBaseUrl() {
+  // Keep in sync with bob/lib/env/tokyo.ts (but plain JS for DevStudio tools).
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (isLocal) return 'http://localhost:4000';
+  // Cloudflare Pages build/runtime (dev). Keep stable even if env vars aren't wired yet.
+  return 'https://tokyo-dev.pages.dev';
+}
+
+const TOKYO_BASE = resolveTokyoBaseUrl();
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
 // v1: website creatives live in the single Clickeen-owned workspace in dev, which is ck-dev.
 // In prod this will point at the Clickeen marketing workspace.
@@ -444,6 +539,7 @@ const websiteCreativeWidgetEl = document.getElementById('website-creative-widget
 const websiteCreativePageEl = document.getElementById('website-creative-page');
 const websiteCreativeSlotEl = document.getElementById('website-creative-slot');
 const websiteCreativeLocaleEl = document.getElementById('website-creative-locale');
+const websiteCreativeOverwriteEl = document.getElementById('website-creative-overwrite');
 const websiteCreativePreviewKeyEl = document.getElementById('website-creative-preview-key');
 const websiteCreativePreviewIdEl = document.getElementById('website-creative-preview-id');
 const websiteCreativeCancelEl = document.getElementById('website-creative-cancel');
@@ -740,7 +836,7 @@ async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, conf
   throw new Error(`[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
 }
 
-async function exportInstanceDataFromBob({ timeoutMs = 2500 } = {}) {
+async function exportInstanceDataFromBob({ timeoutMs = 2500, persistAssets = false } = {}) {
   const target = iframe.contentWindow;
   if (!target) throw new Error('[DevStudio] Bob iframe not ready');
   const requestId = crypto.randomUUID();
@@ -771,8 +867,123 @@ async function exportInstanceDataFromBob({ timeoutMs = 2500 } = {}) {
     };
 
     window.addEventListener('message', onMessage);
-    target.postMessage({ type: 'devstudio:export-instance-data', requestId }, BOB_ORIGIN);
+    target.postMessage({ type: 'devstudio:export-instance-data', requestId, persistAssets }, BOB_ORIGIN);
   });
+}
+
+function cloneJson(value) {
+  // v1: config is JSON-only.
+  return JSON.parse(JSON.stringify(value ?? null));
+}
+
+function extractPrimaryUrl(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return null;
+  if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
+  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (m && m[2]) return m[2];
+  return null;
+}
+
+function replacePrimaryUrl(raw, nextUrl) {
+  const v = String(raw || '');
+  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (m && m[2]) return v.replace(m[2], nextUrl);
+  return nextUrl;
+}
+
+function isNonPersistableUrl(rawUrl) {
+  const v = String(rawUrl || '').trim();
+  return /^(?:data|blob):/i.test(v);
+}
+
+function extFromMime(mime) {
+  const mt = String(mime || '').toLowerCase();
+  if (mt === 'image/png') return 'png';
+  if (mt === 'image/jpeg') return 'jpg';
+  if (mt === 'image/webp') return 'webp';
+  if (mt === 'image/gif') return 'gif';
+  if (mt === 'image/svg+xml') return 'svg';
+  if (mt === 'video/mp4') return 'mp4';
+  if (mt === 'video/webm') return 'webm';
+  if (mt === 'application/pdf') return 'pdf';
+  return 'bin';
+}
+
+async function uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename, variant = 'original' }) {
+  const headers = new Headers();
+  headers.set('content-type', blob.type || 'application/octet-stream');
+  headers.set('x-filename', filename || 'upload.bin');
+  headers.set('x-variant', variant);
+
+  let endpoint = '';
+  if (scope === 'workspace') {
+    if (!workspaceId) throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
+    headers.set('x-workspace-id', workspaceId);
+    endpoint = `${TOKYO_BASE}/workspace-assets/upload`;
+  } else if (scope === 'widget') {
+    const normalized = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
+    if (!normalized) throw new Error('[DevStudio] Missing widgetType for widget asset upload');
+    headers.set('x-widget-type', normalized);
+    endpoint = `${TOKYO_BASE}/widgets/upload`;
+  } else {
+    throw new Error(`[DevStudio] Unknown asset upload scope: ${String(scope)}`);
+  }
+
+  const res = await fetch(`${endpoint}?_t=${Date.now()}`, {
+    method: 'POST',
+    headers,
+    body: blob,
+  });
+  const text = await res.text().catch(() => '');
+  if (!res.ok) {
+    throw new Error(
+      `[DevStudio] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
+    );
+  }
+  const json = text ? JSON.parse(text) : null;
+  const url = json?.url;
+  if (!url || typeof url !== 'string') throw new Error('[DevStudio] Asset upload missing url');
+  return url;
+}
+
+async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetType }) {
+  if (!config || typeof config !== 'object') return config;
+
+  const cache = new Map();
+  const visit = async (node) => {
+    if (typeof node === 'string') {
+      const url = extractPrimaryUrl(node);
+      if (!url || !isNonPersistableUrl(url)) return;
+
+      if (!cache.has(url)) {
+        const blob = await fetch(url).then((r) => r.blob());
+        const ext = extFromMime(blob.type);
+        const filename = `upload.${ext}`;
+        const uploadedUrl = await uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename, variant: 'original' });
+        cache.set(url, uploadedUrl);
+      }
+      const uploaded = cache.get(url);
+      return replacePrimaryUrl(node, uploaded);
+    }
+
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        const replaced = await visit(node[i]);
+        if (typeof replaced === 'string') node[i] = replaced;
+      }
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      const replaced = await visit(value);
+      if (typeof replaced === 'string') node[key] = replaced;
+    }
+  };
+
+  await visit(config);
+  return config;
 }
 
 async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
@@ -788,8 +999,18 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
     const ok = window.confirm(
       `Save the currently loaded editor state (${exportedPublicId}) into default instance (${publicId})?`
     );
-    if (!ok) throw new Error('[DevStudio] Canceled');
+  if (!ok) throw new Error('[DevStudio] Canceled');
   }
+
+  // Defaults are platform-owned; persist any uploads into tokyo/widgets/** (git-tracked),
+  // never into workspace-scoped storage.
+  await persistConfigAssetsToTokyo(config, { scope: 'widget', widgetType: widgetSlug });
+
+  // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
+  // so downstream actions (like website creatives) deterministically inherit the updated baseline.
+  await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: config });
+  compiledCache.delete(widgetSlug);
+
   await createWorkspaceInstance({
     workspaceId: DEV_WORKSPACE_ID,
     widgetType: widgetSlug,
@@ -804,6 +1025,21 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
     status: 'unpublished',
   });
   return publicId;
+}
+
+async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
+  const res = await fetch(`/api/widget-spec-defaults?_t=${Date.now()}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ widgetType: widgetSlug, defaults }),
+  });
+  const text = await res.text().catch(() => '');
+  if (!res.ok) {
+    throw new Error(
+      `[DevStudio] Update widget spec defaults failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
+    );
+  }
+  return text ? JSON.parse(text) : null;
 }
 
 async function createTemplateInstance({ widgetSlug, sourceConfig }) {
@@ -839,6 +1075,7 @@ function ensureWebsiteCreativeModalElements() {
   if (!(websiteCreativePageEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing page selector');
   if (!(websiteCreativeSlotEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing slot select');
   if (!(websiteCreativeLocaleEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing locale select');
+  if (!(websiteCreativeOverwriteEl instanceof HTMLInputElement)) throw new Error('[DevStudio] Missing overwrite checkbox');
   if (!(websiteCreativePreviewKeyEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing creativeKey preview');
   if (!(websiteCreativePreviewIdEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing publicId preview');
   if (!(websiteCreativeCancelEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing cancel button');
@@ -851,6 +1088,7 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
 
   return new Promise(async (resolve, reject) => {
     let activePage = 'overview';
+    let pageSpecsByPage = {};
 
     const cleanup = () => {
       modal.hidden = true;
@@ -858,33 +1096,80 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
       websiteCreativeWidgetEl.onchange = null;
       websiteCreativeSlotEl.onchange = null;
       websiteCreativeLocaleEl.onchange = null;
+      websiteCreativeOverwriteEl.onchange = null;
+      websiteCreativeOverwriteEl.checked = false;
+      websiteCreativeOverwriteEl.disabled = true;
       websiteCreativeCancelEl.onclick = null;
       websiteCreativeSubmitEl.onclick = null;
     };
 
+    const loadWidgetPages = async () => {
+      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
+      if (!widgetType) {
+        pageSpecsByPage = {};
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        WEBSITE_CREATIVE_PAGES.map(async (page) => {
+          const spec = await loadWidgetPageJson({ widgetType, page });
+          return { page, spec };
+        })
+      );
+
+      const next = {};
+      results.forEach((r) => {
+        if (r.status !== 'fulfilled') return;
+        if (!r.value?.spec) return;
+        next[r.value.page] = r.value.spec;
+      });
+      pageSpecsByPage = next;
+
+      if (!pageSpecsByPage[activePage]) {
+        const firstEnabled = WEBSITE_CREATIVE_PAGES.find((p) => Boolean(pageSpecsByPage[p]));
+        activePage = firstEnabled || 'overview';
+      }
+    };
+
     const recomputePreview = () => {
       const widgetType = (websiteCreativeWidgetEl.value || '').trim();
-      const slot = (websiteCreativeSlotEl.value || '').trim();
+      const blockId = (websiteCreativeSlotEl.value || '').trim();
       const locale = (websiteCreativeLocaleEl.value || 'en').trim();
-      const creativeKey = widgetType && slot ? composeWebsiteCreativeKey({ widgetType, page: activePage, slot }) : '';
+      const creativeKey = widgetType && blockId ? composeWebsiteCreativeKey({ widgetType, page: activePage, blockId }) : '';
       const publicId = creativeKey ? composeWebsiteCreativePublicId({ creativeKey, locale }) : '';
+      const exists = Boolean(publicId && instances.some((inst) => inst?.publicId === publicId));
+      const overwrite = websiteCreativeOverwriteEl.checked === true;
+
       websiteCreativePreviewKeyEl.textContent = creativeKey;
       websiteCreativePreviewIdEl.textContent = publicId;
       websiteCreativeSubmitEl.toggleAttribute('disabled', !publicId);
+      websiteCreativeOverwriteEl.toggleAttribute('disabled', !exists);
+      if (!exists) websiteCreativeOverwriteEl.checked = false;
+
+      const submitLabel = websiteCreativeSubmitEl.querySelector('.diet-btn-txt__label');
+      if (submitLabel) {
+        submitLabel.textContent = exists ? (overwrite ? 'Update / Open' : 'Open') : 'Create / Open';
+      }
     };
 
     const renderSlots = () => {
-      const slots = CREATIVE_SLOTS_BY_PAGE[activePage] || [];
-      websiteCreativeSlotEl.innerHTML = slots.map((slot) => `<option value="${slot}">${slot}</option>`).join('');
-      if (!slots.length) {
-        websiteCreativeSlotEl.innerHTML = `<option value="">(no slots yet)</option>`;
-      }
+      const blocks = pageSpecsByPage?.[activePage]?.blocks || [];
+      const visualBlocks = Array.isArray(blocks) ? blocks.filter((b) => b && b.visual === true) : [];
+
+      websiteCreativeSlotEl.innerHTML = visualBlocks
+        .map((b) => {
+          const label = b.kind && b.kind !== b.id ? `${b.id} (${b.kind})` : b.id;
+          return `<option value="${b.id}">${label}</option>`;
+        })
+        .join('');
+
+      if (!visualBlocks.length) websiteCreativeSlotEl.innerHTML = `<option value="">(no visual blocks)</option>`;
       recomputePreview();
     };
 
     const renderPages = () => {
-      websiteCreativePageEl.innerHTML = CREATIVE_PAGES.map((page) => {
-        const enabled = (CREATIVE_SLOTS_BY_PAGE[page] || []).length > 0;
+      websiteCreativePageEl.innerHTML = WEBSITE_CREATIVE_PAGES.map((page) => {
+        const enabled = Boolean(pageSpecsByPage?.[page]);
         const selected = page === activePage;
         return `
           <button
@@ -899,7 +1184,7 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
             <span class="diet-btn-txt__label">${page}</span>
           </button>
         `;
-      }).join('');
+          }).join('');
 
       websiteCreativePageEl.querySelectorAll('[data-page]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -918,6 +1203,7 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
       const options = Array.from(new Set([fallbackType, ...widgetTypes])).filter(Boolean);
       websiteCreativeWidgetEl.innerHTML = options.map((type) => `<option value="${type}">${type}</option>`).join('');
       websiteCreativeWidgetEl.value = fallbackType;
+      await loadWidgetPages();
     } catch (err) {
       cleanup();
       reject(err);
@@ -932,19 +1218,30 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
       reject(error || new Error('[DevStudio] Canceled'));
     };
 
-    websiteCreativeWidgetEl.onchange = recomputePreview;
+    websiteCreativeWidgetEl.onchange = async () => {
+      try {
+        await loadWidgetPages();
+        renderPages();
+        renderSlots();
+        recomputePreview();
+      } catch (err) {
+        dismiss(err);
+      }
+    };
     websiteCreativeSlotEl.onchange = recomputePreview;
     websiteCreativeLocaleEl.onchange = recomputePreview;
+    websiteCreativeOverwriteEl.onchange = recomputePreview;
 
     websiteCreativeCancelEl.onclick = () => dismiss(new Error('[DevStudio] Canceled'));
     websiteCreativeSubmitEl.onclick = () => {
       const widgetType = (websiteCreativeWidgetEl.value || '').trim();
       const slot = (websiteCreativeSlotEl.value || '').trim();
       const locale = (websiteCreativeLocaleEl.value || 'en').trim();
+      const overwrite = websiteCreativeOverwriteEl.checked === true;
       if (!widgetType) return dismiss(new Error('[DevStudio] Missing widget type'));
       if (!slot) return dismiss(new Error('[DevStudio] Missing slot'));
       cleanup();
-      resolve({ widgetType, page: activePage, slot, locale });
+      resolve({ widgetType, page: activePage, slot, locale, overwrite });
     };
 
     modal.querySelectorAll('[data-modal-dismiss]').forEach((node) => {
@@ -956,13 +1253,13 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
   });
 }
 
-async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, locale, baselineConfig }) {
+async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, locale, baselineConfig, overwrite = false }) {
   const res = await superadminFetch(
     `${PARIS_API}/website-creative?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ widgetType, page, slot, locale, baselineConfig }),
+      body: JSON.stringify({ widgetType, page, slot, locale, baselineConfig, overwrite }),
     }
   );
   const text = await res.text().catch(() => '');
@@ -1008,6 +1305,35 @@ superadminCreateTemplate?.addEventListener('click', async () => {
 
 superadminCreatePrague?.addEventListener('click', async () => {
   try {
+    // If we're already editing a website creative instance, treat this as "Update":
+    // persist the current editor state into the same website-creative instance (no new instance).
+    const currentCreative = parseWebsiteCreativePublicId(currentPublicId);
+    if (currentCreative) {
+      // Export via Bob so `blob:` URLs can be persisted (DevStudio cannot read Bob-origin blob URLs).
+      const exported = await exportInstanceDataFromBob({ persistAssets: true });
+      const config = exported?.instanceData;
+      if (!config || typeof config !== 'object') {
+        throw new Error('[DevStudio] Bob export did not include instanceData');
+      }
+
+      const exportedPublicId = exported?.meta?.publicId;
+      if (exportedPublicId && exportedPublicId !== currentCreative.publicId) {
+        const ok = window.confirm(
+          `Save the currently loaded editor state (${exportedPublicId}) into website creative (${currentCreative.publicId})?`
+        );
+        if (!ok) throw new Error('[DevStudio] Canceled');
+      }
+
+      await updateWorkspaceInstance({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        publicId: currentCreative.publicId,
+        config,
+        status: 'unpublished',
+      });
+      await refreshInstancesAndSelect(currentCreative.publicId);
+      return;
+    }
+
     const instance = instances.find((inst) => inst.publicId === currentPublicId);
     const defaultWidgetType = instance?.widgetSlug || requireWidgetSlugForAction();
 
@@ -1017,17 +1343,21 @@ superadminCreatePrague?.addEventListener('click', async () => {
     const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
     if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
 
+    const baselineConfig = cloneJson(defaults);
+    await persistConfigAssetsToTokyo(baselineConfig, { scope: 'widget', widgetType: selection.widgetType });
+
     const result = await ensureWebsiteCreative({
       workspaceId: CLICKEEN_WORKSPACE_ID,
       widgetType: selection.widgetType,
       page: selection.page,
       slot: selection.slot,
       locale: selection.locale,
-      baselineConfig: defaults,
+      baselineConfig,
+      overwrite: selection.overwrite === true,
     });
 
     const publicId = result?.publicId || composeWebsiteCreativePublicId({
-      creativeKey: composeWebsiteCreativeKey({ widgetType: selection.widgetType, page: selection.page, slot: selection.slot }),
+      creativeKey: composeWebsiteCreativeKey({ widgetType: selection.widgetType, page: selection.page, blockId: selection.slot }),
       locale: selection.locale,
     });
 

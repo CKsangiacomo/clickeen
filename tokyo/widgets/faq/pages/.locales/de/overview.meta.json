@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "widget": "faq",
+  "page": "overview",
+  "locale": "de",
+  "model": "gpt-5.2",
+  "srcHash": "48a8f31811b62f832de4dc0f37c08927a05a1dcaa2828eeb7fb3ea5be0b32d2e"
+}
