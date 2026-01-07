@@ -67,12 +67,24 @@ This single foundation enables a cascade of redefinitions:
 
 ## Contents
 
-| File/Folder | Purpose |
-|-------------|---------|
-| `pitch_narrative.md` | The structured narrative (10 parts—see below) |
-| `investor_faq.md` | Q&A format covering investor questions |
-| `FounderProfile/` | Founder background, track record, and personality profile |
-| `README.md` | This file—meta-docs and context for the Pitch Agent |
+| File/Folder | Purpose | Tier |
+|-------------|---------|------|
+| `pitch_narrative.md` | The structured narrative (10 parts—see below) | Core |
+| `investor_faq.md` | Q&A format covering investor questions | Core |
+| `FounderProfile/` | Founder background, track record, and personality profile | Tier 2 |
+| `growth-projections.md` | 6/12/18-month projections with benchmarks and levers | **Tier 4** |
+| `README.md` | This file—meta-docs and context for the Pitch Agent | — |
+
+### Document Tiers
+
+| Tier | When to Use |
+|------|-------------|
+| **Core** | Every investor conversation |
+| **Tier 2** | When they ask about the founder |
+| **Tier 3** | Technical deep-dives (link to `documentation/architecture/`) |
+| **Tier 4** | Granular analysis for investors who want Phase A details |
+
+**Tier 4: Growth Projections** — For investors who want to dig into the widget business specifically. Covers baseline vs. ambitious scenarios, competitive benchmarks (Elfsight, Common Ninja, EmbedSocial), and key growth levers/risks.
 
 ## Pitch Narrative Structure
 
@@ -160,12 +172,11 @@ When explaining the architecture, use both: "San Francisco (our AI orchestration
 ## Indexing rules (for Pitch Agent)
 
 Pitch Agent ingestion should:
-- **Always ingest:** `documentation/_pitch/**`
+- **Always ingest:** `documentation/_pitch/**` (includes growth-projections.md)
 - **Optionally ingest:** small allowlist for factual grounding:
   - `documentation/strategy/WhyClickeen.md`
   - `documentation/strategy/GlobalReach.md`
   - `documentation/architecture/CONTEXT.md` (for technical details if asked)
-  - `documentation/architecture/CONTEXT.md`
 
 ## Key framing reminders
 
