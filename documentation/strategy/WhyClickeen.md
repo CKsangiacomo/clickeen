@@ -9,13 +9,13 @@ For technical implementation, see:
 
 ---
 
-## The Experiment
+## What We're Building
 
-**What happens if you build a SaaS from the ground up—every token, every contract, every doc—so that AI can actually operate it?**
+**A new type of SaaS—built with AI, to be understood and managed by AI, with human supervision.**
 
-Not "add AI features." Not "AI copilots that help humans." Actually AI-operable infrastructure.
+Not "add AI features." Not "AI copilots that help humans." A codebase built from scratch, with AI, for AI.
 
-This is Clickeen's thesis. It's an experiment, not a guaranteed outcome.
+This is Clickeen's thesis. It's new territory—and we're writing the playbook.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ This is Clickeen's thesis. It's an experiment, not a guaranteed outcome.
 - **AI coding assistants** build the product from specs and PRDs
 - **AI agents** run the company: sales, support, marketing, localization, ops
 
-**The San Francisco system is not a feature—it's the operating system for the company's workforce.**
+**San Francisco (our AI orchestration service) is not a feature—it's the operating system for the company's workforce.**
 
 See: `documentation/ai/overview.md`, `ai/learning.md`, `ai/infrastructure.md`
 
@@ -188,7 +188,7 @@ Widget categories (illustrative, not final):
 
 Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand. Each widget includes multiple professionally designed **starter designs** (curated instances users can clone).
 
-**Widgets are the wedge, not the destination.** They prove the model works: AI-native architecture, global by default, AI-operable. The architecture is the product.
+**Widgets are the Trojan horse, not the destination.** They're the perfect starting point—high-ROI, viral by design, fast time-to-value. But once you're using widgets, you're already on the platform. The architecture is the product.
 
 ---
 
@@ -258,7 +258,7 @@ See: `documentation/capabilities/multitenancy.md`
 ## The PLG Motion
 
 **Play without an account (marketing site):**
-- Visitor browses widgets on clickeen.com website (Prague)
+- Visitor browses widgets on clickeen.com (Prague, our marketing website)
 - Chooses a widget (e.g., "FAQ", "Testimonials") and lands on the widget's landing page
 - Sees MiniBob loaded with an unpublished instance
 - Can customize config (text, colors, etc.) and optionally start from a different starter design
@@ -517,7 +517,7 @@ See: `documentation/capabilities/supernova.md` for full architecture.
 
 ## What If This Works? (Speculative)
 
-If the experiment succeeds—if a SaaS can truly be built AI-native from scratch and operated by AI—the implications go beyond "a better widget company."
+If this works—if a SaaS can truly be built AI-native from scratch and managed by AI—the implications go beyond "a better widget company."
 
 ### 1. Cost Structures Change Fundamentally
 
@@ -572,7 +572,7 @@ Clickeen:
 If this works, we genuinely don't know where it goes.
 
 - Downside: A well-architected widget business
-- Upside: Proof that one human + AI can run what used to require 100
+- Upside: Proof that one human + AI can run what used to require a full team
 
 And if *that* works? The implications compound beyond what we can model.
 

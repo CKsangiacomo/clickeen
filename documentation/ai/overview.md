@@ -9,17 +9,17 @@ If you find a mismatch, update this document; execution continues even if docs d
 
 **Clickeen is an AI-first company.** San Francisco is not just a feature—it's the **operating system for the company's AI workforce**.
 
-Traditional SaaS companies need 30-100+ people to operate at scale. Clickeen operates with **1 human + AI agents**:
+Traditional SaaS companies need full teams to operate at scale—sales, support, marketing, localization, ops. Clickeen operates with **1 human + AI agents**:
 
-| Agent | Role | Traditional Equivalent |
-|-------|------|------------------------|
-| SDR Copilot | Convert visitors in Minibob | Sales team (5-20 people) |
+| Agent | Role | Replaces |
+|-------|------|----------|
+| SDR Copilot | Convert visitors in Minibob | Sales team |
 | Editor Copilot | Help users customize widgets | Product specialists |
-| Support Agent | Resolve user issues | Support team (5-15 people) |
-| Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team (3-10 people) |
-| Content Writer | Blog, SEO, help articles | Content team (2-5 people) |
-| UI Translator | Product localization | Localization team (5+ people) |
-| Ops Monitor | Alerts, incidents, monitoring | DevOps/SRE (2-5 people) |
+| Support Agent | Resolve user issues | Support team |
+| Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team |
+| Content Writer | Blog, SEO, help articles | Content team |
+| UI Translator | Product localization | Localization team |
+| Ops Monitor | Alerts, incidents, monitoring | DevOps/SRE |
 
 **Every agent learns automatically** from outcomes—improving prompts, accumulating golden examples, and evolving over time. Day 1 agents are mediocre. Day 100 agents are excellent.
 

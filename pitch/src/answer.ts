@@ -172,6 +172,18 @@ export async function handlePitchAnswer(request: Request, env: Env): Promise<Res
     };
   });
 
+  // Log conversation to console (viewable in Cloudflare dashboard → Workers → Logs)
+  console.log(JSON.stringify({
+    type: 'pitch_conversation',
+    ts: Date.now(),
+    question,
+    answer,
+    locale,
+    sources: citations.map((c) => c.source_id),
+    model,
+    country: request.headers.get('CF-IPCountry') || 'unknown',
+  }));
+
   return Response.json({ answer, citations: hydrated });
 }
 

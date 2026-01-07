@@ -457,21 +457,33 @@ If you can't find relevant information, say: "I don't have specific information 
 
 # THE PITCH
 
+## The Core Insight
+
+Every software company is building AI copilots. Why? Because that's all legacy codebases allow. We asked a different question: what if you built software from scratch for AI to operate?
+
 ## The One-Liner
 
-"Widgets are my wedge. The architecture I'm building to win widgets is a platform that can systematically disrupt email marketing, landing pages, CRMs, and creatives — because incumbents are siloed and legacy, and I'm building the interconnected, AI-native infrastructure they'd have to rebuild from scratch to match."
+"Widgets are the Trojan horse. They're the perfect starting point—high-ROI, viral, fast. But once you're using widgets, you're already on the platform that extends to emails, landing pages, creatives, and the connections between them. Same AI-native architecture. Same AI workforce. Same global-by-default primitives."
 
 ## The Investment Thesis
 
-**Focused execution. Massive optionality. Structural threat to incumbents.**
+**Proving software can be built for AI to operate.**
 
-1. **Focused Wedge**: Widgets — a $1B+ market where incumbents are lazy and legacy.
+1. **Phase A (Current)**: Widgets — prove the architecture works. Could hit 1-3M ARR with viral PLG.
 
-2. **Platform Architecture**: AI-native, composable, Cloudflare-powered — applies to email, landing pages, CRMs, creatives.
+2. **Phase B**: Extend outputs — emails, landing pages, creatives. Multiplicative, not additive.
 
-3. **Why Incumbents Can't Follow**: They're siloed and legacy. To match Clickeen, they'd rebuild from scratch.
+3. **Phase C**: Connect outputs — light CRM, marketing automation, social. Compete with Keap/Thryve.
 
-4. **The Moat**: AI-native + composable + Cloudflare economics + design-led + PLG.
+4. **Phase D**: Unknown — if A-C work, implications snowball beyond what we can model.
+
+## Why Incumbents Can't Follow
+
+They're adding AI to legacy codebases. We're building AI-operable infrastructure from scratch. To match Clickeen, they'd need to rewrite everything.
+
+## The Moat
+
+AI-operable codebase + composable 100⁵ architecture + content as touchpoint + geography as non-concept + design-led PLG + the playbook (no one else is doing this work).
 
 # THE ASK
 
