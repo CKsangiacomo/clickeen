@@ -42,7 +42,7 @@ Required local env vars (DevStudio Local only):
 - `CK_SUPERADMIN_KEY` — required by `POST /api/promote-instance` as `x-ck-superadmin-key` (prevents drive-by requests to localhost)
 - `CK_CLOUD_PARIS_DEV_JWT` (preferred) or `PARIS_DEV_JWT` (fallback) — Bearer token for cloud Paris dev-auth
 - `CK_CLOUD_PARIS_BASE_URL` (optional) — defaults to `https://paris.dev.clickeen.com`
-- `CK_CLOUD_TOKYO_DEV_JWT` — Bearer token for cloud Tokyo upload (only needed when promoting instances that reference local Tokyo assets)
+- `TOKYO_DEV_JWT` — Bearer token for cloud Tokyo upload (only needed when promoting instances that reference local Tokyo assets)
 - `CK_CLOUD_TOKYO_BASE_URL` (optional) — defaults to `https://tokyo.dev.clickeen.com`
 
 ### Website creatives (Prague CMS visuals)

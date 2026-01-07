@@ -341,7 +341,7 @@ export default defineConfig({
             let configToPromote: Record<string, unknown> = config;
             if (localUrlRefs.length) {
               const cloudTokyoBase = (process.env.CK_CLOUD_TOKYO_BASE_URL || 'https://tokyo.dev.clickeen.com').trim().replace(/\/+$/, '');
-              const tokyoJwt = (process.env.CK_CLOUD_TOKYO_DEV_JWT || '').trim();
+              const tokyoJwt = (process.env.TOKYO_DEV_JWT || '').trim();
               if (!tokyoJwt) {
                 res.statusCode = 500;
                 res.end(
@@ -349,7 +349,7 @@ export default defineConfig({
                     error: {
                       kind: 'INTERNAL',
                       reasonKey: 'devstudio.errors.promote.missingCloudTokyoAuth',
-                      detail: 'Missing CK_CLOUD_TOKYO_DEV_JWT in DevStudio Local env (required to promote instances that reference local assets).',
+                      detail: 'Missing TOKYO_DEV_JWT in DevStudio Local env (required to promote instances that reference local assets).',
                       paths: localUrlRefs.map((r) => r.path),
                     },
                   }),
