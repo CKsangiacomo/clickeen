@@ -86,6 +86,15 @@ type BobExportInstanceDataResponseMessage = {
   isDirty?: boolean;
 };
 
+type BobPublishedMessage = {
+  type: 'bob:published';
+  publicId: string;
+  workspaceId: string;
+  widgetType: string;
+  status: 'published';
+  config: Record<string, unknown>;
+};
+
 const DEFAULT_PREVIEW: PreviewSettings = {
   device: 'desktop',
   theme: 'light',
@@ -424,10 +433,18 @@ function useWidgetSessionInternal() {
   const publish = useCallback(async () => {
     const publicId = state.meta?.publicId;
     const workspaceId = state.meta?.workspaceId;
+    const widgetType = state.meta?.widgetname;
     if (!publicId || !workspaceId) {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.publish.missingInstanceContext' },
+      }));
+      return;
+    }
+    if (!widgetType) {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
       }));
       return;
     }
@@ -503,11 +520,23 @@ function useWidgetSessionInternal() {
         instanceData: json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.instanceData,
         policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
       }));
+
+      try {
+        const message: BobPublishedMessage = {
+          type: 'bob:published',
+          publicId,
+          workspaceId,
+          widgetType,
+          status: 'published',
+          config: persisted,
+        };
+        window.parent?.postMessage(message, '*');
+      } catch {}
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err);
       setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
     }
-  }, [state.instanceData, state.meta?.publicId, state.meta?.workspaceId, state.policy]);
+  }, [state.instanceData, state.meta?.publicId, state.meta?.workspaceId, state.meta?.widgetname, state.policy]);
 
   const loadFromUrlParams = useCallback(async () => {
     if (typeof window === 'undefined') return;

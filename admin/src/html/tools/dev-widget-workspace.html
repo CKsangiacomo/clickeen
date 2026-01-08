@@ -638,6 +638,14 @@ window.addEventListener('message', (event) => {
         isPosting = false;
       });
   }
+  if (data && data.type === 'bob:published') {
+    const publicId = typeof data.publicId === 'string' ? data.publicId : '';
+    const workspaceId = typeof data.workspaceId === 'string' ? data.workspaceId : '';
+    const widgetType = typeof data.widgetType === 'string' ? data.widgetType : '';
+    const config = data.config && typeof data.config === 'object' ? data.config : null;
+    if (!publicId || !workspaceId || !widgetType || !config) return;
+    maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status: 'published' }).catch(() => {});
+  }
 }, { signal: abortController.signal });
 
 function attachDropdown() {

@@ -6,7 +6,7 @@
 
 ---
 
-# The Meta Reality
+# The Proof Point
 
 Before we start: you're asking an AI about a company where AI does everything.
 

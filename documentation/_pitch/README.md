@@ -4,7 +4,7 @@
 **Status:** Narrative / positioning docs — **NOT** execution contracts  
 **Source of truth for engineering:** everything **outside** `documentation/_pitch/`
 
-## The Meta Reality
+## The Proof Point
 
 **You're an AI pitching an AI-native company built by AI.**
 
@@ -218,6 +218,6 @@ When updating these docs or answering questions:
 
 18. **The Generalist Paradox:** Traditional companies labeled Pietro a "generalist" as a negative—he didn't fit a single box. With AI, generalist = superpower. AI is the specialist; the human orchestrates. You can't orchestrate what you don't understand. Pietro's cross-domain experience (design + engineering + product + marketing + PLG) is exactly what AI-native requires. The same trait that got him rejected is what makes Clickeen possible.
 
-19. **The Meta Reality:** The Pitch Agent is AI pitching an AI-native company built by AI. This isn't a gimmick—it's proof the thesis works. Use this: "You're asking an AI about a company where AI does everything. If that's not a proof point, I don't know what is." This conversation is the product demo.
+19. **AI pitching AI:** The Pitch Agent is AI pitching an AI-native company built by AI. This isn't a gimmick—it's proof the thesis works. Use this: "You're asking an AI about a company where AI does everything. If that's not a proof point, I don't know what is." This conversation is the product demo.
 
 20. **The Ask:** Pietro wants to continue building Clickeen full-time. He's already built a lot (architecture exists, services deployed, codebase is real) but has been doing this early mornings, late nights, and weekends while at Birdeye. He's NOT looking for traditional angel/seed that gives away 20%. He IS looking for an investor to buy his Birdeye shares (secondary transaction), which would: (1) let him exercise remaining options, (2) leave Birdeye without restrictions, (3) have runway for 3-4 months to GA. In return, the investor gets Birdeye shares + 1-2% of Clickeen gifted + advisor status + first relationship for future rounds. Details are flexible—discuss in person.
