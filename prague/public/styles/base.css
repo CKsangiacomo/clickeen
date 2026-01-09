@@ -14,3 +14,7 @@ body {
 /* Dieter typography sets `p { font: ... }` in foundations.
    Prague wants paragraphs to inherit the Prague baseline by default. */
 p { font: inherit; }
+
+/* Prague uses Dieter typography utilities everywhere (e.g. `body-m`).
+   For the marketing surface, treat `body-m` as the default body size (inherit Prague baseline). */
+.body-m { font: inherit; }
