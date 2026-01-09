@@ -57,24 +57,14 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
           <div class="ck-share__menu" role="menu" aria-label="Share options">
             <div class="ck-share__toast" role="status" aria-live="polite"></div>
 
-            <div class="ck-share__grid" data-size="sm">
-              <button type="button" class="ck-shareCard" data-action="native">
-                <span class="ck-shareCard__icon" aria-hidden="true">
-                  <Icon name="share" size={18} />
-                </span>
-                <span class="ck-shareCard__label label-xs">System</span>
-              </button>
+            <div class="ck-share__sectionTitle label-s">Send as message</div>
+            <div class="ck-share__grid">
               <button type="button" class="ck-shareCard" data-action="copy">
                 <span class="ck-shareCard__icon" aria-hidden="true">
                   <Icon name="copy" size={18} />
                 </span>
                 <span class="ck-shareCard__label label-xs">Copy link</span>
               </button>
-            </div>
-
-            <div class="ck-share__sep" aria-hidden="true"></div>
-
-            <div class="ck-share__grid">
               <button type="button" class="ck-shareCard" data-action="sms">
                 <span class="ck-shareCard__icon" aria-hidden="true">
                   <Icon name="sms" size={18} />
@@ -127,6 +117,7 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
             <div class="ck-share__sep" aria-hidden="true"></div>
 
+            <div class="ck-share__sectionTitle label-s">Share on Social</div>
             <div class="ck-share__grid">
               <button type="button" class="ck-shareCard" data-action="x">
                 <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="x" size={18} /></span>
@@ -242,8 +233,9 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
   .ck-share__menu {
     position: absolute;
     top: calc(100% + 10px);
-    right: 0;
-    width: min(360px, calc(100vw - 48px));
+    right: var(--space-4);
+    width: min(640px, calc(100vw - 96px));
+    max-width: calc(100% - 32px);
     max-height: min(480px, calc(100vh - 120px));
     overflow: auto;
     background: color-mix(in oklab, var(--color-system-white), transparent 4%);
@@ -276,8 +268,13 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     gap: var(--space-3);
   }
 
-  .ck-share__grid[data-size="sm"] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .ck-share__sectionTitle {
+    margin: 2px 4px var(--space-3);
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  @media (min-width: 560px) {
+    .ck-share__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   .ck-shareCard {
@@ -427,19 +424,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     const url = shareUrlFor(action);
     const title = document.title || 'Clickeen';
     const text = title;
-
-    if (action === 'native') {
-      if (navigator.share) {
-        try {
-          await navigator.share({ title, text, url: shareUrlFor('native') });
-          showToast('Shared');
-        } catch {}
-        return;
-      }
-      await copy(shareUrlFor('copy'));
-      showToast('Link copied');
-      return;
-    }
 
     if (action === 'copy') { await copy(url); showToast('Link copied'); return; }
 
