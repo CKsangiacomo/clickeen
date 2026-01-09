@@ -196,7 +196,8 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
   }
 
   .ck-share {
-    position: relative;
+    /* Let the menu position relative to the topbar (not the tiny share button). */
+    position: static;
   }
 
   .ck-share__btn {
@@ -232,10 +233,11 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
   .ck-share__menu {
     position: absolute;
-    top: calc(100% + 10px);
+    /* Anchor to the creative/topbar surface, not the button width */
+    top: calc(44px + 10px);
     right: var(--space-4);
-    width: min(640px, calc(100vw - 96px));
-    max-width: calc(100% - 32px);
+    left: auto;
+    width: min(720px, calc(100vw - 64px));
     max-height: min(480px, calc(100vh - 120px));
     overflow: auto;
     background: color-mix(in oklab, var(--color-system-white), transparent 4%);
@@ -271,6 +273,7 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
   .ck-share__sectionTitle {
     margin: 2px 4px var(--space-3);
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+    white-space: nowrap;
   }
 
   @media (min-width: 560px) {
