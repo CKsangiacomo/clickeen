@@ -1,5 +1,6 @@
 ---
 import { resolveWidgetsMegaMenu } from './widgetsMegaMenu';
+import { t } from '../../../lib/i18n';
 
 type Props = {
   title: string;
@@ -7,7 +8,7 @@ type Props = {
   homeHref?: string;
   // Legacy escape hatch: some pages may still pass items, but the scalable default is system-owned nav.
   items?: { label: string; href: string }[];
-  cta?: { label: string; href: string; variant?: 'primary' | 'secondary' | 'ghost' };
+  cta?: { label: string; href: string; variant?: 'primary' | 'secondary' };
 };
 
 const { title, locale, homeHref = `/${locale}/`, items: itemsProp, cta } = Astro.props;
@@ -21,13 +22,15 @@ const widget = widgetMatch?.[1] ?? null;
 const widgetPage = (widgetMatch?.[2] ?? 'overview') as WidgetSubpage;
 const isWidgetPage = Boolean(widget);
 
+const widgetsLabel = t(locale, 'nav.widgets');
+
 const widgetTabs = widget
   ? ([
-      { label: 'Overview', href: `/${locale}/widgets/${widget}`, key: 'overview' },
-      { label: 'Templates', href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
-      { label: 'Examples', href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
-      { label: 'Features', href: `/${locale}/widgets/${widget}/features`, key: 'features' },
-      { label: 'Pricing', href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
+      { label: t(locale, 'tabs.overview'), href: `/${locale}/widgets/${widget}`, key: 'overview' },
+      { label: t(locale, 'tabs.templates'), href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
+      { label: t(locale, 'tabs.examples'), href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
+      { label: t(locale, 'tabs.features'), href: `/${locale}/widgets/${widget}/features`, key: 'features' },
+      { label: t(locale, 'tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
     ] as const)
   : [];
 
@@ -36,35 +39,34 @@ const mega = await resolveWidgetsMegaMenu({ locale });
 const primaryItems =
   itemsProp ??
   ([
-    { label: 'Widgets', href: mega.allWidgetsHref },
+    { label: widgetsLabel, href: mega.allWidgetsHref },
   ] as const);
 ---
 
-<header class="ck-canvas" style="padding-block: var(--space-5);">
+<header class="ck-canvas ck-siteNavHeader">
   <div class="ck-inline">
-    <div class="ck-row ck-siteNav" style="justify-content: space-between; gap: var(--space-6);">
+    <div class="ck-row ck-siteNav">
       <a href={homeHref} class="ck-brand" aria-label={title}>
         <img class="ck-brand__logo" src="/brand/clickeen-logo-full.svg" alt={title} />
       </a>
 
       <nav aria-label="Primary">
-        <div class="ck-row" style="gap: var(--space-5);">
+        <div class="ck-row ck-siteNav__primary">
           {primaryItems.map((item) =>
-            item.label === 'Widgets' ? (
+            item.href === mega.allWidgetsHref ? (
               <details class="ck-navWidgets">
                 <summary
                   class="label-s ck-navWidgets__trigger"
                   aria-haspopup="true"
-                  style="color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
                 >
-                  Widgets
+                  {widgetsLabel}
                 </summary>
 
                 <div class="ck-navWidgets__menu" role="dialog" aria-label="Widgets menu">
                   <div class="ck-navWidgets__grid">
                     {mega.items.map((w) => (
                       <a class="ck-navWidgets__item" href={w.href}>
-                        <div class="label-s" style="color: inherit;">{w.headline}</div>
+                        <div class="label-s">{w.headline}</div>
                         {w.subheadline ? (
                           <div class="caption ck-navWidgets__sub">{w.subheadline}</div>
                         ) : null}
@@ -73,15 +75,16 @@ const primaryItems =
                   </div>
 
                   <div class="ck-navWidgets__footer">
-                    <a class="ck-btn ck-btn--secondary" href={mega.allWidgetsHref}>View all widgets</a>
+                    <a class="ck-btn ck-btn--secondary ck-btn--md label-m" href={mega.allWidgetsHref}>
+                      {t(locale, 'nav.viewAllWidgets')}
+                    </a>
                   </div>
                 </div>
               </details>
             ) : (
               <a
                 href={item.href}
-                class="label-s"
-                style="text-decoration: none; color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
+                class="label-s ck-siteNav__link"
               >
                 {item.label}
               </a>
@@ -91,7 +94,7 @@ const primaryItems =
       </nav>
 
       {cta ? (
-        <a class={`ck-btn ck-btn--${ctaVariant}`} href={cta.href}>
+        <a class={`ck-btn ck-btn--${ctaVariant} ck-btn--md label-m`} href={cta.href}>
           {cta.label}
         </a>
       ) : (
@@ -100,22 +103,14 @@ const primaryItems =
     </div>
 
     {isWidgetPage ? (
-      <div class="ck-row" style="gap: var(--space-4); margin-top: var(--space-4);">
+      <div class="ck-row ck-siteNav__tabs">
         {widgetTabs.map((t) => {
           const isActive = t.key === widgetPage;
           return (
             <a
               href={t.href}
-              class="label-s"
+              class={`label-s ck-siteNav__tab${isActive ? ' is-active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
-              style={[
-                'text-decoration: none;',
-                'padding: 6px 10px;',
-                'border-radius: var(--control-radius-md);',
-                isActive
-                  ? 'color: var(--color-system-black); background: color-mix(in oklab, var(--color-system-black), transparent 92%);'
-                  : 'color: color-mix(in oklab, var(--color-system-black), transparent 35%);',
-              ].join(' ')}
             >
               {t.label}
             </a>
@@ -128,6 +123,19 @@ const primaryItems =
 
 <style>
   .ck-siteNav { position: relative; }
+  .ck-siteNavHeader { padding-block: var(--space-5); }
+
+  .ck-siteNav {
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+
+  .ck-siteNav__primary { gap: var(--space-5); }
+
+  .ck-siteNav__link {
+    text-decoration: none;
+    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+  }
   .ck-brand { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
   .ck-brand__logo { height: 22px; width: auto; display: block; }
 
@@ -139,6 +147,7 @@ const primaryItems =
     gap: var(--space-2);
     cursor: pointer;
     user-select: none;
+    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
   }
 
   .ck-navWidgets__trigger::-webkit-details-marker { display: none; }
@@ -196,6 +205,23 @@ const primaryItems =
   .ck-navWidgets__sub {
     margin-top: 4px;
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  .ck-siteNav__tabs {
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .ck-siteNav__tab {
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: var(--control-radius-md);
+    color: color-mix(in oklab, var(--color-system-black), transparent 35%);
+  }
+
+  .ck-siteNav__tab.is-active {
+    color: var(--color-system-black);
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
   }
 
   .ck-navWidgets__footer {

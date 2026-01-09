@@ -1,0 +1,32 @@
+/* Prague element utilities (NO typography).
+   - Typography MUST use Dieter classes: heading-*, body-*, label-*, caption, overline, etc.
+   - These utilities only cover text tone, link chrome, margins, and a tiny spacing subset.
+*/
+
+:root {
+  /* Canonical text tones (avoid repeating color-mix everywhere). */
+  --ck-text-muted: color-mix(in oklab, var(--color-system-black), transparent 56%);
+  --ck-text-subtle: color-mix(in oklab, var(--color-system-black), transparent 45%);
+  --ck-text-faint: color-mix(in oklab, var(--color-system-black), transparent 55%);
+}
+
+/* Text tone helpers (do not set font). */
+.ck-text-muted { color: var(--ck-text-muted); }
+.ck-text-subtle { color: var(--ck-text-subtle); }
+.ck-text-faint { color: var(--ck-text-faint); }
+
+/* Margin resets for headings/paragraphs (do not set font). */
+.ck-m0 { margin: 0; }
+
+/* Link chrome. */
+.ck-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Minimal spacing helpers (use sparingly). */
+.ck-gap-tight { gap: var(--space-2); }
+.ck-gap-snug { gap: var(--space-3); }
+.ck-gap-loose { gap: var(--space-6); }
+
+

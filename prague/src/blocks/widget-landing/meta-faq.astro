@@ -10,12 +10,12 @@ const { title = 'FAQ', items } = Astro.props;
 <section class="ck-canvas">
   <div class="ck-inline ck-stack">
     <div class="heading-3">{title}</div>
-    <div class="ck-stack" style="gap: var(--space-3);">
+    <div class="ck-stack ck-metaFaq__list">
       {items.map((item) => (
         <details class="ck-faqItem">
           <summary class="ck-faqSummary">
             <span class="label-l">{item.question}</span>
-            <span aria-hidden="true" class="ck-faqIcon" />
+            <span aria-hidden="true" class="ck-faqIcon label-m" />
           </summary>
           <div class="ck-faqBody body-s">{item.answer}</div>
         </details>
@@ -25,6 +25,8 @@ const { title = 'FAQ', items } = Astro.props;
 </section>
 
 <style>
+  .ck-metaFaq__list { gap: var(--space-3); }
+
   .ck-faqItem {
     border-radius: var(--control-radius-3xl);
     border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
@@ -53,7 +55,6 @@ const { title = 'FAQ', items } = Astro.props;
     border-radius: 999px;
     border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 85%);
     color: color-mix(in oklab, var(--color-system-black), transparent 35%);
-    font: 700 var(--fs-14)/1 var(--font-ui);
     flex: 0 0 auto;
   }
 

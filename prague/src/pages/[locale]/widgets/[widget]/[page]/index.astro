@@ -4,6 +4,7 @@ import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
 import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
 import { listPragueLocales } from '../../../../../lib/locales';
+import { t } from '../../../../../lib/i18n';
 
 const { locale, widget, page } = Astro.params;
 
@@ -37,20 +38,26 @@ const pageLabel = titleCase(page);
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
-      cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
+      cta={{ label: t(locale, 'cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
 
-    <section class="ck-canvas" style="padding-top: 0;">
-      <div class="ck-inline ck-stack" style="gap: var(--space-3);">
-        <h1 class="heading-2" style="margin: 0;">
-          {widgetLabel} — {pageLabel}
-        </h1>
-        <p class="body-m" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
-          Coming soon.
-        </p>
+    <section class="ck-canvas ck-widgetSubpage">
+      <div class="ck-inline ck-stack ck-widgetSubpage__inner">
+        <h1 class="heading-2 ck-widgetSubpage__title">{widgetLabel} — {pageLabel}</h1>
+        <p class="body-m ck-widgetSubpage__body">{t(locale, 'common.comingSoon')}</p>
       </div>
     </section>
 
     <Footer locale={locale} />
   </main>
 </Base>
+
+<style>
+  .ck-widgetSubpage { padding-top: 0; }
+  .ck-widgetSubpage__inner { gap: var(--space-3); }
+  .ck-widgetSubpage__title { margin: 0; }
+  .ck-widgetSubpage__body {
+    margin: 0;
+    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
+  }
+</style>

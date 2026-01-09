@@ -12,15 +12,28 @@ const { headline, subheadline, primaryLabel, primaryHref } = Astro.props;
 <section class="ck-canvas">
   <div class="ck-inline">
     <div class="ck-card">
-      <div class="ck-split ck-split--center" style="padding: var(--space-8); gap: var(--space-8);">
-        <div class="ck-split__a ck-stack" style="gap: var(--space-2);">
+      <div class="ck-split ck-split--center ck-cta__wrap">
+        <div class="ck-split__a ck-stack ck-cta__copy">
           <div class="heading-2">{headline}</div>
-          {subheadline ? <div class="body-m" style="color: color-mix(in oklab, var(--color-system-black), transparent 45%);">{subheadline}</div> : null}
+          {subheadline ? <div class="body-m ck-cta__sub ck-text-subtle">{subheadline}</div> : null}
         </div>
-        <div class="ck-split__b" style="flex: 0 0 auto;">
-          <a class="ck-btn ck-btn--primary" href={primaryHref}>{primaryLabel}</a>
+        <div class="ck-split__b ck-cta__cta">
+          <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryHref}>{primaryLabel}</a>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  .ck-cta__wrap {
+    padding: var(--space-8);
+    gap: var(--space-8);
+  }
+
+  .ck-cta__copy { gap: var(--space-2); }
+
+  .ck-cta__sub { }
+
+  .ck-cta__cta { flex: 0 0 auto; }
+</style>

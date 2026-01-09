@@ -10,18 +10,35 @@ const { title = 'How it works', steps } = Astro.props;
 <section class="ck-canvas">
   <div class="ck-inline ck-stack">
     <div class="heading-3">{title}</div>
-    <div class="ck-row" style="align-items: stretch; gap: var(--space-4);">
+    <div class="ck-row ck-steps__row">
       {steps.map((step, i) => (
-        <div class="ck-card" style="flex: 1 1 0; min-width: 240px;">
-          <div class="ck-stack" style="padding: var(--space-6); gap: var(--space-3);">
+        <div class="ck-card ck-steps__card">
+          <div class="ck-stack ck-steps__cardInner">
             <div class="ck-badge">Step {i + 1}</div>
             <div class="label-l">{step.title}</div>
-            <div class="body-s" style="color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
-              {step.body}
-            </div>
+            <div class="body-s ck-steps__body ck-text-subtle">{step.body}</div>
           </div>
         </div>
       ))}
     </div>
   </div>
 </section>
+
+<style>
+  .ck-steps__row {
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .ck-steps__card {
+    flex: 1 1 0;
+    min-width: 240px;
+  }
+
+  .ck-steps__cardInner {
+    padding: var(--space-6);
+    gap: var(--space-3);
+  }
+
+  .ck-steps__body { }
+</style>

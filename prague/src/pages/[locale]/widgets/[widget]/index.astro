@@ -11,6 +11,8 @@ import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
 import { listWidgets, loadWidgetPageJsonForLocale, loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
 import { listPragueLocales } from '../../../../lib/locales';
+import { resolvePragueHref } from '../../../../lib/links';
+import { t } from '../../../../lib/i18n';
 
 const { locale, widget } = Astro.params;
 
@@ -42,6 +44,15 @@ const subheadline = (heroSubheadlineFromJson && String(heroSubheadlineFromJson))
 if (!headline || !subheadline) {
   throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
 }
+
+// Global CTA policy (applies across all widget pages):
+// - "Create free" scrolls to MiniBob on the current page.
+// - "See templates" navigates to the widget templates page (locale-prefixed).
+const heroPrimaryCta = { label: t(locale, 'cta.createFree'), href: '#minibob' };
+const heroSecondaryCta = {
+  label: t(locale, 'cta.seeTemplates'),
+  href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
+};
 
 const statsRaw = sections.get('stats');
 const stepsRaw = sections.get('steps');
@@ -83,11 +94,13 @@ const minibobSubhead = minibobLines[1];
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
-      cta={{ label: 'Create free', href: `/${locale}/create`, variant: 'primary' }}
+      cta={{ label: t(locale, 'cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
     <Hero
       headline={headline}
       subheadline={subheadline}
+      primaryCta={heroPrimaryCta}
+      secondaryCta={heroSecondaryCta}
       websiteCreative={
         heroWantsCreative
           ? { widgetType: widget, locale, height: '640px', title: `${widget} overview hero` }
@@ -102,7 +115,7 @@ const minibobSubhead = minibobLines[1];
     <Cta
       headline={ctaHeadline}
       subheadline={ctaSubheadline}
-      primaryLabel="Create free"
+      primaryLabel={t(locale, 'cta.createFree')}
       primaryHref={`/${locale}/create`}
     />
     <Footer locale={locale} />

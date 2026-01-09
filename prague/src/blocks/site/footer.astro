@@ -6,18 +6,34 @@ type Props = {
 const { locale } = Astro.props;
 ---
 
-<footer class="ck-canvas" style="padding-block: var(--space-10);">
-  <div class="ck-inline ck-stack" style="gap: var(--space-6);">
-    <div class="ck-row" style="justify-content: space-between; gap: var(--space-6);">
+<footer class="ck-canvas ck-footerCanvas">
+  <div class="ck-inline ck-stack ck-footer">
+    <div class="ck-row ck-footer__row">
       <div class="label-m">Clickeen</div>
-      <div class="ck-row" style="gap: var(--space-5);">
-        <a class="label-s" href={`/${locale}/pricing`} style="text-decoration: none; color: inherit;">Pricing</a>
-        <a class="label-s" href={`/${locale}/widgets/faq`} style="text-decoration: none; color: inherit;">Widgets</a>
+      <div class="ck-row ck-footer__links">
+        <a class="label-s ck-footer__link" href={`/${locale}/pricing`}>Pricing</a>
+        <a class="label-s ck-footer__link" href={`/${locale}/widgets/faq`}>Widgets</a>
       </div>
     </div>
-    <div class="caption" style="color: color-mix(in oklab, var(--color-system-black), transparent 55%);">
-      © {new Date().getFullYear()} Clickeen. All rights reserved.
-    </div>
+    <div class="caption">© {new Date().getFullYear()} Clickeen. All rights reserved.</div>
   </div>
 </footer>
+
+<style>
+  .ck-footerCanvas { padding-block: var(--space-10); }
+
+  .ck-footer { gap: var(--space-6); }
+
+  .ck-footer__row {
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+
+  .ck-footer__links { gap: var(--space-5); }
+
+  .ck-footer__link {
+    text-decoration: none;
+    color: inherit;
+  }
+</style>
 

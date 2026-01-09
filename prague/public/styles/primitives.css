@@ -3,17 +3,50 @@
 */
 
 .ck-btn {
+  /* Sizes are handled via `ck-btn--sm|md|lg`.
+     Typography is owned by Dieter utilities (use `label-s|m|l` on the element). */
+  --ck-btn-py: var(--space-2);
+  --ck-btn-px: var(--space-4);
+  --ck-btn-radius: var(--control-radius-xl);
+  --ck-btn-min-h: var(--min-touch-target);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--control-radius-xl);
+  min-height: var(--ck-btn-min-h);
+  padding: var(--ck-btn-py) var(--ck-btn-px);
+  border-radius: var(--ck-btn-radius);
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 84%);
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  font: 600 var(--fs-13)/1 var(--font-ui);
+  font: inherit;
+  line-height: 1;
   gap: var(--space-2);
+  white-space: nowrap;
+  transition: background-color var(--duration-base, 160ms), border-color var(--duration-base, 160ms),
+    color var(--duration-base, 160ms), box-shadow var(--duration-base, 160ms), transform var(--duration-base, 160ms);
+}
+
+.ck-btn--sm {
+  --ck-btn-py: var(--space-1);
+  --ck-btn-px: var(--space-3);
+  --ck-btn-radius: var(--control-radius-lg);
+  --ck-btn-min-h: 2.25rem; /* 36px */
+}
+
+.ck-btn--md {
+  --ck-btn-py: var(--space-2);
+  --ck-btn-px: var(--space-4);
+  --ck-btn-radius: var(--control-radius-xl);
+  --ck-btn-min-h: var(--min-touch-target); /* 44px */
+}
+
+.ck-btn--lg {
+  --ck-btn-py: var(--space-3);
+  --ck-btn-px: var(--space-5);
+  --ck-btn-radius: var(--control-radius-2xl);
+  --ck-btn-min-h: 3.25rem; /* 52px */
 }
 
 .ck-btn--primary {
@@ -27,10 +60,27 @@
   box-shadow: var(--shadow-inset-control);
 }
 
-.ck-btn--ghost {
-  background: transparent;
-  color: var(--color-system-black);
+.ck-btn:hover {
+  border-color: color-mix(in oklab, var(--color-system-black), transparent 78%);
 }
+
+.ck-btn--primary:hover {
+  background: color-mix(in oklab, var(--color-system-black), var(--color-system-white) 10%);
+}
+
+.ck-btn--secondary:hover {
+  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 2%);
+}
+
+.ck-btn:active {
+  transform: translateY(0.5px);
+}
+
+.ck-btn:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-system-blue);
+  outline-offset: var(--focus-ring-offset);
+}
+
 
 .ck-badge {
   display: inline-flex;
