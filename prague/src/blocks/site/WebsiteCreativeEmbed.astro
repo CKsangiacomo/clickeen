@@ -59,119 +59,116 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
           <div class="ck-share__menu" role="menu" aria-label="Share options">
             <div class="ck-share__toast" role="status" aria-live="polite"></div>
 
-            <div class="ck-share__group">
-              <div class="ck-share__groupTitle label-xs">Quick</div>
-              <button type="button" class="ck-share__item" data-action="native">
-                <span class="ck-share__icon" aria-hidden="true">
+            <div class="ck-share__grid" data-size="sm">
+              <button type="button" class="ck-shareCard" data-action="native">
+                <span class="ck-shareCard__icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 16V4"></path>
                     <path d="M7 9l5-5 5 5"></path>
                     <path d="M4 20h16"></path>
                   </svg>
                 </span>
-                <span class="ck-share__text">System share</span>
+                <span class="ck-shareCard__label label-xs">System</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="copy">
-                <span class="ck-share__icon" aria-hidden="true">
+              <button type="button" class="ck-shareCard" data-action="copy">
+                <span class="ck-shareCard__icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="3"></rect>
                     <rect x="2" y="2" width="13" height="13" rx="3"></rect>
                   </svg>
                 </span>
-                <span class="ck-share__text">Copy link</span>
+                <span class="ck-shareCard__label label-xs">Copy link</span>
               </button>
             </div>
 
             <div class="ck-share__sep" aria-hidden="true"></div>
 
-            <div class="ck-share__group">
-              <div class="ck-share__groupTitle label-xs">Messages</div>
-              <button type="button" class="ck-share__item" data-action="sms">
-                <span class="ck-share__icon" aria-hidden="true">
+            <div class="ck-share__grid">
+              <button type="button" class="ck-shareCard" data-action="sms">
+                <span class="ck-shareCard__icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
                   </svg>
                 </span>
-                <span class="ck-share__text">Text (SMS)</span>
+                <span class="ck-shareCard__label label-xs">SMS</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="email">
-                <span class="ck-share__icon" aria-hidden="true">
+              <button type="button" class="ck-shareCard" data-action="email">
+                <span class="ck-shareCard__icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 4h16v16H4z"></path>
                     <path d="M4 7l8 6 8-6"></path>
                   </svg>
                 </span>
-                <span class="ck-share__text">Email</span>
+                <span class="ck-shareCard__label label-xs">Email</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="whatsapp">
-                <span class="ck-share__icon" aria-hidden="true">WA</span>
-                <span class="ck-share__text">WhatsApp</span>
+              <button type="button" class="ck-shareCard" data-action="whatsapp">
+                <span class="ck-shareCard__icon" aria-hidden="true">WA</span>
+                <span class="ck-shareCard__label label-xs">WhatsApp</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="telegram">
-                <span class="ck-share__icon" aria-hidden="true">TG</span>
-                <span class="ck-share__text">Telegram</span>
+              <button type="button" class="ck-shareCard" data-action="telegram">
+                <span class="ck-shareCard__icon" aria-hidden="true">TG</span>
+                <span class="ck-shareCard__label label-xs">Telegram</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="signal">
-                <span class="ck-share__icon" aria-hidden="true">SG</span>
-                <span class="ck-share__text">Signal</span>
+              <button type="button" class="ck-shareCard" data-action="signal">
+                <span class="ck-shareCard__icon" aria-hidden="true">SG</span>
+                <span class="ck-shareCard__label label-xs">Signal</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="messenger">
-                <span class="ck-share__icon" aria-hidden="true">M</span>
-                <span class="ck-share__text">Messenger</span>
+              <button type="button" class="ck-shareCard" data-action="messenger">
+                <span class="ck-shareCard__icon" aria-hidden="true">M</span>
+                <span class="ck-shareCard__label label-xs">Messenger</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="wechat">
-                <span class="ck-share__icon" aria-hidden="true">WC</span>
-                <span class="ck-share__text">WeChat</span>
+              <button type="button" class="ck-shareCard" data-action="wechat">
+                <span class="ck-shareCard__icon" aria-hidden="true">WC</span>
+                <span class="ck-shareCard__label label-xs">WeChat</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="line">
-                <span class="ck-share__icon" aria-hidden="true">LN</span>
-                <span class="ck-share__text">LINE</span>
+              <button type="button" class="ck-shareCard" data-action="line">
+                <span class="ck-shareCard__icon" aria-hidden="true">LN</span>
+                <span class="ck-shareCard__label label-xs">LINE</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="slack">
-                <span class="ck-share__icon" aria-hidden="true">S</span>
-                <span class="ck-share__text">Slack</span>
+              <button type="button" class="ck-shareCard" data-action="slack">
+                <span class="ck-shareCard__icon" aria-hidden="true">S</span>
+                <span class="ck-shareCard__label label-xs">Slack</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="teams">
-                <span class="ck-share__icon" aria-hidden="true">T</span>
-                <span class="ck-share__text">Microsoft Teams</span>
+              <button type="button" class="ck-shareCard" data-action="teams">
+                <span class="ck-shareCard__icon" aria-hidden="true">T</span>
+                <span class="ck-shareCard__label label-xs">Teams</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="discord">
-                <span class="ck-share__icon" aria-hidden="true">D</span>
-                <span class="ck-share__text">Discord</span>
+              <button type="button" class="ck-shareCard" data-action="discord">
+                <span class="ck-shareCard__icon" aria-hidden="true">D</span>
+                <span class="ck-shareCard__label label-xs">Discord</span>
               </button>
             </div>
 
             <div class="ck-share__sep" aria-hidden="true"></div>
 
-            <div class="ck-share__group">
-              <div class="ck-share__groupTitle label-xs">Social</div>
-              <button type="button" class="ck-share__item" data-action="x">
-                <span class="ck-share__icon" aria-hidden="true">X</span>
-                <span class="ck-share__text">X</span>
+            <div class="ck-share__grid">
+              <button type="button" class="ck-shareCard" data-action="x">
+                <span class="ck-shareCard__icon" aria-hidden="true">X</span>
+                <span class="ck-shareCard__label label-xs">X</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="linkedin">
-                <span class="ck-share__icon" aria-hidden="true">in</span>
-                <span class="ck-share__text">LinkedIn</span>
+              <button type="button" class="ck-shareCard" data-action="linkedin">
+                <span class="ck-shareCard__icon" aria-hidden="true">in</span>
+                <span class="ck-shareCard__label label-xs">LinkedIn</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="facebook">
-                <span class="ck-share__icon" aria-hidden="true">f</span>
-                <span class="ck-share__text">Facebook</span>
+              <button type="button" class="ck-shareCard" data-action="facebook">
+                <span class="ck-shareCard__icon" aria-hidden="true">f</span>
+                <span class="ck-shareCard__label label-xs">Facebook</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="reddit">
-                <span class="ck-share__icon" aria-hidden="true">r/</span>
-                <span class="ck-share__text">Reddit</span>
+              <button type="button" class="ck-shareCard" data-action="reddit">
+                <span class="ck-shareCard__icon" aria-hidden="true">r/</span>
+                <span class="ck-shareCard__label label-xs">Reddit</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="pinterest">
-                <span class="ck-share__icon" aria-hidden="true">P</span>
-                <span class="ck-share__text">Pinterest</span>
+              <button type="button" class="ck-shareCard" data-action="pinterest">
+                <span class="ck-shareCard__icon" aria-hidden="true">P</span>
+                <span class="ck-shareCard__label label-xs">Pinterest</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="instagram">
-                <span class="ck-share__icon" aria-hidden="true">IG</span>
-                <span class="ck-share__text">Instagram</span>
+              <button type="button" class="ck-shareCard" data-action="instagram">
+                <span class="ck-shareCard__icon" aria-hidden="true">IG</span>
+                <span class="ck-shareCard__label label-xs">Instagram</span>
               </button>
-              <button type="button" class="ck-share__item" data-action="tiktok">
-                <span class="ck-share__icon" aria-hidden="true">TT</span>
-                <span class="ck-share__text">TikTok</span>
+              <button type="button" class="ck-shareCard" data-action="tiktok">
+                <span class="ck-shareCard__icon" aria-hidden="true">TT</span>
+                <span class="ck-shareCard__label label-xs">TikTok</span>
               </button>
             </div>
           </div>
@@ -287,28 +284,33 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     -webkit-backdrop-filter: blur(10px);
   }
 
-  .ck-share__group { display: flex; flex-direction: column; gap: var(--space-2); }
-  .ck-share__groupTitle {
-    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
-    padding: 2px 8px;
+  .ck-share__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
   }
 
-  .ck-share__item {
+  .ck-share__grid[data-size="sm"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ck-shareCard {
     width: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--space-3);
-    padding: 12px 14px;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 10px;
     border-radius: var(--control-radius-xl);
     border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
     background: color-mix(in oklab, var(--color-system-white), transparent 6%);
     color: var(--color-system-black);
     cursor: pointer;
-    font: 600 var(--fs-14)/1.2 var(--font-ui);
-    text-align: left;
+    text-align: center;
   }
 
-  .ck-share__item:hover {
+  .ck-shareCard:hover {
     background: color-mix(in oklab, var(--color-system-black), transparent 94%);
     border-color: color-mix(in oklab, var(--color-system-black), transparent 88%);
   }
@@ -319,20 +321,30 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     background: color-mix(in oklab, var(--color-system-black), transparent 90%);
   }
 
-  .ck-share__icon {
+  .ck-shareCard__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
     background: color-mix(in oklab, var(--color-system-black), transparent 94%);
     color: color-mix(in oklab, var(--color-system-black), transparent 18%);
-    font: 700 var(--fs-11)/1 var(--font-ui);
+    font: 700 var(--fs-12)/1 var(--font-ui);
     flex: 0 0 auto;
   }
 
-  .ck-share__text { flex: 1 1 auto; }
+  .ck-shareCard__label {
+    display: block;
+    color: color-mix(in oklab, var(--color-system-black), transparent 30%);
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  @media (max-width: 520px) {
+    .ck-share__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 
   .ck-websiteCreative__iframe {
     width: 100%;
