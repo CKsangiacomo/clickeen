@@ -275,13 +275,29 @@ const primaryItems =
   const header = document.querySelector('.ck-siteNavHeader[data-nav-sticky="true"]');
   if (!header) return;
 
+  const surface = header.closest('.ck-topSurface');
+  const heightTarget = surface || document.documentElement;
+  const syncHeight = () => {
+    const h = Math.ceil(header.getBoundingClientRect().height);
+    heightTarget.style.setProperty('--ck-nav-h', h ? (h + 'px') : '0px');
+  };
+
   // Toggle "stuck" styling when the page scrolls. Keep the controller tiny and deterministic.
   const update = () => {
     const stuck = window.scrollY > 8;
     header.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
   };
 
+  syncHeight();
   update();
+
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => syncHeight());
+    ro.observe(header);
+  } else {
+    window.addEventListener('resize', syncHeight, { passive: true });
+  }
+
   window.addEventListener('scroll', update, { passive: true });
 })();
 `}
