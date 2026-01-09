@@ -29,15 +29,27 @@ const iframeSrc = VENICE_URL
 
 <div class="ck-websiteCreative">
   {iframeSrc ? (
-    <iframe
-      class="ck-websiteCreative__iframe"
-      title={title}
-      src={iframeSrc}
-      style={`height: ${height};`}
-      loading="lazy"
-      referrerpolicy="no-referrer"
-      sandbox="allow-scripts allow-same-origin allow-forms"
-    />
+    <>
+      <iframe
+        class="ck-websiteCreative__iframe"
+        title={title}
+        src={iframeSrc}
+        style={`height: ${height};`}
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+      />
+
+      {/* Visual-only preview chrome (no border): top share bar + bottom CTA bar */}
+      <div class="ck-websiteCreative__chrome" aria-hidden="true">
+        <div class="ck-websiteCreative__chromeTop">
+          <div class="ck-websiteCreative__share">Share</div>
+        </div>
+        <div class="ck-websiteCreative__chromeBottom">
+          <div class="ck-websiteCreative__cta">Open</div>
+        </div>
+      </div>
+    </>
   ) : (
     <div class="ck-media ck-websiteCreative__stub">
       Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {publicId}
@@ -56,45 +68,70 @@ const iframeSrc = VENICE_URL
     border: 0;
   }
 
-  /* “Preview chrome”: subtle top bars (no border), stronger on hover. */
-  .ck-websiteCreative::before {
-    content: '';
+  .ck-websiteCreative__chrome {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none; /* never block iframe interaction */
+    opacity: 0;
+    transition: opacity var(--duration-base, 160ms);
+  }
+
+  .ck-websiteCreative:hover .ck-websiteCreative__chrome,
+  .ck-websiteCreative:focus-within .ck-websiteCreative__chrome {
+    opacity: 1;
+  }
+
+  .ck-websiteCreative__chromeTop,
+  .ck-websiteCreative__chromeBottom {
     position: absolute;
     left: 0;
     right: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--space-4);
+  }
+
+  .ck-websiteCreative__chromeTop {
     top: 0;
-    height: 36px;
-    z-index: 2;
-    pointer-events: none;
+    height: 44px;
+    justify-content: flex-end;
     background: linear-gradient(
       to bottom,
       color-mix(in oklab, var(--color-system-black), transparent 92%),
       transparent
     );
-    opacity: 0.65;
-    transition: opacity var(--duration-base, 160ms);
   }
 
-  .ck-websiteCreative::after {
-    content: '';
-    position: absolute;
-    left: 14px;
-    top: 12px;
-    width: 46px;
-    height: 12px;
-    z-index: 3;
-    pointer-events: none;
-    background:
-      radial-gradient(circle, color-mix(in oklab, var(--color-system-black), transparent 70%) 6px, transparent 7px) 0 0/16px 12px no-repeat,
-      radial-gradient(circle, color-mix(in oklab, var(--color-system-black), transparent 78%) 6px, transparent 7px) 16px 0/16px 12px no-repeat,
-      radial-gradient(circle, color-mix(in oklab, var(--color-system-black), transparent 86%) 6px, transparent 7px) 32px 0/16px 12px no-repeat;
-    opacity: 0.55;
-    transition: opacity var(--duration-base, 160ms);
+  .ck-websiteCreative__chromeBottom {
+    bottom: 0;
+    height: 56px;
+    justify-content: flex-end;
+    background: linear-gradient(
+      to top,
+      color-mix(in oklab, var(--color-system-black), transparent 92%),
+      transparent
+    );
   }
 
-  .ck-websiteCreative:hover::before,
-  .ck-websiteCreative:hover::after {
-    opacity: 0.9;
+  .ck-websiteCreative__share,
+  .ck-websiteCreative__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-system-white), transparent 10%);
+    color: color-mix(in oklab, var(--color-system-black), transparent 22%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+    font: 600 var(--fs-12)/1 var(--font-ui);
+    letter-spacing: -0.01em;
+  }
+
+  .ck-websiteCreative__cta {
+    height: 36px;
+    padding-inline: 14px;
   }
 
   .ck-websiteCreative__iframe {
