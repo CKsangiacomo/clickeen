@@ -34,7 +34,8 @@ function requireDevAuth(req: Request, env: Env): Response | null {
 }
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  // Dev/staging tolerate non-v4 UUIDs (e.g. deterministic ck-dev workspace ids).
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function extFromMime(mime: string): string | null {
