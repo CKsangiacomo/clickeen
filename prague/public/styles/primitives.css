@@ -67,13 +67,13 @@
 
 .ck-btn--primary {
   /* Prague CTA primary (pink). */
-  --ck-btn-bg: var(--color-system-pink, #ff2d55);
-  --ck-btn-color: var(--color-system-white, #ffffff);
+  --ck-btn-bg: var(--color-system-pink);
+  --ck-btn-color: var(--color-system-white);
   --ck-btn-border-w: 0px;
   --ck-btn-border-color: transparent;
-  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-pink, #ff2d55), #000000 22%);
-  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-pink, #ff2d55), #000000 40%);
-  --ck-btn-focus-ring: var(--color-system-pink, #ff2d55);
+  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 22%);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-pink), var(--color-system-black) 40%);
+  --ck-btn-focus-ring: var(--color-system-pink);
 }
 
 .ck-btn--secondary {
@@ -131,4 +131,3 @@
   box-shadow: var(--shadow-elevated);
   overflow: hidden;
 }
-

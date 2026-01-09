@@ -210,7 +210,7 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     border-radius: 999px;
     background: color-mix(in oklab, var(--color-system-white), transparent 8%);
     color: color-mix(in oklab, var(--color-system-black), transparent 20%);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 10px 30px color-mix(in oklab, var(--color-system-black), transparent 90%);
     cursor: pointer;
     user-select: none;
     list-style: none;
@@ -243,7 +243,7 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     background: var(--color-system-white);
     border-radius: var(--control-radius-2xl);
     border: 0;
-    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 28px 90px color-mix(in oklab, var(--color-system-black), transparent 86%);
     padding: 10px;
     display: none;
   }
