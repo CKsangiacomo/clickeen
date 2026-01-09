@@ -1,0 +1,179 @@
+---
+type IconName =
+  | 'share'
+  | 'copy'
+  | 'sms'
+  | 'email'
+  | 'whatsapp'
+  | 'telegram'
+  | 'x'
+  | 'linkedin'
+  | 'facebook'
+  | 'reddit'
+  | 'more';
+
+type Props = {
+  name: IconName;
+  size?: number;
+  title?: string;
+};
+
+const { name, size = 16, title } = Astro.props as Props;
+const ariaHidden = title ? undefined : 'true';
+const role = title ? 'img' : 'presentation';
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  aria-hidden={ariaHidden}
+  role={role}
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {title ? <title>{title}</title> : null}
+
+  {name === 'share' ? (
+    <path
+      d="M16 8a3 3 0 1 0-2.83-4H13a3 3 0 0 0 0 6c.37 0 .73-.07 1.07-.2L8.9 12.4a3.1 3.1 0 0 0 0-.8l5.17-2.6c.34.13.7.2 1.06.2Zm-8 8a3 3 0 1 0 2.83 4H11a3 3 0 0 0 0-6c-.37 0-.73.07-1.07.2l5.17-2.6c.34.13.7.2 1.06.2a3 3 0 1 0-2.83-4H13a3 3 0 0 0 .07.8L7.9 14.8A3 3 0 0 0 7 14a3 3 0 0 0 1 2Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'copy' ? (
+    <>
+      <path
+        d="M9 9h9a2 2 0 0 1 2 2v9H11a2 2 0 0 1-2-2V9Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </>
+  ) : null}
+
+  {name === 'sms' ? (
+    <path
+      d="M6 7h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H10l-4 3v-3H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'email' ? (
+    <>
+      <path
+        d="M4 7h16v10H4V7Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M4 8l8 6 8-6"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </>
+  ) : null}
+
+  {name === 'whatsapp' ? (
+    <path
+      d="M12 21a9 9 0 1 0-7.76-4.44L3 21l4.6-1.14A8.96 8.96 0 0 0 12 21Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'telegram' ? (
+    <path
+      d="M21 4 3.8 11.1c-.9.35-.86 1.64.06 1.94l4.53 1.5 1.76 5.3c.23.7 1.17.9 1.68.35l2.6-2.8 4.8 3.5c.66.49 1.6.12 1.78-.68L23 5.2c.17-.82-.78-1.47-1.56-1.2Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'x' ? (
+    <path
+      d="M5 4h4l5 7 5-7h4l-7 9 7 11h-4l-5-8-5 8H5l7-11L5 4Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'linkedin' ? (
+    <>
+      <path
+        d="M4 9h4v11H4V9Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M6 4.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+      />
+      <path
+        d="M10 9h4v2c.8-1.2 2-2 3.6-2 2.7 0 4.4 1.8 4.4 5v6h-4v-6c0-1.7-.7-2.6-2-2.6-1.3 0-2 1-2 2.6v6h-4V9Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      />
+    </>
+  ) : null}
+
+  {name === 'facebook' ? (
+    <path
+      d="M14 8h3V4h-3c-2.2 0-4 1.8-4 4v3H7v4h3v7h4v-7h3l1-4h-4V8c0-.55.45-1 1-1Z"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+    />
+  ) : null}
+
+  {name === 'reddit' ? (
+    <>
+      <path
+        d="M20 12c0 3.9-3.6 7-8 7s-8-3.1-8-7 3.6-7 8-7 8 3.1 8 7Z"
+        stroke="currentColor"
+        stroke-width="1.8"
+      />
+      <path
+        d="M9.5 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"
+        fill="currentColor"
+      />
+      <path
+        d="M9 15c1 .8 2 .9 3 .9s2 0 3-.9"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+    </>
+  ) : null}
+
+  {name === 'more' ? (
+    <path
+      d="M6 12h.01M12 12h.01M18 12h.01"
+      stroke="currentColor"
+      stroke-width="3.2"
+      stroke-linecap="round"
+    />
+  ) : null}
+</svg>
+
