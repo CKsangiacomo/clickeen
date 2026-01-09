@@ -36,6 +36,7 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 | **Widget Files = Truth** | The 5 files in `tokyo/widgets/{name}/` define everything about a widget. |
 | **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. Widget-specific rules live only in the widget package. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
+| **Locale Is Not Identity** | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out. |
 
 ---
 

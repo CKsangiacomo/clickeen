@@ -25,10 +25,11 @@ Request comes in:
 System doesn't think: "Oh, this is the Japanese version"
 System thinks: "locale is ja. Render accordingly."
 
-There is no "English version" that other versions are derived from.
 There is no "primary market."
 There is no retrofitting.
 There is no geography.
+
+**Phase 1 implementation detail:** Clickeen keeps a single canonical instance/config identity (locale-free) and applies locale-specific overlays at runtime. If a request does not specify locale, we use a deterministic default (`en`) for stability (not as an identity rule).
 ```
 
 **This isn't "launching globally from day one." It's the absence of locale assumptions in the architecture.**
@@ -41,7 +42,7 @@ Traditional companies expand into markets. Clickeen exists in all markets by def
 
 | Requirement | What it means | Why it's hard |
 |-------------|---------------|---------------|
-| **Locale as runtime parameter** | Like `userId`, not a build-time decision | No shortcuts, no "default to English" |
+| **Locale as runtime parameter** | Like `userId`, not a build-time decision | No shortcuts, no locale-as-identity |
 | **No hardcoded formats** | Dates, numbers, currencies derived from locale | Every format must be parameterized |
 | **AI agents operate natively** | Not "translate from English"—operate in locale | Agents must understand cultural nuance |
 | **Typography for all scripts** | CJK, RTL, Cyrillic from day 1 | Font fallback chains, layout adaptation |

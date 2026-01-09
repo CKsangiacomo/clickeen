@@ -99,7 +99,7 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 - **Platform**: Cloudflare Workers
 - **Source Directory**: `paris`
 - **Runtime**: Edge (V8 isolates)
-- **Build Command**: `pnpm build`
+- **Deploy Command**: `pnpm --filter @clickeen/paris deploy` (Wrangler bundles internally)
 - **URL Pattern**: `https://paris.clickeen.com` (prod) / `https://paris.dev.clickeen.com` (cloud-dev)
 
 Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
@@ -255,6 +255,37 @@ Required env vars:
 **publicId generation (Phase-1)**
 - `publicId` is provided by the caller (internal services / DevStudio Local superadmin flows) and persisted in Michael.
 - The stable contract is `widget_instances.public_id` + `widget_instances.config` (+ `workspace_id`), not internal UUIDs.
+
+### Website creatives (local-only superadmin)
+
+Paris provides a **local-only** endpoint for ensuring the Clickeen-owned website-creative instances used by Prague embeds.
+
+Endpoint:
+- `POST /api/workspaces/:workspaceId/website-creative` (requires dev auth; rejects non-local `ENV_STAGE`)
+
+Deterministic identity (non-negotiable):
+- `creativeKey = {widgetType}.{page}.{slot}` (locale-free)
+- `publicId = wgt_web_{creativeKey}` (locale-free)
+
+Payload:
+```json
+{
+  "widgetType": "faq",
+  "page": "overview",
+  "slot": "hero",
+  "baselineConfig": { "...": "..." },
+  "overwrite": false
+}
+```
+
+Response:
+```json
+{ "creativeKey": "faq.overview.hero", "publicId": "wgt_web_faq.overview.hero" }
+```
+
+Notes:
+- Locale is a **runtime parameter** (handled by Venice overlays); it must not be encoded into `publicId`.
+- Cloud-dev should be updated via DevStudio’s “promote instance” path (direct upsert), not by calling this local-only endpoint.
 
 ### Usage & submissions (not shipped here)
 - `POST /api/usage` and `POST /api/submit/:publicId` exist only as explicit `501 NOT_IMPLEMENTED` placeholders in this repo snapshot.

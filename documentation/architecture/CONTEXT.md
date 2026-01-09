@@ -215,6 +215,18 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 ---
 
+## Localization (Phase 1)
+
+Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
+
+- UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
+- Instance/content translation uses Tokyo-hosted `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops).
+
+Canonical reference:
+- `documentation/capabilities/localization.md`
+
+---
+
 ## Current Implementation Status
 
 ### Systems

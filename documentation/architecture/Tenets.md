@@ -70,11 +70,13 @@ If any system along this path "corrects" or "defaults" the value, the user's int
 
 ### The Rule
 
-**There are no fallbacks anywhere in Clickeen.**
+**There are no fallbacks for instance identity or instance config in Clickeen.**
 
-- If a value is missing → the system fails visibly
-- If a value is wrong → the system fails visibly
+- If a config value is missing → the system fails visibly
+- If a config value is wrong → the system fails visibly
 - The widget files define everything; orchestrators pass data through unchanged
+
+Note: request parameters (like `locale`) may have a deterministic default (Phase 1: `en`) when omitted. This is not identity and must not create DB fan-out.
 
 ### Why No Fallbacks
 
@@ -325,7 +327,7 @@ These panels ensure consistency across all widgets. Widget developers use the st
 
 | Tenet | One-liner |
 |-------|-----------|
-| **0** | No fallbacks anywhere |
+| **0** | No fallbacks for instance config/identity |
 | **1** | 5 widget files = complete truth |
 | **2** | Orchestrators are dumb pipes |
 | **3** | System fails visibly |

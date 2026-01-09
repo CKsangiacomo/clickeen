@@ -55,19 +55,23 @@ DevStudio Local includes a superadmin action: **Create/update website creative**
   - Slot key is `block.id` (can contain dots; e.g. `feature.left.50`)
 - **Deterministic identity**:
   - `creativeKey = {widgetType}.{page}.{block.id}` (locale-free)
-  - `publicId = wgt_web_{creativeKey}.{locale}` (locale-specific; DevStudio defaults `locale=en`)
+  - `publicId = wgt_web_{creativeKey}` (locale-free; locale is a runtime parameter)
 - **How DevStudio executes it**
   - DevStudio requests widget types via Bob’s Paris proxy:
     - `GET /api/paris/widgets`
   - DevStudio ensures the website creative via Bob’s Paris proxy (workspace-owned):
     - `POST /api/paris/website-creative?workspaceId=<workspaceId>`
-    - Body includes: `{ widgetType, page, slot, locale, baselineConfig, overwrite? }`
+    - Body includes: `{ widgetType, page, slot, baselineConfig, overwrite? }`
   - Baseline config is seeded from compiled defaults:
     - `GET /api/widgets/{widgetType}/compiled` (Bob compile endpoint)
 
 Notes:
 - If the currently selected instance is already a website creative (`publicId` starts with `wgt_web_`), clicking the button saves the current Bob editor state back into that same instance (no new instance).
 - Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
+
+Localization note:
+- Website creative IDs are locale-free; do not create `wgt_web_*.<locale>` variants.
+- To localize a website creative, add a Tokyo `l10n` overlay at `l10n/instances/<publicId>/<locale>.ops.json` and run `pnpm build:l10n` (Venice applies overlays at runtime).
 
 ## Troubleshooting
 

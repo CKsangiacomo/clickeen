@@ -7,6 +7,7 @@
 ## Interfaces
 - Upload APIs, signed URLs
 - Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
+- Serves localization overlays for Clickeen-owned content (`tokyo/l10n/**`)
 
 ## Dependencies
 - Used by: Venice, Bob, Site
@@ -65,9 +66,25 @@ Rules:
 Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
+- `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
+
+## l10n overlays (executed)
+
+Tokyo serves **instance localization overlays** as content-hashed ops patches:
+
+- Build output path: `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`
+- Manifest: `tokyo/l10n/manifest.json`
+
+Rules:
+- Overlays are set-only ops (no structural mutations).
+- Instance identity is locale-free (`publicId` never contains locale).
+- Consumers should treat overlay files as cacheable (hashed filenames); `manifest.json` is the indirection layer and should be short-TTL.
+
+Build command (repo root):
+- `pnpm build:l10n`
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:

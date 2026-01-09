@@ -86,9 +86,13 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 
 **Contract (non-negotiable):**
 - This is **not** a generic “slot”. The hero visual (when enabled) is always the website creative for:
-  - `wgt_web_{widgetType}.overview.hero.{locale}`
+  - `wgt_web_{widgetType}.overview.hero`
 - Pages enable the hero visual via the canonical page spec:
   - `tokyo/widgets/{widgetType}/pages/overview.json` → block `{ id: "hero", kind: "hero", visual: true }`
+
+**Embed rule (strict):**
+- Prague always embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
+- `wgt_web_*.<locale>` is invalid and must 404 (no legacy support).
 
 ### 2.3 Proof
 

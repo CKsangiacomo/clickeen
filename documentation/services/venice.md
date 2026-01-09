@@ -10,11 +10,14 @@ Venice serves an embed by combining:
 - **Tokyo widget files** (the widget package/runtime), and
 - **Paris instance config** (the instance state).
 
+For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay to the instance config before bootstrapping `window.CK_WIDGET` (overlay is a pure, set-only ops patch; locale is never part of instance identity).
+
 **Core rule (Phase 1):** The widget package owns rendering. Venice owns **embed assembly + delivery** (asset proxying, bootstrapping `window.CK_WIDGET`, cache policy, sandboxing, tokens/entitlements) so the public embed matches Bob’s Workspace preview for the same widget package + state.
 **Owner:** `venice/` (Next.js route handlers running on the Edge runtime).
 **Dependencies:** Paris (instance API), Tokyo (widget assets), Dieter (tokens/components).
 **Shipped in this repo snapshot:**
 - `GET /e/:publicId` (renders Tokyo `widget.html` and injects `window.CK_WIDGET`)
+- `GET /r/:publicId` (returns a JSON render payload for loader/SEO flows)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy so widget packages stay portable)
 - `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
@@ -85,10 +88,26 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 - `locale=<bcp47-ish>` (optional, defaults to `en`; passed through in `window.CK_WIDGET.locale`)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
+**Non-goal (strict):**
+- Locale is never encoded into `publicId`. Venice does not support `wgt_web_*.<locale>` URLs; they are treated as invalid and will 404.
+
 **Cache strategy (shipped):**
-- With `?ts=<timestamp>`: `no-store` (explicit cache bust)
-- Published: `public, max-age=300, s-maxage=600, stale-while-revalidate=1800`
-- Unpublished (without `ts`): `public, max-age=60, s-maxage=60, stale-while-revalidate=300`
+  - With `?ts=<timestamp>`: `no-store` (explicit cache bust)
+  - Published: `public, max-age=300, s-maxage=600, stale-while-revalidate=1800`
+  - Unpublished (without `ts`): `public, max-age=60, s-maxage=60, stale-while-revalidate=300`
+
+### JSON Render Route: `GET /r/:publicId` (shipped)
+
+**Purpose:** Return a structured render payload for embed loaders and SEO/GEO modes.
+
+Response includes (as implemented today):
+- `renderHtml` (HTML body content with script tags stripped)
+- `assets.styles[]` and `assets.scripts[]` (resolved widget asset paths)
+- `schemaJsonLd` (derived from `widgetType + state + locale`)
+- `state` (localized instance config; overlays applied the same as `/e`)
+
+**Locale resolution (shipped):**
+- Uses `?locale=<token>` when present, else falls back to `Accept-Language` (then `en`).
 
 ### Tokyo Asset Proxy Routes (Shipped)
 

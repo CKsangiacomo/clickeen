@@ -271,12 +271,15 @@ Implementation:
 - Loader: `bob/lib/i18n/loader.ts`
 - DOM applier: `bob/lib/i18n/dom.ts`
 
+See also:
+- `documentation/capabilities/localization.md`
+
 ---
 
 ## Environment & Dev Setup
 
 ### Required
-- `NEXT_PUBLIC_TOKYO_URL` (hard-required in `bob/app/layout.tsx` and compile route)
+- `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
 
 ### Paris proxy (current code)
 Bob proxies Paris via:

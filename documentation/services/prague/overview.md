@@ -950,7 +950,7 @@ for (const file of crawl('tokyo/widgets/*/pages/**/*.md')) {
 ### Instance localization logic
 
 ```javascript
-// scripts/prague-localize.js
+// scripts/prague-localize.mjs (conceptual)
 
 for (const page of crawl('dist/en/**/*.html')) {
   for (const locale of LOCALES) {
@@ -962,12 +962,16 @@ for (const page of crawl('dist/en/**/*.html')) {
     // 2. Translate strings (cache in D1)
     const translatedStrings = await translateStrings(strings, locale)
     
-    // 3. Translate instance content (cache in D1)
-    const translatedInstances = await translateInstances(instances, locale)
-    // Key: "faq:instances:shopify-store:de"
+    // 3. Translate instance content → write l10n overlays (Tokyo software plane)
+    // We do NOT create locale-suffixed instance IDs or store per-locale full JSON in Michael.
+    const overlays = await translateInstancesToOverlays(instances, locale)
+    // Output: tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json + tokyo/l10n/manifest.json
+    await publishL10nOverlays(overlays)
     
     // 4. Render localized page
-    const html = renderPage(page, translatedStrings, translatedInstances)
+    // Pages embed canonical locale-free instance IDs and pass `?locale=...` to Venice.
+    // Venice applies the overlay at render time so widgets display localized content.
+    const html = renderPage(page, translatedStrings, { locale })
     
     // 5. Output
     write(`dist/${locale}/${page.path}`, html)

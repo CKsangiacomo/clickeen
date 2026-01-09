@@ -111,7 +111,6 @@ Request comes in:
 System doesn't think: "Oh, this is the Japanese version"
 System thinks: "locale is ja. Render accordingly."
 
-There is no "English version" that other versions are derived from.
 There is no "primary market."
 There is no retrofitting.
 There is no geography.
@@ -120,7 +119,7 @@ There is no geography.
 **What this requires:**
 - Locale is a runtime parameter, like `userId`
 - No hardcoded date formats
-- No "default to English" fallbacks baked in
+- Locale is never encoded into IDs (no DB fan-out like `wgt_web_*.<locale>`)
 - Typography that handles all scripts from day 1
 - Payments designed multi-currency from the start
 - AI agents that operate natively in any language—not "translate from English"

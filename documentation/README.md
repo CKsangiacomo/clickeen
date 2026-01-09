@@ -35,6 +35,7 @@ documentation/
 ├── capabilities/             # CROSS-CUTTING FEATURES
 │   ├── supernova.md         # NextGen web design effects
 │   ├── seo-geo.md           # SEO/GEO platform
+│   ├── localization.md      # i18n + l10n (runtime contract)
 │   └── multitenancy.md      # Team/workspace model
 │
 ├── ai/                       # AI ARCHITECTURE

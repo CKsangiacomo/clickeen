@@ -100,16 +100,27 @@ Examples:
 ### D) Website creative instance (Prague CMS visual)
 Instances owned by the Clickeen workspace that are embedded inside Prague marketing blocks (via Venice).
 
-**Naming (v1)**
-- `wgt_web_{creativeKey}.{locale}`
+**Naming (canonical)**
+- `wgt_web_{creativeKey}`
 
 Where:
-- `creativeKey` is locale-free and stable: `{widgetType}.{page}.{blockSlot}` (allowed chars: `a-z 0-9 . -`)
-- `locale` is a BCP47-ish tag like `en` or `en-us` (lowercase)
+- `creativeKey` is stable: `{widgetType}.{page}.{blockSlot}` (allowed chars: `a-z 0-9 . - _`)
+- locale is a runtime parameter; it must not be encoded into `public_id`
 
 Examples:
-- `wgt_web_faq.overview.hero.en`
-- `wgt_web_faq.templates.card.1.en`
+- `wgt_web_faq.overview.hero`
+- `wgt_web_faq.templates.card.1`
+
+### Migration note (no legacy)
+
+Legacy `wgt_web_{creativeKey}.{locale}` rows must not exist.
+
+The canonical migration is:
+- `supabase/migrations/20260108090000__website_creatives_locale_free.sql`
+
+It:
+- collapses any locale-suffixed website creative rows into a single locale-free row per creative key, and
+- re-adds the `widget_instances_public_id_format` constraint to forbid locale suffixes going forward.
 
 ## “Instances ARE Templates” (how templates work)
 
