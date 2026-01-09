@@ -5,75 +5,96 @@
 .ck-btn {
   /* Sizes are handled via `ck-btn--sm|md|lg`.
      Typography is owned by Dieter utilities (use `label-s|m|l` on the element). */
-  --ck-btn-py: var(--space-2);
-  --ck-btn-px: var(--space-4);
-  --ck-btn-radius: var(--control-radius-xl);
+  /* Prague buttons must feel like Dieter buttons (same proportion logic),
+     while still being larger for marketing surfaces. */
+  --ck-btn-px: var(--control-padding-inline);
+  --ck-btn-radius: var(--control-radius-md);
   --ck-btn-min-h: var(--min-touch-target);
+  --ck-btn-bg: var(--color-system-white);
+  --ck-btn-color: var(--color-system-black);
+  --ck-btn-border-w: 1px;
+  --ck-btn-border-color: color-mix(in oklab, var(--color-system-black), transparent 84%);
+  --ck-btn-hover-bg: color-mix(in oklab, var(--ck-btn-bg), var(--ck-btn-color) 6%);
+  --ck-btn-hover-color: var(--ck-btn-color);
+  --ck-btn-hover-border-color: var(--ck-btn-border-color);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--ck-btn-bg), var(--ck-btn-color) 14%);
+  --ck-btn-clicked-color: var(--ck-btn-color);
+  --ck-btn-clicked-border-color: var(--ck-btn-border-color);
+  --ck-btn-shadow: none;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: var(--ck-btn-min-h);
-  padding: var(--ck-btn-py) var(--ck-btn-px);
+  /* Dieter-like vertical rhythm: height drives the control, not padding-block. */
+  padding-block: 0;
+  padding-inline: var(--ck-btn-px);
   border-radius: var(--ck-btn-radius);
-  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 84%);
+  border: var(--ck-btn-border-w) solid var(--ck-btn-border-color);
+  background: var(--ck-btn-bg);
+  color: var(--ck-btn-color);
+  box-shadow: var(--ck-btn-shadow);
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  font: inherit;
-  line-height: 1;
-  gap: var(--space-2);
+  gap: var(--control-inline-gap-md);
   white-space: nowrap;
+  letter-spacing: -0.02em;
   transition: background-color var(--duration-base, 160ms), border-color var(--duration-base, 160ms),
     color var(--duration-base, 160ms), box-shadow var(--duration-base, 160ms), transform var(--duration-base, 160ms);
 }
 
 .ck-btn--sm {
-  --ck-btn-py: var(--space-1);
-  --ck-btn-px: var(--space-3);
-  --ck-btn-radius: var(--control-radius-lg);
+  --ck-btn-px: calc(var(--control-padding-inline) - var(--space-1));
+  --ck-btn-radius: var(--control-radius-sm);
   --ck-btn-min-h: 2.25rem; /* 36px */
+  gap: var(--control-inline-gap-sm);
 }
 
 .ck-btn--md {
-  --ck-btn-py: var(--space-2);
-  --ck-btn-px: var(--space-4);
-  --ck-btn-radius: var(--control-radius-xl);
+  --ck-btn-px: var(--control-padding-inline);
+  --ck-btn-radius: var(--control-radius-md);
   --ck-btn-min-h: var(--min-touch-target); /* 44px */
 }
 
 .ck-btn--lg {
-  --ck-btn-py: var(--space-3);
-  --ck-btn-px: var(--space-5);
-  --ck-btn-radius: var(--control-radius-2xl);
+  --ck-btn-px: calc(var(--control-padding-inline) + var(--space-2));
+  --ck-btn-radius: var(--control-radius-lg);
   --ck-btn-min-h: 3.25rem; /* 52px */
+  gap: var(--control-inline-gap-lg);
 }
 
 .ck-btn--primary {
-  background: var(--color-system-black);
-  color: var(--color-system-white);
+  /* Match Dieter primary behavior (blue). */
+  --ck-btn-bg: var(--color-system-blue, #0a84ff);
+  --ck-btn-color: var(--color-system-white, #ffffff);
+  --ck-btn-border-w: 0px;
+  --ck-btn-border-color: transparent;
+  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
 }
 
 .ck-btn--secondary {
-  background: var(--color-system-white);
-  color: var(--color-system-black);
-  box-shadow: var(--shadow-inset-control);
+  /* Dieter-like “surface tint” secondary */
+  --ck-btn-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
+  --ck-btn-color: var(--color-system-black);
+  --ck-btn-border-w: 0px;
+  --ck-btn-border-color: transparent;
+  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-black) 35%, transparent);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-black) 20%, transparent);
 }
 
-.ck-btn:hover {
-  border-color: color-mix(in oklab, var(--color-system-black), transparent 78%);
+.ck-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--ck-btn-hover-bg);
+  color: var(--ck-btn-hover-color);
+  border-color: var(--ck-btn-hover-border-color);
 }
 
-.ck-btn--primary:hover {
-  background: color-mix(in oklab, var(--color-system-black), var(--color-system-white) 10%);
-}
-
-.ck-btn--secondary:hover {
-  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 2%);
-}
-
-.ck-btn:active {
-  transform: translateY(0.5px);
+.ck-btn:active:not(:disabled):not([aria-disabled='true']) {
+  background: var(--ck-btn-clicked-bg);
+  color: var(--ck-btn-clicked-color);
+  border-color: var(--ck-btn-clicked-border-color);
+  transform: translateY(1px);
 }
 
 .ck-btn:focus-visible {
