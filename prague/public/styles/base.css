@@ -4,7 +4,13 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: var(--font-ui);
+  /* Prague baseline body type is intentionally larger than product UI.
+     We still use Dieter foundation tokens, but set a marketing-friendly default. */
+  font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui);
   background: var(--color-system-gray-6);
   color: var(--color-system-black);
 }
+
+/* Dieter typography sets `p { font: ... }` in foundations.
+   Prague wants paragraphs to inherit the Prague baseline by default. */
+p { font: inherit; }
