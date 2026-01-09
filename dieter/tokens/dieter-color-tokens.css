@@ -121,13 +121,13 @@
   /* Neutral ladder (light) */
   --color-system-white: #ffffff;
   --color-system-black: #212121;
-  --color-system-gray: #8e8e93;
+  --color-system-gray: #707075;
   --color-system-gray-contrast: #636366;
-  --color-system-gray-2: #aeaeb2;
-  --color-system-gray-3: #c7c7cc;
-  --color-system-gray-4: #d1d1d6;
-  --color-system-gray-5: #e5e5ea;
-  --color-system-gray-6: #f2f2f7;
+  --color-system-gray-2: #808085;
+  --color-system-gray-3: #8e8e93;
+  --color-system-gray-4: #aeaeb2;
+  --color-system-gray-5: #c7c7cc;
+  --color-system-gray-6: #d1d1d6;
 
   --color-system-gray-step1: color-mix(in oklab, var(--color-system-gray), white 20%);
   --color-system-gray-step2: color-mix(in oklab, var(--color-system-gray), white 40%);
