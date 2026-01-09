@@ -4,7 +4,7 @@ import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
 import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
 import { listPragueLocales } from '../../../../../lib/locales';
-import { t } from '../../../../../lib/i18n';
+import { pragueT } from '../../../../../lib/i18n';
 
 const { locale, widget, page } = Astro.params;
 
@@ -38,13 +38,13 @@ const pageLabel = titleCase(page);
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
-      cta={{ label: t(locale, 'cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
+      cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
 
     <section class="ck-canvas ck-widgetSubpage">
       <div class="ck-inline ck-stack ck-widgetSubpage__inner">
         <h1 class="heading-2 ck-widgetSubpage__title">{widgetLabel} — {pageLabel}</h1>
-        <p class="body-m ck-widgetSubpage__body">{t(locale, 'common.comingSoon')}</p>
+        <p class="body-m ck-widgetSubpage__body">{pragueT(locale, 'prague.common.comingSoon')}</p>
       </div>
     </section>
 

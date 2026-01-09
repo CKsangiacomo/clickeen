@@ -1,6 +1,6 @@
 ---
 import { resolveWidgetsMegaMenu } from './widgetsMegaMenu';
-import { t } from '../../../lib/i18n';
+import { pragueT } from '../../../lib/i18n';
 
 type Props = {
   title: string;
@@ -22,15 +22,15 @@ const widget = widgetMatch?.[1] ?? null;
 const widgetPage = (widgetMatch?.[2] ?? 'overview') as WidgetSubpage;
 const isWidgetPage = Boolean(widget);
 
-const widgetsLabel = t(locale, 'nav.widgets');
+const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
 
 const widgetTabs = widget
   ? ([
-      { label: t(locale, 'tabs.overview'), href: `/${locale}/widgets/${widget}`, key: 'overview' },
-      { label: t(locale, 'tabs.templates'), href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
-      { label: t(locale, 'tabs.examples'), href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
-      { label: t(locale, 'tabs.features'), href: `/${locale}/widgets/${widget}/features`, key: 'features' },
-      { label: t(locale, 'tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
+      { label: pragueT(locale, 'prague.tabs.overview'), href: `/${locale}/widgets/${widget}`, key: 'overview' },
+      { label: pragueT(locale, 'prague.tabs.templates'), href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
+      { label: pragueT(locale, 'prague.tabs.examples'), href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
+      { label: pragueT(locale, 'prague.tabs.features'), href: `/${locale}/widgets/${widget}/features`, key: 'features' },
+      { label: pragueT(locale, 'prague.tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
     ] as const)
   : [];
 
@@ -76,7 +76,7 @@ const primaryItems =
 
                   <div class="ck-navWidgets__footer">
                     <a class="ck-btn ck-btn--secondary ck-btn--md label-m" href={mega.allWidgetsHref}>
-                      {t(locale, 'nav.viewAllWidgets')}
+                      {pragueT(locale, 'prague.nav.viewAllWidgets')}
                     </a>
                   </div>
                 </div>
