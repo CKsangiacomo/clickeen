@@ -167,7 +167,7 @@ echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
 
-echo "[dev-up] Note: instances are usually created from DevStudio Local; optionally run: pnpm bootstrap:local-widgets"
+echo "[dev-up] Note: instances are created/edited from DevStudio Local (human-driven)"
 
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
