@@ -580,12 +580,11 @@ async function maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, conf
 
   setAutoPromoteStatus('Promoting…');
   try {
-    const key = requireSuperadminKey();
     lastPromotePayload = { workspaceId, publicId, widgetType, config, status };
     if (autoPromoteRetryBtn instanceof HTMLButtonElement) autoPromoteRetryBtn.disabled = false;
     const res = await fetch('/api/promote-instance?_t=' + Date.now(), {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-ck-superadmin-key': key },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ workspaceId, publicId, widgetType, config, status }),
     });
     const json = await res.json().catch(() => null);

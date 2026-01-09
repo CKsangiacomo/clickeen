@@ -160,24 +160,15 @@ export default defineConfig({
           }
 
           const expectedSuperadminKey = (process.env.CK_SUPERADMIN_KEY || '').trim();
-          if (!expectedSuperadminKey) {
-            res.statusCode = 500;
-            res.end(
-              JSON.stringify({
-                error: {
-                  kind: 'INTERNAL',
-                  reasonKey: 'devstudio.errors.promote.missingSuperadminKey',
-                  detail: 'Missing CK_SUPERADMIN_KEY in DevStudio Local env.',
-                },
-              }),
-            );
-            return;
-          }
-          const providedKey = String(req.headers['x-ck-superadmin-key'] || '').trim();
-          if (!providedKey || providedKey !== expectedSuperadminKey) {
-            res.statusCode = 403;
-            res.end(JSON.stringify({ error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } }));
-            return;
+          // Local-only DevStudio: superadmin auth is optional.
+          // If CK_SUPERADMIN_KEY is set, require it to prevent drive-by writes to cloud-dev.
+          if (expectedSuperadminKey) {
+            const providedKey = String(req.headers['x-ck-superadmin-key'] || '').trim();
+            if (!providedKey || providedKey !== expectedSuperadminKey) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } }));
+              return;
+            }
           }
 
           let body = '';
