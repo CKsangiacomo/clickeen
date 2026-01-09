@@ -117,6 +117,9 @@ pkill -f "workerd serve.*entry=localhost:8790" || true
 echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
 rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
 
+echo "[dev-up] Cleaning Venice build artifacts (.next/.next-dev) to avoid stale edge sandbox mismatches"
+rm -rf "$ROOT_DIR/venice/.next" "$ROOT_DIR/venice/.next-dev" || true
+
 # Local dev always uses the local Tokyo CDN stub.
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 

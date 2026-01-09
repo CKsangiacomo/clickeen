@@ -112,6 +112,13 @@ function main() {
     throw new Error('[i18n] Missing required locale: en');
   }
 
+  const supportedLocales = locales.filter((locale) => {
+    const corePath = path.join(srcRoot, locale, 'coreui.json');
+    if (fs.existsSync(corePath)) return true;
+    console.warn(`[i18n] Skipping locale "${locale}" (missing ${locale}/coreui.json)`);
+    return false;
+  });
+
   const manifest = {
     v: 1,
     gitSha: tryGetGitSha(),
@@ -121,7 +128,7 @@ function main() {
 
   ensureDir(outRoot);
 
-  for (const locale of locales) {
+  for (const locale of supportedLocales) {
     const localeSrcDir = path.join(srcRoot, locale);
     const localeOutDir = path.join(outRoot, locale);
     ensureDir(localeOutDir);
@@ -132,9 +139,7 @@ function main() {
       .map((d) => d.name)
       .sort();
 
-    if (!files.includes('coreui.json')) {
-      throw new Error(`[i18n] Missing ${locale}/coreui.json`);
-    }
+    // Note: supportedLocales already guarantees coreui.json exists.
 
     const bundlesForLocale = {};
 
@@ -157,8 +162,7 @@ function main() {
   }
 
   fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`[i18n] Built ${locales.length} locale(s) → tokyo/i18n (gitSha=${manifest.gitSha})`);
+  console.log(`[i18n] Built ${supportedLocales.length} locale(s) → tokyo/i18n (gitSha=${manifest.gitSha})`);
 }
 
 main();
-

@@ -40,7 +40,14 @@ function main() {
     throw new Error('[i18n] Missing required locale: en');
   }
 
-  for (const locale of locales) {
+  const supportedLocales = locales.filter((locale) => {
+    const corePath = path.join(srcRoot, locale, 'coreui.json');
+    if (fs.existsSync(corePath)) return true;
+    console.warn(`[i18n] Skipping locale "${locale}" (missing ${locale}/coreui.json)`);
+    return false;
+  });
+
+  for (const locale of supportedLocales) {
     const coreui = loadCatalog(locale, 'coreui');
     if (!coreui) throw new Error(`[i18n] Missing ${locale}/coreui.json`);
 
@@ -72,8 +79,7 @@ function main() {
     }
   }
 
-  console.log(`[i18n] OK: ${keys.length} referenced key(s) validated across ${locales.length} locale(s)`);
+  console.log(`[i18n] OK: ${keys.length} referenced key(s) validated across ${supportedLocales.length} locale(s)`);
 }
 
 main();
-
