@@ -3,6 +3,19 @@
 
   const STYLE_ID = 'ck-branding-style';
 
+  function resolveCspNonce() {
+    const direct = window.CK_CSP_NONCE;
+    if (typeof direct === 'string' && direct) return direct;
+
+    const meta = document.querySelector('meta[name="ck-csp-nonce"]');
+    const metaNonce = meta instanceof HTMLMetaElement ? meta.content : '';
+    if (metaNonce) return metaNonce;
+
+    const nonceEl = document.querySelector('script[nonce],style[nonce]');
+    const attr = nonceEl instanceof HTMLElement ? nonceEl.getAttribute('nonce') || '' : '';
+    return attr;
+  }
+
   function ensureStyle(scope) {
     if (!scope) return;
     const existing =
@@ -12,6 +25,11 @@
     if (existing) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
+    const nonce = resolveCspNonce();
+    if (nonce) {
+      style.setAttribute('nonce', nonce);
+      style.nonce = nonce;
+    }
     style.textContent = `
       .ck-branding {
         position: absolute;
