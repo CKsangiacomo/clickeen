@@ -25,9 +25,11 @@ const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
 const iframeSrc = VENICE_URL
   ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
   : null;
+
+const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 ---
 
-<div class="ck-websiteCreative">
+<div class="ck-websiteCreative" id={anchorId} data-ck-creative-id={anchorId}>
   {iframeSrc ? (
     <>
       <iframe
@@ -40,13 +42,38 @@ const iframeSrc = VENICE_URL
         sandbox="allow-scripts allow-same-origin allow-forms"
       />
 
-      {/* Visual-only preview chrome (no border): top share bar + bottom CTA bar */}
-      <div class="ck-websiteCreative__chrome" aria-hidden="true">
-        <div class="ck-websiteCreative__chromeTop">
-          <div class="ck-websiteCreative__share">Share</div>
-        </div>
-        <div class="ck-websiteCreative__chromeBottom">
-          <div class="ck-websiteCreative__cta">Open</div>
+      {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
+      <div class="ck-websiteCreative__chrome">
+        <div class="ck-websiteCreative__topbar">
+          <details class="ck-share">
+            <summary class="ck-share__btn label-s">Share</summary>
+            <div class="ck-share__menu" role="menu" aria-label="Share options">
+              <button type="button" class="ck-share__item" data-action="native">System share</button>
+              <button type="button" class="ck-share__item" data-action="copy">Copy link</button>
+              <div class="ck-share__sep" aria-hidden="true"></div>
+              <button type="button" class="ck-share__item" data-action="sms">Text (SMS)</button>
+              <button type="button" class="ck-share__item" data-action="email">Email</button>
+              <button type="button" class="ck-share__item" data-action="whatsapp">WhatsApp</button>
+              <button type="button" class="ck-share__item" data-action="telegram">Telegram</button>
+              <button type="button" class="ck-share__item" data-action="signal">Signal</button>
+              <div class="ck-share__sep" aria-hidden="true"></div>
+              <button type="button" class="ck-share__item" data-action="x">X</button>
+              <button type="button" class="ck-share__item" data-action="linkedin">LinkedIn</button>
+              <button type="button" class="ck-share__item" data-action="facebook">Facebook</button>
+              <button type="button" class="ck-share__item" data-action="reddit">Reddit</button>
+              <button type="button" class="ck-share__item" data-action="discord">Discord</button>
+              <button type="button" class="ck-share__item" data-action="pinterest">Pinterest</button>
+              <button type="button" class="ck-share__item" data-action="messenger">Messenger</button>
+              <button type="button" class="ck-share__item" data-action="slack">Slack</button>
+              <button type="button" class="ck-share__item" data-action="teams">Microsoft Teams</button>
+              <div class="ck-share__sep" aria-hidden="true"></div>
+              <button type="button" class="ck-share__item" data-action="instagram">Instagram</button>
+              <button type="button" class="ck-share__item" data-action="tiktok">TikTok</button>
+              <button type="button" class="ck-share__item" data-action="youtube">YouTube</button>
+              <button type="button" class="ck-share__item" data-action="wechat">WeChat</button>
+              <button type="button" class="ck-share__item" data-action="line">LINE</button>
+            </div>
+          </details>
         </div>
       </div>
     </>
@@ -72,7 +99,7 @@ const iframeSrc = VENICE_URL
     position: absolute;
     inset: 0;
     z-index: 3;
-    pointer-events: none; /* never block iframe interaction */
+    pointer-events: none; /* only the controls are interactive */
     opacity: 0;
     transition: opacity var(--duration-base, 160ms);
   }
@@ -82,20 +109,16 @@ const iframeSrc = VENICE_URL
     opacity: 1;
   }
 
-  .ck-websiteCreative__chromeTop,
-  .ck-websiteCreative__chromeBottom {
+  .ck-websiteCreative__topbar {
     position: absolute;
     left: 0;
     right: 0;
     display: flex;
     align-items: center;
-    padding-inline: var(--space-4);
-  }
-
-  .ck-websiteCreative__chromeTop {
     top: 0;
     height: 44px;
     justify-content: flex-end;
+    padding-inline: var(--space-4);
     background: linear-gradient(
       to bottom,
       color-mix(in oklab, var(--color-system-black), transparent 92%),
@@ -103,35 +126,68 @@ const iframeSrc = VENICE_URL
     );
   }
 
-  .ck-websiteCreative__chromeBottom {
-    bottom: 0;
-    height: 56px;
-    justify-content: flex-end;
-    background: linear-gradient(
-      to top,
-      color-mix(in oklab, var(--color-system-black), transparent 92%),
-      transparent
-    );
+  .ck-share {
+    position: relative;
+    pointer-events: auto;
   }
 
-  .ck-websiteCreative__share,
-  .ck-websiteCreative__cta {
+  .ck-share__btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 32px;
-    padding-inline: 12px;
+    height: 34px;
+    padding-inline: 14px;
     border-radius: 999px;
     background: color-mix(in oklab, var(--color-system-white), transparent 10%);
     color: color-mix(in oklab, var(--color-system-black), transparent 22%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
-    font: 600 var(--fs-12)/1 var(--font-ui);
-    letter-spacing: -0.01em;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
   }
 
-  .ck-websiteCreative__cta {
-    height: 36px;
-    padding-inline: 14px;
+  .ck-share__btn::-webkit-details-marker { display: none; }
+  .ck-share__btn::marker { content: ''; }
+
+  .ck-share__menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(320px, calc(100vw - 48px));
+    background: color-mix(in oklab, var(--color-system-white), transparent 4%);
+    border-radius: var(--control-radius-xl);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.14);
+    padding: var(--space-3);
+    display: none;
+    pointer-events: auto;
+  }
+
+  .ck-share[open] .ck-share__menu { display: block; }
+
+  .ck-share__item {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 12px;
+    border-radius: var(--control-radius-lg);
+    border: 0;
+    background: transparent;
+    color: var(--color-system-black);
+    cursor: pointer;
+    font: 500 var(--fs-14)/1.2 var(--font-ui);
+    text-align: left;
+  }
+
+  .ck-share__item:hover {
+    background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+  }
+
+  .ck-share__sep {
+    height: 1px;
+    margin: 6px 8px;
+    background: color-mix(in oklab, var(--color-system-black), transparent 90%);
   }
 
   .ck-websiteCreative__iframe {
@@ -153,3 +209,124 @@ const iframeSrc = VENICE_URL
     text-align: center;
   }
 </style>
+
+<script>
+  {`
+(() => {
+  const root = document.currentScript?.previousElementSibling;
+  // The script is rendered after the <style>, so walk up to the creative wrapper.
+  const creative = document.currentScript?.closest?.('.ck-websiteCreative');
+  if (!(creative instanceof HTMLElement)) return;
+
+  const anchorId = creative.getAttribute('data-ck-creative-id') || creative.id || '';
+  const details = creative.querySelector('.ck-share');
+  const menu = creative.querySelector('.ck-share__menu');
+  if (!(details instanceof HTMLDetailsElement) || !(menu instanceof HTMLElement)) return;
+
+  const close = () => { details.open = false; };
+  document.addEventListener('click', (e) => {
+    if (!details.open) return;
+    const t = e.target;
+    if (t instanceof Node && details.contains(t)) return;
+    close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+
+  function shareUrlFor(channel) {
+    const u = new URL(window.location.href);
+    if (anchorId) u.hash = anchorId;
+    if (channel) {
+      u.searchParams.set('ref', 'share');
+      u.searchParams.set('channel', channel);
+    }
+    return u.toString();
+  }
+
+  async function copy(text) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {}
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch {}
+    document.body.removeChild(ta);
+    return true;
+  }
+
+  function openUrl(url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  async function handle(action) {
+    const url = shareUrlFor(action);
+    const title = document.title || 'Clickeen';
+    const text = title;
+
+    if (action === 'native') {
+      if (navigator.share) {
+        try { await navigator.share({ title, text, url: shareUrlFor('native') }); } catch {}
+        return;
+      }
+      await copy(shareUrlFor('copy'));
+      return;
+    }
+
+    if (action === 'copy') { await copy(url); return; }
+
+    if (action === 'email') {
+      const mailto = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(url);
+      window.location.href = mailto;
+      return;
+    }
+
+    if (action === 'sms') {
+      const sms = 'sms:?&body=' + encodeURIComponent(url);
+      window.location.href = sms;
+      return;
+    }
+
+    if (action === 'whatsapp') { openUrl('https://wa.me/?text=' + encodeURIComponent(url)); return; }
+    if (action === 'telegram') { openUrl('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); return; }
+    if (action === 'signal') { await copy(url); openUrl('https://signal.me/'); return; }
+
+    if (action === 'x') { openUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); return; }
+    if (action === 'linkedin') { openUrl('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url)); return; }
+    if (action === 'facebook') { openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)); return; }
+    if (action === 'reddit') { openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title)); return; }
+    if (action === 'discord') { await copy(url); openUrl('https://discord.com/channels/@me'); return; }
+    if (action === 'pinterest') { openUrl('https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&description=' + encodeURIComponent(title)); return; }
+    if (action === 'messenger') { await copy(url); openUrl('https://www.messenger.com/'); return; }
+    if (action === 'slack') { await copy(url); openUrl('https://slack.com/app'); return; }
+    if (action === 'teams') { await copy(url); openUrl('https://teams.microsoft.com/'); return; }
+
+    // Platforms without a reliable web intent: copy link + best-effort open.
+    if (action === 'instagram') { await copy(url); openUrl('https://www.instagram.com/'); return; }
+    if (action === 'tiktok') { await copy(url); openUrl('https://www.tiktok.com/'); return; }
+    if (action === 'youtube') { await copy(url); openUrl('https://www.youtube.com/'); return; }
+    if (action === 'wechat') { await copy(url); return; }
+    if (action === 'line') { await copy(url); openUrl('https://line.me/'); return; }
+  }
+
+  menu.addEventListener('click', async (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLElement)) return;
+    const btn = t.closest('[data-action]');
+    if (!(btn instanceof HTMLElement)) return;
+    const action = btn.getAttribute('data-action') || '';
+    if (!action) return;
+    e.preventDefault();
+    try { await handle(action); } finally { close(); }
+  });
+})();
+`}
+</script>
