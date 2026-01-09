@@ -43,38 +43,117 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
       />
 
       {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
-      <div class="ck-websiteCreative__chrome">
-        <div class="ck-websiteCreative__topbar">
-          <details class="ck-share">
-            <summary class="ck-share__btn label-s">Share</summary>
-            <div class="ck-share__menu" role="menu" aria-label="Share options">
-              <button type="button" class="ck-share__item" data-action="native">System share</button>
-              <button type="button" class="ck-share__item" data-action="copy">Copy link</button>
-              <div class="ck-share__sep" aria-hidden="true"></div>
-              <button type="button" class="ck-share__item" data-action="sms">Text (SMS)</button>
-              <button type="button" class="ck-share__item" data-action="email">Email</button>
-              <button type="button" class="ck-share__item" data-action="whatsapp">WhatsApp</button>
-              <button type="button" class="ck-share__item" data-action="telegram">Telegram</button>
-              <button type="button" class="ck-share__item" data-action="signal">Signal</button>
-              <div class="ck-share__sep" aria-hidden="true"></div>
-              <button type="button" class="ck-share__item" data-action="x">X</button>
-              <button type="button" class="ck-share__item" data-action="linkedin">LinkedIn</button>
-              <button type="button" class="ck-share__item" data-action="facebook">Facebook</button>
-              <button type="button" class="ck-share__item" data-action="reddit">Reddit</button>
-              <button type="button" class="ck-share__item" data-action="discord">Discord</button>
-              <button type="button" class="ck-share__item" data-action="pinterest">Pinterest</button>
-              <button type="button" class="ck-share__item" data-action="messenger">Messenger</button>
-              <button type="button" class="ck-share__item" data-action="slack">Slack</button>
-              <button type="button" class="ck-share__item" data-action="teams">Microsoft Teams</button>
-              <div class="ck-share__sep" aria-hidden="true"></div>
-              <button type="button" class="ck-share__item" data-action="instagram">Instagram</button>
-              <button type="button" class="ck-share__item" data-action="tiktok">TikTok</button>
-              <button type="button" class="ck-share__item" data-action="youtube">YouTube</button>
-              <button type="button" class="ck-share__item" data-action="wechat">WeChat</button>
-              <button type="button" class="ck-share__item" data-action="line">LINE</button>
+      <div class="ck-websiteCreative__topbar">
+        <details class="ck-share">
+          <summary class="ck-share__btn">
+            <span class="ck-share__btnIcon" aria-hidden="true">⤴</span>
+            <span class="label-s">Share</span>
+          </summary>
+
+          <div class="ck-share__menu" role="menu" aria-label="Share options">
+            <div class="ck-share__toast" role="status" aria-live="polite"></div>
+
+            <div class="ck-share__group">
+              <div class="ck-share__groupTitle label-xs">Quick</div>
+              <button type="button" class="ck-share__item" data-action="native">
+                <span class="ck-share__badge" aria-hidden="true">⇪</span>
+                <span class="ck-share__text">System share</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="copy">
+                <span class="ck-share__badge" aria-hidden="true">⧉</span>
+                <span class="ck-share__text">Copy link</span>
+              </button>
             </div>
-          </details>
-        </div>
+
+            <div class="ck-share__sep" aria-hidden="true"></div>
+
+            <div class="ck-share__group">
+              <div class="ck-share__groupTitle label-xs">Send</div>
+              <button type="button" class="ck-share__item" data-action="sms">
+                <span class="ck-share__badge" aria-hidden="true">SMS</span>
+                <span class="ck-share__text">Text (SMS)</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="email">
+                <span class="ck-share__badge" aria-hidden="true">@</span>
+                <span class="ck-share__text">Email</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="whatsapp">
+                <span class="ck-share__badge" aria-hidden="true">WA</span>
+                <span class="ck-share__text">WhatsApp</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="telegram">
+                <span class="ck-share__badge" aria-hidden="true">TG</span>
+                <span class="ck-share__text">Telegram</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="signal">
+                <span class="ck-share__badge" aria-hidden="true">SG</span>
+                <span class="ck-share__text">Signal</span>
+              </button>
+            </div>
+
+            <div class="ck-share__sep" aria-hidden="true"></div>
+
+            <div class="ck-share__group">
+              <div class="ck-share__groupTitle label-xs">Social</div>
+              <button type="button" class="ck-share__item" data-action="x">
+                <span class="ck-share__badge" aria-hidden="true">X</span>
+                <span class="ck-share__text">X</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="linkedin">
+                <span class="ck-share__badge" aria-hidden="true">in</span>
+                <span class="ck-share__text">LinkedIn</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="facebook">
+                <span class="ck-share__badge" aria-hidden="true">f</span>
+                <span class="ck-share__text">Facebook</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="reddit">
+                <span class="ck-share__badge" aria-hidden="true">r/</span>
+                <span class="ck-share__text">Reddit</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="discord">
+                <span class="ck-share__badge" aria-hidden="true">D</span>
+                <span class="ck-share__text">Discord</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="pinterest">
+                <span class="ck-share__badge" aria-hidden="true">P</span>
+                <span class="ck-share__text">Pinterest</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="messenger">
+                <span class="ck-share__badge" aria-hidden="true">M</span>
+                <span class="ck-share__text">Messenger</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="slack">
+                <span class="ck-share__badge" aria-hidden="true">S</span>
+                <span class="ck-share__text">Slack</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="teams">
+                <span class="ck-share__badge" aria-hidden="true">T</span>
+                <span class="ck-share__text">Microsoft Teams</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="instagram">
+                <span class="ck-share__badge" aria-hidden="true">IG</span>
+                <span class="ck-share__text">Instagram</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="tiktok">
+                <span class="ck-share__badge" aria-hidden="true">TT</span>
+                <span class="ck-share__text">TikTok</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="youtube">
+                <span class="ck-share__badge" aria-hidden="true">YT</span>
+                <span class="ck-share__text">YouTube</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="wechat">
+                <span class="ck-share__badge" aria-hidden="true">WC</span>
+                <span class="ck-share__text">WeChat</span>
+              </button>
+              <button type="button" class="ck-share__item" data-action="line">
+                <span class="ck-share__badge" aria-hidden="true">LN</span>
+                <span class="ck-share__text">LINE</span>
+              </button>
+            </div>
+          </div>
+        </details>
       </div>
     </>
   ) : (
@@ -95,20 +174,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     border: 0;
   }
 
-  .ck-websiteCreative__chrome {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none; /* only the controls are interactive */
-    opacity: 0;
-    transition: opacity var(--duration-base, 160ms);
-  }
-
-  .ck-websiteCreative:hover .ck-websiteCreative__chrome,
-  .ck-websiteCreative:focus-within .ck-websiteCreative__chrome {
-    opacity: 1;
-  }
-
   .ck-websiteCreative__topbar {
     position: absolute;
     left: 0;
@@ -124,71 +189,129 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
       color-mix(in oklab, var(--color-system-black), transparent 92%),
       transparent
     );
+    z-index: 3;
+    opacity: 0;
+    transition: opacity var(--duration-base, 160ms);
+  }
+
+  .ck-websiteCreative:hover .ck-websiteCreative__topbar,
+  .ck-websiteCreative:focus-within .ck-websiteCreative__topbar {
+    opacity: 1;
   }
 
   .ck-share {
     position: relative;
-    pointer-events: auto;
   }
 
   .ck-share__btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 34px;
+    gap: 8px;
+    height: 36px;
     padding-inline: 14px;
     border-radius: 999px;
-    background: color-mix(in oklab, var(--color-system-white), transparent 10%);
-    color: color-mix(in oklab, var(--color-system-black), transparent 22%);
+    background: color-mix(in oklab, var(--color-system-white), transparent 8%);
+    color: color-mix(in oklab, var(--color-system-black), transparent 20%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
     cursor: pointer;
     user-select: none;
     list-style: none;
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
   }
 
   .ck-share__btn::-webkit-details-marker { display: none; }
   .ck-share__btn::marker { content: ''; }
 
+  .ck-share__btnIcon {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    color: color-mix(in oklab, var(--color-system-black), transparent 35%);
+  }
+
   .ck-share__menu {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
-    width: min(320px, calc(100vw - 48px));
+    width: min(360px, calc(100vw - 48px));
+    max-height: min(520px, calc(100vh - 120px));
+    overflow: auto;
     background: color-mix(in oklab, var(--color-system-white), transparent 4%);
-    border-radius: var(--control-radius-xl);
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.14);
-    padding: var(--space-3);
+    border-radius: var(--control-radius-2xl);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.16);
+    padding: var(--space-4);
     display: none;
-    pointer-events: auto;
   }
 
   .ck-share[open] .ck-share__menu { display: block; }
 
+  .ck-share__toast {
+    position: sticky;
+    top: 0;
+    display: none;
+    padding: 10px 12px;
+    margin-bottom: var(--space-3);
+    border-radius: var(--control-radius-lg);
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+    font: 500 var(--fs-13)/1.2 var(--font-ui);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .ck-share__group { display: flex; flex-direction: column; gap: var(--space-2); }
+  .ck-share__groupTitle {
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+    padding: 2px 8px;
+  }
+
   .ck-share__item {
     width: 100%;
     display: flex;
-    justify-content: flex-start;
     align-items: center;
     gap: var(--space-3);
-    padding: 10px 12px;
-    border-radius: var(--control-radius-lg);
-    border: 0;
-    background: transparent;
+    padding: 12px 12px;
+    border-radius: var(--control-radius-xl);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
+    background: color-mix(in oklab, var(--color-system-white), transparent 6%);
     color: var(--color-system-black);
     cursor: pointer;
-    font: 500 var(--fs-14)/1.2 var(--font-ui);
+    font: 600 var(--fs-14)/1.2 var(--font-ui);
     text-align: left;
   }
 
   .ck-share__item:hover {
     background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+    border-color: color-mix(in oklab, var(--color-system-black), transparent 88%);
   }
 
   .ck-share__sep {
     height: 1px;
-    margin: 6px 8px;
+    margin: var(--space-4) 6px;
     background: color-mix(in oklab, var(--color-system-black), transparent 90%);
   }
+
+  .ck-share__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+    color: color-mix(in oklab, var(--color-system-black), transparent 20%);
+    font: 700 var(--fs-11)/1 var(--font-ui);
+    letter-spacing: -0.02em;
+    flex: 0 0 auto;
+  }
+
+  .ck-share__text { flex: 1 1 auto; }
 
   .ck-websiteCreative__iframe {
     width: 100%;
@@ -221,6 +344,7 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
   const anchorId = creative.getAttribute('data-ck-creative-id') || creative.id || '';
   const details = creative.querySelector('.ck-share');
   const menu = creative.querySelector('.ck-share__menu');
+  const toast = creative.querySelector('.ck-share__toast');
   if (!(details instanceof HTMLDetailsElement) || !(menu instanceof HTMLElement)) return;
 
   const close = () => { details.open = false; };
@@ -242,6 +366,19 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
       u.searchParams.set('channel', channel);
     }
     return u.toString();
+  }
+
+  let toastTimer = 0;
+  function showToast(msg) {
+    if (!(toast instanceof HTMLElement)) return;
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    if (toastTimer) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.style.display = 'none';
+      toast.textContent = '';
+      toastTimer = 0;
+    }, 1600);
   }
 
   async function copy(text) {
@@ -274,47 +411,53 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
     if (action === 'native') {
       if (navigator.share) {
-        try { await navigator.share({ title, text, url: shareUrlFor('native') }); } catch {}
+        try {
+          await navigator.share({ title, text, url: shareUrlFor('native') });
+          showToast('Shared');
+        } catch {}
         return;
       }
       await copy(shareUrlFor('copy'));
+      showToast('Link copied');
       return;
     }
 
-    if (action === 'copy') { await copy(url); return; }
+    if (action === 'copy') { await copy(url); showToast('Link copied'); return; }
 
     if (action === 'email') {
       const mailto = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(url);
       window.location.href = mailto;
+      showToast('Opening email…');
       return;
     }
 
     if (action === 'sms') {
       const sms = 'sms:?&body=' + encodeURIComponent(url);
       window.location.href = sms;
+      showToast('Opening messages…');
       return;
     }
 
-    if (action === 'whatsapp') { openUrl('https://wa.me/?text=' + encodeURIComponent(url)); return; }
-    if (action === 'telegram') { openUrl('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); return; }
-    if (action === 'signal') { await copy(url); openUrl('https://signal.me/'); return; }
+    if (action === 'whatsapp') { openUrl('https://wa.me/?text=' + encodeURIComponent(url)); showToast('Opening WhatsApp…'); return; }
+    if (action === 'telegram') { openUrl('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); showToast('Opening Telegram…'); return; }
+    if (action === 'signal') { await copy(url); showToast('Link copied (paste in Signal)'); openUrl('https://signal.me/'); return; }
 
-    if (action === 'x') { openUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); return; }
-    if (action === 'linkedin') { openUrl('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url)); return; }
-    if (action === 'facebook') { openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)); return; }
-    if (action === 'reddit') { openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title)); return; }
-    if (action === 'discord') { await copy(url); openUrl('https://discord.com/channels/@me'); return; }
-    if (action === 'pinterest') { openUrl('https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&description=' + encodeURIComponent(title)); return; }
-    if (action === 'messenger') { await copy(url); openUrl('https://www.messenger.com/'); return; }
-    if (action === 'slack') { await copy(url); openUrl('https://slack.com/app'); return; }
-    if (action === 'teams') { await copy(url); openUrl('https://teams.microsoft.com/'); return; }
+    if (action === 'x') { openUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); showToast('Opening X…'); return; }
+    if (action === 'linkedin') { openUrl('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url)); showToast('Opening LinkedIn…'); return; }
+    if (action === 'facebook') { openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)); showToast('Opening Facebook…'); return; }
+    if (action === 'reddit') { openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title)); showToast('Opening Reddit…'); return; }
+    if (action === 'discord') { await copy(url); showToast('Link copied (paste in Discord)'); openUrl('https://discord.com/channels/@me'); return; }
+    if (action === 'pinterest') { openUrl('https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&description=' + encodeURIComponent(title)); showToast('Opening Pinterest…'); return; }
+    if (action === 'messenger') { await copy(url); showToast('Link copied (paste in Messenger)'); openUrl('https://www.messenger.com/'); return; }
+    if (action === 'slack') { await copy(url); showToast('Link copied (paste in Slack)'); openUrl('https://slack.com/app'); return; }
+    if (action === 'teams') { await copy(url); showToast('Link copied (paste in Teams)'); openUrl('https://teams.microsoft.com/'); return; }
 
     // Platforms without a reliable web intent: copy link + best-effort open.
-    if (action === 'instagram') { await copy(url); openUrl('https://www.instagram.com/'); return; }
-    if (action === 'tiktok') { await copy(url); openUrl('https://www.tiktok.com/'); return; }
-    if (action === 'youtube') { await copy(url); openUrl('https://www.youtube.com/'); return; }
-    if (action === 'wechat') { await copy(url); return; }
-    if (action === 'line') { await copy(url); openUrl('https://line.me/'); return; }
+    if (action === 'instagram') { await copy(url); showToast('Link copied (paste in Instagram)'); openUrl('https://www.instagram.com/'); return; }
+    if (action === 'tiktok') { await copy(url); showToast('Link copied (paste in TikTok)'); openUrl('https://www.tiktok.com/'); return; }
+    if (action === 'youtube') { await copy(url); showToast('Link copied (paste in YouTube)'); openUrl('https://www.youtube.com/'); return; }
+    if (action === 'wechat') { await copy(url); showToast('Link copied (paste in WeChat)'); return; }
+    if (action === 'line') { await copy(url); showToast('Link copied (paste in LINE)'); openUrl('https://line.me/'); return; }
   }
 
   menu.addEventListener('click', async (e) => {
