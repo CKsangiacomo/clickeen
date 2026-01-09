@@ -1467,6 +1467,23 @@ superadminCreatePrague?.addEventListener('click', async () => {
 
     const selection = await openWebsiteCreativeModal({ defaultWidgetType });
 
+    const creativeKey = composeWebsiteCreativeKey({
+      widgetType: selection.widgetType,
+      page: selection.page,
+      blockId: selection.slot,
+    });
+    const publicId = composeWebsiteCreativePublicId({ creativeKey });
+    const exists = instances.some((inst) => inst?.publicId === publicId);
+
+    try { await navigator.clipboard.writeText(publicId); } catch {}
+
+    // Deterministic behavior:
+    // - If the instance already exists and overwrite is NOT checked, this action is "Open" (no writes).
+    if (exists && selection.overwrite !== true) {
+      await refreshInstancesAndSelect(publicId);
+      return;
+    }
+
     const compiled = await ensureCompiledWidget(selection.widgetType);
     const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
     if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
@@ -1482,35 +1499,24 @@ superadminCreatePrague?.addEventListener('click', async () => {
       baselineConfig,
       overwrite: selection.overwrite === true,
     });
-
-    const publicId =
-      result?.publicId ||
-      composeWebsiteCreativePublicId({
-        creativeKey: composeWebsiteCreativeKey({
-          widgetType: selection.widgetType,
-          page: selection.page,
-          blockId: selection.slot,
-        }),
-      });
-
-    try { await navigator.clipboard.writeText(publicId); } catch {}
+    const ensuredPublicId = result?.publicId ? String(result.publicId) : publicId;
 
     // Venice is the public embed runtime; it only serves published instances.
     // Ensure the newly created/overwritten website creative is published in the local sandbox.
     await updateWorkspaceInstance({
       workspaceId: CLICKEEN_WORKSPACE_ID,
-      publicId,
+      publicId: ensuredPublicId,
       config: baselineConfig,
       status: 'published',
     });
     await maybeAutoPromoteToCloud({
       workspaceId: CLICKEEN_WORKSPACE_ID,
-      publicId,
+      publicId: ensuredPublicId,
       widgetType: selection.widgetType,
       config: baselineConfig,
       status: 'published',
     });
-    await refreshInstancesAndSelect(publicId);
+    await refreshInstancesAndSelect(ensuredPublicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }
