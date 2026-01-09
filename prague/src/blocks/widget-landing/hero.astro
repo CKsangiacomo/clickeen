@@ -5,7 +5,7 @@ type Props = {
   headline: string;
   subheadline?: string;
   // Contract-locked: the hero preview (when enabled) is ALWAYS the website creative for:
-  //   wgt_web_{widgetType}.overview.hero.{locale}
+  //   wgt_web_{widgetType}.overview.hero
   // This is not a generic slot and cannot visualize arbitrary content.
   websiteCreative?: {
     widgetType: string;
@@ -20,7 +20,7 @@ const { headline, subheadline, websiteCreative } = Astro.props;
 
 <section class="ck-canvas">
   <div class="ck-inline">
-    <div class="ck-split ck-split--center">
+    <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
         <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">{headline}</h1>
         {subheadline ? (

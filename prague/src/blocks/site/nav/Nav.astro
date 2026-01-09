@@ -51,15 +51,14 @@ const primaryItems =
         <div class="ck-row" style="gap: var(--space-5);">
           {primaryItems.map((item) =>
             item.label === 'Widgets' ? (
-              <div class="ck-navWidgets">
-                <a
-                  href={item.href}
+              <details class="ck-navWidgets">
+                <summary
                   class="label-s ck-navWidgets__trigger"
                   aria-haspopup="true"
-                  style="text-decoration: none; color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
+                  style="color: color-mix(in oklab, var(--color-system-black), transparent 25%);"
                 >
                   Widgets
-                </a>
+                </summary>
 
                 <div class="ck-navWidgets__menu" role="dialog" aria-label="Widgets menu">
                   <div class="ck-navWidgets__grid">
@@ -77,7 +76,7 @@ const primaryItems =
                     <a class="ck-btn ck-btn--secondary" href={mega.allWidgetsHref}>View all widgets</a>
                   </div>
                 </div>
-              </div>
+              </details>
             ) : (
               <a
                 href={item.href}
@@ -134,6 +133,17 @@ const primaryItems =
 
   .ck-navWidgets { position: relative; }
 
+  .ck-navWidgets__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ck-navWidgets__trigger::-webkit-details-marker { display: none; }
+  .ck-navWidgets__trigger::marker { content: ''; }
+
   .ck-navWidgets__menu {
     display: none;
     position: absolute;
@@ -148,6 +158,17 @@ const primaryItems =
     z-index: 50;
   }
 
+  /* Hover bridge: prevents the menu from closing while moving the cursor from the trigger to the menu. */
+  .ck-navWidgets__menu::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -12px;
+    height: 12px;
+  }
+
+  .ck-navWidgets[open] .ck-navWidgets__menu,
   .ck-navWidgets:hover .ck-navWidgets__menu,
   .ck-navWidgets:focus-within .ck-navWidgets__menu {
     display: block;
@@ -193,5 +214,3 @@ const primaryItems =
     .ck-navWidgets__menu { left: 0; transform: none; width: calc(100vw - 24px); }
   }
 </style>
-
-

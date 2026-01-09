@@ -1,12 +1,12 @@
 // Prague owns the canonical website creative slot taxonomy.
 //
-// Deterministic identity contract (v1):
-// - creativeKey = {widgetType}.{page}.{slot}                 (locale-free)
-// - publicId    = wgt_web_{creativeKey}.{locale}             (locale-specific)
+// Deterministic identity contract:
+// - creativeKey = {widgetType}.{page}.{slot}
+// - publicId    = wgt_web_{creativeKey}                      (locale-free; locale is a runtime parameter)
 //
 // Example:
 //   creativeKey = faq.overview.hero
-//   publicId    = wgt_web_faq.overview.hero.en
+//   publicId    = wgt_web_faq.overview.hero
 //
 // Evolution policy:
 // - Growth is additive: add new pages/slots as the website expands.
@@ -22,4 +22,3 @@ export const CREATIVE_SLOTS_BY_PAGE: Record<CreativePage, readonly string[]> = {
   examples: [] as const,
   features: [] as const,
 } as const;
-

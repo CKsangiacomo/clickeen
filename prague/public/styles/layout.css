@@ -55,6 +55,10 @@
 .ck-split__b { flex: 0 0 min(560px, 40vw); }
 
 .ck-split--center { align-items: center; }
+.ck-split--equal > .ck-split__a { flex: 1 1 0; }
+.ck-split--equal > .ck-split__b { flex: 1 1 0; }
+.ck-split--hero > .ck-split__a { flex: 1 1 0; }
+.ck-split--hero > .ck-split__b { flex: 1.35 1 0; }
 
 /* Mobile breakpoint (single breakpoint system) */
 @media (max-width: 900px) {

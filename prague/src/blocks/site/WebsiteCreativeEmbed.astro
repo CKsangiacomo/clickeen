@@ -12,9 +12,18 @@ const { widgetType, page, blockId, locale, height = '360px', title = 'Widget pre
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 const creativeKey = `${widgetType}.${page}.${blockId}`;
-const publicId = `wgt_web_${creativeKey}.${locale}`;
+const publicId = `wgt_web_${creativeKey}`;
+const okWebsiteCreativePublicId = /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(
+  publicId,
+);
+if (!okWebsiteCreativePublicId) {
+  throw new Error(
+    `[Prague] Invalid website creative publicId '${publicId}' (website creatives are locale-free; locale is a runtime query param)`,
+  );
+}
+const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
 const iframeSrc = VENICE_URL
-  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}`
+  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
   : null;
 ---
 
