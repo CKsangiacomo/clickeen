@@ -12,6 +12,14 @@ const CORS_HEADERS = {
 const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
 
+function shouldEnforceSuperadmin(request: NextRequest): boolean {
+  if (!CK_SUPERADMIN_KEY) return false;
+  if (process.env.NODE_ENV === 'development') return false;
+  const host = (request.headers.get('host') || '').toLowerCase();
+  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) return false;
+  return true;
+}
+
 function resolveParisBaseOrResponse() {
   try {
     return { ok: true as const, baseUrl: resolveParisBaseUrl() };
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest) {
   const paris = resolveParisBaseOrResponse();
   if (!paris.ok) return paris.response;
 
-  if (CK_SUPERADMIN_KEY) {
+  if (shouldEnforceSuperadmin(request)) {
     const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
     if (!provided || provided !== CK_SUPERADMIN_KEY) {
       return NextResponse.json(
