@@ -29,7 +29,16 @@ export async function POST(request: NextRequest) {
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
   const variant = (request.headers.get('x-variant') || '').trim() || 'original';
 
-  const tokyoBase = resolveTokyoBaseUrl().replace(/\/$/, '');
+  let tokyoBase = '';
+  try {
+    tokyoBase = resolveTokyoBaseUrl().replace(/\/$/, '');
+  } catch (err) {
+    const messageText = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail: messageText } },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
   const tokyoUrl = `${tokyoBase}/workspace-assets/upload`;
 
   try {
@@ -79,4 +88,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
+import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 
 export const runtime = 'edge';
-
-const PARIS_BASE_URL =
-  process.env.PARIS_BASE_URL ||
-  process.env.NEXT_PUBLIC_PARIS_URL ||
-  'http://localhost:3001';
 
 const SANFRANCISCO_BASE_URL =
   process.env.SANFRANCISCO_BASE_URL ||
@@ -155,7 +151,15 @@ async function getAiGrant(args: {
   instancePublicId?: string;
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
 }) {
-  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/ai/grant`;
+  let parisBaseUrl = '';
+  try {
+    parisBaseUrl = resolveParisBaseUrl();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false as const, error: 'AI_NOT_CONFIGURED', message };
+  }
+
+  const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/grant`;
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
   if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
 
@@ -183,10 +187,10 @@ async function getAiGrant(args: {
       typeof payload?.message === 'string'
         ? payload.message
         : looksLikeHtml(text)
-          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${PARIS_BASE_URL.replace(/\/$/, '')}).`
+          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${parisBaseUrl.replace(/\/$/, '')}).`
           : text || `Grant request failed (${res.status})`;
     if (looksLikeHtml(message)) {
-      message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: PARIS_BASE_URL, status: res.status, bodyText: message });
+      message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: res.status, bodyText: message });
     }
     return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
   }

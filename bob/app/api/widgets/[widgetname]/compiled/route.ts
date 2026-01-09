@@ -14,9 +14,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
     );
   }
 
-  const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
-  const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
   try {
+    const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
+    const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
     const res = await fetch(specUrl, { cache: 'no-store' });
     if (!res.ok) {
       if (res.status === 404) {

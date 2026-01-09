@@ -4,8 +4,15 @@ type PersistScope = 'workspace';
 
 function resolveTokyoBaseUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_TOKYO_URL || '').trim();
-  if (raw) return raw;
-  return 'http://localhost:4000';
+  if (raw) return raw.replace(/\/+$/, '');
+
+  // Local dev fallback only. In deployed environments, missing Tokyo URL is a hard misconfiguration.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4000';
+  }
+
+  throw new Error('[persistConfigAssetsToTokyo] Missing NEXT_PUBLIC_TOKYO_URL');
 }
 
 function cloneJson<T>(value: T): T {
@@ -139,4 +146,3 @@ export async function persistConfigAssetsToTokyo(
   await visit(next);
   return next;
 }
-

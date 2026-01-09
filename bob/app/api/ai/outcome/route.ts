@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
+import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 
 export const runtime = 'edge';
-
-const PARIS_BASE_URL =
-  process.env.PARIS_BASE_URL ||
-  process.env.NEXT_PUBLIC_PARIS_URL ||
-  'http://localhost:3001';
 
 const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 
@@ -69,7 +65,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/ai/outcome`;
+    let parisBaseUrl = '';
+    try {
+      parisBaseUrl = resolveParisBaseUrl();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return NextResponse.json(
+        { ok: false, message },
+        { status: 200, headers: { 'cache-control': 'no-store' } },
+      );
+    }
+
+    const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/outcome`;
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
 
@@ -99,4 +106,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

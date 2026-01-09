@@ -16,7 +16,14 @@ function buildTokyoUrl(request: NextRequest, prefix: string, pathSegments: strin
 }
 
 async function proxyGet(request: NextRequest, prefix: string, pathSegments: string[]) {
-  const url = buildTokyoUrl(request, prefix, pathSegments);
+  let url: string;
+  try {
+    url = buildTokyoUrl(request, prefix, pathSegments);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });
+  }
+
   const res = await fetch(url, { cache: 'no-store' });
 
   const headers = new Headers(res.headers);
@@ -34,7 +41,14 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ path?: 
 export async function HEAD(request: NextRequest, ctx: { params: Promise<{ path?: string[] }> }) {
   const params = await ctx.params;
   const segments = Array.isArray(params.path) ? params.path : [];
-  const url = buildTokyoUrl(request, 'dieter', segments);
+  let url: string;
+  try {
+    url = buildTokyoUrl(request, 'dieter', segments);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return new NextResponse(null, { status: 500, headers: { 'x-ck-error': message } });
+  }
+
   const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
 
   const headers = new Headers(res.headers);
@@ -42,4 +56,3 @@ export async function HEAD(request: NextRequest, ctx: { params: Promise<{ path?:
 
   return new NextResponse(null, { status: res.status, headers });
 }
-
