@@ -235,16 +235,16 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     position: absolute;
     /* Anchor to the creative/topbar surface, not the button width */
     top: calc(44px + 10px);
-    right: var(--space-4);
+    right: var(--space-2);
     left: auto;
-    width: min(720px, calc(100vw - 64px));
+    width: min(760px, calc(100vw - 32px));
     max-height: min(520px, calc(100vh - 120px));
     overflow: auto;
-    background: var(--color-system-gray-6);
+    background: var(--color-system-white);
     border-radius: var(--control-radius-2xl);
     border: 0;
     box-shadow: 0 28px 90px rgba(0, 0, 0, 0.14);
-    padding: var(--space-2);
+    padding: 10px;
     display: none;
   }
 
@@ -294,14 +294,14 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     padding: 10px 8px;
     border-radius: var(--control-radius-xl);
     border: 0;
-    background: var(--color-system-gray-5);
+    background: var(--color-system-gray-6);
     color: var(--color-system-black);
     cursor: pointer;
     text-align: center;
   }
 
   .ck-shareCard:hover {
-    background: var(--color-system-gray-4);
+    background: var(--color-system-gray-5);
   }
 
   .ck-share__sep {
