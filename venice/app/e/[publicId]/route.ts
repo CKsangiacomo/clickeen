@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { parisJson, getParisBase } from '@venice/lib/paris';
-import { tokyoFetch } from '@venice/lib/tokyo';
+import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { escapeHtml } from '@venice/lib/html';
 import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
@@ -122,7 +122,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   headers['Vary'] = 'Authorization, X-Embed-Token';
 
   const parisOrigin = new URL(getParisBase()).origin;
-  headers['Content-Security-Policy'] = buildCsp(nonce, parisOrigin);
+  const tokyoOrigin = new URL(getTokyoBase()).origin;
+  headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
 
   return new NextResponse(responseHtml, { status: 200, headers });
 }
@@ -250,12 +251,12 @@ function renderErrorPage({ publicId, status, message }: { publicId: string; stat
 </html>`;
 }
 
-function buildCsp(nonce: string, parisOrigin: string) {
+function buildCsp(nonce: string, { parisOrigin, tokyoOrigin }: { parisOrigin: string; tokyoOrigin: string }) {
   return [
     "default-src 'none'",
     `script-src 'self' 'nonce-${nonce}'`,
     `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
-    "img-src 'self' data: https:",
+    `img-src 'self' data: https: ${escapeHtml(tokyoOrigin)}`,
     "font-src https://fonts.gstatic.com data:",
     `connect-src 'self' ${escapeHtml(parisOrigin)}`,
     "frame-ancestors *",
