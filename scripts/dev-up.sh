@@ -4,6 +4,26 @@ set -euo pipefail
 # Simple dev up script: stop stale listeners, then start Tokyo CDN + Workers + UIs.
 # Logs go to CurrentlyExecuting/ and URLs are printed at the end.
 
+DEV_UP_FULL_REBUILD=0
+for arg in "$@"; do
+  case "$arg" in
+    --full|--rebuild-all)
+      DEV_UP_FULL_REBUILD=1
+      ;;
+    --help|-h)
+      echo "Usage: scripts/dev-up.sh [--full]"
+      echo ""
+      echo "Options:"
+      echo "  --full        Runs 'pnpm -w build' before starting dev servers."
+      exit 0
+      ;;
+    *)
+      echo "[dev-up] Unknown argument: $arg" >&2
+      exit 1
+      ;;
+  esac
+done
+
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
@@ -81,19 +101,24 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   SF_BASE_URL="http://localhost:3002"
 fi
 
-echo "[dev-up] Building Dieter directly into tokyo/dieter"
-(
-  cd "$ROOT_DIR"
-  pnpm --filter @ck/dieter build
-)
+if [ "$DEV_UP_FULL_REBUILD" = "1" ]; then
+  echo "[dev-up] Full rebuild requested (--full): running workspace build"
+  pnpm -w build
+else
+  echo "[dev-up] Building Dieter directly into tokyo/dieter"
+  (
+    cd "$ROOT_DIR"
+    pnpm --filter @ck/dieter build
+  )
 
-echo "[dev-up] Building i18n bundles into tokyo/i18n"
-node "$ROOT_DIR/scripts/i18n/build.mjs"
-node "$ROOT_DIR/scripts/i18n/validate.mjs"
+  echo "[dev-up] Building i18n bundles into tokyo/i18n"
+  node "$ROOT_DIR/scripts/i18n/build.mjs"
+  node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-echo "[dev-up] Building l10n overlays into tokyo/l10n"
-node "$ROOT_DIR/scripts/l10n/build.mjs"
-node "$ROOT_DIR/scripts/l10n/validate.mjs"
+  echo "[dev-up] Building l10n overlays into tokyo/l10n"
+  node "$ROOT_DIR/scripts/l10n/build.mjs"
+  node "$ROOT_DIR/scripts/l10n/validate.mjs"
+fi
 
 echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790 (if any)"
 for p in 3000 3001 3002 3003 4000 4321 5173 8790; do

@@ -34,6 +34,12 @@ pnpm build:dieter       # builds Dieter into tokyo/dieter
 ./scripts/dev-up.sh     # starts Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
 ```
 
+To force a full workspace rebuild before starting dev servers:
+
+```bash
+./scripts/dev-up.sh --full
+```
+
 Useful scripts:
 - `pnpm dev:bob`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
 - `pnpm build` (after `pnpm build:dieter`)
