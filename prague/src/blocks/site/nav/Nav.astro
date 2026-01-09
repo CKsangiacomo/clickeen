@@ -9,10 +9,20 @@ type Props = {
   // Legacy escape hatch: some pages may still pass items, but the scalable default is system-owned nav.
   items?: { label: string; href: string }[];
   cta?: { label: string; href: string; variant?: 'primary' | 'secondary' };
+  /**
+   * Nav surface model:
+   * - overlay: transparent at top-of-page; becomes surfaced when stuck (default)
+   * - solid: always surfaced (use on non-hero pages if desired)
+   */
+  surface?: 'overlay' | 'solid';
+  /** Enable sticky behavior (visual + position). Default true. */
+  sticky?: boolean;
 };
 
 const { title, locale, homeHref = `/${locale}/`, items: itemsProp, cta } = Astro.props;
 const ctaVariant = cta?.variant ?? 'secondary';
+const navSurface = (Astro.props.surface ?? 'overlay') as NonNullable<Props['surface']>;
+const navSticky = Astro.props.sticky !== false;
 
 const pathname = Astro.url.pathname;
 
@@ -43,7 +53,12 @@ const primaryItems =
   ] as const);
 ---
 
-<header class="ck-canvas ck-siteNavHeader">
+<header
+  class="ck-canvas ck-siteNavHeader"
+  data-nav-surface={navSurface}
+  data-nav-sticky={navSticky ? 'true' : 'false'}
+  data-nav-stuck="false"
+>
   <div class="ck-inline">
     <div class="ck-row ck-siteNav">
       <a href={homeHref} class="ck-brand" aria-label={title}>
@@ -123,7 +138,50 @@ const primaryItems =
 
 <style>
   .ck-siteNav { position: relative; }
-  .ck-siteNavHeader { padding-block: var(--space-5); }
+
+  /* Nav state machine (global, scalable):
+     - surface: overlay | solid
+     - stuck: false | true
+     This keeps page-level styling out of page templates and prevents drift. */
+  .ck-siteNavHeader {
+    padding-block: var(--space-5);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+
+    /* Default (overlay) values */
+    --ck-nav-bg: transparent;
+    --ck-nav-border: transparent;
+    --ck-nav-shadow: none;
+    --ck-nav-backdrop: none;
+
+    background: var(--ck-nav-bg);
+    border-bottom: 1px solid var(--ck-nav-border);
+    box-shadow: var(--ck-nav-shadow);
+    backdrop-filter: var(--ck-nav-backdrop);
+    -webkit-backdrop-filter: var(--ck-nav-backdrop);
+  }
+
+  .ck-siteNavHeader[data-nav-sticky="false"] {
+    position: relative;
+    top: auto;
+  }
+
+  /* Solid surface (always) */
+  .ck-siteNavHeader[data-nav-surface="solid"] {
+    --ck-nav-bg: color-mix(in oklab, var(--color-system-white), transparent 6%);
+    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
+    --ck-nav-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+    --ck-nav-backdrop: blur(14px);
+  }
+
+  /* Overlay surface: becomes surfaced only when stuck */
+  .ck-siteNavHeader[data-nav-surface="overlay"][data-nav-stuck="true"] {
+    --ck-nav-bg: color-mix(in oklab, var(--color-system-white), transparent 6%);
+    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
+    --ck-nav-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+    --ck-nav-backdrop: blur(14px);
+  }
 
   .ck-siteNav {
     justify-content: space-between;
@@ -240,3 +298,23 @@ const primaryItems =
     .ck-navWidgets__menu { left: 0; transform: none; width: calc(100vw - 24px); }
   }
 </style>
+
+{navSticky ? (
+  <script>
+    {`
+(() => {
+  const header = document.querySelector('.ck-siteNavHeader[data-nav-sticky="true"]');
+  if (!header) return;
+
+  // Toggle "stuck" styling when the page scrolls. Keep the controller tiny and deterministic.
+  const update = () => {
+    const stuck = window.scrollY > 8;
+    header.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
+  };
+
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+})();
+`}
+  </script>
+) : null}
