@@ -20,7 +20,7 @@ type Props = {
 const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Astro.props;
 ---
 
-<section class="ck-canvas">
+<section class="ck-canvas ck-heroCanvas">
   <div class="ck-inline">
     <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
@@ -56,6 +56,10 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
 </section>
 
 <style>
+  .ck-heroCanvas {
+    background: var(--color-system-brown-5);
+  }
+
   .ck-hero__title { margin: 0; }
   .ck-hero__subheadline { margin: 0; }
 
