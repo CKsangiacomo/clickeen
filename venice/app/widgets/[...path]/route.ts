@@ -20,12 +20,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ path: string[]
   headers.set('Cache-Control', cacheControl || 'public, max-age=3600, s-maxage=86400');
   headers.set('X-Content-Type-Options', 'nosniff');
 
-  const body = await res.arrayBuffer();
-  return new NextResponse(body, { status: res.status, headers });
+  // Stream through (avoid buffering) so Edge runtime can proxy large assets safely.
+  return new NextResponse(res.body, { status: res.status, headers });
 }
 
 export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const res = await GET(req, ctx);
   return new NextResponse(null, { status: res.status, headers: res.headers });
 }
-
