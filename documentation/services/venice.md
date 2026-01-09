@@ -19,10 +19,13 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
 - `GET /e/:publicId` (renders Tokyo `widget.html` and injects `window.CK_WIDGET`)
 - `GET /r/:publicId` (returns a JSON render payload for loader/SEO flows)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy so widget packages stay portable)
+- Loader script routes:
+  - `GET /embed/latest/loader.js` (alias of v2)
+  - `GET /embed/v1/loader.js` (legacy iframe loader)
+  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`)
 - `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 **Planned / not fully wired yet:**
-- Loader script routes (`/embed/v{semver}/loader.js`, `/embed/latest/loader.js`) — loader modules exist but aren’t exposed as `route.ts` yet.
 - Indexable embed mode (inline, host-DOM) for SEO + GEO — see `documentation/capabilities/seo-geo.md`.
 
 ## Critical Concept: Widget Definition vs Instance

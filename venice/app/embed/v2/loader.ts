@@ -2,25 +2,28 @@ const script = `(() => {
   const scriptEl = document.currentScript;
   if (!scriptEl) return;
 
-  const {
-    publicId,
-    trigger = 'immediate',
-    delay = '0',
-    scrollPct,
-    clickSelector,
-    theme = 'light',
-    device = 'desktop',
-    forceShadow = 'false',
-  } = scriptEl.dataset;
+	  const {
+	    publicId,
+	    trigger = 'immediate',
+	    delay = '0',
+	    scrollPct,
+	    clickSelector,
+	    theme = 'light',
+	    device = 'desktop',
+	    forceShadow = 'false',
+	    cacheBust = 'false',
+	    locale: localeAttr,
+	  } = scriptEl.dataset;
 
   if (!publicId) {
     console.warn('[Clickeen] Missing data-public-id');
     return;
   }
 
-  const origin = new URL(scriptEl.src, window.location.href).origin;
-  const locale = (navigator.language || 'en').split('-')[0] || 'en';
-  window.CK_ASSET_ORIGIN = origin;
+	  const origin = new URL(scriptEl.src, window.location.href).origin;
+	  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
+	  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
+	  window.CK_ASSET_ORIGIN = origin;
 
   // Minimal event bus with buffering
   const bus = { listeners: {}, queue: [], ready: false };
@@ -143,15 +146,16 @@ const script = `(() => {
     }
   }
 
-  function mountIframe() {
-    const iframe = document.createElement('iframe');
-    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { ts: Date.now() });
-    iframe.setAttribute('loading', 'lazy');
-    iframe.setAttribute('title', 'Clickeen widget');
-    iframe.style.width = '100%';
-    iframe.style.border = '0';
-    iframe.style.maxWidth = '640px';
-    iframe.style.minHeight = '420px';
+	  function mountIframe() {
+	    const tsParam = cacheBust === 'true' ? { ts: Date.now() } : {};
+	    const iframe = document.createElement('iframe');
+	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { locale, ...tsParam });
+	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
+	    iframe.setAttribute('title', 'Clickeen widget');
+	    iframe.style.width = '100%';
+	    iframe.style.border = '0';
+	    iframe.style.maxWidth = '640px';
+	    iframe.style.minHeight = '420px';
 
     container.replaceChildren(iframe);
     iframe.addEventListener('load', () => setReadyOnce());
@@ -258,33 +262,33 @@ const script = `(() => {
     setReadyOnce();
   }
 
-  let mountStarted = false;
-  async function mountOnce() {
-    if (mountStarted) return;
-    mountStarted = true;
+	  let mountStarted = false;
+	  async function mountOnce() {
+	    if (mountStarted) return;
+	    mountStarted = true;
 
-    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { ts: Date.now(), locale }), {
-      mode: 'cors',
-      credentials: 'omit',
-    });
-    const payload = await renderRes.json();
+	    // Default path (fast): iframe embed only.
+	    if (forceShadow !== 'true') {
+	      mountIframe();
+	      return;
+	    }
 
-    if (!renderRes.ok) {
-      console.warn('[Clickeen] Render failed', renderRes.status, payload);
-      mountIframe();
-      return;
-    }
+	    // Shadow mode: fetch structured render payload (used by Bob preview-shadow / SEO flows).
+	    const tsParam = cacheBust === 'true' ? { ts: Date.now() } : {};
+	    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, ...tsParam }), {
+	      mode: 'cors',
+	      credentials: 'omit',
+	    });
+	    const payload = await renderRes.json().catch(() => null);
 
-    const enabled =
-      forceShadow === 'true' ||
-      (payload && payload.state && payload.state.seoGeo && payload.state.seoGeo.enabled === true);
-    if (!enabled) {
-      mountIframe();
-      return;
-    }
+	    if (!renderRes.ok || !payload) {
+	      console.warn('[Clickeen] Render failed', renderRes.status, payload);
+	      mountIframe();
+	      return;
+	    }
 
-    await mountShadow(payload);
-  }
+	    await mountShadow(payload);
+	  }
 
   function triggerAndMount() {
     triggerInjection();

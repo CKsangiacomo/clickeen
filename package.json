@@ -40,9 +40,12 @@
     "build:prague:global": "pnpm prague:localize && pnpm build:prague"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
     "esbuild": "^0.21.5",
-    "glob": "^10.3.10",
     "eslint": "^9.5.0",
+    "eslint-config-next": "15.5.2",
+    "glob": "^10.3.10",
     "prettier": "^3.3.2",
     "turbo": "^2.0.6",
     "typescript": "^5.4.5"

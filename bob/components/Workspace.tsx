@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 
@@ -15,11 +15,26 @@ export function Workspace() {
   const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
   const publicId = meta?.publicId ? String(meta.publicId) : '';
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeReady, setIframeReady] = useState(false);
-  const [iframeRevision, setIframeRevision] = useState(0);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeHasState, setIframeHasState] = useState(false);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const displayName =
     meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
+
+  const latestRef = useRef({ compiled, instanceData, device, theme });
+  useEffect(() => {
+    latestRef.current = { compiled, instanceData, device, theme };
+  }, [compiled, instanceData, device, theme]);
+
+  const iframeSrc = useMemo(() => {
+    if (!hasWidget || !compiled) return 'about:blank';
+    if (seoGeoEnabled && publicId) {
+      return `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=${encodeURIComponent(
+        theme,
+      )}&device=${encodeURIComponent(device)}`;
+    }
+    return compiled.assets.htmlUrl;
+  }, [hasWidget, compiled, compiled?.assets.htmlUrl, seoGeoEnabled, publicId, theme, device]);
 
   const iframeBackdrop = (() => {
     const raw = (instanceData as any)?.stage?.background;
@@ -53,40 +68,46 @@ export function Workspace() {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    setIframeReady(false);
-    if (!hasWidget || !compiled) {
-      iframe.src = 'about:blank';
-      return;
-    }
+    setIframeLoaded(false);
+    setIframeHasState(false);
+    iframe.src = iframeSrc;
+    if (iframeSrc === 'about:blank') return;
 
-    const handleLoad = () => setIframeReady(true);
+    let readyTimeout: number | null = null;
+    const handleLoad = () => {
+      setIframeLoaded(true);
+      const snapshot = latestRef.current;
+      const nextCompiled = snapshot.compiled;
+      const iframeWindow = iframe.contentWindow;
+      if (!iframeWindow || !nextCompiled) return;
+      iframeWindow.postMessage(
+        {
+          type: 'ck:state-update',
+          widgetname: nextCompiled.widgetname,
+          state: snapshot.instanceData,
+          device: snapshot.device,
+          theme: snapshot.theme,
+        },
+        '*',
+      );
+
+      // Fail-safe: if the widget runtime doesn't emit `ck:ready`, don't stay hidden forever.
+      if (readyTimeout != null) window.clearTimeout(readyTimeout);
+      readyTimeout = window.setTimeout(() => setIframeHasState(true), 1000);
+    };
     iframe.addEventListener('load', handleLoad);
-    const baseUrl =
-      seoGeoEnabled && publicId
-        ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=${encodeURIComponent(
-            theme,
-          )}&device=${encodeURIComponent(device)}`
-        : compiled.assets.htmlUrl;
-    const sep = baseUrl.includes('?') ? '&' : '?';
-    iframe.src = `${baseUrl}${sep}ck_preview_rev=${iframeRevision}`;
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
+      if (readyTimeout != null) window.clearTimeout(readyTimeout);
     };
-  }, [hasWidget, compiled, compiled?.assets.htmlUrl, iframeRevision, seoGeoEnabled, publicId, theme, device]);
-
-  // Reload iframe when a new widget/instance is loaded (so HTML/CSS/JS changes are picked up immediately).
-  useEffect(() => {
-    if (!compiled) return;
-    setIframeRevision((n) => n + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [compiled?.assets.htmlUrl, meta?.publicId]);
+  }, [iframeSrc]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;
     const iframeWindow = iframeRef.current?.contentWindow;
     if (!iframeWindow) return;
-    if (!iframeReady) return;
+    if (!iframeLoaded) return;
 
     const message = {
       type: 'ck:state-update',
@@ -97,7 +118,7 @@ export function Workspace() {
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, instanceData, device, theme, iframeReady]);
+  }, [hasWidget, compiled, instanceData, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -106,6 +127,10 @@ export function Workspace() {
       if (event.source !== iframeWindow) return;
       const data = event.data as any;
       if (!data || typeof data !== 'object') return;
+      if (data.type === 'ck:ready') {
+        setIframeHasState(true);
+        return;
+      }
       if (data.type !== 'ck:resize') return;
       const h = Number(data.height);
       if (!Number.isFinite(h) || h <= 0) return;
@@ -142,6 +167,7 @@ export function Workspace() {
       className="workspace"
       data-device={device}
       data-host={host}
+      data-widget-ready={hasWidget && iframeHasState ? 'true' : undefined}
       data-canvas-resize={shouldRenderCanvasCard ? 'true' : undefined}
       style={
         shouldRenderCanvasCard

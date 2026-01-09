@@ -6,7 +6,7 @@
   function getResizeState(stageEl) {
     const existing = resizeState.get(stageEl);
     if (existing) return existing;
-    const next = { obs: null, raf: 0, lastHeight: null };
+    const next = { obs: null, raf: 0, lastHeight: null, readySent: false };
     resizeState.set(stageEl, next);
     return next;
   }
@@ -107,6 +107,21 @@
     });
   }
 
+  function postReady(stageEl, scopeEl) {
+    if (!(stageEl instanceof HTMLElement)) return;
+    if (!(scopeEl instanceof HTMLElement)) return;
+    if (typeof window === 'undefined' || !window.parent || window.parent === window) return;
+    const state = getResizeState(stageEl);
+    if (state.readySent) return;
+    state.readySent = true;
+
+    const widgetRoot = scopeEl.closest('[data-ck-widget]');
+    const widgetname = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-widget') || '' : '';
+    const publicId = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-public-id') || '' : '';
+
+    window.parent.postMessage({ type: 'ck:ready', widgetname, publicId }, '*');
+  }
+
   function applyStagePod(stageCfg, podCfg, scopeEl) {
     if (!(scopeEl instanceof HTMLElement)) {
       throw new Error('[CKStagePod] scope must be an HTMLElement');
@@ -149,6 +164,10 @@
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);
+
+    // Tell the parent that the widget has applied its first state.
+    // Bob uses this to avoid rendering "default" HTML before the real config is applied.
+    postReady(stageEl, scopeEl);
 
     // Notify parent (Bob preview) of height changes only when the parent needs it (wrap-to-content or auto-height fixed).
     const shouldReport =

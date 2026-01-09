@@ -114,7 +114,26 @@ function serveStatic(req, res, prefix) {
     return false;
   }
 
-  const relativePath = pathname.slice(1); // drop leading "/"
+  const relativePathPosix = pathname.slice(1); // drop leading "/"
+  const relativePath = relativePathPosix; // keep naming for existing logic
+  const cacheControlFor = () => {
+    // Cache policy:
+    // - Workspace uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
+    // - i18n/l10n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
+    // - Dieter/widget assets are edited frequently in dev; allow caching but require revalidation to avoid staleness.
+    if (prefix === '/workspace-assets/') {
+      return 'public, max-age=31536000, immutable';
+    }
+    if (prefix === '/i18n/' || prefix === '/l10n/') {
+      if (relativePathPosix.endsWith('/manifest.json')) {
+        return 'public, max-age=60, must-revalidate';
+      }
+      return 'public, max-age=31536000, immutable';
+    }
+    // Default for /dieter/ and /widgets/ in local dev: cache, but always revalidate.
+    return 'public, max-age=0, must-revalidate';
+  };
+
   const filePath = path.join(baseDir, relativePath);
 
   fs.stat(filePath, (err, stat) => {
@@ -125,17 +144,21 @@ function serveStatic(req, res, prefix) {
       return;
     }
 
+    const etag = `"${stat.size}-${Math.round(stat.mtimeMs)}"`;
+    const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
+    res.setHeader('ETag', etag);
+
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      res.statusCode = 304;
+      res.setHeader('Cache-Control', cacheControlFor());
+      res.end();
+      return;
+    }
+
     const stream = fs.createReadStream(filePath);
     res.statusCode = 200;
     res.setHeader('Content-Type', getContentType(filePath));
-    // Cache policy:
-    // - Workspace uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
-    // - Widget/Dieter assets are edited frequently in dev; disable caching to avoid stale previews.
-    const cacheControl =
-      prefix === '/workspace-assets/'
-        ? 'public, max-age=31536000, immutable'
-        : 'no-store, max-age=0, must-revalidate';
-    res.setHeader('Cache-Control', cacheControl);
+    res.setHeader('Cache-Control', cacheControlFor());
     stream.on('error', () => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

@@ -38,7 +38,8 @@ export async function loadI18nManifest(): Promise<I18nManifest> {
   const cached = manifestCache.get(url);
   if (cached) return cached;
   const promise = (async () => {
-    const res = await fetch(url, { cache: 'no-store' });
+    // Allow browser HTTP caching; Tokyo controls TTL (manifest is short-lived indirection).
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`[i18n] Failed to load manifest (${res.status}) ${url}`);
     const json = (await res.json()) as I18nManifest;
     if (!json || typeof json !== 'object' || typeof json.v !== 'number') {
@@ -68,7 +69,8 @@ async function loadCatalogFile(locale: string, bundle: string): Promise<Catalog>
   if (!file) return {};
 
   const url = `${base}/${encodeURIComponent(chosenLocale)}/${encodeURIComponent(file)}`;
-  const res = await fetch(url, { cache: 'no-store' });
+  // Catalog files are content-hashed; allow browser caching (Tokyo controls Cache-Control).
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`[i18n] Failed to load catalog (${res.status}) ${url}`);
   const json = (await res.json()) as Catalog;
   if (!json || typeof json !== 'object' || Array.isArray(json)) {
@@ -114,4 +116,3 @@ export function createTranslator(args: {
     return interpolate(chosen, params);
   };
 }
-
