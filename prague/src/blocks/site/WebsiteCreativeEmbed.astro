@@ -238,13 +238,13 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     right: var(--space-4);
     left: auto;
     width: min(720px, calc(100vw - 64px));
-    max-height: min(480px, calc(100vh - 120px));
+    max-height: min(520px, calc(100vh - 120px));
     overflow: auto;
-    background: color-mix(in oklab, var(--color-system-white), transparent 4%);
+    background: var(--color-system-gray-6);
     border-radius: var(--control-radius-2xl);
-    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
-    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.16);
-    padding: var(--space-4);
+    border: 0;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.14);
+    padding: var(--space-3);
     display: none;
   }
 
@@ -255,9 +255,9 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     top: 0;
     display: none;
     padding: 10px 12px;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
     border-radius: var(--control-radius-lg);
-    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+    background: color-mix(in oklab, var(--color-system-white), transparent 25%);
     color: color-mix(in oklab, var(--color-system-black), transparent 25%);
     font: 500 var(--fs-13)/1.2 var(--font-ui);
     backdrop-filter: blur(10px);
@@ -267,17 +267,21 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
   .ck-share__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-3);
+    gap: var(--space-2);
   }
 
   .ck-share__sectionTitle {
-    margin: 2px 4px var(--space-3);
+    margin: 2px 6px var(--space-2);
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
     white-space: nowrap;
   }
 
   @media (min-width: 560px) {
     .ck-share__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 860px) {
+    .ck-share__grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   }
 
   .ck-shareCard {
@@ -287,35 +291,34 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 14px 10px;
+    padding: 12px 8px;
     border-radius: var(--control-radius-xl);
-    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 92%);
-    background: color-mix(in oklab, var(--color-system-white), transparent 6%);
+    border: 0;
+    background: var(--color-system-gray-5);
     color: var(--color-system-black);
     cursor: pointer;
     text-align: center;
   }
 
   .ck-shareCard:hover {
-    background: color-mix(in oklab, var(--color-system-black), transparent 94%);
-    border-color: color-mix(in oklab, var(--color-system-black), transparent 88%);
+    background: var(--color-system-gray-4);
   }
 
   .ck-share__sep {
     height: 1px;
-    margin: var(--space-4) 6px;
-    background: color-mix(in oklab, var(--color-system-black), transparent 90%);
+    margin: var(--space-3) 6px;
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
   }
 
   .ck-shareCard__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 12px;
-    background: color-mix(in oklab, var(--color-system-black), transparent 94%);
-    color: color-mix(in oklab, var(--color-system-black), transparent 18%);
+    width: 22px;
+    height: 22px;
+    border-radius: 0;
+    background: transparent;
+    color: color-mix(in oklab, var(--color-system-black), transparent 22%);
     font: 700 var(--fs-12)/1 var(--font-ui);
     flex: 0 0 auto;
   }
