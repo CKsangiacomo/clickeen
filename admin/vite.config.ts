@@ -207,6 +207,16 @@ export default defineConfig({
               res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
               return;
             }
+            // Website creatives are locale-free. Locale is a runtime parameter and must not be encoded into publicId.
+            // This prevents accidental fan-out (wgt_web_*.<locale>) when promoting to shared cloud-dev.
+            if (publicId.startsWith('wgt_web_')) {
+              const okWebsiteCreative = /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(publicId);
+              if (!okWebsiteCreative) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
+                return;
+              }
+            }
 
             const widgetType = String(payload?.widgetType || '').trim().toLowerCase();
             if (!widgetType || !/^[a-z0-9][a-z0-9_-]*$/.test(widgetType)) {

@@ -372,9 +372,8 @@ function assertPublicId(publicId: unknown) {
   if (!value) return { ok: false as const, issues: [{ path: 'publicId', message: 'publicId is required' }] };
   const okLegacy = /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/.test(value);
   const okWebsiteCreative =
-    /^wgt_web_[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2}(?:-[a-z]{2})?$/.test(
-      value
-    );
+    // Locale-free website creative instances (canonical). Locale is a runtime parameter, not part of identity.
+    /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/.test(value);
   if (!okLegacy && !okWebsiteCreative) {
     return { ok: false as const, issues: [{ path: 'publicId', message: 'invalid publicId format' }] };
   }
@@ -619,18 +618,10 @@ function assertWebsiteCreativeSlot(value: unknown) {
   return { ok: true as const, value: trimmed };
 }
 
-function normalizeWebsiteLocale(value: unknown): string {
-  const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (!trimmed) return 'en';
-  if (!/^[a-z]{2}(?:-[a-z0-9]{2,})*$/.test(trimmed)) return 'en';
-  return trimmed;
-}
-
 type WebsiteCreativeEnsurePayload = {
   widgetType: string;
   page: string;
   slot: string;
-  locale?: string;
   baselineConfig?: Record<string, unknown>;
   overwrite?: boolean;
 };
@@ -672,14 +663,13 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   const slotResult = assertWebsiteCreativeSlot((payload as any).slot);
   if (!slotResult.ok) return slotResult.response;
 
-  const locale = normalizeWebsiteLocale((payload as any).locale);
   const overwrite = (payload as any).overwrite === true;
 
   const widgetType = widgetTypeResult.value;
   const page = pageResult.value;
   const slot = slotResult.value;
   const creativeKey = `${widgetType}.${page}.${slot}`;
-  const publicId = `wgt_web_${creativeKey}.${locale}`;
+  const publicId = `wgt_web_${creativeKey}`;
 
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);

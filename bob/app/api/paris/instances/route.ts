@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 
 export const runtime = 'edge';
 
@@ -8,13 +9,20 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
 } as const;
 
-const PARIS_BASE_URL =
-  process.env.PARIS_BASE_URL ||
-  process.env.NEXT_PUBLIC_PARIS_URL ||
-  'http://localhost:3001';
-
 const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
 const CK_SUPERADMIN_KEY = process.env.CK_SUPERADMIN_KEY;
+
+function resolveParisBaseOrResponse() {
+  try {
+    return { ok: true as const, baseUrl: resolveParisBaseUrl() };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500, headers: CORS_HEADERS }),
+    };
+  }
+}
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
@@ -31,6 +39,9 @@ async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 50
 }
 
 export async function GET(request: NextRequest) {
+  const paris = resolveParisBaseOrResponse();
+  if (!paris.ok) return paris.response;
+
   const reqUrl = new URL(request.url);
   const workspaceId = (reqUrl.searchParams.get('workspaceId') || '').trim();
   if (!workspaceId) {
@@ -40,7 +51,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances`;
+  const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances`;
 
   const headers: HeadersInit = {};
   if (PARIS_DEV_JWT) {
@@ -73,6 +84,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const paris = resolveParisBaseOrResponse();
+  if (!paris.ok) return paris.response;
+
   if (CK_SUPERADMIN_KEY) {
     const provided = (request.headers.get('x-ck-superadmin-key') || '').trim();
     if (!provided || provided !== CK_SUPERADMIN_KEY) {
@@ -99,7 +113,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const url = `${PARIS_BASE_URL.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=${encodeURIComponent(subject)}`;
+  const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/instances?subject=${encodeURIComponent(subject)}`;
 
   const headers: HeadersInit = {};
   if (PARIS_DEV_JWT) {

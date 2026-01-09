@@ -8,8 +8,6 @@ export function composeWebsiteCreativeKey(opts: { widgetType: string; page: stri
   return `${opts.widgetType}.${opts.page}.${opts.slot}`;
 }
 
-export function composeWebsiteCreativePublicId(opts: { creativeKey: string; locale: string }): string {
-  const locale = (opts.locale || 'en').toLowerCase();
-  return `wgt_web_${opts.creativeKey}.${locale}`;
+export function composeWebsiteCreativePublicId(opts: { creativeKey: string }): string {
+  return `wgt_web_${opts.creativeKey}`;
 }
-

@@ -354,12 +354,6 @@
         <select id="website-creative-slot" class="ck-modal__select body-s"></select>
       </div>
       <div class="ck-modal__field">
-        <label class="label-s" for="website-creative-locale">Locale</label>
-        <select id="website-creative-locale" class="ck-modal__select body-s">
-          <option value="en">en</option>
-        </select>
-      </div>
-      <div class="ck-modal__field">
         <label class="label-s" for="website-creative-overwrite">
           <input id="website-creative-overwrite" type="checkbox" />
           Overwrite existing instance config
@@ -406,9 +400,9 @@ function composeWebsiteCreativeKey({ widgetType, page, blockId }) {
   return `${widgetType}.${page}.${blockId}`;
 }
 
-function composeWebsiteCreativePublicId({ creativeKey, locale }) {
-  return `wgt_web_${creativeKey}.${locale}`;
-}
+  function composeWebsiteCreativePublicId({ creativeKey }) {
+    return `wgt_web_${creativeKey}`;
+  }
 
 const widgetPageJsonCache = new Map();
 
@@ -459,29 +453,24 @@ async function loadWidgetPageJson({ widgetType, page }) {
   return promise;
 }
 
-function parseWebsiteCreativePublicId(publicId) {
-  const raw = String(publicId || '').trim();
-  if (!raw.startsWith('wgt_web_')) return null;
-  const suffix = raw.slice('wgt_web_'.length);
-  const lastDot = suffix.lastIndexOf('.');
-  if (lastDot <= 0) return null;
-  const creativeKey = suffix.slice(0, lastDot);
-  const locale = suffix.slice(lastDot + 1);
-  if (!locale) return null;
+  function parseWebsiteCreativePublicId(publicId) {
+    const raw = String(publicId || '').trim();
+    if (!raw.startsWith('wgt_web_')) return null;
+    const creativeKey = raw.slice('wgt_web_'.length);
 
-  const firstDot = creativeKey.indexOf('.');
-  if (firstDot <= 0) return null;
-  const widgetType = creativeKey.slice(0, firstDot);
-  const rest = creativeKey.slice(firstDot + 1);
+    const firstDot = creativeKey.indexOf('.');
+    if (firstDot <= 0) return null;
+    const widgetType = creativeKey.slice(0, firstDot);
+    const rest = creativeKey.slice(firstDot + 1);
 
   const secondDot = rest.indexOf('.');
   if (secondDot <= 0) return null;
-  const page = rest.slice(0, secondDot);
-  const blockId = rest.slice(secondDot + 1);
-  if (!widgetType || !page || !blockId) return null;
+    const page = rest.slice(0, secondDot);
+    const blockId = rest.slice(secondDot + 1);
+    if (!widgetType || !page || !blockId) return null;
 
-  return { widgetType, page, blockId, locale, creativeKey, publicId: raw };
-}
+    return { widgetType, page, blockId, creativeKey, publicId: raw };
+  }
 
 // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
 // DevStudio swaps DOM but does not automatically remove global event listeners.
@@ -550,7 +539,6 @@ const websiteCreativeModal = document.getElementById('website-creative-modal');
 const websiteCreativeWidgetEl = document.getElementById('website-creative-widget');
 const websiteCreativePageEl = document.getElementById('website-creative-page');
 const websiteCreativeSlotEl = document.getElementById('website-creative-slot');
-const websiteCreativeLocaleEl = document.getElementById('website-creative-locale');
 const websiteCreativeOverwriteEl = document.getElementById('website-creative-overwrite');
 const websiteCreativePreviewKeyEl = document.getElementById('website-creative-preview-key');
 const websiteCreativePreviewIdEl = document.getElementById('website-creative-preview-id');
@@ -1156,7 +1144,6 @@ function ensureWebsiteCreativeModalElements() {
   if (!(websiteCreativeWidgetEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing widget select');
   if (!(websiteCreativePageEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing page selector');
   if (!(websiteCreativeSlotEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing slot select');
-  if (!(websiteCreativeLocaleEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing locale select');
   if (!(websiteCreativeOverwriteEl instanceof HTMLInputElement)) throw new Error('[DevStudio] Missing overwrite checkbox');
   if (!(websiteCreativePreviewKeyEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing creativeKey preview');
   if (!(websiteCreativePreviewIdEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing publicId preview');
@@ -1177,7 +1164,6 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
       websiteCreativePageEl.innerHTML = '';
       websiteCreativeWidgetEl.onchange = null;
       websiteCreativeSlotEl.onchange = null;
-      websiteCreativeLocaleEl.onchange = null;
       websiteCreativeOverwriteEl.onchange = null;
       websiteCreativeOverwriteEl.checked = false;
       websiteCreativeOverwriteEl.disabled = true;
@@ -1216,9 +1202,8 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
     const recomputePreview = () => {
       const widgetType = (websiteCreativeWidgetEl.value || '').trim();
       const blockId = (websiteCreativeSlotEl.value || '').trim();
-      const locale = (websiteCreativeLocaleEl.value || 'en').trim();
       const creativeKey = widgetType && blockId ? composeWebsiteCreativeKey({ widgetType, page: activePage, blockId }) : '';
-      const publicId = creativeKey ? composeWebsiteCreativePublicId({ creativeKey, locale }) : '';
+      const publicId = creativeKey ? composeWebsiteCreativePublicId({ creativeKey }) : '';
       const exists = Boolean(publicId && instances.some((inst) => inst?.publicId === publicId));
       const overwrite = websiteCreativeOverwriteEl.checked === true;
 
@@ -1311,19 +1296,17 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
       }
     };
     websiteCreativeSlotEl.onchange = recomputePreview;
-    websiteCreativeLocaleEl.onchange = recomputePreview;
     websiteCreativeOverwriteEl.onchange = recomputePreview;
 
     websiteCreativeCancelEl.onclick = () => dismiss(new Error('[DevStudio] Canceled'));
     websiteCreativeSubmitEl.onclick = () => {
       const widgetType = (websiteCreativeWidgetEl.value || '').trim();
       const slot = (websiteCreativeSlotEl.value || '').trim();
-      const locale = (websiteCreativeLocaleEl.value || 'en').trim();
       const overwrite = websiteCreativeOverwriteEl.checked === true;
       if (!widgetType) return dismiss(new Error('[DevStudio] Missing widget type'));
       if (!slot) return dismiss(new Error('[DevStudio] Missing slot'));
       cleanup();
-      resolve({ widgetType, page: activePage, slot, locale, overwrite });
+      resolve({ widgetType, page: activePage, slot, overwrite });
     };
 
     modal.querySelectorAll('[data-modal-dismiss]').forEach((node) => {
@@ -1335,19 +1318,19 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
   });
 }
 
-async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, locale, baselineConfig, overwrite = false }) {
-  const res = await superadminFetch(
-    `${PARIS_API}/website-creative?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ widgetType, page, slot, locale, baselineConfig, overwrite }),
-    }
-  );
-  const text = await res.text().catch(() => '');
-  if (!res.ok) throw new Error(`[DevStudio] Ensure website creative failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
-  return text ? JSON.parse(text) : null;
-}
+  async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, baselineConfig, overwrite = false }) {
+    const res = await superadminFetch(
+      `${PARIS_API}/website-creative?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ widgetType, page, slot, baselineConfig, overwrite }),
+      }
+    );
+    const text = await res.text().catch(() => '');
+    if (!res.ok) throw new Error(`[DevStudio] Ensure website creative failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+    return text ? JSON.parse(text) : null;
+  }
 
 async function refreshInstancesAndSelect(publicId) {
   await fetchInstances();
@@ -1496,15 +1479,19 @@ superadminCreatePrague?.addEventListener('click', async () => {
       widgetType: selection.widgetType,
       page: selection.page,
       slot: selection.slot,
-      locale: selection.locale,
       baselineConfig,
       overwrite: selection.overwrite === true,
     });
 
-    const publicId = result?.publicId || composeWebsiteCreativePublicId({
-      creativeKey: composeWebsiteCreativeKey({ widgetType: selection.widgetType, page: selection.page, blockId: selection.slot }),
-      locale: selection.locale,
-    });
+    const publicId =
+      result?.publicId ||
+      composeWebsiteCreativePublicId({
+        creativeKey: composeWebsiteCreativeKey({
+          widgetType: selection.widgetType,
+          page: selection.page,
+          blockId: selection.slot,
+        }),
+      });
 
     try { await navigator.clipboard.writeText(publicId); } catch {}
 
