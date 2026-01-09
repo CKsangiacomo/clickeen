@@ -19,13 +19,38 @@
   --fs-20: 1.25rem;       /* 20px */
   --fs-24: 1.5rem;        /* 24px */
   --fs-32: 2rem;          /* 32px */
-  --fs-fluid-title: clamp(1.5rem, 1.1rem + 1.6vw, 3rem);
+  /* Display typography (marketing / hero headlines).
+     These are intentionally larger than heading-1, but still “Dieter-like” in rhythm. */
+  --fs-fluid-display-1: clamp(2.25rem, 1.7rem + 2.2vw, 3.75rem);
+  --fs-fluid-display-2: clamp(1.875rem, 1.45rem + 1.7vw, 3rem);
+  --fs-fluid-display-3: clamp(1.5rem, 1.2rem + 1.2vw, 2.5rem);
+  /* Back-compat alias (older code may reference this). */
+  --fs-fluid-title: var(--fs-fluid-display-2);
 
   /* Line heights */
   --lh-tight: 1.15;
   --lh-normal: 1.4;
   --lh-loose: 1.5;
   --lh-body-ui: 1.45;
+}
+
+/* Display (marketing) */
+.display-1 {
+  font: 700 var(--fs-fluid-display-1)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.015em;
+  color: inherit;
+}
+
+.display-2 {
+  font: 700 var(--fs-fluid-display-2)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.012em;
+  color: inherit;
+}
+
+.display-3 {
+  font: 600 var(--fs-fluid-display-3)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.01em;
+  color: inherit;
 }
 
 /* Body text */
