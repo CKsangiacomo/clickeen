@@ -135,10 +135,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
                 <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="reddit" size={18} /></span>
                 <span class="ck-shareCard__label label-xs">Reddit</span>
               </button>
-              <button type="button" class="ck-shareCard" data-action="pinterest">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="more" size={18} /></span>
-                <span class="ck-shareCard__label label-xs">Pinterest</span>
-              </button>
               <button type="button" class="ck-shareCard" data-action="instagram">
                 <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="more" size={18} /></span>
                 <span class="ck-shareCard__label label-xs">Instagram</span>
@@ -266,7 +262,8 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
   .ck-share__grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Fixed layout: 6 items per row (as requested). */
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--space-1);
   }
 
@@ -274,14 +271,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     margin: 2px 6px var(--space-1);
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
     white-space: nowrap;
-  }
-
-  @media (min-width: 560px) {
-    .ck-share__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  }
-
-  @media (min-width: 860px) {
-    .ck-share__grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   }
 
   .ck-shareCard {
@@ -331,9 +320,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     text-wrap: balance;
   }
 
-  @media (max-width: 520px) {
-    .ck-share__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
 
   .ck-websiteCreative__iframe {
     width: 100%;
@@ -456,7 +442,6 @@ const anchorId = `ck-creative-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
     if (action === 'facebook') { openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)); showToast('Opening Facebook…'); return; }
     if (action === 'reddit') { openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title)); showToast('Opening Reddit…'); return; }
     if (action === 'discord') { await copy(url); showToast('Link copied (paste in Discord)'); openUrl('https://discord.com/channels/@me'); return; }
-    if (action === 'pinterest') { openUrl('https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&description=' + encodeURIComponent(title)); showToast('Opening Pinterest…'); return; }
     if (action === 'messenger') { await copy(url); showToast('Link copied (paste in Messenger)'); openUrl('https://www.messenger.com/'); return; }
     if (action === 'slack') { await copy(url); showToast('Link copied (paste in Slack)'); openUrl('https://slack.com/app'); return; }
     if (action === 'teams') { await copy(url); showToast('Link copied (paste in Teams)'); openUrl('https://teams.microsoft.com/'); return; }
