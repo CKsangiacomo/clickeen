@@ -142,7 +142,7 @@ All motion types must reuse one shared “strip motion engine” so behavior is 
 - Define a single computed tile width derived from logo height:
   - `--ls-tile-w: clamp(96px, calc(var(--ls-logo-h) * 3), 240px)`
   - `--ls-tile-w-mobile: clamp(80px, calc(var(--ls-logo-h-mobile) * 3), 200px)`
-- Each `[data-role="logo"]` uses `flex: 0 0 var(--ls-tile-w)` (mobile uses `--ls-tile-w-mobile` under 640px).
+- Each `[data-role="logo"]` uses `flex: 0 0 var(--ls-tile-w)` (mobile uses `--ls-tile-w-mobile` under 900px).
 
 **Shared paging math** (used by Slider + Carousel):
 - `viewportW = stripViewport.clientWidth`
@@ -667,4 +667,3 @@ Captured under `documentation/widgets/LogoShowcase/CompetitorAnalysis/`:
 - `Logo Showcase — Add Logo Carousel widget to your website [2025].html`
 - `15+ Top Logo Showcase Templates for Websites [free].html`
 - screenshots showing: type picker, size/spacing sliders, random order, logo look options
-
