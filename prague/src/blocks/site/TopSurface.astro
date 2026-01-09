@@ -1,0 +1,28 @@
+---
+type Props = {
+  /** Background for the whole top-of-page surface (behind floating nav + hero). */
+  background: string;
+  /** Top padding to keep hero/page content from sitting under the floating nav. */
+  topPad?: string;
+};
+
+const { background, topPad } = Astro.props;
+---
+
+<div
+  class="ck-topSurface"
+  style={[
+    `--ck-topSurface-bg: ${background};`,
+    topPad ? `--ck-topSurface-topPad: ${topPad};` : '',
+  ].filter(Boolean).join(' ')}
+>
+  <slot />
+</div>
+
+<style>
+  .ck-topSurface {
+    background: var(--ck-topSurface-bg);
+    padding-top: var(--ck-topSurface-topPad, 0px);
+  }
+</style>
+

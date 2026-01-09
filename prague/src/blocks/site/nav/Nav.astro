@@ -17,12 +17,19 @@ type Props = {
   surface?: 'overlay' | 'solid';
   /** Enable sticky behavior (visual + position). Default true. */
   sticky?: boolean;
+  /**
+   * Floating mode (true "overlay"):
+   * - At top-of-page, nav overlays the top surface (absolute).
+   * - Once stuck, nav pins to viewport (fixed) and can become surfaced.
+   */
+  floating?: boolean;
 };
 
 const { title, locale, homeHref = `/${locale}/`, items: itemsProp, cta } = Astro.props;
 const ctaVariant = cta?.variant ?? 'secondary';
 const navSurface = (Astro.props.surface ?? 'overlay') as NonNullable<Props['surface']>;
 const navSticky = Astro.props.sticky !== false;
+const navFloating = Astro.props.floating === true;
 
 const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
 
@@ -40,6 +47,7 @@ const primaryItems =
   data-nav-surface={navSurface}
   data-nav-sticky={navSticky ? 'true' : 'false'}
   data-nav-stuck="false"
+  data-nav-floating={navFloating ? 'true' : 'false'}
 >
   <div class="ck-inline">
     <div class="ck-row ck-siteNav">
@@ -113,6 +121,7 @@ const primaryItems =
     position: sticky;
     top: 0;
     z-index: 60;
+    width: 100%;
 
     /* Default (overlay) values */
     --ck-nav-bg: transparent;
@@ -130,6 +139,18 @@ const primaryItems =
   .ck-siteNavHeader[data-nav-sticky="false"] {
     position: relative;
     top: auto;
+  }
+
+  /* Floating overlay mode (true overlap in code). */
+  .ck-siteNavHeader[data-nav-floating="true"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .ck-siteNavHeader[data-nav-floating="true"][data-nav-stuck="true"] {
+    position: fixed;
   }
 
   /* Solid surface (always) */

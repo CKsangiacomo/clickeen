@@ -2,6 +2,7 @@
 import Base from '../../../../layouts/Base.astro';
 import Nav from '../../../../blocks/site/nav/Nav.astro';
 import WidgetSubnav from '../../../../blocks/site/nav/WidgetSubnav.astro';
+import TopSurface from '../../../../blocks/site/TopSurface.astro';
 import Footer from '../../../../blocks/site/footer.astro';
 import Minibob from '../../../../blocks/site/minibob.astro';
 import Hero from '../../../../blocks/widget-landing/hero.astro';
@@ -91,24 +92,30 @@ const minibobSubhead = minibobLines[1];
 
 <Base title={`${headline} — Clickeen`} locale={locale}>
   <main>
-    <Nav
-      title="Clickeen"
-      locale={locale}
-      homeHref={`/${locale}/`}
-      cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
-    />
-    <WidgetSubnav locale={locale} widget={widget} active="overview" />
-    <Hero
-      headline={headline}
-      subheadline={subheadline}
-      primaryCta={heroPrimaryCta}
-      secondaryCta={heroSecondaryCta}
-      websiteCreative={
-        heroWantsCreative
-          ? { widgetType: widget, locale, height: '640px', title: `${widget} overview hero` }
-          : undefined
-      }
-    />
+    <TopSurface
+      background="var(--color-system-gray-2-step5)"
+      topPad="calc(var(--space-5) + var(--space-5) + 22px)"
+    >
+      <Nav
+        title="Clickeen"
+        locale={locale}
+        homeHref={`/${locale}/`}
+        floating={true}
+        cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
+      />
+      <WidgetSubnav locale={locale} widget={widget} active="overview" />
+      <Hero
+        headline={headline}
+        subheadline={subheadline}
+        primaryCta={heroPrimaryCta}
+        secondaryCta={heroSecondaryCta}
+        websiteCreative={
+          heroWantsCreative
+            ? { widgetType: widget, locale, height: '640px', title: `${widget} overview hero` }
+            : undefined
+        }
+      />
+    </TopSurface>
     <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
     {stats.length ? <Stats stats={stats} /> : null}
     {steps.length ? <Steps steps={steps} /> : null}
