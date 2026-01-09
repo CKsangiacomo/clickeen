@@ -57,7 +57,8 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
 
 <style>
   .ck-heroCanvas {
-    background: var(--color-system-gray-6);
+    /* “gray-2.5” = midpoint between gray-2 and gray-3 */
+    background: color-mix(in oklab, var(--color-system-gray-2) 50%, var(--color-system-gray-3) 50%);
   }
 
   .ck-hero__title { margin: 0; }

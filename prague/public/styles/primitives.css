@@ -21,6 +21,7 @@
   --ck-btn-clicked-color: var(--ck-btn-color);
   --ck-btn-clicked-border-color: var(--ck-btn-border-color);
   --ck-btn-shadow: none;
+  --ck-btn-focus-ring: var(--color-system-blue);
 
   display: inline-flex;
   align-items: center;
@@ -65,13 +66,14 @@
 }
 
 .ck-btn--primary {
-  /* Match Dieter primary behavior (blue). */
-  --ck-btn-bg: var(--color-system-blue, #0a84ff);
+  /* Prague CTA primary (pink). */
+  --ck-btn-bg: var(--color-system-pink, #ff2d55);
   --ck-btn-color: var(--color-system-white, #ffffff);
   --ck-btn-border-w: 0px;
   --ck-btn-border-color: transparent;
-  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
-  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
+  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-pink, #ff2d55), #000000 22%);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-pink, #ff2d55), #000000 40%);
+  --ck-btn-focus-ring: var(--color-system-pink, #ff2d55);
 }
 
 .ck-btn--secondary {
@@ -98,7 +100,7 @@
 }
 
 .ck-btn:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-system-blue);
+  outline: var(--focus-ring-width) solid var(--ck-btn-focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
 
