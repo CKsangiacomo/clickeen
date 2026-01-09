@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "gitSha": "d0ae72cdeffb0345557ef5ae56a5c7ea0ed32415",
+  "gitSha": "94605c9e583ea11f8303b28b5e3ab45955a0902b",
   "locales": {
     "en": {
       "dir": "ltr"
@@ -9,7 +9,8 @@
   "bundles": {
     "en": {
       "coreui": "coreui.571a8867.json",
-      "faq": "faq.4607c587.json"
+      "faq": "faq.4607c587.json",
+      "prague": "prague.60ac0fe5.json"
     }
   }
 }

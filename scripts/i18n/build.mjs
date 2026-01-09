@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const srcRoot = path.join(repoRoot, 'i18n');
 const outRoot = path.join(repoRoot, 'tokyo', 'i18n');
+const canonicalLocalesPath = path.join(repoRoot, 'config', 'locales.json');
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -35,7 +36,7 @@ function tryGetGitSha() {
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
   try {
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'i18n', 'scripts/i18n/build.mjs'], {
+    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'i18n', 'config/locales.json', 'scripts/i18n/build.mjs'], {
       cwd: repoRoot,
       encoding: 'utf8',
     });
@@ -45,6 +46,32 @@ function tryGetGitSha() {
     }
   } catch {}
   return 'unknown';
+}
+
+function readCanonicalLocales() {
+  if (!fs.existsSync(canonicalLocalesPath)) {
+    throw new Error(`[i18n] Missing canonical locales file: ${canonicalLocalesPath}`);
+  }
+  const raw = fs.readFileSync(canonicalLocalesPath, 'utf8');
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    throw new Error(`[i18n] Invalid canonical locales file (expected array): ${canonicalLocalesPath}`);
+  }
+  const locales = parsed
+    .map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : ''))
+    .filter(Boolean);
+  if (!locales.includes('en')) {
+    throw new Error(`[i18n] Canonical locales must include "en": ${canonicalLocalesPath}`);
+  }
+  // Dedupe while preserving order.
+  const seen = new Set();
+  const unique = [];
+  for (const l of locales) {
+    if (seen.has(l)) continue;
+    seen.add(l);
+    unique.push(l);
+  }
+  return unique;
 }
 
 function isRtlLocale(locale) {
@@ -102,17 +129,8 @@ function main() {
     throw new Error(`[i18n] Missing source dir: ${srcRoot}`);
   }
 
-  const locales = fs
-    .readdirSync(srcRoot, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-    .sort();
-
-  if (!locales.includes('en')) {
-    throw new Error('[i18n] Missing required locale: en');
-  }
-
-  const supportedLocales = locales.filter((locale) => {
+  const canonicalLocales = readCanonicalLocales();
+  const supportedLocales = canonicalLocales.filter((locale) => {
     const corePath = path.join(srcRoot, locale, 'coreui.json');
     if (fs.existsSync(corePath)) return true;
     console.warn(`[i18n] Skipping locale "${locale}" (missing ${locale}/coreui.json)`);

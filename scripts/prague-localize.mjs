@@ -26,9 +26,21 @@ const REPO_ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..
 const TOKYO_WIDGETS_DIR = path.join(REPO_ROOT, 'tokyo', 'widgets');
 const SANFRANCISCO_LEXICON = path.join(REPO_ROOT, 'sanfrancisco', 'src', 'lexicon', 'global_dictionary.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
+const CANONICAL_LOCALES_FILE = path.join(REPO_ROOT, 'config', 'locales.json');
 
 const CANONICAL_PAGES = ['overview', 'templates', 'examples', 'features'];
-const TARGET_LOCALES = ['es', 'pt', 'de', 'fr']; // Phase-1 non-English locales. English is source.
+const TARGET_LOCALES = await (async () => {
+  const parsed = JSON.parse(await fs.readFile(CANONICAL_LOCALES_FILE, 'utf8'));
+  if (!Array.isArray(parsed)) throw new Error(`[prague-localize] Invalid canonical locales file: ${CANONICAL_LOCALES_FILE}`);
+  const locales = parsed
+    .map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : ''))
+    .filter(Boolean);
+  if (!locales.includes('en')) {
+    throw new Error(`[prague-localize] Canonical locales must include "en": ${CANONICAL_LOCALES_FILE}`);
+  }
+  // English is the source of truth; this script only generates non-English outputs.
+  return locales.filter((l) => l !== 'en');
+})();
 
 function sha256(raw) {
   return crypto.createHash('sha256').update(raw).digest('hex');
@@ -301,4 +313,3 @@ main().catch((err) => {
   console.error(String(err?.stack || err));
   process.exit(1);
 });
-
