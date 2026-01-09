@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "gitSha": "unknown",
+  "instances": {
+    "wgt_web_faq.overview.hero": {
+      "es": {
+        "file": "es.7aa329ce.ops.json",
+        "baseUpdatedAt": null
+      }
+    }
+  }
+}

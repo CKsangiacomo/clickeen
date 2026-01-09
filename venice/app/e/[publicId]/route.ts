@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { escapeHtml } from '@venice/lib/html';
+import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,8 @@ const CACHE_PUBLISHED = 'public, max-age=300, s-maxage=600, stale-while-revalida
 const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
 
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
-  const { publicId } = await ctx.params;
+  const { publicId: rawPublicId } = await ctx.params;
+  const publicId = String(rawPublicId || '').trim();
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
@@ -26,9 +28,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     const raw = (url.searchParams.get('locale') || '').trim();
     if (!raw) return 'en';
     // v1: keep it strict and deterministic; prefer BCP-47-ish tokens (en, en-US).
-    const normalized = raw.replace(/_/g, '-');
-    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalized)) return 'en';
-    return normalized.toLowerCase();
+    const normalizedLocale = raw.replace(/_/g, '-');
+    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalizedLocale)) return 'en';
+    return normalizedLocale.toLowerCase();
   })();
   const ts = url.searchParams.get('ts');
 
@@ -186,6 +188,14 @@ async function renderInstancePage({
   const bodyHtml = extractBodyHtml(widgetHtml);
   const title = extractTitle(widgetHtml) ?? `${widgetType} widget`;
   const stylesheetLinks = extractStylesheetLinks(widgetHtml);
+
+  const localizedState = await applyTokyoInstanceOverlay({
+    publicId: instance.publicId,
+    locale,
+    baseUpdatedAt: instance.updatedAt ?? null,
+    config: instance.config,
+  });
+
   const ckWidgetJson = JSON.stringify({
     widgetname: widgetType,
     publicId: instance.publicId,
@@ -193,7 +203,7 @@ async function renderInstancePage({
     theme,
     device,
     locale,
-    state: instance.config,
+    state: localizedState,
   }).replace(/</g, '\\u003c');
 
   return `<!doctype html>
@@ -207,7 +217,7 @@ async function renderInstancePage({
     <base href="/widgets/${escapeHtml(widgetType)}/" />
     ${stylesheetLinks}
     <style nonce="${escapeHtml(nonce)}">html,body{margin:0;padding:0}</style>
-    <script nonce="${escapeHtml(nonce)}">window.CK_WIDGET=${ckWidgetJson};</script>
+    <script nonce="${escapeHtml(nonce)}">window.CK_CSP_NONCE=${JSON.stringify(nonce)};window.CK_WIDGET=${ckWidgetJson};</script>
   </head>
   <body>
     ${bodyHtml}

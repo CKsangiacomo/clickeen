@@ -91,8 +91,12 @@ echo "[dev-up] Building i18n bundles into tokyo/i18n"
 node "$ROOT_DIR/scripts/i18n/build.mjs"
 node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173 (if any)"
-for p in 3000 3001 3002 3003 4000 4321 5173; do
+echo "[dev-up] Building l10n overlays into tokyo/l10n"
+node "$ROOT_DIR/scripts/l10n/build.mjs"
+node "$ROOT_DIR/scripts/l10n/validate.mjs"
+
+echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790 (if any)"
+for p in 3000 3001 3002 3003 4000 4321 5173 8790; do
   PIDS=$(lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null || true)
   if [ -n "$PIDS" ]; then
     echo "[dev-up] Killing $PIDS on port $p"
@@ -102,11 +106,13 @@ done
 
 # Wrangler/workerd can get stuck in a broken state without holding the LISTEN socket
 # (e.g. after a crash/reload loop). Kill them by commandline as a backstop.
-echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002)"
+echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002/8790)"
 pkill -f "wrangler.*dev.*--port 3001" || true
 pkill -f "wrangler.*dev.*--port 3002" || true
+pkill -f "wrangler.*dev.*--port 8790" || true
 pkill -f "workerd serve.*entry=localhost:3001" || true
 pkill -f "workerd serve.*entry=localhost:3002" || true
+pkill -f "workerd serve.*entry=localhost:8790" || true
 
 echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
 rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
@@ -158,7 +164,7 @@ echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
   exit 1
 fi
 
-echo "[dev-up] Note: instances are created explicitly from DevStudio Local (no bootstrap scripts)."
+echo "[dev-up] Note: instances are usually created from DevStudio Local; optionally run: pnpm bootstrap:local-widgets"
 
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
@@ -236,6 +242,32 @@ if ! curl -sf "http://localhost:5173" >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "[dev-up] Starting Pitch Agent worker (8790)"
+(
+  cd "$ROOT_DIR/pitch"
+  nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/pitch.dev.log" 2>&1 &
+  PITCH_PID=$!
+  echo "[dev-up] Pitch PID: $PITCH_PID"
+)
+for i in {1..30}; do
+  if curl -sf "http://localhost:8790/healthz" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+if ! curl -sf "http://localhost:8790/healthz" >/dev/null 2>&1; then
+  echo "[dev-up] Timeout waiting for Pitch @ http://localhost:8790/healthz"
+  exit 1
+fi
+
+if [ -n "${PITCH_SERVICE_KEY:-}" ] && [ -n "${OPENAI_API_KEY:-}" ]; then
+  echo "[dev-up] Syncing pitch docs to local Pitch worker"
+  (
+    cd "$ROOT_DIR/pitch"
+    PITCH_API_URL="http://localhost:8790" PITCH_SERVICE_KEY="$PITCH_SERVICE_KEY" pnpm -s sync-docs
+  ) || echo "[dev-up] Pitch docs sync failed; continuing startup (non-fatal)"
+else
+  echo "[dev-up] Skipping pitch docs sync (requires PITCH_SERVICE_KEY + OPENAI_API_KEY in $ROOT_DIR/.env.local)"
+fi
+
 echo "[dev-up] Starting Prague marketing site (4321)"
 (
   cd "$ROOT_DIR/prague"
@@ -260,4 +292,5 @@ if [ -n "$SF_BASE_URL" ]; then
 fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
+echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/en/widgets/faq"

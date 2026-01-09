@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { generateSchemaJsonLd } from '@venice/lib/schema';
+import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -106,7 +107,8 @@ function toWeakEtag(value: string) {
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
-  const { publicId } = await ctx.params;
+  const { publicId: rawPublicId } = await ctx.params;
+  const publicId = String(rawPublicId || '').trim();
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
@@ -190,9 +192,16 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const scripts = extractScriptSrcs(bodyHtml, widgetType).filter(Boolean);
   const renderHtml = injectPublicId(stripScriptTags(bodyHtml), widgetType, instance.publicId);
 
+  const localizedState = await applyTokyoInstanceOverlay({
+    publicId: instance.publicId,
+    locale,
+    baseUpdatedAt: instance.updatedAt ?? null,
+    config: instance.config,
+  });
+
   const schemaJsonLd = generateSchemaJsonLd({
     widgetType,
-    state: instance.config,
+    state: localizedState,
     locale,
   });
 
@@ -203,7 +212,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     theme,
     device,
     locale,
-    state: instance.config,
+    state: localizedState,
     schemaJsonLd,
     renderHtml,
     assets: { styles, scripts },

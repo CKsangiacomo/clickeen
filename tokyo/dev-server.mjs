@@ -266,6 +266,7 @@ const server = http.createServer((req, res) => {
   if (
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
+    serveStatic(req, res, '/l10n/') ||
     serveStatic(req, res, '/widgets/') ||
     serveStatic(req, res, '/workspace-assets/')
   ) {
