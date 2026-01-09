@@ -163,8 +163,8 @@
 }
 
 .diet-repeater__placeholder {
-  border: 2px dashed var(--color-system-blue, #2f6bff);
-  background: rgba(47, 107, 255, 0.08);
+  border: 2px dashed var(--color-system-blue);
+  background: color-mix(in oklab, var(--color-system-blue), transparent 92%);
   border-radius: var(--radius-3);
   transition: height 140ms ease, margin 140ms ease;
 }

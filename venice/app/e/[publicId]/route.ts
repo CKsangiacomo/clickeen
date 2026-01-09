@@ -61,10 +61,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   if (!res.ok) {
     const status = res.status === 401 || res.status === 403 ? 403 : res.status;
+    const tokyoBase = getTokyoBase();
     const html = renderErrorPage({
       publicId,
       status,
       message: typeof body === 'string' ? body : JSON.stringify(body),
+      tokyoBase,
     });
     headers['Cache-Control'] = 'no-store';
     return new NextResponse(html, { status, headers });
@@ -74,10 +76,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   // Venice is the public embed runtime. It must never serve unpublished instances.
   // (Dev/auth preview belongs to Bob; Prague and third-party sites only iframe Venice.)
   if (instance.status !== 'published') {
+    const tokyoBase = getTokyoBase();
     const html = renderErrorPage({
       publicId,
       status: 404,
       message: 'Widget unavailable',
+      tokyoBase,
     });
     headers['Cache-Control'] = 'no-store';
     headers['Vary'] = 'Authorization, X-Embed-Token';
@@ -173,9 +177,10 @@ async function renderInstancePage({
   locale: string;
   nonce: string;
 }) {
+  const tokyoBase = getTokyoBase();
   const widgetType = instance.widgetType ? String(instance.widgetType) : '';
   if (!widgetType) {
-    return renderErrorPage({ publicId: instance.publicId, status: 500, message: 'Missing widgetType' });
+    return renderErrorPage({ publicId: instance.publicId, status: 500, message: 'Missing widgetType', tokyoBase });
   }
 
   let widgetHtml: string;
@@ -183,7 +188,7 @@ async function renderInstancePage({
     widgetHtml = await loadWidgetHtml(widgetType);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return renderErrorPage({ publicId: instance.publicId, status: 502, message });
+    return renderErrorPage({ publicId: instance.publicId, status: 502, message, tokyoBase });
   }
 
   const bodyHtml = extractBodyHtml(widgetHtml);
@@ -226,16 +231,27 @@ async function renderInstancePage({
 </html>`;
 }
 
-function renderErrorPage({ publicId, status, message }: { publicId: string; status: number; message: string }) {
+function renderErrorPage({
+  publicId,
+  status,
+  message,
+  tokyoBase,
+}: {
+  publicId: string;
+  status: number;
+  message: string;
+  tokyoBase: string;
+}) {
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Clickeen widget error</title>
+    <link rel="stylesheet" href="${escapeHtml(tokyoBase)}/dieter/tokens/tokens.css">
     <style>
-      body { font-family: system-ui, sans-serif; background:#f1f5f9; color:#0f172a; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
-      .card { background:#fff; padding:32px; border-radius:20px; box-shadow:0 24px 60px rgba(15,23,42,0.12); max-width:480px; text-align:center; }
+      body { font-family: var(--font-ui, system-ui, sans-serif); background:var(--color-system-gray-6-step5); color:var(--color-text); margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:var(--space-6); }
+      .card { background:var(--color-system-white); padding:32px; border-radius:20px; border:1px solid color-mix(in oklab, var(--color-system-black), transparent 88%); box-shadow:0 24px 60px color-mix(in oklab, var(--color-system-black), transparent 88%); max-width:480px; text-align:center; }
       h1 { margin:0 0 12px; font-size:18px; }
       p { margin:6px 0; font-size:14px; opacity:0.78; }
     </style>

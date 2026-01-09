@@ -10,8 +10,8 @@
 /* Dieter Color Tokens */
 :root {
   /* Text color tokens */
-  --color-text: var(--color-system-black, #212121);
-  --color-text-secondary: color-mix(in oklab, var(--color-system-black, #212121), transparent 45%);
+  --color-text: var(--color-system-black);
+  --color-text-secondary: color-mix(in oklab, var(--color-system-black), transparent 45%);
 
   /* Global state mix controls */
   --state-darken-target: black;

@@ -143,11 +143,11 @@
 }
 
 .diet-btn-ictxt[data-variant="primary"] {
-  --btn-bg: var(--color-system-blue, #0a84ff);
-  --btn-color: var(--color-system-white, #ffffff);
+  --btn-bg: var(--color-system-blue);
+  --btn-color: var(--color-system-white);
   --btn-border-color: transparent;
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 22%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 40%);
 }
 
 .diet-btn-ictxt[data-variant="secondary"] {
@@ -169,20 +169,20 @@
 
 .diet-btn-ictxt[data-variant="line1"] {
   --btn-bg: transparent;
-  --btn-color: var(--color-system-blue, #0a84ff);
+  --btn-color: var(--color-system-blue);
   --btn-border-width: 1px;
-  --btn-border-color: var(--color-system-blue, #0a84ff);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 60%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 30%);
+  --btn-border-color: var(--color-system-blue);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
 }
 
 .diet-btn-ictxt[data-variant="line2"] {
   --btn-bg: transparent;
-  --btn-color: var(--color-system-gray-contrast, #636366);
+  --btn-color: var(--color-system-gray-contrast);
   --btn-border-width: 1px;
-  --btn-border-color: var(--color-system-gray-contrast, #636366);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-contrast, #636366), transparent 75%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-contrast, #636366), transparent 55%);
+  --btn-border-color: var(--color-system-gray-contrast);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-contrast), transparent 75%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-contrast), transparent 55%);
 }
 
 /* Text Only Button */
@@ -276,11 +276,11 @@
 }
 
 .diet-btn-txt[data-variant="primary"] {
-  --btn-bg: var(--color-system-blue, #0a84ff);
-  --btn-color: var(--color-system-white, #ffffff);
+  --btn-bg: var(--color-system-blue);
+  --btn-color: var(--color-system-white);
   --btn-border-color: transparent;
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 22%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 40%);
 }
 
 .diet-btn-txt[data-variant="secondary"] {
@@ -300,20 +300,20 @@
 
 .diet-btn-txt[data-variant="line1"] {
   --btn-bg: transparent;
-  --btn-color: var(--color-system-blue, #0a84ff);
+  --btn-color: var(--color-system-blue);
   --btn-border-width: 1px;
-  --btn-border-color: var(--color-system-blue, #0a84ff);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 60%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 30%);
+  --btn-border-color: var(--color-system-blue);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
 }
 
 .diet-btn-txt[data-variant="line2"] {
   --btn-bg: transparent;
-  --btn-color: var(--color-system-gray-contrast, #636366);
+  --btn-color: var(--color-system-gray-contrast);
   --btn-border-width: 1px;
-  --btn-border-color: var(--color-system-gray-contrast, #636366);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-contrast, #636366), transparent 75%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-contrast, #636366), transparent 55%);
+  --btn-border-color: var(--color-system-gray-contrast);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-contrast), transparent 75%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-contrast), transparent 55%);
 }
 
 /* Icon Only Button */
@@ -436,11 +436,11 @@
 }
 
 .diet-btn-ic[data-variant="primary"] {
-  --btn-bg: var(--color-system-blue, #0a84ff);
-  --btn-color: var(--color-system-white, #ffffff);
+  --btn-bg: var(--color-system-blue);
+  --btn-color: var(--color-system-white);
   --btn-border-color: transparent;
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 22%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), #000000 40%);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 22%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), var(--state-darken-target) 40%);
 }
 
 .diet-btn-ic[data-variant="secondary"] {
@@ -460,9 +460,9 @@
 
 .diet-btn-ic[data-variant="line1"] {
   --btn-bg: transparent;
-  --btn-color: var(--color-system-blue, #0a84ff);
+  --btn-color: var(--color-system-blue);
   --btn-border-width: 1px;
-  --btn-border-color: var(--color-system-blue, #0a84ff);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 60%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue, #0a84ff), transparent 30%);
+  --btn-border-color: var(--color-system-blue);
+  --btn-hover-bg: color-mix(in oklab, var(--color-system-blue), transparent 60%);
+  --btn-clicked-bg: color-mix(in oklab, var(--color-system-blue), transparent 30%);
 }

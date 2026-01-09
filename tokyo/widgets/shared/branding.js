@@ -66,10 +66,10 @@
         padding-inline: var(--space-2);
         border-radius: var(--control-radius-sm, 0.25rem);
         border: none;
-        background: color-mix(in oklab, var(--color-system-white, #ffffff), transparent 15%);
+        background: color-mix(in oklab, var(--color-system-white), transparent 15%);
         box-shadow: none;
         font: 500 var(--fs-12, 12px) / var(--lh-tight, 1.2) var(--font-ui, ui-sans-serif);
-        color: var(--color-text, #212121);
+        color: var(--color-text);
         text-decoration: none;
         -webkit-font-smoothing: antialiased;
         white-space: nowrap;

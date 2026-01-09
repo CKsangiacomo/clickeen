@@ -64,7 +64,7 @@
   display: inline-block;
   position: relative;
   border-radius: calc(var(--tog-h) / 2);
-  background: var(--color-system-gray-5, #e5e5ea);
+  background: var(--color-system-gray-6-step4);
   transition: background-color var(--duration-base, 160ms) ease;
   cursor: pointer;
   flex: 0 0 var(--tog-w);
@@ -94,15 +94,16 @@
   inline-size: var(--knob-d);
   block-size: var(--knob-d);
   border-radius: 999px;
-  background: var(--color-system-white, #ffffff);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 3px 1px rgba(0,0,0,0.06);
+  background: var(--color-system-white);
+  box-shadow: 0 3px 8px color-mix(in oklab, var(--color-system-black), transparent 85%),
+    0 3px 1px color-mix(in oklab, var(--color-system-black), transparent 94%);
   transition: transform var(--duration-base, 160ms) ease;
   will-change: transform;
 }
 
 /* On state */
 .diet-toggle__input:checked + .diet-toggle__switch {
-  background: var(--color-system-green, #34c759);
+  background: var(--color-system-green);
 }
 .diet-toggle__input:checked + .diet-toggle__switch .diet-toggle__knob {
   transform: translateX(calc(var(--tog-w) - var(--knob-d) - (var(--tog-pad) * 2)));

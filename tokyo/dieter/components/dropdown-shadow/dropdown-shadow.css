@@ -10,6 +10,8 @@
   display: grid;
   gap: var(--hspace-2, 0.1rem);
   inline-size: 100%;
+  --picker-rgb: 0 0 0;
+  --swatch-color: transparent;
 }
 
 .diet-dropdown-shadow .diet-dropdown-header {
@@ -182,8 +184,8 @@
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)),
-    linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)),
+    linear-gradient(to top, var(--color-system-black), transparent),
+    linear-gradient(to right, var(--color-system-white), transparent),
     hsl(var(--picker-hue, 0) 100% 50%);
 }
 
@@ -191,7 +193,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  background: linear-gradient(to right, var(--color-system-white), transparent);
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -203,8 +205,8 @@
   border-radius: 50%;
   transform: translate(-50%, -50%);
   border: 2px solid var(--color-system-white);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
-  background: rgb(var(--picker-rgb, 0 0 0));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-system-black), transparent 75%);
+  background: rgb(var(--picker-rgb));
   left: 0;
   top: 0;
 }
@@ -245,7 +247,7 @@
   inline-size: 100%;
   block-size: 100%;
   border-radius: 7px;
-  background: var(--swatch-color, transparent);
+  background: var(--swatch-color);
 }
 
 .diet-dropdown-shadow__swatch.is-selected {

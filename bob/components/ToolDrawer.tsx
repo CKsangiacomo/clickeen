@@ -119,11 +119,11 @@ export function ToolDrawer() {
                   margin: 'var(--space-2)',
                   padding: 'var(--space-2)',
                   borderRadius: 'var(--control-radius-md)',
-                  border: '1px solid color-mix(in oklab, var(--color-system-red, #ff3b30), transparent 55%)',
-                  background: 'color-mix(in oklab, var(--color-system-red-5, #ff3b30), transparent 85%)',
+                  border: '1px solid color-mix(in oklab, var(--color-system-red), transparent 55%)',
+                  background: 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)',
                 }}
               >
-                <div className="label-s" style={{ color: 'var(--color-system-red, #ff3b30)' }}>
+                <div className="label-s" style={{ color: 'var(--color-system-red)' }}>
                   {sessionError.source === 'load'
                     ? 'Instance load error'
                     : sessionError.source === 'publish'

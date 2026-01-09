@@ -459,19 +459,19 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     item.style.boxShadow = "none";
     item.style.transition = "border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease";
     if (mode === "drag") {
-      item.style.borderColor = "var(--color-system-green, #2ecc71)";
-      item.style.backgroundColor = "#c7efd8";
-      item.style.boxShadow = "0 10px 24px rgba(0,0,0,0.12), 0 0 0 2px rgba(46, 204, 113, 0.35)";
+      item.style.borderColor = "var(--color-system-green)";
+      item.style.backgroundColor = "color-mix(in oklab, var(--color-system-green), var(--color-system-white) 85%)";
+      item.style.boxShadow = "0 10px 24px color-mix(in oklab, var(--color-system-black), transparent 88%), 0 0 0 2px color-mix(in oklab, var(--color-system-green), transparent 65%)";
       return;
     }
     if (mode === "hover") {
-      item.style.borderColor = "var(--color-system-blue, #2f6bff)";
-      item.style.backgroundColor = "#cedcff";
+      item.style.borderColor = "var(--color-system-blue)";
+      item.style.backgroundColor = "color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 85%)";
       item.style.boxShadow = "none";
       return;
     }
-    item.style.borderColor = "#2f6bff";
-    item.style.backgroundColor = "#e4ebff";
+    item.style.borderColor = "var(--color-system-blue)";
+    item.style.backgroundColor = "color-mix(in oklab, var(--color-system-blue), var(--color-system-white) 90%)";
     item.style.boxShadow = "none";
   }
 
