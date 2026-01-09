@@ -159,17 +159,8 @@ export default defineConfig({
             return;
           }
 
-          const expectedSuperadminKey = (process.env.CK_SUPERADMIN_KEY || '').trim();
-          // Local-only DevStudio: superadmin auth is optional.
-          // If CK_SUPERADMIN_KEY is set, require it to prevent drive-by writes to cloud-dev.
-          if (expectedSuperadminKey) {
-            const providedKey = String(req.headers['x-ck-superadmin-key'] || '').trim();
-            if (!providedKey || providedKey !== expectedSuperadminKey) {
-              res.statusCode = 403;
-              res.end(JSON.stringify({ error: { kind: 'DENY', reasonKey: 'coreui.errors.superadmin.invalid' } }));
-              return;
-            }
-          }
+          // Local-only DevStudio: no superadmin auth gate for promote.
+          // This endpoint is already locked to localhost:5173; keep it frictionless for solo local dev.
 
           let body = '';
           req.on('data', (chunk) => {
