@@ -22,6 +22,9 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
 
 <section class="ck-canvas ck-heroCanvas">
   <div class="ck-inline">
+    <div class="ck-hero__subnav">
+      <slot name="subnav" />
+    </div>
     <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
         <h1 class="display-2 ck-hero__title">{headline}</h1>
@@ -60,6 +63,11 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
     /* Tokenized “gray 2.5” in our ladder corresponds to gray-2 step5 (very light). */
     background: var(--color-system-gray-2-step5);
   }
+
+  .ck-hero__subnav {
+    margin-bottom: var(--space-7);
+  }
+  .ck-hero__subnav:empty { display: none; }
 
   .ck-hero__title { margin: 0; }
   .ck-hero__subheadline { margin: 0; }

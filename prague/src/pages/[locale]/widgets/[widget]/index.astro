@@ -94,7 +94,7 @@ const minibobSubhead = minibobLines[1];
   <main>
     <TopSurface
       background="var(--color-system-gray-2-step5)"
-      topPad="var(--ck-nav-h, 0px)"
+      topPad="var(--ck-nav-h, calc(var(--space-5) * 2 + 22px))"
     >
       <Nav
         title="Clickeen"
@@ -103,7 +103,6 @@ const minibobSubhead = minibobLines[1];
         floating={true}
         cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
       />
-      <WidgetSubnav locale={locale} widget={widget} active="overview" />
       <Hero
         headline={headline}
         subheadline={subheadline}
@@ -114,7 +113,9 @@ const minibobSubhead = minibobLines[1];
             ? { widgetType: widget, locale, height: '640px', title: `${widget} overview hero` }
             : undefined
         }
-      />
+      >
+        <WidgetSubnav slot="subnav" locale={locale} widget={widget} active="overview" variant="inline" />
+      </Hero>
     </TopSurface>
     <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
     {stats.length ? <Stats stats={stats} /> : null}

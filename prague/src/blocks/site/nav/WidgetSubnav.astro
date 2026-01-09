@@ -7,9 +7,11 @@ type Props = {
   locale: string;
   widget: string;
   active: WidgetSubpage;
+  /** page: full-width section (default). inline: render as an inline row (for hero). */
+  variant?: 'page' | 'inline';
 };
 
-const { locale, widget, active } = Astro.props;
+const { locale, widget, active, variant = 'page' } = Astro.props;
 
 const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
   { key: 'overview', label: pragueT(locale, 'prague.tabs.overview'), href: `/${locale}/widgets/${widget}` },
@@ -20,24 +22,41 @@ const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
 ];
 ---
 
-<section class="ck-canvas ck-widgetSubnav" aria-label="Widget sections">
-  <div class="ck-inline">
-    <div class="ck-row ck-widgetSubnav__row">
-      {tabs.map((t) => {
-        const isActive = t.key === active;
-        return (
-          <a
-            href={t.href}
-            class={`label-s ck-widgetSubnav__tab${isActive ? ' is-active' : ''}`}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            {t.label}
-          </a>
-        );
-      })}
+{variant === 'inline' ? (
+  <nav class="ck-row ck-widgetSubnav__row" aria-label="Widget sections">
+    {tabs.map((t) => {
+      const isActive = t.key === active;
+      return (
+        <a
+          href={t.href}
+          class={`label-s ck-widgetSubnav__tab${isActive ? ' is-active' : ''}`}
+          aria-current={isActive ? 'page' : undefined}
+        >
+          {t.label}
+        </a>
+      );
+    })}
+  </nav>
+) : (
+  <section class="ck-canvas ck-widgetSubnav" aria-label="Widget sections">
+    <div class="ck-inline">
+      <div class="ck-row ck-widgetSubnav__row">
+        {tabs.map((t) => {
+          const isActive = t.key === active;
+          return (
+            <a
+              href={t.href}
+              class={`label-s ck-widgetSubnav__tab${isActive ? ' is-active' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {t.label}
+            </a>
+          );
+        })}
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+)}
 
 <style>
   /* Page-level secondary nav (never sticky): belongs to the widget page, not the global Nav. */
