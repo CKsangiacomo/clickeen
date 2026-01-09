@@ -4,17 +4,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  /* Prague baseline body type is intentionally larger than product UI.
-     We still use Dieter foundation tokens, but set a marketing-friendly default. */
-  font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui);
+  font-family: var(--font-ui);
   background: var(--color-system-gray-6);
   color: var(--color-system-black);
 }
-
-/* Dieter typography sets `p { font: ... }` in foundations.
-   Prague wants paragraphs to inherit the Prague baseline by default. */
-p { font: inherit; }
-
-/* Prague uses Dieter typography utilities everywhere (e.g. `body-m`).
-   For the marketing surface, treat `body-m` as the default body size (inherit Prague baseline). */
-.body-m { font: inherit; }
