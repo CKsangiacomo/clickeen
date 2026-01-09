@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logo Showcase Widget</title>
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div
+          class="ck-widget ck-logoshowcase-widget"
+          data-ck-widget="logoshowcase"
+          data-role="root"
+        >
+          <section class="ck-logoshowcase" data-role="logoshowcase" data-type="grid">
+            <header class="ck-logoshowcase__header" data-role="header">
+              <div class="ck-logoshowcase__header-text">
+                <h2 class="ck-logoshowcase__title" data-role="title">Some of our clients</h2>
+                <div class="ck-logoshowcase__subtitle" data-role="subtitle"></div>
+              </div>
+              <a
+                class="ck-logoshowcase__cta"
+                data-role="cta"
+                data-variant="filled"
+                href="https://example.com/contact"
+                hidden
+              >
+                Contact us
+              </a>
+            </header>
+            <div class="ck-logoshowcase__strips" data-role="strips"></div>
+          </section>
+          <script src="../shared/typography.js" defer></script>
+          <script src="../shared/stagePod.js" defer></script>
+          <script src="../shared/branding.js" defer></script>
+          <script src="./widget.client.js" defer></script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

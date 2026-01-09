@@ -1,0 +1,259 @@
+{
+  "widgetname": "logoshowcase",
+  "defaults": {
+    "header": {
+      "enabled": true,
+      "title": "Some of our clients",
+      "textHtml": "",
+      "alignment": "center"
+    },
+    "strips": [
+      {
+        "id": "s1",
+        "logos": [
+          {
+            "id": "l1",
+            "name": "Acme",
+            "logoFill": "",
+            "href": "",
+            "targetBlank": false,
+            "nofollow": false,
+            "alt": "",
+            "title": "",
+            "caption": ""
+          }
+        ]
+      }
+    ],
+    "cta": {
+      "enabled": false,
+      "label": "Contact us",
+      "href": "https://example.com/contact",
+      "style": "filled"
+    },
+    "type": "grid",
+    "typeConfig": {
+      "grid": { "columnsDesktop": 5, "columnsMobile": 2 },
+      "slider": {
+        "showArrows": true,
+        "showDots": false,
+        "allowSwipe": true,
+        "pauseOnHover": true,
+        "autoSlide": false,
+        "autoSlideDelayMs": 2500,
+        "transitionMs": 350
+      },
+      "carousel": {
+        "pauseOnHover": true,
+        "autoSlideDelayMs": 2500,
+        "transitionMs": 350,
+        "direction": "left"
+      },
+      "ticker": { "pauseOnHover": true, "speed": 30, "direction": "left" }
+    },
+    "appearance": {
+      "logoLook": "original",
+      "logoOpacity": 0.9,
+      "itemBackground": "transparent",
+      "itemCard": {
+        "radiusLinked": true,
+        "radius": "4xl",
+        "radiusTL": "4xl",
+        "radiusTR": "4xl",
+        "radiusBR": "4xl",
+        "radiusBL": "4xl",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)"
+        },
+        "shadow": {
+          "enabled": false,
+          "inset": false,
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "spread": 0,
+          "color": "#000000",
+          "alpha": 18
+        }
+      },
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaRadius": "md"
+    },
+    "spacing": {
+      "gap": 20,
+      "rowGap": 16,
+      "stripGap": 16,
+      "logoHeight": 28,
+      "mobileGap": 16,
+      "mobileStripGap": 12,
+      "mobileLogoHeight": 24
+    },
+    "behavior": { "randomOrder": false, "showBacklink": true },
+    "seoGeo": { "enabled": false },
+    "stage": {
+      "background": "transparent",
+      "alignment": "center",
+      "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+      "padding": {
+        "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
+        "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+      }
+    },
+    "pod": {
+      "background": "transparent",
+      "padding": {
+        "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
+        "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
+      },
+      "widthMode": "wrap",
+      "contentWidth": 960,
+      "radiusLinked": true,
+      "radius": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "radiusBR": "4xl",
+      "radiusBL": "4xl"
+    },
+    "typography": {
+      "globalFamily": "Inter",
+      "roleScales": {
+        "title": { "xs": "18px", "s": "20px", "m": "24px", "l": "28px", "xl": "32px" },
+        "body": { "xs": "12px", "s": "13px", "m": "14px", "l": "16px", "xl": "18px" }
+      },
+      "roles": {
+        "title": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "24px",
+          "fontStyle": "normal",
+          "weight": "700",
+          "color": "var(--color-system-black)"
+        },
+        "body": {
+          "family": "Inter",
+          "sizePreset": "m",
+          "sizeCustom": "14px",
+          "fontStyle": "normal",
+          "weight": "400",
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+        }
+      }
+    }
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Type' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='type' label='Type' value='{{type}}' options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;},{&quot;label&quot;:&quot;Slider&quot;,&quot;value&quot;:&quot;slider&quot;},{&quot;label&quot;:&quot;Carousel&quot;,&quot;value&quot;:&quot;carousel&quot;},{&quot;label&quot;:&quot;Ticker&quot;,&quot;value&quot;:&quot;ticker&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Header' />",
+    "    <tooldrawer-field type='toggle' size='md' path='header.enabled' label='Show header' />",
+    "    <tooldrawer-field type='textfield' size='lg' path='header.title' label='Title' show-if=\"header.enabled == true\" />",
+    "    <tooldrawer-field type='dropdown-edit' size='md' path='header.textHtml' label='Subtitle' placeholder='Add subtitle text' show-if=\"header.enabled == true\" />",
+    "    <tooldrawer-field type='segmented' size='md' path='header.alignment' label='Alignment' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' show-if=\"header.enabled == true\" />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Call to action' />",
+    "    <tooldrawer-field type='toggle' size='md' path='cta.enabled' label='Show CTA button' />",
+    "    <tooldrawer-field type='textfield' size='md' path='cta.label' label='CTA label' show-if=\"cta.enabled == true\" />",
+    "    <tooldrawer-field type='textfield' size='lg' path='cta.href' label='CTA link' placeholder='https://example.com' show-if=\"cta.enabled == true\" />",
+    "    <tooldrawer-field type='segmented' size='md' path='cta.style' label='CTA style' options='[{&quot;label&quot;:&quot;Filled&quot;,&quot;value&quot;:&quot;filled&quot;},{&quot;label&quot;:&quot;Outline&quot;,&quot;value&quot;:&quot;outline&quot;}]' show-if=\"cta.enabled == true\" />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Strips' />",
+    "    <tooldrawer-field class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; default-item=&apos;{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}&apos; template=&apos;&lt;tooldrawer-field type=&quot;dropdown-upload&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.logoFill&quot; label=&quot;Logo&quot; placeholder=&quot;Upload logo&quot; accept=&quot;image/*,.svg&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.name&quot; label=&quot;Name&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.caption&quot; label=&quot;Caption (hover)&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.href&quot; label=&quot;Link URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.targetBlank&quot; label=&quot;Open in new tab&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.nofollow&quot; label=&quot;Nofollow&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.alt&quot; label=&quot;Alt text&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.title&quot; label=&quot;Title (tooltip)&quot; /&gt;&apos; /&gt;' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"type == 'grid'\">",
+    "    <tooldrawer-eyebrow text='Grid' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.grid.columnsDesktop' label='Columns (desktop)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.grid.columnsMobile' label='Columns (mobile)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.rowGap' label='Row gap (px)' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"type == 'slider'\">",
+    "    <tooldrawer-eyebrow text='Slider' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.showArrows' label='Show arrows' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.showDots' label='Show dots' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.allowSwipe' label='Allow swipe/drag' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.autoSlide' label='Autoplay' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.slider.autoSlideDelayMs' label='Autoplay delay (ms)' show-if=\"typeConfig.slider.autoSlide == true\" />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.slider.transitionMs' label='Transition (ms)' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.pauseOnHover' label='Pause on hover' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"type == 'carousel'\">",
+    "    <tooldrawer-eyebrow text='Carousel' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.autoSlideDelayMs' label='Delay (ms)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.transitionMs' label='Transition (ms)' />",
+    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.carousel.direction' label='Direction' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.carousel.pauseOnHover' label='Pause on hover' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"type == 'ticker'\">",
+    "    <tooldrawer-eyebrow text='Ticker' />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.ticker.speed' label='Speed (px/sec)' />",
+    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.ticker.direction' label='Direction' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.ticker.pauseOnHover' label='Pause on hover' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='layout'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Spacing' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.logoHeight' label='Logo height (px)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.gap' label='Logo gap (px)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.stripGap' label='Strip gap (px)' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Mobile spacing' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileLogoHeight' label='Logo height (mobile px)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileGap' label='Logo gap (mobile px)' />",
+    "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileStripGap' label='Strip gap (mobile px)' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Ordering' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.randomOrder' label='Randomize logo order' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='appearance'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Logos' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.logoLook' label='Logo look' value='{{appearance.logoLook}}' options='[{&quot;label&quot;:&quot;Original&quot;,&quot;value&quot;:&quot;original&quot;},{&quot;label&quot;:&quot;Grayscale&quot;,&quot;value&quot;:&quot;grayscale&quot;}]' />",
+    "    <tooldrawer-field type='textfield' size='md' path='appearance.logoOpacity' label='Logo opacity (0-1)' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.itemBackground' label='Tile background' value='{{appearance.itemBackground}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Tile card' />",
+    "    <tooldrawer-field type='toggle' size='md' path='appearance.itemCard.radiusLinked' label='Link tile radius' value='{{appearance.itemCard.radiusLinked}}' default='true' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radius' label='Tile radius' placeholder='Choose radius' value='{{appearance.itemCard.radius}}' show-if=\"appearance.itemCard.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTL' label='Tile top-left radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusTL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTR' label='Tile top-right radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusTR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBR' label='Tile bottom-right radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusBR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Tile bottom-left radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-border' size='md' path='appearance.itemCard.border' label='Tile border' value='{{appearance.itemCard.border}}' />",
+    "    <tooldrawer-field type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Tile shadow' value='{{appearance.itemCard.shadow}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='CTA' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.ctaBackground' label='CTA background' value='{{appearance.ctaBackground}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.ctaTextColor' label='CTA text color' value='{{appearance.ctaTextColor}}' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.ctaRadius' label='CTA radius' placeholder='Choose radius' value='{{appearance.ctaRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2XL&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='settings'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='SEO/GEO optimization' />",
+    "    <tooldrawer-field type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Branding' />",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.showBacklink' label='Show backlink' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>"
+  ]
+}
