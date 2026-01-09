@@ -24,25 +24,7 @@ const ctaVariant = cta?.variant ?? 'secondary';
 const navSurface = (Astro.props.surface ?? 'overlay') as NonNullable<Props['surface']>;
 const navSticky = Astro.props.sticky !== false;
 
-const pathname = Astro.url.pathname;
-
-type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
-const widgetMatch = pathname.match(/^\/[^/]+\/widgets\/([^/]+)(?:\/([^/]+))?\/?$/);
-const widget = widgetMatch?.[1] ?? null;
-const widgetPage = (widgetMatch?.[2] ?? 'overview') as WidgetSubpage;
-const isWidgetPage = Boolean(widget);
-
 const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
-
-const widgetTabs = widget
-  ? ([
-      { label: pragueT(locale, 'prague.tabs.overview'), href: `/${locale}/widgets/${widget}`, key: 'overview' },
-      { label: pragueT(locale, 'prague.tabs.templates'), href: `/${locale}/widgets/${widget}/templates`, key: 'templates' },
-      { label: pragueT(locale, 'prague.tabs.examples'), href: `/${locale}/widgets/${widget}/examples`, key: 'examples' },
-      { label: pragueT(locale, 'prague.tabs.features'), href: `/${locale}/widgets/${widget}/features`, key: 'features' },
-      { label: pragueT(locale, 'prague.tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing`, key: 'pricing' },
-    ] as const)
-  : [];
 
 const mega = await resolveWidgetsMegaMenu({ locale });
 
@@ -116,23 +98,6 @@ const primaryItems =
         <span aria-hidden="true" />
       )}
     </div>
-
-    {isWidgetPage ? (
-      <div class="ck-row ck-siteNav__tabs">
-        {widgetTabs.map((t) => {
-          const isActive = t.key === widgetPage;
-          return (
-            <a
-              href={t.href}
-              class={`label-s ck-siteNav__tab${isActive ? ' is-active' : ''}`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {t.label}
-            </a>
-          );
-        })}
-      </div>
-    ) : null}
   </div>
 </header>
 
@@ -263,23 +228,6 @@ const primaryItems =
   .ck-navWidgets__sub {
     margin-top: 4px;
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
-  }
-
-  .ck-siteNav__tabs {
-    gap: var(--space-4);
-    margin-top: var(--space-4);
-  }
-
-  .ck-siteNav__tab {
-    text-decoration: none;
-    padding: 6px 10px;
-    border-radius: var(--control-radius-md);
-    color: color-mix(in oklab, var(--color-system-black), transparent 35%);
-  }
-
-  .ck-siteNav__tab.is-active {
-    color: var(--color-system-black);
-    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
   }
 
   .ck-navWidgets__footer {

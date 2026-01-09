@@ -1,12 +1,19 @@
 ---
 import Base from '../../../../../layouts/Base.astro';
 import Nav from '../../../../../blocks/site/nav/Nav.astro';
+import WidgetSubnav from '../../../../../blocks/site/nav/WidgetSubnav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
 import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
 import { listPragueLocales } from '../../../../../lib/locales';
 import { pragueT } from '../../../../../lib/i18n';
 
 const { locale, widget, page } = Astro.params;
+
+type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+const activeSubpage: WidgetSubpage =
+  page === 'overview' || page === 'templates' || page === 'examples' || page === 'features' || page === 'pricing'
+    ? (page as WidgetSubpage)
+    : 'overview';
 
 export async function getStaticPaths() {
   const widgets = await listWidgets();
@@ -40,6 +47,7 @@ const pageLabel = titleCase(page);
       homeHref={`/${locale}/`}
       cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
+    <WidgetSubnav locale={locale} widget={widget} active={activeSubpage} />
 
     <section class="ck-canvas ck-widgetSubpage">
       <div class="ck-inline ck-stack ck-widgetSubpage__inner">

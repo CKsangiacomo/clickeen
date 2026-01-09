@@ -1,0 +1,65 @@
+---
+import { pragueT } from '../../../lib/i18n';
+
+type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+
+type Props = {
+  locale: string;
+  widget: string;
+  active: WidgetSubpage;
+};
+
+const { locale, widget, active } = Astro.props;
+
+const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
+  { key: 'overview', label: pragueT(locale, 'prague.tabs.overview'), href: `/${locale}/widgets/${widget}` },
+  { key: 'templates', label: pragueT(locale, 'prague.tabs.templates'), href: `/${locale}/widgets/${widget}/templates` },
+  { key: 'examples', label: pragueT(locale, 'prague.tabs.examples'), href: `/${locale}/widgets/${widget}/examples` },
+  { key: 'features', label: pragueT(locale, 'prague.tabs.features'), href: `/${locale}/widgets/${widget}/features` },
+  { key: 'pricing', label: pragueT(locale, 'prague.tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing` },
+];
+---
+
+<section class="ck-canvas ck-widgetSubnav" aria-label="Widget sections">
+  <div class="ck-inline">
+    <div class="ck-row ck-widgetSubnav__row">
+      {tabs.map((t) => {
+        const isActive = t.key === active;
+        return (
+          <a
+            href={t.href}
+            class={`label-s ck-widgetSubnav__tab${isActive ? ' is-active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {t.label}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Page-level secondary nav (never sticky): belongs to the widget page, not the global Nav. */
+  .ck-widgetSubnav {
+    padding-top: 0;
+    padding-bottom: var(--space-6);
+  }
+
+  .ck-widgetSubnav__row {
+    gap: var(--space-4);
+  }
+
+  .ck-widgetSubnav__tab {
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: var(--control-radius-md);
+    color: color-mix(in oklab, var(--color-system-black), transparent 35%);
+  }
+
+  .ck-widgetSubnav__tab.is-active {
+    color: var(--color-system-black);
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+  }
+</style>
+
