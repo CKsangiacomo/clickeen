@@ -161,7 +161,7 @@ Panels:
 - **Settings**: workspace website URL setting (policy-gated; not widget instance state)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
-## 7) Defaults (authoritative `spec.json.defaults`)
+## 7) Defaults (authoritative `spec.json` → `defaults`)
 The implementer must translate this PRD into a complete defaults object in `tokyo/widgets/countdown/spec.json`.
 Defaults must include:
 - `seoGeo: { enabled: false }`

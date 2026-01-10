@@ -1,8 +1,8 @@
 # Dieter System Overview
 
-This document is the canonical reference for Clickeen’s design system and its preview harness. It consolidates all guidance previously found in `dieter/README.md` and replaces outdated versions of this doc.
+This document is the canonical reference for Clickeen’s design system and its preview harness. It replaces older scattered notes and should be kept aligned with the Dieter source tree.
 
-**Last updated:** 2025-10-12 — Always verify against `dieter/components/*.css`, `dieter/tokens/tokens.css`, and the Dieter Admin showcases when making changes.
+**Last updated:** 2025-10-12 — Always verify against `dieter/components/*/*.css`, `dieter/components/*/*.spec.json`, `dieter/tokens/tokens.css`, and the DevStudio Dieter showcases when making changes.
 
 - [1. Dieter Core](#1-dieter-core)
 - [2. Dieter Admin](#2-dieter-admin)
@@ -43,18 +43,17 @@ If you add a new component or a new dependency, you must update the manifest emi
 **What Dieter Contains:**
 
 1. **Primitives** - Core design system components
-   - `button.css`, `toggle.css`, `textfield.css`, `expander.css`, `dropdown.css`, etc.
-   - Universal tokens (`tokens.css`)
+   - `dieter/components/button/button.css`, `dieter/components/toggle/toggle.css`, `dieter/components/textfield/textfield.css`, etc.
+   - Universal tokens (`dieter/tokens/tokens.css`)
    - Typography, colors, spacing, motion
 
 2. **Widget-Specific Compositions** - Components built FROM primitives for specific widgets
-   - `expander-faq.css` - FAQ-specific expander with delete button, Q&A structure
-   - `card-testimonials.css` - Testimonial card layout
+   - Implemented as new component folders under `dieter/components/<component>/`
    - Each widget can create its own compositions as needed
 
 3. **Bob-Specific Components** - Components for Bob's UI
-   - `bob-basetooldrawer.css` - Tool drawer base styles
-   - Other Bob-specific UI patterns
+   - Implemented as component folders under `dieter/components/<component>/`
+   - Other Bob-specific UI patterns live alongside the primitives
 
 **Why This Matters:**
 
@@ -76,18 +75,16 @@ If you add a new component or a new dependency, you must update the manifest emi
 **Component Organization:**
 ```
 dieter/components/
-  // Primitives (universal)
-  button.css
-  toggle.css
-  textfield.css
-  expander.css
-
-  // Widget-specific compositions
-  expander-faq.css
-  card-testimonials.css
-
-  // Bob-specific
-  bob-basetooldrawer.css
+  button/
+    button.css
+    button.html
+    button.spec.json
+    button.ts
+  dropdown-edit/
+    dropdown-edit.css
+    dropdown-edit.html
+    dropdown-edit.spec.json
+  ...
 ```
 
 **For widget definitions:**
@@ -99,12 +96,11 @@ See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details
 
 | Path | Description |
 | --- | --- |
-| `tokens/` | Canonical design tokens (`@dieter/tokens/tokens.css`). Includes spacing, typography, color, focus, and motion tokens. |
-| `components/` | CSS contracts for each primitive (e.g., `button.css`, `segmented.css`). Compiled into `dist/components/*.css`. |
+| `tokens/` | Canonical design tokens (source). Built output lands in `tokyo/dieter/tokens/`. |
+| `components/` | Per-component folders with `*.css`, `*.html`, `*.spec.json`, and optional `*.ts`. |
 | `icons/` | Source SVGs normalized to `fill="currentColor"` plus the generated registry (`icons/icons.json`). |
-| `dietercomponents.md` | Live integration guide: markup, behavior expectations, QA per component. |
-| `dieteradmin/` | Preview harness (documented in [Section 2](#2-dieter-admin)). |
-| `dist/` | Generated artifacts produced by `pnpm --filter @ck/dieter build` (ignored during development). |
+| `dieteradmin/` | Static HTML fragments for icon showcase (generated; not a standalone app). |
+| `tokyo/dieter/` | Build output (manifest, tokens, components, icons). |
 
 ### 1.2 Using Dieter in an Application
 
@@ -116,9 +112,9 @@ See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details
    ```
 3. **Import the component stylesheet(s) you need:**
    ```html
-   <link rel="stylesheet" href="/dieter/components/button.css">
+   <link rel="stylesheet" href="/dieter/components/button/button.css">
    ```
-4. **Copy markup + behaviors** from `dietercomponents.md`, wire with your application logic, and run the QA checklist.
+4. **Copy markup + behaviors** from `dieter/components/<component>/<component>.html` and `dieter/components/<component>/<component>.spec.json`, wire with your application logic, and run the QA checklist.
 
 Dieter ships **CSS only**. Host applications manage all interactivity (e.g., toggling `data-state` attributes, focus management, persistence).
 
@@ -252,124 +248,58 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 ### 1.6 Icons
 
 - Source SVGs: `icons/svg/*.svg` (normalized to `fill="currentColor"`).
-- Build output: `dieter/dist/icons/svg/*`, plus registry files (`icons.json`, `icons.js`, typings).
-- Copy process: `pnpm --filter @ck/dieter build` followed by `node scripts/copy-dieter-assets.js` (or Turbo task) to sync `/dieter/icons/**` in consuming apps.
+- Build output: `tokyo/dieter/icons/svg/*` plus the registry (`tokyo/dieter/icons/icons.json`).
+- Build process: `pnpm --filter @ck/dieter build` (writes into `tokyo/dieter`).
 - Consumption rules:
-  - Inline SVG markup from the registry (`dieter/dist/icons.js` or JSON).
+  - Inline SVG markup from the registry (`tokyo/dieter/icons/icons.json`).
   - Bob housed icons can use local helpers (e.g., a React wrapper) but must source markup from the registry.
   - Venice embeds MUST inline SVG during SSR; client-side fetches are forbidden to protect loader budgets.
   - No ad-hoc icon bundles: update source SVGs, rebuild, copy assets.
 
 ### 1.7 Component Contracts
 
-The full integration guide (markup, behaviors, QA) lives in [dieter/dietercomponents.md](../../dieter/dietercomponents.md). Always consult it before wiring a component. Current components include:
+Component contracts live alongside source:
+- `dieter/components/<component>/<component>.spec.json` (behavior + props contract)
+- `dieter/components/<component>/<component>.html` (canonical markup)
+- `dieter/components/<component>/<component>.css` (styling contract)
 
-| Component | Purpose |
-| --- | --- |
-| Button | Primary/secondary calls to action (icon-only/text-only/icon-text). |
-| Segmented | Radio-based segmented control. |
-| Textfield | Core input field + composed variants. |
-| Dropdown | Trigger + floating surface pattern. |
-| Expander | Checkbox-driven disclosure section. |
-| Toggle | Checkbox-based switch. |
-| Tabs | Radio-based tablist with baseline indicator. |
-| Textrename | Inline editable text field with view/edit state toggle. |
+Use the DevStudio Dieter showcase to review the current component set and rendered markup.
 
 ### 1.8 Build & Distribution Workflow
 
 Whenever tokens or component CSS changes:
 
-1. Update source files in `tokens/` or `components/`.
-2. Update `dietercomponents.md` with the new contract.
-3. Update Dieter Admin fragments for previews.
-4. Run `pnpm --filter @ck/dieteradmin dev` to verify visually.
-5. Build and copy assets:
+1. Update source files in `tokens/` or `components/` (including `*.spec.json` / `*.html` contracts).
+2. Build Dieter assets into Tokyo:
    ```bash
    pnpm --filter @ck/dieter build
-   node scripts/copy-dieter-assets.js
    ```
-6. Commit changes; the consuming apps should re-run their asset copy or build step.
+3. Verify visually in DevStudio:
+   ```bash
+   pnpm --filter @clickeen/devstudio dev
+   ```
+   - Visit `http://localhost:5173/#/dieter/` or `http://localhost:5173/#/dieter-components-new/`
+4. Commit changes; consuming apps should use the rebuilt `tokyo/dieter` assets.
 
 Never hand-edit `/bob/public/dieter/**`; treat it as a generated artifact.
 
 ---
 
-## 2. Dieter Admin
+## 2. DevStudio Dieter Preview (current)
 
-Dieter Admin is the internal preview harness used for documentation and manual QA. It imports Dieter source CSS directly; it is not a production surface.
+DevStudio (`admin/`) is the preview harness for Dieter. It loads component specs/templates directly from `dieter/components/*` and renders per-component pages generated by `admin/scripts/generate-component-pages.ts`.
 
-### 2.1 Role & Scope
+### 2.1 Running & Viewing
 
-| Dieter Admin **is** | Dieter Admin **is not** |
-| --- | --- |
-| Static Vite app for previews & documentation. | A runtime bundle or component library. |
-| A safe playground for interaction demos. | A source of truth for component contracts (the CSS is). |
-| A QA checklist driver before shipping CSS. | Replacement for app-specific logic (Bob/Venice still own JS). |
+- Development: `pnpm --filter @clickeen/devstudio dev` → `http://localhost:5173`
+- Dieter showcase routes:
+  - `/#/dieter/` (curated showcases)
+  - `/#/dieter-components-new/` (generated per-component pages)
 
-### 2.2 Project Structure
+### 2.2 Source of Truth
 
-| Path | Description |
-| --- | --- |
-| `src/main.ts` | Bootstraps the shell, router, and shared renderer. |
-| `src/html/dieter-showcase/*.html` | HTML fragments for each component preview. |
-| `src/css/*` | Styles for the admin shell (never shipped). |
-| `src/data/routes.ts` | Maps slugs to showcase fragments and CSS imports. |
-| `src/data/nav.config.ts` | Sidebar grouping and ordering. |
-
-### 2.3 Running & Building
-
-- Development: `pnpm --filter @ck/dieteradmin dev` → `http://localhost:5173`
-- Production build (optional): `pnpm --filter @ck/dieteradmin build`
-
-### 2.4 Authoring / Updating Pages
-
-1. Create or edit the HTML fragment under `src/html/dieter-showcase/`.
-2. Ensure the fragment’s CSS imports are listed in `routes.ts`.
-3. Register the page in `nav.config.ts` to expose it in the sidebar.
-4. If the demo needs interaction, add local inline scripts guarded by `data-demo` hooks (admin-only; never shipped to production).
-
-### 2.5 Shared Renderer Warnings
-
-`main.ts` renders all component pages. Changes to its layout or DOM helpers affect every showcase. Always leave a warning block near the renderer:
-
-```text
-// ⚠️ Shared renderer: affects all showcase pages.
-// After editing, verify at minimum:
-// 1) Button grid renders correctly.
-// 2) Segmented layout intact.
-// 3) Textfield/Dropdown toggles.
-// 4) Textrename view/edit toggle.
-```
-
-### 2.6 QA Checklist (Admin)
-
-After modifying shared code or CSS imports, manually confirm:
-
-1. **Button** page: icon-only/icon-text/text-only grids render and respond on hover/focus.
-2. **Segmented** page: all sizes show correct rail, icons, and active states.
-3. **Textfield** page: basic and composed variants display correctly.
-4. **Dropdown** page: trigger toggles surface open/closed; icon rotates.
-5. **Expander** page: disclosure opens/closes, chevron rotates.
-6. **Toggle** page: knob animates, track color updates.
-7. **Tabs** page: underline tracks active radio.
-8. **Textrename** page: view/edit toggle works and focus is managed.
-9. **Typography/Colors** pages: tokens render without layout issues.
-
-### 2.7 Best Practices for Contributors (Human or AI)
-
-- Keep component wiring local to the fragment; shared CSS/app code stays generic.
-- When adding new demos, follow the button page pattern: spec/preview area + component preview + optional CSS/UX blocks.
-- Use inline scripts guarded by `data-demo` attributes for interaction (e.g., dropdown click handler). These scripts are admin-only and stripped from external builds.
-- Always verify markup against `dietercomponents.md`; the admin harness does not supersede the component contract.
-
-### 2.8 Keeping Admin in Sync
-
-Whenever components change:
-
-1. Update the canonical CSS in `dieter/components/`.
-2. Update the integration guide (`dietercomponents.md`).
-3. Update the admin fragment and run `pnpm --filter @ck/dieteradmin dev`.
-4. Confirm the QA checklist before committing.
+- Component contracts live in `dieter/components/<component>/<component>.spec.json` + `.html` + `.css`.
+- DevStudio is a viewer; it does not define component behavior.
 
 ---
 
@@ -432,4 +362,4 @@ Before shipping any Dieter component or widget:
 
 ---
 
-This document now supersedes older Dieter write-ups. `dietercomponents.md` remains the detailed per-component contract file; refer to both together when integrating or modifying Dieter components.
+This document now supersedes older Dieter write-ups. Per-component contracts live in `dieter/components/<component>/<component>.spec.json` and `.html`; refer to both together when integrating or modifying Dieter components.

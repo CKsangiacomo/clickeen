@@ -318,7 +318,7 @@ Layout selects the arrangement/placement of that type.
 
 When you add a new **Type** (mode) to a widget, you are effectively adding a second **miniwidget** inside the same widget root, because a Type must include the full stack:
 
-- **State shape**: new paths in `spec.json.defaults` (what exists in the state)
+- **State shape**: new paths in `spec.json` → `defaults` (what exists in the state)
 - **ToolDrawer**: controls for those paths (and `show-if` so only the active Type’s controls show)
 - **Runtime**: logic that interprets those paths (what the widget does)
 - **DOM/CSS**: elements and styling that can actually change in response
@@ -433,7 +433,7 @@ Concrete runtime binding (from `tokyo/widgets/faq/widget.client.js`):
 
 Every ToolDrawer control must be connected to the actual widget via an explicit binding. In Clickeen, a control is “real” only when:
 
-- **A. Path exists in defaults**: the control’s `path="..."` must exist under `spec.json.defaults` so the state shape is real.
+- **A. Path exists in defaults**: the control’s `path="..."` must exist under `spec.json` → `defaults` so the state shape is real.
 - **B. Widget has a target**: there is a concrete DOM node to change (via `data-role="..."`) or a variant to toggle (via `data-*` on the widget root).
 - **C. Runtime applies it**: `widget.client.js` applies the state value to one of the supported mechanisms below, and `widget.css`/DOM reflects it.
 

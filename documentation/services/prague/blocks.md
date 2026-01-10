@@ -43,9 +43,9 @@ Blocks:
 
 This is where we win (or die). The filesystem is the taxonomy.
 
-- **Folder names describe the page family**, not implementation: `widget-landing/`, `widget-features/`, `site/`, `playground/`.
+- **Folder names describe the page family**, not implementation: `widget-landing/`, `widget-templates/`, `widget-examples/`, `widget-pricing/`, `site/`, `playground/`.
 - **File names are kebab-case** and start simple: `hero.astro`, `stats.astro`, `features.astro`.
-- **Variants use a suffix** (no new naming scheme): `hero-stacked.astro`, `hero-animated.astro`, `features-compact.astro`.
+- **Variants use a suffix** (no new naming scheme): e.g. `hero-stacked.astro`, `features-compact.astro`.
 - **No CamelCase “two-word” components** like `HeroWidget.astro` or `FeatureGrid.astro`. Those scale into naming drift.
 
 Examples:
@@ -54,8 +54,9 @@ Examples:
 prague/src/blocks/site/nav/Nav.astro
 prague/src/blocks/site/footer.astro
 prague/src/blocks/widget-landing/hero.astro
+prague/src/blocks/widget-landing/stats.astro
 prague/src/blocks/widget-landing/features.astro
-prague/src/blocks/widget-landing/hero-stacked.astro
+prague/src/blocks/widget-landing/meta-faq.astro
 ```
 
 ### 2.1 Navigation
@@ -63,8 +64,8 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 `site/nav/Nav.astro` (system-owned)
 - Primary nav is derived from the URL and `resolveWidgetsMegaMenu()` (no page-authored `items[]` in the scalable path).
 - The **Widgets** nav item behaves as:
-  - Hover: opens the mega menu
-  - Click: navigates to `/{locale}/widgets/`
+  - Click/keyboard toggle: opens the mega menu (`<details>` + `<summary>`)
+  - “View all widgets” CTA links to `/{locale}/widgets/` (route is not implemented; the directory page lives at `/{locale}/`)
 - Widget secondary tabs are also derived from the URL:
   - `/[locale]/widgets/[widget]` → Overview
   - `/[locale]/widgets/[widget]/templates|examples|features|pricing`
@@ -81,7 +82,7 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 ### 2.2 Hero
 
 `widget-landing/hero`
-- Props: `{ headline: string, subheadline?: string, websiteCreative?: { widgetType: string, locale: string, height?: string, title?: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, websiteCreative?: { widgetType: string, locale: string, height?: string, title?: string } }`
 - Owns: H1 + subhead + primary/secondary CTA + **deterministic hero visual**
 
 **Contract (non-negotiable):**
@@ -151,9 +152,9 @@ prague/src/blocks/widget-landing/hero-stacked.astro
   - It must not access host cookies/storage.
   - It must identify itself as the `minibob` subject (so Bob applies the MiniBob policy: flags/caps/budgets).
   - It must pass `workspaceId` + `publicId` via the iframe URL query params (Bob loads them on mount).
-  - It may override the default `publicId` via env:
-    - `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>` (e.g. `PUBLIC_MINIBOB_PUBLIC_ID_FAQ`)
-    - fallback: `PUBLIC_MINIBOB_PUBLIC_ID`
+  - It may override the default `workspaceId` + `publicId` via env:
+    - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>` / `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>`
+    - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_PUBLIC_ID`
 
 ## 3) Page templates (composition)
 

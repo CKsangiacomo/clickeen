@@ -70,7 +70,7 @@ This taxonomy is encoded in `widget_instances.public_id` and enforced by a DB ch
 One per widget type. Used for:
 - dev sandbox editing in DevStudio/Bob
 - canonical “baseline” config to copy/clone from
-- local dev convenience mirror of `tokyo/widgets/<widgetType>/spec.json.defaults` (Bob compilation + fallbacks use Tokyo specs)
+- local dev convenience mirror of `tokyo/widgets/<widgetType>/spec.json` defaults (Bob compilation + fallbacks use Tokyo specs)
 
 **Naming**
 - `wgt_<widgetType>_main`

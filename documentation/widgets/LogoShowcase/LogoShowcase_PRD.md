@@ -527,7 +527,7 @@ This PRD is for **editor-time widget UX** (Tokyo 5 files + Bob preview). It is n
 In the editor loop, `dropdown-upload` must not persist assets. It stores an in-memory value for preview, and persistence is handled later on Save/Publish.
 
 ### Global defaults (apply to all types)
-The full defaults object (used verbatim as `spec.json.defaults`):
+The full defaults object (used verbatim as `spec.json` → `defaults`):
 
 ```json
 {

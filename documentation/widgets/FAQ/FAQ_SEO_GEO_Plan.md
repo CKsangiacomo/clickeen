@@ -4,7 +4,7 @@ This plan turns the FAQ widget into a moat:
 - **SEO**: Search Engine Optimization (Google/Bing rich results + entity understanding)
 - **GEO**: Generative Engine Optimization (AI answer extraction + citation)
 
-This doc is the committed version of the working plan (the `CurrentlyExecuting/` folder is gitignored).
+This doc is the committed version of the working plan (the `CurrentlyExecuting/` folder is gitignored). Any future files or routes are explicitly labeled as planned.
 
 See also:
 - Cross-cutting architecture: `documentation/capabilities/seo-geo.md`
@@ -131,7 +131,7 @@ Implementation location (FAQ runtime):
 Show SEO/GEO scores and generate deterministic `ops[]` to fix issues.
 
 ### SanFrancisco
-New agent:
+New agent (planned, not in repo yet):
 - `sanfrancisco/src/agents/faqOptimizer.ts`
 
 Prompt modules (kept small and typed, no prose returns):

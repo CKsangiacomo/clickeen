@@ -554,6 +554,6 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 
 ### What's Planned
 
-- Venice full SSR rendering (currently debug shell)
-- Prague marketing site
+- Venice inline embed mode (SEO/GEO) + submission/pixel wiring
+- Prague long-tail SEO surfaces (hubs/spokes/comparisons)
 - Additional widget types

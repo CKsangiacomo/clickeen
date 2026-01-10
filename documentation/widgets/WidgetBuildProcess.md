@@ -97,8 +97,8 @@ For Layout:
 
 Gate: for each Type/Layout, you can name the **DOM/CSS difference** and the **state paths** that drive it.
 
-#### Step 2 — Write `spec.json.defaults` (state shape)
-Create the full state shape:
+#### Step 2 — Write `spec.json` defaults (state shape)
+Create the full state shape under `spec.json` → `defaults`:
 - Platform globals when applicable: `stage`, `pod`, `typography`, `behavior`
 - Copilot context (cross-widget): `websiteUrl` (used by Copilot only; runtime can ignore)
 - Arrays/items defaults + piece defaults
@@ -177,5 +177,3 @@ If a control cannot be described as a row, it should not exist yet.
 - Every ToolDrawer field affects the widget immediately in preview.
 - No runtime default merges or random ID generation.
 - `node scripts/compile-all-widgets.mjs` stays green.
-
-

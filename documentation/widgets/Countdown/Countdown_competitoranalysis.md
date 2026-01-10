@@ -14,7 +14,7 @@ Canonical Clickeen PRD (what we will build): `documentation/widgets/Countdown/Co
 - **Category:** Content Display / Marketing / Urgency
 - **Competitive Target:** Complete Elfsight Countdown Timer feature set (70%+ coverage)
 - **Performance Target:** <6KB SSR (vs Elfsight 80KB+ client JS)
-- **Renderer:** Planned Venice SSR renderer (this repo snapshot has no `venice/lib/renderers/*`; Venice currently serves a safe debug shell)
+- **Renderer:** Countdown renderer is not shipped in this repo; Venice SSR embed routes are live, but there is no Countdown widget package yet
 - **Dieter Components:** Custom timer display (new component needed)
 
 ### 🎯 Feature Coverage Goal: 70%+ of Elfsight
@@ -1713,7 +1713,7 @@ Vertical stack of four Dieter icon buttons:
 
 ### Phase 1: Timer Core & Modes (4-5 days)
 - [ ] Schema implementation in Supabase
-- [ ] Venice SSR renderer base structure (TBD; current Venice is debug shell in this repo snapshot)
+- [ ] Countdown renderer base structure (TBD; Venice SSR embed is shipped, but Countdown is not)
 - [ ] Personal Countdown mode (localStorage persistence)
 - [ ] Countdown to Date mode (timezone support)
 - [ ] Number Counter mode (count-up animation)
