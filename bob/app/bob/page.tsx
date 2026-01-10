@@ -32,7 +32,7 @@ export default function BobRoutePage() {
           gap: 'var(--space-2)',
           padding: 'var(--space-2)',
           overflow: 'hidden',
-          backgroundColor: 'var(--color-system-gray-6-step5)',
+          backgroundColor: 'var(--color-system-gray-6-step3)',
         }}
       >
         <TopDrawer />

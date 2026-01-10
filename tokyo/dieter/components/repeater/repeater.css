@@ -4,7 +4,7 @@
   padding: var(--space-2);
   border: none;
   border-radius: var(--control-radius-sm, 0.25rem);
-  background: var(--color-system-gray-6);
+  background: var(--color-system-gray-6-step4);
 }
 
 .diet-repeater__icon-stash {
@@ -12,7 +12,7 @@
 }
 
 .diet-repeater[data-reorder="on"] {
-  background: var(--color-system-gray-6);
+  background: var(--color-system-indigo-5);
 }
 
 .diet-repeater__header {
@@ -76,9 +76,9 @@
   position: relative;
   padding: var(--space-1);
   display: block;
-  border: 1px solid var(--color-system-gray-6);
+  border: 1px solid var(--color-system-gray-6-step4);
   border-radius: var(--radius-3);
-  background: var(--color-system-gray-6);
+  background: var(--color-system-gray-6-step4);
   transition:
     border-color var(--duration-base, 160ms) ease,
     background-color var(--duration-base, 160ms) ease,
@@ -94,8 +94,8 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item {
-  border-color: var(--color-system-gray-6) !important;
-  background: var(--color-system-gray-6) !important;
+  border-color: var(--color-system-indigo-5) !important;
+  background: var(--color-system-indigo-5) !important;
   cursor: grab;
   user-select: none;
   position: relative;
@@ -109,13 +109,13 @@
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item:hover {
-  border-color: var(--color-system-gray-6) !important;
-  background: var(--color-system-gray-6) !important;
+  border-color: var(--color-system-indigo-5) !important;
+  background: var(--color-system-indigo-5) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragging {
-  border-color: var(--color-system-gray-6) !important;
-  background: var(--color-system-gray-6) !important;
+  border-color: var(--color-system-indigo-5) !important;
+  background: var(--color-system-indigo-5) !important;
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before,
@@ -125,7 +125,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--color-system-gray-6);
+  background: var(--color-system-indigo);
 }
 
 .diet-repeater[data-reorder="on"] .diet-repeater__item.is-dragover-top::before {
