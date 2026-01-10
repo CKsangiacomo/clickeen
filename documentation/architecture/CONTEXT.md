@@ -1,6 +1,6 @@
 # CLICKEEN — Technical Context & Reference
 
-This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `WhyClickeen.md`.
+This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
 **PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: do **not** spend cycles on backward compatibility, migrations, fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json.defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic.
 
@@ -40,7 +40,7 @@ Clickeen is designed from the ground up to be **built by AI** and **run by AI**:
 
 **All agents learn automatically** — outcomes feed back into the system, improving prompts and examples over time.
 
-See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
+See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
 
 ---
 
@@ -119,7 +119,7 @@ Examples:
 |--------|---------|---------|-----------|
 | **Prague** | Marketing site + gallery | Cloudflare Pages | `prague/` |
 | **Bob** | Widget builder app | Cloudflare Pages (Next.js) | `bob/` |
-| **Venice** | SSR embed runtime | Cloudflare Workers | `venice/` |
+| **Venice** | SSR embed runtime | Cloudflare Pages (Next.js Edge) | `venice/` |
 | **Paris** | HTTP API gateway | Cloudflare Workers | `paris/` |
 | **San Francisco** | AI Workforce OS (agents, learning) | Workers (D1/KV/R2/Queues) | `sanfrancisco/` |
 | **Michael** | Database | Supabase Postgres | `supabase/` |
@@ -138,7 +138,7 @@ Examples:
 
 **Paris** — HTTP API gateway (Cloudflare Workers). Reads/writes Michael using service role; handles instances, tokens, submissions, usage, entitlements. Stateless API layer. Browsers never call Paris directly. Issues AI Grants to San Francisco.
 
-**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`.
+**San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
 
@@ -236,7 +236,7 @@ Canonical reference:
 | Bob | ✅ Active | Compiler, ToolDrawer, Workspace, Ops engine |
 | Tokyo | ✅ Active | FAQ widget with shared modules |
 | Paris | ✅ Active | Instance API, tokens, entitlements, submissions |
-| Venice | ⚠️ Partial | Debug shell (full SSR rendering planned) |
+| Venice | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
 | Dieter | ✅ Active | 16+ components, tokens, typography |
 | Michael | ✅ Active | Supabase Postgres with RLS |
 
@@ -255,9 +255,9 @@ Canonical reference:
 ## Working with Code
 
 **Before making changes:**
-- Read `WhyClickeen.md` (strategy/vision)
-- Read `clickeen-platform-architecture.md` (system boundaries)
-- Read the relevant system PRD (`systems/{system}.md`)
+- Read `documentation/strategy/WhyClickeen.md` (strategy/vision)
+- Read `documentation/architecture/Overview.md` (system boundaries)
+- Read the relevant system doc (`documentation/services/{system}.md` or `documentation/services/prague/*.md`; San Francisco: `documentation/ai/*.md`)
 
 **Build & Dev:**
 ```bash
@@ -266,7 +266,7 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-./scripts/dev-up.sh             # Start all: Tokyo (4000), Paris (3001), Bob (3000), DevStudio (5173)
+./scripts/dev-up.sh             # Start all (local): Tokyo (4000), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ optional SF 3002)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only

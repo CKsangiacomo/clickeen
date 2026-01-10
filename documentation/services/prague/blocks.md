@@ -70,10 +70,10 @@ prague/src/blocks/widget-landing/hero-stacked.astro
   - `/[locale]/widgets/[widget]/templates|examples|features|pricing`
 
 `site/nav/widgetsMegaMenu.ts`
-- Resolves mega menu content from the canonical widget registry + each widget’s `pages/landing.md`:
-  - `headline` comes from `## Headline`
-  - `subheadline` comes from `## Subheadline`
-  - Source: `tokyo/widgets/{widget}/pages/landing.md`
+- Resolves mega menu content from the canonical widget registry + each widget’s `pages/overview.json` (hero block copy):
+  - `headline` comes from `blocks[].id=="hero" && kind=="hero"` → `copy.headline`
+  - `subheadline` comes from `blocks[].id=="hero" && kind=="hero"` → `copy.subheadline`
+  - Source: `tokyo/widgets/{widget}/pages/overview.json` (optional locale overrides under `pages/.locales/{locale}/overview.json`)
  
 `site/footer`
 - Props: `{ locale: string }`
@@ -144,7 +144,7 @@ prague/src/blocks/widget-landing/hero-stacked.astro
 - Island: the only Prague section that ships JS.
 - Responsibility: embed Bob in Minibob mode and bootstrap a demo instance.
 - Structure (non-negotiable):
-  - Stage: heading + subhead (from markdown)
+  - Stage: heading + subhead (from `tokyo/widgets/{widget}/pages/overview.json` block `minibob.copy`)
   - Pod: iframe only (Minibob takes full available width)
 - Contract:
   - It must not introduce global CSS (only block-scoped styles).
@@ -169,21 +169,10 @@ Page templates are just a list of blocks in a fixed order. Example (widget landi
 
 ## 4) Content mapping (Tokyo → Prague)
 
-Prague is **JSON-first** for canonical widget pages and uses markdown for long-tail pages.
+Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Canonical widget pages:
-  - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features}.json`
+  - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
+  - Optional per-locale overrides: `tokyo/widgets/{widget}/pages/.locales/{locale}/{page}.json`
   - Prague renders `blocks[]` by `kind` and uses `visual: true` to embed website creatives deterministically.
-- Long-tail pages (hubs/spokes/comparisons, etc.):
-  - Source of truth: `tokyo/widgets/{widget}/pages/**/*.md`
-  - Prague loads/derives block props from markdown sections (at build time) using the deterministic parser.
-
-Example keys for `landing.md`:
-- `## Headline`
-- `## Subheadline`
-- `## Stats` (list)
-- `## Steps` (list)
-- `## Features` (list)
-- `## Meta FAQ` (Q/A pairs)
-- `## CTA`
-- `## Minibob` (2 lines: heading, subhead)
+- Canonical overview is fail-fast: `overview.json` must include required blocks (`hero`, `stats`, `steps`, `features`, `metaFaq`, `cta`, `minibob`). See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.

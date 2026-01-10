@@ -1,7 +1,7 @@
 # Why Clickeen: Global Reach Strategy
 
 **STATUS: INFORMATIVE — STRATEGY & VISION**  
-**Related:** `WhyClickeen.md` (core strategy), `systems/sanfrancisco-learning.md` (AI agents)
+**Related:** `WhyClickeen.md` (core strategy), `documentation/ai/learning.md` (AI agents)
 
 ---
 

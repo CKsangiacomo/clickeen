@@ -3,8 +3,8 @@
 This document describes system boundaries, data flows, and how the platform fits together.
 
 **For definitions and glossary:** See `CONTEXT.md`
-**For strategy and vision:** See `WhyClickeen.md`
-**For system details:** See `systems/*.md`
+**For strategy and vision:** See `documentation/strategy/WhyClickeen.md`
+**For system details:** See `documentation/services/` and `documentation/ai/`
 
 For debugging reality, follow the “Debugging order” in `CONTEXT.md` (runtime code + DB schema, then deployed Cloudflare config, then docs).
 
@@ -22,7 +22,7 @@ Clickeen is designed to be **built by AI** and **run by AI**:
 
 **San Francisco is the Workforce OS** — the system that operates the AI agents who run the company.
 
-See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/sanfrancisco-infrastructure.md`
+See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
 
 ---
 
@@ -44,9 +44,9 @@ See: `systems/sanfrancisco.md`, `systems/sanfrancisco-learning.md`, `systems/san
 
 | System | Repo Path | Deploy | Responsibility | Status |
 |--------|-----------|--------|----------------|--------|
-| **Prague** | `prague/` | Cloudflare Pages | Marketing site, gallery | Placeholder |
+| **Prague** | `prague/` | Cloudflare Pages | Marketing + SEO surface | ✅ Active |
 | **Bob** | `bob/` | Cloudflare Pages | Widget builder, compiler, ToolDrawer, preview | ✅ Active |
-| **Venice** | `venice/` | Cloudflare Workers | SSR embed runtime, pixel, loader | ⚠️ Debug shell |
+| **Venice** | `venice/` | Cloudflare Pages (Next.js Edge) | SSR embed runtime, pixel, loader | ✅ Active |
 | **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
@@ -289,7 +289,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 
 Notes:
 - `envStage` is stamped into grants by Paris (`ENV_STAGE`) so San Francisco can index learning data by exposure stage.
-- San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `systems/sanfrancisco-learning.md`).
+- San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
 
 ---
 
@@ -434,7 +434,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Debug shell (renders config JSON). Full SSR rendering planned.
+**Current Status:** Shipped SSR embed assembler (`/e/:publicId`) with published-only enforcement. (Pixel/submission routes exist but Paris returns `501` in this repo snapshot.)
 
 ### Endpoints
 

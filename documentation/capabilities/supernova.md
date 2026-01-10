@@ -488,7 +488,6 @@ Clickeen's strategic moat #3 is **Design-Led Culture**. Supernova is how we weap
 
 ## References
 
-- WhyClickeen.md — Supernova as a moat
-- WidgetArchitecture.md — How widgets declare Supernova support
-- HowWeBuildWidgets.md — Implementing Supernova in a widget
-
+- `documentation/strategy/WhyClickeen.md` — Supernova as a moat
+- `documentation/widgets/WidgetArchitecture.md` — How widgets declare Supernova support
+- `documentation/widgets/HowWeBuildWidgets.md` — Implementing Supernova in a widget

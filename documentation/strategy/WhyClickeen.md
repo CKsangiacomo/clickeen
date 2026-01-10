@@ -45,7 +45,7 @@ This is Clickeen's thesis. It's new territory—and we're writing the playbook.
 
 **San Francisco (our AI orchestration service) is not a feature—it's the operating system for the company's workforce.**
 
-See: `documentation/ai/overview.md`, `ai/learning.md`, `ai/infrastructure.md`
+See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`
 
 ---
 
@@ -582,6 +582,7 @@ This is uncharted territory. The system might plateau. Agents might not generali
 ## Out of Scope Here
 
 Technical implementation details live in:
-- `CONTEXT.md` — Architecture snapshot, systems, glossary
-- `clickeen-platform-architecture.md` — System boundaries and data flows
-- `systems/*.md` — Individual system PRDs
+- `documentation/architecture/CONTEXT.md` — Architecture snapshot, systems, glossary
+- `documentation/architecture/Overview.md` — System boundaries and data flows
+- `documentation/services/` — System PRDs (Bob/Paris/Venice/Tokyo/Dieter/Michael/DevStudio/Prague)
+- `documentation/ai/` — San Francisco PRDs (overview/learning/infrastructure)

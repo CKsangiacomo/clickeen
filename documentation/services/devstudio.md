@@ -50,7 +50,7 @@ Required local env vars (DevStudio Local only):
 DevStudio Local includes a superadmin action: **Create/update website creative**.
 
 - **Dropdown options source (canonical)**: widget page specs in Tokyo (checked-in JSON)
-  - `tokyo/widgets/{widgetType}/pages/{overview|templates|examples|features}.json`
+  - `tokyo/widgets/{widgetType}/pages/{overview|templates|examples|features|pricing}.json`
   - DevStudio loads the selected `{page}.json` and lists only blocks where `visual: true`
   - Slot key is `block.id` (can contain dots; e.g. `feature.left.50`)
 - **Deterministic identity**:
