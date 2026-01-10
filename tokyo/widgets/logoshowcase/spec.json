@@ -94,21 +94,21 @@
     "behavior": { "randomOrder": false, "showBacklink": true },
     "seoGeo": { "enabled": false },
     "stage": {
-      "background": "transparent",
+      "background": "var(--color-system-gray-5)",
       "alignment": "center",
-      "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+      "canvas": { "mode": "viewport", "width": 0, "height": 0 },
       "padding": {
-        "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
-        "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+        "desktop": { "linked": true, "all": 80, "top": 80, "right": 80, "bottom": 80, "left": 80 },
+        "mobile": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 }
       }
     },
     "pod": {
-      "background": "transparent",
+      "background": "var(--color-system-white)",
       "padding": {
         "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
         "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
       },
-      "widthMode": "wrap",
+      "widthMode": "fixed",
       "contentWidth": 960,
       "radiusLinked": true,
       "radius": "4xl",

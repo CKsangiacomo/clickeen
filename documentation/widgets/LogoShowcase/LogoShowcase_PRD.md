@@ -314,7 +314,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: container padding, width mode, radius, alignment
   - **how**: Bob auto-generates Stage/Pod Layout panel; runtime applies via `CKStagePod.applyStagePod(...)`
   - **important**: Pod width mode materially changes how Types present:
-    - `pod.widthMode='wrap'` creates a centered “card/module” feel (good for Grid).
+    - `pod.widthMode='fixed'` creates a centered “card/module” feel (good for Grid).
     - `pod.widthMode='full'` makes the widget span the available width (good for Slider/Carousel/Ticker).
 
 ### Panel: Appearance (common)
@@ -422,7 +422,7 @@ If `websiteUrl` is present and policy allows it, Copilot may:
 
 #### Other panels when `grid` is selected
 - **Recommended Pod preset**:
-  - `pod.widthMode='wrap'`
+  - `pod.widthMode='fixed'`
   - `pod.contentWidth=960`
   - `pod.padding=24` (linked)
   - `pod.radius='4xl'` (linked)
@@ -597,21 +597,21 @@ The full defaults object (used verbatim as `spec.json.defaults`):
   },
   "behavior": { "randomOrder": false, "showBacklink": true },
   "stage": {
-    "background": "transparent",
+    "background": "var(--color-system-gray-5)",
     "alignment": "center",
-    "canvas": { "mode": "wrap", "width": 0, "height": 0 },
+    "canvas": { "mode": "viewport", "width": 0, "height": 0 },
     "padding": {
-      "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
-      "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
+      "desktop": { "linked": true, "all": 80, "top": 80, "right": 80, "bottom": 80, "left": 80 },
+      "mobile": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 }
     }
   },
   "pod": {
-    "background": "transparent",
+    "background": "var(--color-system-white)",
     "padding": {
       "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
       "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
     },
-    "widthMode": "wrap",
+    "widthMode": "fixed",
     "contentWidth": 960,
     "radiusLinked": true,
     "radius": "4xl",
@@ -647,7 +647,7 @@ The full defaults object (used verbatim as `spec.json.defaults`):
 
 ### Per-type default differences
 Defaults differ by Type primarily via **Pod presets** (because width/containment is part of the experience):
-- **grid**: `pod.widthMode='wrap'`, `pod.contentWidth=960`, `pod.padding=24`, `pod.radius='4xl'`
+- **grid**: `pod.widthMode='fixed'`, `pod.contentWidth=960`, `pod.padding=24`, `pod.radius='4xl'`
 - **slider**: `pod.widthMode='full'`, `pod.padding=16`, `pod.radius='none'`
 - **carousel**: `pod.widthMode='full'`, `pod.padding=16`, `pod.radius='none'`
 - **ticker**: `pod.widthMode='full'`, `pod.padding=0`, `pod.radius='none'`
