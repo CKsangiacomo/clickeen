@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "FAQ Examples",
+        "subheadline": "See real-world use cases and best practices."
+      }
+    }
+  ]
+}
+

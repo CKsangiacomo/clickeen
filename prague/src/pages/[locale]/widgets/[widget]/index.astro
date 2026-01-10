@@ -11,7 +11,7 @@ import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
 import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
-import { listWidgets, loadWidgetPageJsonForLocale, loadWidgetPageMarkdown, parseMarkdownSections, parsePipeBullets } from '../../../../lib/markdown';
+import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../../lib/markdown';
 import { listPragueLocales } from '../../../../lib/locales';
 import { resolvePragueHref } from '../../../../lib/links';
 import { pragueT } from '../../../../lib/i18n';
@@ -21,11 +21,18 @@ const { locale, widget } = Astro.params;
 export async function getStaticPaths() {
   const widgets = await listWidgets();
   const locales = listPragueLocales();
+  // Hard contract: every widget must ship 4 page JSONs (overview/templates/examples/features).
+  for (const w of widgets) {
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'overview', locale: 'en' });
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'templates', locale: 'en' });
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'examples', locale: 'en' });
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'features', locale: 'en' });
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'pricing', locale: 'en' });
+  }
   return locales.flatMap((l) => widgets.map((w) => ({ params: { locale: l, widget: w } })));
 }
 
-const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
-const overviewJson = await loadWidgetPageJsonForLocale({ widget, page: 'overview', locale });
+const overviewJson = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
 const heroCopyFromJson =
   Boolean(overviewJson)
   && typeof overviewJson === 'object'
@@ -40,11 +47,13 @@ const heroWantsCreative =
   && Array.isArray((overviewJson as any).blocks)
   && (overviewJson as any).blocks.some((b: any) => b && b.id === 'hero' && b.visual === true);
 
-const sections = parseMarkdownSections(md);
-const headline = (heroHeadlineFromJson && String(heroHeadlineFromJson)) || sections.get('headline');
-const subheadline = (heroSubheadlineFromJson && String(heroSubheadlineFromJson)) || sections.get('subheadline');
+if (!heroHeadlineFromJson || !heroSubheadlineFromJson) {
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
+}
+const headline = (heroHeadlineFromJson && String(heroHeadlineFromJson)) || '';
+const subheadline = (heroSubheadlineFromJson && String(heroSubheadlineFromJson)) || '';
 if (!headline || !subheadline) {
-  throw new Error(`[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
 }
 
 // Global CTA policy (applies across all widget pages):
@@ -56,38 +65,27 @@ const heroSecondaryCta = {
   href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
 };
 
-const statsRaw = sections.get('stats');
-const stepsRaw = sections.get('steps');
-const featuresRaw = sections.get('features');
-const metaFaqRaw = sections.get('meta faq');
-if (!statsRaw || !stepsRaw || !featuresRaw || !metaFaqRaw) {
-  throw new Error(
-    `[Prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Stats/Steps/Features/Meta FAQ)`,
-  );
-}
+const blocks = Array.isArray((overviewJson as any).blocks) ? (overviewJson as any).blocks : [];
+const byIdKind = (id: string, kind: string) => blocks.find((b: any) => b && b.id === id && b.kind === kind) ?? null;
+const statsBlock = byIdKind('stats', 'stats');
+const stepsBlock = byIdKind('steps', 'steps');
+const featuresBlock = byIdKind('features', 'features');
+const metaFaqBlock = byIdKind('metaFaq', 'metaFaq');
+const ctaBlock = byIdKind('cta', 'cta');
+const minibobBlock = byIdKind('minibob', 'minibob');
 
-const stats = parsePipeBullets(statsRaw).map(([value, label]) => ({ value, label }));
-const steps = parsePipeBullets(stepsRaw).map(([title, body]) => ({ title, body }));
-const features = parsePipeBullets(featuresRaw).map(([title, body]) => ({ title, body }));
-const metaFaq = parsePipeBullets(metaFaqRaw).map(([question, answer]) => ({ question, answer }));
+const stats = ((statsBlock as any)?.copy?.items ?? []) as { value: string; label: string }[];
+const steps = ((stepsBlock as any)?.copy?.items ?? []) as { title: string; body: string }[];
+const features = ((featuresBlock as any)?.copy?.items ?? []) as { title: string; body?: string }[];
+const metaFaq = ((metaFaqBlock as any)?.copy?.items ?? []) as { question: string; answer: string }[];
+const ctaHeadline = ((ctaBlock as any)?.copy?.headline ?? '').toString();
+const ctaSubheadline = ((ctaBlock as any)?.copy?.subheadline ?? '').toString();
+const minibobHeading = ((minibobBlock as any)?.copy?.heading ?? '').toString();
+const minibobSubhead = ((minibobBlock as any)?.copy?.subhead ?? '').toString();
 
-const ctaRaw = sections.get('cta');
-if (!ctaRaw) {
-  throw new Error(`[Prague] Missing '## CTA' in tokyo/widgets/${widget}/pages/landing.md`);
+if (!stats.length || !steps.length || !features.length || !metaFaq.length || !ctaHeadline || !ctaSubheadline || !minibobHeading || !minibobSubhead) {
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (missing required blocks: stats/steps/features/metaFaq/cta/minibob)`);
 }
-const ctaLines = ctaRaw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-if (ctaLines.length < 2) {
-  throw new Error(`[Prague] Missing '## CTA' (2 lines) in tokyo/widgets/${widget}/pages/landing.md`);
-}
-const ctaHeadline = ctaLines[0];
-const ctaSubheadline = ctaLines[1];
-
-const minibobLines = (sections.get('minibob') ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-if (minibobLines.length < 2) {
-  throw new Error(`[Prague] Missing '## Minibob' (2 lines) in tokyo/widgets/${widget}/pages/landing.md`);
-}
-const minibobHeading = minibobLines[0];
-const minibobSubhead = minibobLines[1];
 ---
 
 <Base title={`${headline} — Clickeen`} locale={locale}>

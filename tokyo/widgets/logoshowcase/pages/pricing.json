@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "Logo Showcase Pricing",
+        "subheadline": "Start free. Upgrade when you want more widgets and no branding."
+      }
+    }
+  ]
+}
+

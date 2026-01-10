@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "Logo Showcase Templates",
+        "subheadline": "Start from a polished layout — then make it yours."
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "Logo Showcase Examples",
+        "subheadline": "See common placements and use cases."
+      }
+    }
+  ]
+}
+

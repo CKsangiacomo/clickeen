@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "Logo Showcase Features",
+        "subheadline": "Fast, flexible, and designed to look great everywhere."
+      }
+    }
+  ]
+}
+

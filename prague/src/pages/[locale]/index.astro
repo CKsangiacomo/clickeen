@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Nav from '../../blocks/site/nav/Nav.astro';
 import Footer from '../../blocks/site/footer.astro';
-import { listWidgets, loadWidgetPageMarkdown, parseMarkdownSections } from '../../lib/markdown';
+import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../lib/markdown';
 import { listPragueLocales } from '../../lib/locales';
 
 const { locale } = Astro.params;
@@ -18,16 +18,19 @@ if (!widgets.length) {
 
 const widgetCards = await Promise.all(
   widgets.map(async (widget) => {
-    const md = await loadWidgetPageMarkdown({ widget, page: 'landing' });
-    const sections = parseMarkdownSections(md);
-    const headline = sections.get('headline');
-    const subheadline = sections.get('subheadline');
+    const overview = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
+    const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
+    const hero = blocks ? blocks.find((b: any) => b && b.id === 'hero' && b.kind === 'hero') : null;
+    const copy = hero && typeof hero === 'object' ? (hero as any).copy : null;
+    const headline = copy && typeof copy === 'object' ? String((copy as any).headline ?? '') : '';
+    const subheadline = copy && typeof copy === 'object' ? String((copy as any).subheadline ?? '') : '';
     if (!headline || !subheadline) {
-      throw new Error(`[prague] Missing required sections in tokyo/widgets/${widget}/pages/landing.md (Headline/Subheadline)`);
+      throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
     }
     return { widget, headline, subheadline };
   }),
 );
+const widgetCardsSafe = widgetCards.filter(Boolean) as NonNullable<(typeof widgetCards)[number]>[];
 ---
 
 <Base title="Clickeen" locale={locale}>
@@ -49,7 +52,7 @@ const widgetCards = await Promise.all(
         </div>
 
         <div class="ck-stack" style="gap: var(--space-4);">
-          {widgetCards.map((w) => (
+          {widgetCardsSafe.map((w) => (
             <a
               class="ck-card"
               href={`/${locale}/widgets/${w.widget}`}

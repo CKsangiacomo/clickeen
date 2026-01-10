@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "hero",
+      "kind": "hero",
+      "copy": {
+        "headline": "FAQ Pricing",
+        "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
+      }
+    }
+  ]
+}
+

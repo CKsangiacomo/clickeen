@@ -3,7 +3,7 @@ import Base from '../../../../../layouts/Base.astro';
 import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import WidgetSubnav from '../../../../../blocks/site/nav/WidgetSubnav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
-import { listWidgets, listWidgetPages } from '../../../../../lib/markdown';
+import { listWidgets, listWidgetPages, loadRequiredWidgetPageJsonForLocale } from '../../../../../lib/markdown';
 import { listPragueLocales } from '../../../../../lib/locales';
 import { pragueT } from '../../../../../lib/i18n';
 
@@ -22,6 +22,11 @@ export async function getStaticPaths() {
 
   for (const w of widgets) {
     const pages = await listWidgetPages(w);
+    // Hard contract: every marketed widget must have all 4 page JSONs.
+    await loadRequiredWidgetPageJsonForLocale({ widget: w, page: 'overview', locale: 'en' });
+    for (const p of pages) {
+      await loadRequiredWidgetPageJsonForLocale({ widget: w, page: p, locale: 'en' });
+    }
     for (const l of locales) {
       for (const p of pages) out.push({ params: { locale: l, widget: w, page: p } });
     }
@@ -37,6 +42,8 @@ function titleCase(s: string) {
 
 const widgetLabel = titleCase(widget);
 const pageLabel = titleCase(page);
+// Ensure the page contract exists (fail-fast) even though the UI is currently a stub.
+await loadRequiredWidgetPageJsonForLocale({ widget, page, locale });
 ---
 
 <Base title={`${widgetLabel} — ${pageLabel} — Clickeen`} locale={locale}>

@@ -12,11 +12,6 @@ function isRealWidgetDir(name: string): boolean {
   return true;
 }
 
-export async function loadWidgetPageMarkdown(opts: { widget: string; page: string }): Promise<string> {
-  const filePath = path.join(REPO_ROOT, 'tokyo', 'widgets', opts.widget, 'pages', `${opts.page}.md`);
-  return await fs.readFile(filePath, 'utf8');
-}
-
 export async function loadWidgetPageJson(opts: { widget: string; page: string }): Promise<unknown | null> {
   const filePath = path.join(REPO_ROOT, 'tokyo', 'widgets', opts.widget, 'pages', `${opts.page}.json`);
   try {
@@ -46,9 +41,20 @@ export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: 
     const raw = await fs.readFile(filePath, 'utf8');
     return JSON.parse(raw) as unknown;
   } catch (err: any) {
-    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) return null;
+    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) {
+      // Locale overrides are optional; fall back to the canonical (en) page JSON.
+      return await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+    }
     throw err;
   }
+}
+
+export async function loadRequiredWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown> {
+  const json = await loadWidgetPageJsonForLocale(opts);
+  if (!json) {
+    throw new Error(`[prague] Missing tokyo/widgets/${opts.widget}/pages/${opts.page}.json (required)`);
+  }
+  return json;
 }
 
 export async function listWidgets(): Promise<string[]> {
@@ -64,43 +70,6 @@ export async function listWidgetPages(widget: string): Promise<string[]> {
   if (!isRealWidgetDir(widget)) {
     throw new Error(`[prague] Invalid widget directory: ${widget}`);
   }
-  const dir = path.join(TOKYO_WIDGETS_DIR, widget, 'pages');
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  return entries
-    .filter((e) => e.isFile() && e.name.endsWith('.md'))
-    .map((e) => e.name.slice(0, -3))
-    .filter((slug) => slug !== 'landing')
-    .sort();
-}
-
-export function parseMarkdownSections(md: string): Map<string, string> {
-  // Extremely small, deterministic parser:
-  // - Split by `## {Heading}`
-  // - Store lowercase keys with spaces collapsed.
-  // - Values are raw text trimmed (markdown rendering comes later block-by-block).
-  const out = new Map<string, string>();
-  const normalized = md.replace(/\r\n/g, '\n');
-  const parts = normalized.split(/\n##\s+/g);
-  for (let i = 1; i < parts.length; i++) {
-    const part = parts[i];
-    const firstNewline = part.indexOf('\n');
-    const rawKey = (firstNewline >= 0 ? part.slice(0, firstNewline) : part).trim();
-    const key = rawKey.toLowerCase().replace(/\s+/g, ' ');
-    const value = (firstNewline >= 0 ? part.slice(firstNewline + 1) : '').trim();
-    if (key) out.set(key, value);
-  }
-  return out;
-}
-
-export function parsePipeBullets(value: string): string[][] {
-  // Deterministic list parser for our Prague markdown contract.
-  // Each list item is a bullet with optional `|`-separated fields:
-  // - `- A | B`
-  // - `- A | B | C`
-  return value
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('- '))
-    .map((line) => line.slice(2).split('|').map((part) => part.trim()));
+  // Prague subpages are a fixed product surface (no markdown scanning).
+  return ['templates', 'examples', 'features', 'pricing'];
 }
