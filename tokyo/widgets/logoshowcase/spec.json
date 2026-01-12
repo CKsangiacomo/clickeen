@@ -14,7 +14,7 @@
           {
             "id": "l1",
             "name": "Acme",
-            "logoFill": "",
+            "logoFill": "transparent",
             "href": "",
             "targetBlank": false,
             "nofollow": false,
@@ -78,6 +78,8 @@
           "alpha": 18
         }
       },
+      "titleColor": "var(--color-system-black)",
+      "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
       "ctaBackground": "var(--color-system-blue)",
       "ctaTextColor": "var(--color-system-white)",
       "ctaRadius": "md"
@@ -165,7 +167,7 @@
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Strips' />",
-    "    <tooldrawer-field class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; default-item=&apos;{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}&apos; template=&apos;&lt;tooldrawer-field type=&quot;dropdown-upload&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.logoFill&quot; label=&quot;Logo&quot; placeholder=&quot;Upload logo&quot; accept=&quot;image/*,.svg&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.name&quot; label=&quot;Name&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.caption&quot; label=&quot;Caption (hover)&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.href&quot; label=&quot;Link URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.targetBlank&quot; label=&quot;Open in new tab&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.nofollow&quot; label=&quot;Nofollow&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.alt&quot; label=&quot;Alt text&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.title&quot; label=&quot;Title (tooltip)&quot; /&gt;&apos; /&gt;' />",
+    "    <tooldrawer-field class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; default-item=&apos;{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}&apos; template=&apos;&lt;tooldrawer-field type=&quot;dropdown-upload&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.logoFill&quot; label=&quot;Logo&quot; placeholder=&quot;Upload logo&quot; accept=&quot;image/*,.svg&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.name&quot; label=&quot;Name&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.caption&quot; label=&quot;Caption (hover)&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.href&quot; label=&quot;Link URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.targetBlank&quot; label=&quot;Open in new tab&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.nofollow&quot; label=&quot;Nofollow&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.alt&quot; label=&quot;Alt text&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.title&quot; label=&quot;Title (tooltip)&quot; /&gt;&apos; /&gt;' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"type == 'grid'\">",
     "    <tooldrawer-eyebrow text='Grid' />",
@@ -232,6 +234,11 @@
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Tile bottom-left radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field type='dropdown-border' size='md' path='appearance.itemCard.border' label='Tile border' value='{{appearance.itemCard.border}}' />",
     "    <tooldrawer-field type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Tile shadow' value='{{appearance.itemCard.shadow}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Header' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.titleColor' label='Title color' value='{{appearance.titleColor}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.textColor' label='Text color' value='{{appearance.textColor}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='CTA' />",

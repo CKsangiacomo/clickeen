@@ -105,6 +105,8 @@ body {
   --ls-item-border-color: transparent;
   --ls-item-shadow: none;
   --ls-item-radius: var(--control-radius-4xl);
+  --ls-title-color: var(--typo-title-color);
+  --ls-text-color: var(--typo-body-color);
   --ls-cta-bg: var(--color-system-blue);
   --ls-cta-fg: var(--color-system-white);
   --ls-cta-radius: var(--control-radius-md);
@@ -132,8 +134,18 @@ body {
   gap: var(--space-4);
 }
 
+.ck-logoshowcase__header[data-cta='false'] {
+  grid-template-columns: 1fr;
+}
+
 .ck-logoshowcase__header-text {
   min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .ck-logoshowcase__header {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ck-logoshowcase__header[data-align='center'],
@@ -164,7 +176,7 @@ body {
   font-weight: var(--typo-title-weight, 700);
   font-size: var(--typo-title-size, var(--fs-20));
   line-height: var(--lh-tight);
-  color: var(--typo-title-color);
+  color: var(--ls-title-color, var(--typo-title-color));
 }
 
 .ck-logoshowcase__subtitle {
@@ -174,7 +186,7 @@ body {
   font-weight: var(--typo-body-weight, 400);
   font-size: var(--typo-body-size, var(--fs-14));
   line-height: var(--lh-body);
-  color: var(--typo-body-color);
+  color: var(--ls-text-color, var(--typo-body-color));
 }
 
 .ck-logoshowcase__subtitle a {
@@ -366,6 +378,15 @@ body {
   color: inherit;
 }
 
+a.ck-logoshowcase__logo {
+  cursor: pointer;
+}
+
+.ck-logoshowcase__logo:focus-visible {
+  outline: 2px solid var(--color-system-blue);
+  outline-offset: 2px;
+}
+
 .ck-logoshowcase__logo-visual {
   width: 100%;
   height: var(--ls-logo-h);
@@ -403,6 +424,11 @@ body {
   transform: translateY(0);
 }
 
+.ck-logoshowcase__logo:focus-visible .ck-logoshowcase__logo-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Slider navigation */
 .ck-logoshowcase__nav {
   margin-top: var(--space-3);
@@ -410,6 +436,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
+}
+
+.ck-logoshowcase__nav[data-dots='false'] {
+  justify-content: space-between;
+  width: 100%;
 }
 
 .ck-logoshowcase__arrow.diet-btn-ic {

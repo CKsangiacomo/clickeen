@@ -38,8 +38,8 @@ Content:
 - Strips / Logos:
   - `strips[]` (array)
   - `strips[].logos[]` (array)
-  - `strips[].logos[].name` (string)
-  - `strips[].logos[].logoFill` (string URL; editor-time often `blob:`; published often `https://...`)
+- `strips[].logos[].name` (string)
+- `strips[].logos[].logoFill` (string CSS fill from `dropdown-upload`, e.g. `url("...") center / contain no-repeat` or `transparent`)
   - `strips[].logos[].caption` (string; hover label; falls back to `name` if empty)
   - `strips[].logos[].href` (string; only valid `http(s)://` becomes clickable)
   - `strips[].logos[].targetBlank` (boolean)
@@ -79,6 +79,9 @@ Appearance:
   - `appearance.itemCard.radius|radiusTL|radiusTR|radiusBR|radiusBL` (radius token, e.g. `none|2xl|4xl|6xl|10xl`)
   - `appearance.itemCard.border` (object; Dieter `dropdown-border` schema)
   - `appearance.itemCard.shadow` (object; Dieter `dropdown-shadow` schema)
+- Header colors:
+  - `appearance.titleColor` (string; CSS fill)
+  - `appearance.textColor` (string; CSS fill)
 - CTA appearance:
   - `appearance.ctaBackground` (string; CSS fill)
   - `appearance.ctaTextColor` (string; CSS fill)

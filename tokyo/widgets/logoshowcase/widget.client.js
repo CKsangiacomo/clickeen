@@ -201,6 +201,9 @@
       throw new Error('[LogoShowcase] state.appearance.itemCard.shadow.alpha must be 0..100');
     }
 
+    assertString(state.appearance.titleColor, 'state.appearance.titleColor');
+    assertString(state.appearance.textColor, 'state.appearance.textColor');
+
     assertString(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
     assertString(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
     assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
@@ -376,6 +379,9 @@
           })();
     lsRoot.style.setProperty('--ls-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
 
+    lsRoot.style.setProperty('--ls-title-color', state.appearance.titleColor);
+    lsRoot.style.setProperty('--ls-text-color', state.appearance.textColor);
+
     lsRoot.style.setProperty('--ls-cta-bg', state.appearance.ctaBackground);
     lsRoot.style.setProperty('--ls-cta-fg', state.appearance.ctaTextColor);
     lsRoot.style.setProperty('--ls-cta-radius', tokenizeRadius(state.appearance.ctaRadius));
@@ -395,6 +401,7 @@
 
   function applyCta(state) {
     ctaEl.hidden = state.cta.enabled !== true;
+    headerEl.dataset.cta = state.cta.enabled === true ? 'true' : 'false';
     ctaEl.setAttribute('data-variant', state.cta.style);
     ctaEl.textContent = state.cta.label;
 
@@ -628,6 +635,8 @@
     nextBtn.hidden = cfg.showArrows !== true;
     dotsEl.hidden = cfg.showDots !== true;
     navEl.hidden = cfg.showArrows !== true && cfg.showDots !== true;
+    navEl.dataset.dots = cfg.showDots === true ? 'true' : 'false';
+    navEl.dataset.arrows = cfg.showArrows === true ? 'true' : 'false';
 
     let hovering = false;
     const onEnter = () => {
