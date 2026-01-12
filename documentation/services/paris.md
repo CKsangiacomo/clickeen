@@ -90,6 +90,11 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `PUT /api/workspaces/:workspaceId/instance/:publicId` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
 - `POST /api/workspaces/:workspaceId/website-creative` — Ensures a website creative exists for that workspace (intentionally **local-only**; not a cloud-dev workflow).
 
+### Entitlements + limits (v1)
+- Paris computes entitlements from `config/entitlements.matrix.json` using `subject` + `workspaces.tier`.
+- On create/publish, Paris loads `tokyo/widgets/{widget}/limits.json` and rejects configs that violate caps/flags.
+- Budgets are per-session and enforced in Bob; Paris only enforces caps/flags at the product boundary.
+
 # Paris — HTTP API Service (Phase-1)
 
 ## Purpose

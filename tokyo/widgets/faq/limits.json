@@ -1,0 +1,46 @@
+{
+  "v": 1,
+  "limits": [
+    {
+      "kind": "flag",
+      "key": "seoGeo.enabled",
+      "path": "seoGeo.enabled",
+      "mode": "boolean",
+      "deny": true,
+      "sanitizeTo": false,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "branding.remove",
+      "path": "behavior.showBacklink",
+      "mode": "boolean",
+      "deny": false,
+      "sanitizeTo": true,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "media.images.enabled",
+      "path": "behavior.displayImages",
+      "mode": "boolean",
+      "deny": true,
+      "sanitizeTo": false,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "media.videos.enabled",
+      "path": "behavior.displayVideos",
+      "mode": "boolean",
+      "deny": true,
+      "sanitizeTo": false,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    { "kind": "cap", "key": "list.primary.max", "path": "sections[]", "metric": "count" },
+    { "kind": "cap", "key": "list.secondary.rich.max", "path": "sections[].faqs[]", "metric": "count" },
+    { "kind": "cap", "key": "list.secondary.rich.total.max", "path": "sections[].faqs[]", "metric": "count-total" },
+    { "kind": "cap", "key": "text.question.max", "path": "sections[].faqs[].question", "metric": "chars" },
+    { "kind": "cap", "key": "text.answer.max", "path": "sections[].faqs[].answer", "metric": "chars" }
+  ]
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { compileWidgetServer } from '../../../../../lib/compiler.server';
 import type { RawWidget } from '../../../../../lib/compiler.shared';
 import { requireTokyoUrl } from '../../../../../lib/compiler/assets';
+import { parseLimitsSpec } from '@clickeen/ck-policy';
 
 export const runtime = 'edge';
 
@@ -33,7 +34,19 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ widgetname
 
     const widgetJson = (await res.json()) as RawWidget;
     const compiled = await compileWidgetServer(widgetJson);
-    return NextResponse.json(compiled, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    const limitsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/limits.json`;
+    let limits = null;
+    const limitsRes = await fetch(limitsUrl, { cache: 'no-store' });
+    if (limitsRes.ok) {
+      limits = parseLimitsSpec(await limitsRes.json());
+    } else if (limitsRes.status !== 404) {
+      return NextResponse.json(
+        { error: `[Bob] Failed to fetch widget limits from Tokyo (${limitsRes.status} ${limitsRes.statusText})` },
+        { status: 502, headers: { 'Access-Control-Allow-Origin': '*' } },
+      );
+    }
+
+    return NextResponse.json({ ...compiled, limits }, { headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(

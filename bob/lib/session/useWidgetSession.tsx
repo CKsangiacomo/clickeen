@@ -14,8 +14,8 @@ import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
-import type { Policy } from '@clickeen/ck-policy';
-import { can, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
+import type { BudgetDecision, Policy } from '@clickeen/ck-policy';
+import { can, canConsume, consume, evaluateLimits, sanitizeConfig, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
 import { persistConfigAssetsToTokyo } from '../assets/persistConfigAssetsToTokyo';
 
 type UpdateMeta = {
@@ -131,6 +131,21 @@ function resolveDevPolicy(profile: SubjectMode): Policy {
   return resolveCkPolicy({ profile, role: 'editor' });
 }
 
+function isUploadValue(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  return trimmed.startsWith('blob:') || trimmed.startsWith('data:');
+}
+
+function countUploadOps(ops: WidgetOp[]): number {
+  return ops.reduce((count, op) => {
+    if (!op || typeof op !== 'object') return count;
+    if (op.op !== 'set') return count;
+    if (!isUploadValue((op as any).value)) return count;
+    return count + 1;
+  }, 0);
+}
+
 function useWidgetSessionInternal() {
   const initialSubjectMode = resolveSubjectModeFromUrl();
   const initialPolicy = resolveDevPolicy(initialSubjectMode);
@@ -188,87 +203,17 @@ function useWidgetSessionInternal() {
         return result;
       };
 
-      const denyCap = (opIndex: number, path: string | undefined, capKey: string, max: number) =>
-        denyOps(opIndex, path, {
-          reasonKey: 'coreui.upsell.reason.capReached',
-          detail: `${capKey} reached (max=${max}).`,
-        });
+      const editsBudget = state.policy.budgets['budget.edits'];
+      if (editsBudget) {
+        const decision = canConsume(state.policy, 'budget.edits', 1);
+        if (!decision.ok) return denyOps(0, ops[0]?.path, decision);
+      }
 
-      for (let idx = 0; idx < ops.length; idx += 1) {
-        const op = ops[idx] as any;
-        if (!op || typeof op !== 'object') continue;
-
-        if (op.op === 'set' && op.path === 'seoGeo.enabled' && op.value === true) {
-          const decision = can(state.policy, 'embed.seoGeo.toggle');
-          if (!decision.allow) return denyOps(idx, 'seoGeo.enabled', decision);
-        }
-
-        if (op.op === 'insert' && op.path === 'sections') {
-          const currentSections = Array.isArray((state.instanceData as any).sections)
-            ? ((state.instanceData as any).sections as unknown[]).length
-            : 0;
-          const decision = can(state.policy, 'widget.faq.section.add', { currentSections });
-          if (!decision.allow) return denyOps(idx, op.path, decision);
-        }
-
-        if (op.op === 'insert' && typeof op.path === 'string' && /^sections\\.(\\d+)\\.faqs$/.test(op.path)) {
-          const match = op.path.match(/^sections\\.(\\d+)\\.faqs$/);
-          const sectionIndex = match ? Number(match[1]) : -1;
-          const sections = Array.isArray((state.instanceData as any).sections)
-            ? ((state.instanceData as any).sections as any[])
-            : [];
-          const currentQaInSection =
-            sectionIndex >= 0 && sectionIndex < sections.length && Array.isArray(sections[sectionIndex]?.faqs)
-              ? sections[sectionIndex].faqs.length
-              : 0;
-          const currentQaTotal = sections.reduce(
-            (sum, section) => sum + (Array.isArray(section?.faqs) ? section.faqs.length : 0),
-            0
-          );
-          const decision = can(state.policy, 'widget.faq.qa.add', { currentQaInSection, currentQaTotal });
-          if (!decision.allow) return denyOps(idx, op.path, decision);
-        }
-
-        // Dieter array controls (object-manager/repeater) mutate arrays via `set` of the full array value
-        // (not `insert`), so we must enforce caps on the resulting array length (fail-closed).
-        if (op.op === 'set' && op.path === 'sections' && Array.isArray(op.value)) {
-          const max = state.policy.caps['widget.faq.sections.max'];
-          if (typeof max === 'number' && Number.isFinite(max) && op.value.length > max) {
-            return denyCap(idx, op.path, 'widget.faq.sections.max', max);
-          }
-        }
-
-        if (op.op === 'set' && typeof op.path === 'string' && Array.isArray(op.value)) {
-          const matchDot = op.path.match(/^sections\.(\d+)\.faqs$/);
-          const matchBracket = op.path.match(/^sections\[(\d+)\]\.faqs$/);
-          const sectionIndex = matchDot ? Number(matchDot[1]) : matchBracket ? Number(matchBracket[1]) : -1;
-          if (sectionIndex >= 0) {
-            const sections = Array.isArray((state.instanceData as any).sections)
-              ? ((state.instanceData as any).sections as any[])
-              : [];
-            const currentQaTotal = sections.reduce(
-              (sum, section) => sum + (Array.isArray(section?.faqs) ? section.faqs.length : 0),
-              0
-            );
-            const currentQaInSection =
-              sectionIndex >= 0 && sectionIndex < sections.length && Array.isArray(sections[sectionIndex]?.faqs)
-                ? sections[sectionIndex].faqs.length
-                : 0;
-
-            const nextQaInSection = (op.value as unknown[]).length;
-            const nextQaTotal = currentQaTotal - currentQaInSection + nextQaInSection;
-
-            const maxTotal = state.policy.caps['widget.faq.qa.max'];
-            if (typeof maxTotal === 'number' && Number.isFinite(maxTotal) && nextQaTotal > maxTotal) {
-              return denyCap(idx, op.path, 'widget.faq.qa.max', maxTotal);
-            }
-
-            const maxPerSection = state.policy.caps['widget.faq.qaPerSection.max'];
-            if (typeof maxPerSection === 'number' && Number.isFinite(maxPerSection) && nextQaInSection > maxPerSection) {
-              return denyCap(idx, op.path, 'widget.faq.qaPerSection.max', maxPerSection);
-            }
-          }
-        }
+      const uploadCount = countUploadOps(ops);
+      const uploadsBudget = state.policy.budgets['budget.uploads'];
+      if (uploadCount > 0 && uploadsBudget) {
+        const decision = canConsume(state.policy, 'budget.uploads', uploadCount);
+        if (!decision.ok) return denyOps(0, ops[0]?.path, decision);
       }
 
       const applied = applyWidgetOps({
@@ -282,6 +227,17 @@ function useWidgetSessionInternal() {
         return applied;
       }
 
+      const violations = evaluateLimits({
+        config: applied.data,
+        limits: compiled.limits ?? null,
+        policy: state.policy,
+        context: 'ops',
+      });
+      if (violations.length > 0) {
+        const first = violations[0];
+        return denyOps(0, first.path, { reasonKey: first.reasonKey, detail: first.detail });
+      }
+
       setState((prev) => ({
         ...prev,
         undoSnapshot: prev.instanceData,
@@ -289,6 +245,12 @@ function useWidgetSessionInternal() {
         isDirty: true,
         error: null,
         upsell: null,
+        policy: (() => {
+          let next = prev.policy;
+          if (editsBudget) next = consume(next, 'budget.edits', 1);
+          if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads', uploadCount);
+          return next;
+        })(),
         lastUpdate: {
           source: 'ops',
           path: ops[0]?.path || '',
@@ -380,11 +342,12 @@ function useWidgetSessionInternal() {
         if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
       }
 
-      if (nextPolicy.flags['embed.seoGeo.enabled'] !== true) {
-        const asAny = resolved as any;
-        if (!asAny.seoGeo || typeof asAny.seoGeo !== 'object') asAny.seoGeo = {};
-        asAny.seoGeo.enabled = false;
-      }
+      resolved = sanitizeConfig({
+        config: resolved,
+        limits: compiled.limits ?? null,
+        policy: nextPolicy,
+        context: 'load',
+      });
 
       setState((prev) => ({
         ...prev,
@@ -607,6 +570,35 @@ function useWidgetSessionInternal() {
     []
   );
 
+  const consumeBudget = useCallback(
+    (key: string, amount = 1): BudgetDecision => {
+      const budget = state.policy.budgets[key];
+      if (!budget) return { ok: true, nextUsed: 0 };
+
+      const decision = canConsume(state.policy, key, amount);
+      if (!decision.ok) {
+        setState((prev) => ({
+          ...prev,
+          error: null,
+          upsell: {
+            reasonKey: decision.reasonKey,
+            detail: decision.detail,
+            cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+          },
+        }));
+        return decision;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        policy: consume(prev.policy, key, amount),
+        upsell: null,
+      }));
+      return decision;
+    },
+    [state.policy]
+  );
+
   const setPreview = useCallback((updates: Partial<PreviewSettings>) => {
     setState((prev) => ({
       ...prev,
@@ -721,6 +713,7 @@ function useWidgetSessionInternal() {
       setSelectedPath,
       setPreview,
       loadInstance,
+      consumeBudget,
       setCopilotThread,
       updateCopilotThread,
     }),
@@ -734,6 +727,7 @@ function useWidgetSessionInternal() {
       loadInstance,
       setPreview,
       setSelectedPath,
+      consumeBudget,
       setCopilotThread,
       updateCopilotThread,
     ]

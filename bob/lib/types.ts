@@ -3,6 +3,8 @@
  * These mirror the plan’s canonical panel IDs so session + UI stay in sync.
  */
 
+import type { LimitsSpec } from '@clickeen/ck-policy';
+
 export type PanelId = string;
 
 export interface CompiledPanel {
@@ -50,6 +52,7 @@ export interface CompiledWidget {
   defaults: Record<string, unknown>;
   panels: CompiledPanel[];
   controls: CompiledControl[];
+  limits?: LimitsSpec | null;
   assets: {
     htmlUrl: string;
     cssUrl: string;

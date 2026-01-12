@@ -1,74 +1,29 @@
-### Subject Policy — Flags / Caps / Budgets (Matrices)
+### Entitlements Mapping — Widget Template
 
-X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+Tier values live in **one global matrix**:
+- `config/entitlements.matrix.json`
 
-Use ASCII matrices in code blocks (fixed-width) so columns don’t wrap.
+Each widget maps those keys to its state in:
+- `tokyo/widgets/{widget}/limits.json`
 
-#### Matrix A — Flags (ALLOW/BLOCK)
+Use a fixed-width mapping table in a code block so it reads cleanly.
 
-```text
-Legend: A=ALLOW, B=BLOCK
-
-Row            | DS | MB | F  | T1 | T2 | T3
--------------- |----|----|----|----|----|----
-seoGeoEnabled  | A  | B  | B  | A  | A  | A
-removeBranding | A  | B  | B  | A  | A  | A
-websiteUrlAllowed | A | B  | A  | A  | A  | A
-```
-
-**Flag key (details)**
+#### Limits Mapping (per widget)
 
 ```text
-Flag key
-Row            | Path                        | Enforcement | Upsell | Meaning
--------------- | --------------------------- | ----------- | ------ | -------------------------
-seoGeoEnabled  | seoGeo.enabled              | OPS+LOAD    | UP     | (example) SEO/GEO optimization toggle
-removeBranding | behavior.showBacklink=false | UI+OPS      | UP     | (example) Remove branding
-websiteUrlAllowed | websiteUrl               | UI+OPS      | UP     | (example) Website URL for Copilot/AI content generation
+Key                      | Kind   | Path(s)                         | Metric/Mode         | Enforcement  | Upsell
+------------------------ | ------ | ------------------------------- | ------------------- | ------------ | ------
+seoGeo.enabled           | flag   | seoGeo.enabled                  | boolean (deny true) | ops+load+pub | UP
+branding.remove          | flag   | behavior.showBacklink           | boolean (deny false)| ops+load+pub | UP
+list.primary.max         | cap    | sections[]                      | count               | ops+pub      | UP
+list.secondary.rich.max  | cap    | sections[].faqs[]               | count               | ops+pub      | UP
+text.question.max        | cap    | sections[].faqs[].question      | chars               | ops+pub      | UP
+budget.copilot.turns     | budget | (consumed on Copilot send)      | per prompt          | session      | UP
+budget.uploads           | budget | (consumed on file pick)         | per file            | session      | UP
 ```
 
-#### Matrix B — Caps (numbers)
-
-```text
-Legend: ∞ means “no cap”
-
-Row      |  DS |  MB |   F |  T1 |  T2 |  T3
--------- |-----|-----|-----|-----|-----|-----
-maxItems |   ∞ |   1 |   2 |  10 |   ∞ |   ∞
-```
-
-**Cap key (details)**
-
-```text
-Cap key
-Row      | Path       | Enforcement  | Violation | Upsell | Meaning
--------- | ---------- | ------------ | --------- | ------ | -------------------------
-maxItems | sections[] | OPS(insert)  | REJECT    | UP     | (example) Max sections
-```
-
-#### Matrix C — Budgets (numbers)
-
-```text
-Legend: ∞ means “no budget limit”
-
-Row          |  DS |  MB |   F |  T1 |  T2 |  T3
------------- |-----|-----|-----|-----|-----|-----
-copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
-edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
-uploads      |   ∞ |   5 |   ∞ |   ∞ |   ∞ |   ∞
-```
-
-**Budget key (details)**
-
-Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
-
-```text
-Budget key
-Row          | Consumed when         | Counts as          | Upsell | Notes
------------- | --------------------- | ------------------ | ------ | -------------------------
-copilotTurns | Copilot prompt submit | 1 per user prompt  | UP     | (example)
-edits        | any successful edit   | 1 per state change | UP     | continue editing your widget by creating a free account
-uploads      | choose file (if widget has uploads) | 1 per file chosen | UP | (example)
-```
-
+Notes:
+- **Flags**: define deny value + optional sanitize on load (e.g., force false/empty).
+- **Caps**: enforce on ops + publish; use `count-total` when you need an aggregate.
+- **Budgets**: per-session counters; enforced in editor runtime (Bob).
 

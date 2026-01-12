@@ -40,32 +40,26 @@ Rule: **Type and Layout are the only top-level variant axes.** Everything else i
 Before implementing a widget, the PRD must exist and must be complete.
 
 **Policy rule (durable):**
-- Widgets are implemented and tested with **everything enabled** in the editor (DevStudio / highest-tier policy profile).
-- The PRD must define the widget’s **Subject Policy** *before code is written*, using these **six policy profiles**:
-  - `DevStudio`, `MiniBob`, `Free`, `Tier 1`, `Tier 2`, `Tier 3`
-- The PRD must include **three matrices** (X-axis = profiles, Y-axis = items):
-  - **Flags matrix**: ALLOW/BLOCK per profile
-  - **Caps matrix**: numeric caps per profile (use `∞` for “no cap”)
-  - **Budgets matrix**: numeric budgets per profile (use `∞` for “no budget limit”)
-- The PRD must also include a **Key table** under each matrix (the “truth table”):
-  - For flags: meaning + state path + enforcement point + **upsell marker (UP or —)**
-  - For caps: meaning + state path + enforcement point + violation rule + **upsell marker (UP or —)**
-  - For budgets: meaning + what consumes it + counting rule + **upsell marker (UP or —)**
+- Widgets are implemented and tested with **everything enabled** in the editor (DevStudio / highest-tier profile).
+- Tier values live in a single global matrix: `config/entitlements.matrix.json`.
+- Widget-specific enforcement lives in `tokyo/widgets/{widget}/limits.json` (paths + metrics + enforcement points).
+- The PRD must declare **which entitlement keys** the widget uses and **how they map to state paths**.
+- Budgets are **per-session counters**; caps/flags are enforced on ops + publish.
 
-**Formatting rule (so it reads like a real matrix):**
-- Do not use wide Markdown tables for the matrices (they wrap and stop looking like matrices).
-- Use fixed-width ASCII matrices inside code blocks, like:
+**Formatting rule (limits mapping):**
+- Do not use wide Markdown tables (they wrap and stop reading like a matrix).
+- Use a fixed-width mapping table in a code block:
 
 ```text
-Legend: A=ALLOW, B=BLOCK
-
-Row            | DS | MB | F  | T1 | T2 | T3
--------------- |----|----|----|----|----|----
-seoGeoEnabled  | A  | B  | B  | A  | A  | A
-removeBranding | A  | B  | B  | A  | A  | A
+Key                      | Kind  | Path(s)                         | Metric/Mode      | Enforcement | Upsell
+------------------------ | ----- | ------------------------------- | ---------------- | ----------- | ------
+seoGeo.enabled           | flag  | seoGeo.enabled                  | boolean (deny T) | ops+load+pub| UP
+list.primary.max         | cap   | sections[]                      | count            | ops+pub     | UP
+text.question.max        | cap   | sections[].faqs[].question      | chars            | ops+pub     | UP
+budget.copilot.turns     | budget| (consumed in Copilot send)      | per prompt       | session     | UP
 ```
 
-Gate: the PRD specifies full widget behavior and includes **flags + caps + budgets** matrices for the six profiles.
+Gate: the PRD specifies widget behavior + the entitlements mapping (no per-widget tier matrices).
 
 #### Step 0 — Define the content model (Arrays → Items → Item pieces)
 For each Array:

@@ -5,86 +5,14 @@ STATUS: DRAFT
 ## 1) High level description of what the widget does
 LogoShowcase renders a **header** + one or more **strips** of logos (each strip contains an ordered list of logos, optionally clickable) in one of four **Types** (Grid / Slider / Carousel / Ticker). Users edit the widget in Bob; the widget runtime applies the saved state deterministically on `{ type: 'ck:state-update' }`.
 
-## Subject Policy — Flags / Caps / Budgets (Matrices)
+## Subject Policy — Entitlements (v1)
 
-X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+Tier values are defined globally in `config/entitlements.matrix.json`.
 
-### Matrix A — Flags (ALLOW/BLOCK)
+Widget-specific enforcement lives in:
+- `tokyo/widgets/logoshowcase/limits.json`
 
-```text
-Legend: A=ALLOW, B=BLOCK
-
-Row                   | DS | MB | F  | T1 | T2 | T3
---------------------- |----|----|----|----|----|----
-seoGeoEnabled         | A  | B  | B  | A  | A  | A
-removeBranding        | A  | B  | B  | A  | A  | A
-websiteUrlAllowed     | A  | B  | A  | A  | A  | A
-logoLinksAllowed      | A  | B  | A  | A  | A  | A
-logoMetaAllowed       | A  | B  | B  | A  | A  | A
-```
-
-**Flag key (details)**
-
-```text
-Flag key
-Row                 | Path                        | Enforcement | Upsell | Meaning
-------------------- | --------------------------- | ----------- | ------ | -------------------------
-seoGeoEnabled       | seoGeo.enabled              | OPS+LOAD    | UP     | SEO/GEO optimization toggle
-removeBranding      | behavior.showBacklink=false | UI+OPS      | UP     | Remove branding
-websiteUrlAllowed   | workspace.websiteUrl        | UI+OPS      | UP     | Website URL for Copilot/AI content generation (workspace setting; not widget instance state)
-logoLinksAllowed    | strips[i].logos[j].href / targetBlank / nofollow | UI+OPS | UP | Link URL + clickable behavior (Free+)
-logoMetaAllowed     | strips[i].logos[j].alt / title | UI+OPS+LOAD | UP     | Alt/title meta (Tier 1+). When blocked (MiniBob/Free), must be forced empty on load + ops rejected.
-```
-
-### Matrix B — Caps (numbers)
-
-```text
-Legend: ∞ means “no cap”
-
-Row                  |  DS |  MB |   F |  T1 |  T2 |  T3
--------------------- |-----|-----|-----|-----|-----|-----
-maxStrips            |   ∞ |   1 |   2 |  10 |   ∞ |   ∞
-maxLogosPerStrip     |   ∞ |   6 |  10 |  20 |   ∞ |   ∞
-maxCaptionChars      |   ∞ |  40 |  80 | 120 |   ∞ |   ∞
-maxHeaderTextHtmlChars|  ∞ | 140 | 200 | 300 |   ∞ |   ∞
-```
-
-**Cap key (details)**
-
-```text
-Cap key
-Row                 | Path                    | Enforcement  | Violation | Upsell | Meaning
-------------------- | ----------------------- | ------------ | --------- | ------ | -------------------------
-maxStrips           | strips[]                | OPS(insert)  | REJECT    | UP     | Max strips
-maxLogosPerStrip    | strips[i].logos[]       | OPS(insert)  | REJECT    | UP     | Max logos per strip
-maxCaptionChars     | strips[i].logos[j].caption | OPS(set)  | REJECT    | UP     | Max caption length (chars)
-maxHeaderTextHtmlChars | header.textHtml      | OPS(set)     | REJECT    | UP     | Max header subtitle length (chars)
-```
-
-### Matrix C — Budgets (numbers)
-
-```text
-Legend: ∞ means “no budget limit”
-
-Row          |  DS |  MB |   F |  T1 |  T2 |  T3
------------- |-----|-----|-----|-----|-----|-----
-uploads      |   ∞ |   5 |  10 |  50 | 200 |   ∞
-copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
-edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
-```
-
-**Budget key (details)**
-
-Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
-
-```text
-Budget key
-Row          | Consumed when                           | Counts as            | Upsell | Notes
------------- | -------------------------------------- | -------------------- | ------ | -------------------------
-uploads      | choose file for strips[i].logos[j].logoFill (dropdown-upload) | 1 per file chosen | UP     | in-editor (Data URL) selection
-copilotTurns | Copilot prompt submit                   | 1 per user prompt    | UP     | —
-edits        | any successful edit                     | 1 per state change   | UP     | continue editing your widget by creating a free account
-```
+Use the limits mapping for paths + metrics; do not duplicate per-tier matrices here.
 
 ### Non-negotiable widget implementation patterns (LogoShowcase-specific; do not copy another widget)
 These are required patterns to keep editor UX deterministic and prevent dead controls:

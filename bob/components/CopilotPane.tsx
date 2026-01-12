@@ -263,6 +263,15 @@ export function CopilotPane() {
       return;
     }
 
+    const budgetDecision = session.consumeBudget('budget.copilot.turns', 1);
+    if (!budgetDecision.ok) {
+      pushMessage({
+        role: 'assistant',
+        text: 'Copilot usage limit reached. Please upgrade to continue.',
+      });
+      return;
+    }
+
     setStatus('loading');
     setDraft('');
     pushMessage({ role: 'user', text: prompt });

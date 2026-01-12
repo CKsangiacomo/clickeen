@@ -1,10 +1,11 @@
-import { can, resolvePolicy } from '@clickeen/ck-policy';
-import type { Policy, PolicyProfile } from '@clickeen/ck-policy';
+import { can, resolvePolicy, evaluateLimits, parseLimitsSpec } from '@clickeen/ck-policy';
+import type { Policy, PolicyProfile, LimitsSpec } from '@clickeen/ck-policy';
 
 type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   PARIS_DEV_JWT: string;
+  TOKYO_BASE_URL?: string;
   AI_GRANT_HMAC_SECRET?: string;
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
@@ -170,6 +171,27 @@ async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: Request
     ...init,
     headers,
   });
+}
+
+function requireTokyoBase(env: Env) {
+  const base = env.TOKYO_BASE_URL?.trim();
+  if (!base) {
+    throw new Error('[ParisWorker] Missing required env var: TOKYO_BASE_URL');
+  }
+  return base.replace(/\/+$/, '');
+}
+
+async function loadWidgetLimits(env: Env, widgetType: string): Promise<LimitsSpec | null> {
+  const base = requireTokyoBase(env);
+  const url = `${base}/widgets/${encodeURIComponent(widgetType)}/limits.json`;
+  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const details = await res.text().catch(() => '');
+    throw new Error(`[ParisWorker] Failed to load widget limits (${res.status}): ${details}`);
+  }
+  const json = await res.json();
+  return parseLimitsSpec(json);
 }
 
 async function readJson(res: Response) {
@@ -849,51 +871,35 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
   });
 }
 
-function enforceConfigAgainstPolicy(policy: Policy, config: Record<string, unknown>) {
-  const seoGeoEnabled = Boolean((config as any)?.seoGeo?.enabled === true);
-  if (seoGeoEnabled && policy.flags['embed.seoGeo.enabled'] !== true) {
-    return ckError(
-      {
-        kind: 'DENY',
-        reasonKey: 'coreui.upsell.reason.embed.seoGeo',
-        upsell: 'UP',
-        paths: ['config.seoGeo.enabled'],
-      },
-      403
-    );
+async function enforceLimits(
+  env: Env,
+  policy: Policy,
+  widgetType: string | null,
+  config: Record<string, unknown>,
+) {
+  if (!widgetType) return null;
+  let limits: LimitsSpec | null = null;
+  try {
+    limits = await loadWidgetLimits(env, widgetType);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.limits.loadFailed', detail }, 500);
   }
-  return null;
-}
+  if (!limits) return null;
 
-function enforceFaqCaps(policy: Policy, widgetType: string | null, config: Record<string, unknown>) {
-  if (widgetType !== 'faq') return null;
+  const violations = evaluateLimits({ config, limits, policy, context: 'publish' });
+  if (violations.length === 0) return null;
 
-  const sections = Array.isArray((config as any).sections) ? ((config as any).sections as unknown[]) : [];
-  const sectionCount = sections.length;
-  const faqCounts = sections.map((section) => (Array.isArray((section as any)?.faqs) ? (section as any).faqs.length : 0));
-  const qaTotal = faqCounts.reduce((sum, n) => sum + n, 0);
-  const qaMaxInSection = faqCounts.reduce((max, n) => Math.max(max, n), 0);
-
-  const denyCap = (capKey: keyof Policy['caps'], current: number, path: string) => {
-    const max = policy.caps[capKey];
-    if (max == null) return null;
-    if (current <= max) return null;
-    return ckError(
-      {
-        kind: 'DENY',
-        reasonKey: 'coreui.upsell.reason.capReached',
-        upsell: 'UP',
-        detail: `${String(capKey)} exceeded (max=${max}, current=${current}).`,
-        paths: [path],
-      },
-      403
-    );
-  };
-
-  return (
-    denyCap('widget.faq.sections.max', sectionCount, 'config.sections') ||
-    denyCap('widget.faq.qa.max', qaTotal, 'config.sections[*].faqs') ||
-    denyCap('widget.faq.qaPerSection.max', qaMaxInSection, 'config.sections[*].faqs')
+  const first = violations[0];
+  return ckError(
+    {
+      kind: 'DENY',
+      reasonKey: first.reasonKey,
+      upsell: 'UP',
+      detail: first.detail,
+      paths: [first.path],
+    },
+    403
   );
 }
 
@@ -961,11 +967,8 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
       );
     }
 
-    const denyByPolicy = enforceConfigAgainstPolicy(policyResult.policy, config);
-    if (denyByPolicy) return denyByPolicy;
-
-    const denyByCaps = enforceFaqCaps(policyResult.policy, widget.type ?? null, config);
-    if (denyByCaps) return denyByCaps;
+    const denyByLimits = await enforceLimits(env, policyResult.policy, widget.type ?? null, config);
+    if (denyByLimits) return denyByLimits;
   }
 
   const update: Record<string, unknown> = {};
@@ -1051,8 +1054,8 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
     );
   }
 
-  const denyByPolicy = enforceConfigAgainstPolicy(policyResult.policy, config);
-  if (denyByPolicy) return denyByPolicy;
+  const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
+  if (denyByLimits) return denyByLimits;
 
   let widget = await loadWidgetByType(env, widgetType);
   if (!widget) {

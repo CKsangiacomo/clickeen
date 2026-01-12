@@ -1,5 +1,6 @@
 import type { Policy, PolicyProfile } from './types';
 import { BUDGET_KEYS, CAP_KEYS, FLAG_KEYS } from './registry';
+import { getEntitlementsMatrix } from './matrix';
 
 type ResolvePolicyArgs = {
   profile: PolicyProfile;
@@ -25,101 +26,19 @@ function createTotalPolicyBase(args: ResolvePolicyArgs): Policy {
 
 export function resolvePolicy(args: ResolvePolicyArgs): Policy {
   const policy = createTotalPolicyBase(args);
+  const matrix = getEntitlementsMatrix();
 
-  if (args.profile === 'devstudio') {
-    policy.flags['embed.seoGeo.enabled'] = true;
-    policy.flags['context.websiteUrl.enabled'] = true;
-    policy.flags['platform.uploads.enabled'] = true;
-
-    policy.caps['workspace.editors.max'] = null;
-    policy.caps['workspace.instances.max'] = null;
-    policy.caps['workspace.widgetTypes.max'] = null;
-    policy.caps['widget.faq.sections.max'] = null;
-    policy.caps['widget.faq.qa.max'] = null;
-    policy.caps['widget.faq.qaPerSection.max'] = null;
-
-    policy.budgets['platform.uploads.files'].max = null;
-    return policy;
+  const capabilities = matrix.capabilities;
+  for (const [key, entry] of Object.entries(capabilities)) {
+    const value = entry.values[args.profile];
+    if (entry.kind === 'flag') {
+      policy.flags[key] = Boolean(value);
+    } else if (entry.kind === 'cap') {
+      policy.caps[key] = value as number | null;
+    } else {
+      policy.budgets[key].max = value as number | null;
+    }
   }
 
-  if (args.profile === 'minibob') {
-    // MiniBob: demo surface. Editing is allowed, but persistence + premium capabilities are blocked.
-    policy.flags['embed.seoGeo.enabled'] = false;
-    policy.flags['context.websiteUrl.enabled'] = false;
-    policy.flags['platform.uploads.enabled'] = true;
-
-    // Keep caps strict for demo.
-    policy.caps['workspace.editors.max'] = 0;
-    policy.caps['workspace.instances.max'] = 0;
-    policy.caps['workspace.widgetTypes.max'] = 0;
-    policy.caps['widget.faq.sections.max'] = 2;
-    policy.caps['widget.faq.qa.max'] = 6;
-    policy.caps['widget.faq.qaPerSection.max'] = 4;
-
-    policy.budgets['platform.uploads.files'].max = 0;
-    return policy;
-  }
-
-  if (args.profile === 'free') {
-    policy.flags['embed.seoGeo.enabled'] = false;
-    policy.flags['context.websiteUrl.enabled'] = true;
-    policy.flags['platform.uploads.enabled'] = true;
-
-    policy.caps['workspace.editors.max'] = 1;
-    policy.caps['workspace.instances.max'] = 1;
-    policy.caps['workspace.widgetTypes.max'] = 1;
-    policy.caps['widget.faq.sections.max'] = 2;
-    policy.caps['widget.faq.qa.max'] = 8;
-    policy.caps['widget.faq.qaPerSection.max'] = 4;
-
-    policy.budgets['platform.uploads.files'].max = 0;
-    return policy;
-  }
-
-  if (args.profile === 'tier1') {
-    policy.flags['embed.seoGeo.enabled'] = true;
-    policy.flags['context.websiteUrl.enabled'] = true;
-    policy.flags['platform.uploads.enabled'] = true;
-
-    policy.caps['workspace.editors.max'] = 5;
-    policy.caps['workspace.instances.max'] = 10;
-    policy.caps['workspace.widgetTypes.max'] = null;
-    policy.caps['widget.faq.sections.max'] = 10;
-    policy.caps['widget.faq.qa.max'] = 100;
-    policy.caps['widget.faq.qaPerSection.max'] = 20;
-
-    policy.budgets['platform.uploads.files'].max = 0;
-    return policy;
-  }
-
-  if (args.profile === 'tier2') {
-    policy.flags['embed.seoGeo.enabled'] = true;
-    policy.flags['context.websiteUrl.enabled'] = true;
-    policy.flags['platform.uploads.enabled'] = true;
-
-    policy.caps['workspace.editors.max'] = null;
-    policy.caps['workspace.instances.max'] = null;
-    policy.caps['workspace.widgetTypes.max'] = null;
-    policy.caps['widget.faq.sections.max'] = null;
-    policy.caps['widget.faq.qa.max'] = null;
-    policy.caps['widget.faq.qaPerSection.max'] = null;
-
-    policy.budgets['platform.uploads.files'].max = null;
-    return policy;
-  }
-
-  // tier3
-  policy.flags['embed.seoGeo.enabled'] = true;
-  policy.flags['context.websiteUrl.enabled'] = true;
-  policy.flags['platform.uploads.enabled'] = true;
-
-  policy.caps['workspace.editors.max'] = null;
-  policy.caps['workspace.instances.max'] = null;
-  policy.caps['workspace.widgetTypes.max'] = null;
-  policy.caps['widget.faq.sections.max'] = null;
-  policy.caps['widget.faq.qa.max'] = null;
-  policy.caps['widget.faq.qaPerSection.max'] = null;
-
-  policy.budgets['platform.uploads.files'].max = null;
   return policy;
 }

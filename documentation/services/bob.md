@@ -28,6 +28,11 @@ Bob compiles the spec into a deterministic contract:
 - Bob does not coerce values or perform orchestrator-owned schema validation.
 - State errors are surfaced by the widget runtime (Tokyo) and fixed at the source (Tokyo widget package + our own code).
 
+### Entitlements + limits (v1)
+- Paris returns entitlements from the global matrix (`config/entitlements.matrix.json`).
+- Widget-specific limits live in `tokyo/widgets/{widget}/limits.json` and are loaded with the compiled payload.
+- Bob enforces limits on ops and sanitizes blocked values on load (no widget-specific branches).
+
 ---
 
 ## Boot Flow
