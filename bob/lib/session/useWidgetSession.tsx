@@ -17,6 +17,15 @@ import type { CopilotThread } from '../copilot/types';
 import type { BudgetDecision, Policy } from '@clickeen/ck-policy';
 import { can, canConsume, consume, evaluateLimits, sanitizeConfig, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
 import { persistConfigAssetsToTokyo } from '../assets/persistConfigAssetsToTokyo';
+import {
+  applyLocalizationOps,
+  computeBaseFingerprint,
+  filterAllowlistedOps,
+  mergeLocalizationOps,
+  normalizeLocaleToken,
+  type LocalizationOp,
+} from '../l10n/instance';
+import { resolveTokyoBaseUrl } from '../env/tokyo';
 
 type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -35,16 +44,37 @@ type PreviewSettings = {
   host: 'canvas' | 'column' | 'banner' | 'floating';
 };
 
+type LocaleState = {
+  baseLocale: string;
+  activeLocale: string;
+  baseOps: LocalizationOp[];
+  userOps: LocalizationOp[];
+  allowlist: string[];
+  source: string | null;
+  dirty: boolean;
+  stale: boolean;
+  loading: boolean;
+  error: string | null;
+};
+
+type TokyoOverlay = {
+  ops: LocalizationOp[];
+  baseFingerprint: string | null;
+  baseUpdatedAt: string | null;
+};
+
 type SubjectMode = 'devstudio' | 'minibob';
 
 type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
+  baseInstanceData: Record<string, unknown>;
   isDirty: boolean;
   policy: Policy;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
   isPublishing: boolean;
   preview: PreviewSettings;
+  locale: LocaleState;
   selectedPath: string | null;
   lastUpdate: UpdateMeta | null;
   undoSnapshot: Record<string, unknown> | null;
@@ -101,6 +131,20 @@ const DEFAULT_PREVIEW: PreviewSettings = {
   host: 'canvas',
 };
 
+const DEFAULT_LOCALE = 'en';
+const DEFAULT_LOCALE_STATE: LocaleState = {
+  baseLocale: DEFAULT_LOCALE,
+  activeLocale: DEFAULT_LOCALE,
+  baseOps: [],
+  userOps: [],
+  allowlist: [],
+  source: null,
+  dirty: false,
+  stale: false,
+  loading: false,
+  error: null,
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
@@ -153,11 +197,13 @@ function useWidgetSessionInternal() {
   const [state, setState] = useState<SessionState>(() => ({
     compiled: null,
     instanceData: {},
+    baseInstanceData: {},
     isDirty: false,
     policy: initialPolicy,
     upsell: null,
     isPublishing: false,
     preview: DEFAULT_PREVIEW,
+    locale: DEFAULT_LOCALE_STATE,
     selectedPath: null,
     lastUpdate: null,
     undoSnapshot: null,
@@ -168,10 +214,14 @@ function useWidgetSessionInternal() {
 
   const stateRef = useRef(state);
   stateRef.current = state;
+  const allowlistCacheRef = useRef<Map<string, string[]>>(new Map());
+  const localeRequestRef = useRef(0);
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
       const compiled = state.compiled;
+      const localeState = state.locale;
+      const isLocaleMode = localeState.activeLocale !== localeState.baseLocale;
       if (!compiled || compiled.controls.length === 0) {
         const result: ApplyWidgetOpsResult = {
           ok: false,
@@ -216,9 +266,43 @@ function useWidgetSessionInternal() {
         if (!decision.ok) return denyOps(0, ops[0]?.path, decision);
       }
 
+      let opsToApply = ops;
+
+      if (isLocaleMode) {
+        if (!localeState.allowlist.length) {
+          const result: ApplyWidgetOpsResult = {
+            ok: false,
+            errors: [{ opIndex: 0, message: 'Localization allowlist not loaded' }],
+          };
+          setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+          return result;
+        }
+
+        const candidateOps = ops.filter((op) => op && op.op === 'set' && typeof (op as any).value === 'string') as LocalizationOp[];
+        if (candidateOps.length === 0) {
+          const result: ApplyWidgetOpsResult = {
+            ok: false,
+            errors: [{ opIndex: 0, message: 'Localized edits only support text fields' }],
+          };
+          setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+          return result;
+        }
+
+        const { filtered } = filterAllowlistedOps(candidateOps, localeState.allowlist);
+        if (filtered.length === 0) {
+          const result: ApplyWidgetOpsResult = {
+            ok: false,
+            errors: [{ opIndex: 0, message: 'This field is not localizable' }],
+          };
+          setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+          return result;
+        }
+        opsToApply = filtered;
+      }
+
       const applied = applyWidgetOps({
         data: state.instanceData,
-        ops,
+        ops: opsToApply,
         controls: compiled.controls,
       });
 
@@ -238,10 +322,40 @@ function useWidgetSessionInternal() {
         return denyOps(0, first.path, { reasonKey: first.reasonKey, detail: first.detail });
       }
 
+      if (isLocaleMode) {
+        const merged = mergeLocalizationOps(localeState.userOps, opsToApply as LocalizationOp[]);
+        const localized = applyLocalizationOps(
+          applyLocalizationOps(state.baseInstanceData, localeState.baseOps),
+          merged
+        );
+        setState((prev) => ({
+          ...prev,
+          instanceData: localized,
+          locale: { ...prev.locale, userOps: merged, dirty: true, error: null },
+          undoSnapshot: null,
+          error: null,
+          upsell: null,
+          policy: (() => {
+            let next = prev.policy;
+            if (editsBudget) next = consume(next, 'budget.edits', 1);
+            if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads', uploadCount);
+            return next;
+          })(),
+          lastUpdate: {
+            source: 'ops',
+            path: opsToApply[0]?.path || '',
+            ts: Date.now(),
+          },
+        }));
+
+        return applied;
+      }
+
       setState((prev) => ({
         ...prev,
         undoSnapshot: prev.instanceData,
         instanceData: applied.data,
+        baseInstanceData: applied.data,
         isDirty: true,
         error: null,
         upsell: null,
@@ -253,22 +367,24 @@ function useWidgetSessionInternal() {
         })(),
         lastUpdate: {
           source: 'ops',
-          path: ops[0]?.path || '',
+          path: opsToApply[0]?.path || '',
           ts: Date.now(),
         },
       }));
 
       return applied;
     },
-    [state.compiled, state.instanceData, state.policy]
+    [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale]
   );
 
   const undoLastOps = useCallback(() => {
     setState((prev) => {
       if (!prev.undoSnapshot) return prev;
+      if (prev.locale.activeLocale !== prev.locale.baseLocale) return prev;
       return {
         ...prev,
         instanceData: prev.undoSnapshot,
+        baseInstanceData: prev.undoSnapshot,
         undoSnapshot: null,
         isDirty: true,
         lastUpdate: {
@@ -286,6 +402,273 @@ function useWidgetSessionInternal() {
       return { ...prev, undoSnapshot: null };
     });
   }, []);
+
+  const loadLocaleAllowlist = useCallback(async (widgetType: string): Promise<string[]> => {
+    const cached = allowlistCacheRef.current.get(widgetType);
+    if (cached) return cached;
+
+    const base = resolveTokyoBaseUrl();
+    const res = await fetch(`${base}/widgets/${encodeURIComponent(widgetType)}/localization.json`, { cache: 'no-store' });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`Failed to load localization allowlist (${res.status}) ${text}`.trim());
+    }
+    const json = (await res.json().catch(() => null)) as { v?: number; paths?: Array<{ path?: string }> } | null;
+    if (!json || json.v !== 1 || !Array.isArray(json.paths)) {
+      throw new Error('Invalid localization allowlist');
+    }
+    const allowlist = json.paths
+      .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
+      .filter(Boolean);
+    allowlistCacheRef.current.set(widgetType, allowlist);
+    return allowlist;
+  }, []);
+
+  const loadTokyoOverlay = useCallback(async (publicId: string, locale: string): Promise<TokyoOverlay> => {
+    const empty: TokyoOverlay = { ops: [], baseFingerprint: null, baseUpdatedAt: null };
+    const base = resolveTokyoBaseUrl();
+    const manifestRes = await fetch(`${base}/l10n/manifest.json`, { cache: 'no-store' });
+    if (!manifestRes.ok) return empty;
+    const manifest = (await manifestRes.json().catch(() => null)) as any;
+    const entry = manifest?.instances?.[publicId]?.[locale];
+    const file = typeof entry?.file === 'string' ? entry.file.trim() : '';
+    if (!file) return empty;
+    const overlayRes = await fetch(
+      `${base}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(file)}`,
+      { cache: 'no-store' }
+    );
+    if (!overlayRes.ok) return empty;
+    const overlay = (await overlayRes.json().catch(() => null)) as any;
+    const ops = Array.isArray(overlay?.ops) ? overlay.ops : [];
+    const baseFingerprintRaw = typeof overlay?.baseFingerprint === 'string' ? overlay.baseFingerprint.trim() : '';
+    const baseFingerprint = /^[a-f0-9]{64}$/i.test(baseFingerprintRaw) ? baseFingerprintRaw : null;
+    const baseUpdatedAt = typeof overlay?.baseUpdatedAt === 'string' ? overlay.baseUpdatedAt : null;
+    const normalizedOps = ops
+      .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
+      .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
+    return {
+      ops: normalizedOps,
+      baseFingerprint,
+      baseUpdatedAt,
+    };
+  }, []);
+
+  const loadLocaleSources = useCallback(async (publicId: string): Promise<Record<string, string>> => {
+    const res = await fetch(`/api/paris/instances/${encodeURIComponent(publicId)}/locales`, { cache: 'no-store' });
+    if (!res.ok) return {};
+    const json = (await res.json().catch(() => null)) as any;
+    const locales = Array.isArray(json?.locales) ? json.locales : [];
+    const map: Record<string, string> = {};
+    locales.forEach((entry: any) => {
+      const locale = typeof entry?.locale === 'string' ? entry.locale : '';
+      const source = typeof entry?.source === 'string' ? entry.source : '';
+      if (locale && source) map[locale] = source;
+    });
+    return map;
+  }, []);
+
+  const setLocalePreview = useCallback(async (rawLocale: string) => {
+    const normalized = normalizeLocaleToken(rawLocale) ?? DEFAULT_LOCALE;
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
+    const baseLocale = snapshot.locale.baseLocale;
+
+    if (!publicId || !widgetType) {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, activeLocale: normalized, error: 'Missing instance context', loading: false, stale: false },
+      }));
+      return;
+    }
+
+    const requestId = ++localeRequestRef.current;
+    if (normalized === baseLocale) {
+      setState((prev) => ({
+        ...prev,
+        instanceData: prev.baseInstanceData,
+        locale: {
+          ...prev.locale,
+          activeLocale: normalized,
+          baseOps: [],
+          userOps: [],
+          allowlist: prev.locale.allowlist,
+          source: null,
+          dirty: false,
+          stale: false,
+          loading: false,
+          error: null,
+        },
+        undoSnapshot: null,
+      }));
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      locale: { ...prev.locale, activeLocale: normalized, loading: true, error: null, dirty: false, stale: false },
+      undoSnapshot: null,
+    }));
+
+    try {
+      const [allowlist, overlay, sources] = await Promise.all([
+        loadLocaleAllowlist(widgetType),
+        loadTokyoOverlay(publicId, normalized),
+        loadLocaleSources(publicId),
+      ]);
+
+      if (localeRequestRef.current !== requestId) return;
+      const source = sources[normalized] ?? null;
+      const { filtered } = filterAllowlistedOps(overlay.ops, allowlist);
+      const baseOps = source === 'user' ? [] : filtered;
+      const userOps = source === 'user' ? filtered : [];
+      let stale = false;
+      if (overlay.baseFingerprint) {
+        const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
+        stale = overlay.baseFingerprint !== currentFingerprint;
+      }
+      if (localeRequestRef.current !== requestId) return;
+      const localized = applyLocalizationOps(
+        applyLocalizationOps(snapshot.baseInstanceData, baseOps),
+        userOps
+      );
+
+      setState((prev) => ({
+        ...prev,
+        instanceData: localized,
+        locale: {
+          ...prev.locale,
+          activeLocale: normalized,
+          baseOps,
+          userOps,
+          allowlist,
+          source,
+          dirty: false,
+          stale,
+          loading: false,
+          error: null,
+        },
+      }));
+    } catch (err) {
+      if (localeRequestRef.current !== requestId) return;
+      const message = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, activeLocale: normalized, loading: false, error: message, stale: false },
+      }));
+    }
+  }, [loadLocaleAllowlist, loadLocaleSources, loadTokyoOverlay]);
+
+  const saveLocaleOverrides = useCallback(async () => {
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
+    const locale = snapshot.locale.activeLocale;
+
+    if (!publicId || !widgetType) {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Missing instance context' },
+      }));
+      return;
+    }
+    if (locale === snapshot.locale.baseLocale) return;
+    if (!snapshot.locale.dirty && !snapshot.locale.stale) {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'No localized changes to save' },
+      }));
+      return;
+    }
+
+    try {
+      const baseFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
+      const mergedOps = mergeLocalizationOps(snapshot.locale.baseOps, snapshot.locale.userOps);
+      if (!mergedOps.length) {
+        setState((prev) => ({
+          ...prev,
+          locale: { ...prev.locale, error: 'No localized changes to save' },
+        }));
+        return;
+      }
+      const res = await fetch(
+        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            ops: mergedOps,
+            baseFingerprint,
+            source: 'user',
+            widgetType,
+            workspaceId,
+          }),
+        }
+      );
+      const json = (await res.json().catch(() => null)) as any;
+      if (!res.ok) {
+        const message = json?.error?.message || json?.error?.code || 'Failed to save locale overrides';
+        setState((prev) => ({
+          ...prev,
+          locale: { ...prev.locale, error: message, loading: false },
+        }));
+        return;
+      }
+      setState((prev) => ({
+        ...prev,
+        locale: {
+          ...prev.locale,
+          baseOps: [],
+          userOps: mergedOps,
+          dirty: false,
+          stale: false,
+          source: 'user',
+          error: null,
+        },
+      }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message },
+      }));
+    }
+  }, []);
+
+  const revertLocaleOverrides = useCallback(async () => {
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const locale = snapshot.locale.activeLocale;
+    if (!publicId || !workspaceId) return;
+    if (locale === snapshot.locale.baseLocale) return;
+
+    try {
+      const res = await fetch(
+        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}?workspaceId=${encodeURIComponent(
+          workspaceId
+        )}`,
+        { method: 'DELETE' }
+      );
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as any;
+        const message = json?.error?.message || json?.error?.code || 'Failed to revert locale overrides';
+        setState((prev) => ({
+          ...prev,
+          locale: { ...prev.locale, error: message },
+        }));
+        return;
+      }
+      await setLocalePreview(locale);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message },
+      }));
+    }
+  }, [setLocalePreview]);
 
   const loadInstance = useCallback(async (message: WidgetBootstrapMessage) => {
     try {
@@ -353,11 +736,13 @@ function useWidgetSessionInternal() {
         ...prev,
         compiled,
         instanceData: resolved,
+        baseInstanceData: resolved,
         isDirty: false,
         policy: nextPolicy,
         selectedPath: null,
         error: null,
         upsell: null,
+        locale: { ...DEFAULT_LOCALE_STATE },
         lastUpdate: {
           source: 'load',
           path: '',
@@ -381,9 +766,11 @@ function useWidgetSessionInternal() {
         ...prev,
         compiled: null,
         instanceData: {},
+        baseInstanceData: {},
         isDirty: false,
         error: { source: 'load', message: messageText },
         upsell: null,
+        locale: { ...DEFAULT_LOCALE_STATE },
         meta: null,
       }));
     }
@@ -430,7 +817,7 @@ function useWidgetSessionInternal() {
 
     setState((prev) => ({ ...prev, isPublishing: true, error: null }));
     try {
-      const persisted = await persistConfigAssetsToTokyo(state.instanceData, { workspaceId });
+      const persisted = await persistConfigAssetsToTokyo(state.baseInstanceData, { workspaceId });
       const res = await fetch(
         `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
           workspaceId
@@ -480,7 +867,16 @@ function useWidgetSessionInternal() {
         isDirty: false,
         error: null,
         upsell: null,
-        instanceData: json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.instanceData,
+        baseInstanceData:
+          json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.baseInstanceData,
+        instanceData: (() => {
+          const nextBase =
+            json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.baseInstanceData;
+          if (prev.locale.activeLocale !== prev.locale.baseLocale) {
+            return applyLocalizationOps(applyLocalizationOps(nextBase, prev.locale.baseOps), prev.locale.userOps);
+          }
+          return nextBase;
+        })(),
         policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
       }));
 
@@ -641,9 +1037,9 @@ function useWidgetSessionInternal() {
                   if (!workspaceId) {
                     throw new Error('[Bob] Missing workspaceId for asset persistence');
                   }
-                  return persistConfigAssetsToTokyo(snapshot.instanceData, { workspaceId });
+                  return persistConfigAssetsToTokyo(snapshot.baseInstanceData, { workspaceId });
                 })()
-              : snapshot.instanceData;
+              : snapshot.baseInstanceData;
 
             const reply: BobExportInstanceDataResponseMessage = {
               type: 'bob:export-instance-data',
@@ -681,9 +1077,11 @@ function useWidgetSessionInternal() {
         ...prev,
         compiled: null,
         instanceData: {},
+        baseInstanceData: {},
         isDirty: false,
         error: { source: 'load', message: messageText },
         upsell: null,
+        locale: { ...DEFAULT_LOCALE_STATE },
         meta: null,
       }));
     });
@@ -694,16 +1092,19 @@ function useWidgetSessionInternal() {
     () => ({
       compiled: state.compiled,
       instanceData: state.instanceData,
+      baseInstanceData: state.baseInstanceData,
       isDirty: state.isDirty,
       isMinibob: state.policy.profile === 'minibob',
+      policy: state.policy,
       upsell: state.upsell,
       isPublishing: state.isPublishing,
       preview: state.preview,
+      locale: state.locale,
       selectedPath: state.selectedPath,
       lastUpdate: state.lastUpdate,
       error: state.error,
       meta: state.meta,
-      canUndo: Boolean(state.undoSnapshot),
+      canUndo: Boolean(state.undoSnapshot) && state.locale.activeLocale === state.locale.baseLocale,
       copilotThreads: state.copilotThreads,
       applyOps,
       undoLastOps,
@@ -712,6 +1113,9 @@ function useWidgetSessionInternal() {
       dismissUpsell,
       setSelectedPath,
       setPreview,
+      setLocalePreview,
+      saveLocaleOverrides,
+      revertLocaleOverrides,
       loadInstance,
       consumeBudget,
       setCopilotThread,
@@ -726,6 +1130,9 @@ function useWidgetSessionInternal() {
       dismissUpsell,
       loadInstance,
       setPreview,
+      setLocalePreview,
+      saveLocaleOverrides,
+      revertLocaleOverrides,
       setSelectedPath,
       consumeBudget,
       setCopilotThread,

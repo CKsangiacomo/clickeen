@@ -11,7 +11,7 @@ type Props = {
   cta?: { label: string; href: string; variant?: 'primary' | 'secondary' };
   /**
    * Nav surface model:
-   * - overlay: transparent at top-of-page; becomes surfaced when stuck (default)
+    * - overlay: solid at top-of-page; can add surfaced treatment when stuck (default)
    * - solid: always surfaced (use on non-hero pages if desired)
    */
   surface?: 'overlay' | 'solid';
@@ -32,6 +32,7 @@ const navSticky = Astro.props.sticky !== false;
 const navFloating = Astro.props.floating === true;
 
 const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
+const viewAllWidgetsLabel = pragueT(locale, 'prague.nav.viewAllWidgets');
 
 const mega = await resolveWidgetsMegaMenu({ locale });
 
@@ -62,6 +63,8 @@ const widgetCategories: { label: string }[] = [
   data-nav-sticky={navSticky ? 'true' : 'false'}
   data-nav-stuck="false"
   data-nav-floating={navFloating ? 'true' : 'false'}
+  data-nav-mega="closed"
+  data-nav-mobile="closed"
 >
   <div class="ck-inline">
     <div class="ck-row ck-siteNav">
@@ -74,10 +77,15 @@ const widgetCategories: { label: string }[] = [
           {primaryItems.map((item) => {
             if (item.kind === 'widgets') {
               return (
-                <details class="ck-mega" data-ck-mega="widgets">
-                  <summary class="label-s ck-siteNav__link ck-mega__trigger" aria-haspopup="dialog">
+                <div class="ck-mega" data-ck-mega="widgets" data-mega-open="false">
+                  <button
+                    type="button"
+                    class="label-s ck-siteNav__link ck-mega__trigger"
+                    aria-haspopup="dialog"
+                    aria-expanded="false"
+                  >
                     {widgetsLabel}
-                  </summary>
+                  </button>
 
                   {/* Backdrop captures outside clicks and blocks interaction with page UI under the curtain. */}
                   <button class="ck-mega__backdrop" type="button" aria-label="Close widgets menu" data-ck-mega-close />
@@ -111,17 +119,17 @@ const widgetCategories: { label: string }[] = [
                           <div class="ck-stack ck-mega__asideInner">
                             <div class="label-m">Try without an account</div>
                             <div class="caption ck-mega__asideBody">
-                              Customize a widget instantly. Publish when you’re ready.
+                              Customize a widget instantly. Publish when you're ready.
                             </div>
                             <a class="ck-btn ck-btn--secondary ck-btn--md label-m" href={mega.allWidgetsHref}>
-                              {pragueT(locale, 'prague.nav.viewAllWidgets')}
+                              {viewAllWidgetsLabel}
                             </a>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </details>
+                </div>
               );
             }
 
@@ -142,18 +150,64 @@ const widgetCategories: { label: string }[] = [
         </div>
       </nav>
 
-      {cta ? (
-        <a class={`ck-btn ck-btn--${ctaVariant} ck-btn--md label-m`} href={cta.href}>
-          {cta.label}
-        </a>
-      ) : (
-        <span aria-hidden="true" />
-      )}
+      <div class="ck-row ck-siteNav__actions">
+        {cta ? (
+          <a class={`ck-btn ck-btn--${ctaVariant} ck-btn--md label-m ck-siteNav__cta`} href={cta.href}>
+            {cta.label}
+          </a>
+        ) : (
+          <span aria-hidden="true" class="ck-siteNav__cta" />
+        )}
+
+        {/* Mobile menu trigger (Quiksilver-style: menu ↔ close, full-screen curtain) */}
+        <button
+          type="button"
+          class="ck-siteNav__menuBtn label-s"
+          aria-label="Menu"
+          aria-expanded="false"
+          data-ck-nav-mobile-trigger
+        >
+          <span class="ck-siteNav__menuIcon" aria-hidden="true" />
+          <span class="ck-siteNav__menuLabel">Menu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile curtain menu */}
+  <div class="ck-mobileMenu" data-ck-mobile-menu>
+    <button
+      class="ck-mobileMenu__backdrop"
+      type="button"
+      aria-label="Close menu"
+      data-ck-nav-mobile-close
+    />
+
+    <div class="ck-mobileMenu__panel" role="dialog" aria-label="Menu" aria-modal="true">
+      <div class="ck-inline">
+        <div class="ck-stack ck-mobileMenu__inner">
+          <div class="caption ck-mobileMenu__sectionTitle">Browse</div>
+          <div class="ck-stack ck-mobileMenu__list">
+            {mega.items.map((w) => (
+              <a class="label-m ck-mobileMenu__link" href={w.href}>
+                <div class="ck-stack" style="gap: 2px;">
+                  <div class="label-m">{w.headline}</div>
+                  <div class="caption ck-mobileMenu__sub">{w.subheadline}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <a class="ck-btn ck-btn--secondary ck-btn--md label-m ck-mobileMenu__all" href={mega.allWidgetsHref}>
+            {viewAllWidgetsLabel}
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
-<style>
+<style is:global>
   .ck-siteNav { position: relative; }
 
   /* Nav state machine (global, scalable):
@@ -167,9 +221,9 @@ const widgetCategories: { label: string }[] = [
     z-index: 60;
     width: 100%;
 
-    /* Default (overlay) values */
-    --ck-nav-bg: transparent;
-    --ck-nav-border: transparent;
+    /* Default values (solid by default to avoid "transparent header" moments). */
+    --ck-nav-bg: var(--color-system-white);
+    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
     --ck-nav-shadow: none;
     --ck-nav-backdrop: none;
 
@@ -178,6 +232,13 @@ const widgetCategories: { label: string }[] = [
     box-shadow: var(--ck-nav-shadow);
     backdrop-filter: var(--ck-nav-backdrop);
     -webkit-backdrop-filter: var(--ck-nav-backdrop);
+
+    /* Quiksilver-style: same height, smooth surface transition. */
+    transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      backdrop-filter 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      -webkit-backdrop-filter 180ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .ck-siteNavHeader[data-nav-sticky="false"] {
@@ -199,23 +260,120 @@ const widgetCategories: { label: string }[] = [
 
   /* Solid surface (always) */
   .ck-siteNavHeader[data-nav-surface="solid"] {
-    --ck-nav-bg: color-mix(in oklab, var(--color-system-white), transparent 6%);
+    --ck-nav-bg: var(--color-system-white);
     --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    --ck-nav-shadow: 0 8px 22px color-mix(in oklab, var(--color-system-black), transparent 94%);
-    --ck-nav-backdrop: blur(14px);
+    --ck-nav-shadow: none;
+    --ck-nav-backdrop: none;
   }
 
   /* Overlay surface: becomes surfaced only when stuck */
   .ck-siteNavHeader[data-nav-surface="overlay"][data-nav-stuck="true"] {
-    --ck-nav-bg: color-mix(in oklab, var(--color-system-white), transparent 6%);
+    --ck-nav-bg: var(--color-system-white);
     --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    --ck-nav-shadow: 0 8px 22px color-mix(in oklab, var(--color-system-black), transparent 94%);
-    --ck-nav-backdrop: blur(14px);
+    --ck-nav-shadow: none;
+    --ck-nav-backdrop: none;
+  }
+
+  /* Desktop affordance: in overlay mode, hovering the header should surface it.
+     This matches the expected "interactive = surfaced" feel (and prevents the
+     header from looking transparent while users explore nav items). */
+  @media (hover: hover) {
+    .ck-siteNavHeader[data-nav-surface="overlay"]:hover {
+      --ck-nav-bg: var(--color-system-white);
+      --ck-nav-border: transparent;
+      --ck-nav-shadow: none;
+      --ck-nav-backdrop: none;
+    }
+  }
+
+  /* When mega menu is engaged, force solid white. */
+  .ck-siteNavHeader[data-nav-mega="engaged"],
+  .ck-siteNavHeader[data-nav-mobile="open"] {
+    --ck-nav-bg: var(--color-system-white);
+    --ck-nav-border: transparent;
+    --ck-nav-shadow: none;
+    --ck-nav-backdrop: none;
   }
 
   .ck-siteNav {
     justify-content: space-between;
     gap: var(--space-6);
+  }
+
+  .ck-siteNav__actions {
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .ck-siteNav__menuBtn {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px;
+    border-radius: var(--control-radius-md);
+    border: 0;
+    background: transparent;
+    color: var(--color-system-black);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 140ms ease-out;
+  }
+
+  .ck-siteNav__menuBtn:hover {
+    background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+  }
+
+  .ck-siteNav__menuBtn:active { transform: scale(0.99); }
+
+  .ck-siteNav__menuIcon {
+    width: 16px;
+    height: 12px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .ck-siteNav__menuIcon::before,
+  .ck-siteNav__menuIcon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+      top 160ms cubic-bezier(0.16, 1, 0.3, 1),
+      bottom 160ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ck-siteNav__menuIcon::before { top: 0; }
+  .ck-siteNav__menuIcon::after { bottom: 0; }
+
+  /* Middle bar */
+  .ck-siteNav__menuIcon {
+    background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
+    transition: background-size 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Menu ↔ Close morph */
+  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon {
+    background-size: 0% 2px;
+  }
+  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon::before {
+    top: 5px;
+    transform: rotate(45deg);
+  }
+  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon::after {
+    bottom: 5px;
+    transform: rotate(-45deg);
+  }
+
+  /* Keep the label stable (Quiksilver doesn’t relabel). */
+  .ck-siteNav__menuLabel {
+    line-height: 1;
+    display: none;
   }
 
   .ck-siteNav__primary { gap: var(--space-5); }
@@ -236,12 +394,38 @@ const widgetCategories: { label: string }[] = [
   .ck-mega { position: relative; }
 
   .ck-mega__trigger {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: inherit;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     cursor: pointer;
     user-select: none;
+    transition: color 120ms ease-out;
   }
+
+  /* Hover bridge: extends trigger hit area down toward curtain */
+  .ck-mega__trigger::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    right: -16px;
+    top: 100%;
+    height: 8px;
+    /* Invisible—just extends hover zone */
+  }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::before {
+    height: 24px; /* Taller bridge when menu is open */
+  }
+
   .ck-mega__trigger::after {
     content: "▾";
     font-size: 10px;
@@ -249,33 +433,44 @@ const widgetCategories: { label: string }[] = [
     margin-left: 2px;
     color: color-mix(in oklab, var(--color-system-black), transparent 45%);
     transform: translateY(-1px);
-    transition: transform var(--duration-base) var(--easing-standard);
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms ease-out;
   }
-  .ck-mega[open] .ck-mega__trigger::after { transform: rotate(180deg) translateY(1px); }
 
-  .ck-mega__trigger::-webkit-details-marker { display: none; }
-  .ck-mega__trigger::marker { content: ''; }
+  /* Anticipation feedback: trigger acknowledges hover immediately */
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger {
+    color: var(--color-system-black);
+  }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::after {
+    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+    transform: translateY(1px);
+  }
+
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::after { transform: rotate(180deg) translateY(1px); }
 
   .ck-mega__backdrop {
-    display: none;
     position: fixed;
     left: 0;
     right: 0;
     top: var(--ck-nav-h, 72px);
     bottom: 0;
-    background: transparent;
+    /* Dimming scrim so the curtain reads as a full overlay layer. */
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
     border: 0;
     padding: 0;
     margin: 0;
     z-index: 55;
     cursor: default;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .ck-mega__curtain {
-    display: none;
     position: fixed;
     left: 0;
     right: 0;
+    /* Attach flush to the nav. Height is synced precisely from JS. */
     top: var(--ck-nav-h, 72px);
     max-height: calc(100vh - var(--ck-nav-h, 72px));
     overflow: auto;
@@ -285,17 +480,24 @@ const widgetCategories: { label: string }[] = [
     z-index: 56;
     padding-block: var(--space-7);
     transform-origin: top;
+
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .ck-mega[open] .ck-mega__backdrop,
-  .ck-mega[open] .ck-mega__curtain {
-    display: block;
-    animation: ckMegaIn var(--duration-base) var(--easing-standard) both;
+  /* When unified white, drop the curtain's top border (nav already defines the edge). */
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain {
+    border-top-color: transparent;
   }
 
-  @keyframes ckMegaIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__backdrop,
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
   }
 
   .ck-mega__layout {
@@ -324,13 +526,12 @@ const widgetCategories: { label: string }[] = [
   }
 
   .ck-mega__main {
-    /* Prevent huge dead space when we have few widgets. */
-    max-width: 820px;
+    min-width: 0;
   }
 
   .ck-mega__grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: var(--space-3);
   }
 
@@ -341,10 +542,29 @@ const widgetCategories: { label: string }[] = [
     text-decoration: none;
     color: var(--color-system-black);
     background: color-mix(in oklab, var(--color-system-black), transparent 96%);
-    transition: background var(--duration-base) var(--easing-standard);
+    transition: background 140ms ease-out, transform 140ms ease-out;
   }
   .ck-mega__item:hover {
     background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+  }
+  .ck-mega__item:active {
+    transform: scale(0.98);
+  }
+
+  /* Staggered entry animation for grid items */
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item {
+    animation: ckItemIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(1) { animation-delay: 20ms; }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(2) { animation-delay: 40ms; }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(3) { animation-delay: 60ms; }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(4) { animation-delay: 80ms; }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(5) { animation-delay: 100ms; }
+  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(6) { animation-delay: 120ms; }
+
+  @keyframes ckItemIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .ck-mega__sub {
@@ -368,116 +588,354 @@ const widgetCategories: { label: string }[] = [
     .ck-brand__logo { height: 20px; }
     .ck-mega__layout { grid-template-columns: 1fr; gap: var(--space-6); }
     .ck-mega__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* Mobile nav: hide desktop primary and show menu button. */
+    .ck-siteNavHeader nav[aria-label="Primary"] { display: none; }
+    .ck-siteNav__menuBtn { display: inline-flex; }
   }
 
   @media (max-width: 640px) {
     .ck-mega__grid { grid-template-columns: 1fr; }
+
+    /* On small screens, CTA often crowds. Keep it but allow wrapping gracefully. */
+    .ck-siteNav { gap: var(--space-3); }
+  }
+
+  /* Mobile curtain menu */
+  .ck-mobileMenu__backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    /* Dimming scrim so the curtain reads as a full overlay layer. */
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+    z-index: 58;
+  }
+
+  .ck-mobileMenu__panel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--color-system-white);
+    z-index: 59;
+    padding-top: var(--ck-nav-h, 72px);
+    overflow: auto;
+    transform-origin: top;
+  }
+
+  .ck-mobileMenu__inner {
+    padding-block: var(--space-6);
+    gap: var(--space-4);
+  }
+
+  .ck-mobileMenu__sectionTitle {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  .ck-mobileMenu__list { gap: 10px; }
+
+  .ck-mobileMenu__link {
+    text-decoration: none;
+    color: var(--color-system-black);
+    padding: 10px 12px;
+    border-radius: var(--control-radius-lg);
+    background: color-mix(in oklab, var(--color-system-black), transparent 96%);
+  }
+
+  .ck-mobileMenu__sub {
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__backdrop,
+  .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__panel {
+    display: block;
+    animation: ckMobileIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .ck-mobileMenu.is-closing .ck-mobileMenu__backdrop,
+  .ck-mobileMenu.is-closing .ck-mobileMenu__panel {
+    display: block;
+    animation: ckMobileOut 140ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  @keyframes ckMobileIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes ckMobileOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-4px) scale(0.99); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ck-siteNavHeader { transition: none; }
+    .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__backdrop,
+    .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain,
+    .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__backdrop,
+    .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__panel,
+    .ck-mobileMenu.is-closing .ck-mobileMenu__backdrop,
+    .ck-mobileMenu.is-closing .ck-mobileMenu__panel {
+      animation: none !important;
+    }
+
+    .ck-mega__backdrop,
+    .ck-mega__curtain {
+      transition: none !important;
+    }
   }
 </style>
 
-{navSticky ? (
-  <script>
-    {`
+<script is:inline>
 (() => {
-  const header = document.querySelector('.ck-siteNavHeader[data-nav-sticky="true"]');
-  if (!header) return;
+  const headers = document.querySelectorAll('.ck-siteNavHeader');
+  if (!headers.length) return;
 
-  const surface = header.closest('.ck-topSurface');
-  const heightTarget = surface || document.documentElement;
-  const syncHeight = () => {
-    const h = Math.ceil(header.getBoundingClientRect().height);
-    heightTarget.style.setProperty('--ck-nav-h', h ? (h + 'px') : '0px');
-  };
+  for (const headerEl of headers) {
+    if (!(headerEl instanceof HTMLElement)) continue;
 
-  // Toggle "stuck" styling when the page scrolls. Keep the controller tiny and deterministic.
-  const update = () => {
-    const stuck = window.scrollY > 8;
-    header.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
-  };
+    // Track shared overlay state: we never allow both "curtains" at once.
+    // (Desktop mega curtain OR mobile full-screen curtain.)
+    let closeMegaImmediate = null;
 
-  syncHeight();
-  update();
+    // --- Height sync (drives curtain top via --ck-nav-h) ---
+    const surface = headerEl.closest('.ck-topSurface');
+    const heightTarget = (surface instanceof HTMLElement ? surface : null) || document.documentElement;
+    const syncHeight = () => {
+      const h = headerEl.getBoundingClientRect().height;
+      heightTarget.style.setProperty('--ck-nav-h', h ? (h + 'px') : '0px');
+    };
 
-  if ('ResizeObserver' in window) {
-    const ro = new ResizeObserver(() => syncHeight());
-    ro.observe(header);
-  } else {
-    window.addEventListener('resize', syncHeight, { passive: true });
-  }
+    syncHeight();
 
-  window.addEventListener('scroll', update, { passive: true });
-})();
-`}
-  </script>
-) : null}
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(() => syncHeight());
+      ro.observe(headerEl);
+    } else {
+      window.addEventListener('resize', syncHeight, { passive: true });
+    }
 
-<script>
-  {`
-(() => {
-  const mega = document.querySelector('details.ck-mega[data-ck-mega="widgets"]');
-  if (!mega) return;
+    // --- Sticky "stuck" state (Quiksilver-style: no height collapse; just surface change) ---
+    const stickyEnabled = headerEl.getAttribute('data-nav-sticky') === 'true';
+    if (stickyEnabled) {
+      // Avoid triggering stuck/fixed after a tiny scroll.
+      // This keeps the header from "jumping" into sticky state immediately.
+      const STUCK_Y = 120;
+      let raf = 0;
+      const updateStuck = () => {
+        raf = 0;
+        // Keep header pinned while an overlay is open so header + curtain stay one layer.
+        if (
+          headerEl.getAttribute('data-nav-mega') === 'engaged' ||
+          headerEl.getAttribute('data-nav-mobile') === 'open'
+        ) {
+          headerEl.setAttribute('data-nav-stuck', 'true');
+          return;
+        }
+        const stuck = window.scrollY > STUCK_Y;
+        headerEl.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
+      };
 
-  const isHoverCapable = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
+      const onScroll = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(updateStuck);
+      };
 
-  const open = () => {
-    mega.open = true;
-  };
-  const close = () => {
-    mega.open = false;
-  };
+      updateStuck();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
 
-  // Close on backdrop click.
-  const backdrop = mega.querySelector('[data-ck-mega-close]');
-  if (backdrop) {
-    backdrop.addEventListener('click', (e) => {
-      e.preventDefault();
-      close();
+    // --- Mobile menu (curtain) ---
+    const mobileMenu = headerEl.querySelector('.ck-mobileMenu');
+    const mobileTrigger = headerEl.querySelector('[data-ck-nav-mobile-trigger]');
+    const mobileBackdrop = headerEl.querySelector('[data-ck-nav-mobile-close]');
+    const mobilePanel = headerEl.querySelector('.ck-mobileMenu__panel');
+    const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 900px)') : null;
+
+    let mobileExitTimer = 0;
+    let mobileIsClosing = false;
+    const EXIT_ANIMATION_MS = 140;
+
+    const setMobileOpen = (open) => {
+      headerEl.setAttribute('data-nav-mobile', open ? 'open' : 'closed');
+      if (mobileTrigger instanceof HTMLElement) {
+        mobileTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+
+      // Lock page scroll when mobile menu is open.
+      // Keep it minimal and reversible.
+      if (open) {
+        const prev = document.documentElement.style.overflow;
+        document.documentElement.dataset.ckPrevOverflow = prev;
+        document.documentElement.style.overflow = 'hidden';
+      } else {
+        const prev = document.documentElement.dataset.ckPrevOverflow;
+        if (prev !== undefined) document.documentElement.style.overflow = prev;
+        delete document.documentElement.dataset.ckPrevOverflow;
+      }
+    };
+
+    const closeMobileImmediate = () => {
+      mobileIsClosing = false;
+      if (mobileExitTimer) window.clearTimeout(mobileExitTimer);
+      mobileExitTimer = 0;
+      if (mobileMenu instanceof HTMLElement) mobileMenu.classList.remove('is-closing');
+      setMobileOpen(false);
+    };
+
+    const closeMobileAnimated = () => {
+      if (mobileIsClosing) return;
+      if (headerEl.getAttribute('data-nav-mobile') !== 'open') {
+        closeMobileImmediate();
+        return;
+      }
+      mobileIsClosing = true;
+      if (mobileMenu instanceof HTMLElement) mobileMenu.classList.add('is-closing');
+      // Keep it visually open during exit animation.
+      setMobileOpen(true);
+      mobileExitTimer = window.setTimeout(() => {
+        if (mobileMenu instanceof HTMLElement) mobileMenu.classList.remove('is-closing');
+        mobileIsClosing = false;
+        setMobileOpen(false);
+      }, EXIT_ANIMATION_MS);
+    };
+
+    const toggleMobile = () => {
+      const openNow = headerEl.getAttribute('data-nav-mobile') === 'open';
+      if (openNow) closeMobileAnimated();
+      else {
+        // If the desktop mega is engaged, close it first.
+        if (typeof closeMegaImmediate === 'function') closeMegaImmediate();
+        closeMobileImmediate();
+        setMobileOpen(true);
+      }
+    };
+
+    if (mobileTrigger instanceof HTMLElement) {
+      mobileTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleMobile();
+      });
+    }
+
+    if (mobileBackdrop instanceof HTMLElement) {
+      mobileBackdrop.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeMobileAnimated();
+      });
+    }
+
+    // Close when navigating via a link inside the mobile panel.
+    if (mobilePanel instanceof HTMLElement) {
+      mobilePanel.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        if (t.closest('a')) closeMobileImmediate();
+      });
+    }
+
+    // Close mobile menu when leaving mobile breakpoint.
+    if (mqMobile) {
+      mqMobile.addEventListener('change', () => {
+        if (!mqMobile.matches) closeMobileImmediate();
+      });
+    }
+
+    // --- Mega menu (desktop curtain) ---
+    // Quiksilver model:
+    // - Desktop visibility is conceptually hover/focus driven.
+    // - We only mirror "engaged" state on the header for surface + arrow affordance.
+    const mega = headerEl.querySelector('.ck-mega[data-ck-mega="widgets"]');
+    if (mega instanceof HTMLElement) {
+      const trigger = mega.querySelector('.ck-mega__trigger');
+      const curtain = mega.querySelector('.ck-mega__curtain');
+      const backdrop = mega.querySelector('.ck-mega__backdrop');
+
+      const isHoverCapable = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
+      const setMegaEngaged = (engaged) => {
+        headerEl.setAttribute('data-nav-mega', engaged ? 'engaged' : 'closed');
+        if (engaged) headerEl.setAttribute('data-nav-stuck', 'true');
+        if (trigger instanceof HTMLElement) trigger.setAttribute('aria-expanded', engaged ? 'true' : 'false');
+      };
+
+      const closeMega = () => setMegaEngaged(false);
+      closeMegaImmediate = closeMega;
+
+      // Hover/focus opens on desktop.
+      mega.addEventListener('pointerenter', () => {
+        if (!isHoverCapable()) return;
+        setMegaEngaged(true);
+      });
+
+      mega.addEventListener('pointerleave', () => {
+        if (!isHoverCapable()) return;
+        setMegaEngaged(false);
+      });
+
+      mega.addEventListener('focusin', () => {
+        setMegaEngaged(true);
+      });
+
+      mega.addEventListener('focusout', (e) => {
+        const next = e.relatedTarget;
+        if (next instanceof Node && mega.contains(next)) return;
+        // Small defer avoids flicker when tabbing.
+        window.setTimeout(() => {
+          if (!mega.matches(':focus-within')) setMegaEngaged(false);
+        }, 0);
+      });
+
+      // Click:
+      // - Touch/non-hover toggles the mega.
+      // - Hover-capable: click just ensures it's engaged.
+      if (trigger instanceof HTMLElement) {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeMobileImmediate();
+          const engaged = headerEl.getAttribute('data-nav-mega') === 'engaged';
+          if (isHoverCapable()) {
+            setMegaEngaged(true);
+            return;
+          }
+          setMegaEngaged(!engaged);
+        });
+      }
+
+      if (backdrop instanceof HTMLElement) {
+        backdrop.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeMega();
+        });
+      }
+
+      // Close when navigating via a link.
+      if (curtain instanceof HTMLElement) {
+        curtain.addEventListener('click', (e) => {
+          const t = e.target;
+          if (!(t instanceof Element)) return;
+          if (t.closest('a')) closeMega();
+        });
+      }
+    }
+
+    // Escape closes whichever overlay is open.
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      // Prefer closing mobile first if open.
+      if (headerEl.getAttribute('data-nav-mobile') === 'open') {
+        closeMobileAnimated();
+        return;
+      }
+      if (headerEl.getAttribute('data-nav-mega') === 'engaged') {
+        // Close immediately to match Quiksilver's "Escape = get me out".
+        if (typeof closeMegaImmediate === 'function') closeMegaImmediate();
+      }
     });
   }
-
-  // Close on Escape.
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
-  });
-
-  // Close when clicking a destination (navigation will proceed).
-  mega.addEventListener('click', (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    if (t.closest('.ck-mega__item') || t.closest('.ck-mega__asideInner a')) {
-      close();
-    }
-  });
-
-  // Hover open/close (desktop only). Mirrors “curtain” behavior.
-  // IMPORTANT: use bubbling events so entering the fixed-position curtain counts as "still hovered".
-  let closeTimer = null;
-  const scheduleClose = () => {
-    if (closeTimer) clearTimeout(closeTimer);
-    closeTimer = setTimeout(() => close(), 140);
-  };
-  const cancelClose = () => {
-    if (closeTimer) clearTimeout(closeTimer);
-    closeTimer = null;
-  };
-
-  mega.addEventListener('mouseover', (e) => {
-    if (!isHoverCapable()) return;
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    if (mega.contains(t)) {
-      cancelClose();
-      open();
-    }
-  });
-
-  mega.addEventListener('mouseout', (e) => {
-    if (!isHoverCapable()) return;
-    const rt = e.relatedTarget;
-    if (!(rt instanceof Element) || !mega.contains(rt)) {
-      scheduleClose();
-    }
-  });
 })();
-`}
 </script>

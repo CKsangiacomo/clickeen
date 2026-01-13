@@ -5,13 +5,14 @@ export type LocalizationOp = { op: 'set'; path: string; value: unknown };
 export type InstanceOverlay = {
   v: 1;
   baseUpdatedAt?: string | null;
+  baseFingerprint?: string | null;
   ops: LocalizationOp[];
 };
 
 type L10nManifest = {
   v: 1;
   gitSha: string;
-  instances: Record<string, Record<string, { file: string; baseUpdatedAt?: string | null }>>;
+  instances: Record<string, Record<string, { file: string; baseUpdatedAt?: string | null; geoCountries?: string[] | null }>>;
 };
 
 const manifestCache = new Map<string, Promise<L10nManifest>>();
@@ -24,8 +25,36 @@ function hasProhibitedSegment(path: string): boolean {
     .some((segment) => segment && PROHIBITED_SEGMENTS.has(segment));
 }
 
+function stableStringify(value: unknown): string {
+  if (value == null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  const keys = Object.keys(value as Record<string, unknown>).sort();
+  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
+  return `{${body}}`;
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
+  return sha256Hex(stableStringify(config));
+}
+
 function isIndex(segment: string): boolean {
   return /^\d+$/.test(segment);
+}
+
+function isCuratedPublicId(publicId: string): boolean {
+  if (/^wgt_web_/.test(publicId)) return true;
+  return /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/.test(publicId);
+}
+
+function isDevStrict(): boolean {
+  return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 }
 
 function setAt(obj: unknown, path: string, value: unknown): unknown {
@@ -124,6 +153,39 @@ async function fetchOverlay(publicId: string, locale: string): Promise<InstanceO
   return null;
 }
 
+export async function resolveTokyoLocale(args: {
+  publicId: string;
+  locale: string;
+  explicit: boolean;
+  country?: string | null;
+}): Promise<string> {
+  if (args.explicit) return args.locale;
+  const country = String(args.country || '').trim().toUpperCase();
+  if (!country) return args.locale;
+
+  let manifest: L10nManifest;
+  try {
+    manifest = await loadL10nManifest();
+  } catch {
+    return args.locale;
+  }
+
+  const entries = manifest.instances?.[args.publicId];
+  if (!entries || typeof entries !== 'object') return args.locale;
+
+  const locales = Object.keys(entries).sort();
+  for (const locale of locales) {
+    const meta = entries[locale];
+    const geo = Array.isArray(meta?.geoCountries) ? meta.geoCountries : null;
+    if (!geo || geo.length === 0) continue;
+    if (geo.some((code) => String(code || '').trim().toUpperCase() === country)) {
+      return locale;
+    }
+  }
+
+  return args.locale;
+}
+
 export async function applyTokyoInstanceOverlay(args: {
   publicId: string;
   locale: string;
@@ -134,9 +196,22 @@ export async function applyTokyoInstanceOverlay(args: {
   if (!locale) return args.config;
 
   const overlay = await fetchOverlay(args.publicId, locale);
-  if (!overlay) return args.config;
+  if (!overlay) {
+    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+      throw new Error(`[VeniceL10n] Missing overlay for ${args.publicId} (${locale})`);
+    }
+    return args.config;
+  }
 
-  if (overlay.baseUpdatedAt && args.baseUpdatedAt && overlay.baseUpdatedAt !== args.baseUpdatedAt) {
+  if (overlay.baseFingerprint) {
+    const baseFingerprint = await computeBaseFingerprint(args.config);
+    if (overlay.baseFingerprint !== baseFingerprint) {
+      if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+        throw new Error(`[VeniceL10n] Stale overlay for ${args.publicId} (${locale})`);
+      }
+      return args.config;
+    }
+  } else if (overlay.baseUpdatedAt && args.baseUpdatedAt && overlay.baseUpdatedAt !== args.baseUpdatedAt) {
     return args.config;
   }
 

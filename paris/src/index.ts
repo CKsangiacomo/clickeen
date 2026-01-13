@@ -1,16 +1,23 @@
 import { can, resolvePolicy, evaluateLimits, parseLimitsSpec } from '@clickeen/ck-policy';
 import type { Policy, PolicyProfile, LimitsSpec } from '@clickeen/ck-policy';
+import supportedLocalesRaw from '../../config/locales.json';
 
 type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   PARIS_DEV_JWT: string;
   TOKYO_BASE_URL?: string;
+  TOKYO_WORKER_BASE_URL?: string;
+  TOKYO_DEV_JWT?: string;
   AI_GRANT_HMAC_SECRET?: string;
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
+  L10N_QUEUE?: Queue<L10nJob>;
+  L10N_PUBLISH_QUEUE?: Queue<L10nPublishJob>;
 };
+
+type InstanceKind = 'curated' | 'user';
 
 type InstanceRow = {
   public_id: string;
@@ -20,6 +27,7 @@ type InstanceRow = {
   updated_at?: string | null;
   widget_id: string | null;
   workspace_id?: string | null;
+  kind?: InstanceKind | null;
 };
 
 type WidgetRow = {
@@ -35,6 +43,7 @@ type WorkspaceRow = {
   name: string;
   slug: string;
   website_url: string | null;
+  l10n_locales?: unknown;
 };
 
 type UpdatePayload = {
@@ -91,6 +100,42 @@ type AIGrant = {
   };
 };
 
+type L10nJob = {
+  v: 1;
+  publicId: string;
+  widgetType: string;
+  locale: string;
+  baseUpdatedAt: string;
+  kind: InstanceKind;
+  workspaceId: string | null;
+  envStage: string;
+};
+
+type L10nPublishJob = {
+  v: 1;
+  publicId: string;
+  locale: string;
+  action?: 'upsert' | 'delete';
+};
+
+type InstanceLocaleRow = {
+  public_id: string;
+  locale: string;
+  ops: Array<{ op: 'set'; path: string; value: unknown }>;
+  base_fingerprint: string | null;
+  base_updated_at?: string | null;
+  source: string;
+  geo_countries?: string[] | null;
+  workspace_id?: string | null;
+  updated_at?: string | null;
+};
+
+type L10nAllowlistEntry = { path: string; type?: 'string' | 'richtext' };
+type L10nAllowlistFile = { v: 1; paths: L10nAllowlistEntry[] };
+
+const L10N_ALLOWED_SOURCES = new Set(['agent', 'manual', 'import', 'user']);
+const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+
 function json(body: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
@@ -100,6 +145,42 @@ function json(body: unknown, init?: ResponseInit) {
 
 function ckError(error: CkErrorResponse['error'], status: number) {
   return json({ error } satisfies CkErrorResponse, { status });
+}
+
+function apiError(code: string, message: string, status: number, detail?: unknown) {
+  return json({ error: { code, message, detail } }, { status });
+}
+
+function resolveLocalTokyoWorkerBase(env: Env): string | null {
+  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
+  if (stage !== 'local') return null;
+  const base = asTrimmedString(env.TOKYO_WORKER_BASE_URL);
+  if (!base) return null;
+  return base.replace(/\/+$/, '');
+}
+
+async function publishLocaleLocal(
+  env: Env,
+  publicId: string,
+  locale: string,
+  action: 'upsert' | 'delete'
+): Promise<Response | null> {
+  const base = resolveLocalTokyoWorkerBase(env);
+  if (!base) return null;
+  const token = asTrimmedString(env.TOKYO_DEV_JWT) ?? asTrimmedString(env.PARIS_DEV_JWT);
+  const headers: HeadersInit = { 'content-type': 'application/json' };
+  if (token) headers['authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${base}/l10n/publish`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ publicId, locale, action }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    return apiError('INTERNAL_ERROR', 'Local l10n publish failed', 500, detail);
+  }
+  return null;
 }
 
 function requireEnv(env: Env, key: keyof Env) {
@@ -218,7 +299,7 @@ function assertWorkspaceId(value: unknown) {
 
 async function loadWorkspaceById(env: Env, workspaceId: string): Promise<WorkspaceRow | null> {
   const params = new URLSearchParams({
-    select: 'id,tier,name,slug,website_url',
+    select: 'id,tier,name,slug,website_url,l10n_locales',
     id: `eq.${workspaceId}`,
     limit: '1',
   });
@@ -380,6 +461,186 @@ function asTrimmedString(value: unknown): string | null {
   return s ? s : null;
 }
 
+function normalizeSupportedLocales(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    throw new Error('[ParisWorker] config/locales.json must be an array of locale strings');
+  }
+  const locales = raw
+    .map((value) => (typeof value === 'string' ? value.trim().toLowerCase() : ''))
+    .filter(Boolean);
+  const unique = Array.from(new Set(locales));
+  if (unique.length === 0) {
+    throw new Error('[ParisWorker] config/locales.json must include at least one locale');
+  }
+  return unique;
+}
+
+const SUPPORTED_LOCALES = normalizeSupportedLocales(supportedLocalesRaw);
+const SUPPORTED_LOCALE_SET = new Set(SUPPORTED_LOCALES);
+
+function normalizeLocaleList(value: unknown, path: string) {
+  if (value == null) {
+    return { ok: true as const, locales: [] as string[] };
+  }
+  if (!Array.isArray(value)) {
+    return { ok: false as const, issues: [{ path, message: 'locales must be an array' }] };
+  }
+
+  const locales: string[] = [];
+  const issues: Array<{ path: string; message: string }> = [];
+  const seen = new Set<string>();
+
+  value.forEach((item, index) => {
+    const raw = typeof item === 'string' ? item.trim().toLowerCase() : '';
+    if (!raw) {
+      issues.push({ path: `${path}[${index}]`, message: 'locale must be a non-empty string' });
+      return;
+    }
+    if (!SUPPORTED_LOCALE_SET.has(raw)) {
+      issues.push({ path: `${path}[${index}]`, message: `unsupported locale: ${raw}` });
+      return;
+    }
+    if (!seen.has(raw)) {
+      seen.add(raw);
+      locales.push(raw);
+    }
+  });
+
+  if (issues.length) return { ok: false as const, issues };
+  return { ok: true as const, locales };
+}
+
+function normalizeLocaleToken(raw: unknown): string | null {
+  const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
+  if (!value) return null;
+  if (!SUPPORTED_LOCALE_SET.has(value)) return null;
+  return value;
+}
+
+function normalizeL10nSource(raw: unknown): string | null {
+  const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+  if (!value) return null;
+  if (!L10N_ALLOWED_SOURCES.has(value)) return null;
+  return value;
+}
+
+function hasLocaleSuffix(publicId: string, locale: string): boolean {
+  const lower = publicId.toLowerCase();
+  return lower.endsWith(`.${locale}`) || lower.endsWith(`-${locale}`);
+}
+
+function hasProhibitedSegment(pathStr: string): boolean {
+  return String(pathStr || '')
+    .split('.')
+    .some((seg) => seg && L10N_PROHIBITED_SEGMENTS.has(seg));
+}
+
+function normalizeOpPath(raw: string): string {
+  return String(raw || '')
+    .replace(/\[(\d+)\]/g, '.$1')
+    .replace(/\.+/g, '.')
+    .replace(/^\./, '')
+    .replace(/\.$/, '');
+}
+
+function splitPathSegments(pathStr: string): string[] {
+  return String(pathStr || '')
+    .split('.')
+    .map((seg) => seg.trim())
+    .filter(Boolean);
+}
+
+function isNumericSegment(seg: string): boolean {
+  return /^\d+$/.test(seg);
+}
+
+function pathMatchesAllowlist(pathStr: string, allowPath: string): boolean {
+  const pathSegs = splitPathSegments(pathStr);
+  const allowSegs = splitPathSegments(allowPath);
+  if (pathSegs.length !== allowSegs.length) return false;
+  for (let i = 0; i < allowSegs.length; i += 1) {
+    const allow = allowSegs[i];
+    const actual = pathSegs[i];
+    if (allow === '*') {
+      if (!isNumericSegment(actual)) return false;
+      continue;
+    }
+    if (allow !== actual) return false;
+  }
+  return true;
+}
+
+async function loadWidgetLocalizationAllowlist(env: Env, widgetType: string): Promise<string[]> {
+  const base = requireTokyoBase(env);
+  const url = `${base}/widgets/${encodeURIComponent(widgetType)}/localization.json`;
+  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if (!res.ok) {
+    const details = await res.text().catch(() => '');
+    throw new Error(`[ParisWorker] Failed to load localization allowlist (${res.status}): ${details}`);
+  }
+  const json = (await res.json().catch(() => null)) as L10nAllowlistFile | null;
+  if (!json || json.v !== 1 || !Array.isArray(json.paths)) {
+    throw new Error('[ParisWorker] Invalid localization.json allowlist');
+  }
+  return json.paths
+    .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
+    .filter(Boolean);
+}
+
+function stableStringify(value: unknown): string {
+  if (value == null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  const keys = Object.keys(value as Record<string, unknown>).sort();
+  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
+  return `{${body}}`;
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
+  return sha256Hex(stableStringify(config));
+}
+
+function validateL10nOps(opsRaw: unknown, allowlist: string[]) {
+  if (!Array.isArray(opsRaw)) {
+    return { ok: false as const, code: 'OPS_INVALID_TYPE', message: 'ops must be an array' };
+  }
+
+  const ops: Array<{ op: 'set'; path: string; value: unknown }> = [];
+  for (let i = 0; i < opsRaw.length; i += 1) {
+    const op = opsRaw[i] as any;
+    if (!op || typeof op !== 'object' || Array.isArray(op)) {
+      return { ok: false as const, code: 'OPS_INVALID_TYPE', message: `ops[${i}] must be an object` };
+    }
+    if (op.op !== 'set') {
+      return { ok: false as const, code: 'OPS_INVALID_TYPE', message: `ops[${i}].op must be "set"` };
+    }
+    const rawPath = typeof op.path === 'string' ? op.path : '';
+    const path = normalizeOpPath(rawPath);
+    if (!path) {
+      return { ok: false as const, code: 'OPS_INVALID_TYPE', message: `ops[${i}].path is required` };
+    }
+    if (hasProhibitedSegment(path)) {
+      return { ok: false as const, code: 'OPS_INVALID_PATH', message: `ops[${i}].path contains prohibited segment` };
+    }
+    const allowed = allowlist.some((allow) => pathMatchesAllowlist(path, allow));
+    if (!allowed) {
+      return { ok: false as const, code: 'OPS_INVALID_PATH', message: `ops[${i}].path not allowlisted`, detail: path };
+    }
+    if (!('value' in op)) {
+      return { ok: false as const, code: 'OPS_INVALID_TYPE', message: `ops[${i}].value is required` };
+    }
+    ops.push({ op: 'set', path, value: op.value });
+  }
+
+  return { ok: true as const, ops };
+}
+
 function assertWidgetType(widgetType: unknown) {
   const value = asTrimmedString(widgetType);
   if (!value) return { ok: false as const, issues: [{ path: 'widgetType', message: 'widgetType is required' }] };
@@ -400,6 +661,20 @@ function assertPublicId(publicId: unknown) {
     return { ok: false as const, issues: [{ path: 'publicId', message: 'invalid publicId format' }] };
   }
   return { ok: true as const, value };
+}
+
+function inferInstanceKindFromPublicId(publicId: string): InstanceKind {
+  if (/^wgt_web_/.test(publicId)) return 'curated';
+  if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/.test(publicId)) return 'curated';
+  return 'user';
+}
+
+function resolveInstanceKind(instance: InstanceRow): InstanceKind {
+  const inferred = inferInstanceKindFromPublicId(instance.public_id);
+  // PublicId grammar is authoritative for curated instances (e.g. wgt_web_*, wgt_*_main/tmpl_*).
+  if (inferred === 'curated') return 'curated';
+  if (instance.kind === 'curated' || instance.kind === 'user') return instance.kind;
+  return inferred;
 }
 
 function isOutcomeAttachPayload(value: unknown): value is {
@@ -487,7 +762,7 @@ async function handleInstances(req: Request, env: Env) {
   const workspaceId = workspaceIdResult.value;
 
   const params = new URLSearchParams({
-    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id,kind',
     order: 'created_at.desc',
     limit: '50',
     workspace_id: `eq.${workspaceId}`,
@@ -537,7 +812,7 @@ async function handleInstances(req: Request, env: Env) {
 
 async function loadInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id,kind',
     public_id: `eq.${publicId}`,
     limit: '1',
   });
@@ -550,9 +825,39 @@ async function loadInstanceByPublicId(env: Env, publicId: string): Promise<Insta
   return rows?.[0] ?? null;
 }
 
+async function loadInstanceLocale(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,locale,ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    public_id: `eq.${publicId}`,
+    locale: `eq.${locale}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load instance locale (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as InstanceLocaleRow[];
+  return rows?.[0] ?? null;
+}
+
+async function loadInstanceLocales(env: Env, publicId: string): Promise<InstanceLocaleRow[]> {
+  const params = new URLSearchParams({
+    select: 'public_id,locale,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    public_id: `eq.${publicId}`,
+    order: 'locale.asc',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load instance locales (${res.status}): ${JSON.stringify(details)}`);
+  }
+  return ((await res.json()) as InstanceLocaleRow[]).filter(Boolean);
+}
+
 async function loadInstanceByWorkspaceAndPublicId(env: Env, workspaceId: string, publicId: string): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id',
+    select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id,kind',
     public_id: `eq.${publicId}`,
     workspace_id: `eq.${workspaceId}`,
     limit: '1',
@@ -697,7 +1002,7 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
 
   // 1) Ensure instance exists (and optionally reset config to baseline).
-  const existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  let existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (existing && !overwrite) {
     // No-op open path: do not validate or mutate baseline config if we're only opening an existing creative.
     return json({ creativeKey, publicId }, { status: 200 });
@@ -757,12 +1062,15 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
         public_id: publicId,
         status: 'unpublished',
         config: baselineConfig,
+        kind: 'curated',
       }),
     });
     if (!instanceInsert.ok) {
       const details = await readJson(instanceInsert);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
+    const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
+    existing = created?.[0] ?? null;
   } else {
     const patchRes = await supabaseFetch(
       env,
@@ -770,14 +1078,33 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
       {
         method: 'PATCH',
         headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ config: baselineConfig }),
+        body: JSON.stringify({ config: baselineConfig, kind: 'curated' }),
       },
     );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
+    const updated = (await patchRes.json().catch(() => null)) as InstanceRow[] | null;
+    existing = updated?.[0] ?? existing;
   }
+
+  if (!existing) {
+    existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  }
+  if (!existing) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.notFound' }, 500);
+  }
+
+  const enqueueError = await enqueueL10nJobs({
+    env,
+    instance: existing,
+    workspace,
+    widgetType,
+    baseUpdatedAt: existing.updated_at ?? null,
+    policy: policyResult.policy,
+  });
+  if (enqueueError) return enqueueError;
 
   return json({ creativeKey, publicId }, { status: 200 });
 }
@@ -823,6 +1150,283 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     updatedAt: instance.updated_at ?? null,
     workspaceId: instance.workspace_id ?? null,
   });
+}
+
+async function handleInstanceLocalesList(req: Request, env: Env, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const instance = await loadInstanceByPublicId(env, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const rows = await loadInstanceLocales(env, publicIdResult.value);
+  return json({
+    publicId: instance.public_id,
+    workspaceId: instance.workspace_id ?? null,
+    locales: rows.map((row) => ({
+      locale: row.locale,
+      source: row.source,
+      baseFingerprint: row.base_fingerprint,
+      baseUpdatedAt: row.base_updated_at ?? null,
+      geoCountries: row.geo_countries ?? null,
+      updatedAt: row.updated_at ?? null,
+    })),
+  });
+}
+
+async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: string, localeRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const locale = normalizeLocaleToken(localeRaw);
+  if (!locale) return apiError('LOCALE_INVALID', 'Unsupported locale', 400, { locale: localeRaw });
+
+  if (hasLocaleSuffix(publicIdResult.value, locale)) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return apiError('OPS_INVALID_TYPE', 'Invalid JSON payload', 400);
+  }
+  if (!isRecord(payload)) {
+    return apiError('OPS_INVALID_TYPE', 'Payload must be an object', 400);
+  }
+
+  const source = normalizeL10nSource((payload as any).source);
+  if (!source) {
+    return apiError('OPS_INVALID_TYPE', 'Invalid source', 400);
+  }
+
+  const baseFingerprintRaw = asTrimmedString((payload as any).baseFingerprint);
+  const baseUpdatedAtRaw = asTrimmedString((payload as any).baseUpdatedAt);
+  const widgetTypeRaw = asTrimmedString((payload as any).widgetType);
+
+  const instance = await loadInstanceByPublicId(env, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const instanceKind = resolveInstanceKind(instance);
+  const instanceWorkspaceId = instance.workspace_id ?? null;
+  if (instanceKind === 'user') {
+    if (!instanceWorkspaceId) {
+      return apiError('WORKSPACE_MISMATCH', 'Instance missing workspace', 403, { publicId });
+    }
+    const workspace = await loadWorkspaceById(env, instanceWorkspaceId);
+    if (!workspace) {
+      return apiError('WORKSPACE_MISMATCH', 'Workspace not found', 403, { workspaceId: instanceWorkspaceId });
+    }
+    const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+    if (!normalized.ok) {
+      return apiError('LOCALE_INVALID', 'Workspace locales invalid', 500, normalized.issues);
+    }
+    if (!normalized.locales.includes(locale)) {
+      return apiError('LOCALE_NOT_ENTITLED', 'Locale not enabled for workspace', 403, {
+        locale,
+        workspaceId: instanceWorkspaceId,
+      });
+    }
+  }
+
+  const computedFingerprint = await computeBaseFingerprint(instance.config);
+  if (baseFingerprintRaw) {
+    if (baseFingerprintRaw !== computedFingerprint) {
+      return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint does not match', 409, {
+        provided: baseFingerprintRaw,
+      });
+    }
+  } else if (baseUpdatedAtRaw) {
+    const instanceUpdatedAt = instance.updated_at ?? null;
+    if (!instanceUpdatedAt || instanceUpdatedAt !== baseUpdatedAtRaw) {
+      return apiError('FINGERPRINT_MISMATCH', 'baseUpdatedAt does not match', 409, {
+        provided: baseUpdatedAtRaw,
+      });
+    }
+  } else {
+    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint or baseUpdatedAt required', 409);
+  }
+
+  let widgetType: string | null = null;
+  if (instance.widget_id) {
+    const widget = await loadWidget(env, instance.widget_id);
+    if (!widget) return apiError('INTERNAL_ERROR', 'Widget missing for instance', 500, { publicId });
+    widgetType = widget.type ?? null;
+  }
+  if (!widgetType && widgetTypeRaw) {
+    const widgetTypeResult = assertWidgetType(widgetTypeRaw);
+    if (!widgetTypeResult.ok) {
+      return apiError('OPS_INVALID_TYPE', 'Invalid widgetType', 400, widgetTypeResult.issues);
+    }
+    widgetType = widgetTypeResult.value;
+  }
+  if (!widgetType) {
+    return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
+  }
+
+  let allowlist: string[];
+  try {
+    allowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to load localization allowlist', 500, detail);
+  }
+
+  const opsResult = validateL10nOps((payload as any).ops, allowlist);
+  if (!opsResult.ok) {
+    return apiError(opsResult.code, opsResult.message, 400, opsResult.detail);
+  }
+
+  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
+  if (existing && existing.source === 'user' && source !== 'user') {
+    return apiError('USER_OVERRIDE_EXISTS', 'Cannot overwrite user-edited localization', 403, {
+      publicId: publicIdResult.value,
+      locale,
+      source: existing.source,
+    });
+  }
+
+  const payloadRow = {
+    public_id: publicIdResult.value,
+    locale,
+    ops: opsResult.ops,
+    base_fingerprint: computedFingerprint,
+    base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
+    source,
+    workspace_id: instanceWorkspaceId,
+  };
+
+  const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_locales?on_conflict=public_id,locale`, {
+    method: 'POST',
+    headers: {
+      Prefer: 'resolution=merge-duplicates,return=representation',
+    },
+    body: JSON.stringify(payloadRow),
+  });
+  if (!upsertRes.ok) {
+    const details = await readJson(upsertRes);
+    return apiError('INTERNAL_ERROR', 'Failed to upsert locale', 500, details);
+  }
+
+  const rows = (await upsertRes.json().catch(() => [])) as InstanceLocaleRow[];
+  const row = rows?.[0] ?? null;
+
+  if (!env.L10N_PUBLISH_QUEUE) {
+    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
+  }
+  try {
+    await env.L10N_PUBLISH_QUEUE.send({
+      v: 1,
+      publicId: publicIdResult.value,
+      locale,
+      action: 'upsert',
+    } satisfies L10nPublishJob);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  }
+
+  const localPublish = await publishLocaleLocal(env, publicIdResult.value, locale, 'upsert');
+  if (localPublish) return localPublish;
+
+  return json({
+    publicId: publicIdResult.value,
+    locale,
+    source,
+    baseFingerprint: row?.base_fingerprint ?? computedFingerprint,
+    baseUpdatedAt: row?.base_updated_at ?? payloadRow.base_updated_at ?? null,
+    updatedAt: row?.updated_at ?? null,
+  });
+}
+
+async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: string, localeRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const locale = normalizeLocaleToken(localeRaw);
+  if (!locale) return apiError('LOCALE_INVALID', 'Unsupported locale', 400, { locale: localeRaw });
+
+  if (hasLocaleSuffix(publicIdResult.value, locale)) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale });
+  }
+
+  const instance = await loadInstanceByPublicId(env, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const instanceWorkspaceId = instance.workspace_id ?? null;
+  const url = new URL(req.url);
+  const workspaceIdRaw = url.searchParams.get('workspaceId');
+  if (!instanceWorkspaceId) {
+    return apiError('WORKSPACE_MISMATCH', 'Curated instances do not support user overrides', 403, { publicId });
+  }
+  if (!workspaceIdRaw) {
+    return apiError('UNAUTHORIZED', 'workspaceId required', 403);
+  }
+  const workspaceIdResult = assertWorkspaceId(workspaceIdRaw);
+  if (!workspaceIdResult.ok) {
+    return apiError('UNAUTHORIZED', 'workspaceId invalid', 403);
+  }
+  if (workspaceIdResult.value !== instanceWorkspaceId) {
+    return apiError('WORKSPACE_MISMATCH', 'Instance does not belong to workspace', 403, {
+      publicId,
+      workspaceId: workspaceIdResult.value,
+    });
+  }
+
+  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
+  if (!existing) {
+    return json({ publicId: publicIdResult.value, locale, deleted: false, reason: 'not_found' });
+  }
+  if (existing.source !== 'user') {
+    return json({ publicId: publicIdResult.value, locale, deleted: false, reason: 'not_user_source' });
+  }
+
+  const deleteRes = await supabaseFetch(
+    env,
+    `/rest/v1/widget_instance_locales?public_id=eq.${encodeURIComponent(publicIdResult.value)}&locale=eq.${encodeURIComponent(
+      locale,
+    )}`,
+    { method: 'DELETE' },
+  );
+  if (!deleteRes.ok) {
+    const details = await readJson(deleteRes);
+    return apiError('INTERNAL_ERROR', 'Failed to delete locale', 500, details);
+  }
+
+  if (!env.L10N_PUBLISH_QUEUE) {
+    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
+  }
+  try {
+    await env.L10N_PUBLISH_QUEUE.send({
+      v: 1,
+      publicId: publicIdResult.value,
+      locale,
+      action: 'delete',
+    } satisfies L10nPublishJob);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  }
+
+  const localPublish = await publishLocaleLocal(env, publicIdResult.value, locale, 'delete');
+  if (localPublish) return localPublish;
+
+  return json({ publicId: publicIdResult.value, locale, deleted: true });
 }
 
 async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
@@ -871,6 +1475,76 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
   });
 }
 
+async function handleWorkspaceLocalesGet(req: Request, env: Env, workspaceId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+  if (!normalized.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.workspace.locales.invalid',
+        detail: JSON.stringify(normalized.issues),
+      },
+      500
+    );
+  }
+
+  return json({ locales: normalized.locales });
+}
+
+async function handleWorkspaceLocalesPut(req: Request, env: Env, workspaceId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
+  }
+
+  if (!isRecord(payload)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const localesResult = normalizeLocaleList((payload as any).locales, 'locales');
+  if (!localesResult.ok) {
+    return json(localesResult.issues, { status: 422 });
+  }
+
+  const locales = localesResult.locales;
+  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
+  if (entitlementGate) return entitlementGate;
+
+  const patchRes = await supabaseFetch(env, `/rest/v1/workspaces?id=eq.${encodeURIComponent(workspaceId)}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ l10n_locales: locales }),
+  });
+  if (!patchRes.ok) {
+    const details = await readJson(patchRes);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+
+  return json({ locales });
+}
+
 async function enforceLimits(
   env: Env,
   policy: Policy,
@@ -901,6 +1575,116 @@ async function enforceLimits(
     },
     403
   );
+}
+
+function requirePolicyFlag(policy: Policy, key: string): boolean {
+  if (!(key in policy.flags)) {
+    throw new Error(`[ParisWorker] Policy missing flag key: ${key}`);
+  }
+  return Boolean(policy.flags[key]);
+}
+
+function requirePolicyCap(policy: Policy, key: string): number | null {
+  if (!(key in policy.caps)) {
+    throw new Error(`[ParisWorker] Policy missing cap key: ${key}`);
+  }
+  return policy.caps[key] as number | null;
+}
+
+function readWorkspaceLocales(workspace: WorkspaceRow): Response | { locales: string[] } {
+  const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+  if (!normalized.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.workspace.locales.invalid',
+        detail: JSON.stringify(normalized.issues),
+      },
+      500
+    );
+  }
+  return { locales: normalized.locales };
+}
+
+function enforceL10nSelection(policy: Policy, locales: string[]) {
+  if (locales.length === 0) return null;
+  const enabled = requirePolicyFlag(policy, 'l10n.enabled');
+  if (!enabled) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
+  }
+  const max = requirePolicyCap(policy, 'l10n.locales.max');
+  if (max != null && locales.length > max) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.upsell.reason.capReached',
+        upsell: 'UP',
+        detail: `l10n.locales.max=${max}`,
+      },
+      403
+    );
+  }
+  return null;
+}
+
+async function enqueueL10nJobs(args: {
+  env: Env;
+  instance: InstanceRow;
+  workspace: WorkspaceRow;
+  widgetType: string | null;
+  baseUpdatedAt: string | null | undefined;
+  policy: Policy;
+}) {
+  if (!args.widgetType) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  }
+  if (!args.baseUpdatedAt) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.missingUpdatedAt' }, 500);
+  }
+
+  const kind = resolveInstanceKind(args.instance);
+  let locales: string[] = [];
+
+  if (kind === 'curated') {
+    locales = SUPPORTED_LOCALES;
+  } else {
+    const workspaceLocales = readWorkspaceLocales(args.workspace);
+    if (workspaceLocales instanceof Response) return workspaceLocales;
+    locales = workspaceLocales.locales;
+    const entitlementGate = enforceL10nSelection(args.policy, locales);
+    if (entitlementGate) return entitlementGate;
+  }
+
+  if (locales.length === 0) return null;
+
+  if (!args.env.L10N_QUEUE) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.missing', detail: 'L10N_QUEUE missing' }, 500);
+  }
+
+  const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
+  const workspaceId = args.instance.workspace_id ?? args.workspace.id ?? null;
+
+  const messages = locales.map((locale) => ({
+    body: {
+      v: 1,
+      publicId: args.instance.public_id,
+      widgetType: args.widgetType!,
+      locale,
+      baseUpdatedAt: args.baseUpdatedAt!,
+      kind,
+      workspaceId,
+      envStage,
+    } satisfies L10nJob,
+  }));
+
+  try {
+    await args.env.L10N_QUEUE.sendBatch(messages);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.enqueueFailed', detail }, 500);
+  }
+
+  return null;
 }
 
 async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId: string, publicId: string) {
@@ -975,6 +1759,7 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   if (config !== undefined) update.config = config;
   if (status !== undefined) update.status = status;
 
+  let updatedInstance: InstanceRow | null = instance;
   const patchRes = await supabaseFetch(
     env,
     `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
@@ -987,6 +1772,30 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   if (!patchRes.ok) {
     const details = await readJson(patchRes);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+  const updated = (await patchRes.json().catch(() => null)) as InstanceRow[] | null;
+  updatedInstance = updated?.[0] ?? updatedInstance;
+
+  if (!updatedInstance) {
+    updatedInstance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  }
+
+  if (updatedInstance) {
+    const shouldTrigger =
+      config !== undefined ||
+      (status === 'published' && updatedInstance.status === 'published');
+    const isCurated = resolveInstanceKind(updatedInstance) === 'curated';
+    if (shouldTrigger && (isCurated || updatedInstance.status === 'published')) {
+      const enqueueError = await enqueueL10nJobs({
+        env,
+        instance: updatedInstance,
+        workspace,
+        widgetType: widget.type ?? null,
+        baseUpdatedAt: updatedInstance.updated_at ?? null,
+        policy: policyResult.policy,
+      });
+      if (enqueueError) return enqueueError;
+    }
   }
 
   return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
@@ -1032,6 +1841,7 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const publicId = publicIdResult.value;
   const config = configResult.value;
   const status = statusResult.value ?? 'unpublished';
+  const kind = inferInstanceKindFromPublicId(publicId);
 
   const existing = await loadInstanceByPublicId(env, publicId);
   if (existing) {
@@ -1089,11 +1899,30 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
       public_id: publicId,
       status,
       config,
+      kind,
     }),
   });
   if (!instanceInsert.ok) {
     const details = await readJson(instanceInsert);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+  }
+  const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
+  const createdInstance = created?.[0] ?? null;
+
+  if (createdInstance) {
+    const shouldTrigger =
+      resolveInstanceKind(createdInstance) === 'curated' || createdInstance.status === 'published';
+    if (shouldTrigger) {
+      const enqueueError = await enqueueL10nJobs({
+        env,
+        instance: createdInstance,
+        workspace,
+        widgetType,
+        baseUpdatedAt: createdInstance.updated_at ?? null,
+        policy: policyResult.policy,
+      });
+      if (enqueueError) return enqueueError;
+    }
   }
 
   return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
@@ -1155,6 +1984,7 @@ async function handleCreateInstance(req: Request, env: Env) {
   const workspaceId = workspaceIdRaw as string;
   const config = configResult.value!;
   const status = statusResult.value ?? 'unpublished';
+  const kind = inferInstanceKindFromPublicId(publicId);
 
   const existing = await loadInstanceByPublicId(env, publicId);
   if (existing) {
@@ -1195,6 +2025,7 @@ async function handleCreateInstance(req: Request, env: Env) {
       workspace_id: workspaceId,
       status,
       config,
+      kind,
     }),
   });
   if (!instanceInsert.ok) {
@@ -1357,6 +2188,15 @@ export default {
         return handleAiOutcome(req, env);
       }
 
+      const workspaceLocalesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/locales$/);
+      if (workspaceLocalesMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceLocalesMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        if (req.method === 'GET') return handleWorkspaceLocalesGet(req, env, workspaceIdResult.value);
+        if (req.method === 'PUT') return handleWorkspaceLocalesPut(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
       const workspaceInstancesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instances$/);
       if (workspaceInstancesMatch) {
         const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancesMatch[1]));
@@ -1381,6 +2221,22 @@ export default {
         const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceWebsiteCreativeMatch[1]));
         if (!workspaceIdResult.ok) return workspaceIdResult.response;
         if (req.method === 'POST') return handleWorkspaceEnsureWebsiteCreative(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const instanceLocalesMatch = pathname.match(/^\/api\/instances\/([^/]+)\/locales$/);
+      if (instanceLocalesMatch) {
+        const publicId = decodeURIComponent(instanceLocalesMatch[1]);
+        if (req.method === 'GET') return handleInstanceLocalesList(req, env, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const instanceLocaleMatch = pathname.match(/^\/api\/instances\/([^/]+)\/locales\/([^/]+)$/);
+      if (instanceLocaleMatch) {
+        const publicId = decodeURIComponent(instanceLocaleMatch[1]);
+        const locale = decodeURIComponent(instanceLocaleMatch[2]);
+        if (req.method === 'PUT') return handleInstanceLocaleUpsert(req, env, publicId, locale);
+        if (req.method === 'DELETE') return handleInstanceLocaleDelete(req, env, publicId, locale);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

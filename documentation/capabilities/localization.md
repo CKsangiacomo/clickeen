@@ -14,6 +14,27 @@ This document defines how Clickeen handles language and localization across:
 
 This prevents “fan-out” (e.g. `wgt_web_... .fr/.de/.es`) and keeps caching + ownership clean.
 
+## Instance kinds + entitlement gating (Phase 1)
+
+### Instance kinds (authoritative)
+- **Curated**: Clickeen-owned instances used for Prague embeds and template pickers.
+- **User**: Workspace-owned instances created by users (often by cloning curated).
+
+Curated instances always localize to all supported locales. User instances localize only when entitled and selected.
+
+### Entitlement + selection model
+Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace locale selection**.
+
+- Entitlement keys:
+  - `l10n.enabled` (flag)
+  - `l10n.locales.max` (cap)
+- Tier rules (V0):
+  - Minibob / Free / Tier 1: ❌ no localization
+  - Tier 2: ✅ up to 3 locales
+  - Tier 3: ✅ unlimited locales
+  - DevStudio: ✅ uncapped
+- Workspace selection source: `workspaces.l10n_locales` (JSON array)
+
 ## Two distinct systems: `i18n` vs `l10n`
 
 ### `i18n` (catalogs for UI strings)
@@ -38,9 +59,20 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 
+**Generation (V0)**
+- Paris enqueues localization jobs on publish/update.
+- San Francisco runs the localization agent and emits set-only ops.
+- Tokyo persists overlays + updates the `l10n/manifest.json` indirection map.
+- Venice applies the overlay at render time (if present and not stale).
+
+**Widget allowlist (authoritative)**
+- `tokyo/widgets/{widgetType}/localization.json` defines exactly which paths are translatable.
+- Agents must not mutate paths outside this allowlist.
+
 ## Website creatives (Prague visuals)
 
-Website creatives are Clickeen-owned instances used as Prague visual embeds (via Venice).
+Website creatives are **curated instances** (Clickeen-owned) used as Prague visual embeds **and** template pickers.
+They are the same objects; “creative” and “template” are distribution surfaces, not different instance types.
 
 ### Identity (non-negotiable)
 
@@ -68,6 +100,7 @@ Example:
 ```json
 {
   "v": 1,
+  "baseFingerprint": null,
   "baseUpdatedAt": null,
   "ops": [
     { "op": "set", "path": "headline", "value": "..." }
@@ -78,7 +111,24 @@ Example:
 Rules:
 - Only `{ op: "set" }` ops are allowed.
 - Paths use dot notation (e.g. `cta.label`, `items.0.title`).
-- `baseUpdatedAt` is optional. When set, runtime applies the overlay only if it matches the base instance `updatedAt` (staleness guard).
+
+### Staleness guard (single contract for pages + instances)
+
+We use one staleness guard everywhere (Prague pages, curated instances, user instances):
+
+- `baseFingerprint` is the canonical staleness guard.
+- Runtime applies an overlay only when:
+  - `overlay.baseFingerprint === computeBaseFingerprint(baseDoc)`.
+
+This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
+
+**Legacy fallback (temporary):**
+- `baseUpdatedAt` is supported only for backward compatibility with existing instance overlays.
+- When `baseFingerprint` is missing, runtime MAY fall back to `baseUpdatedAt` equality against the base instance `updatedAt`.
+- New overlays SHOULD set `baseFingerprint`; `baseUpdatedAt` is considered deprecated.
+
+**Shared implementation requirement:**
+- `computeBaseFingerprint()` must be implemented once and imported from a shared module (recommended: a workspace package `@clickeen/l10n` located at `tooling/l10n`).
 
 ## Why overlays (vs full localized JSON per locale)
 
@@ -108,16 +158,18 @@ Effect:
 - Re-adds the DB constraint forbidding locale suffixes
 
 Apply:
-- Local: `supabase db reset` (destructive) or apply the migration to the running local DB.
-- Remote: `supabase db push` (will apply the migration to the configured remote project).
+- Local/Remote: apply the migration to the running DB (`supabase db push` to the configured project).
 
-### 2) Add or update an instance overlay
+### 2) Generate overlays (V0 default)
 
-1. Create/update: `l10n/instances/<publicId>/<locale>.ops.json`
-2. Build + validate: `pnpm build:l10n`
-3. Ensure Tokyo serves the output:
-   - Local: `tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**`
-   - Cloud-dev/prod: `tokyo` must publish `tokyo/l10n/**` to R2/CDN
+1. Paris enqueues an l10n job on publish/update.
+2. San Francisco runs the localization agent (allowlist + budgets).
+3. Tokyo stores overlays and updates `tokyo/l10n/manifest.json`.
+
+Manual override (optional, dev-only):
+- Create/update: `l10n/instances/<publicId>/<locale>.ops.json`
+- Build + validate: `pnpm build:l10n`
+- Ensure Tokyo serves the output (`tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**` locally).
 
 ### 3) Consume overlays
 

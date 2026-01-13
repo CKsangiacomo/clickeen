@@ -28,6 +28,7 @@ Core columns:
 - `widget_id` (uuid) — FK to `widgets.id`
 - `workspace_id` (uuid) — FK to `workspaces.id` (instances are workspace-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
+- `kind` (text) — `curated` | `user` (curated powers Prague + templates; user is workspace-owned)
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
 
@@ -39,7 +40,8 @@ Core columns:
 - `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
 - `name` (text)
 - `slug` (text) — URL-safe workspace slug
-- `website_url` (text, nullable) — workspace setting gated by `context.websiteUrl.enabled`
+- `website_url` (text, nullable) — workspace setting used by Copilot; gated by `context.websiteUrl.enabled` where it is surfaced/consumed
+- `l10n_locales` (jsonb, nullable) — workspace-selected locales for auto-translate
 
 ### `workspace_members`
 One row per user membership (roles).

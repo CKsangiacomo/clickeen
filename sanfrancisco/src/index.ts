@@ -5,6 +5,7 @@ import { executeSdrCopilot } from './agents/sdrCopilot';
 import { executeEditorFaqAnswer } from './agents/editorFaqAnswer';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
+import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
 
 const MAX_INFLIGHT_PER_ISOLATE = 8;
 let inflight = 0;
@@ -422,11 +423,16 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<InteractionEvent>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<InteractionEvent | L10nJob>, env: Env): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     await ensureD1Schema(env);
     for (const msg of batch.messages) {
-      const e = msg.body;
+      const body = msg.body;
+      if (isL10nJob(body)) {
+        await executeL10nJob(body, env);
+        continue;
+      }
+      const e = body as InteractionEvent;
       const key = `logs/${env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
       await env.SF_R2.put(key, JSON.stringify(e), { httpMetadata: { contentType: 'application/json' } });
       await indexCopilotEvent(env, e);

@@ -6,3 +6,9 @@ workers_dev = true
 [[r2_buckets]]
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
+
+[[queues.consumers]]
+queue = "l10n-publish-dev"
+
+[triggers]
+crons = ["0 3 * * *"]

@@ -3,3 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-12-28"
 workers_dev = true
 
+[[queues.producers]]
+binding = "L10N_QUEUE"
+queue = "l10n-jobs-dev"
+
+[[queues.producers]]
+binding = "L10N_PUBLISH_QUEUE"
+queue = "l10n-publish-dev"

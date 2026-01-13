@@ -11,84 +11,28 @@ Renders a configurable countdown / personal countdown / number counter with opti
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates text/visibility.
 
-## Subject Policy — Flags / Caps / Budgets (Matrices)
+## Entitlements + limits (v1)
 
-X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+- Tier values live in the global matrix: `config/entitlements.matrix.json`.
+- Widget enforcement lives in `tokyo/widgets/countdown/limits.json` (create this when the widget ships).
+- The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
-### Matrix A — Flags (ALLOW/BLOCK)
-
-```text
-Legend: A=ALLOW, B=BLOCK
-
-Row                 | DS | MB | F  | T1 | T2 | T3
-------------------- |----|----|----|----|----|----
-seoGeoEnabled       | A  | B  | B  | A  | A  | A
-removeBranding      | A  | B  | B  | A  | A  | A
-websiteUrlAllowed   | A  | B  | A  | A  | A  | A
-modeDateAllowed     | A  | A  | A  | A  | A  | A
-modePersonalAllowed | A  | B  | B  | A  | A  | A
-modeNumberAllowed   | A  | B  | B  | A  | A  | A
-```
-
-**Flag key (details)**
+### Limits mapping (initial)
 
 ```text
-Flag key
-Row                 | Path                     | Enforcement | Upsell | Meaning
-------------------- | ------------------------ | ----------- | ------ | -------------------------
-seoGeoEnabled       | seoGeo.enabled           | OPS+LOAD    | UP     | SEO/GEO optimization toggle
-removeBranding      | behavior.showBacklink=false | UI+OPS   | UP     | Remove branding
-websiteUrlAllowed   | workspace.websiteUrl     | UI+OPS      | UP     | Website URL for Copilot/AI content generation (workspace setting; not widget instance state)
-modeDateAllowed     | timer.mode='date'        | UI+OPS      | —      | Countdown to a date/time
-modePersonalAllowed | timer.mode='personal'    | UI+OPS      | UP     | Personal countdown (per-visitor start)
-modeNumberAllowed   | timer.mode='number'      | UI+OPS      | UP     | Number counter (count up/down)
+key                 | kind | path(s)                        | metric/mode        | enforce                    | notes
+------------------- | ---- | ------------------------------ | ------------------ | -------------------------- | -----------------------------
+seoGeo.enabled      | flag | seoGeo.enabled                 | boolean (deny true)| load sanitize; ops+publish | SEO/GEO toggle
+branding.remove     | flag | behavior.showBacklink          | boolean (deny false)| load sanitize; ops+publish | Remove branding
+links.enabled       | flag | actions.*.url (TBD)            | nonempty-string    | ops+publish                | CTA links require link access
 ```
 
-### Matrix B — Caps (numbers)
+Budgets are global, per-session counters (no per-widget matrices):
+- `budget.copilot.turns` (Copilot send)
+- `budget.edits` (any successful edit)
+- `budget.uploads` (file inputs; not used by Countdown unless uploads are added)
 
-```text
-Legend: ∞ means “no cap”
-
-Row              |  DS |  MB |   F |  T1 |  T2 |  T3
----------------- |-----|-----|-----|-----|-----|-----
-maxActions       |   ∞ |   1 |   1 |   2 |   ∞ |   ∞
-maxMessageChars  |   ∞ |  80 | 140 | 300 |   ∞ |   ∞
-```
-
-**Cap key (details)**
-
-```text
-Cap key
-Row             | Path                         | Enforcement | Violation | Upsell | Meaning
---------------- | ---------------------------- | ---------- | --------- | ------ | -------------------------
-maxActions      | actions.during.enabled + actions.after.* | UI+OPS | REJECT | UP | Max enabled actions (CTA and/or after-action)
-maxMessageChars | actions.after.messageText    | OPS(set)    | REJECT    | UP     | Max “after end” message length (chars)
-```
-
-### Matrix C — Budgets (numbers)
-
-```text
-Legend: ∞ means “no budget limit”
-
-Row          |  DS |  MB |   F |  T1 |  T2 |  T3
------------- |-----|-----|-----|-----|-----|-----
-copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
-edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
-uploads      |   ∞ |   5 |   ∞ |   ∞ |   ∞ |   ∞
-```
-
-**Budget key (details)**
-
-Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
-
-```text
-Budget key
-Row          | Consumed when              | Counts as          | Upsell | Notes
------------- | -------------------------- | ------------------ | ------ | -------------------------
-copilotTurns | Copilot prompt submit      | 1 per user prompt  | UP     | —
-edits        | any successful edit        | 1 per state change | UP     | continue editing your widget by creating a free account
-uploads      | — (Countdown has no uploads) | —                | —      | —
-```
+If Countdown needs tier-gated modes (date/personal/number), add a new global flag key in `config/entitlements.matrix.json` and map it in `limits.json` (no per-widget tier tables).
 
 ## 1) Where the widget lives (authoritative)
 Widget definition (the software): `tokyo/widgets/countdown/`

@@ -6,7 +6,17 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 
 ---
 
-## The Model
+## Status (shipped vs target)
+
+This doc mixes shipped behavior with target packaging. Shipped enforcement today is limited to:
+- Global entitlements matrix: `config/entitlements.matrix.json`
+- Per-widget limits mapping: `tokyo/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
+
+Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
+
+---
+
+## The Model (target packaging)
 
 | Tier | Viewers | Editors | Widget Types | Instances | Content | Features |
 |------|---------|---------|--------------|-----------|---------|----------|
@@ -42,7 +52,7 @@ Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. Th
 - All widget types
 - Unlimited instances
 - Unlimited content
-- All features including auto-translate (up to 10 locales)
+- All features including auto-translate (up to 3 locales)
 - No Supernova
 - No branding
 
@@ -178,7 +188,7 @@ type Comment = {
 
 ---
 
-## Tier Gating (Full Matrix)
+## Tier Gating (target packaging)
 
 | Capability | Free | Tier 1 | Tier 2 | Tier 3 |
 |------------|------|--------|--------|--------|
@@ -189,7 +199,7 @@ type Comment = {
 | **Content** | Limited | Higher | ∞ | ∞ |
 | **SEO/GEO** | ❌ | ✅ | ✅ | ✅ |
 | **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ |
-| **Auto-translate** | ❌ | ❌ | ✅ (10 locales) | ✅ (∞) |
+| **Auto-translate** | ❌ | ❌ | ✅ (3 locales) | ✅ (∞) |
 | **Supernova** | ❌ | ❌ | ❌ | ✅ |
 | **Branding** | Required | Optional | None | None |
 
@@ -262,20 +272,17 @@ While we are building (before full auth/billing enforcement ships), we still nee
 - Budgets are defined by the subject policy (e.g. `minibob` vs `devstudio`), not by individual widgets.
 
 **How this appears in widget PRDs (required):**
-- Every widget PRD must include **three matrices** (Flags / Caps / Budgets) with **six profiles** on the X-axis:
-  - `DevStudio`, `MiniBob`, `Free`, `Tier 1`, `Tier 2`, `Tier 3`
-- Matrices must be formatted as **fixed-width ASCII grids** in code blocks (so they read like real matrices and don’t wrap).
-- Full semantics live in the Key tables under each matrix (path, enforcement, upsell marker).
-- Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md`
+- PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
+- Tier values live only in the global matrix: `config/entitlements.matrix.json`.
+- Widget enforcement lives in `tokyo/widgets/{widget}/limits.json` (flags/caps). Budgets are global, per-session.
+- Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**
-- Every gated action uses the same **Upsell** popup.
-- The PRD should not include custom copy per row; it should specify **only** whether the action is gated by upsell:
-  - `Upsell = UP` (gated) or `Upsell = —` (not gated)
+- Every rejected limit or budget uses the same **Upsell** popup (no per-row copy).
 - The system chooses the destination and CTA deterministically:
   - If the viewer has no account/session (MiniBob / anonymous): upsell takes them to **Create Free Account**
   - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
-- PRDs do **not** need to encode “free vs paid” in the key table; it is derived from the **matrix deltas** and current viewer profile.
+- PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
 **Current dev subjects:**
 - `devstudio`: internal “everything enabled” subject used by DevStudio.
@@ -287,9 +294,10 @@ While we are building (before full auth/billing enforcement ships), we still nee
   - Bootstrap message: `postMessage { type:'devstudio:load-instance', subjectMode:'minibob'|'devstudio', ... }`
 
 **What Bob enforces today (example):**
-- For `minibob`, `seoGeo.enabled` cannot be turned on and is forced off on load.
-- For `minibob`, `websiteUrl` is blocked (Settings UI gated) so anonymous demo sessions don’t provide website context to Copilot.
-- This enforcement is done in one place (session/ops gate) so we don’t scatter `if (minibob)` checks.
+- `seoGeo.enabled` is sanitized to `false` on load and rejected on ops/publish when the policy flag is off.
+- `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.
+- `context.websiteUrl.enabled` is a workspace-level flag; when website URL is surfaced, enforcement happens at the usage boundary (not by hiding UI).
+- Enforcement is centralized via `limits.json` + policy, so we do not scatter `if (minibob)` checks.
 
 **Why this scales:**
 - New surfaces add a new `subjectMode` without changing widget code.
@@ -343,4 +351,3 @@ CREATE TABLE comments (
 5. **No sales call for teams** — self-serve collaboration from day 1
 
 This is the Figma model applied to widgets: make adoption frictionless, let stickiness compound, charge for serious usage.
-

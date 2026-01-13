@@ -44,19 +44,19 @@ Before implementing a widget, the PRD must exist and must be complete.
 - Tier values live in a single global matrix: `config/entitlements.matrix.json`.
 - Widget-specific enforcement lives in `tokyo/widgets/{widget}/limits.json` (paths + metrics + enforcement points).
 - The PRD must declare **which entitlement keys** the widget uses and **how they map to state paths**.
-- Budgets are **per-session counters**; caps/flags are enforced on ops + publish.
+- Budgets are **per-session counters**; caps/flags are enforced on ops + publish, and blocked flags may be sanitized on load.
 
 **Formatting rule (limits mapping):**
 - Do not use wide Markdown tables (they wrap and stop reading like a matrix).
 - Use a fixed-width mapping table in a code block:
 
 ```text
-Key                      | Kind  | Path(s)                         | Metric/Mode      | Enforcement | Upsell
------------------------- | ----- | ------------------------------- | ---------------- | ----------- | ------
-seoGeo.enabled           | flag  | seoGeo.enabled                  | boolean (deny T) | ops+load+pub| UP
-list.primary.max         | cap   | sections[]                      | count            | ops+pub     | UP
-text.question.max        | cap   | sections[].faqs[].question      | chars            | ops+pub     | UP
-budget.copilot.turns     | budget| (consumed in Copilot send)      | per prompt       | session     | UP
+Key                      | Kind  | Path(s)                         | Metric/Mode      | Enforcement       | Notes
+------------------------ | ----- | ------------------------------- | ---------------- | ----------------- | ----------------
+seoGeo.enabled           | flag  | seoGeo.enabled                  | boolean (deny T) | load+ops+publish  | sanitize on load
+list.primary.max         | cap   | sections[]                      | count            | ops+publish        | —
+text.question.max        | cap   | sections[].faqs[].question      | chars            | ops+publish        | —
+budget.copilot.turns     | budget| (consumed in Copilot send)      | per prompt       | session            | global budget
 ```
 
 Gate: the PRD specifies widget behavior + the entitlements mapping (no per-widget tier matrices).

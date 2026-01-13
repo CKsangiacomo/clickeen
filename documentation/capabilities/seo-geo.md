@@ -193,12 +193,16 @@ The "Enable SEO/GEO Optimization" toggle is intentionally gated:
 
 SEO/GEO is a Tier 1+ feature — it's one of the key reasons "serious" users upgrade from Free.
 
-- **Bob (editor):** toggle exists in Settings, off by default, and only enabled for Tier 1+.
-- **Minibob:** toggle cannot be turned on (Minibob is a demo surface; no SEO/GEO advanced mode).
+Entitlement key:
+- `seoGeo.enabled` in `config/entitlements.matrix.json`
 
-Server-side enforcement (required):
-- Publish should reject `seoGeo.enabled === true` for subjects without entitlement.
-- UI gating is not sufficient; entitlements must be enforced at the product boundary.
+Enforcement (shipped):
+- **Bob (editor):** the toggle can be visible in all tiers; enforcement is via limits, not UI hiding.
+- **Minibob:** the same policy applies; load sanitizes to `false`, and ops/publish reject if enabled.
+- **Paris (publish):** rejects `seoGeo.enabled === true` when the policy flag is off.
+
+Implementation note:
+- Each widget maps `seoGeo.enabled` in its `tokyo/widgets/{widget}/limits.json` with `load = sanitize` and `ops/publish = reject`.
 
 ### SEO schema output (deterministic rules)
 

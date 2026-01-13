@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { generateSchemaJsonLd } from '@venice/lib/schema';
-import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlay, resolveTokyoLocale } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -59,17 +59,17 @@ function stripScriptTags(bodyHtml: string): string {
   return bodyHtml.replace(/<script\b[\s\S]*?<\/script>/gi, '').trim();
 }
 
-function resolveLocale(req: Request): string {
+function resolveLocale(req: Request): { locale: string; explicit: boolean } {
   const url = new URL(req.url);
   const explicit = url.searchParams.get('locale');
   if (explicit && /^[a-z]{2}(-[a-z0-9]+)?$/i.test(explicit.trim())) {
-    return explicit.trim().toLowerCase().split('-')[0] || 'en';
+    return { locale: explicit.trim().toLowerCase().split('-')[0] || 'en', explicit: true };
   }
   const header = req.headers.get('accept-language') || req.headers.get('Accept-Language') || '';
   const first = header.split(',')[0]?.trim() || '';
   const candidate = first.split(';')[0]?.trim() || '';
   const normalized = candidate.toLowerCase().split('-')[0] || '';
-  return /^[a-z]{2}$/.test(normalized) ? normalized : 'en';
+  return { locale: /^[a-z]{2}$/.test(normalized) ? normalized : 'en', explicit: false };
 }
 
 function resolveWidgetAssetPath(widgetType: string, raw: string): string {
@@ -113,7 +113,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const ts = url.searchParams.get('ts');
-  const locale = resolveLocale(req);
+  const localeResult = resolveLocale(req);
+  let locale = localeResult.locale;
+  if (!localeResult.explicit) {
+    const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
+    locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=utf-8',

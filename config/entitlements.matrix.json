@@ -13,6 +13,28 @@
         "tier3": true
       }
     },
+    "l10n.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.locales.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 0,
+        "free": 0,
+        "tier1": 0,
+        "tier2": 3,
+        "tier3": null
+      }
+    },
     "branding.remove": {
       "kind": "flag",
       "values": {

@@ -45,7 +45,12 @@ const brandSvgs = {
 } as const;
 ---
 
-<div class="ck-websiteCreative" id={anchorId} data-ck-creative-id={anchorId}>
+<div
+  class="ck-websiteCreative"
+  id={anchorId}
+  data-ck-creative-id={anchorId}
+  data-ck-widget-type={widgetType}
+>
   {iframeSrc ? (
     <>
       <iframe
@@ -58,6 +63,9 @@ const brandSvgs = {
         sandbox="allow-scripts allow-same-origin allow-forms"
       />
 
+      {/* Toast is anchored to the creative (not the fading topbar). */}
+      <div class="ck-share__toast" role="status" aria-live="polite"></div>
+
       {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
       <div class="ck-websiteCreative__topbar">
         <details class="ck-share">
@@ -69,8 +77,6 @@ const brandSvgs = {
           </summary>
 
           <div class="ck-share__menu" role="menu" aria-label="Share options">
-            <div class="ck-share__toast" role="status" aria-live="polite"></div>
-
             <div class="ck-share__sectionTitle eyebrow heading-5">Send this widget template as message</div>
             <div class="ck-share__grid">
               <button type="button" class="ck-shareCard" data-action="copy">
@@ -172,7 +178,8 @@ const brandSvgs = {
     width: 100%;
     position: relative;
     isolation: isolate;
-    border-radius: var(--control-radius-lg);
+    --ck-creative-chrome-inset: var(--space-4);
+    border-radius: var(--control-radius-4xl);
     overflow: hidden;
     background: var(--color-system-white);
     border: 0;
@@ -181,7 +188,6 @@ const brandSvgs = {
   .ck-websiteCreative__topbar {
     position: absolute;
     /* Button inset must match on top + right. */
-    --ck-creative-chrome-inset: var(--space-4);
     top: var(--ck-creative-chrome-inset);
     right: var(--ck-creative-chrome-inset);
     left: auto;
@@ -281,17 +287,22 @@ const brandSvgs = {
   .ck-share[open] .ck-share__menu { display: block; }
 
   .ck-share__toast {
-    position: sticky;
-    top: 0;
+    position: absolute;
+    /* Show under the Share button regardless of topbar hover state. */
+    top: calc(var(--ck-creative-chrome-inset) + 2.25rem + var(--space-3));
+    right: var(--ck-creative-chrome-inset);
+    left: auto;
+    z-index: 70;
     display: none;
-    padding: 9px 10px;
-    margin-bottom: var(--space-2);
+    padding: 9px 12px;
     border-radius: var(--control-radius-lg);
     background: color-mix(in oklab, var(--color-system-white), transparent 25%);
     color: color-mix(in oklab, var(--color-system-black), transparent 25%);
     font: 500 var(--fs-13)/1.2 var(--font-ui);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px color-mix(in oklab, var(--color-system-black), transparent 92%);
+    pointer-events: none;
   }
 
   .ck-share__grid {
@@ -417,133 +428,205 @@ const brandSvgs = {
   }
 </style>
 
-<script>
-  {`
+<script is:inline>
 (() => {
-  const root = document.currentScript?.previousElementSibling;
-  // The script is rendered after the <style>, so walk up to the creative wrapper.
-  const creative = document.currentScript?.closest?.('.ck-websiteCreative');
-  if (!(creative instanceof HTMLElement)) return;
+  // Do not rely on 'document.currentScript' (unreliable for module scripts in Astro).
+  // This script may be emitted multiple times (one per creative), so dedupe per element.
+  const creatives = document.querySelectorAll('.ck-websiteCreative');
+  creatives.forEach((creative) => {
+    if (!(creative instanceof HTMLElement)) return;
+    if (creative.dataset.ckShareBound === '1') return;
+    creative.dataset.ckShareBound = '1';
 
-  const anchorId = creative.getAttribute('data-ck-creative-id') || creative.id || '';
-  const details = creative.querySelector('.ck-share');
-  const menu = creative.querySelector('.ck-share__menu');
-  const toast = creative.querySelector('.ck-share__toast');
-  if (!(details instanceof HTMLDetailsElement) || !(menu instanceof HTMLElement)) return;
+    const anchorId = creative.getAttribute('data-ck-creative-id') || creative.id || '';
+    const widgetType = creative.getAttribute('data-ck-widget-type') || '';
+    const details = creative.querySelector('.ck-share');
+    const menu = creative.querySelector('.ck-share__menu');
+    const toast = creative.querySelector('.ck-share__toast');
+    if (!(details instanceof HTMLDetailsElement) || !(menu instanceof HTMLElement)) return;
 
-  const close = () => { details.open = false; };
-  document.addEventListener('click', (e) => {
-    if (!details.open) return;
-    const t = e.target;
-    if (t instanceof Node && details.contains(t)) return;
-    close();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
-  });
+    const close = () => { details.open = false; };
 
-  // Avoid the “opens on hover” perception caused by the topbar being hidden:
-  // if the user clicks Share (menu opens) and then moves mouse away, close it
-  // so it can't reappear later just by hovering the creative again.
-  creative.addEventListener('pointerleave', () => close());
+    document.addEventListener('click', (e) => {
+      if (!details.open) return;
+      const t = e.target;
+      if (t instanceof Node && details.contains(t)) return;
+      close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
 
-  function shareUrlFor(channel) {
-    const u = new URL(window.location.href);
-    if (anchorId) u.hash = anchorId;
-    if (channel) {
-      u.searchParams.set('ref', 'share');
-      u.searchParams.set('channel', channel);
+    // Avoid the “opens on hover” perception caused by the topbar being hidden:
+    // if the user clicks Share (menu opens) and then moves mouse away, close it
+    // so it can't reappear later just by hovering the creative again.
+    creative.addEventListener('pointerleave', () => close());
+
+    function titleCaseWidgetType(input) {
+      const s = String(input || '').trim();
+      if (!s) return 'Widget';
+      if (s.toLowerCase() === 'faq') return 'FAQ';
+
+      const spaced = s
+        .replace(/[_-]+/g, ' ')
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .toLowerCase();
+
+      return spaced.replace(/\b[a-z]/g, (m) => m.toUpperCase());
     }
-    return u.toString();
-  }
 
-  let toastTimer = 0;
-  function showToast(msg) {
-    if (!(toast instanceof HTMLElement)) return;
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    if (toastTimer) window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => {
-      toast.style.display = 'none';
-      toast.textContent = '';
-      toastTimer = 0;
-    }, 1600);
-  }
-
-  async function copy(text) {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return true;
+    function shareUrlFor(channel) {
+      const u = new URL(window.location.href);
+      if (anchorId) u.hash = anchorId;
+      if (channel) {
+        u.searchParams.set('ref', 'share');
+        u.searchParams.set('channel', channel);
       }
-    } catch {}
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); } catch {}
-    document.body.removeChild(ta);
-    return true;
-  }
-
-  function openUrl(url) {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
-  async function handle(action) {
-    const url = shareUrlFor(action);
-    const title = document.title || 'Clickeen';
-    const text = title;
-
-    if (action === 'copy') { await copy(url); showToast('Link copied'); return; }
-
-    if (action === 'email') {
-      const mailto = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(url);
-      window.location.href = mailto;
-      showToast('Opening email…');
-      return;
+      return u.toString();
     }
 
-    if (action === 'sms') {
-      const sms = 'sms:?&body=' + encodeURIComponent(url);
-      window.location.href = sms;
-      showToast('Opening messages…');
-      return;
+    function shareCopyFor(action) {
+      const widgetName = titleCaseWidgetType(widgetType);
+      const sendMessageText = 'Check out this widget from Clickeen!';
+      // IMPORTANT: this script is embedded inside an Astro backtick string, so do not use JS template literals here.
+      const socialText = 'This Clickeen ' + widgetName + ' widget is awesome ❤️';
+
+      const isSocial = ['x', 'linkedin', 'facebook', 'reddit', 'instagram', 'tiktok'].includes(action);
+      return isSocial ? socialText : sendMessageText;
     }
 
-    if (action === 'whatsapp') { openUrl('https://wa.me/?text=' + encodeURIComponent(url)); showToast('Opening WhatsApp…'); return; }
-    if (action === 'telegram') { openUrl('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); showToast('Opening Telegram…'); return; }
-    if (action === 'signal') { await copy(url); showToast('Link copied (paste in Signal)'); openUrl('https://signal.me/'); return; }
+    let toastTimer = 0;
+    function showToast(msg) {
+      if (!(toast instanceof HTMLElement)) return;
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      if (toastTimer) window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.style.display = 'none';
+        toast.textContent = '';
+        toastTimer = 0;
+      }, 1600);
+    }
 
-    if (action === 'x') { openUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)); showToast('Opening X…'); return; }
-    if (action === 'linkedin') { openUrl('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url)); showToast('Opening LinkedIn…'); return; }
-    if (action === 'facebook') { openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)); showToast('Opening Facebook…'); return; }
-    if (action === 'reddit') { openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title)); showToast('Opening Reddit…'); return; }
-    if (action === 'discord') { await copy(url); showToast('Link copied (paste in Discord)'); openUrl('https://discord.com/channels/@me'); return; }
-    if (action === 'messenger') { await copy(url); showToast('Link copied (paste in Messenger)'); openUrl('https://www.messenger.com/'); return; }
-    if (action === 'slack') { await copy(url); showToast('Link copied (paste in Slack)'); openUrl('https://slack.com/app'); return; }
-    if (action === 'teams') { await copy(url); showToast('Link copied (paste in Teams)'); openUrl('https://teams.microsoft.com/'); return; }
+    async function copy(text) {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch {}
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+      return true;
+    }
 
-    // Platforms without a reliable web intent: copy link + best-effort open.
-    if (action === 'instagram') { await copy(url); showToast('Link copied (paste in Instagram)'); openUrl('https://www.instagram.com/'); return; }
-    if (action === 'tiktok') { await copy(url); showToast('Link copied (paste in TikTok)'); openUrl('https://www.tiktok.com/'); return; }
-    if (action === 'wechat') { await copy(url); showToast('Link copied (paste in WeChat)'); return; }
-    if (action === 'line') { await copy(url); showToast('Link copied (paste in LINE)'); openUrl('https://line.me/'); return; }
-  }
+    function openUrl(url) {
+      // IMPORTANT:
+      // Some browsers can return a falsy value even when a new tab actually opens.
+      // If we "fallback" to same-tab navigation, we can end up opening BOTH.
+      // So: never same-tab fallback here. If blocked, we degrade to "copy link" instead.
+      try {
+        const w = window.open(url, '_blank');
+        if (w) {
+          try { w.opener = null; } catch {}
+          return true;
+        }
+      } catch {}
+      return false;
+    }
 
-  menu.addEventListener('click', async (e) => {
-    const t = e.target;
-    if (!(t instanceof HTMLElement)) return;
-    const btn = t.closest('[data-action]');
-    if (!(btn instanceof HTMLElement)) return;
-    const action = btn.getAttribute('data-action') || '';
-    if (!action) return;
-    e.preventDefault();
-    try { await handle(action); } finally { close(); }
+    async function handle(action) {
+      const url = shareUrlFor(action);
+      const title = document.title || 'Clickeen';
+      const text = shareCopyFor(action);
+
+      if (action === 'copy') { await copy(url); showToast('Link copied'); return; }
+
+      if (action === 'email') {
+        const mailto = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text + '\n\n' + url);
+        window.location.href = mailto;
+        showToast('Opening email…');
+        return;
+      }
+
+      if (action === 'sms') {
+        const sms = 'sms:?&body=' + encodeURIComponent(text + ' ' + url);
+        window.location.href = sms;
+        showToast('Opening messages…');
+        return;
+      }
+
+      if (action === 'whatsapp') {
+        const ok = openUrl('https://wa.me/?text=' + encodeURIComponent(text + '\n' + url));
+        if (ok) showToast('Opening WhatsApp…');
+        else { await copy(url); showToast('Link copied (paste in WhatsApp)'); }
+        return;
+      }
+      if (action === 'telegram') {
+        const ok = openUrl('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text));
+        if (ok) showToast('Opening Telegram…');
+        else { await copy(url); showToast('Link copied (paste in Telegram)'); }
+        return;
+      }
+      if (action === 'signal') { await copy(url); showToast('Link copied (paste in Signal)'); openUrl('https://signal.me/'); return; }
+
+      if (action === 'x') {
+        const ok = openUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text));
+        if (ok) showToast('Opening X…');
+        else { await copy(url); showToast('Link copied'); }
+        return;
+      }
+      if (action === 'linkedin') {
+        // LinkedIn does not reliably support prefilled share text via URL params.
+        // Best UX: copy the composed message + anchored URL, then open LinkedIn.
+        await copy(text + '\n\n' + url);
+        showToast('Copied (paste in LinkedIn)');
+        // Let the toast paint before opening the new tab.
+        window.setTimeout(() => {
+          openUrl('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url));
+        }, 50);
+        return;
+      }
+      if (action === 'facebook') {
+        const ok = openUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url));
+        if (ok) showToast('Opening Facebook…');
+        else { await copy(url); showToast('Link copied'); }
+        return;
+      }
+      if (action === 'reddit') {
+        const ok = openUrl('https://www.reddit.com/submit?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(text));
+        if (ok) showToast('Opening Reddit…');
+        else { await copy(url); showToast('Link copied'); }
+        return;
+      }
+      if (action === 'discord') { await copy(url); showToast('Link copied (paste in Discord)'); openUrl('https://discord.com/channels/@me'); return; }
+      if (action === 'messenger') { await copy(url); showToast('Link copied (paste in Messenger)'); openUrl('https://www.messenger.com/'); return; }
+      if (action === 'slack') { await copy(url); showToast('Link copied (paste in Slack)'); openUrl('https://slack.com/app'); return; }
+      if (action === 'teams') { await copy(url); showToast('Link copied (paste in Teams)'); openUrl('https://teams.microsoft.com/'); return; }
+
+      // Platforms without a reliable web intent: copy link + best-effort open.
+      if (action === 'instagram') { await copy(url); showToast('Link copied (paste in Instagram)'); openUrl('https://www.instagram.com/'); return; }
+      if (action === 'tiktok') { await copy(url); showToast('Link copied (paste in TikTok)'); openUrl('https://www.tiktok.com/'); return; }
+      if (action === 'wechat') { await copy(url); showToast('Link copied (paste in WeChat)'); return; }
+      if (action === 'line') { await copy(url); showToast('Link copied (paste in LINE)'); openUrl('https://line.me/'); return; }
+    }
+
+    menu.addEventListener('click', async (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      const btn = t.closest('[data-action]');
+      if (!(btn instanceof HTMLElement)) return;
+      const action = btn.getAttribute('data-action') || '';
+      if (!action) return;
+      e.preventDefault();
+      try { await handle(action); } finally { close(); }
+    });
   });
 })();
-`}
 </script>

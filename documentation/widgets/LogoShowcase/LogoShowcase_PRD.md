@@ -173,17 +173,17 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
       - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
-- `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s) (**editable via Logo details popup for Free+; not editable in MiniBob**)
-- `strips[i].logos[j].targetBlank=true` → set `target="_blank"` (**editable via Logo details popup for Free+; not editable in MiniBob**)
-- `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`) (**editable via Logo details popup for Free+; not editable in MiniBob**)
-- `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image) (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
-- `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface (**editable via Logo details popup for Tier 1+; not editable in MiniBob**)
+- `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s) (**editable via Logo details popup when `links.enabled` is true**)
+- `strips[i].logos[j].targetBlank=true` → set `target="_blank"` (**editable via Logo details popup when `links.enabled` is true**)
+- `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`) (**editable via Logo details popup when `links.enabled` is true**)
+- `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image) (**editable when `media.meta.enabled` is true**)
+- `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface (**editable when `media.meta.enabled` is true**)
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
 **Policy enforcement rule (required; no subject checks in runtime):**
-- If `logoLinksAllowed` is blocked for the session:
+- If `links.enabled` is blocked for the session:
   - Bob must force-clear `href/targetBlank/nofollow` on load, and reject any ops that set them.
-- If `logoMetaAllowed` is blocked for the session:
+- If `media.meta.enabled` is blocked for the session:
   - Bob must force-clear `alt/title` on load, and reject any ops that set them.
 
   - **Editor control**:
@@ -314,7 +314,7 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
 - Entry point: a single button near the strips/logos editor: **“Logo details…”**
   - Always visible.
   - Gated on interaction via the Upsell popup:
-    - If `logoLinksAllowed` and `logoMetaAllowed` are both blocked: clicking opens Upsell and does nothing else.
+    - If `links.enabled` and `media.meta.enabled` are both blocked: clicking opens Upsell and does nothing else.
     - Otherwise: open modal.
 - Modal content: a table with **one row per logo**, including:
   - **Logo**: thumbnail + `name`
@@ -322,15 +322,16 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
   - **Open in new tab**: checkbox → `targetBlank`
   - **Nofollow**: checkbox → `nofollow`
   - **Caption**: `caption` textfield
-- Plan-gated columns inside the same modal:
-  - **Free**: URL + targetBlank + nofollow + caption (no alt/title UI)
-  - **Tier 1+**: add **Alt** (`alt`) + **Title** (`title`) fields (same tier as SEO/GEO)
+- Policy-gated columns inside the same modal:
+  - **links.enabled**: URL + targetBlank + nofollow
+  - **media.meta.enabled**: Alt (`alt`) + Title (`title`)
+  - Caption/name remain available in all profiles
 - Save behavior: the modal writes standard ops (`set`) to the underlying paths above; there is no special persistence logic.
 
 **Implementation note (scales across many widgets):**
 - This modal should be implemented as a reusable Bob primitive (generic “bulk edit table” for an array-of-items), configured by:
   - row source: flattened `strips[].logos[]`
-  - columns: a list of `{ label, path, controlType }`, with per-column gating driven by policy flags (`logoLinksAllowed`, `logoMetaAllowed`)
+  - columns: a list of `{ label, path, controlType }`, with per-column gating driven by policy flags (`links.enabled`, `media.meta.enabled`)
   - save: emits standard ops (`set`) only
 
 #### AI behavior (Copilot, uses `websiteUrl`)
@@ -338,7 +339,7 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
 
 If `websiteUrl` is present and policy allows it, Copilot may:
 - Propose or rewrite LogoShowcase copy (header/CTA) based on the website URL.
-- For **Tier 1+** (same plan as SEO/GEO), propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
+- When `media.meta.enabled` is true (same tiers as SEO/GEO in v1), propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
 
 ### Type = `grid`
 #### Content panel (below Type picker)

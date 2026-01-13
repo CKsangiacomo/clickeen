@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "paths": [
+    { "path": "header.title", "type": "string" },
+    { "path": "header.textHtml", "type": "richtext" },
+    { "path": "cta.label", "type": "string" },
+    { "path": "strips.*.logos.*.name", "type": "string" },
+    { "path": "strips.*.logos.*.caption", "type": "string" },
+    { "path": "strips.*.logos.*.alt", "type": "string" },
+    { "path": "strips.*.logos.*.title", "type": "string" }
+  ]
+}

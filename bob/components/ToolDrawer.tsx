@@ -6,6 +6,7 @@ import { CopilotPane } from './CopilotPane';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
+import { SettingsPanel } from './SettingsPanel';
 
 export function ToolDrawer() {
   const session = useWidgetSession();
@@ -140,17 +141,21 @@ export function ToolDrawer() {
               </div>
             ) : null}
             {compiled ? (
-              <TdMenuContent
-                panelId={activePanel}
-                panelHtml={activePanelHtml ?? ''}
-                widgetKey={compiled.widgetname}
-                instanceData={session.instanceData}
-                applyOps={session.applyOps}
-                undoLastOps={session.undoLastOps}
-                canUndo={session.canUndo}
-                lastUpdate={session.lastUpdate}
-                dieterAssets={compiled.assets.dieter}
-              />
+              activePanel === 'settings' ? (
+                <SettingsPanel />
+              ) : (
+                <TdMenuContent
+                  panelId={activePanel}
+                  panelHtml={activePanelHtml ?? ''}
+                  widgetKey={compiled.widgetname}
+                  instanceData={session.instanceData}
+                  applyOps={session.applyOps}
+                  undoLastOps={session.undoLastOps}
+                  canUndo={session.canUndo}
+                  lastUpdate={session.lastUpdate}
+                  dieterAssets={compiled.assets.dieter}
+                />
+              )
             ) : (
               <div className="tdmenucontent">
                 <div className="heading-3">Content</div>

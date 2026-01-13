@@ -32,87 +32,33 @@ Why this is the core framework:
 How it differs from other widgets:
 - It’s a data-backed content widget: it depends on an external “posts” dataset that is rendered by the chosen Type.
 
-## Subject Policy — Flags / Caps / Budgets (Matrices)
-
-X-axis is the policy profile: **DevStudio**, **MiniBob**, **Free**, **Tier 1**, **Tier 2**, **Tier 3**.
+## Entitlements + limits (v1)
 
 Notes:
-- This widget is not yet a Tokyo 5-file package in this repo; **exact state paths are TBD** until `tokyo/widgets/instagramfeed/spec.json` exists.
-- Use `?` in the matrices where product decisions are not finalized yet; replace `?` with `A/B` or numbers before implementation.
-- Cross-widget standard (not TBD): `websiteUrl` exists for Copilot/AI content generation and is policy-gated (MiniBob blocked, Free+ allowed).
+- This widget is not yet a Tokyo 5-file package in this repo; exact state paths are TBD until `tokyo/widgets/instagramfeed/spec.json` exists.
+- Tier values live in the global matrix: `config/entitlements.matrix.json`.
+- Widget enforcement lives in `tokyo/widgets/instagramfeed/limits.json` (create this when the widget ships).
+- The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
-### Matrix A — Flags (ALLOW/BLOCK)
-
-```text
-Legend: A=ALLOW, B=BLOCK, ?=TBD
-
-Row                 | DS | MB | F  | T1 | T2 | T3
-------------------- |----|----|----|----|----|----
-seoGeoEnabled        | A  | ?  | ?  | ?  | ?  | ?
-removeBranding       | A  | ?  | ?  | ?  | ?  | ?
-websiteUrlAllowed    | A  | B  | A  | A  | A  | A
-layoutCarouselAllowed| A  | ?  | ?  | ?  | ?  | ?
-layoutMasonryAllowed | A  | ?  | ?  | ?  | ?  | ?
-```
-
-**Flag key (details)**
+### Limits mapping (initial / TBD)
 
 ```text
-Flag key
-Row                 | Path                   | Enforcement | Upsell | Meaning
-------------------- | ---------------------- | ----------- | ------ | -------------------------
-seoGeoEnabled       | seoGeo.enabled (TBD)   | OPS+LOAD    | UP     | SEO/GEO optimization toggle
-removeBranding      | behavior.showBacklink=false | UI+OPS  | UP     | Remove branding
-websiteUrlAllowed   | websiteUrl             | UI+OPS      | UP     | Website URL for Copilot/AI content generation
-layoutCarouselAllowed | layout.mode='carousel' | UI+OPS    | UP     | Carousel layout
-layoutMasonryAllowed  | layout.mode='masonry'  | UI+OPS    | UP     | Masonry layout
+key                  | kind | path(s)                           | metric/mode          | enforce                    | notes
+-------------------- | ---- | --------------------------------- | -------------------- | -------------------------- | ------------------------------
+seoGeo.enabled       | flag | seoGeo.enabled (TBD)              | boolean (deny true)  | load sanitize; ops+publish | SEO/GEO toggle
+branding.remove      | flag | behavior.showBacklink (TBD)       | boolean (deny false) | load sanitize; ops+publish | Remove branding
+media.images.enabled | flag | posts[].imageUrl (TBD)            | nonempty-string      | ops+publish                | Images require image access
+media.videos.enabled | flag | posts[].videoUrl (TBD)            | nonempty-string      | ops+publish                | Videos require video access
+links.enabled        | flag | posts[].linkUrl (TBD)             | nonempty-string      | ops+publish                | Post links require link access
+media.meta.enabled   | flag | posts[].alt/posts[].title (TBD)   | nonempty-string      | ops+publish                | Meta requires meta access
 ```
 
-### Matrix B — Caps (numbers)
+Budgets are global, per-session counters (no per-widget matrices):
+- `budget.copilot.turns` (Copilot send)
+- `budget.edits` (any successful edit)
+- `budget.uploads` (file inputs; InstagramFeed may add uploads later)
 
-```text
-Legend: ∞ means “no cap”, ? means “TBD”
-
-Row            |  DS |  MB |   F |  T1 |  T2 |  T3
--------------- |-----|-----|-----|-----|-----|-----
-maxPosts       |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
-maxHidePostIds |   ∞ |   ? |   ? |   ? |   ∞ |   ∞
-```
-
-**Cap key (details)**
-
-```text
-Cap key
-Row           | Path              | Enforcement  | Violation | Upsell | Meaning
-------------- | ----------------- | ------------ | --------- | ------ | -------------------------
-maxPosts      | source.maxPosts   | OPS(set)     | REJECT    | UP     | Max posts (cap in editor)
-maxHidePostIds| source.hidePostIds[] | OPS(insert)| REJECT    | UP     | Max hidden post IDs
-```
-
-### Matrix C — Budgets (numbers)
-
-```text
-Legend: ∞ means “no budget limit”
-
-Row          |  DS |  MB |   F |  T1 |  T2 |  T3
------------- |-----|-----|-----|-----|-----|-----
-copilotTurns |   ∞ |   4 |  20 | 100 | 300 |   ∞
-edits        |   ∞ |  10 |   ∞ |   ∞ |   ∞ |   ∞
-uploads      |   ∞ |   5 |   ∞ |   ∞ |   ∞ |   ∞
-```
-
-**Budget key (details)**
-
-Budgets are **per-session counters**. When a budget reaches 0, the consuming action is blocked and the Upsell popup is shown.
-
-```text
-Budget key
-Row          | Consumed when                 | Counts as          | Upsell | Notes
------------- | ----------------------------- | ------------------ | ------ | -------------------------
-copilotTurns | Copilot prompt submit         | 1 per user prompt  | UP     | —
-edits        | any successful edit           | 1 per state change | UP     | continue editing your widget by creating a free account
-uploads      | — (InstagramFeed has no uploads) | —               | —      | —
-```
+If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `config/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
 
 ---
 
@@ -769,5 +715,4 @@ Display Instagram posts from a public profile in grid, carousel, or masonry layo
 1. **OAuth for post-MVP**: Which OAuth provider? Instagram Basic Display API is deprecated.
 2. **Video handling**: Autoplay muted? Thumbnail until click?
 3. **Carousel physics**: CSS-only or need JS library for elastic feel?
-
 

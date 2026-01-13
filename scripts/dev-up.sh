@@ -85,6 +85,11 @@ if [ -z "${PARIS_DEV_JWT:-}" ]; then
   exit 1
 fi
 
+# Default TOKYO_DEV_JWT to the Paris dev token for local workflows.
+if [ -z "${TOKYO_DEV_JWT:-}" ]; then
+  TOKYO_DEV_JWT="$PARIS_DEV_JWT"
+fi
+
 # Shared HMAC used for Paris grants -> SanFrancisco verification.
 AI_GRANT_HMAC_SECRET_FILE="$ROOT_DIR/CurrentlyExecuting/ai.grant.hmac.secret"
 if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
@@ -120,8 +125,8 @@ else
   node "$ROOT_DIR/scripts/l10n/validate.mjs"
 fi
 
-echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790 (if any)"
-for p in 3000 3001 3002 3003 4000 4321 5173 8790; do
+echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"
+for p in 3000 3001 3002 3003 4000 4321 5173 8790 8791; do
   PIDS=$(lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null || true)
   if [ -n "$PIDS" ]; then
     echo "[dev-up] Killing $PIDS on port $p"
@@ -131,13 +136,15 @@ done
 
 # Wrangler/workerd can get stuck in a broken state without holding the LISTEN socket
 # (e.g. after a crash/reload loop). Kill them by commandline as a backstop.
-echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002/8790)"
+echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002/8790/8791)"
 pkill -f "wrangler.*dev.*--port 3001" || true
 pkill -f "wrangler.*dev.*--port 3002" || true
 pkill -f "wrangler.*dev.*--port 8790" || true
+pkill -f "wrangler.*dev.*--port 8791" || true
 pkill -f "workerd serve.*entry=localhost:3001" || true
 pkill -f "workerd serve.*entry=localhost:3002" || true
 pkill -f "workerd serve.*entry=localhost:8790" || true
+pkill -f "workerd serve.*entry=localhost:8791" || true
 
 echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
 rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
@@ -164,11 +171,36 @@ if ! curl -sf "http://localhost:4000/healthz" >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
+(
+  cd "$ROOT_DIR/tokyo-worker"
+  VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
+  VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
+  if [ -n "${TOKYO_DEV_JWT:-}" ]; then
+    VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
+  fi
+  nohup pnpm exec wrangler dev --local --port 8791 \
+    "${VARS[@]}" \
+    > "$ROOT_DIR/CurrentlyExecuting/tokyo-worker.dev.log" 2>&1 &
+  TOKYO_WORKER_PID=$!
+  echo "[dev-up] Tokyo Worker PID: $TOKYO_WORKER_PID"
+)
+for i in {1..30}; do
+  if curl -sf "http://localhost:8791/healthz" >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+if ! curl -sf "http://localhost:8791/healthz" >/dev/null 2>&1; then
+  echo "[dev-up] Timeout waiting for Tokyo Worker @ http://localhost:8791/healthz"
+  exit 1
+fi
+
 echo "[dev-up] Starting Paris Worker (3001)"
 (
   cd "$ROOT_DIR/paris"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
   VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
+  VARS+=(--var "TOKYO_WORKER_BASE_URL:http://localhost:8791")
+  VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   VARS+=(--var "ENV_STAGE:local")
   if [ -n "$SF_BASE_URL" ]; then
     VARS+=(--var "SANFRANCISCO_BASE_URL:$SF_BASE_URL")
@@ -218,6 +250,12 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     VARS=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
     if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
       VARS+=(--var "DEEPSEEK_API_KEY:$DEEPSEEK_API_KEY")
+    fi
+    VARS+=(--var "PARIS_BASE_URL:http://localhost:3001")
+    VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
+    VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
+    if [ -n "${TOKYO_DEV_JWT:-}" ]; then
+      VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
     fi
 
     nohup pnpm exec wrangler dev --local --port 3002 "${VARS[@]}" \

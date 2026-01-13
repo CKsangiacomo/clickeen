@@ -265,53 +265,43 @@ EU businesses require VAT-compliant invoices:
 
 ---
 
-## Implementation Phases
+## Unified Global Coverage Model (No Phases)
 
-### Phase 1: Core Markets (GA)
-**Markets:** USA, Canada, UK, Australia, EU core, Latin America, Brazil  
-**Languages:** English, Spanish, Portuguese, German, French  
-**Scope:**
-- [ ] Product UI translated (Bob, Site)
-- [ ] Marketing funnels localized
-- [ ] Help articles (top 20)
-- [ ] Multi-currency: USD, EUR, GBP, CAD, AUD, BRL, MXN
-- [ ] Argentina: Price in USD
-- [ ] Stripe Tax enabled
+Clickeen does not ship localization in phases. The system is global by design.
+This is a single coverage checklist; execution order is demand-driven and can
+run in parallel.
 
-### Phase 2: Extended EU + Japan
-**Markets:** + Japan, Italy, Netherlands, Belgium  
-**Languages:** + Italian, Dutch, Japanese  
-**Scope:**
-- [ ] Noto Sans JP (Japanese fonts)
-- [ ] JPY currency
-- [ ] Japan-specific payment methods (Konbini)
-- [ ] Japan marketing adaptation (formal tone, trust signals)
+### Languages (current GA targets + planned additions)
+- English, Spanish, Portuguese, German, French
+- Italian, Dutch, Japanese, Traditional Chinese, Hindi, Korean, Polish, Turkish, Arabic (RTL)
 
-### Phase 3: Asia-Pacific Expansion
-**Markets:** + Taiwan, India, South Korea  
-**Languages:** + Traditional Chinese, Hindi, Korean  
-**Scope:**
-- [ ] Noto Sans TC, KR
-- [ ] Hindi UI
-- [ ] INR, TWD, KRW currencies
-- [ ] UPI payments (India)
+### Typography + RTL
+- Noto Sans JP, Noto Sans TC, Noto Sans KR
+- Arabic fonts + RTL layout support
 
-### Phase 4: Africa Expansion
-**Markets:** + Nigeria, South Africa, Kenya, Ghana, Francophone Africa  
-**Languages:** Already covered (English, French)  
-**Scope:**
-- [ ] African payment methods (Flutterwave, M-Pesa)
-- [ ] NGN, ZAR, KES currencies
-- [ ] Africa-specific SEO campaigns
-- [ ] Morocco as EU-Africa bridge
+### Markets + payments
+- Markets: USA, Canada, UK, Australia, EU core, Latin America, Brazil, Japan,
+  Italy, Netherlands, Belgium, Taiwan, India, South Korea, Nigeria, South Africa,
+  Kenya, Ghana, Francophone Africa, Poland, Turkey
+- Payment methods: Stripe Payment Element (auto-market), Konbini, UPI,
+  Flutterwave/Paystack, M-Pesa, PayFast
 
-### Phase 5+: Extended Growth
-**Markets:** + Poland, Turkey, other emerging  
-**Languages:** + Polish, Turkish, Arabic (RTL)  
-**Scope:**
-- [ ] RTL support
-- [ ] Arabic fonts
-- [ ] Additional currencies
+### Currencies
+- USD, EUR, GBP, CAD, AUD, BRL, MXN, JPY, INR, TWD, KRW, NGN, ZAR, KES
+- Argentina: price in USD
+
+### Content + marketing
+- Product UI translated (Bob, Site)
+- Marketing funnels localized
+- Help articles (top 20)
+- Japan marketing adaptation (formal tone, trust signals)
+- Africa-specific SEO campaigns
+- Morocco as EU-Africa bridge
+
+### Compliance
+- Stripe Tax enabled
+- VAT validation + reverse charge for EU
+- Local invoice language where required
 
 ---
 

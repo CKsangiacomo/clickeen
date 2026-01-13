@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { escapeHtml } from '@venice/lib/html';
-import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlay, resolveTokyoLocale } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -24,15 +24,19 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
-  const locale = (() => {
+  const localeResult = (() => {
     const raw = (url.searchParams.get('locale') || '').trim();
-    if (!raw) return 'en';
-    // v1: keep it strict and deterministic; prefer BCP-47-ish tokens (en, en-US).
+    if (!raw) return { locale: 'en', explicit: false };
     const normalizedLocale = raw.replace(/_/g, '-');
-    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalizedLocale)) return 'en';
-    return normalizedLocale.toLowerCase();
+    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalizedLocale)) return { locale: 'en', explicit: false };
+    return { locale: normalizedLocale.toLowerCase(), explicit: true };
   })();
   const ts = url.searchParams.get('ts');
+  let locale = localeResult.locale;
+  if (!localeResult.explicit) {
+    const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
+    locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'text/html; charset=utf-8',

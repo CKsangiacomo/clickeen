@@ -1,4 +1,4 @@
-import type { PragueLocale } from './locales';
+import { PRAGUE_CANONICAL_LOCALES, type PragueLocale } from './locales';
 
 // Prague chrome i18n (system-owned strings).
 // - Deterministic: no runtime fetches, no fallbacks, fail-fast if missing.
@@ -59,14 +59,11 @@ const EN: Record<PragueI18nKey, string> = {
   'prague.share.text': 'Use this widget on your website.',
 };
 
-// Phase 1: wiring-first. These locales intentionally mirror EN until we populate real translations.
-const CATALOG: Record<PragueLocale, Record<PragueI18nKey, string>> = {
-  en: EN,
-  es: EN,
-  pt: EN,
-  de: EN,
-  fr: EN,
-};
+// Phase 1: wiring-first. All canonical locales intentionally mirror EN until we populate real translations.
+// This must align with config/locales.json, because Prague statically generates pages for every canonical locale.
+const CATALOG: Record<string, Record<PragueI18nKey, string>> = Object.fromEntries(
+  PRAGUE_CANONICAL_LOCALES.map((l) => [l, EN])
+);
 
 // IMPORTANT: Do NOT name this function `t()` — the repo-wide i18n validator extracts `t("...")`
 // calls across the monorepo. Prague chrome uses its own mechanism and must not pollute Bob's i18n keyset.

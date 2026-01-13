@@ -24,3 +24,6 @@ queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
 queue = "sanfrancisco-events-dev"
+
+[[queues.consumers]]
+queue = "l10n-jobs-dev"

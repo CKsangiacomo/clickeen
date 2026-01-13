@@ -70,6 +70,9 @@ Local dev:
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
+  - `POST /l10n/instances/:publicId/:locale` (writes localized overlays into `tokyo/l10n/**`)
+  - `DELETE /l10n/instances/:publicId/:locale` (removes localized overlays from `tokyo/l10n/**`)
+- Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set (see `scripts/dev-up.sh`).
 
 ## l10n overlays (executed)
 
@@ -90,6 +93,8 @@ Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:
   - `POST /workspace-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-workspace-id`)
   - `GET /workspace-assets/**` (public, cacheable; content-addressed by `assetId`)
+  - `POST /l10n/instances/:publicId/:locale` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
+  - `GET /l10n/**` (public; manifest short-TTL, hashed overlays immutable)
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. DevStudio promotion uses it server-side (local Vite middleware).

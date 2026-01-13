@@ -138,6 +138,41 @@ body {
   overflow: hidden;
 }
 
+.settings-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.settings-panel__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 70%);
+}
+
+.settings-panel__error {
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-red), transparent 60%);
+  background: color-mix(in oklab, var(--color-system-red-5), transparent 85%);
+  color: var(--color-system-red);
+}
+
+.settings-panel__warning {
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-orange), transparent 60%);
+  background: color-mix(in oklab, var(--color-system-orange-5), transparent 85%);
+  color: var(--color-system-orange-contrast);
+}
+
 .workspace {
   position: relative;
   display: flex;

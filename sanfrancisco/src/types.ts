@@ -95,6 +95,11 @@ export type Env = {
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
+  PARIS_BASE_URL?: string;
+  PARIS_DEV_JWT?: string;
+  TOKYO_BASE_URL?: string;
+  TOKYO_L10N_BASE_URL?: string;
+  TOKYO_DEV_JWT?: string;
   OPENAI_API_KEY?: string;
   PITCH_SERVICE_KEY?: string;
   PITCH_MODEL?: string;
