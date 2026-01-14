@@ -27,6 +27,9 @@ function assertOverlayShape({ ref, data }) {
   }
   if (data.v !== 1) throw new Error(`[l10n] ${ref}: v must be 1`);
   if (!Array.isArray(data.ops)) throw new Error(`[l10n] ${ref}: ops must be an array`);
+  if (!data.baseFingerprint || typeof data.baseFingerprint !== 'string' || !/^[a-f0-9]{64}$/i.test(data.baseFingerprint)) {
+    throw new Error(`[l10n] ${ref}: baseFingerprint is required`);
+  }
   for (let i = 0; i < data.ops.length; i += 1) {
     const op = data.ops[i];
     if (!op || typeof op !== 'object' || Array.isArray(op)) {
@@ -37,6 +40,7 @@ function assertOverlayShape({ ref, data }) {
     if (!p) throw new Error(`[l10n] ${ref}: ops[${i}].path is required`);
     if (hasProhibitedSegment(p)) throw new Error(`[l10n] ${ref}: ops[${i}].path contains prohibited segment`);
     if (!('value' in op)) throw new Error(`[l10n] ${ref}: ops[${i}].value is required`);
+    if (typeof op.value !== 'string') throw new Error(`[l10n] ${ref}: ops[${i}].value must be a string`);
     if (op.value === undefined) throw new Error(`[l10n] ${ref}: ops[${i}].value cannot be undefined`);
   }
 }
@@ -76,4 +80,3 @@ function main() {
 }
 
 main();
-

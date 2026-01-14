@@ -100,7 +100,7 @@ Example:
 ```json
 {
   "v": 1,
-  "baseFingerprint": null,
+  "baseFingerprint": "sha256-hex",
   "baseUpdatedAt": null,
   "ops": [
     { "op": "set", "path": "headline", "value": "..." }
@@ -122,10 +122,9 @@ We use one staleness guard everywhere (Prague pages, curated instances, user ins
 
 This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
 
-**Legacy fallback (temporary):**
-- `baseUpdatedAt` is supported only for backward compatibility with existing instance overlays.
-- When `baseFingerprint` is missing, runtime MAY fall back to `baseUpdatedAt` equality against the base instance `updatedAt`.
-- New overlays SHOULD set `baseFingerprint`; `baseUpdatedAt` is considered deprecated.
+**Strict rule (Phase 1+):**
+- `baseFingerprint` is required for all new overlays (curated + user).
+- `baseUpdatedAt` is retained as metadata only; runtime does not apply overlays without a fingerprint.
 
 **Shared implementation requirement:**
 - `computeBaseFingerprint()` must be implemented once and imported from a shared module (recommended: a workspace package `@clickeen/l10n` located at `tooling/l10n`).
@@ -168,7 +167,8 @@ Apply:
 
 Manual override (optional, dev-only):
 - Create/update: `l10n/instances/<publicId>/<locale>.ops.json`
-- Build + validate: `pnpm build:l10n`
+- Overlay files must include `baseFingerprint` (or be built with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY so the build can compute it).
+- Build + validate: `pnpm build:l10n` (enforces allowlists + fingerprints)
 - Ensure Tokyo serves the output (`tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**` locally).
 
 ### 3) Consume overlays

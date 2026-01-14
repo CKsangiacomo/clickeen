@@ -69,7 +69,7 @@ Venice must **never** serve unpublished instances.
 2. Fetch `widget.html` from Tokyo via Venice’s proxy routes.
 3. Apply Tokyo `l10n` overlay (if present) from `tokyo/l10n/manifest.json`:
    - Overlay must be set-only ops.
-   - If `overlay.baseUpdatedAt` mismatches `instance.updatedAt`, skip overlay (stale guard).
+   - Overlay must include `baseFingerprint` and match `computeBaseFingerprint(instance.config)` (stale guard).
 4. Return HTML that:
    - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice
    - injects a single canonical bootstrap object: `window.CK_WIDGET`

@@ -94,6 +94,9 @@ importers:
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../tooling/ck-policy
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../tooling/l10n
       gsap:
         specifier: ^3.13.0
         version: 3.13.0
@@ -143,6 +146,9 @@ importers:
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../tooling/ck-policy
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../tooling/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -180,6 +186,10 @@ importers:
         version: 5.9.3
 
   sanfrancisco:
+    dependencies:
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../tooling/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -189,6 +199,10 @@ importers:
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
 
   tokyo-worker:
+    dependencies:
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../tooling/l10n
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251228.0
@@ -198,6 +212,8 @@ importers:
         version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
 
   tooling/ck-policy: {}
+
+  tooling/l10n: {}
 
   tooling/sf-symbols:
     dependencies:
@@ -217,6 +233,9 @@ importers:
 
   venice:
     dependencies:
+      '@clickeen/l10n':
+        specifier: workspace:*
+        version: link:../tooling/l10n
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

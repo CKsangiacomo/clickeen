@@ -21,6 +21,7 @@ import {
   applyLocalizationOps,
   computeBaseFingerprint,
   filterAllowlistedOps,
+  isCuratedPublicId,
   mergeLocalizationOps,
   normalizeLocaleToken,
   type LocalizationOp,
@@ -61,6 +62,7 @@ type TokyoOverlay = {
   ops: LocalizationOp[];
   baseFingerprint: string | null;
   baseUpdatedAt: string | null;
+  source: string | null;
 };
 
 type SubjectMode = 'devstudio' | 'minibob';
@@ -424,25 +426,23 @@ function useWidgetSessionInternal() {
     return allowlist;
   }, []);
 
-  const loadTokyoOverlay = useCallback(async (publicId: string, locale: string): Promise<TokyoOverlay> => {
-    const empty: TokyoOverlay = { ops: [], baseFingerprint: null, baseUpdatedAt: null };
-    const base = resolveTokyoBaseUrl();
-    const manifestRes = await fetch(`${base}/l10n/manifest.json`, { cache: 'no-store' });
-    if (!manifestRes.ok) return empty;
-    const manifest = (await manifestRes.json().catch(() => null)) as any;
-    const entry = manifest?.instances?.[publicId]?.[locale];
-    const file = typeof entry?.file === 'string' ? entry.file.trim() : '';
-    if (!file) return empty;
-    const overlayRes = await fetch(
-      `${base}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(file)}`,
+  const loadParisOverlay = useCallback(async (publicId: string, locale: string): Promise<TokyoOverlay> => {
+    const empty: TokyoOverlay = { ops: [], baseFingerprint: null, baseUpdatedAt: null, source: null };
+    const res = await fetch(
+      `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
       { cache: 'no-store' }
     );
-    if (!overlayRes.ok) return empty;
-    const overlay = (await overlayRes.json().catch(() => null)) as any;
+    if (res.status === 404) return empty;
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Failed to load locale overlay (${res.status}) ${detail}`.trim());
+    }
+    const overlay = (await res.json().catch(() => null)) as any;
     const ops = Array.isArray(overlay?.ops) ? overlay.ops : [];
     const baseFingerprintRaw = typeof overlay?.baseFingerprint === 'string' ? overlay.baseFingerprint.trim() : '';
     const baseFingerprint = /^[a-f0-9]{64}$/i.test(baseFingerprintRaw) ? baseFingerprintRaw : null;
     const baseUpdatedAt = typeof overlay?.baseUpdatedAt === 'string' ? overlay.baseUpdatedAt : null;
+    const source = typeof overlay?.source === 'string' ? overlay.source : null;
     const normalizedOps = ops
       .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
       .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
@@ -450,21 +450,8 @@ function useWidgetSessionInternal() {
       ops: normalizedOps,
       baseFingerprint,
       baseUpdatedAt,
+      source,
     };
-  }, []);
-
-  const loadLocaleSources = useCallback(async (publicId: string): Promise<Record<string, string>> => {
-    const res = await fetch(`/api/paris/instances/${encodeURIComponent(publicId)}/locales`, { cache: 'no-store' });
-    if (!res.ok) return {};
-    const json = (await res.json().catch(() => null)) as any;
-    const locales = Array.isArray(json?.locales) ? json.locales : [];
-    const map: Record<string, string> = {};
-    locales.forEach((entry: any) => {
-      const locale = typeof entry?.locale === 'string' ? entry.locale : '';
-      const source = typeof entry?.source === 'string' ? entry.source : '';
-      if (locale && source) map[locale] = source;
-    });
-    return map;
   }, []);
 
   const setLocalePreview = useCallback(async (rawLocale: string) => {
@@ -511,18 +498,23 @@ function useWidgetSessionInternal() {
     }));
 
     try {
-      const [allowlist, overlay, sources] = await Promise.all([
+      const [allowlist, overlay] = await Promise.all([
         loadLocaleAllowlist(widgetType),
-        loadTokyoOverlay(publicId, normalized),
-        loadLocaleSources(publicId),
+        loadParisOverlay(publicId, normalized),
       ]);
 
       if (localeRequestRef.current !== requestId) return;
-      const source = sources[normalized] ?? null;
+      const source = overlay.source ?? null;
+      if (!overlay.ops.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
+        throw new Error('Missing locale overlay for curated instance');
+      }
       const { filtered } = filterAllowlistedOps(overlay.ops, allowlist);
       const baseOps = source === 'user' ? [] : filtered;
       const userOps = source === 'user' ? filtered : [];
       let stale = false;
+      if (!overlay.baseFingerprint && overlay.ops.length > 0 && isCuratedPublicId(publicId) && normalized !== baseLocale) {
+        throw new Error('Missing baseFingerprint for curated locale overlay');
+      }
       if (overlay.baseFingerprint) {
         const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
         stale = overlay.baseFingerprint !== currentFingerprint;
@@ -557,7 +549,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, activeLocale: normalized, loading: false, error: message, stale: false },
       }));
     }
-  }, [loadLocaleAllowlist, loadLocaleSources, loadTokyoOverlay]);
+  }, [loadLocaleAllowlist, loadParisOverlay]);
 
   const saveLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -592,6 +584,7 @@ function useWidgetSessionInternal() {
         }));
         return;
       }
+      const source = isCuratedPublicId(publicId) ? 'manual' : 'user';
       const res = await fetch(
         `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
         {
@@ -600,7 +593,7 @@ function useWidgetSessionInternal() {
           body: JSON.stringify({
             ops: mergedOps,
             baseFingerprint,
-            source: 'user',
+            source,
             widgetType,
             workspaceId,
           }),
@@ -619,11 +612,11 @@ function useWidgetSessionInternal() {
         ...prev,
         locale: {
           ...prev.locale,
-          baseOps: [],
-          userOps: mergedOps,
+          baseOps: source === 'user' ? [] : mergedOps,
+          userOps: source === 'user' ? mergedOps : [],
           dirty: false,
           stale: false,
-          source: 'user',
+          source,
           error: null,
         },
       }));

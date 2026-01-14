@@ -1,3 +1,4 @@
+import { computeBaseFingerprint, localeCandidates, normalizeLocaleToken } from '@clickeen/l10n';
 import { tokyoFetch } from './tokyo';
 
 export type LocalizationOp = { op: 'set'; path: string; value: unknown };
@@ -23,25 +24,6 @@ function hasProhibitedSegment(path: string): boolean {
   return path
     .split('.')
     .some((segment) => segment && PROHIBITED_SEGMENTS.has(segment));
-}
-
-function stableStringify(value: unknown): string {
-  if (value == null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value as Record<string, unknown>).sort();
-  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
-  return `{${body}}`;
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
-  return sha256Hex(stableStringify(config));
 }
 
 function isIndex(segment: string): boolean {
@@ -92,15 +74,6 @@ function applySetOps(config: Record<string, unknown>, ops: LocalizationOp[]): Re
     working = setAt(working, op.path, op.value);
   }
   return (working && typeof working === 'object' && !Array.isArray(working) ? (working as Record<string, unknown>) : config);
-}
-
-function localeCandidates(locale: string): string[] {
-  const normalized = String(locale || '').trim().toLowerCase().replace(/_/g, '-');
-  if (!normalized) return [];
-  const base = normalized.split('-')[0] || '';
-  if (!base) return [];
-  if (base === normalized) return [base];
-  return [normalized, base];
 }
 
 async function loadL10nManifest(): Promise<L10nManifest> {
@@ -192,7 +165,7 @@ export async function applyTokyoInstanceOverlay(args: {
   baseUpdatedAt?: string | null;
   config: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
-  const locale = String(args.locale || '').trim().toLowerCase();
+  const locale = normalizeLocaleToken(args.locale);
   if (!locale) return args.config;
 
   const overlay = await fetchOverlay(args.publicId, locale);
@@ -211,7 +184,10 @@ export async function applyTokyoInstanceOverlay(args: {
       }
       return args.config;
     }
-  } else if (overlay.baseUpdatedAt && args.baseUpdatedAt && overlay.baseUpdatedAt !== args.baseUpdatedAt) {
+  } else {
+    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+      throw new Error(`[VeniceL10n] Missing baseFingerprint for ${args.publicId} (${locale})`);
+    }
     return args.config;
   }
 

@@ -1,3 +1,5 @@
+import { normalizeLocaleToken } from '@clickeen/l10n';
+
 type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
@@ -175,13 +177,7 @@ function normalizePublicId(raw: string): string | null {
 }
 
 function normalizeLocale(raw: string): string | null {
-  const value = String(raw || '')
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, '-');
-  if (!value) return null;
-  if (!/^[a-z]{2}(?:-[a-z]{2})?$/.test(value)) return null;
-  return value;
+  return normalizeLocaleToken(raw);
 }
 
 function hasProhibitedSegment(pathStr: string): boolean {
@@ -233,8 +229,10 @@ function assertOverlayShape(payload: any): L10nOverlay {
   });
 
   const baseFingerprint = typeof payload.baseFingerprint === 'string' ? payload.baseFingerprint.trim() : '';
-  const normalizedFingerprint = /^[a-f0-9]{64}$/i.test(baseFingerprint) ? baseFingerprint : null;
-  return { v: 1, baseUpdatedAt: payload.baseUpdatedAt ?? null, baseFingerprint: normalizedFingerprint, ops };
+  if (!/^[a-f0-9]{64}$/i.test(baseFingerprint)) {
+    throw new Error('[tokyo] overlay.baseFingerprint must be a sha256 hex string');
+  }
+  return { v: 1, baseUpdatedAt: payload.baseUpdatedAt ?? null, baseFingerprint, ops };
 }
 
 async function loadL10nManifest(env: Env): Promise<L10nManifest> {

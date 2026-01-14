@@ -1,15 +1,9 @@
+import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import { setAt } from '../utils/paths';
 
 export type LocalizationOp = { op: 'set'; path: string; value: string };
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
-
-export function normalizeLocaleToken(raw: unknown): string | null {
-  const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
-  if (!value) return null;
-  if (!/^[a-z]{2}(?:-[a-z0-9]+)?$/.test(value)) return null;
-  return value;
-}
 
 function normalizeOpPath(raw: string): string {
   return String(raw || '')
@@ -28,6 +22,11 @@ function splitPathSegments(pathStr: string): string[] {
 
 function isNumericSegment(seg: string): boolean {
   return /^\d+$/.test(seg);
+}
+
+export function isCuratedPublicId(publicId: string): boolean {
+  if (/^wgt_web_/.test(publicId)) return true;
+  return /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/.test(publicId);
 }
 
 function hasProhibitedSegment(pathStr: string): boolean {
@@ -97,17 +96,4 @@ export function applyLocalizationOps(base: Record<string, unknown>, ops: Localiz
   return working;
 }
 
-function stableStringify(value: unknown): string {
-  if (value == null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value as Record<string, unknown>).sort();
-  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
-  return `{${body}}`;
-}
-
-export async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(stableStringify(config)));
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+export { computeBaseFingerprint, normalizeLocaleToken };

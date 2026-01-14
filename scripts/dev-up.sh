@@ -123,6 +123,9 @@ else
   echo "[dev-up] Building l10n overlays into tokyo/l10n"
   node "$ROOT_DIR/scripts/l10n/build.mjs"
   node "$ROOT_DIR/scripts/l10n/validate.mjs"
+
+  echo "[dev-up] Syncing l10n overlays into Supabase (canonical)"
+  node "$ROOT_DIR/scripts/l10n/push.mjs"
 fi
 
 echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"
@@ -179,7 +182,7 @@ echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
   if [ -n "${TOKYO_DEV_JWT:-}" ]; then
     VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   fi
-  nohup pnpm exec wrangler dev --local --port 8791 \
+  nohup pnpm exec wrangler dev --local --env local --port 8791 \
     "${VARS[@]}" \
     > "$ROOT_DIR/CurrentlyExecuting/tokyo-worker.dev.log" 2>&1 &
   TOKYO_WORKER_PID=$!
@@ -209,7 +212,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
     VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
   fi
 
-  nohup pnpm exec wrangler dev --local --port 3001 \
+  nohup pnpm exec wrangler dev --local --env local --port 3001 \
     "${VARS[@]}" \
     > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
   PARIS_PID=$!
@@ -258,7 +261,7 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
       VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
     fi
 
-    nohup pnpm exec wrangler dev --local --port 3002 "${VARS[@]}" \
+    nohup pnpm exec wrangler dev --local --env local --port 3002 "${VARS[@]}" \
       > "$ROOT_DIR/CurrentlyExecuting/sanfrancisco.dev.log" 2>&1 &
     SF_PID=$!
     echo "[dev-up] SanFrancisco PID: $SF_PID"

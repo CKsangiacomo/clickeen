@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { generateSchemaJsonLd } from '@venice/lib/schema';
@@ -61,15 +62,14 @@ function stripScriptTags(bodyHtml: string): string {
 
 function resolveLocale(req: Request): { locale: string; explicit: boolean } {
   const url = new URL(req.url);
-  const explicit = url.searchParams.get('locale');
-  if (explicit && /^[a-z]{2}(-[a-z0-9]+)?$/i.test(explicit.trim())) {
-    return { locale: explicit.trim().toLowerCase().split('-')[0] || 'en', explicit: true };
-  }
+  const explicitRaw = url.searchParams.get('locale');
+  const explicit = normalizeLocaleToken(explicitRaw);
+  if (explicit) return { locale: explicit, explicit: true };
   const header = req.headers.get('accept-language') || req.headers.get('Accept-Language') || '';
   const first = header.split(',')[0]?.trim() || '';
   const candidate = first.split(';')[0]?.trim() || '';
-  const normalized = candidate.toLowerCase().split('-')[0] || '';
-  return { locale: /^[a-z]{2}$/.test(normalized) ? normalized : 'en', explicit: false };
+  const normalized = normalizeLocaleToken(candidate);
+  return { locale: normalized ?? 'en', explicit: false };
 }
 
 function resolveWidgetAssetPath(widgetType: string, raw: string): string {

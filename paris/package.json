@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "wrangler dev --local --port 3001",
-    "deploy": "wrangler deploy"
+    "deploy": "node ../scripts/infra/ensure-queues.mjs --queue instance-l10n-generate-cloud-dev --queue instance-l10n-publish-cloud-dev && wrangler deploy"
   },
   "type": "module",
   "dependencies": {
-    "@clickeen/ck-policy": "workspace:*"
+    "@clickeen/ck-policy": "workspace:*",
+    "@clickeen/l10n": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251228.0",

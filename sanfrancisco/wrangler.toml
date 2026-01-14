@@ -26,4 +26,10 @@ queue = "sanfrancisco-events-dev"
 queue = "sanfrancisco-events-dev"
 
 [[queues.consumers]]
-queue = "l10n-jobs-dev"
+queue = "instance-l10n-generate-cloud-dev"
+
+[env.local]
+name = "sanfrancisco-local"
+
+[[env.local.queues.consumers]]
+queue = "instance-l10n-generate-local"

@@ -1,22 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import supportedLocalesRaw from '../../config/locales.json';
-import { normalizeLocaleToken } from '../lib/l10n/instance';
+import { isCuratedPublicId, normalizeLocaleToken } from '../lib/l10n/instance';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-
-function normalizeSupportedLocales(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  const locales = raw
-    .map((value) => (typeof value === 'string' ? value.trim().toLowerCase() : ''))
-    .filter(Boolean);
-  return Array.from(new Set(locales));
-}
-
-function isCuratedPublicId(publicId: string): boolean {
-  if (/^wgt_web_/.test(publicId)) return true;
-  return /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/.test(publicId);
-}
 
 function titleCase(input: string): string {
   return input
@@ -40,7 +26,9 @@ export function SettingsPanel() {
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
 
-  const supportedLocales = useMemo(() => normalizeSupportedLocales(supportedLocalesRaw), []);
+  const [curatedLocales, setCuratedLocales] = useState<string[] | null>(null);
+  const [curatedError, setCuratedError] = useState<string | null>(null);
+  const [curatedLoading, setCuratedLoading] = useState(false);
 
   useEffect(() => {
     if (!workspaceId || curated) {
@@ -82,9 +70,53 @@ export function SettingsPanel() {
     };
   }, [workspaceId, curated]);
 
+  useEffect(() => {
+    if (!publicId || !curated) {
+      setCuratedLocales(null);
+      setCuratedError(null);
+      setCuratedLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCuratedLoading(true);
+    fetch(`/api/paris/instances/${encodeURIComponent(publicId)}/locales`, { cache: 'no-store' })
+      .then(async (res) => {
+        const json = (await res.json().catch(() => null)) as any;
+        if (!res.ok) {
+          const message = json?.error?.message || json?.error?.code || 'Failed to load locale overlays';
+          throw new Error(message);
+        }
+        const locales = Array.isArray(json?.locales)
+          ? json.locales
+              .map((item: any) => (typeof item?.locale === 'string' ? item.locale.trim().toLowerCase() : ''))
+              .filter(Boolean)
+          : [];
+        return locales;
+      })
+      .then((locales) => {
+        if (cancelled) return;
+        setCuratedLocales(Array.from(new Set(locales)));
+        setCuratedError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCuratedLocales([]);
+        setCuratedError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setCuratedLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [publicId, curated]);
+
   const availableLocales = useMemo(() => {
     const baseLocale = locale.baseLocale;
-    const list = curated ? supportedLocales : workspaceLocales ?? [];
+    const list = curated ? curatedLocales ?? [] : workspaceLocales ?? [];
     const normalized = list
       .map((value) => normalizeLocaleToken(value))
       .filter((value): value is string => Boolean(value));
@@ -93,7 +125,7 @@ export function SettingsPanel() {
       .filter((code) => code !== baseLocale)
       .sort();
     return [baseLocale, ...rest];
-  }, [curated, supportedLocales, workspaceLocales, locale.baseLocale]);
+  }, [curated, curatedLocales, workspaceLocales, locale.baseLocale]);
 
   const activeLocale = locale.activeLocale;
   const baseLocale = locale.baseLocale;
@@ -105,6 +137,7 @@ export function SettingsPanel() {
     !hasInstance ||
     locale.loading ||
     (curated ? false : !l10nEnabled) ||
+    (curated ? curatedLoading : workspaceLoading) ||
     availableLocales.length <= 1;
 
   const selectLocales = useMemo(() => {
@@ -150,7 +183,7 @@ export function SettingsPanel() {
             </label>
             <div className="label-s label-muted">
               {curated
-                ? 'Curated instances preview every supported locale.'
+                ? 'Curated instances preview locales with published overlays.'
                 : l10nEnabled
                   ? 'Switch locales to review and edit translations.'
                   : 'Localization preview is available on Tier 2+.'}
@@ -159,7 +192,9 @@ export function SettingsPanel() {
               {isLocaleMode ? `Editing locale: ${activeLocale}` : `Editing base (${baseLocale})`}
             </div>
             {workspaceLoading ? <div className="label-s label-muted">Loading workspace locales…</div> : null}
+            {curatedLoading ? <div className="label-s label-muted">Loading locale overlays…</div> : null}
             {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
+            {curatedError ? <div className="settings-panel__error">{curatedError}</div> : null}
 
             <div className="settings-panel__status">
               <span className="label-s">Status</span>

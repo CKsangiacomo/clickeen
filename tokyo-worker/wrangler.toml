@@ -8,7 +8,13 @@ binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
 
 [[queues.consumers]]
-queue = "l10n-publish-dev"
+queue = "instance-l10n-publish-cloud-dev"
+
+[env.local]
+name = "tokyo-assets-local"
+
+[[env.local.queues.consumers]]
+queue = "instance-l10n-publish-local"
 
 [triggers]
 crons = ["0 3 * * *"]

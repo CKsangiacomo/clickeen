@@ -83,6 +83,7 @@ Tokyo serves **instance localization overlays** as content-hashed ops patches:
 
 Rules:
 - Overlays are set-only ops (no structural mutations).
+- Overlays include `baseFingerprint` and are rejected if missing.
 - Instance identity is locale-free (`publicId` never contains locale).
 - Consumers should treat overlay files as cacheable (hashed filenames); `manifest.json` is the indirection layer and should be short-TTL.
 

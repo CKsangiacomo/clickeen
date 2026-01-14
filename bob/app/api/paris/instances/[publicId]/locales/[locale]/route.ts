@@ -5,7 +5,7 @@ export const runtime = 'edge';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'PUT,DELETE,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,PUT,DELETE,OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
 } as const;
 
@@ -90,6 +90,14 @@ export async function PUT(request: NextRequest, ctx: { params: Promise<{ publicI
   }
   const body = await request.text();
   return forwardToParis(request, publicId, locale, { method: 'PUT', body });
+}
+
+export async function GET(request: NextRequest, ctx: { params: Promise<{ publicId: string; locale: string }> }) {
+  const { publicId, locale } = await ctx.params;
+  if (!publicId || !locale) {
+    return NextResponse.json({ error: 'INVALID_PARAMS' }, { status: 400, headers: CORS_HEADERS });
+  }
+  return forwardToParis(request, publicId, locale, { method: 'GET' });
 }
 
 export async function DELETE(request: NextRequest, ctx: { params: Promise<{ publicId: string; locale: string }> }) {

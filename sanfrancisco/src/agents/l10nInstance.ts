@@ -1,3 +1,4 @@
+import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 
@@ -52,35 +53,6 @@ export function isL10nJob(value: unknown): value is L10nJob {
   if (!publicId || !widgetType || !locale || !baseUpdatedAt) return false;
   if (kind !== 'curated' && kind !== 'user') return false;
   return true;
-}
-
-function normalizeLocale(raw: string): string | null {
-  const normalized = String(raw || '')
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, '-');
-  if (!normalized) return null;
-  if (!/^[a-z]{2}(?:-[a-z]{2})?$/.test(normalized)) return null;
-  return normalized;
-}
-
-function stableStringify(value: unknown): string {
-  if (value == null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value as Record<string, unknown>).sort();
-  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
-  return `{${body}}`;
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
-  return sha256Hex(stableStringify(config));
 }
 
 function requireEnvVar(value: unknown, name: string): string {
@@ -476,7 +448,7 @@ async function writeLog(env: Env, job: L10nJob, payload: Record<string, unknown>
 
 export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
   const startedAt = Date.now();
-  const locale = normalizeLocale(job.locale);
+  const locale = normalizeLocaleToken(job.locale);
   if (!locale) {
     await writeLog(env, job, { status: 'skipped', reason: 'invalid_locale', job, occurredAtMs: startedAt });
     return;

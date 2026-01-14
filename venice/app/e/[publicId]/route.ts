@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { escapeHtml } from '@venice/lib/html';
@@ -26,10 +27,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const localeResult = (() => {
     const raw = (url.searchParams.get('locale') || '').trim();
-    if (!raw) return { locale: 'en', explicit: false };
-    const normalizedLocale = raw.replace(/_/g, '-');
-    if (!/^[a-z]{2}(?:-[a-z]{2})?$/i.test(normalizedLocale)) return { locale: 'en', explicit: false };
-    return { locale: normalizedLocale.toLowerCase(), explicit: true };
+    const normalized = normalizeLocaleToken(raw);
+    if (!normalized) return { locale: 'en', explicit: false };
+    return { locale: normalized, explicit: true };
   })();
   const ts = url.searchParams.get('ts');
   let locale = localeResult.locale;

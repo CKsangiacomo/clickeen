@@ -1,3 +1,4 @@
+import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import { can, resolvePolicy, evaluateLimits, parseLimitsSpec } from '@clickeen/ck-policy';
 import type { Policy, PolicyProfile, LimitsSpec } from '@clickeen/ck-policy';
 import supportedLocalesRaw from '../../config/locales.json';
@@ -13,7 +14,7 @@ type Env = {
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
-  L10N_QUEUE?: Queue<L10nJob>;
+  L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishJob>;
 };
 
@@ -491,18 +492,18 @@ function normalizeLocaleList(value: unknown, path: string) {
   const seen = new Set<string>();
 
   value.forEach((item, index) => {
-    const raw = typeof item === 'string' ? item.trim().toLowerCase() : '';
-    if (!raw) {
-      issues.push({ path: `${path}[${index}]`, message: 'locale must be a non-empty string' });
+    const normalized = normalizeLocaleToken(item);
+    if (!normalized) {
+      issues.push({ path: `${path}[${index}]`, message: 'locale must be a valid token' });
       return;
     }
-    if (!SUPPORTED_LOCALE_SET.has(raw)) {
-      issues.push({ path: `${path}[${index}]`, message: `unsupported locale: ${raw}` });
+    if (!SUPPORTED_LOCALE_SET.has(normalized)) {
+      issues.push({ path: `${path}[${index}]`, message: `unsupported locale: ${normalized}` });
       return;
     }
-    if (!seen.has(raw)) {
-      seen.add(raw);
-      locales.push(raw);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      locales.push(normalized);
     }
   });
 
@@ -510,11 +511,11 @@ function normalizeLocaleList(value: unknown, path: string) {
   return { ok: true as const, locales };
 }
 
-function normalizeLocaleToken(raw: unknown): string | null {
-  const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
-  if (!value) return null;
-  if (!SUPPORTED_LOCALE_SET.has(value)) return null;
-  return value;
+function normalizeSupportedLocaleToken(raw: unknown): string | null {
+  const normalized = normalizeLocaleToken(raw);
+  if (!normalized) return null;
+  if (!SUPPORTED_LOCALE_SET.has(normalized)) return null;
+  return normalized;
 }
 
 function normalizeL10nSource(raw: unknown): string | null {
@@ -585,25 +586,6 @@ async function loadWidgetLocalizationAllowlist(env: Env, widgetType: string): Pr
   return json.paths
     .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
     .filter(Boolean);
-}
-
-function stableStringify(value: unknown): string {
-  if (value == null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  const keys = Object.keys(value as Record<string, unknown>).sort();
-  const body = keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(',');
-  return `{${body}}`;
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-async function computeBaseFingerprint(config: Record<string, unknown>): Promise<string> {
-  return sha256Hex(stableStringify(config));
 }
 
 function validateL10nOps(opsRaw: unknown, allowlist: string[]) {
@@ -1179,6 +1161,43 @@ async function handleInstanceLocalesList(req: Request, env: Env, publicId: strin
   });
 }
 
+async function handleInstanceLocaleGet(req: Request, env: Env, publicId: string, localeRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const locale = normalizeSupportedLocaleToken(localeRaw);
+  if (!locale) return apiError('LOCALE_INVALID', 'Unsupported locale', 400, { locale: localeRaw });
+
+  if (hasLocaleSuffix(publicIdResult.value, locale)) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale });
+  }
+
+  const instance = await loadInstanceByPublicId(env, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const row = await loadInstanceLocale(env, publicIdResult.value, locale);
+  if (!row) {
+    return apiError('INSTANCE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
+  }
+
+  return json({
+    publicId: row.public_id,
+    locale: row.locale,
+    source: row.source,
+    ops: row.ops,
+    baseFingerprint: row.base_fingerprint,
+    baseUpdatedAt: row.base_updated_at ?? null,
+    geoCountries: row.geo_countries ?? null,
+    workspaceId: row.workspace_id ?? null,
+    updatedAt: row.updated_at ?? null,
+  });
+}
+
 async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: string, localeRaw: string) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -1188,7 +1207,7 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
   }
 
-  const locale = normalizeLocaleToken(localeRaw);
+  const locale = normalizeSupportedLocaleToken(localeRaw);
   if (!locale) return apiError('LOCALE_INVALID', 'Unsupported locale', 400, { locale: localeRaw });
 
   if (hasLocaleSuffix(publicIdResult.value, locale)) {
@@ -1240,21 +1259,13 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
   }
 
   const computedFingerprint = await computeBaseFingerprint(instance.config);
-  if (baseFingerprintRaw) {
-    if (baseFingerprintRaw !== computedFingerprint) {
-      return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint does not match', 409, {
-        provided: baseFingerprintRaw,
-      });
-    }
-  } else if (baseUpdatedAtRaw) {
-    const instanceUpdatedAt = instance.updated_at ?? null;
-    if (!instanceUpdatedAt || instanceUpdatedAt !== baseUpdatedAtRaw) {
-      return apiError('FINGERPRINT_MISMATCH', 'baseUpdatedAt does not match', 409, {
-        provided: baseUpdatedAtRaw,
-      });
-    }
-  } else {
-    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint or baseUpdatedAt required', 409);
+  if (!baseFingerprintRaw) {
+    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint required', 409);
+  }
+  if (baseFingerprintRaw !== computedFingerprint) {
+    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint does not match', 409, {
+      provided: baseFingerprintRaw,
+    });
   }
 
   let widgetType: string | null = null;
@@ -1358,7 +1369,7 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
     return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
   }
 
-  const locale = normalizeLocaleToken(localeRaw);
+  const locale = normalizeSupportedLocaleToken(localeRaw);
   if (!locale) return apiError('LOCALE_INVALID', 'Unsupported locale', 400, { locale: localeRaw });
 
   if (hasLocaleSuffix(publicIdResult.value, locale)) {
@@ -1657,8 +1668,11 @@ async function enqueueL10nJobs(args: {
 
   if (locales.length === 0) return null;
 
-  if (!args.env.L10N_QUEUE) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.missing', detail: 'L10N_QUEUE missing' }, 500);
+  if (!args.env.L10N_GENERATE_QUEUE) {
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.missing', detail: 'L10N_GENERATE_QUEUE missing' },
+      500
+    );
   }
 
   const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
@@ -1678,7 +1692,7 @@ async function enqueueL10nJobs(args: {
   }));
 
   try {
-    await args.env.L10N_QUEUE.sendBatch(messages);
+    await args.env.L10N_GENERATE_QUEUE.sendBatch(messages);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.enqueueFailed', detail }, 500);
@@ -2235,6 +2249,7 @@ export default {
       if (instanceLocaleMatch) {
         const publicId = decodeURIComponent(instanceLocaleMatch[1]);
         const locale = decodeURIComponent(instanceLocaleMatch[2]);
+        if (req.method === 'GET') return handleInstanceLocaleGet(req, env, publicId, locale);
         if (req.method === 'PUT') return handleInstanceLocaleUpsert(req, env, publicId, locale);
         if (req.method === 'DELETE') return handleInstanceLocaleDelete(req, env, publicId, locale);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });

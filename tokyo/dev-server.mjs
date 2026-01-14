@@ -153,7 +153,10 @@ function assertOverlayShape(payload) {
 
   const baseUpdatedAt = typeof payload.baseUpdatedAt === 'string' ? payload.baseUpdatedAt : null;
   const rawFingerprint = typeof payload.baseFingerprint === 'string' ? payload.baseFingerprint.trim() : '';
-  const baseFingerprint = /^[a-f0-9]{64}$/i.test(rawFingerprint) ? rawFingerprint : null;
+  if (!/^[a-f0-9]{64}$/i.test(rawFingerprint)) {
+    throw new Error('[tokyo-dev] overlay.baseFingerprint must be a sha256 hex string');
+  }
+  const baseFingerprint = rawFingerprint;
 
   return { v: 1, baseUpdatedAt, baseFingerprint, ops };
 }

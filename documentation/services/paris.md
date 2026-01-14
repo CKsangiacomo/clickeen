@@ -8,7 +8,7 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
 
@@ -100,11 +100,13 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - Endpoints:
   - `GET /api/workspaces/:workspaceId/locales`
   - `PUT /api/workspaces/:workspaceId/locales` (entitlement gated via `l10n.enabled` + `l10n.locales.max`)
+  - `GET /api/instances/:publicId/locales/:locale` (single-locale overlay for preview/debug)
 - Publish/update trigger:
-  - On instance create/update, Paris enqueues l10n jobs to `L10N_QUEUE`.
+  - On instance create/update, Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
+  - Queue names follow `instance-l10n-generate-{env}` and `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`).
   - Curated instances → all supported locales.
   - User instances → `workspaces.l10n_locales` (within cap).
-  - `baseUpdatedAt` is stamped from `widget_instances.updated_at`.
+  - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Instance locale overlays (`PUT/DELETE /api/instances/:publicId/locales/:locale`) enqueue `L10N_PUBLISH_QUEUE`.
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
 
