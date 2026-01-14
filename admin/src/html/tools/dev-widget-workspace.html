@@ -401,7 +401,7 @@ function composeWebsiteCreativeKey({ widgetType, page, blockId }) {
 }
 
   function composeWebsiteCreativePublicId({ creativeKey }) {
-    return `wgt_web_${creativeKey}`;
+    return `wgt_curated_${creativeKey}`;
   }
 
 const widgetPageJsonCache = new Map();
@@ -455,8 +455,8 @@ async function loadWidgetPageJson({ widgetType, page }) {
 
   function parseWebsiteCreativePublicId(publicId) {
     const raw = String(publicId || '').trim();
-    if (!raw.startsWith('wgt_web_')) return null;
-    const creativeKey = raw.slice('wgt_web_'.length);
+    if (!raw.startsWith('wgt_curated_')) return null;
+    const creativeKey = raw.slice('wgt_curated_'.length);
 
     const firstDot = creativeKey.indexOf('.');
     if (firstDot <= 0) return null;

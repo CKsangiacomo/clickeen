@@ -285,7 +285,7 @@ Endpoint:
 
 Deterministic identity (non-negotiable):
 - `creativeKey = {widgetType}.{page}.{slot}` (locale-free)
-- `publicId = wgt_web_{creativeKey}` (locale-free)
+- `publicId = wgt_curated_{creativeKey}` (locale-free)
 
 Payload:
 ```json
@@ -300,7 +300,7 @@ Payload:
 
 Response:
 ```json
-{ "creativeKey": "faq.overview.hero", "publicId": "wgt_web_faq.overview.hero" }
+{ "creativeKey": "faq.overview.hero", "publicId": "wgt_curated_faq.overview.hero" }
 ```
 
 Notes:

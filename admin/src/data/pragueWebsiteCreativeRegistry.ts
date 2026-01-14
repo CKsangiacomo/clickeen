@@ -9,5 +9,5 @@ export function composeWebsiteCreativeKey(opts: { widgetType: string; page: stri
 }
 
 export function composeWebsiteCreativePublicId(opts: { creativeKey: string }): string {
-  return `wgt_web_${opts.creativeKey}`;
+  return `wgt_curated_${opts.creativeKey}`;
 }

@@ -17,6 +17,7 @@ Overlay format:
 ```json
 {
   "v": 1,
+  "baseFingerprint": "sha256-hex",
   "baseUpdatedAt": "2026-01-08T00:00:00.000Z",
   "ops": [
     { "op": "set", "path": "headline", "value": "..." }
@@ -27,5 +28,5 @@ Overlay format:
 Rules:
 - Only `set` ops are allowed.
 - Locale is a runtime parameter; it must never be encoded into `publicId`.
-- `baseUpdatedAt` is optional; when present, runtime applies the overlay only if it matches the base instance `updatedAt`.
-
+- `baseFingerprint` is required; runtime applies the overlay only when it matches the base instance config.
+- `baseUpdatedAt` is metadata only.

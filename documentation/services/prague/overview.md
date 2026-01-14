@@ -93,7 +93,7 @@ Implementation:
 
 Defaults (local/dev):
 - workspaceId defaults to `ck-dev` (`00000000-0000-0000-0000-000000000001`)
-- publicId defaults to `wgt_{widget}_main`
+- publicId defaults to `wgt_main_{widget}`
 - override via env:
   - `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
   - `PUBLIC_MINIBOB_PUBLIC_ID` / `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>`
@@ -104,7 +104,7 @@ Defaults (local/dev):
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- “Website creatives” (visual widget embeds inside Prague blocks) remain locale-free instances (e.g. `wgt_web_{widgetType}.overview.hero`); locale is passed as a query param and/or applied via overlays at runtime.
+- “Website creatives” (visual widget embeds inside Prague blocks) remain locale-free instances (e.g. `wgt_curated_{widgetType}.overview.hero`); locale is passed as a query param and/or applied via overlays at runtime.
 
 ---
 

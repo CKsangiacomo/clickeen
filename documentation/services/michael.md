@@ -75,23 +75,27 @@ One per widget type. Used for:
 - local dev convenience mirror of `tokyo/widgets/<widgetType>/spec.json` defaults (Bob compilation + fallbacks use Tokyo specs)
 
 **Naming**
-- `wgt_<widgetType>_main`
+- `wgt_main_{widgetType}`
 
 Examples:
-- `wgt_faq_main`
+- `wgt_main_faq`
 
-### B) Template instance (Clickeen curated “gallery”)
-These are instances created by Clickeen (via Bob) that serve as starter designs.
+### B) Curated instance (Clickeen-owned)
+These are instances created by Clickeen (via Bob) that serve as starter designs **and** Prague embeds.
 
 **Naming**
-- `wgt_<widgetType>_tmpl_<templateKey>`
+- `wgt_curated_{curatedKey}`
+
+Where:
+- `curatedKey` is stable and dot-separated; it starts with the widget type (allowed chars: `a-z 0-9 . - _`)
+- locale is a runtime parameter; it must not be encoded into `public_id`
 
 Examples:
-- `wgt_faq_tmpl_christmas`
-- `wgt_faq_tmpl_halloween`
+- `wgt_curated_faq.overview.hero`
+- `wgt_curated_faq.templates.card.1`
 
 ### C) User instance
-Instances created by users (usually by cloning either a `main` instance or a template instance).
+Instances created by users (usually by cloning either a `main` instance or a curated instance).
 
 **Naming**
 - `wgt_<widgetType>_u_<instanceKey>`
@@ -99,29 +103,15 @@ Instances created by users (usually by cloning either a `main` instance or a tem
 Examples:
 - `wgt_faq_u_4f8k2m1x`
 
-### D) Website creative instance (Prague CMS visual)
-Instances owned by the Clickeen workspace that are embedded inside Prague marketing blocks (via Venice).
-
-**Naming (canonical)**
-- `wgt_web_{creativeKey}`
-
-Where:
-- `creativeKey` is stable: `{widgetType}.{page}.{blockSlot}` (allowed chars: `a-z 0-9 . - _`)
-- locale is a runtime parameter; it must not be encoded into `public_id`
-
-Examples:
-- `wgt_web_faq.overview.hero`
-- `wgt_web_faq.templates.card.1`
-
 ### Migration note (no legacy)
 
-Legacy `wgt_web_{creativeKey}.{locale}` rows must not exist.
+Legacy `wgt_curated_{curatedKey}.{locale}` rows must not exist.
 
 The canonical migration is:
-- `supabase/migrations/20260108090000__website_creatives_locale_free.sql`
+- `supabase/migrations/20260116090000__public_id_prefixes.sql`
 
 It:
-- collapses any locale-suffixed website creative rows into a single locale-free row per creative key, and
+- renames the known curated/main instances to the new prefixes, and
 - re-adds the `widget_instances_public_id_format` constraint to forbid locale suffixes going forward.
 
 ## “Instances ARE Templates” (how templates work)
@@ -130,7 +120,7 @@ Competitors build a separate “template system”.
 
 Clickeen does not.
 
-A “template” is just a `widget_instances` row whose `public_id` uses the `tmpl` form. The gallery is simply a filtered view of instances (later: in UI/service code).
+A “template” is just a curated `widget_instances` row whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of instances (later: in UI/service code).
 
 ## Local Dev (Docker Supabase)
 

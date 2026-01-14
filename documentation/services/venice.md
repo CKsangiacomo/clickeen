@@ -95,7 +95,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Non-goal (strict):**
-- Locale is never encoded into `publicId`. Venice does not support `wgt_web_*.<locale>` URLs; they are treated as invalid and will 404.
+- Locale is never encoded into `publicId`. Venice does not support `wgt_curated_*.<locale>` URLs; they are treated as invalid and will 404.
 
 **Cache strategy (shipped):**
   - With `?ts=<timestamp>`: `no-store` (explicit cache bust)

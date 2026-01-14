@@ -78,13 +78,17 @@ function pathMatchesAllowlist(pathStr, allowPath) {
 }
 
 function resolveWidgetTypeFromPublicId(publicId) {
-  if (publicId.startsWith('wgt_web_')) {
-    const rest = publicId.slice('wgt_web_'.length);
+  if (publicId.startsWith('wgt_curated_')) {
+    const rest = publicId.slice('wgt_curated_'.length);
     const widgetType = rest.split('.')[0] || '';
     return widgetType.trim() || null;
   }
-  const legacy = publicId.match(/^wgt_([a-z0-9][a-z0-9_-]*)_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/i);
-  if (legacy) return legacy[1];
+  if (publicId.startsWith('wgt_main_')) {
+    const widgetType = publicId.slice('wgt_main_'.length);
+    return widgetType.trim() || null;
+  }
+  const user = publicId.match(/^wgt_([a-z0-9][a-z0-9_-]*)_u_[a-z0-9][a-z0-9_-]*$/i);
+  if (user) return user[1];
   return null;
 }
 

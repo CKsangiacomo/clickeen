@@ -2,11 +2,11 @@
 //
 // Deterministic identity contract:
 // - creativeKey = {widgetType}.{page}.{slot}
-// - publicId    = wgt_web_{creativeKey}                      (locale-free; locale is a runtime parameter)
+// - publicId    = wgt_curated_{creativeKey}                  (locale-free; locale is a runtime parameter)
 //
 // Example:
 //   creativeKey = faq.overview.hero
-//   publicId    = wgt_web_faq.overview.hero
+//   publicId    = wgt_curated_faq.overview.hero
 //
 // Evolution policy:
 // - Growth is additive: add new pages/slots as the website expands.

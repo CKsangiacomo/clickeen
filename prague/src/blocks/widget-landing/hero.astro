@@ -6,8 +6,8 @@ type Props = {
   subheadline?: string;
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
-  // Contract-locked: the hero preview (when enabled) is ALWAYS the website creative for:
-  //   wgt_web_{widgetType}.overview.hero
+  // Contract-locked: the hero preview (when enabled) is ALWAYS the curated instance for:
+  //   wgt_curated_{widgetType}.overview.hero
   // This is not a generic slot and cannot visualize arbitrary content.
   websiteCreative?: {
     widgetType: string;

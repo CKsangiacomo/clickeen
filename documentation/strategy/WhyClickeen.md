@@ -119,7 +119,7 @@ There is no geography.
 **What this requires:**
 - Locale is a runtime parameter, like `userId`
 - No hardcoded date formats
-- Locale is never encoded into IDs (no DB fan-out like `wgt_web_*.<locale>`)
+- Locale is never encoded into IDs (no DB fan-out like `wgt_curated_*.<locale>`)
 - Typography that handles all scripts from day 1
 - Payments designed multi-currency from the start
 - AI agents that operate natively in any language—not "translate from English"

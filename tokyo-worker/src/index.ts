@@ -169,10 +169,11 @@ type InstanceLocaleRow = {
 function normalizePublicId(raw: string): string | null {
   const value = String(raw || '').trim();
   if (!value) return null;
-  const okLegacy = /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(value);
-  const okWebsiteCreative =
-    /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value);
-  if (!okLegacy && !okWebsiteCreative) return null;
+  const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
+  const okCurated =
+    /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value);
+  const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(value);
+  if (!okMain && !okCurated && !okUser) return null;
   return value;
 }
 

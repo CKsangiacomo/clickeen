@@ -1,11 +1,11 @@
 {
   "v": 1,
-  "gitSha": "52b24757da5304dea3caec986886cff041670a34",
+  "gitSha": "eb117be938f887036b3ad4ca630af1584fd45bad",
   "instances": {
-    "wgt_web_faq.overview.hero": {
+    "wgt_curated_faq.overview.hero": {
       "es": {
-        "file": "es.464b21ef.ops.json",
-        "baseUpdatedAt": "2026-01-14T15:41:11.117584+00:00"
+        "file": "es.c82ab7ad.ops.json",
+        "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00"
       }
     }
   }

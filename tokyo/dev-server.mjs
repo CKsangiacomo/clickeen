@@ -83,10 +83,11 @@ function normalizeWidgetType(raw) {
 function normalizePublicId(raw) {
   const v = String(raw || '').trim();
   if (!v) return null;
-  const okLegacy = /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/i.test(v);
-  const okWebsiteCreative =
-    /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v);
-  if (!okLegacy && !okWebsiteCreative) return null;
+  const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v);
+  const okCurated =
+    /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v);
+  const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(v);
+  if (!okMain && !okCurated && !okUser) return null;
   return v;
 }
 

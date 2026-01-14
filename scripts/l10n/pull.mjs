@@ -33,8 +33,8 @@ function prettyStableJson(value) {
 }
 
 function isCuratedPublicId(publicId) {
-  if (/^wgt_web_/.test(publicId)) return true;
-  return /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/i.test(publicId);
+  if (/^wgt_curated_/.test(publicId)) return true;
+  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
 }
 
 async function listInstanceLocales() {

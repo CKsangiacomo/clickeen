@@ -635,25 +635,26 @@ function assertWidgetType(widgetType: unknown) {
 function assertPublicId(publicId: unknown) {
   const value = asTrimmedString(publicId);
   if (!value) return { ok: false as const, issues: [{ path: 'publicId', message: 'publicId is required' }] };
-  const okLegacy = /^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*|u_[a-z0-9][a-z0-9_-]*)$/.test(value);
-  const okWebsiteCreative =
-    // Locale-free website creative instances (canonical). Locale is a runtime parameter, not part of identity.
-    /^wgt_web_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/.test(value);
-  if (!okLegacy && !okWebsiteCreative) {
+  const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/.test(value);
+  const okCurated =
+    // Locale-free curated instances. Locale is a runtime parameter, not part of identity.
+    /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/.test(value);
+  const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/.test(value);
+  if (!okMain && !okCurated && !okUser) {
     return { ok: false as const, issues: [{ path: 'publicId', message: 'invalid publicId format' }] };
   }
   return { ok: true as const, value };
 }
 
 function inferInstanceKindFromPublicId(publicId: string): InstanceKind {
-  if (/^wgt_web_/.test(publicId)) return 'curated';
-  if (/^wgt_[a-z0-9][a-z0-9_-]*_(main|tmpl_[a-z0-9][a-z0-9_-]*)$/.test(publicId)) return 'curated';
+  if (/^wgt_curated_/.test(publicId)) return 'curated';
+  if (/^wgt_main_[a-z0-9][a-z0-9_-]*$/.test(publicId)) return 'curated';
   return 'user';
 }
 
 function resolveInstanceKind(instance: InstanceRow): InstanceKind {
   const inferred = inferInstanceKindFromPublicId(instance.public_id);
-  // PublicId grammar is authoritative for curated instances (e.g. wgt_web_*, wgt_*_main/tmpl_*).
+  // PublicId grammar is authoritative for curated instances (e.g. wgt_curated_*, wgt_main_*).
   if (inferred === 'curated') return 'curated';
   if (instance.kind === 'curated' || instance.kind === 'user') return instance.kind;
   return inferred;
@@ -978,7 +979,7 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   const page = pageResult.value;
   const slot = slotResult.value;
   const creativeKey = `${widgetType}.${page}.${slot}`;
-  const publicId = `wgt_web_${creativeKey}`;
+  const publicId = `wgt_curated_${creativeKey}`;
 
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);

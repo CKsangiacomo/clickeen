@@ -12,7 +12,7 @@ This document defines how Clickeen handles language and localization across:
 - **Locale is a runtime parameter.**
 - **Locale is not identity.** We never encode locale into `publicId`.
 
-This prevents “fan-out” (e.g. `wgt_web_... .fr/.de/.es`) and keeps caching + ownership clean.
+This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps caching + ownership clean.
 
 ## Instance kinds + entitlement gating (Phase 1)
 
@@ -77,19 +77,19 @@ They are the same objects; “creative” and “template” are distribution su
 ### Identity (non-negotiable)
 
 - `creativeKey = {widgetType}.{page}.{slot}`
-- `publicId = wgt_web_{creativeKey}` (locale-free)
+- `publicId = wgt_curated_{creativeKey}` (locale-free)
 
 There is exactly **one** instance row per creative in Michael. Locale selection happens at render time.
 
 ### Render algorithm (Phase 1)
 
 1. Prague embeds Venice with canonical `publicId`:
-   - `/e/wgt_web_{creativeKey}?locale=...`
+   - `/e/wgt_curated_{creativeKey}?locale=...`
 2. Venice loads the base instance config from Paris/Michael.
 3. Venice applies Tokyo `l10n` overlay for the request locale (if present).
 4. Venice bootstraps `window.CK_WIDGET.state` with the localized config.
 
-**Strict rule:** `wgt_web_*.<locale>` URLs are invalid and must 404 (no legacy support).
+**Strict rule:** `wgt_curated_*.<locale>` URLs are invalid and must 404 (no legacy support).
 
 ## Overlay format (set-only)
 
@@ -146,14 +146,13 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 ## Operational runbook (Phase 1)
 
-### 1) Enforce locale-free website creatives in Michael
+### 1) Enforce locale-free curated instances in Michael
 
 Canonical migration:
-- `supabase/migrations/20260108090000__website_creatives_locale_free.sql`
+- `supabase/migrations/20260116090000__public_id_prefixes.sql`
 
 Effect:
-- Collapses `wgt_web_{creativeKey}.{locale}` → `wgt_web_{creativeKey}`
-- Deletes remaining locale-suffixed variants
+- Renames known curated/main instances to the new prefixes and enforces locale-free IDs.
 - Re-adds the DB constraint forbidding locale suffixes
 
 Apply:
