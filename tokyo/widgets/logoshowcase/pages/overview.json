@@ -11,17 +11,6 @@
       }
     },
     {
-      "id": "stats",
-      "kind": "stats",
-      "copy": {
-        "items": [
-          { "value": "30s", "label": "Setup time" },
-          { "value": "Unlimited", "label": "Logos" },
-          { "value": "100%", "label": "Responsive" }
-        ]
-      }
-    },
-    {
       "id": "steps",
       "kind": "steps",
       "copy": {
@@ -43,18 +32,6 @@
           { "title": "Clean", "body": "Minimal, modern design that matches your brand." },
           { "title": "Fast", "body": "Tiny payload and edge-cached assets." },
           { "title": "Accessible", "body": "Sensible markup and keyboard-safe controls." }
-        ]
-      }
-    },
-    {
-      "id": "metaFaq",
-      "kind": "metaFaq",
-      "copy": {
-        "title": "FAQ",
-        "items": [
-          { "question": "What is this widget?", "answer": "A simple logo strip/carousel you can embed anywhere." },
-          { "question": "Can I change the design?", "answer": "Yes — spacing, layout, and style are configurable." },
-          { "question": "Does it work on mobile?", "answer": "Yes — it’s responsive by default." }
         ]
       }
     },

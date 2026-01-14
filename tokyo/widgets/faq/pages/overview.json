@@ -11,17 +11,6 @@
       }
     },
     {
-      "id": "stats",
-      "kind": "stats",
-      "copy": {
-        "items": [
-          { "value": "2,078,753", "label": "Customers" },
-          { "value": "60s", "label": "Setup time" },
-          { "value": "50+", "label": "Locales (planned)" }
-        ]
-      }
-    },
-    {
       "id": "steps",
       "kind": "steps",
       "copy": {
@@ -43,18 +32,6 @@
           { "title": "Fast setup", "body": "Launch in minutes with a clean default design." },
           { "title": "Fully customizable", "body": "Change layout, colors, typography, and behavior." },
           { "title": "Built for scale", "body": "Deterministic state + strict policy enforcement." }
-        ]
-      }
-    },
-    {
-      "id": "metaFaq",
-      "kind": "metaFaq",
-      "copy": {
-        "title": "FAQ",
-        "items": [
-          { "question": "What is Clickeen?", "answer": "Embeddable widgets with conversions built in." },
-          { "question": "How do I install a widget?", "answer": "Copy the embed code and paste it into your site." },
-          { "question": "Does this help SEO?", "answer": "Enable SEO/GEO mode to emit schema + deep links." }
         ]
       }
     },

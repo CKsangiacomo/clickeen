@@ -54,9 +54,7 @@ Examples:
 prague/src/blocks/site/nav/Nav.astro
 prague/src/blocks/site/footer.astro
 prague/src/blocks/widget-landing/hero.astro
-prague/src/blocks/widget-landing/stats.astro
 prague/src/blocks/widget-landing/features.astro
-prague/src/blocks/widget-landing/meta-faq.astro
 ```
 
 ### 2.1 Navigation
@@ -87,28 +85,20 @@ prague/src/blocks/widget-landing/meta-faq.astro
 
 **Contract (non-negotiable):**
 - This is **not** a generic “slot”. The hero visual (when enabled) is always the website creative for:
-  - `wgt_web_{widgetType}.overview.hero`
+  - `wgt_curated_{widgetType}.overview.hero`
 - Pages enable the hero visual via the canonical page spec:
   - `tokyo/widgets/{widgetType}/pages/overview.json` → block `{ id: "hero", kind: "hero", visual: true }`
 
 **Embed rule (strict):**
 - Prague always embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
-- `wgt_web_*.<locale>` is invalid and must 404 (no legacy support).
+- `wgt_curated_*.<locale>` is invalid and must 404 (no legacy support).
 
-### 2.3 Proof
-
-`widget-landing/stats`
-- Props: `{ stats: { value: string, label: string }[] }`
-
-`TestimonialsStrip` (later)
-- Props: `{ quotes: { name: string, text: string }[] }`
-
-### 2.4 How-it-works
+### 2.3 How-it-works
 
 `widget-landing/steps`
 - Props: `{ steps: { title: string, body: string }[] }`
 
-### 2.5 Collections
+### 2.4 Collections
 
 `widget-landing/features`
 - Props: `{ items: { title: string, body?: string }[] }`
@@ -128,18 +118,12 @@ prague/src/blocks/widget-landing/meta-faq.astro
 `ExamplesGallery` (later)
 - Props: `{ items: { title: string, instanceRef: string }[] }`
 
-### 2.6 Meta FAQ (about the widget)
-
-`widget-landing/meta-faq`
-- Props: `{ items: { question: string, answer: string }[] }`
-- Implementation: semantic `<details>` + `<summary>` (SSR only)
-
-### 2.7 CTA
+### 2.5 CTA
 
 `widget-landing/cta`
 - Props: `{ headline: string, subheadline?: string, primaryLabel: string, primaryHref: string }`
 
-### 2.8 Minibob island
+### 2.6 Minibob island
 
 `site/minibob`
 - Island: the only Prague section that ships JS.
@@ -161,10 +145,8 @@ prague/src/blocks/widget-landing/meta-faq.astro
 Page templates are just a list of blocks in a fixed order. Example (widget landing):
 - site/nav
 - widget-landing/hero
-- widget-landing/stats
 - widget-landing/steps
 - widget-landing/features
-- widget-landing/meta-faq
 - widget-landing/cta
 - site/minibob
 
@@ -176,4 +158,4 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
   - Optional per-locale overrides: `tokyo/widgets/{widget}/pages/.locales/{locale}/{page}.json`
   - Prague renders `blocks[]` by `kind` and uses `visual: true` to embed website creatives deterministically.
-- Canonical overview is fail-fast: `overview.json` must include required blocks (`hero`, `stats`, `steps`, `features`, `metaFaq`, `cta`, `minibob`). See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
+- Canonical overview is fail-fast: `overview.json` must include required blocks (`hero`, `steps`, `features`, `cta`, `minibob`). See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.

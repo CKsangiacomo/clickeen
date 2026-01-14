@@ -6,10 +6,8 @@ import TopSurface from '../../../../blocks/site/TopSurface.astro';
 import Footer from '../../../../blocks/site/footer.astro';
 import Minibob from '../../../../blocks/site/minibob.astro';
 import Hero from '../../../../blocks/widget-landing/hero.astro';
-import Stats from '../../../../blocks/widget-landing/stats.astro';
 import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
-import MetaFaq from '../../../../blocks/widget-landing/meta-faq.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
 import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../../lib/markdown';
 import { listPragueLocales } from '../../../../lib/locales';
@@ -67,24 +65,20 @@ const heroSecondaryCta = {
 
 const blocks = Array.isArray((overviewJson as any).blocks) ? (overviewJson as any).blocks : [];
 const byIdKind = (id: string, kind: string) => blocks.find((b: any) => b && b.id === id && b.kind === kind) ?? null;
-const statsBlock = byIdKind('stats', 'stats');
 const stepsBlock = byIdKind('steps', 'steps');
 const featuresBlock = byIdKind('features', 'features');
-const metaFaqBlock = byIdKind('metaFaq', 'metaFaq');
 const ctaBlock = byIdKind('cta', 'cta');
 const minibobBlock = byIdKind('minibob', 'minibob');
 
-const stats = ((statsBlock as any)?.copy?.items ?? []) as { value: string; label: string }[];
 const steps = ((stepsBlock as any)?.copy?.items ?? []) as { title: string; body: string }[];
 const features = ((featuresBlock as any)?.copy?.items ?? []) as { title: string; body?: string }[];
-const metaFaq = ((metaFaqBlock as any)?.copy?.items ?? []) as { question: string; answer: string }[];
 const ctaHeadline = ((ctaBlock as any)?.copy?.headline ?? '').toString();
 const ctaSubheadline = ((ctaBlock as any)?.copy?.subheadline ?? '').toString();
 const minibobHeading = ((minibobBlock as any)?.copy?.heading ?? '').toString();
 const minibobSubhead = ((minibobBlock as any)?.copy?.subhead ?? '').toString();
 
-if (!stats.length || !steps.length || !features.length || !metaFaq.length || !ctaHeadline || !ctaSubheadline || !minibobHeading || !minibobSubhead) {
-  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (missing required blocks: stats/steps/features/metaFaq/cta/minibob)`);
+if (!steps.length || !features.length || !ctaHeadline || !ctaSubheadline || !minibobHeading || !minibobSubhead) {
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (missing required blocks: steps/features/cta/minibob)`);
 }
 ---
 
@@ -116,10 +110,8 @@ if (!stats.length || !steps.length || !features.length || !metaFaq.length || !ct
       </Hero>
     </TopSurface>
     <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
-    {stats.length ? <Stats stats={stats} /> : null}
     {steps.length ? <Steps steps={steps} /> : null}
     {features.length ? <Features items={features} /> : null}
-    {metaFaq.length ? <MetaFaq items={metaFaq} /> : null}
     <Cta
       headline={ctaHeadline}
       subheadline={ctaSubheadline}

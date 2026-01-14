@@ -4,7 +4,6 @@ import Nav from '../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../blocks/site/footer.astro';
 import Minibob from '../../../../blocks/site/minibob.astro';
 import Hero from '../../../../blocks/widget-landing/hero.astro';
-import Stats from '../../../../blocks/widget-landing/stats.astro';
 import Steps from '../../../../blocks/widget-landing/steps.astro';
 import Features from '../../../../blocks/widget-landing/features.astro';
 import Cta from '../../../../blocks/widget-landing/cta.astro';
@@ -37,11 +36,6 @@ export function getStaticPaths() {
       heading="Try it live"
       subhead="Edit a demo instance in Minibob. Publish when you’re ready."
     />
-    <Stats stats={[
-      { value: '2,078,753', label: 'Customers' },
-      { value: '60s', label: 'Setup time' },
-      { value: '50+', label: 'Locales (planned)' },
-    ]} />
     <Steps steps={[
       { title: 'Pick a template', body: 'Start from a proven layout and structure.' },
       { title: 'Customize with AI', body: 'Rewrite copy and styling for your business in minutes.' },
