@@ -60,7 +60,13 @@ function runWranglerCreate(queueName) {
     return;
   }
   const output = `${res.stdout || ''}\n${res.stderr || ''}`.toLowerCase();
-  if (output.includes('already exists') || output.includes('queue already exists')) {
+  const existsMarkers = [
+    'already exists',
+    'queue already exists',
+    'already taken',
+    'code: 11009',
+  ];
+  if (existsMarkers.some((marker) => output.includes(marker))) {
     console.log(`[ensure-queues] Exists ${queueName}`);
     return;
   }
