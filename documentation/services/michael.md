@@ -8,6 +8,7 @@ The schema is defined by:
 - `supabase/migrations/20251228000000__base.sql`
 - `supabase/migrations/20260105000000__workspaces.sql`
 - `supabase/migrations/20260117090000__curated_widget_instances.sql`
+- `supabase/migrations/20260118090000__widget_instances_user_only.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -32,6 +33,9 @@ Core columns:
 - `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
+
+Guardrails:
+- `widget_instances_user_public_id_only` constraint (NOT VALID) blocks new `wgt_main_*` / `wgt_curated_*` writes.
 
 ### `curated_widget_instances`
 One row per **Clickeen-authored** instance (baseline + curated).

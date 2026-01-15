@@ -548,7 +548,10 @@ const websiteCreativeSubmitEl = document.getElementById('website-creative-submit
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
 
-iframe.src = `${BOB_ORIGIN}/bob?subject=devstudio`;
+const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
+bobUrl.searchParams.set('subject', 'devstudio');
+if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
+iframe.src = bobUrl.toString();
 
 function setAutoPromoteStatus(text, kind = 'idle') {
   if (!(autoPromoteCloudStatus instanceof HTMLElement)) return;

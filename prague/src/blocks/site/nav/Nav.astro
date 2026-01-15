@@ -47,6 +47,7 @@ const primaryItems: PrimaryItem[] = itemsProp
   data-nav-panel="none"
   data-nav-phase="closed"
   data-nav-stuck="false"
+  data-nav-engaged="false"
 >
   <div class="ck-inline">
     <div class="ck-row ck-siteNav">
@@ -205,15 +206,9 @@ const primaryItems: PrimaryItem[] = itemsProp
   }
 
   .ck-siteNavHeader[data-nav-stuck="true"],
+  .ck-siteNavHeader[data-nav-engaged="true"],
   .ck-siteNavHeader[data-nav-panel="mega"],
   .ck-siteNavHeader[data-nav-panel="mobile"] {
-    --ck-nav-bg: var(--color-system-white);
-    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    background-color: var(--color-system-white) !important;
-    border-color: color-mix(in oklab, var(--color-system-black), transparent 90%) !important;
-  }
-
-  .ck-siteNavHeader[data-nav-hover="true"] {
     --ck-nav-bg: var(--color-system-white);
     --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
     background-color: var(--color-system-white) !important;

@@ -9,7 +9,7 @@ DevStudio is Clickeen’s internal admin surface for docs + tools. In this repo 
   - Allowed to create/update instance rows (internal-only workflows).
 - **DevStudio Cloudflare** (`https://devstudio.dev.clickeen.com`)
   - Fast “did the deploy work?” verification surface.
-  - Treated as **read-only** (no DB writes).
+  - Treated as **read-only** (no DB writes); DevStudio sets `?readonly=1` on the Bob iframe.
 
 ## Widget Workspace tool
 

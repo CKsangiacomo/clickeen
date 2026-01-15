@@ -5,10 +5,12 @@ type NavState = {
   layout: NavLayout;
   panel: NavPanel;
   activeMegaId: string | null;
-  hover: boolean;
+  engaged: boolean;
 };
 
 const EXIT_ANIMATION_MS = 140;
+const MEGA_HOVER_CLOSE_DELAY_MS = 180;
+const STUCK_SCROLL_PX = 8;
 
 function computeLayout(): NavLayout {
   if (!window.matchMedia) return 'desktop';
@@ -65,12 +67,12 @@ export function initPragueSiteNav() {
       layout: computeLayout(),
       panel: 'none',
       activeMegaId: null,
-      hover: false,
+      engaged: false,
     };
 
     let mobileExitTimer = 0;
     let mobileIsClosing = false;
-    let openSession: AbortController | null = null;
+    let megaCloseTimer = 0;
 
     const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 900px)') : null;
 
@@ -78,8 +80,7 @@ export function initPragueSiteNav() {
       header.setAttribute('data-nav-layout', state.layout);
       header.setAttribute('data-nav-panel', state.panel);
       header.setAttribute('data-nav-phase', state.panel === 'none' ? 'closed' : 'open');
-      header.setAttribute('data-nav-stuck', state.panel === 'none' ? 'false' : 'true');
-      header.setAttribute('data-nav-hover', state.hover ? 'true' : 'false');
+      header.setAttribute('data-nav-engaged', state.engaged ? 'true' : 'false');
       const expanded = state.panel === 'mega';
       for (const trigger of megaTriggers) {
         trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
@@ -87,46 +88,43 @@ export function initPragueSiteNav() {
       if (mobileTrigger) mobileTrigger.setAttribute('aria-expanded', state.panel === 'mobile' ? 'true' : 'false');
     };
 
-    const clearHoverTimers = () => {};
+    const clearHoverTimers = () => {
+      if (!megaCloseTimer) return;
+      window.clearTimeout(megaCloseTimer);
+      megaCloseTimer = 0;
+    };
 
-    const clearOpenSession = () => {
-      if (!openSession) return;
-      openSession.abort();
-      openSession = null;
+    const setEngaged = (engaged: boolean) => {
+      if (state.engaged === engaged) return;
+      state.engaged = engaged;
+      updateAttrs();
+    };
+
+    const scheduleCloseMega = () => {
+      clearHoverTimers();
+      if (!isHoverCapable() || state.layout !== 'desktop') return;
+      if (state.panel !== 'mega') return;
+      megaCloseTimer = window.setTimeout(() => {
+        closeMega();
+      }, MEGA_HOVER_CLOSE_DELAY_MS);
     };
 
     const closeMega = () => {
       clearHoverTimers();
-      clearOpenSession();
       state.panel = 'none';
       state.activeMegaId = null;
-      state.hover = false;
-      updateAttrs();
+      setEngaged(false);
+      onScroll();
     };
 
     const openMega = (id: string) => {
       if (state.panel === 'mobile') closeMobileImmediate();
       clearHoverTimers();
-      clearOpenSession();
       state.activeMegaId = id;
       state.panel = 'mega';
-      state.hover = true;
-      updateAttrs();
+      setEngaged(true);
+      onScroll();
       syncNavHeight(header);
-      if (state.layout === 'desktop' && isHoverCapable()) {
-        openSession = new AbortController();
-        document.addEventListener(
-          'pointermove',
-          (e) => {
-            const t = e.target;
-            if (!(t instanceof Node)) return;
-            if (header.contains(t)) return;
-            if (megaLayer.contains(t)) return;
-            closeMega();
-          },
-          { signal: openSession.signal },
-        );
-      }
     };
 
     function closeMobileImmediate() {
@@ -137,9 +135,8 @@ export function initPragueSiteNav() {
       setScrollLock(false);
       state.panel = 'none';
       state.activeMegaId = null;
-      state.hover = false;
-      clearOpenSession();
-      updateAttrs();
+      setEngaged(false);
+      onScroll();
     }
 
     function closeMobileAnimated() {
@@ -160,9 +157,8 @@ export function initPragueSiteNav() {
       setScrollLock(true);
       state.panel = 'mobile';
       state.activeMegaId = null;
-      state.hover = false;
-      clearOpenSession();
-      updateAttrs();
+      setEngaged(true);
+      onScroll();
       syncNavHeight(header);
     }
 
@@ -176,10 +172,12 @@ export function initPragueSiteNav() {
         closeMobileImmediate();
       }
       updateAttrs();
+      onScroll();
     };
 
     const onScroll = () => {
-      header.setAttribute('data-nav-stuck', state.panel === 'none' ? 'false' : 'true');
+      const stuck = typeof window !== 'undefined' && window.scrollY > STUCK_SCROLL_PX;
+      header.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
     };
 
     // Wire mega trigger interactions
@@ -199,26 +197,16 @@ export function initPragueSiteNav() {
       });
     }
 
-    if (megaLayer) {
-      megaLayer.addEventListener('pointerenter', () => {
-        if (!isHoverCapable() || state.layout !== 'desktop') return;
-        clearHoverTimers();
-        state.hover = true;
-        updateAttrs();
-      });
-    }
-
     header.addEventListener('pointerenter', () => {
       if (!isHoverCapable() || state.layout !== 'desktop') return;
-      state.hover = true;
-      updateAttrs();
+      clearHoverTimers();
+      setEngaged(true);
     });
 
     header.addEventListener('pointerleave', () => {
       if (!isHoverCapable() || state.layout !== 'desktop') return;
-      if (state.panel === 'mega') return;
-      state.hover = false;
-      updateAttrs();
+      if (state.panel === 'mega') return scheduleCloseMega();
+      setEngaged(false);
     });
 
     if (megaBackdrop) {
@@ -240,6 +228,16 @@ export function initPragueSiteNav() {
       if (e.key !== 'Escape') return;
       if (state.panel === 'mega') closeMega();
       if (state.panel === 'mobile') closeMobileAnimated();
+    });
+
+    // Keyboard engagement: keep header white while focus is inside nav.
+    header.addEventListener('focusin', () => {
+      setEngaged(true);
+    });
+    header.addEventListener('focusout', () => {
+      // If a panel is open, keep engaged; otherwise release.
+      if (state.panel !== 'none') return;
+      setEngaged(false);
     });
 
     // Mobile wiring
@@ -280,5 +278,6 @@ export function initPragueSiteNav() {
     if (mqMobile) mqMobile.addEventListener('change', () => updateLayout());
 
     updateAttrs();
+    onScroll();
   }
 }

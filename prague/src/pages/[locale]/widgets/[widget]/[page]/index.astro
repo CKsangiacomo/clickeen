@@ -52,7 +52,6 @@ await loadRequiredWidgetPageJsonForLocale({ widget, page, locale });
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
-      mode="overlayScroll"
       cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
     <WidgetSubnav locale={locale} widget={widget} active={activeSubpage} />

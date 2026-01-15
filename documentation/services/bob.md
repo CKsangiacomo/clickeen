@@ -81,6 +81,10 @@ Bob resolves a single subject mode and computes a single policy object:
 
 Example enforcement (today): `minibob` cannot enable `seoGeo.enabled`.
 
+Read-only mode (DevStudio cloud):
+- Passing `?readonly=1` (or `?role=viewer`) forces `policy.role = viewer`.
+- Bob blocks edits and publishing when in viewer role (read-only DevStudio experience).
+
 ### Intended product shape (still aligned)
 The intended “two API calls per session” model is:
 1. `GET /api/widgets/[widgetname]/compiled` (Bob → Tokyo spec → compile)

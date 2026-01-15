@@ -173,8 +173,24 @@ function resolveSubjectModeFromUrl(): SubjectMode {
   return 'devstudio';
 }
 
+function resolveReadOnlyFromUrl(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const readonlyFlag = (params.get('readonly') || params.get('readOnly') || '').trim().toLowerCase();
+  if (readonlyFlag === '1' || readonlyFlag === 'true' || readonlyFlag === 'yes') return true;
+  const role = (params.get('role') || params.get('mode') || '').trim().toLowerCase();
+  return role === 'viewer' || role === 'readonly' || role === 'read-only';
+}
+
 function resolveDevPolicy(profile: SubjectMode): Policy {
-  return resolveCkPolicy({ profile, role: 'editor' });
+  const role: Policy['role'] = resolveReadOnlyFromUrl() ? 'viewer' : 'editor';
+  return resolveCkPolicy({ profile, role });
+}
+
+function enforceReadOnlyPolicy(policy: Policy): Policy {
+  if (!resolveReadOnlyFromUrl()) return policy;
+  if (policy.role === 'viewer') return policy;
+  return { ...policy, role: 'viewer' };
 }
 
 function isUploadValue(value: unknown): boolean {
@@ -230,6 +246,14 @@ function useWidgetSessionInternal() {
           errors: [{ opIndex: 0, message: 'This widget did not compile with controls[]' }],
         };
         setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors } }));
+        return result;
+      }
+      if (state.policy.role === 'viewer') {
+        const result: ApplyWidgetOpsResult = {
+          ok: false,
+          errors: [{ opIndex: 0, message: 'Read-only mode: editing is disabled.' }],
+        };
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors: result.errors }, upsell: null }));
         return result;
       }
 
@@ -558,6 +582,13 @@ function useWidgetSessionInternal() {
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
 
+    if (snapshot.policy.role === 'viewer') {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Read-only mode: localization edits are disabled.' },
+      }));
+      return;
+    }
     if (!publicId || !widgetType) {
       setState((prev) => ({
         ...prev,
@@ -634,6 +665,13 @@ function useWidgetSessionInternal() {
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
     const locale = snapshot.locale.activeLocale;
+    if (snapshot.policy.role === 'viewer') {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Read-only mode: localization edits are disabled.' },
+      }));
+      return;
+    }
     if (!publicId || !workspaceId) return;
     if (locale === snapshot.locale.baseLocale) return;
 
@@ -718,6 +756,7 @@ function useWidgetSessionInternal() {
         if (!message.policy) nextPolicy = resolveDevPolicy(nextSubjectMode);
       }
 
+      nextPolicy = enforceReadOnlyPolicy(nextPolicy);
       resolved = sanitizeConfig({
         config: resolved,
         limits: compiled.limits ?? null,
@@ -788,6 +827,13 @@ function useWidgetSessionInternal() {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
+      }));
+      return;
+    }
+    if (state.policy.role === 'viewer') {
+      setState((prev) => ({
+        ...prev,
+        error: { source: 'publish', message: 'Read-only mode: publishing is disabled.' },
       }));
       return;
     }
