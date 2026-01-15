@@ -97,7 +97,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `wgt_main_*` and `wgt_curated_*` → `curated_widget_instances`
 - `wgt_*_u_*` → `widget_instances`
 
-Curated writes are **local-only** and gated by `PARIS_DEV_JWT`.
+Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **cloud-dev** (one-way publish from local to cloud-dev). Production remains blocked.
 
 **Validation contract (fail-fast):** before writing curated instances, Paris validates `widget_type` against the Tokyo widget registry (or cached manifest) and rejects unknown types.
 

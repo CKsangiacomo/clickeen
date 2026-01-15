@@ -689,6 +689,11 @@ function isCuratedPublicId(publicId: string): boolean {
   return inferInstanceKindFromPublicId(publicId) === 'curated';
 }
 
+function allowCuratedWrites(env: Env): boolean {
+  const stage = (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase();
+  return stage === 'local' || stage === 'cloud-dev';
+}
+
 function isCuratedInstanceRow(instance: InstanceRow | CuratedInstanceRow): instance is CuratedInstanceRow {
   return 'widget_type' in instance;
 }
@@ -1911,7 +1916,7 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const isCurated = resolveInstanceKind(instance) === 'curated';
-  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+  if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
   if (isCurated) {
@@ -2027,7 +2032,7 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
 
-  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+  if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
 
@@ -2202,7 +2207,7 @@ async function handleCreateInstance(req: Request, env: Env) {
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
 
-  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+  if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
 
@@ -2378,7 +2383,7 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
   if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
 
   const isCurated = resolveInstanceKind(instance) === 'curated';
-  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+  if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
 
