@@ -6,33 +6,28 @@ type Props = {
   title: string;
   locale: string;
   homeHref?: string;
-  // Legacy escape hatch: some pages may still pass items, but the scalable default is system-owned nav.
   items?: { label: string; href: string }[];
   cta?: { label: string; href: string; variant?: 'primary' | 'secondary' };
-  /**
-   * Nav surface model:
-    * - overlay: solid at top-of-page; can add surfaced treatment when stuck (default)
-   * - solid: always surfaced (use on non-hero pages if desired)
-   */
-  surface?: 'overlay' | 'solid';
-  /** Enable sticky behavior (visual + position). Default true. */
-  sticky?: boolean;
-  /**
-   * Floating mode (true "overlay"):
-   * - At top-of-page, nav overlays the top surface (absolute).
-   * - Once stuck, nav pins to viewport (fixed) and can become surfaced.
-   */
-  floating?: boolean;
 };
 
 const { title, locale, homeHref = `/${locale}/`, items: itemsProp, cta } = Astro.props;
 const ctaVariant = cta?.variant ?? 'secondary';
-const navSurface = (Astro.props.surface ?? 'overlay') as NonNullable<Props['surface']>;
-const navSticky = Astro.props.sticky !== false;
-const navFloating = Astro.props.floating === true;
 
-const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
-const viewAllWidgetsLabel = pragueT(locale, 'prague.nav.viewAllWidgets');
+const safeT = (key: string, fallback: string) => {
+  try {
+    return pragueT(locale, key);
+  } catch {
+    return fallback;
+  }
+};
+
+const widgetsLabel = safeT('prague.nav.widgets', 'Widgets');
+const viewAllWidgetsLabel = safeT('prague.nav.viewAllWidgets', 'View all widgets');
+const asideTitle = safeT('prague.nav.aside.title', 'Try without an account');
+const asideBody = safeT(
+  'prague.nav.aside.body',
+  'Customize a widget instantly. Publish when you are ready.',
+);
 
 const mega = await resolveWidgetsMegaMenu({ locale });
 
@@ -43,28 +38,15 @@ type PrimaryItem =
 
 const primaryItems: PrimaryItem[] = itemsProp
   ? [{ kind: 'widgets' }, ...itemsProp.map((i) => ({ kind: 'link', label: i.label, href: i.href }) as const)]
-  : [
-      { kind: 'widgets' },
-      { kind: 'stub', label: 'Pricing' },
-      { kind: 'stub', label: 'Docs' },
-    ];
-
-const widgetCategories: { label: string }[] = [
-  { label: 'Social proof' },
-  { label: 'Lead capture' },
-  { label: 'Engagement' },
-  { label: 'Info' },
-];
+  : [{ kind: 'widgets' }];
 ---
 
 <header
   class="ck-canvas ck-siteNavHeader"
-  data-nav-surface={navSurface}
-  data-nav-sticky={navSticky ? 'true' : 'false'}
+  data-nav-layout="regular"
+  data-nav-panel="none"
+  data-nav-phase="closed"
   data-nav-stuck="false"
-  data-nav-floating={navFloating ? 'true' : 'false'}
-  data-nav-mega="closed"
-  data-nav-mobile="closed"
 >
   <div class="ck-inline">
     <div class="ck-row ck-siteNav">
@@ -77,58 +59,16 @@ const widgetCategories: { label: string }[] = [
           {primaryItems.map((item) => {
             if (item.kind === 'widgets') {
               return (
-                <div class="ck-mega" data-ck-mega="widgets" data-mega-open="false">
+                <div class="ck-mega">
                   <button
                     type="button"
                     class="label-s ck-siteNav__link ck-mega__trigger"
                     aria-haspopup="dialog"
                     aria-expanded="false"
+                    data-ck-mega-trigger="widgets"
                   >
                     {widgetsLabel}
                   </button>
-
-                  {/* Backdrop captures outside clicks and blocks interaction with page UI under the curtain. */}
-                  <button class="ck-mega__backdrop" type="button" aria-label="Close widgets menu" data-ck-mega-close />
-
-                  <div class="ck-mega__curtain" role="dialog" aria-label="Widgets menu">
-                    <div class="ck-inline">
-                      <div class="ck-mega__layout">
-                        <div class="ck-mega__rail">
-                          <div class="caption ck-mega__railTitle">Browse</div>
-                          <div class="ck-stack ck-mega__railList">
-                            {widgetCategories.map((c, idx) => (
-                              <div class={`label-s ck-mega__railItem${idx === 0 ? ' is-active' : ''}`}>
-                                {c.label}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div class="ck-mega__main">
-                          <div class="ck-mega__grid">
-                            {mega.items.map((w) => (
-                              <a class="ck-mega__item" href={w.href}>
-                                <div class="label-s">{w.headline}</div>
-                                <div class="caption ck-mega__sub">{w.subheadline}</div>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div class="ck-mega__aside">
-                          <div class="ck-stack ck-mega__asideInner">
-                            <div class="label-m">Try without an account</div>
-                            <div class="caption ck-mega__asideBody">
-                              Customize a widget instantly. Publish when you're ready.
-                            </div>
-                            <a class="ck-btn ck-btn--secondary ck-btn--md label-m" href={mega.allWidgetsHref}>
-                              {viewAllWidgetsLabel}
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               );
             }
@@ -174,6 +114,39 @@ const widgetCategories: { label: string }[] = [
     </div>
   </div>
 
+  {/* Shared mega layer (one curtain/backdrop for all megas) */}
+  <div class="ck-megaLayer" data-ck-mega-layer hidden>
+    <button
+      class="ck-megaLayer__backdrop"
+      type="button"
+      aria-label="Close widgets menu"
+      data-ck-mega-close
+    />
+    <section class="ck-megaLayer__curtain" role="dialog" aria-label="Widgets menu">
+      <div class="ck-inline">
+        <div class="ck-megaLayer__layout">
+          <div class="ck-megaLayer__grid">
+            {mega.items.map((w) => (
+              <a class="ck-megaLayer__item" href={w.href}>
+                <div class="label-s">{w.headline}</div>
+                <div class="caption ck-megaLayer__sub">{w.subheadline}</div>
+              </a>
+            ))}
+          </div>
+          <div class="ck-megaLayer__aside">
+            <div class="ck-stack ck-megaLayer__asideInner">
+              <div class="label-m">{asideTitle}</div>
+              <div class="caption ck-megaLayer__asideBody">{asideBody}</div>
+              <a class="ck-btn ck-btn--secondary ck-btn--md label-m" href={mega.allWidgetsHref}>
+                {viewAllWidgetsLabel}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
   {/* Mobile curtain menu */}
   <div class="ck-mobileMenu" data-ck-mobile-menu>
     <button
@@ -208,96 +181,43 @@ const widgetCategories: { label: string }[] = [
 </header>
 
 <style is:global>
-  .ck-siteNav { position: relative; }
+  .ck-siteNav {
+    position: relative;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
 
-  /* Nav state machine (global, scalable):
-     - surface: overlay | solid
-     - stuck: false | true
-     This keeps page-level styling out of page templates and prevents drift. */
   .ck-siteNavHeader {
     padding-block: var(--space-5);
-    position: sticky;
-    top: 0;
-    z-index: 60;
-    width: 100%;
-
-    /* Default values (solid by default to avoid "transparent header" moments). */
-    --ck-nav-bg: var(--color-system-white);
-    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    --ck-nav-shadow: none;
-    --ck-nav-backdrop: none;
-
-    background: var(--ck-nav-bg);
-    border-bottom: 1px solid var(--ck-nav-border);
-    box-shadow: var(--ck-nav-shadow);
-    backdrop-filter: var(--ck-nav-backdrop);
-    -webkit-backdrop-filter: var(--ck-nav-backdrop);
-
-    /* Quiksilver-style: same height, smooth surface transition. */
-    transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
-      backdrop-filter 180ms cubic-bezier(0.16, 1, 0.3, 1),
-      -webkit-backdrop-filter 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .ck-siteNavHeader[data-nav-sticky="false"] {
-    position: relative;
-    top: auto;
-  }
-
-  /* Floating overlay mode (true overlap in code). */
-  .ck-siteNavHeader[data-nav-floating="true"] {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-  }
-
-  .ck-siteNavHeader[data-nav-floating="true"][data-nav-stuck="true"] {
-    position: fixed;
-  }
-
-  /* Solid surface (always) */
-  .ck-siteNavHeader[data-nav-surface="solid"] {
-    --ck-nav-bg: var(--color-system-white);
-    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    --ck-nav-shadow: none;
-    --ck-nav-backdrop: none;
-  }
-
-  /* Overlay surface: becomes surfaced only when stuck */
-  .ck-siteNavHeader[data-nav-surface="overlay"][data-nav-stuck="true"] {
-    --ck-nav-bg: var(--color-system-white);
-    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
-    --ck-nav-shadow: none;
-    --ck-nav-backdrop: none;
-  }
-
-  /* Desktop affordance: in overlay mode, hovering the header should surface it.
-     This matches the expected "interactive = surfaced" feel (and prevents the
-     header from looking transparent while users explore nav items). */
-  @media (hover: hover) {
-    .ck-siteNavHeader[data-nav-surface="overlay"]:hover {
-      --ck-nav-bg: var(--color-system-white);
-      --ck-nav-border: transparent;
-      --ck-nav-shadow: none;
-      --ck-nav-backdrop: none;
-    }
-  }
-
-  /* When mega menu is engaged, force solid white. */
-  .ck-siteNavHeader[data-nav-mega="engaged"],
-  .ck-siteNavHeader[data-nav-mobile="open"] {
-    --ck-nav-bg: var(--color-system-white);
+    z-index: 200;
+    width: 100%;
+    --ck-nav-h: 72px;
+    --ck-nav-bg: transparent;
     --ck-nav-border: transparent;
-    --ck-nav-shadow: none;
-    --ck-nav-backdrop: none;
+    background: var(--ck-nav-bg);
+    border-bottom: 1px solid var(--ck-nav-border, transparent);
+    transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .ck-siteNav {
-    justify-content: space-between;
-    gap: var(--space-6);
+  .ck-siteNavHeader[data-nav-stuck="true"],
+  .ck-siteNavHeader[data-nav-panel="mega"],
+  .ck-siteNavHeader[data-nav-panel="mobile"] {
+    --ck-nav-bg: var(--color-system-white);
+    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
+    background-color: var(--color-system-white) !important;
+    border-color: color-mix(in oklab, var(--color-system-black), transparent 90%) !important;
+  }
+
+  .ck-siteNavHeader[data-nav-hover="true"] {
+    --ck-nav-bg: var(--color-system-white);
+    --ck-nav-border: color-mix(in oklab, var(--color-system-black), transparent 90%);
+    background-color: var(--color-system-white) !important;
+    border-color: color-mix(in oklab, var(--color-system-black), transparent 90%) !important;
   }
 
   .ck-siteNav__actions {
@@ -305,6 +225,151 @@ const widgetCategories: { label: string }[] = [
     gap: var(--space-3);
   }
 
+  .ck-siteNav__primary { gap: var(--space-5); }
+
+  .ck-siteNav__link {
+    text-decoration: none;
+    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ck-siteNav__link.is-disabled {
+    opacity: 0.55;
+    cursor: default;
+    user-select: none;
+  }
+
+  .ck-brand { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
+  .ck-brand__logo { height: 22px; width: auto; display: block; }
+
+  .ck-mega__trigger {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ck-mega__trigger::after {
+    content: '▾';
+    font-size: 10px;
+    line-height: 1;
+    color: color-mix(in oklab, var(--color-system-black), transparent 45%);
+    transform: translateY(-1px);
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), color 140ms ease-out;
+  }
+
+  .ck-siteNavHeader[data-nav-panel="mega"] .ck-mega__trigger::after {
+    color: var(--color-system-black);
+    transform: rotate(180deg) translateY(1px);
+  }
+
+  /* Shared mega layer */
+  .ck-megaLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 180;
+    pointer-events: none;
+  }
+
+  .ck-megaLayer__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+    opacity: 0;
+    transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .ck-megaLayer__curtain {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--ck-nav-h, 72px);
+    max-height: calc(100vh - var(--ck-nav-h, 72px));
+    overflow: auto;
+    background: var(--color-system-white);
+    border-top: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+    box-shadow: 0 22px 90px color-mix(in oklab, var(--color-system-black), transparent 90%);
+    padding-block: var(--space-7);
+    transform-origin: top;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .ck-siteNavHeader[data-nav-panel="mega"] .ck-megaLayer {
+    pointer-events: auto;
+  }
+
+  .ck-siteNavHeader[data-nav-panel="mega"] .ck-megaLayer__backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ck-siteNavHeader[data-nav-panel="mega"] .ck-megaLayer__curtain {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    border-top-color: transparent;
+  }
+
+  .ck-megaLayer__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .ck-megaLayer__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .ck-megaLayer__item {
+    display: block;
+    padding: var(--space-4);
+    border-radius: var(--control-radius-lg);
+    text-decoration: none;
+    color: var(--color-system-black);
+    background: color-mix(in oklab, var(--color-system-black), transparent 96%);
+    transition: background 140ms ease-out, transform 140ms ease-out;
+  }
+
+  .ck-megaLayer__item:hover { background: color-mix(in oklab, var(--color-system-black), transparent 92%); }
+  .ck-megaLayer__item:active { transform: scale(0.99); }
+
+  .ck-megaLayer__sub {
+    margin-top: 6px;
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  .ck-megaLayer__asideInner {
+    padding: var(--space-5);
+    border-radius: var(--control-radius-xl);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+    background: color-mix(in oklab, var(--color-system-black), transparent 97%);
+    gap: var(--space-3);
+  }
+
+  .ck-megaLayer__asideBody {
+    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  }
+
+  /* Mobile */
   .ck-siteNav__menuBtn {
     display: none;
     align-items: center;
@@ -324,13 +389,13 @@ const widgetCategories: { label: string }[] = [
     background: color-mix(in oklab, var(--color-system-black), transparent 94%);
   }
 
-  .ck-siteNav__menuBtn:active { transform: scale(0.99); }
-
   .ck-siteNav__menuIcon {
     width: 16px;
     height: 12px;
     position: relative;
     display: inline-block;
+    background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
+    transition: background-size 160ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .ck-siteNav__menuIcon::before,
@@ -344,264 +409,26 @@ const widgetCategories: { label: string }[] = [
     border-radius: 2px;
     transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
       top 160ms cubic-bezier(0.16, 1, 0.3, 1),
-      bottom 160ms cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
+      bottom 160ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .ck-siteNav__menuIcon::before { top: 0; }
   .ck-siteNav__menuIcon::after { bottom: 0; }
 
-  /* Middle bar */
-  .ck-siteNav__menuIcon {
-    background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
-    transition: background-size 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* Menu ↔ Close morph */
-  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon {
+  .ck-siteNavHeader[data-nav-panel="mobile"] .ck-siteNav__menuIcon {
     background-size: 0% 2px;
   }
-  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon::before {
+  .ck-siteNavHeader[data-nav-panel="mobile"] .ck-siteNav__menuIcon::before {
     top: 5px;
     transform: rotate(45deg);
   }
-  .ck-siteNavHeader[data-nav-mobile="open"] .ck-siteNav__menuIcon::after {
+  .ck-siteNavHeader[data-nav-panel="mobile"] .ck-siteNav__menuIcon::after {
     bottom: 5px;
     transform: rotate(-45deg);
   }
 
-  /* Keep the label stable (Quiksilver doesn’t relabel). */
-  .ck-siteNav__menuLabel {
-    line-height: 1;
-    display: none;
-  }
+  .ck-siteNav__menuLabel { display: none; }
 
-  .ck-siteNav__primary { gap: var(--space-5); }
-
-  .ck-siteNav__link {
-    text-decoration: none;
-    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
-  }
-  .ck-siteNav__link.is-disabled {
-    opacity: 0.55;
-    cursor: default;
-    user-select: none;
-  }
-  .ck-brand { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
-  .ck-brand__logo { height: 22px; width: auto; display: block; }
-
-  /* Square-style mega dropdown (curtain) */
-  .ck-mega { position: relative; }
-
-  .ck-mega__trigger {
-    appearance: none;
-    -webkit-appearance: none;
-    border: 0;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    font: inherit;
-    letter-spacing: inherit;
-    text-align: left;
-    color: inherit;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    cursor: pointer;
-    user-select: none;
-    transition: color 120ms ease-out;
-  }
-
-  /* Hover bridge: extends trigger hit area down toward curtain */
-  .ck-mega__trigger::before {
-    content: '';
-    position: absolute;
-    left: -16px;
-    right: -16px;
-    top: 100%;
-    height: 8px;
-    /* Invisible—just extends hover zone */
-  }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::before {
-    height: 24px; /* Taller bridge when menu is open */
-  }
-
-  .ck-mega__trigger::after {
-    content: "▾";
-    font-size: 10px;
-    line-height: 1;
-    margin-left: 2px;
-    color: color-mix(in oklab, var(--color-system-black), transparent 45%);
-    transform: translateY(-1px);
-    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms ease-out;
-  }
-
-  /* Anticipation feedback: trigger acknowledges hover immediately */
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger {
-    color: var(--color-system-black);
-  }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::after {
-    color: color-mix(in oklab, var(--color-system-black), transparent 25%);
-    transform: translateY(1px);
-  }
-
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__trigger::after { transform: rotate(180deg) translateY(1px); }
-
-  .ck-mega__backdrop {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: var(--ck-nav-h, 72px);
-    bottom: 0;
-    /* Dimming scrim so the curtain reads as a full overlay layer. */
-    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
-    border: 0;
-    padding: 0;
-    margin: 0;
-    z-index: 55;
-    cursor: default;
-
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .ck-mega__curtain {
-    position: fixed;
-    left: 0;
-    right: 0;
-    /* Attach flush to the nav. Height is synced precisely from JS. */
-    top: var(--ck-nav-h, 72px);
-    max-height: calc(100vh - var(--ck-nav-h, 72px));
-    overflow: auto;
-    background: var(--color-system-white);
-    border-top: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
-    box-shadow: 0 22px 90px color-mix(in oklab, var(--color-system-black), transparent 90%);
-    z-index: 56;
-    padding-block: var(--space-7);
-    transform-origin: top;
-
-    opacity: 0;
-    transform: translateY(-8px) scale(0.98);
-    pointer-events: none;
-    transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* When unified white, drop the curtain's top border (nav already defines the edge). */
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain {
-    border-top-color: transparent;
-  }
-
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__backdrop,
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-  }
-
-  .ck-mega__layout {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) 280px;
-    gap: var(--space-8);
-    align-items: start;
-  }
-
-  .ck-mega__railTitle {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    opacity: 0.7;
-  }
-
-  .ck-mega__railList { gap: 8px; margin-top: var(--space-4); }
-
-  .ck-mega__railItem {
-    padding: 8px 10px;
-    border-radius: var(--control-radius-md);
-    color: color-mix(in oklab, var(--color-system-black), transparent 35%);
-  }
-  .ck-mega__railItem.is-active {
-    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
-    color: var(--color-system-black);
-  }
-
-  .ck-mega__main {
-    min-width: 0;
-  }
-
-  .ck-mega__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--space-3);
-  }
-
-  .ck-mega__item {
-    display: block;
-    padding: var(--space-4);
-    border-radius: var(--control-radius-lg);
-    text-decoration: none;
-    color: var(--color-system-black);
-    background: color-mix(in oklab, var(--color-system-black), transparent 96%);
-    transition: background 140ms ease-out, transform 140ms ease-out;
-  }
-  .ck-mega__item:hover {
-    background: color-mix(in oklab, var(--color-system-black), transparent 92%);
-  }
-  .ck-mega__item:active {
-    transform: scale(0.98);
-  }
-
-  /* Staggered entry animation for grid items */
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item {
-    animation: ckItemIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(1) { animation-delay: 20ms; }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(2) { animation-delay: 40ms; }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(3) { animation-delay: 60ms; }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(4) { animation-delay: 80ms; }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(5) { animation-delay: 100ms; }
-  .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__item:nth-child(6) { animation-delay: 120ms; }
-
-  @keyframes ckItemIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .ck-mega__sub {
-    margin-top: 6px;
-    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
-  }
-
-  .ck-mega__asideInner {
-    padding: var(--space-5);
-    border-radius: var(--control-radius-xl);
-    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
-    background: color-mix(in oklab, var(--color-system-black), transparent 97%);
-    gap: var(--space-3);
-  }
-
-  .ck-mega__asideBody {
-    color: color-mix(in oklab, var(--color-system-black), transparent 55%);
-  }
-
-  @media (max-width: 900px) {
-    .ck-brand__logo { height: 20px; }
-    .ck-mega__layout { grid-template-columns: 1fr; gap: var(--space-6); }
-    .ck-mega__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-    /* Mobile nav: hide desktop primary and show menu button. */
-    .ck-siteNavHeader nav[aria-label="Primary"] { display: none; }
-    .ck-siteNav__menuBtn { display: inline-flex; }
-  }
-
-  @media (max-width: 640px) {
-    .ck-mega__grid { grid-template-columns: 1fr; }
-
-    /* On small screens, CTA often crowds. Keep it but allow wrapping gracefully. */
-    .ck-siteNav { gap: var(--space-3); }
-  }
-
-  /* Mobile curtain menu */
   .ck-mobileMenu__backdrop {
     display: none;
     position: fixed;
@@ -609,9 +436,8 @@ const widgetCategories: { label: string }[] = [
     border: 0;
     padding: 0;
     margin: 0;
-    /* Dimming scrim so the curtain reads as a full overlay layer. */
     background: color-mix(in oklab, var(--color-system-black), transparent 92%);
-    z-index: 58;
+    z-index: 118;
   }
 
   .ck-mobileMenu__panel {
@@ -619,7 +445,7 @@ const widgetCategories: { label: string }[] = [
     position: fixed;
     inset: 0;
     background: var(--color-system-white);
-    z-index: 59;
+    z-index: 119;
     padding-top: var(--ck-nav-h, 72px);
     overflow: auto;
     transform-origin: top;
@@ -650,8 +476,8 @@ const widgetCategories: { label: string }[] = [
     color: color-mix(in oklab, var(--color-system-black), transparent 55%);
   }
 
-  .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__backdrop,
-  .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__panel {
+  .ck-siteNavHeader[data-nav-panel="mobile"] .ck-mobileMenu__backdrop,
+  .ck-siteNavHeader[data-nav-panel="mobile"] .ck-mobileMenu__panel {
     display: block;
     animation: ckMobileIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -672,270 +498,34 @@ const widgetCategories: { label: string }[] = [
     to { opacity: 0; transform: translateY(-4px) scale(0.99); }
   }
 
+  /* Responsive */
+  @media (max-width: 900px) {
+    .ck-brand__logo { height: 20px; }
+    .ck-siteNavHeader nav[aria-label="Primary"] { display: none; }
+    .ck-siteNav__menuBtn { display: inline-flex; }
+  }
+
+  @media (max-width: 640px) {
+    .ck-siteNav { gap: var(--space-3); }
+    .ck-megaLayer__layout { grid-template-columns: 1fr; gap: var(--space-6); }
+    .ck-megaLayer__grid { grid-template-columns: 1fr; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .ck-siteNavHeader { transition: none; }
-    .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__backdrop,
-    .ck-siteNavHeader[data-nav-mega="engaged"] .ck-mega__curtain,
-    .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__backdrop,
-    .ck-siteNavHeader[data-nav-mobile="open"] .ck-mobileMenu__panel,
+    .ck-siteNavHeader { transition: none !important; }
+    .ck-megaLayer__backdrop,
+    .ck-megaLayer__curtain,
+    .ck-siteNavHeader[data-nav-panel="mobile"] .ck-mobileMenu__backdrop,
+    .ck-siteNavHeader[data-nav-panel="mobile"] .ck-mobileMenu__panel,
     .ck-mobileMenu.is-closing .ck-mobileMenu__backdrop,
     .ck-mobileMenu.is-closing .ck-mobileMenu__panel {
       animation: none !important;
-    }
-
-    .ck-mega__backdrop,
-    .ck-mega__curtain {
       transition: none !important;
     }
   }
 </style>
 
-<script is:inline>
-(() => {
-  const headers = document.querySelectorAll('.ck-siteNavHeader');
-  if (!headers.length) return;
-
-  for (const headerEl of headers) {
-    if (!(headerEl instanceof HTMLElement)) continue;
-
-    // Track shared overlay state: we never allow both "curtains" at once.
-    // (Desktop mega curtain OR mobile full-screen curtain.)
-    let closeMegaImmediate = null;
-
-    // --- Height sync (drives curtain top via --ck-nav-h) ---
-    const surface = headerEl.closest('.ck-topSurface');
-    const heightTarget = (surface instanceof HTMLElement ? surface : null) || document.documentElement;
-    const syncHeight = () => {
-      const h = headerEl.getBoundingClientRect().height;
-      heightTarget.style.setProperty('--ck-nav-h', h ? (h + 'px') : '0px');
-    };
-
-    syncHeight();
-
-    if ('ResizeObserver' in window) {
-      const ro = new ResizeObserver(() => syncHeight());
-      ro.observe(headerEl);
-    } else {
-      window.addEventListener('resize', syncHeight, { passive: true });
-    }
-
-    // --- Sticky "stuck" state (Quiksilver-style: no height collapse; just surface change) ---
-    const stickyEnabled = headerEl.getAttribute('data-nav-sticky') === 'true';
-    if (stickyEnabled) {
-      // Avoid triggering stuck/fixed after a tiny scroll.
-      // This keeps the header from "jumping" into sticky state immediately.
-      const STUCK_Y = 120;
-      let raf = 0;
-      const updateStuck = () => {
-        raf = 0;
-        // Keep header pinned while an overlay is open so header + curtain stay one layer.
-        if (
-          headerEl.getAttribute('data-nav-mega') === 'engaged' ||
-          headerEl.getAttribute('data-nav-mobile') === 'open'
-        ) {
-          headerEl.setAttribute('data-nav-stuck', 'true');
-          return;
-        }
-        const stuck = window.scrollY > STUCK_Y;
-        headerEl.setAttribute('data-nav-stuck', stuck ? 'true' : 'false');
-      };
-
-      const onScroll = () => {
-        if (raf) return;
-        raf = requestAnimationFrame(updateStuck);
-      };
-
-      updateStuck();
-      window.addEventListener('scroll', onScroll, { passive: true });
-    }
-
-    // --- Mobile menu (curtain) ---
-    const mobileMenu = headerEl.querySelector('.ck-mobileMenu');
-    const mobileTrigger = headerEl.querySelector('[data-ck-nav-mobile-trigger]');
-    const mobileBackdrop = headerEl.querySelector('[data-ck-nav-mobile-close]');
-    const mobilePanel = headerEl.querySelector('.ck-mobileMenu__panel');
-    const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 900px)') : null;
-
-    let mobileExitTimer = 0;
-    let mobileIsClosing = false;
-    const EXIT_ANIMATION_MS = 140;
-
-    const setMobileOpen = (open) => {
-      headerEl.setAttribute('data-nav-mobile', open ? 'open' : 'closed');
-      if (mobileTrigger instanceof HTMLElement) {
-        mobileTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      }
-
-      // Lock page scroll when mobile menu is open.
-      // Keep it minimal and reversible.
-      if (open) {
-        const prev = document.documentElement.style.overflow;
-        document.documentElement.dataset.ckPrevOverflow = prev;
-        document.documentElement.style.overflow = 'hidden';
-      } else {
-        const prev = document.documentElement.dataset.ckPrevOverflow;
-        if (prev !== undefined) document.documentElement.style.overflow = prev;
-        delete document.documentElement.dataset.ckPrevOverflow;
-      }
-    };
-
-    const closeMobileImmediate = () => {
-      mobileIsClosing = false;
-      if (mobileExitTimer) window.clearTimeout(mobileExitTimer);
-      mobileExitTimer = 0;
-      if (mobileMenu instanceof HTMLElement) mobileMenu.classList.remove('is-closing');
-      setMobileOpen(false);
-    };
-
-    const closeMobileAnimated = () => {
-      if (mobileIsClosing) return;
-      if (headerEl.getAttribute('data-nav-mobile') !== 'open') {
-        closeMobileImmediate();
-        return;
-      }
-      mobileIsClosing = true;
-      if (mobileMenu instanceof HTMLElement) mobileMenu.classList.add('is-closing');
-      // Keep it visually open during exit animation.
-      setMobileOpen(true);
-      mobileExitTimer = window.setTimeout(() => {
-        if (mobileMenu instanceof HTMLElement) mobileMenu.classList.remove('is-closing');
-        mobileIsClosing = false;
-        setMobileOpen(false);
-      }, EXIT_ANIMATION_MS);
-    };
-
-    const toggleMobile = () => {
-      const openNow = headerEl.getAttribute('data-nav-mobile') === 'open';
-      if (openNow) closeMobileAnimated();
-      else {
-        // If the desktop mega is engaged, close it first.
-        if (typeof closeMegaImmediate === 'function') closeMegaImmediate();
-        closeMobileImmediate();
-        setMobileOpen(true);
-      }
-    };
-
-    if (mobileTrigger instanceof HTMLElement) {
-      mobileTrigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleMobile();
-      });
-    }
-
-    if (mobileBackdrop instanceof HTMLElement) {
-      mobileBackdrop.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeMobileAnimated();
-      });
-    }
-
-    // Close when navigating via a link inside the mobile panel.
-    if (mobilePanel instanceof HTMLElement) {
-      mobilePanel.addEventListener('click', (e) => {
-        const t = e.target;
-        if (!(t instanceof Element)) return;
-        if (t.closest('a')) closeMobileImmediate();
-      });
-    }
-
-    // Close mobile menu when leaving mobile breakpoint.
-    if (mqMobile) {
-      mqMobile.addEventListener('change', () => {
-        if (!mqMobile.matches) closeMobileImmediate();
-      });
-    }
-
-    // --- Mega menu (desktop curtain) ---
-    // Quiksilver model:
-    // - Desktop visibility is conceptually hover/focus driven.
-    // - We only mirror "engaged" state on the header for surface + arrow affordance.
-    const mega = headerEl.querySelector('.ck-mega[data-ck-mega="widgets"]');
-    if (mega instanceof HTMLElement) {
-      const trigger = mega.querySelector('.ck-mega__trigger');
-      const curtain = mega.querySelector('.ck-mega__curtain');
-      const backdrop = mega.querySelector('.ck-mega__backdrop');
-
-      const isHoverCapable = () => window.matchMedia && window.matchMedia('(hover: hover)').matches;
-
-      const setMegaEngaged = (engaged) => {
-        headerEl.setAttribute('data-nav-mega', engaged ? 'engaged' : 'closed');
-        if (engaged) headerEl.setAttribute('data-nav-stuck', 'true');
-        if (trigger instanceof HTMLElement) trigger.setAttribute('aria-expanded', engaged ? 'true' : 'false');
-      };
-
-      const closeMega = () => setMegaEngaged(false);
-      closeMegaImmediate = closeMega;
-
-      // Hover/focus opens on desktop.
-      mega.addEventListener('pointerenter', () => {
-        if (!isHoverCapable()) return;
-        setMegaEngaged(true);
-      });
-
-      mega.addEventListener('pointerleave', () => {
-        if (!isHoverCapable()) return;
-        setMegaEngaged(false);
-      });
-
-      mega.addEventListener('focusin', () => {
-        setMegaEngaged(true);
-      });
-
-      mega.addEventListener('focusout', (e) => {
-        const next = e.relatedTarget;
-        if (next instanceof Node && mega.contains(next)) return;
-        // Small defer avoids flicker when tabbing.
-        window.setTimeout(() => {
-          if (!mega.matches(':focus-within')) setMegaEngaged(false);
-        }, 0);
-      });
-
-      // Click:
-      // - Touch/non-hover toggles the mega.
-      // - Hover-capable: click just ensures it's engaged.
-      if (trigger instanceof HTMLElement) {
-        trigger.addEventListener('click', (e) => {
-          e.preventDefault();
-          closeMobileImmediate();
-          const engaged = headerEl.getAttribute('data-nav-mega') === 'engaged';
-          if (isHoverCapable()) {
-            setMegaEngaged(true);
-            return;
-          }
-          setMegaEngaged(!engaged);
-        });
-      }
-
-      if (backdrop instanceof HTMLElement) {
-        backdrop.addEventListener('click', (e) => {
-          e.preventDefault();
-          closeMega();
-        });
-      }
-
-      // Close when navigating via a link.
-      if (curtain instanceof HTMLElement) {
-        curtain.addEventListener('click', (e) => {
-          const t = e.target;
-          if (!(t instanceof Element)) return;
-          if (t.closest('a')) closeMega();
-        });
-      }
-    }
-
-    // Escape closes whichever overlay is open.
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return;
-      // Prefer closing mobile first if open.
-      if (headerEl.getAttribute('data-nav-mobile') === 'open') {
-        closeMobileAnimated();
-        return;
-      }
-      if (headerEl.getAttribute('data-nav-mega') === 'engaged') {
-        // Close immediately to match Quiksilver's "Escape = get me out".
-        if (typeof closeMegaImmediate === 'function') closeMegaImmediate();
-      }
-    });
-  }
-})();
+<script>
+  import { initPragueSiteNav } from './navController';
+  initPragueSiteNav();
 </script>

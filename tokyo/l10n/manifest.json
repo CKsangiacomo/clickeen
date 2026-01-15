@@ -1,11 +1,63 @@
 {
   "v": 1,
-  "gitSha": "eb117be938f887036b3ad4ca630af1584fd45bad",
+  "gitSha": "0f9edc4846c74d54e7e7f94c248827c29d89ea5c",
   "instances": {
     "wgt_curated_faq.overview.hero": {
+      "ar": {
+        "file": "ar.312cfb69.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "de": {
+        "file": "de.b95aa1ec.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "en": {
+        "file": "en.1b49dfc0.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
       "es": {
-        "file": "es.c82ab7ad.ops.json",
-        "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00"
+        "file": "es.8f7325af.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "fr": {
+        "file": "fr.1226c80e.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "hi": {
+        "file": "hi.5b78cc4d.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "it": {
+        "file": "it.2ebaf817.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "ja": {
+        "file": "ja.687d79e4.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "ko": {
+        "file": "ko.eec9a0dc.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "nl": {
+        "file": "nl.b9845a03.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "pl": {
+        "file": "pl.343e14d5.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "pt": {
+        "file": "pt.b63deee5.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "tr": {
+        "file": "tr.3fd5f1ad.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+      },
+      "zh-tw": {
+        "file": "zh-tw.5e489b35.ops.json",
+        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
       }
     }
   }

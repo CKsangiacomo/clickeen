@@ -406,6 +406,65 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
   return noStore(json({ ok: true }));
 }
 
+async function handleL10nDispatch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const environment = asTrimmedString(env.ENVIRONMENT);
+  if (environment !== 'local') {
+    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
+  }
+
+  const expected = asTrimmedString(env.PARIS_DEV_JWT);
+  if (!expected) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
+  }
+
+  const auth = asTrimmedString(request.headers.get('Authorization'));
+  const [scheme, token] = auth ? auth.split(' ') : [];
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
+  }
+  if (token.trim() !== expected) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  let jobs: unknown[] = [];
+  if (Array.isArray(payload)) {
+    jobs = payload;
+  } else if (isRecord(payload)) {
+    if (Array.isArray(payload.jobs)) jobs = payload.jobs;
+    else if (payload.job) jobs = [payload.job];
+    else jobs = [payload];
+  }
+
+  if (!jobs.length) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'No jobs provided' });
+  }
+
+  const invalid = jobs
+    .map((job, index) => ({ job, index }))
+    .filter(({ job }) => !isL10nJob(job))
+    .map(({ index }) => ({ path: `jobs[${index}]`, message: 'invalid l10n job' }));
+  if (invalid.length) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n jobs', issues: invalid });
+  }
+
+  for (const job of jobs as L10nJob[]) {
+    ctx.waitUntil(
+      executeL10nJob(job, env).catch((err: unknown) => {
+        console.error('[sanfrancisco] l10n dispatch failed', err);
+      }),
+    );
+  }
+
+  return noStore(json({ ok: true, queued: jobs.length }));
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -414,6 +473,7 @@ export default {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
+      if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {

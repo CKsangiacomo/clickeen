@@ -8,8 +8,8 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
 
 ## Runtime Reality (this repo snapshot)
@@ -59,10 +59,11 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - **NOT stored in Michael**
 - **NOT served by Paris**
 
-**Widget Instance config = THE DATA** (Michael tables: `widget_instances`, `widgets`):
-- ONE user’s specific instance config (`widget_instances.config`)
-- Associated widget type is `widgets.type` (surfaced as `widgetType`)
-- **EDITABLE by users** (via Bob → Paris `PUT /api/workspaces/:workspaceId/instance/:publicId`)
+**Widget Instance config = THE DATA** (Michael tables: `widget_instances`, `curated_widget_instances`, `widgets`):
+- User instance config lives in `widget_instances.config` (workspace-owned)
+- Curated/baseline config lives in `curated_widget_instances.config` (Clickeen-authored)
+- Curated uses `widget_type` (denormalized) instead of `widget_id`
+- **EDITABLE by users** (user instances via Bob → Paris `PUT /api/workspaces/:workspaceId/instance/:publicId`)
 
 **What Paris returns for an instance:**
 ```json
@@ -81,6 +82,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `GET /api/instance/:publicId` — Loads the instance snapshot (config + metadata)
 - `PUT /api/instance/:publicId` — Updates instance `config`/`status` (dev auth in this repo snapshot; production will be workspace-auth)
 - `GET /api/instances` — Dev tooling list (requires dev auth)
+- `GET /api/curated-instances` — Curated/baseline list (requires dev auth)
 - `POST /api/instance` — Creates the instance if missing; otherwise returns the existing snapshot (idempotent)
 
 **Workspace-scoped endpoints (dev tooling + promotion):**
@@ -89,6 +91,15 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `GET /api/workspaces/:workspaceId/instance/:publicId` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
 - `PUT /api/workspaces/:workspaceId/instance/:publicId` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
 - `POST /api/workspaces/:workspaceId/website-creative` — Ensures a website creative exists for that workspace (intentionally **local-only**; not a cloud-dev workflow).
+
+### Curated vs user instance routing
+
+- `wgt_main_*` and `wgt_curated_*` → `curated_widget_instances`
+- `wgt_*_u_*` → `widget_instances`
+
+Curated writes are **local-only** and gated by `PARIS_DEV_JWT`.
+
+**Validation contract (fail-fast):** before writing curated instances, Paris validates `widget_type` against the Tokyo widget registry (or cached manifest) and rejects unknown types.
 
 ### Entitlements + limits (v1)
 - Paris computes entitlements from `config/entitlements.matrix.json` using `subject` + `workspaces.tier`.

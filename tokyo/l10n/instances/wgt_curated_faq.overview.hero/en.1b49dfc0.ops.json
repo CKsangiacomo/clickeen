@@ -1,57 +1,57 @@
 {
-  "v": 1,
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
   "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Preguntas Frecuentes"
+      "value": "Frequently Asked Questions"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "All Questions"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "¿Qué es Clickeen?"
+      "value": "What is Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "¿Cómo instalo un widget?"
+      "value": "How do I install a widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "¿Hay un plan gratuito?"
+      "value": "Is there a free plan?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Por qué debería usar Clickeen?"
+      "value": "Why should I use Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "Embeddable widgets with conversions built in."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "Copy the embed code and paste it before </body> on your site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "Yes, one active widget with core features."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
+      "value": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use."
     }
-  ]
+  ],
+  "v": 1
 }

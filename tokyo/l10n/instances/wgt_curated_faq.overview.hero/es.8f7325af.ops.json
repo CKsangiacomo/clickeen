@@ -1,5 +1,4 @@
 {
-  "v": 1,
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
   "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
   "ops": [
@@ -53,5 +52,6 @@
       "path": "sections.0.faqs.3.answer",
       "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
     }
-  ]
+  ],
+  "v": 1
 }

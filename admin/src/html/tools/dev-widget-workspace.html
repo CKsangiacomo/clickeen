@@ -697,7 +697,7 @@ async function fetchInstanceConfig(publicId) {
 
 async function fetchInstances() {
   console.log('[DevStudio] Fetching instances from Paris');
-  const res = await fetch(`${PARIS_API}/instances?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&_t=${Date.now()}`, {
+  const res = await fetch(`${PARIS_API}/curated-instances?_t=${Date.now()}`, {
     cache: 'no-store',
   });
   if (!res.ok) {
@@ -1062,7 +1062,7 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
     throw new Error('[DevStudio] Bob export did not include instanceData');
   }
 
-  const publicId = `wgt_${widgetSlug}_main`;
+  const publicId = `wgt_main_${widgetSlug}`;
   const exportedPublicId = exported?.meta?.publicId;
   if (exportedPublicId && exportedPublicId !== publicId) {
     const ok = window.confirm(
@@ -1116,7 +1116,7 @@ async function createTemplateInstance({ widgetSlug, sourceConfig }) {
   const key = slugifyKey(rawKey);
   if (!key) throw new Error('[DevStudio] Missing key');
 
-  const publicId = `wgt_${widgetSlug}_tmpl_${key}`;
+  const publicId = `wgt_curated_${widgetSlug}.templates.${key}`;
   await createWorkspaceInstance({
     workspaceId: CLICKEEN_WORKSPACE_ID,
     widgetType: widgetSlug,

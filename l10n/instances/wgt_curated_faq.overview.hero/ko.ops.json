@@ -6,52 +6,52 @@
     {
       "op": "set",
       "path": "title",
-      "value": "Preguntas Frecuentes"
+      "value": "자주 묻는 질문"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "모든 질문"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "¿Qué es Clickeen?"
+      "value": "Clickeen이 무엇인가요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "¿Cómo instalo un widget?"
+      "value": "위젯을 어떻게 설치하나요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "¿Hay un plan gratuito?"
+      "value": "무료 플랜이 있나요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Por qué debería usar Clickeen?"
+      "value": "왜 Clickeen을 사용해야 하나요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "내장된 전환 기능을 갖춘 임베디드 위젯입니다."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "임베드 코드를 복사하여 사이트의 </body> 태그 앞에 붙여넣으세요."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "네, 핵심 기능을 갖춘 하나의 활성 위젯이 제공됩니다."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
+      "value": "Clickeen은 웹을 아름답고 사용하기 쉽게 만드는 놀라운 새로운 플랫폼이기 때문입니다."
     }
   ]
 }

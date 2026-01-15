@@ -6,52 +6,52 @@
     {
       "op": "set",
       "path": "title",
-      "value": "Preguntas Frecuentes"
+      "value": "Domande Frequenti"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "Tutte le Domande"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "¿Qué es Clickeen?"
+      "value": "Cos'è Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "¿Cómo instalo un widget?"
+      "value": "Come installo un widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "¿Hay un plan gratuito?"
+      "value": "C'è un piano gratuito?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Por qué debería usar Clickeen?"
+      "value": "Perché dovrei usare Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "Widget integrabili con conversioni integrate."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "Copia il codice di incorporamento e incollalo prima di </body> sul tuo sito."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "Sì, un widget attivo con funzionalità di base."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
+      "value": "Perché Clickeen è una nuova piattaforma straordinaria per rendere il web bello e facile da usare."
     }
   ]
 }

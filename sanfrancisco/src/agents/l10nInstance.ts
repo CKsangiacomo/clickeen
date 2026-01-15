@@ -260,12 +260,38 @@ async function deepseekTranslate(args: {
   return { content, usage };
 }
 
+function extractJsonPayload(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced) return fenced[1].trim();
+
+  const arrayStart = trimmed.indexOf('[');
+  const arrayEnd = trimmed.lastIndexOf(']');
+  if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+    return trimmed.slice(arrayStart, arrayEnd + 1);
+  }
+
+  const objStart = trimmed.indexOf('{');
+  const objEnd = trimmed.lastIndexOf('}');
+  if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
+    return trimmed.slice(objStart, objEnd + 1);
+  }
+
+  return trimmed;
+}
+
 function parseTranslationResult(raw: string, expected: TranslationItem[]): Array<{ path: string; value: string }> {
   let json: unknown;
   try {
     json = JSON.parse(raw);
   } catch {
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Invalid JSON response' });
+    const candidate = extractJsonPayload(raw);
+    try {
+      json = JSON.parse(candidate);
+    } catch {
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Invalid JSON response' });
+    }
   }
 
   const items = Array.isArray(json) ? json : isRecord(json) && Array.isArray((json as any).items) ? (json as any).items : null;

@@ -1,57 +1,57 @@
 {
-  "v": 1,
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
   "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Preguntas Frecuentes"
+      "value": "よくある質問"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "すべての質問"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "¿Qué es Clickeen?"
+      "value": "Clickeenとは何ですか？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "¿Cómo instalo un widget?"
+      "value": "ウィジェットのインストール方法は？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "¿Hay un plan gratuito?"
+      "value": "無料プランはありますか？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Por qué debería usar Clickeen?"
+      "value": "なぜClickeenを使うべきですか？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "埋め込み可能なウィジェットで、コンバージョン機能が組み込まれています。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "埋め込みコードをコピーし、サイトの</body>タグの前に貼り付けてください。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "はい、コア機能を備えた1つのアクティブなウィジェットが利用可能です。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
+      "value": "Clickeenは、ウェブを美しく使いやすくする素晴らしい新しいプラットフォームだからです。"
     }
-  ]
+  ],
+  "v": 1
 }

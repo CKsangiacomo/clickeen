@@ -30,6 +30,20 @@ queue = "instance-l10n-generate-cloud-dev"
 
 [env.local]
 name = "sanfrancisco-local"
+vars = { ENVIRONMENT = "local" }
+
+[[env.local.kv_namespaces]]
+binding = "SF_KV"
+id = "f1abe003b9a8434699175b0c1ccd2603"
+
+[[env.local.d1_databases]]
+binding = "SF_D1"
+database_name = "sanfrancisco_d1_dev"
+database_id = "9ee059a3-538f-4b71-b2ea-f04b33e4897a"
+
+[[env.local.r2_buckets]]
+binding = "SF_R2"
+bucket_name = "sanfrancisco-logs-dev"
 
 [[env.local.queues.consumers]]
 queue = "instance-l10n-generate-local"

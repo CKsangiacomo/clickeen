@@ -28,6 +28,11 @@ ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
 mkdir -p CurrentlyExecuting
+WRANGLER_PERSIST_DIR="$ROOT_DIR/.wrangler/state"
+mkdir -p "$WRANGLER_PERSIST_DIR"
+TOKYO_WORKER_INSPECTOR_PORT=9231
+PARIS_INSPECTOR_PORT=9232
+SANFRANCISCO_INSPECTOR_PORT=9233
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
   echo "[dev-up] Loading $ROOT_DIR/.env.local"
@@ -182,7 +187,7 @@ echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
   if [ -n "${TOKYO_DEV_JWT:-}" ]; then
     VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   fi
-  nohup pnpm exec wrangler dev --local --env local --port 8791 \
+  nohup pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
     "${VARS[@]}" \
     > "$ROOT_DIR/CurrentlyExecuting/tokyo-worker.dev.log" 2>&1 &
   TOKYO_WORKER_PID=$!
@@ -212,7 +217,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
     VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
   fi
 
-  nohup pnpm exec wrangler dev --local --env local --port 3001 \
+  nohup pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
     "${VARS[@]}" \
     > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
   PARIS_PID=$!
@@ -261,7 +266,7 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
       VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
     fi
 
-    nohup pnpm exec wrangler dev --local --env local --port 3002 "${VARS[@]}" \
+    nohup pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" "${VARS[@]}" \
       > "$ROOT_DIR/CurrentlyExecuting/sanfrancisco.dev.log" 2>&1 &
     SF_PID=$!
     echo "[dev-up] SanFrancisco PID: $SF_PID"

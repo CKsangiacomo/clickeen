@@ -1,57 +1,57 @@
 {
-  "v": 1,
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
   "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Preguntas Frecuentes"
+      "value": "Häufig gestellte Fragen"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas las Preguntas"
+      "value": "Alle Fragen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "¿Qué es Clickeen?"
+      "value": "Was ist Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "¿Cómo instalo un widget?"
+      "value": "Wie installiere ich ein Widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "¿Hay un plan gratuito?"
+      "value": "Gibt es einen kostenlosen Plan?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "¿Por qué debería usar Clickeen?"
+      "value": "Warum sollte ich Clickeen verwenden?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Widgets integrables con conversiones incorporadas."
+      "value": "Einbettbare Widgets mit integrierten Konversionen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sí, un widget activo con funciones principales."
+      "value": "Ja, ein aktives Widget mit Kernfunktionen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque Clickeen es una nueva plataforma increíble para hacer la web hermosa y fácil de usar."
+      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
     }
-  ]
+  ],
+  "v": 1
 }

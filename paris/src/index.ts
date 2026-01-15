@@ -31,6 +31,18 @@ type InstanceRow = {
   kind?: InstanceKind | null;
 };
 
+type CuratedInstanceKind = 'baseline' | 'curated';
+
+type CuratedInstanceRow = {
+  public_id: string;
+  widget_type: string;
+  kind?: CuratedInstanceKind | null;
+  status: 'published' | 'unpublished';
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at?: string | null;
+};
+
 type WidgetRow = {
   id: string;
   type: string | null;
@@ -261,6 +273,27 @@ function requireTokyoBase(env: Env) {
     throw new Error('[ParisWorker] Missing required env var: TOKYO_BASE_URL');
   }
   return base.replace(/\/+$/, '');
+}
+
+const widgetTypeExistenceCache = new Map<string, boolean>();
+
+async function isKnownWidgetType(env: Env, widgetType: string): Promise<boolean> {
+  const cached = widgetTypeExistenceCache.get(widgetType);
+  if (cached !== undefined) return cached;
+
+  const base = requireTokyoBase(env);
+  const url = `${base}/widgets/${encodeURIComponent(widgetType)}/spec.json`;
+  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if (res.status === 404) {
+    widgetTypeExistenceCache.set(widgetType, false);
+    return false;
+  }
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`[ParisWorker] Failed to validate widget type (${res.status}): ${detail}`);
+  }
+  widgetTypeExistenceCache.set(widgetType, true);
+  return true;
 }
 
 async function loadWidgetLimits(env: Env, widgetType: string): Promise<LimitsSpec | null> {
@@ -652,7 +685,20 @@ function inferInstanceKindFromPublicId(publicId: string): InstanceKind {
   return 'user';
 }
 
-function resolveInstanceKind(instance: InstanceRow): InstanceKind {
+function isCuratedPublicId(publicId: string): boolean {
+  return inferInstanceKindFromPublicId(publicId) === 'curated';
+}
+
+function isCuratedInstanceRow(instance: InstanceRow | CuratedInstanceRow): instance is CuratedInstanceRow {
+  return 'widget_type' in instance;
+}
+
+function resolveCuratedRowKind(publicId: string): CuratedInstanceKind {
+  return publicId.startsWith('wgt_main_') ? 'baseline' : 'curated';
+}
+
+function resolveInstanceKind(instance: InstanceRow | CuratedInstanceRow): InstanceKind {
+  if (isCuratedInstanceRow(instance)) return 'curated';
   const inferred = inferInstanceKindFromPublicId(instance.public_id);
   // PublicId grammar is authoritative for curated instances (e.g. wgt_curated_*, wgt_main_*).
   if (inferred === 'curated') return 'curated';
@@ -793,7 +839,34 @@ async function handleInstances(req: Request, env: Env) {
   return json({ instances });
 }
 
-async function loadInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
+async function handleCuratedInstances(req: Request, env: Env) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const params = new URLSearchParams({
+    select: 'public_id,widget_type,status,config,created_at,updated_at,kind',
+    order: 'created_at.desc',
+    limit: '100',
+  });
+
+  const res = await supabaseFetch(env, `/rest/v1/curated_widget_instances?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    return json({ error: 'DB_ERROR', details }, { status: 500 });
+  }
+
+  const rows = ((await res.json()) as CuratedInstanceRow[]).filter(Boolean);
+  const instances = rows.map((row) => ({
+    publicId: row.public_id,
+    widgetname: row.widget_type || 'unknown',
+    displayName: row.public_id,
+    config: row.config,
+  }));
+
+  return json({ instances });
+}
+
+async function loadUserInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
     select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id,kind',
     public_id: `eq.${publicId}`,
@@ -802,10 +875,32 @@ async function loadInstanceByPublicId(env: Env, publicId: string): Promise<Insta
   const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(`[ParisWorker] Failed to load user instance (${res.status}): ${JSON.stringify(details)}`);
   }
   const rows = (await res.json()) as InstanceRow[];
   return rows?.[0] ?? null;
+}
+
+async function loadCuratedInstanceByPublicId(env: Env, publicId: string): Promise<CuratedInstanceRow | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,widget_type,status,config,created_at,updated_at,kind',
+    public_id: `eq.${publicId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/curated_widget_instances?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load curated instance (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as CuratedInstanceRow[];
+  return rows?.[0] ?? null;
+}
+
+async function loadInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | CuratedInstanceRow | null> {
+  if (isCuratedPublicId(publicId)) {
+    return loadCuratedInstanceByPublicId(env, publicId);
+  }
+  return loadUserInstanceByPublicId(env, publicId);
 }
 
 async function loadInstanceLocale(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
@@ -838,7 +933,11 @@ async function loadInstanceLocales(env: Env, publicId: string): Promise<Instance
   return ((await res.json()) as InstanceLocaleRow[]).filter(Boolean);
 }
 
-async function loadInstanceByWorkspaceAndPublicId(env: Env, workspaceId: string, publicId: string): Promise<InstanceRow | null> {
+async function loadUserInstanceByWorkspaceAndPublicId(
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
     select: 'public_id,status,config,created_at,updated_at,widget_id,workspace_id,kind',
     public_id: `eq.${publicId}`,
@@ -848,10 +947,21 @@ async function loadInstanceByWorkspaceAndPublicId(env: Env, workspaceId: string,
   const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(`[ParisWorker] Failed to load user instance (${res.status}): ${JSON.stringify(details)}`);
   }
   const rows = (await res.json()) as InstanceRow[];
   return rows?.[0] ?? null;
+}
+
+async function loadInstanceByWorkspaceAndPublicId(
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+): Promise<InstanceRow | CuratedInstanceRow | null> {
+  if (isCuratedPublicId(publicId)) {
+    return loadCuratedInstanceByPublicId(env, publicId);
+  }
+  return loadUserInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
 }
 
 async function loadWidget(env: Env, widgetId: string): Promise<WidgetRow | null> {
@@ -882,6 +992,26 @@ async function loadWidgetByType(env: Env, widgetType: string): Promise<WidgetRow
   }
   const rows = (await res.json()) as WidgetRow[];
   return rows?.[0] ?? null;
+}
+
+function resolveInstanceWorkspaceId(instance: InstanceRow | CuratedInstanceRow): string | null {
+  if (isCuratedInstanceRow(instance)) return null;
+  return instance.workspace_id ?? null;
+}
+
+async function resolveWidgetTypeForInstance(
+  env: Env,
+  instance: InstanceRow | CuratedInstanceRow,
+  fallback?: string | null,
+): Promise<string | null> {
+  if (isCuratedInstanceRow(instance)) {
+    return instance.widget_type || fallback || null;
+  }
+  if (instance.widget_id) {
+    const widget = await loadWidget(env, instance.widget_id);
+    return widget?.type ?? fallback ?? null;
+  }
+  return fallback ?? null;
 }
 
 async function handleListWidgets(req: Request, env: Env) {
@@ -984,6 +1114,11 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
 
+  const isValidType = await isKnownWidgetType(env, widgetType);
+  if (!isValidType) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+  }
+
   // 1) Ensure instance exists (and optionally reset config to baseline).
   let existing = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (existing && !overwrite) {
@@ -1036,39 +1171,34 @@ async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, work
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
     }
 
-    const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+    const instanceInsert = await supabaseFetch(env, `/rest/v1/curated_widget_instances`, {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
-        workspace_id: workspaceId,
-        widget_id: widget.id,
         public_id: publicId,
+        widget_type: widgetType,
+        kind: resolveCuratedRowKind(publicId),
         status: 'unpublished',
         config: baselineConfig,
-        kind: 'curated',
       }),
     });
     if (!instanceInsert.ok) {
       const details = await readJson(instanceInsert);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
-    const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
+    const created = (await instanceInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     existing = created?.[0] ?? null;
   } else {
-    const patchRes = await supabaseFetch(
-      env,
-      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ config: baselineConfig, kind: 'curated' }),
-      },
-    );
+    const patchRes = await supabaseFetch(env, `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ config: baselineConfig, kind: resolveCuratedRowKind(publicId) }),
+    });
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
-    const updated = (await patchRes.json().catch(() => null)) as InstanceRow[] | null;
+    const updated = (await patchRes.json().catch(() => null)) as CuratedInstanceRow[] | null;
     existing = updated?.[0] ?? existing;
   }
 
@@ -1111,15 +1241,14 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     return json({ error: 'NOT_FOUND' }, { status: 404 });
   }
 
-  const widgetId = instance.widget_id;
-  const widget = widgetId ? await loadWidget(env, widgetId) : null;
-  if (!widget) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
 
   if (!isDev) {
     return json({
       publicId: instance.public_id,
       status: instance.status,
-      widgetType: widget.type ?? null,
+      widgetType,
       config: instance.config,
       updatedAt: instance.updated_at ?? null,
     });
@@ -1128,10 +1257,10 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
   return json({
     publicId: instance.public_id,
     status: instance.status,
-    widgetType: widget.type ?? null,
+    widgetType,
     config: instance.config,
     updatedAt: instance.updated_at ?? null,
-    workspaceId: instance.workspace_id ?? null,
+    workspaceId: resolveInstanceWorkspaceId(instance),
   });
 }
 
@@ -1150,7 +1279,7 @@ async function handleInstanceLocalesList(req: Request, env: Env, publicId: strin
   const rows = await loadInstanceLocales(env, publicIdResult.value);
   return json({
     publicId: instance.public_id,
-    workspaceId: instance.workspace_id ?? null,
+    workspaceId: resolveInstanceWorkspaceId(instance),
     locales: rows.map((row) => ({
       locale: row.locale,
       source: row.source,
@@ -1238,7 +1367,7 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
 
   const instanceKind = resolveInstanceKind(instance);
-  const instanceWorkspaceId = instance.workspace_id ?? null;
+  const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
   if (instanceKind === 'user') {
     if (!instanceWorkspaceId) {
       return apiError('WORKSPACE_MISMATCH', 'Instance missing workspace', 403, { publicId });
@@ -1269,19 +1398,15 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     });
   }
 
-  let widgetType: string | null = null;
-  if (instance.widget_id) {
-    const widget = await loadWidget(env, instance.widget_id);
-    if (!widget) return apiError('INTERNAL_ERROR', 'Widget missing for instance', 500, { publicId });
-    widgetType = widget.type ?? null;
-  }
-  if (!widgetType && widgetTypeRaw) {
+  let widgetTypeFallback: string | null = null;
+  if (widgetTypeRaw) {
     const widgetTypeResult = assertWidgetType(widgetTypeRaw);
     if (!widgetTypeResult.ok) {
       return apiError('OPS_INVALID_TYPE', 'Invalid widgetType', 400, widgetTypeResult.issues);
     }
-    widgetType = widgetTypeResult.value;
+    widgetTypeFallback = widgetTypeResult.value;
   }
+  const widgetType = await resolveWidgetTypeForInstance(env, instance, widgetTypeFallback);
   if (!widgetType) {
     return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
   }
@@ -1380,7 +1505,7 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
   const instance = await loadInstanceByPublicId(env, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
 
-  const instanceWorkspaceId = instance.workspace_id ?? null;
+  const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
   const url = new URL(req.url);
   const workspaceIdRaw = url.searchParams.get('workspaceId');
   if (!instanceWorkspaceId) {
@@ -1468,14 +1593,13 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
-  const widgetId = instance.widget_id;
-  const widget = widgetId ? await loadWidget(env, widgetId) : null;
-  if (!widget) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   return json({
     publicId: instance.public_id,
     status: instance.status,
-    widgetType: widget.type ?? null,
+    widgetType,
     config: instance.config,
     updatedAt: instance.updated_at ?? null,
     policy: policyResult.policy,
@@ -1639,9 +1763,41 @@ function enforceL10nSelection(policy: Policy, locales: string[]) {
   return null;
 }
 
+async function dispatchL10nJobsLocal(env: Env, jobs: L10nJob[]) {
+  const base = asTrimmedString(env.SANFRANCISCO_BASE_URL);
+  if (!base) {
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.missing', detail: 'SANFRANCISCO_BASE_URL missing' },
+      500
+    );
+  }
+  const token = asTrimmedString(env.PARIS_DEV_JWT);
+  if (!token) {
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.auth.missing', detail: 'PARIS_DEV_JWT missing' }, 500);
+  }
+
+  const url = new URL('/v1/l10n', base);
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+      'cache-control': 'no-store',
+    },
+    body: JSON.stringify({ jobs }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.enqueueFailed', detail }, 500);
+  }
+
+  return null;
+}
+
 async function enqueueL10nJobs(args: {
   env: Env;
-  instance: InstanceRow;
+  instance: InstanceRow | CuratedInstanceRow;
   workspace: WorkspaceRow;
   widgetType: string | null;
   baseUpdatedAt: string | null | undefined;
@@ -1669,6 +1825,25 @@ async function enqueueL10nJobs(args: {
 
   if (locales.length === 0) return null;
 
+  const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
+  const workspaceId =
+    kind === 'curated' ? null : resolveInstanceWorkspaceId(args.instance) ?? args.workspace.id ?? null;
+
+  const jobs: L10nJob[] = locales.map((locale) => ({
+    v: 1,
+    publicId: args.instance.public_id,
+    widgetType: args.widgetType!,
+    locale,
+    baseUpdatedAt: args.baseUpdatedAt!,
+    kind,
+    workspaceId,
+    envStage,
+  }));
+
+  if (envStage === 'local') {
+    return dispatchL10nJobsLocal(args.env, jobs);
+  }
+
   if (!args.env.L10N_GENERATE_QUEUE) {
     return ckError(
       { kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.missing', detail: 'L10N_GENERATE_QUEUE missing' },
@@ -1676,24 +1851,8 @@ async function enqueueL10nJobs(args: {
     );
   }
 
-  const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
-  const workspaceId = args.instance.workspace_id ?? args.workspace.id ?? null;
-
-  const messages = locales.map((locale) => ({
-    body: {
-      v: 1,
-      publicId: args.instance.public_id,
-      widgetType: args.widgetType!,
-      locale,
-      baseUpdatedAt: args.baseUpdatedAt!,
-      kind,
-      workspaceId,
-      envStage,
-    } satisfies L10nJob,
-  }));
-
   try {
-    await args.env.L10N_GENERATE_QUEUE.sendBatch(messages);
+    await args.env.L10N_GENERATE_QUEUE.sendBatch(jobs.map((job) => ({ body: job })));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.queue.enqueueFailed', detail }, 500);
@@ -1748,9 +1907,19 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
-  const widgetId = instance.widget_id;
-  const widget = widgetId ? await loadWidget(env, widgetId) : null;
-  if (!widget) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+
+  const isCurated = resolveInstanceKind(instance) === 'curated';
+  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
+  if (isCurated) {
+    const isValidType = await isKnownWidgetType(env, widgetType);
+    if (!isValidType) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+    }
+  }
 
   if (config !== undefined) {
     const issues = configNonPersistableUrlIssues(config);
@@ -1766,7 +1935,7 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
       );
     }
 
-    const denyByLimits = await enforceLimits(env, policyResult.policy, widget.type ?? null, config);
+    const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
     if (denyByLimits) return denyByLimits;
   }
 
@@ -1774,21 +1943,20 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   if (config !== undefined) update.config = config;
   if (status !== undefined) update.status = status;
 
-  let updatedInstance: InstanceRow | null = instance;
-  const patchRes = await supabaseFetch(
-    env,
-    `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
-    {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify(update),
-    }
-  );
+  let updatedInstance: InstanceRow | CuratedInstanceRow | null = instance;
+  const patchPath = isCurated
+    ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`
+    : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`;
+  const patchRes = await supabaseFetch(env, patchPath, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(update),
+  });
   if (!patchRes.ok) {
     const details = await readJson(patchRes);
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
   }
-  const updated = (await patchRes.json().catch(() => null)) as InstanceRow[] | null;
+  const updated = (await patchRes.json().catch(() => null)) as Array<InstanceRow | CuratedInstanceRow> | null;
   updatedInstance = updated?.[0] ?? updatedInstance;
 
   if (!updatedInstance) {
@@ -1799,13 +1967,13 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
     const shouldTrigger =
       config !== undefined ||
       (status === 'published' && updatedInstance.status === 'published');
-    const isCurated = resolveInstanceKind(updatedInstance) === 'curated';
-    if (shouldTrigger && (isCurated || updatedInstance.status === 'published')) {
+    const updatedIsCurated = resolveInstanceKind(updatedInstance) === 'curated';
+    if (shouldTrigger && (updatedIsCurated || updatedInstance.status === 'published')) {
       const enqueueError = await enqueueL10nJobs({
         env,
         instance: updatedInstance,
         workspace,
-        widgetType: widget.type ?? null,
+        widgetType,
         baseUpdatedAt: updatedInstance.updated_at ?? null,
         policy: policyResult.policy,
       });
@@ -1857,10 +2025,16 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const config = configResult.value;
   const status = statusResult.value ?? 'unpublished';
   const kind = inferInstanceKindFromPublicId(publicId);
+  const isCurated = kind === 'curated';
+
+  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
 
   const existing = await loadInstanceByPublicId(env, publicId);
   if (existing) {
-    if (existing.workspace_id && existing.workspace_id !== workspaceId) {
+    const existingWorkspaceId = resolveInstanceWorkspaceId(existing);
+    if (!isCurated && existingWorkspaceId && existingWorkspaceId !== workspaceId) {
       return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.conflict' }, 409);
     }
     return handleWorkspaceGetInstance(req, env, workspaceId, publicId);
@@ -1882,47 +2056,73 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
   if (denyByLimits) return denyByLimits;
 
-  let widget = await loadWidgetByType(env, widgetType);
-  if (!widget) {
-    const widgetName = asTrimmedString((payload as any).widgetName);
-    const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+  let createdInstance: InstanceRow | CuratedInstanceRow | null = null;
+
+  if (isCurated) {
+    const isValidType = await isKnownWidgetType(env, widgetType);
+    if (!isValidType) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+    }
+    const curatedInsert = await supabaseFetch(env, `/rest/v1/curated_widget_instances`, {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
-        type: widgetType,
-        name: widgetName ?? (titleCase(widgetType) || widgetType),
+        public_id: publicId,
+        widget_type: widgetType,
+        kind: resolveCuratedRowKind(publicId),
+        status,
+        config,
       }),
     });
-    if (!insertRes.ok) {
-      const details = await readJson(insertRes);
+    if (!curatedInsert.ok) {
+      const details = await readJson(curatedInsert);
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
     }
-    const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
-    widget = created?.[0] ?? null;
-  }
+    const created = (await curatedInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
+    createdInstance = created?.[0] ?? null;
+  } else {
+    let widget = await loadWidgetByType(env, widgetType);
+    if (!widget) {
+      const widgetName = asTrimmedString((payload as any).widgetName);
+      const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          type: widgetType,
+          name: widgetName ?? (titleCase(widgetType) || widgetType),
+        }),
+      });
+      if (!insertRes.ok) {
+        const details = await readJson(insertRes);
+        return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      }
+      const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
+      widget = created?.[0] ?? null;
+    }
 
-  if (!widget?.id) {
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
-  }
+    if (!widget?.id) {
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+    }
 
-  const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      workspace_id: workspaceId,
-      widget_id: widget.id,
-      public_id: publicId,
-      status,
-      config,
-      kind,
-    }),
-  });
-  if (!instanceInsert.ok) {
-    const details = await readJson(instanceInsert);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        workspace_id: workspaceId,
+        widget_id: widget.id,
+        public_id: publicId,
+        status,
+        config,
+        kind,
+      }),
+    });
+    if (!instanceInsert.ok) {
+      const details = await readJson(instanceInsert);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    }
+    const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
+    createdInstance = created?.[0] ?? null;
   }
-  const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
-  const createdInstance = created?.[0] ?? null;
 
   if (createdInstance) {
     const shouldTrigger =
@@ -2000,52 +2200,80 @@ async function handleCreateInstance(req: Request, env: Env) {
   const config = configResult.value!;
   const status = statusResult.value ?? 'unpublished';
   const kind = inferInstanceKindFromPublicId(publicId);
+  const isCurated = kind === 'curated';
+
+  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
 
   const existing = await loadInstanceByPublicId(env, publicId);
   if (existing) {
-    if (existing.workspace_id && existing.workspace_id !== workspaceId) {
+    const existingWorkspaceId = resolveInstanceWorkspaceId(existing);
+    if (!isCurated && existingWorkspaceId && existingWorkspaceId !== workspaceId) {
       return json({ error: 'WORKSPACE_MISMATCH' }, { status: 409 });
     }
     return handleGetInstance(req, env, publicId);
   }
 
-  let widget = await loadWidgetByType(env, widgetType);
-  if (!widget) {
-    const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+  if (isCurated) {
+    const isValidType = await isKnownWidgetType(env, widgetType);
+    if (!isValidType) {
+      return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+    }
+    const curatedInsert = await supabaseFetch(env, `/rest/v1/curated_widget_instances`, {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
-        type: widgetType,
-        name: widgetName ?? (titleCase(widgetType) || widgetType),
+        public_id: publicId,
+        widget_type: widgetType,
+        kind: resolveCuratedRowKind(publicId),
+        status,
+        config,
       }),
     });
-    if (!insertRes.ok) {
-      const details = await readJson(insertRes);
+    if (!curatedInsert.ok) {
+      const details = await readJson(curatedInsert);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
     }
-    const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
-    widget = created?.[0] ?? null;
-  }
+  } else {
+    let widget = await loadWidgetByType(env, widgetType);
+    if (!widget) {
+      const insertRes = await supabaseFetch(env, `/rest/v1/widgets`, {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          type: widgetType,
+          name: widgetName ?? (titleCase(widgetType) || widgetType),
+        }),
+      });
+      if (!insertRes.ok) {
+        const details = await readJson(insertRes);
+        return json({ error: 'DB_ERROR', details }, { status: 500 });
+      }
+      const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
+      widget = created?.[0] ?? null;
+    }
 
-  if (!widget?.id) {
-    return json({ error: 'DB_ERROR', message: 'Failed to resolve widget row' }, { status: 500 });
-  }
+    if (!widget?.id) {
+      return json({ error: 'DB_ERROR', message: 'Failed to resolve widget row' }, { status: 500 });
+    }
 
-  const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      widget_id: widget.id,
-      public_id: publicId,
-      workspace_id: workspaceId,
-      status,
-      config,
-      kind,
-    }),
-  });
-  if (!instanceInsert.ok) {
-    const details = await readJson(instanceInsert);
-    return json({ error: 'DB_ERROR', details }, { status: 500 });
+    const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        widget_id: widget.id,
+        public_id: publicId,
+        workspace_id: workspaceId,
+        status,
+        config,
+        kind,
+      }),
+    });
+    if (!instanceInsert.ok) {
+      const details = await readJson(instanceInsert);
+      return json({ error: 'DB_ERROR', details }, { status: 500 });
+    }
   }
 
   return handleGetInstance(req, env, publicId);
@@ -2146,25 +2374,29 @@ async function handleUpdateInstance(req: Request, env: Env, publicId: string) {
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
   if (!instance) return json({ error: 'NOT_FOUND' }, { status: 404 });
-  const widgetId = instance.widget_id;
-  if (!widgetId) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
+
+  const isCurated = resolveInstanceKind(instance) === 'curated';
+  if (isCurated && (env.ENV_STAGE || '').toLowerCase() !== 'local') {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
 
   if (config !== undefined || status !== undefined) {
     const update: Record<string, unknown> = {};
     if (config !== undefined) update.config = config;
     if (status !== undefined) update.status = status;
 
-    const patchRes = await supabaseFetch(
-      env,
-      `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'PATCH',
-        headers: {
-          Prefer: 'return=representation',
-        },
-        body: JSON.stringify(update),
+    const patchPath = isCurated
+      ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`
+      : `/rest/v1/widget_instances?public_id=eq.${encodeURIComponent(publicId)}&workspace_id=eq.${encodeURIComponent(workspaceId)}`;
+    const patchRes = await supabaseFetch(env, patchPath, {
+      method: 'PATCH',
+      headers: {
+        Prefer: 'return=representation',
       },
-    );
+      body: JSON.stringify(update),
+    });
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
@@ -2264,6 +2496,11 @@ export default {
       if (pathname === '/api/instances') {
         if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleInstances(req, env);
+      }
+
+      if (pathname === '/api/curated-instances') {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleCuratedInstances(req, env);
       }
 
       if (pathname === '/api/instance') {

@@ -7,6 +7,7 @@ Michael is Clickeen’s **minimal** persistence layer. It stores exactly what we
 The schema is defined by:
 - `supabase/migrations/20251228000000__base.sql`
 - `supabase/migrations/20260105000000__workspaces.sql`
+- `supabase/migrations/20260117090000__curated_widget_instances.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -21,14 +22,25 @@ Core columns:
 - `name` (text) — human label
 
 ### `widget_instances`
-One row per instance. This is the **canonical config state tree**.
+One row per **user instance**. This is the canonical config state tree for workspace-owned data.
 
 Core columns:
 - `id` (uuid) — internal (never exposed outside DB/services)
 - `widget_id` (uuid) — FK to `widgets.id`
 - `workspace_id` (uuid) — FK to `workspaces.id` (instances are workspace-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
-- `kind` (text) — `curated` | `user` (curated powers Prague + templates; user is workspace-owned)
+- `kind` (text) — `user` (curated/baseline live in `curated_widget_instances`)
+- `status` (text) — `published` | `unpublished`
+- `config` (jsonb) — required object
+
+### `curated_widget_instances`
+One row per **Clickeen-authored** instance (baseline + curated).
+
+Core columns:
+- `id` (uuid) — internal (never exposed outside DB/services)
+- `public_id` (text) — the **only** identifier that crosses system boundaries
+- `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
+- `kind` (text) — `baseline` | `curated`
 - `status` (text) — `published` | `unpublished`
 - `config` (jsonb) — required object
 
@@ -66,7 +78,9 @@ This table exists even if the full UI/UX ships later.
 
 Clickeen uses one system (“instances”) but we still need a consistent taxonomy so tooling can filter and present them.
 
-This taxonomy is encoded in `widget_instances.public_id` and enforced by a DB check constraint.
+This taxonomy is encoded in `public_id` across two tables:
+- `curated_widget_instances` → `wgt_main_*` and `wgt_curated_*`
+- `widget_instances` → `wgt_*_u_*`
 
 ### A) Main instance (system baseline)
 One per widget type. Used for:
@@ -120,7 +134,7 @@ Competitors build a separate “template system”.
 
 Clickeen does not.
 
-A “template” is just a curated `widget_instances` row whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of instances (later: in UI/service code).
+A “template” is just a curated `curated_widget_instances` row whose `public_id` uses the `wgt_curated_` form. The gallery is simply a filtered view of instances (later: in UI/service code).
 
 ## Local Dev (Docker Supabase)
 
