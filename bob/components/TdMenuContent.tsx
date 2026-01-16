@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
+import { pathMatchesAllowlist } from '../lib/l10n/instance';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { applyI18nToDom } from '../lib/i18n/dom';
 
@@ -113,6 +114,9 @@ type TdMenuContentProps = {
     scripts: string[];
   };
   header?: ReactNode;
+  footer?: ReactNode;
+  translateMode?: boolean;
+  translateAllowlist?: string[];
 };
 
 const GROUP_LABELS: Record<string, string> = {
@@ -492,6 +496,65 @@ function applyGroupHeaders(scope: HTMLElement) {
   scope.appendChild(rebuilt);
 }
 
+function normalizeBobPath(raw: string): string {
+  return String(raw || '')
+    .replace(/\[(\d+)\]/g, '.$1')
+    .replace(/\.+/g, '.')
+    .replace(/^\./, '')
+    .replace(/\.$/, '');
+}
+
+function resolveTranslateRoot(field: HTMLElement): HTMLElement {
+  return (
+    field.closest<HTMLElement>(
+      '.diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
+    ) || field
+  );
+}
+
+function applyTranslateVisibility(scope: HTMLElement, allowlist: string[], enabled: boolean) {
+  const tagged = scope.querySelectorAll<HTMLElement>(
+    '[data-translate-hidden], [data-translate-allow], [data-translate-empty]'
+  );
+  tagged.forEach((node) => {
+    node.removeAttribute('data-translate-hidden');
+    node.removeAttribute('data-translate-allow');
+    node.removeAttribute('data-translate-empty');
+  });
+
+  if (!enabled || allowlist.length === 0) return;
+
+  const isAllowed = (path: string) => allowlist.some((allow) => pathMatchesAllowlist(path, allow));
+  const rootAllow = new Map<HTMLElement, boolean>();
+  const fields = Array.from(scope.querySelectorAll<HTMLElement>('[data-bob-path]'));
+
+  fields.forEach((field) => {
+    const rawPath = field.getAttribute('data-bob-path') || '';
+    const path = normalizeBobPath(rawPath);
+    if (!path) return;
+    const root = resolveTranslateRoot(field);
+    const allowed = isAllowed(path);
+    const prev = rootAllow.get(root);
+    rootAllow.set(root, prev === true ? true : allowed);
+  });
+
+  rootAllow.forEach((allowed, root) => {
+    if (allowed) {
+      root.setAttribute('data-translate-allow', 'true');
+      return;
+    }
+    root.setAttribute('data-translate-hidden', 'true');
+  });
+
+  const groups = scope.querySelectorAll<HTMLElement>('.tdmenucontent__cluster, .tdmenucontent__group');
+  groups.forEach((group) => {
+    const hasAllowed = Boolean(group.querySelector('[data-translate-allow="true"]'));
+    if (!hasAllowed) {
+      group.setAttribute('data-translate-empty', 'true');
+    }
+  });
+}
+
 function collectShowIfPaths(raw: string): string[] {
   if (!raw.trim()) return [];
   try {
@@ -567,6 +630,9 @@ export function TdMenuContent({
   dieterAssets,
   lastUpdate,
   header,
+  footer,
+  translateMode = false,
+  translateAllowlist = [],
 }: TdMenuContentProps) {
   const session = useWidgetSession();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1126,6 +1192,7 @@ export function TdMenuContent({
     if (!container) return;
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
+    applyTranslateVisibility(container, translateAllowlist, translateMode);
   });
 
   if (!panelId) {
@@ -1137,10 +1204,11 @@ export function TdMenuContent({
   }
 
   return (
-    <div className="tdmenucontent">
+    <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'}>
       <div className="heading-3">{panelId}</div>
       {header}
       <div className="tdmenucontent__fields" ref={containerRef} />
+      {footer}
     </div>
   );
 }

@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+  "baseUpdatedAt": "2026-01-16T17:12:50.961Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Waarom teams Logo Showcase gebruiken"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Strak"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Snel"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Toegankelijk"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Minimalistisch, modern ontwerp dat past bij je merk."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Kleine payload en edge-gecachete assets."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Zinnige markup en toetsenbordveilige bediening."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "यह कैसे काम करता है"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "लोगो जोड़ें"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "व्यवस्थित करें"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "एंबेड करें"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "अपने ग्राहक लोगो (SVG/PNG) कुछ ही सेकंड में अपलोड करें।"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "अपनी साइट के अनुसार लेआउट + स्पेसिंग चुनें।"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "किसी भी प्लेटफ़ॉर्म में स्निपेट पेस्ट करें।"
+    }
+  ],
+  "v": 1
+}

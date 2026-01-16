@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+  "baseUpdatedAt": "2026-01-16T18:14:27.929Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Funktionen der Logo-Präsentation"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Schnell, flexibel und so gestaltet, dass es überall großartig aussieht."
+    }
+  ],
+  "v": 1
+}

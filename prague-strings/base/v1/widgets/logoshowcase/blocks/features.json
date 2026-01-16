@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "blockId": "features",
+  "blockKind": "features",
+  "strings": {
+    "title": "Why teams use Logo Showcase",
+    "items": [
+      { "title": "Clean", "body": "Minimal, modern design that matches your brand." },
+      { "title": "Fast", "body": "Tiny payload and edge-cached assets." },
+      { "title": "Accessible", "body": "Sensible markup and keyboard-safe controls." }
+    ]
+  }
+}

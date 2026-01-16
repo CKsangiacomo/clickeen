@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+  "baseUpdatedAt": "2026-01-16T18:14:19.222Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Esempi di vetrina di loghi"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Scopri i posizionamenti e i casi d’uso più comuni."
+    }
+  ],
+  "v": 1
+}

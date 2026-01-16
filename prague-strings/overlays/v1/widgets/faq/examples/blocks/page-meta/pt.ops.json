@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+  "baseUpdatedAt": "2026-01-16T20:21:24.610Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Exemplos de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Veja exemplos reais de widgets de FAQ e boas práticas."
+    }
+  ],
+  "v": 1
+}

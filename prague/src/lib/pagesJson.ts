@@ -6,7 +6,7 @@ const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.ur
 
 export type WidgetPageJsonBlock = {
   id: string;
-  kind: string;
+  type: string;
   copy: Record<string, unknown>;
   visual?: boolean;
 };
@@ -31,5 +31,4 @@ export async function loadWidgetPageJson(opts: { widgetType: string; page: strin
     throw err;
   }
 }
-
 

@@ -1,8 +1,8 @@
 ---
 import Base from '../../../../../layouts/Base.astro';
 import Nav from '../../../../../blocks/site/nav/Nav.astro';
-import WidgetSubnav from '../../../../../blocks/site/nav/WidgetSubnav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
+import WidgetBlocks from '../../../../../components/WidgetBlocks.astro';
 import { listWidgets, listWidgetPages, loadRequiredWidgetPageJsonForLocale } from '../../../../../lib/markdown';
 import { listPragueLocales } from '../../../../../lib/locales';
 import { pragueT } from '../../../../../lib/i18n';
@@ -35,44 +35,31 @@ export async function getStaticPaths() {
   return out;
 }
 
-function titleCase(s: string) {
-  if (!s) return s;
-  return s.slice(0, 1).toUpperCase() + s.slice(1);
+// Ensure the page contract exists (fail-fast) even though some blocks are still stubs.
+const pageJson = await loadRequiredWidgetPageJsonForLocale({ widget, page, locale });
+const blocks = Array.isArray((pageJson as any).blocks) ? (pageJson as any).blocks : [];
+const hasHero = blocks.some((b: any) => b && b.type === 'hero');
+const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
+const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
+const pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
+const pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
+if (!pageTitle || !pageDescription) {
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/${page}.json (page-meta.copy.title/description required)`);
 }
-
-const widgetLabel = titleCase(widget);
-const pageLabel = titleCase(page);
-// Ensure the page contract exists (fail-fast) even though the UI is currently a stub.
-await loadRequiredWidgetPageJsonForLocale({ widget, page, locale });
 ---
 
-<Base title={`${widgetLabel} — ${pageLabel} — Clickeen`} locale={locale}>
+<Base title={pageTitle} description={pageDescription} locale={locale}>
   <main>
     <Nav
       title="Clickeen"
       locale={locale}
       homeHref={`/${locale}/`}
+      overlay={hasHero}
       cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
-    <WidgetSubnav locale={locale} widget={widget} active={activeSubpage} />
 
-    <section class="ck-canvas ck-widgetSubpage">
-      <div class="ck-inline ck-stack ck-widgetSubpage__inner">
-        <h1 class="heading-2 ck-widgetSubpage__title">{widgetLabel} — {pageLabel}</h1>
-        <p class="body-xxl ck-widgetSubpage__body">{pragueT(locale, 'prague.common.comingSoon')}</p>
-      </div>
-    </section>
+    <WidgetBlocks blocks={blocks} widget={widget} locale={locale} activeSubpage={activeSubpage} />
 
     <Footer locale={locale} />
   </main>
 </Base>
-
-<style>
-  .ck-widgetSubpage { padding-top: 0; }
-  .ck-widgetSubpage__inner { gap: var(--space-3); }
-  .ck-widgetSubpage__title { margin: 0; }
-  .ck-widgetSubpage__body {
-    margin: 0;
-    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
-  }
-</style>

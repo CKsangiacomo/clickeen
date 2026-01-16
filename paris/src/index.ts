@@ -135,6 +135,7 @@ type InstanceLocaleRow = {
   public_id: string;
   locale: string;
   ops: Array<{ op: 'set'; path: string; value: unknown }>;
+  user_ops?: Array<{ op: 'set'; path: string; value: unknown }>;
   base_fingerprint: string | null;
   base_updated_at?: string | null;
   source: string;
@@ -148,6 +149,11 @@ type L10nAllowlistFile = { v: 1; paths: L10nAllowlistEntry[] };
 
 const L10N_ALLOWED_SOURCES = new Set(['agent', 'manual', 'import', 'user']);
 const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+
+function resolveUserOps(row: InstanceLocaleRow | null) {
+  const userOps = Array.isArray(row?.user_ops) ? row.user_ops : [];
+  return { userOps };
+}
 
 function json(body: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
@@ -910,7 +916,7 @@ async function loadInstanceByPublicId(env: Env, publicId: string): Promise<Insta
 
 async function loadInstanceLocale(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    select: 'public_id,locale,ops,user_ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
     locale: `eq.${locale}`,
     limit: '1',
@@ -926,7 +932,7 @@ async function loadInstanceLocale(env: Env, publicId: string, locale: string): P
 
 async function loadInstanceLocales(env: Env, publicId: string): Promise<InstanceLocaleRow[]> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    select: 'public_id,locale,user_ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
     order: 'locale.asc',
   });
@@ -1285,14 +1291,18 @@ async function handleInstanceLocalesList(req: Request, env: Env, publicId: strin
   return json({
     publicId: instance.public_id,
     workspaceId: resolveInstanceWorkspaceId(instance),
-    locales: rows.map((row) => ({
-      locale: row.locale,
-      source: row.source,
-      baseFingerprint: row.base_fingerprint,
-      baseUpdatedAt: row.base_updated_at ?? null,
-      geoCountries: row.geo_countries ?? null,
-      updatedAt: row.updated_at ?? null,
-    })),
+    locales: rows.map((row) => {
+      const { userOps } = resolveUserOps(row);
+      return {
+        locale: row.locale,
+        source: row.source,
+        baseFingerprint: row.base_fingerprint,
+        baseUpdatedAt: row.base_updated_at ?? null,
+        geoCountries: row.geo_countries ?? null,
+        updatedAt: row.updated_at ?? null,
+        hasUserOps: userOps.length > 0,
+      };
+    }),
   });
 }
 
@@ -1320,11 +1330,13 @@ async function handleInstanceLocaleGet(req: Request, env: Env, publicId: string,
     return apiError('INSTANCE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
   }
 
+  const { userOps } = resolveUserOps(row);
   return json({
     publicId: row.public_id,
     locale: row.locale,
     source: row.source,
     ops: row.ops,
+    userOps,
     baseFingerprint: row.base_fingerprint,
     baseUpdatedAt: row.base_updated_at ?? null,
     geoCountries: row.geo_countries ?? null,
@@ -1359,8 +1371,14 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError('OPS_INVALID_TYPE', 'Payload must be an object', 400);
   }
 
-  const source = normalizeL10nSource((payload as any).source);
-  if (!source) {
+  const hasOps = Object.prototype.hasOwnProperty.call(payload, 'ops');
+  const hasUserOps = Object.prototype.hasOwnProperty.call(payload, 'userOps');
+  if (!hasOps && !hasUserOps) {
+    return apiError('OPS_INVALID_TYPE', 'ops or userOps required', 400);
+  }
+
+  const source = hasOps ? normalizeL10nSource((payload as any).source) : null;
+  if (hasOps && !source) {
     return apiError('OPS_INVALID_TYPE', 'Invalid source', 400);
   }
 
@@ -1424,44 +1442,70 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError('INTERNAL_ERROR', 'Failed to load localization allowlist', 500, detail);
   }
 
-  const opsResult = validateL10nOps((payload as any).ops, allowlist);
-  if (!opsResult.ok) {
+  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
+  const existingUserOps = resolveUserOps(existing).userOps;
+  if (hasUserOps && !existing) {
+    return apiError('LOCALE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
+  }
+
+  const opsResult = hasOps ? validateL10nOps((payload as any).ops, allowlist) : null;
+  if (hasOps && opsResult && !opsResult.ok) {
     return apiError(opsResult.code, opsResult.message, 400, opsResult.detail);
   }
 
-  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
-  if (existing && existing.source === 'user' && source !== 'user') {
-    return apiError('USER_OVERRIDE_EXISTS', 'Cannot overwrite user-edited localization', 403, {
-      publicId: publicIdResult.value,
+  const userOpsResult = hasUserOps ? validateL10nOps((payload as any).userOps, allowlist) : null;
+  if (hasUserOps && userOpsResult && !userOpsResult.ok) {
+    return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
+  }
+
+  let row: InstanceLocaleRow | null = null;
+  if (hasOps) {
+    const payloadRow = {
+      public_id: publicIdResult.value,
       locale,
-      source: existing.source,
+      ops: opsResult?.ok ? opsResult.ops : [],
+      user_ops: hasUserOps && userOpsResult?.ok ? userOpsResult.ops : existingUserOps,
+      base_fingerprint: computedFingerprint,
+      base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
+      source,
+      workspace_id: instanceWorkspaceId,
+    };
+
+    const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_locales?on_conflict=public_id,locale`, {
+      method: 'POST',
+      headers: {
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify(payloadRow),
     });
+    if (!upsertRes.ok) {
+      const details = await readJson(upsertRes);
+      return apiError('INTERNAL_ERROR', 'Failed to upsert locale', 500, details);
+    }
+
+    const rows = (await upsertRes.json().catch(() => [])) as InstanceLocaleRow[];
+    row = rows?.[0] ?? null;
+  } else if (hasUserOps && userOpsResult?.ok) {
+    const patchRes = await supabaseFetch(
+      env,
+      `/rest/v1/widget_instance_locales?public_id=eq.${encodeURIComponent(publicIdResult.value)}&locale=eq.${encodeURIComponent(
+        locale,
+      )}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ user_ops: userOpsResult.ops }),
+      },
+    );
+    if (!patchRes.ok) {
+      const details = await readJson(patchRes);
+      return apiError('INTERNAL_ERROR', 'Failed to update locale overrides', 500, details);
+    }
+    const rows = (await patchRes.json().catch(() => [])) as InstanceLocaleRow[];
+    row = rows?.[0] ?? null;
   }
-
-  const payloadRow = {
-    public_id: publicIdResult.value,
-    locale,
-    ops: opsResult.ops,
-    base_fingerprint: computedFingerprint,
-    base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
-    source,
-    workspace_id: instanceWorkspaceId,
-  };
-
-  const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_locales?on_conflict=public_id,locale`, {
-    method: 'POST',
-    headers: {
-      Prefer: 'resolution=merge-duplicates,return=representation',
-    },
-    body: JSON.stringify(payloadRow),
-  });
-  if (!upsertRes.ok) {
-    const details = await readJson(upsertRes);
-    return apiError('INTERNAL_ERROR', 'Failed to upsert locale', 500, details);
-  }
-
-  const rows = (await upsertRes.json().catch(() => [])) as InstanceLocaleRow[];
-  const row = rows?.[0] ?? null;
 
   if (!env.L10N_PUBLISH_QUEUE) {
     return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
@@ -1481,12 +1525,13 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
   const localPublish = await publishLocaleLocal(env, publicIdResult.value, locale, 'upsert');
   if (localPublish) return localPublish;
 
+  const resolvedSource = row?.source ?? source ?? null;
   return json({
     publicId: publicIdResult.value,
     locale,
-    source,
+    source: resolvedSource,
     baseFingerprint: row?.base_fingerprint ?? computedFingerprint,
-    baseUpdatedAt: row?.base_updated_at ?? payloadRow.base_updated_at ?? null,
+    baseUpdatedAt: row?.base_updated_at ?? baseUpdatedAtRaw ?? instance.updated_at ?? null,
     updatedAt: row?.updated_at ?? null,
   });
 }
@@ -1513,41 +1558,46 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
   const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
   const url = new URL(req.url);
   const workspaceIdRaw = url.searchParams.get('workspaceId');
-  if (!instanceWorkspaceId) {
-    return apiError('WORKSPACE_MISMATCH', 'Curated instances do not support user overrides', 403, { publicId });
-  }
-  if (!workspaceIdRaw) {
-    return apiError('UNAUTHORIZED', 'workspaceId required', 403);
-  }
-  const workspaceIdResult = assertWorkspaceId(workspaceIdRaw);
-  if (!workspaceIdResult.ok) {
-    return apiError('UNAUTHORIZED', 'workspaceId invalid', 403);
-  }
-  if (workspaceIdResult.value !== instanceWorkspaceId) {
-    return apiError('WORKSPACE_MISMATCH', 'Instance does not belong to workspace', 403, {
-      publicId,
-      workspaceId: workspaceIdResult.value,
-    });
+  if (instanceWorkspaceId) {
+    if (!workspaceIdRaw) {
+      return apiError('UNAUTHORIZED', 'workspaceId required', 403);
+    }
+    const workspaceIdResult = assertWorkspaceId(workspaceIdRaw);
+    if (!workspaceIdResult.ok) {
+      return apiError('UNAUTHORIZED', 'workspaceId invalid', 403);
+    }
+    if (workspaceIdResult.value !== instanceWorkspaceId) {
+      return apiError('WORKSPACE_MISMATCH', 'Instance does not belong to workspace', 403, {
+        publicId,
+        workspaceId: workspaceIdResult.value,
+      });
+    }
   }
 
   const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
   if (!existing) {
-    return json({ publicId: publicIdResult.value, locale, deleted: false, reason: 'not_found' });
-  }
-  if (existing.source !== 'user') {
-    return json({ publicId: publicIdResult.value, locale, deleted: false, reason: 'not_user_source' });
+    return json({ publicId: publicIdResult.value, locale, deleted: false, cleared: false, reason: 'not_found' });
   }
 
-  const deleteRes = await supabaseFetch(
+  const { userOps } = resolveUserOps(existing);
+  if (userOps.length === 0) {
+    return json({ publicId: publicIdResult.value, locale, deleted: false, cleared: false, reason: 'no_overrides' });
+  }
+
+  const patchRes = await supabaseFetch(
     env,
     `/rest/v1/widget_instance_locales?public_id=eq.${encodeURIComponent(publicIdResult.value)}&locale=eq.${encodeURIComponent(
       locale,
     )}`,
-    { method: 'DELETE' },
+    {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ user_ops: [] }),
+    },
   );
-  if (!deleteRes.ok) {
-    const details = await readJson(deleteRes);
-    return apiError('INTERNAL_ERROR', 'Failed to delete locale', 500, details);
+  if (!patchRes.ok) {
+    const details = await readJson(patchRes);
+    return apiError('INTERNAL_ERROR', 'Failed to clear locale overrides', 500, details);
   }
 
   if (!env.L10N_PUBLISH_QUEUE) {
@@ -1558,17 +1608,17 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
       v: 1,
       publicId: publicIdResult.value,
       locale,
-      action: 'delete',
+      action: 'upsert',
     } satisfies L10nPublishJob);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
   }
 
-  const localPublish = await publishLocaleLocal(env, publicIdResult.value, locale, 'delete');
+  const localPublish = await publishLocaleLocal(env, publicIdResult.value, locale, 'upsert');
   if (localPublish) return localPublish;
 
-  return json({ publicId: publicIdResult.value, locale, deleted: true });
+  return json({ publicId: publicIdResult.value, locale, deleted: true, cleared: true });
 }
 
 async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {

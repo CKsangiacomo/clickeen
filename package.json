@@ -36,8 +36,11 @@
     "build:admin": "pnpm --filter @clickeen/devstudio build",
     "build:dieter": "pnpm --filter @ck/dieter build",
     "build:prague": "pnpm --filter @clickeen/prague build",
-    "prague:localize": "node scripts/prague-localize.mjs",
-    "build:prague:global": "pnpm prague:localize && pnpm build:prague"
+    "prague:localize": "node scripts/prague-strings/translate.mjs",
+    "prague:strings:translate": "node scripts/prague-strings/translate.mjs",
+    "prague:strings:compile": "node scripts/prague-strings/compile.mjs",
+    "prague:strings:watch": "node scripts/prague-strings/watch.mjs",
+    "build:prague:global": "pnpm prague:strings:translate && pnpm prague:strings:compile && pnpm build:prague"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

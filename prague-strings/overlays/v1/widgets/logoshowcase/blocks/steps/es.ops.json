@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Cómo funciona"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Añade logotipos"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Organiza"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Incrusta"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Sube los logotipos de tus clientes (SVG/PNG) en segundos."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Elige el diseño y el espaciado para que coincida con tu sitio."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Pega el fragmento en cualquier plataforma."
+    }
+  ],
+  "v": 1
+}

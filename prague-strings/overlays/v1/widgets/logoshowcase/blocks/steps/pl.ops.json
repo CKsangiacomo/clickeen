@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Jak to działa"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Dodaj logotypy"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Uporządkuj"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Osadź"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Prześlij logotypy swoich klientów (SVG/PNG) w kilka sekund."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Wybierz układ i odstępy, aby dopasować je do swojej strony."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Wklej fragment kodu na dowolnej platformie."
+    }
+  ],
+  "v": 1
+}

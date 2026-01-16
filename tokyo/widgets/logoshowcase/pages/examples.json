@@ -2,13 +2,12 @@
   "v": 1,
   "blocks": [
     {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
       "id": "hero",
-      "kind": "hero",
-      "copy": {
-        "headline": "Logo Showcase Examples",
-        "subheadline": "See common placements and use cases."
-      }
+      "type": "hero"
     }
   ]
 }
-

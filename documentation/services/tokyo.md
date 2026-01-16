@@ -7,10 +7,11 @@
 ## Interfaces
 - Upload APIs, signed URLs
 - Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
-- Serves localization overlays for Clickeen-owned content (`tokyo/l10n/**`)
+- Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
+- Prague website strings are repo-local (`prague-strings/**`), not served by Tokyo
 
 ## Dependencies
-- Used by: Venice, Bob, Site
+- Used by: Venice, Bob, Prague
 
 ## Deployment
 - Cloudflare R2 (zero egress)
@@ -70,9 +71,10 @@ Local dev:
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
-  - `POST /l10n/instances/:publicId/:locale` (writes localized overlays into `tokyo/l10n/**`)
-  - `DELETE /l10n/instances/:publicId/:locale` (removes localized overlays from `tokyo/l10n/**`)
-- Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set (see `scripts/dev-up.sh`).
+  - `POST /l10n/instances/:publicId/:locale` (dev-only; writes localized overlays into `tokyo/l10n/**`)
+  - `DELETE /l10n/instances/:publicId/:locale` (dev-only; removes localized overlays from `tokyo/l10n/**`)
+- Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set.
+- `scripts/dev-up.sh` starts the dev server and workers but does **not** build/push instance l10n overlays; run `pnpm build:l10n` or trigger the Paris/SF pipeline when you need instance overlays.
 
 ## l10n overlays (executed)
 
@@ -86,6 +88,7 @@ Rules:
 - Overlays include `baseFingerprint` and are rejected if missing.
 - Instance identity is locale-free (`publicId` never contains locale).
 - Consumers should treat overlay files as cacheable (hashed filenames); `manifest.json` is the indirection layer and should be short-TTL.
+- Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_locales` (`ops + user_ops`, user_ops applied last).
 
 Build command (repo root):
 - `pnpm build:l10n`
@@ -96,9 +99,12 @@ Cloud-dev:
   - `GET /workspace-assets/**` (public, cacheable; content-addressed by `assetId`)
   - `POST /l10n/instances/:publicId/:locale` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /l10n/**` (public; manifest short-TTL, hashed overlays immutable)
+  - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):
 - `TOKYO_DEV_JWT` must never be used from a browser. DevStudio promotion uses it server-side (local Vite middleware).
 
 ## Links
 - Back: ../../CONTEXT.md
+- Tokyo Worker: documentation/services/tokyo-worker.md
+- Localization contract: documentation/capabilities/localization.md

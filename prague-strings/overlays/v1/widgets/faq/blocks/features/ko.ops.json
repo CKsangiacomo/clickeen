@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "팀이 Clickeen FAQ를 선택하는 이유"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "빠른 설정"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "완전 맞춤 설정 가능"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "확장성을 고려한 설계"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "깔끔한 기본 디자인으로 몇 분 만에 출시하세요."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "레이아웃, 색상, 타이포그래피, 동작을 변경하세요."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "결정론적 상태 + 엄격한 정책 적용."
+    }
+  ],
+  "v": 1
+}

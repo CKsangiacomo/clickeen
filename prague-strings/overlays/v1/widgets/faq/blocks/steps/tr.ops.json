@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Nasıl çalışır"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Bir şablon seçin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Özelleştirin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Gömün"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Kanıtlanmış bir düzen ve yapıyla başlayın."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Metin + tasarımı sitenize uyacak şekilde ayarlayın."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Kodu herhangi bir siteye veya platforma ekleyin."
+    }
+  ],
+  "v": 1
+}

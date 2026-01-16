@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Logo Showcase Templates",
+    "subheadline": "Start from a polished layout -- then make it yours."
+  }
+}

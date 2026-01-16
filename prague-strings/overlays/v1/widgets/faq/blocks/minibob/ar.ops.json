@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+  "baseUpdatedAt": "2026-01-16T17:12:18.822Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.heading",
+      "value": "جرّبه مباشرة"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "حرّر نسخة تجريبية في Minibob. انشر عندما تكون جاهزًا."
+    }
+  ],
+  "v": 1
+}

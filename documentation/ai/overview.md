@@ -26,6 +26,8 @@ Traditional SaaS companies need full teams to operate at scale—sales, support,
 See also:
 - `learning.md` — How agents learn from outcomes
 - `infrastructure.md` — Sessions, jobs, state management
+- `BUILD_Widget.md` — AI execution guide for widget definitions
+- `BUILD_PraguePage.md` — AI execution guide for Prague page composition
 
 ---
 

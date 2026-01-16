@@ -2,13 +2,12 @@
   "v": 1,
   "blocks": [
     {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
       "id": "hero",
-      "kind": "hero",
-      "copy": {
-        "headline": "Logo Showcase Features",
-        "subheadline": "Fast, flexible, and designed to look great everywhere."
-      }
+      "type": "hero"
     }
   ]
 }
-

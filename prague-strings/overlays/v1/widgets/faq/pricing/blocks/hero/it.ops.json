@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+  "baseUpdatedAt": "2026-01-16T18:14:03.145Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "FAQ Prezzi"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Livelli semplici. Passa a un piano superiore quando hai bisogno di più widget e rimuovi il branding."
+    }
+  ],
+  "v": 1
+}

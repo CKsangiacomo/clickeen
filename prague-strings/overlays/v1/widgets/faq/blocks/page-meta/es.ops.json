@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+  "baseUpdatedAt": "2026-01-16T20:21:02.590Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Widget de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Crea un widget de FAQ rápido y atractivo. Personaliza, publica y localiza en minutos."
+    }
+  ],
+  "v": 1
+}

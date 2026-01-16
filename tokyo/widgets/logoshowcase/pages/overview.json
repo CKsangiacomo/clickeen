@@ -2,55 +2,34 @@
   "v": 1,
   "blocks": [
     {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
       "id": "hero",
-      "kind": "hero",
-      "visual": true,
-      "copy": {
-        "headline": "Logo Showcase. Instant social proof.",
-        "subheadline": "Show customer logos beautifully — build trust and increase conversions."
-      }
+      "type": "hero",
+      "visual": true
+    },
+    {
+      "id": "navmeta",
+      "type": "navmeta"
     },
     {
       "id": "steps",
-      "kind": "steps",
-      "copy": {
-        "title": "How it works",
-        "items": [
-          { "title": "Add logos", "body": "Upload your customer logos (SVG/PNG) in seconds." },
-          { "title": "Arrange", "body": "Choose layout + spacing to match your site." },
-          { "title": "Embed", "body": "Paste the snippet into any platform." }
-        ]
-      }
+      "type": "steps"
     },
     {
       "id": "features",
-      "kind": "features",
-      "visual": true,
-      "copy": {
-        "title": "Why teams use Logo Showcase",
-        "items": [
-          { "title": "Clean", "body": "Minimal, modern design that matches your brand." },
-          { "title": "Fast", "body": "Tiny payload and edge-cached assets." },
-          { "title": "Accessible", "body": "Sensible markup and keyboard-safe controls." }
-        ]
-      }
+      "type": "features",
+      "visual": true
     },
     {
       "id": "cta",
-      "kind": "cta",
-      "copy": {
-        "headline": "Create your logo showcase",
-        "subheadline": "Start free. Publish when you’re ready."
-      }
+      "type": "cta"
     },
     {
       "id": "minibob",
-      "kind": "minibob",
-      "copy": {
-        "heading": "Try it live",
-        "subhead": "Edit a demo instance in Minibob. Publish when you’re ready."
-      }
+      "type": "minibob"
     }
   ]
 }
-

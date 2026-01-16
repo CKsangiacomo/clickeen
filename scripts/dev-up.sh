@@ -125,12 +125,8 @@ else
   node "$ROOT_DIR/scripts/i18n/build.mjs"
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-  echo "[dev-up] Building l10n overlays into tokyo/l10n"
-  node "$ROOT_DIR/scripts/l10n/build.mjs"
-  node "$ROOT_DIR/scripts/l10n/validate.mjs"
-
-  echo "[dev-up] Syncing l10n overlays into Supabase (canonical)"
-  node "$ROOT_DIR/scripts/l10n/push.mjs"
+  echo "[dev-up] Compiling Prague strings (local, no Supabase writes)"
+  node "$ROOT_DIR/scripts/prague-strings/compile.mjs"
 fi
 
 echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"
@@ -258,6 +254,12 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     VARS=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
     if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
       VARS+=(--var "DEEPSEEK_API_KEY:$DEEPSEEK_API_KEY")
+    fi
+    if [ -n "${OPENAI_API_KEY:-}" ]; then
+      VARS+=(--var "OPENAI_API_KEY:$OPENAI_API_KEY")
+    fi
+    if [ -n "${OPENAI_MODEL:-}" ]; then
+      VARS+=(--var "OPENAI_MODEL:$OPENAI_MODEL")
     fi
     VARS+=(--var "PARIS_BASE_URL:http://localhost:3001")
     VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")

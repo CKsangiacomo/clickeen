@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Jak to działa"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Wybierz szablon"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Dostosuj"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Osadź"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Zacznij od sprawdzonego układu i struktury."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Dopasuj treści i wygląd do swojej strony."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Wklej fragment kodu na dowolnej stronie lub platformie."
+    }
+  ],
+  "v": 1
+}

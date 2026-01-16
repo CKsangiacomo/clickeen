@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+  "baseUpdatedAt": "2026-01-16T17:12:26.606Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Prezentacja logo. Natychmiastowy dowód społeczny."
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Pięknie prezentuj logotypy klientów — buduj zaufanie i zwiększaj konwersje."
+    }
+  ],
+  "v": 1
+}

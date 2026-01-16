@@ -185,7 +185,7 @@ Widget categories (illustrative, not final):
 - Information display — FAQs, pricing tables, feature lists
 - Engagement — newsletters, popups, announcements
 
-Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand. Each widget includes multiple professionally designed **starter designs** (curated instances users can clone).
+Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand. Each widget includes multiple professionally designed **starter designs** (curated instances, `wgt_curated_*`, that users can clone).
 
 **Widgets are the Trojan horse, not the destination.** They're the perfect starting point—high-ROI, viral by design, fast time-to-value. But once you're using widgets, you're already on the platform. The architecture is the product.
 

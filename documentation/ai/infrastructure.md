@@ -37,6 +37,12 @@ Worker vars/secrets:
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
+- `OPENAI_API_KEY` (secret, optional): required for Prague strings translation
+- `OPENAI_MODEL` (optional): defaults to `gpt-5.2`
+
+Provider split (executed):
+- Instance localization and SDR/editor agents use DeepSeek.
+- Prague strings translation uses OpenAI (system-owned strings).
 
 ## 3) HTTP endpoints
 
@@ -68,6 +74,16 @@ Auth:
 
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
+
+### `POST /v1/l10n/translate` (local only)
+Purpose: translate Prague system-owned string chunks (prague-strings pipeline).
+
+Auth:
+- `Authorization: Bearer ${PARIS_DEV_JWT}`
+- Only available when `ENVIRONMENT=local`
+
+Provider:
+- OpenAI (uses `OPENAI_API_KEY`, `OPENAI_MODEL`)
 
 ## 4) State + storage layout (shipped)
 
@@ -137,7 +153,7 @@ Meaning: Bob can’t probe `/healthz` on any configured/fallback SF base URL.
 Actions:
 - Ensure the worker is deployed and the route is correct.
 - Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs (Bob/Paris).
-- In local dev, `./scripts/dev-up.sh` runs SF on `http://localhost:3002`.
+- In local dev, `./scripts/dev-up.sh` runs SF on `http://localhost:3002` **when** `AI_GRANT_HMAC_SECRET` is set.
 
 ### “Missing AI_GRANT_HMAC_SECRET”
 Meaning: the worker cannot verify grants or outcome signatures.
@@ -161,8 +177,9 @@ SanFrancisco only:
 
 Full stack (recommended):
 - `./scripts/dev-up.sh`
-  - starts Tokyo (4000), Paris (3001), SanFrancisco (3002), Bob (3000), DevStudio (5173)
+  - starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) and SanFrancisco (3002 if enabled)
 
 Useful checks:
 - `curl http://localhost:3002/healthz`
 - `curl http://localhost:3001/api/healthz`
+- For Prague strings translation, `PARIS_DEV_JWT` + `OPENAI_API_KEY` must be set locally.

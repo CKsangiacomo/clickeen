@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Comment ça marche"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Choisissez un modèle"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Personnalisez"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Intégrez"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Partez d’une mise en page et d’une structure éprouvées."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Ajustez le texte + le design pour qu’ils correspondent à votre site."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Insérez l’extrait de code dans n’importe quel site ou plateforme."
+    }
+  ],
+  "v": 1
+}

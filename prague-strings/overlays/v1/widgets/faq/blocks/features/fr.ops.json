@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Pourquoi les équipes choisissent la FAQ Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Configuration rapide"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Entièrement personnalisable"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Conçu pour passer à l’échelle"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Lancez en quelques minutes avec un design par défaut épuré."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Modifiez la mise en page, les couleurs, la typographie et le comportement."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "État déterministe + application stricte des politiques."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+  "baseUpdatedAt": "2026-01-16T17:17:35.063Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "Widgets"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "Ver todos los widgets"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "Resumen"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "Plantillas"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "Ejemplos"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "Características"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "Precios"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "Crear gratis"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "Ver plantillas"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "Próximamente."
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "Usa este widget en tu sitio web"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "Compartir"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "Copiar enlace"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "Copiado"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "Más"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "SMS"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "Correo electrónico"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Widget de Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "Usa este widget en tu sitio web."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "Envía esta plantilla de widget como mensaje"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "Comparte esta plantilla de widget en redes sociales"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "Precios"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "Widgets"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "Todos los derechos reservados."
+    }
+  ],
+  "v": 1
+}

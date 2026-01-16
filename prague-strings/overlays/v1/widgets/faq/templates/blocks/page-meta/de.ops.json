@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+  "baseUpdatedAt": "2026-01-16T20:21:13.193Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "FAQ-Vorlagen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Entdecken Sie FAQ-Vorlagen und starten Sie mit einem bewährten Layout."
+    }
+  ],
+  "v": 1
+}

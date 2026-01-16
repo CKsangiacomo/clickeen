@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Warum Teams sich für Clickeen FAQ entscheiden"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Schnelle Einrichtung"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Vollständig anpassbar"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Für Skalierung entwickelt"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "In wenigen Minuten starten – mit einem klaren Standarddesign."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Layout, Farben, Typografie und Verhalten ändern."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Deterministischer Zustand + strikte Richtliniendurchsetzung."
+    }
+  ],
+  "v": 1
+}

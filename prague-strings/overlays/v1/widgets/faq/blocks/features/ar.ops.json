@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "لماذا تختار الفرق الأسئلة الشائعة من Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "إعداد سريع"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "قابل للتخصيص بالكامل"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "مصمم للتوسع"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "أطلق خلال دقائق بتصميم افتراضي نظيف."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "غيّر التخطيط والألوان والطباعة والسلوك."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "حالة حتمية + تطبيق صارم للسياسات."
+    }
+  ],
+  "v": 1
+}

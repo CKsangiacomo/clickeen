@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "為什麼團隊選擇 Clickeen FAQ"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "快速設定"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "完全可自訂"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "為規模化而打造"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "以簡潔的預設設計在幾分鐘內上線。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "變更版面配置、色彩、字體排印與行為。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "確定性狀態 + 嚴格的政策執行。"
+    }
+  ],
+  "v": 1
+}

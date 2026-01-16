@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+  "baseUpdatedAt": "2026-01-16T17:12:58.189Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Logo vitrininizi oluşturun"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Ücretsiz başlayın. Hazır olduğunuzda yayınlayın."
+    }
+  ],
+  "v": 1
+}

@@ -10,7 +10,7 @@ Last updated: 2026-01-10
 
 Prague is the marketing + SEO surface, implemented as an **Astro SSG** app deployed on **Cloudflare Pages**.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (not fetched from a remote Tokyo service).
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` and localized via `prague-strings/` (not fetched from a remote Tokyo service).
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
@@ -26,7 +26,7 @@ Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no l
 
 ### 1.1 Widget directory
 
-- `/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy)
+- `/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from compiled strings)
 
 There is currently no dedicated `/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
 
@@ -63,20 +63,26 @@ The widget overview page uses `blocks[]` to render a deterministic layout. Examp
 {
   "v": 1,
   "blocks": [
-    { "id": "hero", "kind": "hero", "visual": true, "copy": { "headline": "...", "subheadline": "..." } },
-    { "id": "minibob", "kind": "minibob", "copy": { "heading": "...", "subhead": "..." } }
+    { "id": "page-meta", "type": "page-meta" },
+    { "id": "hero", "type": "hero", "visual": true },
+    { "id": "minibob", "type": "minibob" }
   ]
 }
 ```
 
-### 2.2 Optional per-locale overrides (supported; may be absent)
+Required non-visual blocks:
+- `navmeta` (overview only, used by the mega menu)
+- `page-meta` (all widget pages, used for `<head>` title/description)
 
-Prague supports optional locale-specific JSON overrides:
-- `tokyo/widgets/{widget}/pages/.locales/{locale}/{page}.json`
+Localization is applied via compiled strings:
+- base strings (overview): `prague-strings/base/v1/widgets/{widget}/blocks/{blockId}.json`
+- base strings (subpages): `prague-strings/base/v1/widgets/{widget}/{page}/blocks/{blockId}.json`
+- compiled strings (overview): `prague-strings/compiled/v1/{locale}/widgets/{widget}.json`
+- compiled strings (subpages): `prague-strings/compiled/v1/{locale}/widgets/{widget}/{page}.json`
+- Prague merges compiled strings into `blocks[].copy` at load time
 
-Rules (as implemented):
-- if the locale override file is missing, Prague falls back to the canonical (en) `{page}.json`
-- locale is never encoded into instance identity; it remains a runtime parameter
+Validation:
+- Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
 
 ---
 
@@ -85,7 +91,7 @@ Rules (as implemented):
 Prague embeds Bob in **minibob** mode as the only JS island.
 
 Implementation:
-- `prague/src/blocks/site/minibob.astro`
+- `prague/src/blocks/minibob/minibob.astro`
 - iframe URL includes:
   - `subject=minibob` (policy gating)
   - `workspaceId` + `publicId` (instance identity)
@@ -115,3 +121,10 @@ The following ideas are intentionally not implemented here and must not be treat
 - any markdown-driven widget page pipeline under `tokyo/widgets/*/pages/**/*.md`
 
 If/when long-tail SEO is reintroduced, it should ship behind a PRD with a deterministic contract (and this doc should be updated at the same time).
+
+---
+
+## Links
+
+- Prague blocks catalog: `documentation/services/prague/blocks.md`
+- Localization contract: `documentation/capabilities/localization.md`

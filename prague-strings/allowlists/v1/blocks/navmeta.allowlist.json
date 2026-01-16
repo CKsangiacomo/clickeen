@@ -1,0 +1,7 @@
+{
+  "v": 1,
+  "paths": [
+    { "path": "strings.title", "type": "string" },
+    { "path": "strings.description", "type": "string" }
+  ]
+}

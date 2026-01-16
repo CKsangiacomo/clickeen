@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+  "baseUpdatedAt": "2026-01-16T20:22:09.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "लोगो शोकेस टेम्पलेट्स - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "एक परिष्कृत लेआउट से शुरुआत करें और अपने लोगो शोकेस को अनुकूलित करें।"
+    }
+  ],
+  "v": 1
+}

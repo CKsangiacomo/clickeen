@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+  "baseUpdatedAt": "2026-01-16T20:21:02.590Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "FAQウィジェット - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "高速で美しいFAQウィジェットを作成。数分でカスタマイズ、公開、ローカライズできます。"
+    }
+  ],
+  "v": 1
+}

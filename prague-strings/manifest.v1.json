@@ -1,0 +1,1866 @@
+{
+  "chunks": {
+    "chrome": {
+      "base": {
+        "file": "base/v1/chrome.json",
+        "fingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "dd213c62d46ccc873c25c247f255e6b02fe328053959a6fb9cf9b05f405e65b1",
+          "file": "overlays/v1/chrome/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/cta": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/cta.json",
+        "fingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
+          "file": "overlays/v1/widgets/faq/blocks/cta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/features": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/features.json",
+        "fingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+          "file": "overlays/v1/widgets/faq/blocks/features/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/hero.json",
+        "fingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "4d058e8d7c3ef1f213c2cd0ecb143b3287750664418f1363993634119b1199b8",
+          "file": "overlays/v1/widgets/faq/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/minibob": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/minibob.json",
+        "fingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/faq/blocks/minibob/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/navmeta": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/navmeta.json",
+        "fingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+          "file": "overlays/v1/widgets/faq/blocks/navmeta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/page-meta.json",
+        "fingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "36d23e95f50900dac981b96e1497149b65c328367807b81044d6021475fbda8e",
+          "file": "overlays/v1/widgets/faq/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/steps": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/steps.json",
+        "fingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "file": "overlays/v1/widgets/faq/blocks/steps/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/examples/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/faq/examples/blocks/hero.json",
+        "fingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+          "file": "overlays/v1/widgets/faq/examples/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/examples/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/faq/examples/blocks/page-meta.json",
+        "fingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+          "file": "overlays/v1/widgets/faq/examples/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/features/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/faq/features/blocks/hero.json",
+        "fingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+          "file": "overlays/v1/widgets/faq/features/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/features/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/faq/features/blocks/page-meta.json",
+        "fingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "0010a5f5990124fdf251795a19cff8eb249018fd4481924a6e078d1ad3686290",
+          "file": "overlays/v1/widgets/faq/features/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/pricing/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/faq/pricing/blocks/hero.json",
+        "fingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "aa29cd7437c7111769e4ebcbc3d419aba1714d09842ee5dd836a1a972b5dbbe1",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/pricing/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/faq/pricing/blocks/page-meta.json",
+        "fingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+          "file": "overlays/v1/widgets/faq/pricing/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/templates/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/faq/templates/blocks/hero.json",
+        "fingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "4275870f741991a39c67fc294857d7d02649b7891584d341a046a396a6c2c5e5",
+          "file": "overlays/v1/widgets/faq/templates/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/templates/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/faq/templates/blocks/page-meta.json",
+        "fingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "6a048224677ad843989d5c7f618e8d7caa2b228e13766cbdd9d6603c03fe6366",
+          "file": "overlays/v1/widgets/faq/templates/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/cta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/cta.json",
+        "fingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/cta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/features": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/features.json",
+        "fingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/features/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/hero.json",
+        "fingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/minibob": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/minibob.json",
+        "fingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/minibob/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/navmeta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/navmeta.json",
+        "fingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/navmeta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/page-meta.json",
+        "fingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "05843b11518e071a4d61c37e16c0683964ca4126bd0f3434449b524ddd3e8c6a",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/blocks/steps": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/blocks/steps.json",
+        "fingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+          "file": "overlays/v1/widgets/logoshowcase/blocks/steps/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/examples/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/examples/blocks/hero.json",
+        "fingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "e04430b324837f4a1f52d3d5e3a0c534d9ba240d7ef9625e483fef30af4f847d",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/examples/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/examples/blocks/page-meta.json",
+        "fingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "dad5b0b9e22760ebe1fced9ff472f95cd949b632d4f1b9c86d8851306a207e61",
+          "file": "overlays/v1/widgets/logoshowcase/examples/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/features/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/features/blocks/hero.json",
+        "fingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/features/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/features/blocks/page-meta.json",
+        "fingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+          "file": "overlays/v1/widgets/logoshowcase/features/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/pricing/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/pricing/blocks/hero.json",
+        "fingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/pricing/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/pricing/blocks/page-meta.json",
+        "fingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "1ad62742e7accd70cff5e03ebabf256ff16d102722c5f1f3646aa24e2aac58b0",
+          "file": "overlays/v1/widgets/logoshowcase/pricing/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/templates/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/templates/blocks/hero.json",
+        "fingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/logoshowcase/templates/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/logoshowcase/templates/blocks/page-meta.json",
+        "fingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "34e6869568535b0f3d13e2c48d88896b439cd9409924159c465cdd698fe5d8f3",
+          "file": "overlays/v1/widgets/logoshowcase/templates/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    }
+  },
+  "gitSha": "unknown",
+  "v": 1
+}

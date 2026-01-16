@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "blockId": "steps",
+  "blockKind": "steps",
+  "strings": {
+    "title": "How it works",
+    "items": [
+      { "title": "Pick a template", "body": "Start from a proven layout and structure." },
+      { "title": "Customize", "body": "Tune copy + design to match your site." },
+      { "title": "Embed", "body": "Drop the snippet into any site or platform." }
+    ]
+  }
+}

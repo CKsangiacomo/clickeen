@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "FAQ Pricing",
+    "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
+  }
+}

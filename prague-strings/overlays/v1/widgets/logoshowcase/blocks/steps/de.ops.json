@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "So funktioniert’s"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Logos hinzufügen"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Anordnen"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Einbetten"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Laden Sie Ihre Kundenlogos (SVG/PNG) in Sekundenschnelle hoch."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Wählen Sie Layout + Abstände passend zu Ihrer Website."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Fügen Sie das Snippet in jede Plattform ein."
+    }
+  ],
+  "v": 1
+}

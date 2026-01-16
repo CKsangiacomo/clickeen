@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "31ffbf4b776f758dc7b4e3af0e32580a125583a2d1e3f89f493964ee3bcf8501",
+  "baseUpdatedAt": "2026-01-16T17:12:26.606Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "लोगो शोकेस। तुरंत सामाजिक प्रमाण।"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "ग्राहक लोगो को खूबसूरती से दिखाएँ -- भरोसा बनाएँ और रूपांतरण बढ़ाएँ।"
+    }
+  ],
+  "v": 1
+}

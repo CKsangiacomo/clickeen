@@ -3,8 +3,8 @@ import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../lib/m
 export type WidgetsMegaMenuItem = {
   widget: string;
   href: string;
-  headline: string;
-  subheadline: string;
+  title: string;
+  description: string;
 };
 
 export async function resolveWidgetsMegaMenu(params: { locale: string }) {
@@ -15,18 +15,18 @@ export async function resolveWidgetsMegaMenu(params: { locale: string }) {
   for (const widget of widgets) {
     const overview = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
     const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
-    const hero = blocks ? blocks.find((b: any) => b && b.id === 'hero' && b.kind === 'hero') : null;
-    const copy = hero && typeof hero === 'object' ? (hero as any).copy : null;
-    const headline = copy && typeof copy === 'object' ? String((copy as any).headline ?? '') : '';
-    const subheadline = copy && typeof copy === 'object' ? String((copy as any).subheadline ?? '') : '';
-    if (!headline || !subheadline) {
-      throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
+    const navmeta = blocks ? blocks.find((b: any) => b && b.id === 'navmeta' && b.type === 'navmeta') : null;
+    const copy = navmeta && typeof navmeta === 'object' ? (navmeta as any).copy : null;
+    const title = copy && typeof copy === 'object' ? String((copy as any).title ?? '') : '';
+    const description = copy && typeof copy === 'object' ? String((copy as any).description ?? '') : '';
+    if (!title || !description) {
+      throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (navmeta.copy.title/description required)`);
     }
     items.push({
       widget,
       href: `/${locale}/widgets/${widget}`,
-      headline,
-      subheadline,
+      title,
+      description,
     });
   }
 
@@ -35,5 +35,4 @@ export async function resolveWidgetsMegaMenu(params: { locale: string }) {
     items,
   };
 }
-
 

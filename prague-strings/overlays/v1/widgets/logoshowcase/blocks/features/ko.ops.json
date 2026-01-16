@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+  "baseUpdatedAt": "2026-01-16T17:12:50.961Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "팀이 Logo Showcase를 사용하는 이유"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "깔끔함"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "빠름"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "접근성"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "브랜드에 어울리는 미니멀하고 현대적인 디자인."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "아주 작은 페이로드와 엣지 캐시된 에셋."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "합리적인 마크업과 키보드로도 안전하게 사용할 수 있는 컨트롤."
+    }
+  ],
+  "v": 1
+}

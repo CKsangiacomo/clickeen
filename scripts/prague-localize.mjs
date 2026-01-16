@@ -1,21 +1,15 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * Prague localization pipeline (v1)
+ * Prague localization pipeline (v1) - deprecated.
  *
- * - Source of truth: English canonical widget page JSON:
- *     tokyo/widgets/{widgetType}/pages/{overview|templates|examples|features}.json
- * - Output: per-locale localized JSON specs written to:
- *     tokyo/widgets/{widgetType}/pages/.locales/{locale}/{page}.json
- *
- * Contract:
- * - Only translates `block.copy` string fields (deep).
- * - Never mutates ids/kinds/flags.
- * - Deterministic output file paths so Prague can load locale specs at build time.
- *
- * Secrets:
- * - Uses OPENAI_API_KEY from env. Never store keys in git.
+ * Use the prague-strings pipeline instead:
+ *   pnpm prague:strings:translate
+ *   pnpm prague:strings:compile
  */
+
+console.error('[prague-localize] Deprecated. Use prague-strings pipeline instead.');
+process.exit(1);
 
 import fs from 'node:fs/promises';
 import path from 'node:path';

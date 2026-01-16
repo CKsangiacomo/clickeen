@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "e249eeba46979372c48e20415b54535cdd96264d36e5b4e81fdaf121fbd89945",
+  "baseUpdatedAt": "2026-01-16T18:14:34.138Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Logo Vitrini Fiyatlandırması"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Ücretsiz başlayın. Daha fazla widget ve marka ibaresi olmadan kullanmak istediğinizde yükseltin."
+    }
+  ],
+  "v": 1
+}

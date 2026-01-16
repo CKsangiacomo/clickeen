@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "9c581404567e5d573449b64b6f6028ea2c925d5d65bb7e530e9cdffbeccfcbcd",
+  "baseUpdatedAt": "2026-01-16T20:21:24.610Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "FAQ उदाहरण - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "वास्तविक दुनिया के FAQ विजेट उदाहरण और सर्वोत्तम प्रथाएँ देखें।"
+    }
+  ],
+  "v": 1
+}

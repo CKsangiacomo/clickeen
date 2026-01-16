@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "blockId": "features",
+  "blockKind": "features",
+  "strings": {
+    "title": "Why teams choose Clickeen FAQ",
+    "items": [
+      { "title": "Fast setup", "body": "Launch in minutes with a clean default design." },
+      { "title": "Fully customizable", "body": "Change layout, colors, typography, and behavior." },
+      { "title": "Built for scale", "body": "Deterministic state + strict policy enforcement." }
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+---
+import Cta from '../blocks/cta/cta.astro';
+import ExamplesGrid from '../blocks/examples-grid/examples-grid.astro';
+import Features from '../blocks/features/features.astro';
+import Hero from '../blocks/hero/hero.astro';
+import Minibob from '../blocks/minibob/minibob.astro';
+import Outcomes from '../blocks/outcomes/outcomes.astro';
+import PricingPlans from '../blocks/pricing-plans/pricing-plans.astro';
+import Steps from '../blocks/steps/steps.astro';
+import TemplatesGrid from '../blocks/templates-grid/templates-grid.astro';
+import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
+import { pragueT } from '../lib/i18n';
+import { resolvePragueHref } from '../lib/links';
+
+type Block = {
+  id: string;
+  type: string;
+  copy: Record<string, any>;
+  visual?: boolean;
+  align?: string;
+  creativeRef?: { publicId?: string };
+};
+
+type Props = {
+  blocks: Block[];
+  widget: string;
+  locale: string;
+  activeSubpage?: 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+};
+
+const { blocks, widget, locale, activeSubpage = 'overview' } = Astro.props;
+const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
+const heroPrimaryCta = {
+  label: pragueT(locale, 'prague.cta.createFree'),
+  href: hasMinibob ? '#minibob' : `/${locale}/create`,
+};
+const heroSecondaryCta =
+  activeSubpage === 'overview'
+    ? {
+        label: pragueT(locale, 'prague.cta.seeTemplates'),
+        href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
+      }
+    : undefined;
+---
+
+{blocks.map((block) => {
+  if (!block || !block.type) return null;
+  switch (block.type) {
+    case 'hero': {
+      const copy = block.copy ?? {};
+      const wantsCreative = block.visual === true;
+      return (
+        <Hero
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={heroSecondaryCta}
+          websiteCreative={
+            wantsCreative
+              ? { widgetType: widget, locale, height: '640px', title: `${widget} ${activeSubpage} hero` }
+              : undefined
+          }
+        >
+          <WidgetSubnav slot="subnav" locale={locale} widget={widget} active={activeSubpage} variant="inline" />
+        </Hero>
+      );
+    }
+    case 'steps': {
+      const copy = block.copy ?? {};
+      return <Steps steps={(copy.items ?? []) as { title: string; body: string }[]} />;
+    }
+    case 'features': {
+      const copy = block.copy ?? {};
+      return <Features items={(copy.items ?? []) as { title: string; body?: string }[]} />;
+    }
+    case 'cta': {
+      const copy = block.copy ?? {};
+      return (
+        <Cta
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryLabel={pragueT(locale, 'prague.cta.createFree')}
+          primaryHref={`/${locale}/create`}
+        />
+      );
+    }
+    case 'minibob': {
+      const copy = block.copy ?? {};
+      return <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />;
+    }
+    case 'examples-grid': {
+      const copy = block.copy ?? {};
+      return <ExamplesGrid title={copy.title as string} items={(copy.items ?? []) as { title: string; body?: string }[]} />;
+    }
+    case 'templates-grid': {
+      const copy = block.copy ?? {};
+      return <TemplatesGrid title={copy.title as string} items={(copy.items ?? []) as { title: string; body?: string }[]} />;
+    }
+    case 'pricing-plans': {
+      const copy = block.copy ?? {};
+      return <PricingPlans title={copy.title as string} plans={(copy.plans ?? []) as { name: string; price: string; bullets: string[] }[]} />;
+    }
+    case 'outcomes': {
+      const copy = block.copy ?? {};
+      return <Outcomes title={copy.title as string} items={(copy.items ?? []) as { title: string; body: string; eyebrow?: string }[]} />;
+    }
+    case 'navmeta':
+    case 'page-meta':
+      return null;
+    default:
+      throw new Error(`[prague] No renderer for block type \"${block.type}\"`);
+  }
+})}

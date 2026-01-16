@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "チームがClickeen FAQを選ぶ理由"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "素早いセットアップ"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "完全にカスタマイズ可能"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "スケールを前提に設計"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "洗練されたデフォルトデザインで、数分で公開できます。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "レイアウト、カラー、タイポグラフィ、挙動を変更できます。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "決定論的な状態管理＋厳格なポリシー適用。"
+    }
+  ],
+  "v": 1
+}

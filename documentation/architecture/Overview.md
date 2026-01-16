@@ -52,6 +52,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
 | **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
+| **Tokyo Worker** | `tokyo-worker/` | Cloudflare Workers + Queues | Asset uploads + l10n publisher | ✅ Active |
 
 ---
 
@@ -131,16 +132,22 @@ Each release proceeds in 3 steps:
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (embed/unscoped), `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId` (editor/dev tooling), `GET /api/instances` (dev tooling), `POST /api/ai/grant`, `POST /api/ai/outcome`.
+  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (embed/unscoped), `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
+  - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
 
 #### Venice (Workers)
-- Planned public embed surface (third-party websites only talk to Venice).
-- **Current repo snapshot:** `venice/` is a placeholder workspace; embed UX/runtime is not shipped yet.
+- Public embed surface (third-party websites only talk to Venice).
+- Runtime combines Tokyo widget assets with Paris instance config and optional **instance** l10n overlays from Tokyo.
 
-#### Tokyo (R2 + worker)
+#### Tokyo (R2)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
+- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase.
+- Prague website strings are not served by Tokyo; they are repo-local under `prague-strings/**`.
+
+#### Tokyo Worker (Workers + Queues)
+- Reads `widget_instance_locales` from Supabase, merges `ops + user_ops`, and publishes overlays to Tokyo/R2.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.

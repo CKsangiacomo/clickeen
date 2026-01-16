@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "aac72ad931ff0c730e241c3ff4d421fa8148eeedbff62336fbd6d0e36f236e8b",
+  "baseUpdatedAt": "2026-01-16T18:13:52.735Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "FAQ फीचर्स"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "तेज़, परिष्कृत FAQ जारी करने के लिए आपको जो कुछ भी चाहिए।"
+    }
+  ],
+  "v": 1
+}

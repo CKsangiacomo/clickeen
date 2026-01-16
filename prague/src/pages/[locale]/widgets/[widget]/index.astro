@@ -1,17 +1,10 @@
 ---
 import Base from '../../../../layouts/Base.astro';
 import Nav from '../../../../blocks/site/nav/Nav.astro';
-import WidgetSubnav from '../../../../blocks/site/nav/WidgetSubnav.astro';
-import TopSurface from '../../../../blocks/site/TopSurface.astro';
 import Footer from '../../../../blocks/site/footer.astro';
-import Minibob from '../../../../blocks/site/minibob.astro';
-import Hero from '../../../../blocks/widget-landing/hero.astro';
-import Steps from '../../../../blocks/widget-landing/steps.astro';
-import Features from '../../../../blocks/widget-landing/features.astro';
-import Cta from '../../../../blocks/widget-landing/cta.astro';
+import WidgetBlocks from '../../../../components/WidgetBlocks.astro';
 import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../../lib/markdown';
 import { listPragueLocales } from '../../../../lib/locales';
-import { resolvePragueHref } from '../../../../lib/links';
 import { pragueT } from '../../../../lib/i18n';
 
 const { locale, widget } = Astro.params;
@@ -31,93 +24,29 @@ export async function getStaticPaths() {
 }
 
 const overviewJson = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
-const heroCopyFromJson =
-  Boolean(overviewJson)
-  && typeof overviewJson === 'object'
-  && Array.isArray((overviewJson as any).blocks)
-  ? (overviewJson as any).blocks.find((b: any) => b && b.id === 'hero' && b.kind === 'hero')?.copy
-  : null;
-const heroHeadlineFromJson = heroCopyFromJson && typeof heroCopyFromJson === 'object' ? (heroCopyFromJson as any).headline : null;
-const heroSubheadlineFromJson = heroCopyFromJson && typeof heroCopyFromJson === 'object' ? (heroCopyFromJson as any).subheadline : null;
-const heroWantsCreative =
-  Boolean(overviewJson)
-  && typeof overviewJson === 'object'
-  && Array.isArray((overviewJson as any).blocks)
-  && (overviewJson as any).blocks.some((b: any) => b && b.id === 'hero' && b.visual === true);
-
-if (!heroHeadlineFromJson || !heroSubheadlineFromJson) {
-  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
-}
-const headline = (heroHeadlineFromJson && String(heroHeadlineFromJson)) || '';
-const subheadline = (heroSubheadlineFromJson && String(heroSubheadlineFromJson)) || '';
-if (!headline || !subheadline) {
-  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`);
-}
-
-// Global CTA policy (applies across all widget pages):
-// - "Create free" scrolls to MiniBob on the current page.
-// - "See templates" navigates to the widget templates page (locale-prefixed).
-const heroPrimaryCta = { label: pragueT(locale, 'prague.cta.createFree'), href: '#minibob' };
-const heroSecondaryCta = {
-  label: pragueT(locale, 'prague.cta.seeTemplates'),
-  href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
-};
-
 const blocks = Array.isArray((overviewJson as any).blocks) ? (overviewJson as any).blocks : [];
-const byIdKind = (id: string, kind: string) => blocks.find((b: any) => b && b.id === id && b.kind === kind) ?? null;
-const stepsBlock = byIdKind('steps', 'steps');
-const featuresBlock = byIdKind('features', 'features');
-const ctaBlock = byIdKind('cta', 'cta');
-const minibobBlock = byIdKind('minibob', 'minibob');
-
-const steps = ((stepsBlock as any)?.copy?.items ?? []) as { title: string; body: string }[];
-const features = ((featuresBlock as any)?.copy?.items ?? []) as { title: string; body?: string }[];
-const ctaHeadline = ((ctaBlock as any)?.copy?.headline ?? '').toString();
-const ctaSubheadline = ((ctaBlock as any)?.copy?.subheadline ?? '').toString();
-const minibobHeading = ((minibobBlock as any)?.copy?.heading ?? '').toString();
-const minibobSubhead = ((minibobBlock as any)?.copy?.subhead ?? '').toString();
-
-if (!steps.length || !features.length || !ctaHeadline || !ctaSubheadline || !minibobHeading || !minibobSubhead) {
-  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (missing required blocks: steps/features/cta/minibob)`);
+const hasHero = blocks.some((b: any) => b && b.type === 'hero');
+const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
+const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
+const pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
+const pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
+if (!pageTitle || !pageDescription) {
+  throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (page-meta.copy.title/description required)`);
 }
 ---
 
-<Base title={`${headline} — Clickeen`} locale={locale}>
+<Base title={pageTitle} description={pageDescription} locale={locale}>
   <main>
-    <TopSurface
-      background="var(--color-system-gray-2-step5)"
-      topPad="var(--ck-nav-h, calc(var(--space-5) * 2 + 22px))"
-    >
-      <Nav
-        title="Clickeen"
-        locale={locale}
-        homeHref={`/${locale}/`}
-        floating={true}
-        cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
-      />
-      <Hero
-        headline={headline}
-        subheadline={subheadline}
-        primaryCta={heroPrimaryCta}
-        secondaryCta={heroSecondaryCta}
-        websiteCreative={
-          heroWantsCreative
-            ? { widgetType: widget, locale, height: '640px', title: `${widget} overview hero` }
-            : undefined
-        }
-      >
-        <WidgetSubnav slot="subnav" locale={locale} widget={widget} active="overview" variant="inline" />
-      </Hero>
-    </TopSurface>
-    <Minibob widget={widget} locale={locale} heading={minibobHeading} subhead={minibobSubhead} />
-    {steps.length ? <Steps steps={steps} /> : null}
-    {features.length ? <Features items={features} /> : null}
-    <Cta
-      headline={ctaHeadline}
-      subheadline={ctaSubheadline}
-      primaryLabel={pragueT(locale, 'prague.cta.createFree')}
-      primaryHref={`/${locale}/create`}
+    <Nav
+      title="Clickeen"
+      locale={locale}
+      homeHref={`/${locale}/`}
+      overlay={hasHero}
+      cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
     />
+
+    <WidgetBlocks blocks={blocks} widget={widget} locale={locale} activeSubpage="overview" />
+
     <Footer locale={locale} />
   </main>
 </Base>

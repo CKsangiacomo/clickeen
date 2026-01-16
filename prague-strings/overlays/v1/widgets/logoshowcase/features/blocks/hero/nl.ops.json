@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "44195a060748a2545cbcf50a1a6d6eb1ca73b8fc5a4da45b28bc1a5c3c2ec846",
+  "baseUpdatedAt": "2026-01-16T18:14:27.929Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Functies van logovoorbeeld"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Snel, flexibel en ontworpen om er overal geweldig uit te zien."
+    }
+  ],
+  "v": 1
+}

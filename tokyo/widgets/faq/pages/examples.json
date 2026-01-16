@@ -2,13 +2,12 @@
   "v": 1,
   "blocks": [
     {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
       "id": "hero",
-      "kind": "hero",
-      "copy": {
-        "headline": "FAQ Examples",
-        "subheadline": "See real-world use cases and best practices."
-      }
+      "type": "hero"
     }
   ]
 }
-

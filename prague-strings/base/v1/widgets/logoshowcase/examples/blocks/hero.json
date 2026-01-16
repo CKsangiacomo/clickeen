@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Logo Showcase Examples",
+    "subheadline": "See common placements and use cases."
+  }
+}

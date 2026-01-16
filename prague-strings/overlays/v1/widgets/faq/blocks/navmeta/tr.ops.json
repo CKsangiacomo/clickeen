@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "db93cc7c70efce8716166e78a66b66a25a1dcf285ae1061ea530645c9f26dc65",
+  "baseUpdatedAt": "2026-01-16T17:11:44.803Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "SSS"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Ziyaretçilerin yanıtları hızlıca bulmasına yardımcı olun."
+    }
+  ],
+  "v": 1
+}

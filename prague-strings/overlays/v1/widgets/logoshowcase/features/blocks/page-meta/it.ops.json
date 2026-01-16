@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "c2e3c1460383bb0313a39540c46d9b2cb06c22ccc09ce9509b96b911a0478130",
+  "baseUpdatedAt": "2026-01-16T20:22:28.077Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Funzionalità vetrina loghi - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Veloce, flessibile e progettata per avere un ottimo aspetto ovunque."
+    }
+  ],
+  "v": 1
+}

@@ -59,7 +59,7 @@ DevStudio Local includes a superadmin action: **Create/update website creative**
 - **How DevStudio executes it**
   - DevStudio requests widget types via Bob’s Paris proxy:
     - `GET /api/paris/widgets`
-  - DevStudio ensures the website creative via Bob’s Paris proxy (workspace-owned):
+- DevStudio ensures the website creative via Bob’s Paris proxy (curated instance):
     - `POST /api/paris/website-creative?workspaceId=<workspaceId>`
     - Body includes: `{ widgetType, page, slot, baselineConfig, overwrite? }`
   - Baseline config is seeded from compiled defaults:
@@ -71,7 +71,7 @@ Notes:
 
 Localization note:
 - Website creative IDs are locale-free; do not create `wgt_curated_*.<locale>` variants.
-- To localize a website creative, add a Tokyo `l10n` overlay at `l10n/instances/<publicId>/<locale>.ops.json` and run `pnpm build:l10n` (Venice applies overlays at runtime).
+- To localize a website creative, use the canonical pipeline (Paris → San Francisco → Tokyo-worker). Manual `l10n/instances/<publicId>/<locale>.ops.json` files remain dev-only for quick preview.
 
 ## Troubleshooting
 

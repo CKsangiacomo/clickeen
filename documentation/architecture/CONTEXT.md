@@ -55,8 +55,10 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
 **Widget Instance** = THE DATA
-- User's specific widget configuration
-- Stored in Michael: `widget_instances.config` linked to `widgets.type`
+- Instance configuration data (curated or user-owned)
+- Stored in Michael:
+  - Clickeen-authored baseline + curated: `curated_widget_instances` with `widget_type`
+  - User/workspace instances: `widget_instances` with `widget_id` (FK to `widgets`)
 - Paris exposes over HTTP as `{ publicId, widgetType, config }`
 - Bob holds working copy in memory as `instanceData` during editing
 
@@ -88,27 +90,28 @@ Between load and publish:
 
 ### Starter Designs (Curated Instances)
 
-**Clickeen does not have a separate gallery-preset system.** “Starter designs” are just **widget instances** that the Clickeen team configured nicely and made available to clone.
+**Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored instances stored in `curated_widget_instances` and exposed in the gallery.
 
 **How it works:**
-1. Clickeen team creates widget instances using Bob Editor (via DevStudio)
-2. Instances are named with `ck-` prefix: `ck-faq-christmas`, `ck-faq-minimal-dark`
-3. These instances are flagged as available for users to clone
-4. User browses gallery → clicks "Use this" → clones the instance to their workspace
-5. User customizes their copy freely (full ToolDrawer access)
+1. Clickeen team authors baseline + curated instances in DevStudio.
+2. Instances use `wgt_main_{widgetType}` (baseline) and `wgt_curated_{curatedKey}` (curated).
+3. These instances are published one-way to cloud-dev and surfaced in the gallery.
+4. User browses gallery -> clicks "Use this" -> clones to their workspace as a user instance.
+5. User customizes their copy freely (full ToolDrawer access).
 
 **Why this approach:**
-- **One system**: Instances serve both starters and user widgets — no separate gallery table, API, or migration path
-- **Dog-fooding**: Clickeen uses the same Bob Editor to create starters that users clone
-- **Full customization**: Every starter is fully editable because it’s just an instance
-- **Scales to marketplace**: User-created instances can become shareable starters (same infrastructure)
+- **One editor**: Clickeen and users author in Bob; same config schema.
+- **Clean separation**: Curated content is global; user instances are workspace-scoped with RLS.
+- **Deterministic publish**: Clickeen-authored instances are one-way (local -> cloud-dev).
+- **Scales to marketplace**: Curated instances remain shareable configs, not a new content type.
 
 **Naming convention for Clickeen starters:**
 ```
-ck-{widgetType}-{theme/variant}
+wgt_main_{widgetType}
+wgt_curated_{curatedKey}
 Examples:
-  ck-faq-christmas
-  ck-faq-minimal-dark
+  wgt_main_faq
+  wgt_curated_faq.overview.hero
 ```
 
 ---
@@ -125,7 +128,7 @@ Examples:
 | **Michael** | Database | Supabase Postgres | `supabase/` |
 | **Dieter** | Design system | Build artifacts in Tokyo | `dieter/` |
 | **Tokyo** | Asset storage & CDN | Cloudflare R2 | `tokyo/` |
-| **Tokyo Worker** | Workspace asset upload + serving (dev) | Cloudflare Workers + R2 | `tokyo-worker/` |
+| **Tokyo Worker** | Workspace asset upload + l10n publisher | Cloudflare Workers + R2 | `tokyo-worker/` |
 | **Atlas** | Edge config cache (read-only) | Cloudflare KV | — |
 
 ---
@@ -140,11 +143,11 @@ Examples:
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores widget instances, submissions, users, usage events. RLS enabled. Note: starters are just instances with a `ck-` prefix naming convention.
+**Michael** — Supabase PostgreSQL database. Stores curated instances (`curated_widget_instances`), user instances (`widget_instances`), submissions, users, usage events. RLS enforced for user tables; curated rows are global. Starters use `wgt_main_*` and `wgt_curated_*`.
 
 **Tokyo** — Asset storage and CDN. Hosts Dieter build artifacts, widget definitions/assets, and signed URLs for user-uploaded images.
 
-**Tokyo Worker** — Cloudflare Worker that uploads/serves workspace assets from Tokyo R2 (dev surfaces only in this repo snapshot).
+**Tokyo Worker** — Cloudflare Worker that uploads/serves workspace assets and materializes **instance** l10n overlays into Tokyo/R2.
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
 
@@ -221,6 +224,8 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
 - Instance/content translation uses Tokyo-hosted `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops).
+- Prague marketing strings use repo-local `prague-strings/**` (base + overlays + compiled outputs), not Supabase/Tokyo.
+- Canonical overlay truth for instances lives in Supabase (`widget_instance_locales`) with per-field manual overrides stored in `user_ops` and merged at publish time.
 
 Canonical reference:
 - `documentation/capabilities/localization.md`
@@ -266,7 +271,7 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-./scripts/dev-up.sh             # Start all (local): Tokyo (4000), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ optional SF 3002)
+./scripts/dev-up.sh             # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only

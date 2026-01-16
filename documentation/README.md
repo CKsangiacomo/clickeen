@@ -24,7 +24,9 @@ documentation/
 │   ├── dieter.md            # Design system
 │   ├── devstudio.md         # Internal tools (admin)
 │   ├── tokyo.md             # Asset CDN
+│   ├── tokyo-worker.md      # Asset uploads + l10n publisher
 │   ├── paris.md             # API/database
+│   ├── sanfrancisco.md      # AI workforce OS
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
 │   └── prague/              # Marketing surface
@@ -84,6 +86,8 @@ If you change runtime behavior, update docs in the same PR/commit:
   - If it affects shared runtime (stage/pod/typography/branding), update `documentation/architecture/CONTEXT.md`
 - **Capability changes (Supernova, SEO/GEO, multitenancy)**
   - Update `documentation/capabilities/{capability}.md`
+- **Prague strings localization pipeline**
+  - Update `documentation/capabilities/localization.md` + `documentation/services/prague/*.md`
 
 ---
 

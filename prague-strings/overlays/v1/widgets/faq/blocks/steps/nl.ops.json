@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Hoe het werkt"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Kies een template"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Personaliseer"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Insluiten"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Begin met een bewezen lay-out en structuur."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Pas de tekst en het design aan zodat het bij je site past."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Plaats de snippet in elke site of elk platform."
+    }
+  ],
+  "v": 1
+}

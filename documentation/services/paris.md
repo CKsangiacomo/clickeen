@@ -111,7 +111,10 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
 - Endpoints:
   - `GET /api/workspaces/:workspaceId/locales`
   - `PUT /api/workspaces/:workspaceId/locales` (entitlement gated via `l10n.enabled` + `l10n.locales.max`)
-  - `GET /api/instances/:publicId/locales/:locale` (single-locale overlay for preview/debug)
+  - `GET /api/instances/:publicId/locales` (lists locales + `hasUserOps`)
+  - `GET /api/instances/:publicId/locales/:locale` (single-locale overlay for preview/debug; returns `ops` + `userOps`)
+  - `PUT /api/instances/:publicId/locales/:locale` (write `ops` or `userOps`; preserves `userOps` on agent updates)
+  - `DELETE /api/instances/:publicId/locales/:locale` (clears `userOps` and re-publishes)
 - Publish/update trigger:
   - On instance create/update, Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
   - Queue names follow `instance-l10n-generate-{env}` and `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`).
@@ -119,7 +122,9 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
   - User instances → `workspaces.l10n_locales` (within cap).
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Instance locale overlays (`PUT/DELETE /api/instances/:publicId/locales/:locale`) enqueue `L10N_PUBLISH_QUEUE`.
+  - Per-field manual overrides live in `widget_instance_locales.user_ops`; agent writes update `ops` only.
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
+- Prague website strings use the repo-local `prague-strings/**` pipeline and do not go through Paris.
 
 # Paris — HTTP API Service (Phase-1)
 

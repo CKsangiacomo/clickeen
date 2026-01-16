@@ -6,6 +6,7 @@ import { executeEditorFaqAnswer } from './agents/editorFaqAnswer';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
+import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
 
 const MAX_INFLIGHT_PER_ISOLATE = 8;
 let inflight = 0;
@@ -465,6 +466,45 @@ async function handleL10nDispatch(request: Request, env: Env, ctx: ExecutionCont
   return noStore(json({ ok: true, queued: jobs.length }));
 }
 
+async function handlePragueStringsTranslate(request: Request, env: Env): Promise<Response> {
+  if (inflight >= MAX_INFLIGHT_PER_ISOLATE) {
+    throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Service concurrency limit reached' });
+  }
+
+  inflight++;
+  try {
+    const environment = asTrimmedString(env.ENVIRONMENT);
+    if (environment !== 'local') {
+      throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
+    }
+
+    const expected = asTrimmedString(env.PARIS_DEV_JWT);
+    if (!expected) {
+      throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
+    }
+
+    const auth = asTrimmedString(request.headers.get('Authorization'));
+    const [scheme, token] = auth ? auth.split(' ') : [];
+    if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+      throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
+    }
+    if (token.trim() !== expected) {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
+    }
+
+    const body = await readJson(request);
+    const payload = isRecord(body) && isRecord((body as any).job) ? (body as any).job : body;
+    if (!isPragueStringsJob(payload)) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n translate job' });
+    }
+
+    const result = await executePragueStringsTranslate(payload, env);
+    return noStore(json(result));
+  } finally {
+    inflight--;
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -474,6 +514,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
       if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
+      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {

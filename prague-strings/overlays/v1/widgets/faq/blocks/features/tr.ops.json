@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Ekipler neden Clickeen FAQ'yu seçiyor"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Hızlı kurulum"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Tamamen özelleştirilebilir"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Ölçeklenebilirlik için tasarlandı"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Temiz bir varsayılan tasarımla dakikalar içinde yayına alın."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Düzeni, renkleri, tipografiyi ve davranışı değiştirin."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Deterministik durum + katı politika uygulaması."
+    }
+  ],
+  "v": 1
+}

@@ -69,6 +69,7 @@ Venice must **never** serve unpublished instances.
 2. Fetch `widget.html` from Tokyo via Venice’s proxy routes.
 3. Apply Tokyo `l10n` overlay (if present) from `tokyo/l10n/manifest.json`:
    - Overlay must be set-only ops.
+   - Overlay ops are already merged (agent ops + per-field user overrides).
    - Overlay must include `baseFingerprint` and match `computeBaseFingerprint(instance.config)` (stale guard).
 4. Return HTML that:
    - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice

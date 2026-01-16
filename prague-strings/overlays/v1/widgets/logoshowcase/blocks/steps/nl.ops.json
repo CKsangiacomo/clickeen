@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Hoe het werkt"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Logo's toevoegen"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Schikken"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Insluiten"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Upload je klantlogo's (SVG/PNG) in enkele seconden."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Kies lay-out + spatiëring die bij je site past."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Plak het snippet in elk platform."
+    }
+  ],
+  "v": 1
+}

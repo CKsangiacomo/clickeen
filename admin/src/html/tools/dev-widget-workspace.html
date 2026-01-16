@@ -439,10 +439,10 @@ async function loadWidgetPageJson({ widgetType, page }) {
       .filter(Boolean)
       .map((b) => {
         const id = typeof b.id === 'string' ? b.id.trim() : '';
-        const kind = typeof b.kind === 'string' ? b.kind.trim() : '';
+        const type = typeof b.type === 'string' ? b.type.trim() : '';
         const copy = b.copy && typeof b.copy === 'object' && !Array.isArray(b.copy) ? b.copy : {};
         const visual = b.visual === true;
-        return id && kind ? { id, kind, copy, visual } : null;
+        return id && type ? { id, type, copy, visual } : null;
       })
       .filter(Boolean);
 
@@ -1227,7 +1227,7 @@ function openWebsiteCreativeModal({ defaultWidgetType }) {
 
       websiteCreativeSlotEl.innerHTML = visualBlocks
         .map((b) => {
-          const label = b.kind && b.kind !== b.id ? `${b.id} (${b.kind})` : b.id;
+          const label = b.type && b.type !== b.id ? `${b.id} (${b.type})` : b.id;
           return `<option value="${b.id}">${label}</option>`;
         })
         .join('');

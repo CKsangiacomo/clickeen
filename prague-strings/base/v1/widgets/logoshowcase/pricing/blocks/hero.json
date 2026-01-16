@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Logo Showcase Pricing",
+    "subheadline": "Start free. Upgrade when you want more widgets and no branding."
+  }
+}

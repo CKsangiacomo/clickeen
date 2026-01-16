@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
+import { loadCompiledPageStrings } from './pragueStrings';
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 const TOKYO_WIDGETS_DIR = path.join(REPO_ROOT, 'tokyo', 'widgets');
@@ -23,30 +25,53 @@ export async function loadWidgetPageJson(opts: { widget: string; page: string })
   }
 }
 
+function buildWidgetPagePath(widget: string, page: string): string {
+  return page === 'overview' ? `widgets/${widget}` : `widgets/${widget}/${page}`;
+}
+
 export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown | null> {
-  if (!opts.locale || opts.locale === 'en') {
-    return await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  const base = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  if (!base) return null;
+
+  const pagePath = buildWidgetPagePath(opts.widget, opts.page);
+  const compiled = await loadCompiledPageStrings({ locale: opts.locale, pagePath });
+  const blocksById = (compiled as any)?.blocks;
+
+  if (!blocksById || typeof blocksById !== 'object' || Array.isArray(blocksById)) {
+    throw new Error(`[prague-strings] Invalid compiled blocks for ${pagePath}`);
   }
-  const filePath = path.join(
-    REPO_ROOT,
-    'tokyo',
-    'widgets',
-    opts.widget,
-    'pages',
-    '.locales',
-    opts.locale,
-    `${opts.page}.json`,
-  );
-  try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(raw) as unknown;
-  } catch (err: any) {
-    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) {
-      // Locale overrides are optional; fall back to the canonical (en) page JSON.
-      return await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+
+  if (!base || typeof base !== 'object' || Array.isArray(base)) {
+    throw new Error(`[prague-strings] Invalid base JSON for ${opts.widget}/${opts.page}`);
+  }
+
+  const baseBlocks = (base as any).blocks;
+  if (!Array.isArray(baseBlocks)) {
+    throw new Error(`[prague-strings] Missing blocks[] in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+  }
+
+  const mergedBlocks = baseBlocks.map((block: any) => {
+    if (!block || typeof block !== 'object' || Array.isArray(block)) {
+      throw new Error(`[prague-strings] Invalid block entry in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
     }
-    throw err;
-  }
+    const blockId = String(block.id || '');
+    if (!blockId) throw new Error(`[prague-strings] Missing block id in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    const blockType = typeof block.type === 'string' ? block.type : '';
+    if (!blockType) throw new Error(`[prague-strings] Missing block type in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    validateBlockMeta({ block: block as Record<string, unknown>, pagePath });
+    const compiledBlock = blocksById[blockId];
+    if (!compiledBlock || typeof compiledBlock !== 'object') {
+      throw new Error(`[prague-strings] Missing compiled strings for ${pagePath} block ${blockId}`);
+    }
+    const strings = (compiledBlock as any).strings;
+    if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
+      throw new Error(`[prague-strings] Invalid compiled strings for ${pagePath} block ${blockId}`);
+    }
+    validateBlockStrings({ blockType, strings: strings as Record<string, unknown>, pagePath, blockId });
+    return { ...block, id: blockId, type: blockType, copy: strings };
+  });
+
+  return { ...(base as any), blocks: mergedBlocks };
 }
 
 export async function loadRequiredWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown> {

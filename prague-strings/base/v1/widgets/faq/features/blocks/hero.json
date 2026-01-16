@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "FAQ Features",
+    "subheadline": "Everything you need to ship a fast, polished FAQ."
+  }
+}

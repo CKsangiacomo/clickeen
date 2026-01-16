@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "2b6c8e571c5f8ad2c515e4135f946477dbd5ed1b0bc39441afac2bcdc8a8ba32",
+  "baseUpdatedAt": "2026-01-16T18:13:45.432Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Przykłady FAQ"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Zobacz rzeczywiste przypadki użycia i najlepsze praktyki."
+    }
+  ],
+  "v": 1
+}

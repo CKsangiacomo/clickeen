@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "721ac225da7c602db29c0a424f617b5e0025eebc59e6211d1ecc4d42ade01dde",
+  "baseUpdatedAt": "2026-01-16T17:12:31.850Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Vitrine de logos"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Présentez vos logos avec élégance. Inspirez confiance."
+    }
+  ],
+  "v": 1
+}

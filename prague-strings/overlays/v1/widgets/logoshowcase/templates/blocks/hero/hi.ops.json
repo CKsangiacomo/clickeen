@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "073eb86c4836880533725a353101ebdd33523416667d1986d1f24cdbd1c268db",
+  "baseUpdatedAt": "2026-01-16T18:14:10.277Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "लोगो शोकेस टेम्पलेट्स"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "एक सुव्यवस्थित लेआउट से शुरुआत करें -- फिर उसे अपना बनाएं।"
+    }
+  ],
+  "v": 1
+}

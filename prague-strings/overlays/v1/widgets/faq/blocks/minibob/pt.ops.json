@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+  "baseUpdatedAt": "2026-01-16T17:12:18.822Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.heading",
+      "value": "Experimente ao vivo"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Edite uma instância de demonstração no Minibob. Publique quando estiver pronto."
+    }
+  ],
+  "v": 1
+}

@@ -60,6 +60,7 @@ type LocaleState = {
 
 type TokyoOverlay = {
   ops: LocalizationOp[];
+  userOps: LocalizationOp[];
   baseFingerprint: string | null;
   baseUpdatedAt: string | null;
   source: string | null;
@@ -451,7 +452,7 @@ function useWidgetSessionInternal() {
   }, []);
 
   const loadParisOverlay = useCallback(async (publicId: string, locale: string): Promise<TokyoOverlay> => {
-    const empty: TokyoOverlay = { ops: [], baseFingerprint: null, baseUpdatedAt: null, source: null };
+    const empty: TokyoOverlay = { ops: [], userOps: [], baseFingerprint: null, baseUpdatedAt: null, source: null };
     const res = await fetch(
       `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
       { cache: 'no-store' }
@@ -463,6 +464,7 @@ function useWidgetSessionInternal() {
     }
     const overlay = (await res.json().catch(() => null)) as any;
     const ops = Array.isArray(overlay?.ops) ? overlay.ops : [];
+    const userOps = Array.isArray(overlay?.userOps) ? overlay.userOps : [];
     const baseFingerprintRaw = typeof overlay?.baseFingerprint === 'string' ? overlay.baseFingerprint.trim() : '';
     const baseFingerprint = /^[a-f0-9]{64}$/i.test(baseFingerprintRaw) ? baseFingerprintRaw : null;
     const baseUpdatedAt = typeof overlay?.baseUpdatedAt === 'string' ? overlay.baseUpdatedAt : null;
@@ -470,8 +472,12 @@ function useWidgetSessionInternal() {
     const normalizedOps = ops
       .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
       .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
+    const normalizedUserOps = userOps
+      .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
+      .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
     return {
       ops: normalizedOps,
+      userOps: normalizedUserOps,
       baseFingerprint,
       baseUpdatedAt,
       source,
@@ -529,14 +535,20 @@ function useWidgetSessionInternal() {
 
       if (localeRequestRef.current !== requestId) return;
       const source = overlay.source ?? null;
-      if (!overlay.ops.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
+      if (!overlay.ops.length && !overlay.userOps.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
         throw new Error('Missing locale overlay for curated instance');
       }
-      const { filtered } = filterAllowlistedOps(overlay.ops, allowlist);
-      const baseOps = source === 'user' ? [] : filtered;
-      const userOps = source === 'user' ? filtered : [];
+      const baseFiltered = filterAllowlistedOps(overlay.ops, allowlist);
+      const userFiltered = filterAllowlistedOps(overlay.userOps, allowlist);
+      const baseOps = baseFiltered.filtered;
+      const userOps = userFiltered.filtered;
       let stale = false;
-      if (!overlay.baseFingerprint && overlay.ops.length > 0 && isCuratedPublicId(publicId) && normalized !== baseLocale) {
+      if (
+        !overlay.baseFingerprint &&
+        (overlay.ops.length > 0 || overlay.userOps.length > 0) &&
+        isCuratedPublicId(publicId) &&
+        normalized !== baseLocale
+      ) {
         throw new Error('Missing baseFingerprint for curated locale overlay');
       }
       if (overlay.baseFingerprint) {
@@ -607,24 +619,22 @@ function useWidgetSessionInternal() {
 
     try {
       const baseFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
-      const mergedOps = mergeLocalizationOps(snapshot.locale.baseOps, snapshot.locale.userOps);
-      if (!mergedOps.length) {
+      const userOps = snapshot.locale.userOps;
+      if (!userOps.length) {
         setState((prev) => ({
           ...prev,
           locale: { ...prev.locale, error: 'No localized changes to save' },
         }));
         return;
       }
-      const source = isCuratedPublicId(publicId) ? 'manual' : 'user';
       const res = await fetch(
         `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
-            ops: mergedOps,
+            userOps,
             baseFingerprint,
-            source,
             widgetType,
             workspaceId,
           }),
@@ -632,7 +642,11 @@ function useWidgetSessionInternal() {
       );
       const json = (await res.json().catch(() => null)) as any;
       if (!res.ok) {
-        const message = json?.error?.message || json?.error?.code || 'Failed to save locale overrides';
+        const errorCode = json?.error?.code || json?.error?.reasonKey;
+        let message = json?.error?.message || errorCode || 'Failed to save locale overrides';
+        if (errorCode === 'FINGERPRINT_MISMATCH') {
+          message = 'Base content changed. Switch to Base, publish, then try saving overrides again.';
+        }
         setState((prev) => ({
           ...prev,
           locale: { ...prev.locale, error: message, loading: false },
@@ -643,11 +657,9 @@ function useWidgetSessionInternal() {
         ...prev,
         locale: {
           ...prev.locale,
-          baseOps: source === 'user' ? [] : mergedOps,
-          userOps: source === 'user' ? mergedOps : [],
+          userOps,
           dirty: false,
           stale: false,
-          source,
           error: null,
         },
       }));
@@ -672,19 +684,29 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId || !workspaceId) return;
+    if (!publicId) return;
+    if (!isCuratedPublicId(publicId) && !workspaceId) {
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: 'Missing workspace context' },
+      }));
+      return;
+    }
     if (locale === snapshot.locale.baseLocale) return;
+    if (snapshot.locale.userOps.length === 0) return;
 
     try {
+      const url =
+        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}` +
+        (workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '');
       const res = await fetch(
-        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}?workspaceId=${encodeURIComponent(
-          workspaceId
-        )}`,
+        url,
         { method: 'DELETE' }
       );
       if (!res.ok) {
         const json = (await res.json().catch(() => null)) as any;
-        const message = json?.error?.message || json?.error?.code || 'Failed to revert locale overrides';
+        const errorCode = json?.error?.code || json?.error?.reasonKey;
+        const message = json?.error?.message || errorCode || 'Failed to revert locale overrides';
         setState((prev) => ({
           ...prev,
           locale: { ...prev.locale, error: message },

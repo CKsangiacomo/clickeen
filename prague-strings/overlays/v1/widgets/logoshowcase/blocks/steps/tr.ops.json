@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "335f0fe55eb0e241a680219476273d34c58a9c4496be2a75052d0441b74b4019",
+  "baseUpdatedAt": "2026-01-16T17:12:41.551Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Nasıl çalışır"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Logo ekleyin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Düzenleyin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Yerleştirin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Müşteri logolarınızı (SVG/PNG) saniyeler içinde yükleyin."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Sitenize uyacak düzen + aralığı seçin."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Parçacığı herhangi bir platforma yapıştırın."
+    }
+  ],
+  "v": 1
+}

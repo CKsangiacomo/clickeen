@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
+  "baseUpdatedAt": "2026-01-16T17:12:50.961Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Warum Teams Logo Showcase verwenden"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Klar"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Schnell"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Barrierefrei"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Minimales, modernes Design, das zu deiner Marke passt."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Kleine Payload und Assets, die am Edge gecacht werden."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Sinnvolles Markup und tastatursichere Bedienelemente."
+    }
+  ],
+  "v": 1
+}

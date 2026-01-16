@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
+  "baseUpdatedAt": "2026-01-16T17:12:04.075Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Waarom teams kiezen voor Clickeen FAQ"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Snelle installatie"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Volledig aanpasbaar"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Gebouwd voor schaal"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Ga binnen enkele minuten live met een strak standaardontwerp."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Pas de lay-out, kleuren, typografie en het gedrag aan."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Deterministische status + strikte beleidsafdwinging."
+    }
+  ],
+  "v": 1
+}

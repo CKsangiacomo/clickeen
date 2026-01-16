@@ -1,0 +1,42 @@
+{
+  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "كيف يعمل"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "اختر قالبًا"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "خصّص"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "ضمّن"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "ابدأ من تخطيط وبنية مجرّبين."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "اضبط النص + التصميم ليتناسبا مع موقعك."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "ضع المقتطف في أي موقع أو منصة."
+    }
+  ],
+  "v": 1
+}

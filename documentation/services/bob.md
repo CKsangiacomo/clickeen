@@ -285,6 +285,20 @@ See also:
 
 ---
 
+## l10n (Instance content overlays)
+
+Bob supports instance-content localization (not editor chrome):
+
+- Locale preview uses Paris overlays (`/api/instances/:publicId/locales/:locale`).
+- In Translate mode, edits are saved as per-field overrides (`user_ops`) and never change structure.
+- Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate overlays.
+- "Revert to auto-translate" clears overrides (DELETE locale endpoint) and re-applies agent ops.
+
+Reference:
+- `documentation/capabilities/localization.md`
+
+---
+
 ## Environment & Dev Setup
 
 ### Required
@@ -312,8 +326,10 @@ bash scripts/dev-up.sh
 ```
 It:
 - Builds Dieter into `tokyo/dieter`
+- Builds i18n bundles into `tokyo/i18n`
+- Compiles Prague strings into `prague-strings/compiled`
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
+- Starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 
 ### Deterministic compilation gate (executed)

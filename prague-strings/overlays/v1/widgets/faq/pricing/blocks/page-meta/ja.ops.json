@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "64a5c25a04ef7ceead3d39150b3a5edcd72a761a5143f7ddd7321c65fd7831bf",
+  "baseUpdatedAt": "2026-01-16T20:21:48.008Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "FAQ 料金 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "FAQウィジェットのシンプルな料金体系。さらに必要になったらアップグレードできます。"
+    }
+  ],
+  "v": 1
+}

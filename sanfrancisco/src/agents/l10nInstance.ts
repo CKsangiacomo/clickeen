@@ -395,6 +395,7 @@ type ExistingLocale = {
   source?: string | null;
   baseFingerprint?: string | null;
   baseUpdatedAt?: string | null;
+  hasUserOps?: boolean | null;
 };
 
 async function fetchExistingLocale(job: L10nJob, env: Env): Promise<ExistingLocale | null> {
@@ -421,10 +422,11 @@ async function fetchExistingLocale(job: L10nJob, env: Env): Promise<ExistingLoca
     source: typeof entry.source === 'string' ? entry.source : null,
     baseFingerprint: typeof entry.baseFingerprint === 'string' ? entry.baseFingerprint : null,
     baseUpdatedAt: typeof entry.baseUpdatedAt === 'string' ? entry.baseUpdatedAt : null,
+    hasUserOps: typeof entry.hasUserOps === 'boolean' ? entry.hasUserOps : null,
   };
 }
 
-type OverlayWriteResult = { ok: true } | { ok: false; reason: 'user_override' | 'stale_instance' };
+type OverlayWriteResult = { ok: true } | { ok: false; reason: 'stale_instance' };
 
 async function writeOverlay(
   job: L10nJob,
@@ -455,7 +457,6 @@ async function writeOverlay(
   if (!res.ok) {
     const details = (await res.json().catch(() => null)) as any;
     const code = details?.error?.code;
-    if (code === 'USER_OVERRIDE_EXISTS') return { ok: false, reason: 'user_override' };
     if (code === 'FINGERPRINT_MISMATCH') return { ok: false, reason: 'stale_instance' };
     const text = await res.text().catch(() => '');
     throw new HttpError(502, {
@@ -490,7 +491,8 @@ export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
   const baseFingerprint = await computeBaseFingerprint(instance.config);
   const existing = await fetchExistingLocale({ ...job, locale }, env);
   if (existing) {
-    if (existing.source === 'user') {
+    const hasUserOps = existing.hasUserOps === true;
+    if (existing.source === 'user' && !hasUserOps) {
       await writeLog(env, job, { status: 'skipped', reason: 'user_override', job, occurredAtMs: startedAt });
       return;
     }

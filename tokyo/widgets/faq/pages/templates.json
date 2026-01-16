@@ -2,13 +2,12 @@
   "v": 1,
   "blocks": [
     {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
       "id": "hero",
-      "kind": "hero",
-      "copy": {
-        "headline": "FAQ Templates",
-        "subheadline": "Start from a proven layout — then tailor it to your brand."
-      }
+      "type": "hero"
     }
   ]
 }
-

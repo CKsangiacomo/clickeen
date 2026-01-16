@@ -161,6 +161,7 @@ type InstanceLocaleRow = {
   public_id: string;
   locale: string;
   ops: Array<{ op: 'set'; path: string; value: string }>;
+  user_ops?: Array<{ op: 'set'; path: string; value: string }>;
   base_updated_at?: string | null;
   base_fingerprint?: string | null;
   geo_countries?: string[] | null;
@@ -360,7 +361,7 @@ async function publishOverlayArtifacts(
 
 async function loadInstanceLocaleRow(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,ops,base_updated_at,base_fingerprint,geo_countries',
+    select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries',
     public_id: `eq.${publicId}`,
     locale: `eq.${locale}`,
     limit: '1',
@@ -415,13 +416,16 @@ async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<void>
   const publicId = normalizePublicId(row.public_id);
   const locale = normalizeLocale(row.locale);
   if (!publicId || !locale) return;
+  const baseOps = Array.isArray(row.ops) ? row.ops : [];
+  const userOps = Array.isArray(row.user_ops) ? row.user_ops : [];
+  const mergedOps = [...baseOps, ...userOps];
   let overlay: L10nOverlay;
   try {
     overlay = assertOverlayShape({
       v: 1,
       baseUpdatedAt: row.base_updated_at ?? null,
       baseFingerprint: row.base_fingerprint ?? null,
-      ops: row.ops,
+      ops: mergedOps,
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
@@ -467,7 +471,7 @@ async function listInstanceLocales(env: Env): Promise<InstanceLocaleRow[]> {
   let offset = 0;
   while (true) {
     const params = new URLSearchParams({
-      select: 'public_id,locale,ops,base_updated_at,base_fingerprint,geo_countries',
+      select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries',
       limit: String(limit),
       offset: String(offset),
       order: 'public_id.asc,locale.asc',

@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+  "baseUpdatedAt": "2026-01-16T17:12:18.822Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.heading",
+      "value": "라이브로 사용해 보기"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Minibob에서 데모 인스턴스를 편집해 보세요. 준비가 되면 게시하세요."
+    }
+  ],
+  "v": 1
+}
