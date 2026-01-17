@@ -19,7 +19,7 @@ const env = import.meta.env;
 const workspaceId =
   (env[`PUBLIC_MINIBOB_WORKSPACE_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_WORKSPACE_ID ?? DEV_WORKSPACE_ID).trim();
 const publicId =
-  (env[`PUBLIC_MINIBOB_PUBLIC_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_PUBLIC_ID ?? `wgt_${widget}_main`).trim();
+  (env[`PUBLIC_MINIBOB_PUBLIC_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_PUBLIC_ID ?? `wgt_main_${widget}`).trim();
 const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
