@@ -99,10 +99,9 @@ Implementation:
 
 Defaults (local/dev):
 - workspaceId defaults to `ck-dev` (`00000000-0000-0000-0000-000000000001`)
-- publicId defaults to `wgt_main_{widget}`
-- override via env:
+- publicId is derived from the widget slug as `wgt_main_{widget}` (no override)
+- workspaceId override via env:
   - `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
-  - `PUBLIC_MINIBOB_PUBLIC_ID` / `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>`
 
 ---
 

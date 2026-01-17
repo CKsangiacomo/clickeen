@@ -12,10 +12,11 @@ Prague is strict: these env vars are required at build/runtime (because they are
 - `PUBLIC_BOB_URL` — base URL for Bob (used by the MiniBob iframe embed)
 - `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for website creative iframes)
 
-Optional (to pin a specific Minibob demo instance):
+Optional (to pin the Minibob workspace only):
 
-- `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>` (e.g. `PUBLIC_MINIBOB_PUBLIC_ID_FAQ`) or `PUBLIC_MINIBOB_PUBLIC_ID` (fallback)
 - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>` or `PUBLIC_MINIBOB_WORKSPACE_ID` (fallback)
+
+Minibob `publicId` is derived from the widget slug as `wgt_main_${widget}` and is not overridden.
 
 Local defaults (when running `scripts/dev-up.sh`):
 

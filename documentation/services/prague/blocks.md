@@ -179,9 +179,10 @@ Copy contract:
   - It must not access host cookies/storage.
   - It must identify itself as the `minibob` subject (so Bob applies the MiniBob policy: flags/caps/budgets).
   - It must pass `workspaceId` + `publicId` via the iframe URL query params (Bob loads them on mount).
-  - It may override the default `workspaceId` + `publicId` via env:
-    - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>` / `PUBLIC_MINIBOB_PUBLIC_ID_<WIDGET>`
-    - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID` / `PUBLIC_MINIBOB_PUBLIC_ID`
+  - It may override the default `workspaceId` via env:
+    - `PUBLIC_MINIBOB_WORKSPACE_ID_<WIDGET>`
+    - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID`
+  - `publicId` is always derived as `wgt_main_{widget}` (no override).
 
 ## 3) Page templates (composition)
 
