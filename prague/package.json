@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev --host :: --port 4321",
-    "build": "astro build",
+    "build": "node ../scripts/prague-strings/compile.mjs && astro build",
     "preview": "astro preview",
     "typecheck": "astro check"
   },
