@@ -252,7 +252,7 @@ function isDataUrl(raw: string): boolean {
 
 function looksLikeUrl(raw: string): boolean {
   const url = extractPrimaryUrl(raw);
-  return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url)));
+  return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith('/')));
 }
 
 function previewFromUrl(state: DropdownUploadState, raw: string) {
