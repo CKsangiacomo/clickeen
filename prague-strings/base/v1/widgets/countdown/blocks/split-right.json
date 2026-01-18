@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "split-right",
+  "blockKind": "split-creative-right",
+  "strings": {
+    "headline": "Countdown Timer Widget",
+    "subheadline": "Create urgency and drive action with customizable countdown timers."
+  }
+}

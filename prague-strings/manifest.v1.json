@@ -60,6 +60,1206 @@
         }
       }
     },
+    "widgets/countdown/blocks/big-bang": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/big-bang.json",
+        "fingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+          "file": "overlays/v1/widgets/countdown/blocks/big-bang/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/cta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/cta.json",
+        "fingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+          "file": "overlays/v1/widgets/countdown/blocks/cta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/hero.json",
+        "fingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+          "file": "overlays/v1/widgets/countdown/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/minibob": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/minibob.json",
+        "fingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "file": "overlays/v1/widgets/countdown/blocks/minibob/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/navmeta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/navmeta.json",
+        "fingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+          "file": "overlays/v1/widgets/countdown/blocks/navmeta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/page-meta.json",
+        "fingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "efc13ca15a725385d46dba826c20d7917da55dc525d3986c91e1a010939a25ed",
+          "file": "overlays/v1/widgets/countdown/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/split-left": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/split-left.json",
+        "fingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "25baedded9190c3ca9b58dafdb6a0212f524af53dd67cdecf1ec86c574219653",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/split-left-2": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/split-left-2.json",
+        "fingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "a75f2401818d9372dd61ffed33c5d71e96f378a472957f91bec17c73d8c6189f",
+          "file": "overlays/v1/widgets/countdown/blocks/split-left-2/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/split-right": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/split-right.json",
+        "fingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "376dd0a8d5754adc5ec979a609654fae3a52ca396331e810b2847534937b9093",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/split-right-2": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/split-right-2.json",
+        "fingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+          "file": "overlays/v1/widgets/countdown/blocks/split-right-2/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/split-stacked": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/split-stacked.json",
+        "fingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+          "file": "overlays/v1/widgets/countdown/blocks/split-stacked/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/blocks/steps": {
+      "base": {
+        "file": "base/v1/widgets/countdown/blocks/steps.json",
+        "fingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+          "file": "overlays/v1/widgets/countdown/blocks/steps/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/examples/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/countdown/examples/blocks/hero.json",
+        "fingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/examples/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/examples/blocks/page-meta.json",
+        "fingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+          "file": "overlays/v1/widgets/countdown/examples/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/features/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/countdown/features/blocks/hero.json",
+        "fingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+          "file": "overlays/v1/widgets/countdown/features/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/features/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/features/blocks/page-meta.json",
+        "fingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+          "file": "overlays/v1/widgets/countdown/features/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/pricing/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/countdown/pricing/blocks/hero.json",
+        "fingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/pricing/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/pricing/blocks/page-meta.json",
+        "fingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+          "file": "overlays/v1/widgets/countdown/pricing/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/templates/blocks/hero": {
+      "base": {
+        "file": "base/v1/widgets/countdown/templates/blocks/hero.json",
+        "fingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/hero/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/countdown/templates/blocks/page-meta": {
+      "base": {
+        "file": "base/v1/widgets/countdown/templates/blocks/page-meta.json",
+        "fingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "fe6f98bd02e18ae8a31106979871e68dc77244aedd9a1fa27993ca1e3321655c",
+          "file": "overlays/v1/widgets/countdown/templates/blocks/page-meta/zh-tw.ops.json"
+        }
+      }
+    },
     "widgets/faq/blocks/big-bang": {
       "base": {
         "file": "base/v1/widgets/faq/blocks/big-bang.json",
@@ -2101,6 +3301,6 @@
       }
     }
   },
-  "gitSha": "c677e22e34355f5d1989d89f2a45e443bb845ab5",
+  "gitSha": "d2112ffe48c3ab4ead3b2ffcc9a240ff1421b9ea",
   "v": 1
 }

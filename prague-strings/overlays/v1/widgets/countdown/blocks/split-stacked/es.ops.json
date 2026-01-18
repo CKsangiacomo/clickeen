@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "4703c10ea0322dfbd1209468d7a48c2cb95db5f78d32dbef77581e83d4792fd6",
+  "baseUpdatedAt": "2026-01-18T19:25:28.409Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Personalización sencilla"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Ajusta la apariencia, el diseño y las acciones para adaptarlas a tu marca."
+    }
+  ],
+  "v": 1
+}

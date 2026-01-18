@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "5abc8da4e85001eb629d4690a7e47deeb92ca61af7b37f999818208a0ca6c626",
+  "baseUpdatedAt": "2026-01-18T19:25:28.434Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Przykłady odliczania"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Zobacz, jak zespoły korzystają z odliczania do premier, wyprzedaży i wydarzeń."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Countdown Examples",
+    "subheadline": "See how teams use countdowns for launches, sales, and events."
+  }
+}

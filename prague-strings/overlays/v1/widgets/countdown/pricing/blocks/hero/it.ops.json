@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "82efb6a930469abdbd5b3226762866fb0f5ebce64a326a03e698bf0d27bc62d3",
+  "baseUpdatedAt": "2026-01-18T19:25:28.459Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Prezzi Countdown"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Incluso in ogni piano Clickeen."
+    }
+  ],
+  "v": 1
+}

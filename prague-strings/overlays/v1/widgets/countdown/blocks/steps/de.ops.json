@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Schneller starten mit Countdowns"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Von der Einrichtung bis zur Veröffentlichung in wenigen Minuten."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Wähle deinen Timer"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Passend zu deiner Marke"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Veröffentlichen und lokalisieren"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Wähle Datums-, Evergreen- oder Zahlencounter für deinen Anwendungsfall."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Passe Farben, Beschriftungen und Layout an, damit es zu jeder Website passt."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Gehe schnell live und erreiche ein globales Publikum mit integrierter Lokalisierung."
+    }
+  ],
+  "v": 1
+}

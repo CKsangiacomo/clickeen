@@ -7,36 +7,7 @@
     },
     {
       "id": "hero",
-      "type": "hero",
-      "visual": true,
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.examples.hero"
-      }
-    },
-    {
-      "id": "examples-gallery",
-      "type": "gallery",
-      "copy": {
-        "headline": "Countdown Examples",
-        "items": [
-          {
-            "title": "Product Launch",
-            "description": "Build excitement for new releases."
-          },
-          {
-            "title": "Flash Sale",
-            "description": "Create urgency for limited-time offers."
-          },
-          {
-            "title": "Event Countdown",
-            "description": "Count down to webinars, conferences, or holidays."
-          },
-          {
-            "title": "Personal Milestones",
-            "description": "Track birthdays, anniversaries, or goals."
-          }
-        ]
-      }
+      "type": "hero"
     }
   ]
 }

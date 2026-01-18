@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "用倒數計時器更快上線"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "從設定到發布只要幾分鐘。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "選擇你的計時器"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "符合你的品牌風格"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "發布並在地化"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "依你的需求選擇日期倒數、常駐倒數或數字計數器。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "自訂顏色、標籤與版面配置，適用任何網站。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "快速上線，並透過內建在地化觸及全球受眾。"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "カウントダウンで素早くローンチ"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "設定から公開まで数分で完了。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "タイマーを選ぶ"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "ブランドに合わせる"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "公開してローカライズ"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "用途に合わせて、日時指定・エバーグリーン・数値カウンターを選べます。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "色、ラベル、レイアウトをカスタマイズして、どんなサイトにもフィットさせられます。"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "すぐに公開して、内蔵のローカライズ機能で世界中のユーザーに届けましょう。"
+    }
+  ],
+  "v": 1
+}

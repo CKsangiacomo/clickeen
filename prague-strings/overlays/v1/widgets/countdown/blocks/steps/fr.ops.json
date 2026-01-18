@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Lancez plus vite avec des comptes à rebours"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "De la configuration à la publication en quelques minutes."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Choisissez votre minuteur"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Adaptez à votre marque"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Publiez et localisez"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Choisissez des compteurs par date, evergreen ou numériques selon votre cas d’usage."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Personnalisez les couleurs, les libellés et la mise en page pour s’adapter à n’importe quel site."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Mettez en ligne rapidement et touchez des audiences internationales grâce à la localisation intégrée."
+    }
+  ],
+  "v": 1
+}

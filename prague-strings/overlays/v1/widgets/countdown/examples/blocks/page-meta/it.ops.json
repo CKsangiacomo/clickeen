@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "baf347477f4d4b8b4d3266a62570bafff25bbb591cea2db5b04add1bc01f929e",
+  "baseUpdatedAt": "2026-01-18T19:25:28.430Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Esempi di conto alla rovescia - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Esempi di timer per conto alla rovescia per lanci, saldi ed eventi."
+    }
+  ],
+  "v": 1
+}

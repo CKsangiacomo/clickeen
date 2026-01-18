@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "aff07c8bd57718bf00ec126616416970dafb4f700e0b04c980d465b7f37d34b9",
+  "baseUpdatedAt": "2026-01-18T19:25:28.452Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "काउंटडाउन टेम्पलेट्स"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "सामान्य काउंटडाउन उपयोग मामलों के लिए तैयार-शुदा लेआउट।"
+    }
+  ],
+  "v": 1
+}

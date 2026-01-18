@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "1cd8da24d2242800a5f55bb302295e76a0c90a3ff65540616c41be5ba032d67c",
+  "baseUpdatedAt": "2026-01-18T19:25:28.390Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Compte à rebours"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Ajoutez un sentiment d’urgence grâce à des minuteurs flexibles."
+    }
+  ],
+  "v": 1
+}

@@ -7,19 +7,7 @@
     },
     {
       "id": "hero",
-      "type": "hero",
-      "visual": true,
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.pricing.hero"
-      }
-    },
-    {
-      "id": "pricing-table",
-      "type": "pricing",
-      "copy": {
-        "headline": "Countdown Widget Pricing",
-        "subheadline": "Included in all Clickeen plans. Start building today."
-      }
+      "type": "hero"
     }
   ]
 }

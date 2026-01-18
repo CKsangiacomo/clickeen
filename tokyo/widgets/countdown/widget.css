@@ -96,6 +96,21 @@ body {
   border-radius: var(--radius-2xl);
 }
 
+.ck-countdown__number {
+  font-size: var(--typo-timer-size);
+  font-weight: var(--typo-timer-weight);
+  font-family: var(--typo-timer-family);
+  color: var(--countdown-text-color, var(--typo-timer-color));
+  line-height: 1;
+}
+
+.ck-countdown__units {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .ck-countdown__unit {
   display: flex;
   flex-direction: column;
@@ -119,10 +134,14 @@ body {
   margin-top: var(--space-1);
 }
 
-.ck-countdown__separator {
-  font-size: var(--typo-timer-size);
-  font-weight: var(--typo-timer-weight);
-  color: var(--countdown-text-color, var(--typo-timer-color));
+.ck-countdown__number {
+  text-align: center;
+}
+
+.ck-countdown__number .ck-countdown__value {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--countdown-text-color);
 }
 
 .ck-countdown__actions {

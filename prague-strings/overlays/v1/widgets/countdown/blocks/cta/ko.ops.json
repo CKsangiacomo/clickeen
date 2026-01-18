@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+  "baseUpdatedAt": "2026-01-18T19:25:28.425Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "긴급함을 만들고, 매출을 끌어올리세요"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "방문자를 고객으로 전환하는 강력한 카운트다운 타이머."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "4aedde7a9cceea1c67b1105154e9a1b35aa0a8ac9160fdbdb24f06cbc0dfb86f",
+  "baseUpdatedAt": "2026-01-18T19:25:28.456Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "काउंटडाउन मूल्य निर्धारण - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "काउंटडाउन विजेट के लिए मूल्य निर्धारण।"
+    }
+  ],
+  "v": 1
+}

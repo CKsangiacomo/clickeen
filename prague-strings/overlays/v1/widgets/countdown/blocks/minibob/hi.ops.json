@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+  "baseUpdatedAt": "2026-01-18T19:25:28.393Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.heading",
+      "value": "इसे लाइव आज़माएँ"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Minibob में एक डेमो इंस्टेंस संपादित करें। जब आप तैयार हों, प्रकाशित करें।"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "9722194ee0c69c8dba9d3f8ea59d823d29239df6457977673e2253cd0b9e36aa",
+  "baseUpdatedAt": "2026-01-18T19:25:28.439Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Countdown-Funktionen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.description",
+      "value": "Entdecken Sie die Funktionen des Countdown-Widgets."
+    }
+  ],
+  "v": 1
+}

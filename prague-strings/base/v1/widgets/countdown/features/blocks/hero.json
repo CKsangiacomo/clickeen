@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Countdown Features",
+    "subheadline": "Everything you need to create urgency and drive action."
+  }
+}

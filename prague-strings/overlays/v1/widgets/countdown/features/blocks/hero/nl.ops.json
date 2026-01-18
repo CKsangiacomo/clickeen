@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "514310958c884d36181e21f44b34bdccac7c29954f38985203856a42be073b1f",
+  "baseUpdatedAt": "2026-01-18T19:25:28.443Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Aftelfuncties"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Alles wat je nodig hebt om urgentie te creëren en aan te zetten tot actie."
+    }
+  ],
+  "v": 1
+}

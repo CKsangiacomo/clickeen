@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "blockId": "hero",
+  "blockKind": "hero",
+  "strings": {
+    "headline": "Countdown Timer Widget",
+    "subheadline": "Create urgency and drive action with fast, flexible countdowns."
+  }
+}

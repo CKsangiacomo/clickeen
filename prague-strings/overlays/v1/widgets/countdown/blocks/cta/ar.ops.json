@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+  "baseUpdatedAt": "2026-01-18T19:25:28.425Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "اصنع شعورًا بالعجلة، وزِد المبيعات"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "مؤقتات عدٍّ تنازلي قوية تحوّل الزوار إلى عملاء."
+    }
+  ],
+  "v": 1
+}

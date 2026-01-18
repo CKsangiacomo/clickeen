@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "65cee5ca7fa6b4c67fc89f36770469d8f9ad27db5bb4097ec3b479f399e98a4f",
+  "baseUpdatedAt": "2026-01-18T19:25:28.386Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Widget de Temporizador de Contagem Regressiva"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Crie urgência e impulsione a ação com contagens regressivas rápidas e flexíveis."
+    }
+  ],
+  "v": 1
+}

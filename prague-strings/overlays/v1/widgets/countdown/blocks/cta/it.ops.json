@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+  "baseUpdatedAt": "2026-01-18T19:25:28.425Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Crea urgenza, aumenta le vendite"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Potenti timer conto alla rovescia che trasformano i visitatori in clienti."
+    }
+  ],
+  "v": 1
+}

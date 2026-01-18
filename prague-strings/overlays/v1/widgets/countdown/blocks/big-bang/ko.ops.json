@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "841425c405ab0ec7bb241d8189c6b5010d0ce12d5e54c865e79293917a1e6992",
+  "baseUpdatedAt": "2026-01-18T19:25:28.405Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "관심을 행동으로 바꾸세요"
+    },
+    {
+      "op": "set",
+      "path": "strings.body",
+      "value": "출시, 세일, 이벤트, 개인 목표에 맞는 타이머를 사용하세요. 한 번만 설정하면 어디에서나 실행됩니다."
+    }
+  ],
+  "v": 1
+}

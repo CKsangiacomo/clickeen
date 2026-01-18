@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "blockId": "steps",
+  "blockKind": "steps",
+  "strings": {
+    "title": "Launch faster with countdowns",
+    "subhead": "From setup to publish in minutes.",
+    "items": [
+      {
+        "title": "Pick your timer",
+        "body": "Choose date, evergreen, or number counters for your use case."
+      },
+      {
+        "title": "Match your brand",
+        "body": "Customize colors, labels, and layout to fit any site."
+      },
+      {
+        "title": "Publish and localize",
+        "body": "Go live fast and reach global audiences with built-in localization."
+      }
+    ]
+  }
+}

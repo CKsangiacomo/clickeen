@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Lanza más rápido con cuentas regresivas"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "De la configuración a la publicación en minutos."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Elige tu temporizador"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Alinea con tu marca"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Publica y localiza"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Elige contadores por fecha, evergreen o numéricos según tu caso de uso."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Personaliza colores, etiquetas y diseño para adaptarlos a cualquier sitio."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Publica rápidamente y llega a audiencias globales con la localización integrada."
+    }
+  ],
+  "v": 1
+}

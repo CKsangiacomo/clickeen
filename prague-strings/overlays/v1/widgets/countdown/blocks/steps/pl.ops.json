@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Uruchom szybciej dzięki odliczaniu"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Od konfiguracji do publikacji w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Wybierz licznik"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Dopasuj do swojej marki"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Opublikuj i zlokalizuj"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Wybierz odliczanie do daty, evergreen lub licznik liczbowy odpowiednio do potrzeb."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Dostosuj kolory, etykiety i układ, aby pasowały do każdej strony."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Uruchom szybko i docieraj do globalnych odbiorców dzięki wbudowanej lokalizacji."
+    }
+  ],
+  "v": 1
+}

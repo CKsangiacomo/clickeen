@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "a79766d217fcf26986087aa037b3eba075c43939dcef78a30a8b46664fc35a05",
+  "baseUpdatedAt": "2026-01-18T19:25:28.413Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.title",
+      "value": "Geri sayımlarla daha hızlı yayına alın"
+    },
+    {
+      "op": "set",
+      "path": "strings.subhead",
+      "value": "Kurulumdan yayına dakikalar içinde."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.title",
+      "value": "Zamanlayıcınızı seçin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.title",
+      "value": "Markanıza uyarlayın"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.title",
+      "value": "Yayınlayın ve yerelleştirin"
+    },
+    {
+      "op": "set",
+      "path": "strings.items.0.body",
+      "value": "Kullanım senaryonuza göre tarih, sürekli (evergreen) veya sayısal sayaçlar seçin."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.1.body",
+      "value": "Herhangi bir siteye uyacak şekilde renkleri, etiketleri ve düzeni özelleştirin."
+    },
+    {
+      "op": "set",
+      "path": "strings.items.2.body",
+      "value": "Hızla yayına alın ve yerleşik yerelleştirme ile küresel kitlelere ulaşın."
+    }
+  ],
+  "v": 1
+}

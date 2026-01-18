@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "c573748337985aeb670818a40c7f2138bf715b31bad245edcdc117742b1ee9b1",
+  "baseUpdatedAt": "2026-01-18T19:25:28.425Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "तत्कालता पैदा करें, बिक्री बढ़ाएँ"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "शक्तिशाली काउंटडाउन टाइमर जो विज़िटर्स को ग्राहकों में बदल देते हैं।"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "e389e5e4bd7cedbca30422f4b42d027cd982b9adb9ba7ece164cab6ce9a5f7b4",
+  "baseUpdatedAt": "2026-01-18T19:25:28.417Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Augmentez les conversions"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Encouragez une action immédiate avec des offres à durée limitée."
+    }
+  ],
+  "v": 1
+}

@@ -7,40 +7,7 @@
     },
     {
       "id": "hero",
-      "type": "hero",
-      "visual": true,
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.features.hero"
-      }
-    },
-    {
-      "id": "features-list",
-      "type": "features-list",
-      "copy": {
-        "headline": "Countdown Features",
-        "items": [
-          {
-            "title": "Multiple Timer Modes",
-            "description": "Choose from date-based, personal, or number counters."
-          },
-          {
-            "title": "Customizable Appearance",
-            "description": "Adjust colors, fonts, and layout to match your brand."
-          },
-          {
-            "title": "Call-to-Action Integration",
-            "description": "Add buttons and links to drive conversions."
-          },
-          {
-            "title": "SEO Optimized",
-            "description": "Built-in schema markup for better search visibility."
-          },
-          {
-            "title": "Localization Support",
-            "description": "Translate and adapt for global audiences."
-          }
-        ]
-      }
+      "type": "hero"
     }
   ]
 }
