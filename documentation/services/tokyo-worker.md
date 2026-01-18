@@ -19,6 +19,7 @@
 ## Deployment
 - Cloudflare Workers + Queues
 - Queue names: `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`)
+- Scheduled cron republish (daily, 03:00 UTC) to refresh l10n outputs.
 
 ## l10n Publish Flow (executed)
 - Reads `widget_instance_locales` from Supabase.

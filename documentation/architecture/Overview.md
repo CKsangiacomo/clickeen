@@ -49,6 +49,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Venice** | `venice/` | Cloudflare Pages (Next.js Edge) | SSR embed runtime, pixel, loader | ✅ Active |
 | **Paris** | `paris/` | Cloudflare Workers | HTTP API, instances, tokens, entitlements | ✅ Active |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration | ✅ Phase 1 |
+| **Pitch** | `pitch/` | Cloudflare Workers | Investor pitch agent (internal) | ✅ Internal |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
 | **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
@@ -132,9 +133,10 @@ Each release proceeds in 3 steps:
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (embed/unscoped), `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
+  - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
@@ -162,6 +164,7 @@ Each release proceeds in 3 steps:
 | **Bob (Pages)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Base URL for Copilot execution (San Francisco); some routes have local fallbacks |
 | **Paris (Workers)** | `SUPABASE_URL` | dev project | prod project | Service role access |
 | **Paris (Workers)** | `SUPABASE_SERVICE_ROLE_KEY` | dev key | prod key | Never exposed to browsers |
+| **Paris (Workers)** | `TOKYO_BASE_URL` | `https://tokyo.dev.clickeen.com` | `https://tokyo.clickeen.com` | Widget type validation + limits lookup |
 | **Paris (Workers)** | `AI_GRANT_HMAC_SECRET` | dev secret | prod secret | Shared HMAC secret with San Francisco (grant + outcome signatures) |
 | **Paris (Workers)** | `SANFRANCISCO_BASE_URL` | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Used to forward outcomes to `/v1/outcome` |
 | **Paris (Workers)** | `ENV_STAGE` | `cloud-dev` | `ga` | Exposure stage stamped into grants for learning attribution |
@@ -217,7 +220,7 @@ Each release proceeds in 3 steps:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EDITING FLOW                                  │
 │                                                                         │
-│  ┌─────────┐    GET /api/workspaces/:workspaceId/instance/:publicId    ┌─────────┐             │
+│  ┌─────────┐    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace    ┌─────────┐             │
 │  │   Bob   │ ◄──────────────────────────────── │  Paris  │             │
 │  │ Builder │                                   │   API   │             │
 │  └────┬────┘                                   └────┬────┘             │
@@ -233,7 +236,7 @@ Each release proceeds in 3 steps:
 │       │ User clicks Publish                         │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌─────────┐             │
-│            PUT /api/workspaces/:workspaceId/instance/:publicId         │ Michael │             │
+│            PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace         │ Michael │             │
 │                                                │   DB    │             │
 │                                                └─────────┘             │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -308,11 +311,13 @@ Config exists in EXACTLY 2 places during editing:
 
 **The Pattern:**
 ```
-1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId  → Bob gets published config
+1. Load:    GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Bob gets published config
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId  → Saves to Michael
+4. Publish: PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace  → Saves to Michael
 ```
+
+`subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
 
 **Between load and publish:** Zero database writes. 10,000 users editing = 10,000 in-memory states, zero server load.
 
@@ -474,12 +479,12 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Bob GET /api/workspaces/:workspaceId/instance/:publicId
+User opens widget → Bob GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
                   → Paris reads from Michael
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Publish
-                  → Bob PUT /api/workspaces/:workspaceId/instance/:publicId
+                  → Bob PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace
                   → Paris writes to Michael
 ```
 

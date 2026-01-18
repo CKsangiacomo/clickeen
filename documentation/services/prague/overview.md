@@ -42,7 +42,7 @@ This route is strict: it throws at build time if `overview.json` is missing requ
 - `/{locale}/widgets/{widget}/{page}` where `page ∈ { templates, examples, features, pricing }`
 
 Current repo behavior:
-- these pages are UI stubs (“Coming soon”) but the JSON files are still required (contract enforcement)
+- these pages render blocks from JSON like overview; in this snapshot many subpages are intentionally minimal (typically `page-meta` + `hero`) until richer stacks are authored
 - source: `tokyo/widgets/{widget}/pages/{templates|examples|features|pricing}.json`
 
 ---
@@ -73,6 +73,10 @@ The widget overview page uses `blocks[]` to render a deterministic layout. Examp
 Required non-visual blocks:
 - `navmeta` (overview only, used by the mega menu)
 - `page-meta` (all widget pages, used for `<head>` title/description)
+
+Notes:
+- Page JSON is **layout + meta only**; copy is loaded from `prague-strings` and **overwrites** any inline `copy` in the JSON.
+- Visual embeds are explicit: use `curatedRef.publicId` on blocks that should embed a curated instance.
 
 Localization is applied via compiled strings:
 - base strings (overview): `prague-strings/base/v1/widgets/{widget}/blocks/{blockId}.json`

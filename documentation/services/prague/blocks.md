@@ -43,6 +43,9 @@ Non-visual blocks:
 - `navmeta` and `page-meta` are data-only blocks (strings for navigation + SEO).
 - They are present in `blocks[]` but are not rendered by the block renderer.
 
+Supported block types (registered):
+`big-bang`, `hero`, `split-creative-left`, `split-creative-right`, `split-creative-stacked`, `steps`, `outcomes`, `cta`, `minibob`, `navmeta`, `page-meta`.
+
 ### Block registry + validation (executed)
 
 Prague validates widget page JSON at load time:
@@ -54,23 +57,29 @@ Validation rules:
 - Required copy keys are enforced per block type.
 
 Required copy keys (enforced today):
+- `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline` (meta: `visual` allowed; `curatedRef` allowed)
+- `split-creative-left|right|stacked`: `headline`, `subheadline` (meta: `curatedRef` allowed)
 - `steps`: `title`, `items[]`
-- `features`: `title`, `items[]` (meta: `visual` allowed)
 - `cta`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
 - `navmeta`: `title`, `description`
 - `page-meta`: `title`, `description`
 
+Notes:
+- `outcomes` currently has no enforced required keys, but expects `items[]` when used.
+
 Blocks without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
+
+Only block types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other block folders that exist on disk but are not registered are legacy and must not be referenced in page JSON.
 
 ### Naming + taxonomy (non-negotiable)
 
 This is where we win (or die). The filesystem is the taxonomy.
 
-- **Folder names describe the block type**, not the page family: `hero/`, `steps/`, `features/`, `cta/`, `minibob/`.
-- **File names are kebab-case** and match the block type: `hero.astro`, `features.astro`, `pricing-plans.astro`.
-- **Variants prefer props over forks** (e.g., `creative-split` with `align`), only use suffixes when layout truly diverges.
+- **Folder names describe the block type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split-creative-left/`.
+- **File names are kebab-case** and match the block type: `hero.astro`, `split-creative-left.astro`, `steps.astro`.
+- **Variants prefer props over forks** when layout is the same; use distinct block types when layout diverges (e.g. `split-creative-left|right|stacked`).
 - **Site chrome lives under `blocks/site/`** (Nav, Footer) and is not part of page JSON.
 
 Examples:
@@ -79,7 +88,9 @@ Examples:
 prague/src/blocks/site/nav/Nav.astro
 prague/src/blocks/site/footer.astro
 prague/src/blocks/hero/hero.astro
-prague/src/blocks/features/features.astro
+prague/src/blocks/split-creative-left/split-creative-left.astro
+prague/src/blocks/steps/steps.astro
+prague/src/blocks/cta/cta.astro
 ```
 
 ### 2.1 Navigation
@@ -88,7 +99,7 @@ prague/src/blocks/features/features.astro
 - Primary nav is derived from the URL and `resolveWidgetsMegaMenu()` (no page-authored `items[]` in the scalable path).
 - The **Widgets** nav item behaves as:
   - Hover/focus opens the mega menu (CSS-only via `:has()` + `focus-within`)
-  - “View all widgets” CTA links to `/{locale}/widgets/` (route is not implemented; the directory page lives at `/{locale}/`)
+  - “View all widgets” CTA links to `/{locale}/` (directory page)
 - Widget secondary tabs are also derived from the URL:
   - `/[locale]/widgets/[widget]` → Overview
   - `/[locale]/widgets/[widget]/templates|examples|features|pricing`
@@ -125,47 +136,51 @@ Copy contract:
 - Prague embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
 - `wgt_curated_*.<locale>` is invalid and must 404 (no legacy support).
 
-### 2.3 How-it-works
+### 2.3 Big bang
+
+`blocks/big-bang/big-bang`
+- Props: `{ headline: string, body: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string } }`
+
+Copy contract:
+- `headline`, `body`
+- CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
+
+### 2.4 Split creative (left/right/stacked)
+
+`blocks/split-creative-left/split-creative-left`
+`blocks/split-creative-right/split-creative-right`
+`blocks/split-creative-stacked/split-creative-stacked`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
+
+Copy contract:
+- `headline`, `subheadline`
+
+Embed rules:
+- Curated visuals render only when `curatedRef.publicId` is present.
+- If missing, the block renders a visible stub (fail-visible in dev).
+
+### 2.5 How-it-works (steps)
 
 `blocks/steps/steps`
-- Props: `{ title?: string, steps: { title: string, body: string }[] }`
+- Props: `{ title: string, subhead?: string, steps: { title: string, body: string }[] }`
 
 Copy contract:
 - `title` (required by registry, used as section heading)
 - `items[]` (mapped to `steps[]`)
 
-### 2.4 Outcomes
+### 2.6 Outcomes
 
 `blocks/outcomes/outcomes`
 - Props: `{ title?: string, items: { title: string, body: string, eyebrow?: string }[] }`
 - Used for proof points / outcomes tiles.
 
-### 2.5 Collections
-
-`blocks/features/features`
-- Props: `{ title?: string, items: { title: string, body?: string }[] }`
-
-`blocks/templates-grid/templates-grid` (stub)
-- Props: `{ title?: string, items: { title: string, body?: string }[] }`
-
-`blocks/examples-grid/examples-grid` (stub)
-- Props: `{ title?: string, items: { title: string, body?: string }[] }`
-
-`blocks/pricing-plans/pricing-plans` (stub)
-- Props: `{ title?: string, plans: { name: string, price: string, bullets: string[] }[] }`
-
-`TemplateGallery` (later)
-- Props: `{ items: { title: string, instanceRef: string }[] }`
-
-`ExamplesGallery` (later)
-- Props: `{ items: { title: string, instanceRef: string }[] }`
-
-### 2.6 CTA
+### 2.7 CTA
 
 `blocks/cta/cta`
-- Props: `{ headline: string, subheadline?: string, primaryLabel: string, primaryHref: string }`
+- Props: `{ headline: string, subheadline?: string, primaryCta?: { label: string, href: string } }`
+- CTA label/href are currently derived from Prague chrome strings; per-block CTA metadata is ignored (reserved for future use).
 
-### 2.7 Minibob island
+### 2.8 Minibob island
 
 `blocks/minibob/minibob`
 - Island: the only Prague section that ships JS.
@@ -188,8 +203,9 @@ Copy contract:
 Page templates are just a list of blocks in a fixed order. Example (widget landing):
 - site/nav (global chrome)
 - hero
+- split-creative-left/right/stacked (optional)
 - steps
-- features
+- outcomes (optional)
 - cta
 - minibob
 
@@ -200,6 +216,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 - Canonical widget pages:
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
+  - Page JSON is layout + meta only; compiled strings override any inline `copy` in the JSON.
   - Strings are loaded from `prague-strings/compiled/v1/{locale}/widgets/{widget}.json` (overview) and `prague-strings/compiled/v1/{locale}/widgets/{widget}/{page}.json` (subpages), then merged into `copy`.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
 

@@ -22,7 +22,7 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
 - Loader script routes:
   - `GET /embed/latest/loader.js` (alias of v2)
   - `GET /embed/v1/loader.js` (legacy iframe loader)
-  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`)
+  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-cache-bust`.)
 - `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 **Planned / not fully wired yet:**
@@ -65,7 +65,7 @@ Venice must **never** serve unpublished instances.
 **Purpose:** Return complete widget HTML suitable for iframing on third-party sites.
 
 **Render algorithm (high level):**
-1. Fetch instance snapshot from Paris (`GET /api/instance/:publicId`) to get `widgetType`, `status`, and `config`.
+1. Fetch instance snapshot from Paris (`GET /api/instance/:publicId?subject=venice`) to get `widgetType`, `status`, and `config`. Venice forwards `Authorization` and `X-Embed-Token` headers when present and varies responses on those headers.
 2. Fetch `widget.html` from Tokyo via Venice’s proxy routes.
 3. Apply Tokyo `l10n` overlay (if present) from `tokyo/l10n/manifest.json`:
    - Overlay must be set-only ops.
@@ -92,7 +92,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
 - `device=desktop|mobile` (optional, defaults to `desktop`)
-- `locale=<bcp47-ish>` (optional, defaults to `en`; passed through in `window.CK_WIDGET.locale`)
+- `locale=<bcp47-ish>` (optional, defaults to `en`; when omitted, Venice may select a geo-matched locale from the Tokyo l10n manifest using `CF-IPCountry`)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Non-goal (strict):**
@@ -113,8 +113,10 @@ Response includes (as implemented today):
 - `schemaJsonLd` (derived from `widgetType + state + locale`)
 - `state` (localized instance config; overlays applied the same as `/e`)
 
+Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`.
+
 **Locale resolution (shipped):**
-- Uses `?locale=<token>` when present, else falls back to `Accept-Language` (then `en`).
+- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` and may be overridden by a geo-matched locale from the Tokyo l10n manifest using `CF-IPCountry`.
 
 ### Tokyo Asset Proxy Routes (Shipped)
 
@@ -132,6 +134,20 @@ window.CK_ASSET_ORIGIN = new URL(document.currentScript.src, window.location.hre
 ```
 
 Widgets can use this when they need absolute URLs (e.g. Dieter icon `mask-image` URLs) while still relying on Venice as the stable proxy origin.
+
+### Embed loader (v2) data attributes (shipped)
+
+The v2 loader reads `data-*` attributes from the script tag:
+- `data-public-id` (required)
+- `data-trigger` (`immediate` | `time` | `scroll` | `click` | `overlay`)
+- `data-delay` (ms, used when `data-trigger="time"`)
+- `data-scroll-pct` (0-100, used when `data-trigger="scroll"`)
+- `data-click-selector` (CSS selector, used when `data-trigger="click"`)
+- `data-force-shadow` (`true` to use `/r/:publicId` shadow render instead of iframe)
+- `data-locale` (preferred locale override; otherwise uses `navigator.language`)
+- `data-cache-bust` (`true` to add `?ts=` cache busting)
+- `data-theme` (`light` | `dark`)
+- `data-device` (`desktop` | `mobile`)
 
 ### Usage Pixel + Submissions (Present but Not Implemented End-to-End)
 
@@ -162,7 +178,7 @@ Venice is a Next.js Edge app. The supported deploy surface is Cloudflare Pages u
 - Build command: `pnpm --filter @clickeen/venice build:cf`
 - Build output directory: `venice/.vercel/output/static`
 - Environment variables (set once per environment):
-  - `PARIS_URL` (Paris base URL)
-  - `TOKYO_URL` (Tokyo base URL)
+  - `PARIS_URL` (Paris base URL; falls back to `NEXT_PUBLIC_PARIS_URL`)
+  - `TOKYO_URL` (Tokyo base URL; falls back to `TOKYO_BASE_URL` or `NEXT_PUBLIC_TOKYO_URL`)
 
 Venice fails fast in deployed environments if `PARIS_URL` or `TOKYO_URL` is missing (to avoid stale/incorrect hardcoded endpoints).

@@ -88,7 +88,7 @@ Read-only mode (DevStudio cloud):
 ### Intended product shape (still aligned)
 The intended “two API calls per session” model is:
 1. `GET /api/widgets/[widgetname]/compiled` (Bob → Tokyo spec → compile)
-2. `GET /api/paris/instance/:publicId` (Bob proxy → Paris workspace endpoint)
+2. `GET /api/paris/instance/:publicId?workspaceId=...&subject=workspace` (Bob proxy → Paris workspace endpoint)
 …then edits happen in memory until Publish.
 
 ---
@@ -116,6 +116,16 @@ Widget runtime code (`tokyo/widgets/{widget}/widget.client.js`) must:
 - Listen for `ck:state-update` and apply state deterministically.
 - Avoid runtime default merges and random ID generation.
 - Treat shared runtime modules as required when used (e.g. `CKStagePod`, `CKTypography`).
+
+### Tokyo asset proxy (preview)
+
+Bob serves widget and Dieter assets through same-origin routes so the preview iframe can load assets and `blob:` URLs safely:
+- `bob/app/widgets/[...path]/route.ts` (`/widgets/*`)
+- `bob/app/dieter/[...path]/route.ts` (`/dieter/*`)
+
+### Preview shadow (Venice)
+
+Bob’s preview-shadow route (`/bob/preview-shadow`) loads the Venice embed loader with `data-force-shadow="true"` for shadow DOM rendering. It requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
 
 ---
 
@@ -185,6 +195,14 @@ The compiler and ToolDrawer support:
 
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
+
+### Asset persistence (workspace uploads)
+
+Before publish (and during certain DevStudio superadmin flows), Bob scans config for `data:`/`blob:` URLs, uploads binaries to Tokyo workspace assets, and rewrites the config with stable `http(s)` URLs.
+
+Implementation:
+- Client persistence utility: `bob/lib/assets/persistConfigAssetsToTokyo.ts`
+- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to `TOKYO_URL/workspace-assets/upload`)
 
 ---
 
@@ -303,11 +321,18 @@ Reference:
 
 ### Required
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
+- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (preview-shadow embed loader; local dev defaults to `http://localhost:3003`)
 
 ### Paris proxy (current code)
 Bob proxies Paris via:
-- `bob/app/api/paris/instances/route.ts`
 - `bob/app/api/paris/instance/[publicId]/route.ts`
+- `bob/app/api/paris/instances/route.ts`
+- `bob/app/api/paris/curated-instances/route.ts`
+- `bob/app/api/paris/widgets/route.ts`
+- `bob/app/api/paris/instances/[publicId]/locales/route.ts`
+- `bob/app/api/paris/instances/[publicId]/locales/[locale]/route.ts`
+- `bob/app/api/paris/workspaces/[workspaceId]/locales/route.ts`
+- `bob/app/api/paris/website-creative/route.ts` (legacy; curated-only flow does not use this)
 
 The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
@@ -315,6 +340,8 @@ The proxy currently supports:
 
 Optional:
 - `PARIS_DEV_JWT` (dev auth passthrough)
+
+Workspace-scoped proxy calls require `subject=workspace|devstudio|minibob` to resolve policy.
 
 **Security rule (executed):**
 - `PARIS_DEV_JWT` is **local/dev-worker-only**. It must never be set in Cloudflare Pages production env vars.

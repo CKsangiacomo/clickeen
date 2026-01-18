@@ -8,16 +8,17 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only, legacy), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`.
-**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_locales`.
+**Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
 
 Paris in this repo is a **dev-focused Worker** with a deliberately small surface:
-- All current endpoints are gated by `PARIS_DEV_JWT` (dev-only auth; not the final production model).
+- All non-public endpoints are gated by `PARIS_DEV_JWT` (dev-only auth; not the final production model). `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied.
 - Instance creation is implemented (`POST /api/instance`) for **internal DevStudio Local** workflows (superadmin), not as a user-facing product API.
 - Instance reads/writes use Supabase REST with the service role.
+- Paris requires `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
 - AI is handled via:
   - `POST /api/ai/grant` (mint short-lived signed grants)
   - `POST /api/ai/outcome` (forward outcome events to San Francisco `/v1/outcome`)
@@ -28,8 +29,10 @@ If you need the exact shipped behavior, inspect `paris/src/index.ts`.
 
 **Bob makes EXACTLY 2 calls to Paris per editing session:**
 
-1. **Load** - `GET /api/workspaces/:workspaceId/instance/:publicId` when Bob mounts → gets instance snapshot (`config` + `status`)
-2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId` when user clicks Publish → saves working copy
+1. **Load** - `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when Bob mounts → gets instance snapshot (`config` + `status`)
+2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish → saves working copy
+
+`subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
 
 **Between load and publish:**
 - User edits in ToolDrawer → Bob updates React state (NO API calls to Paris)
@@ -63,7 +66,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - User instance config lives in `widget_instances.config` (workspace-owned)
 - Curated/baseline config lives in `curated_widget_instances.config` (Clickeen-authored)
 - Curated uses `widget_type` (denormalized) instead of `widget_id`
-- **EDITABLE by users** (user instances via Bob → Paris `PUT /api/workspaces/:workspaceId/instance/:publicId`)
+- **EDITABLE by users** (user instances via Bob → Paris `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`)
 
 **What Paris returns for an instance:**
 ```json
@@ -79,18 +82,17 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 ```
 
 **Paris endpoints (instance data only):**
-- `GET /api/instance/:publicId` — Loads the instance snapshot (config + metadata)
+- `GET /api/instance/:publicId` — Public, published-only unless dev auth is present (Venice typically passes `?subject=venice` for telemetry).
 - `PUT /api/instance/:publicId` — Updates instance `config`/`status` (dev auth in this repo snapshot; production will be workspace-auth)
 - `GET /api/instances` — Dev tooling list (requires dev auth)
 - `GET /api/curated-instances` — Curated/baseline list (requires dev auth)
 - `POST /api/instance` — Creates the instance if missing; otherwise returns the existing snapshot (idempotent)
 
 **Workspace-scoped endpoints (dev tooling + promotion):**
-- `GET /api/workspaces/:workspaceId/instances` — Lists instances in a specific workspace (requires dev auth).
-- `POST /api/workspaces/:workspaceId/instances` — Creates the instance in that workspace if missing; if the `publicId` already exists in the same workspace it returns the existing snapshot (idempotent). If the `publicId` exists in a *different* workspace, returns 409 `PUBLIC_ID_CONFLICT`.
-- `GET /api/workspaces/:workspaceId/instance/:publicId` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
-- `PUT /api/workspaces/:workspaceId/instance/:publicId` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
-- `POST /api/workspaces/:workspaceId/website-creative` — Legacy helper for website creatives (local-only; not used in curated-only flow).
+- `GET /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace` — Lists instances in a specific workspace (requires dev auth).
+- `POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace` — Creates the instance in that workspace if missing; if the `publicId` already exists in the same workspace it returns the existing snapshot (idempotent). If the `publicId` exists in a *different* workspace, returns 409 `PUBLIC_ID_CONFLICT`.
+- `GET /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
+- `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
 
 ### Curated vs user instance routing
 
@@ -137,13 +139,14 @@ Paris is Clickeen's server-side HTTP API service that handles all privileged ope
 - **Runtime**: Edge (V8 isolates)
 - **Deploy Command**: `pnpm --filter @clickeen/paris deploy` (Wrangler bundles internally)
 - **URL Pattern**: `https://paris.clickeen.com` (prod) / `https://paris.dev.clickeen.com` (cloud-dev)
+- **Runtime deps**: `TOKYO_BASE_URL` is required for widget validation and limits; `TOKYO_WORKER_BASE_URL` is used only when `ENV_STAGE=local` to publish l10n overlays to tokyo-worker.
 
 Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
 
 ## Security Boundaries
 - **Service Role Access**: Paris has `SUPABASE_SERVICE_ROLE_KEY` and can bypass RLS. Handlers MUST scope service-role usage to the smallest set of operations and MUST never expose this key to clients.
 - **No Public Secrets**: All server secrets live here, never exposed to client. Environment variables MUST remain server-only.
-- **Auth model (this repo snapshot):** All current non-public endpoints are gated by `PARIS_DEV_JWT` (dev/local only). Production will validate Supabase Auth JWTs and workspace membership.
+- **Auth model (this repo snapshot):** All current non-public endpoints are gated by `PARIS_DEV_JWT` (dev/local only). `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied. Production will validate Supabase Auth JWTs and workspace membership.
 - **Rate limiting:** Not implemented in this repo snapshot (planned for write endpoints once usage/submissions ship).
 - **Front-door rule:** Third-party pages MUST NOT contact Paris directly. Browsers hit Venice only; Venice proxies to Paris over a server-to-server channel.
 - **CORS:** Intended production rule is an allowlist (Bob/Prague only). In this repo snapshot, treat `PARIS_DEV_JWT` as the primary gate.
@@ -157,7 +160,7 @@ Paris does **not** serve widget definitions. Widget definitions (“Widget JSON�
 
 - Source in-repo: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
 - Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
-- Venice embed rendering should load widget runtime assets from Tokyo; Venice currently fetches the instance snapshot from Paris via `/api/instance/:publicId` (unscoped). Editor/dev tooling uses the workspace-scoped endpoints.
+- Venice embed rendering should load widget runtime assets from Tokyo; Venice currently fetches the instance snapshot from Paris via `/api/instance/:publicId?subject=venice` (public, published-only unless dev auth). Editor/dev tooling uses the workspace-scoped endpoints.
 
 ### AI Gateway (Grants + Outcomes) (shipped in dev/local)
 
@@ -291,33 +294,6 @@ Required env vars:
 **publicId generation (Phase-1)**
 - `publicId` is provided by the caller (internal services / DevStudio Local superadmin flows) and persisted in Michael.
 - The stable contract is `widget_instances.public_id` + `widget_instances.config` (+ `workspace_id`), not internal UUIDs.
-
-### Website creative endpoint (legacy, local-only)
-
-Paris provides a **local-only** legacy endpoint for ensuring website-creative instances (no longer used in curated-only Prague).
-
-Endpoint:
-- `POST /api/workspaces/:workspaceId/website-creative` (requires dev auth; rejects non-local `ENV_STAGE`)
-
-Deterministic identity (non-negotiable):
-- `creativeKey = {widgetType}.{page}.{slot}` (locale-free)
-- `publicId = wgt_curated_{creativeKey}` (locale-free)
-
-Payload:
-```json
-{
-  "widgetType": "faq",
-  "page": "overview",
-  "slot": "hero",
-  "baselineConfig": { "...": "..." },
-  "overwrite": false
-}
-```
-
-Response:
-```json
-{ "creativeKey": "faq.overview.hero", "publicId": "wgt_curated_faq.overview.hero" }
-```
 
 Notes:
 - Locale is a **runtime parameter** (handled by Venice overlays); it must not be encoded into `publicId`.

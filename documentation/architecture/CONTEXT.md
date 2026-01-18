@@ -65,10 +65,12 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 ### The Two-API-Call Pattern
 
 Bob makes EXACTLY 2 calls to Paris per editing session:
-1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId` when Bob mounts
-2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId` when user clicks Publish
+1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when Bob mounts
+2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish
 
-In the browser these typically flow through Bob’s same-origin proxy (`/api/paris/instance/:publicId?workspaceId=...`) which forwards to the workspace-scoped Paris endpoints.
+`subject` is required on workspace-scoped endpoints (`workspace`, `devstudio`, `minibob`) to resolve editor policy.
+
+In the browser these typically flow through Bob’s same-origin proxy (`/api/paris/instance/:publicId?workspaceId=...&subject=workspace`) which forwards to the workspace-scoped Paris endpoints.
 
 Between load and publish:
 - All edits happen in Bob's React state (in memory)

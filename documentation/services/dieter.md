@@ -11,7 +11,7 @@ This document is the canonical reference for Clickeen’s design system and its 
 
 ## 1. Dieter Core
 
-Dieter is Clickeen's shared design system: a token-first, CSS-only library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
+Dieter is Clickeen's shared design system: a token-first library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
 
 ### Bundling manifest (executed)
 
@@ -116,7 +116,7 @@ See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details
    ```
 4. **Copy markup + behaviors** from `dieter/components/<component>/<component>.html` and `dieter/components/<component>/<component>.spec.json`, wire with your application logic, and run the QA checklist.
 
-Dieter ships **CSS only**. Host applications manage all interactivity (e.g., toggling `data-state` attributes, focus management, persistence).
+Dieter ships CSS plus optional JS hydrators (for components listed in `componentsWithJs`). Host applications load the required scripts and manage component state (e.g., `data-state` attributes, focus management, persistence).
 
 ### 1.3 Token System
 

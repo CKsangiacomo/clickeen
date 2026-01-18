@@ -87,7 +87,7 @@ Keeping Paris and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Bob loads an instance via Paris (`GET /api/workspaces/:workspaceId/instance/:publicId`, typically via Bob’s `/api/paris/*` proxy).
+1) Bob loads an instance via Paris (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`, typically via Bob’s `/api/paris/*` proxy).
 2) Bob requests a short‑lived **AI Grant** from Paris (`POST /api/ai/grant`) for that editing session.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
@@ -203,7 +203,7 @@ Shipped (dev/local in this repo):
    - Paris signs the payload with `AI_GRANT_HMAC_SECRET` and forwards to San Francisco `/v1/outcome` using `SANFRANCISCO_BASE_URL`.
 
 Possible future (product ergonomics):
-- Return a grant on instance load (`GET /api/workspaces/:workspaceId/instance/:publicId`) to reduce one extra round trip per chat session.
+- Return a grant on instance load (`GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace`) to reduce one extra round trip per chat session.
 
 Paris does NOT execute AI calls. It only issues grants and forwards outcomes.
 
@@ -358,7 +358,7 @@ Definition of done:
 - Deleted `bob/app/api/ai/faq-answer/route.ts` (FAQ-only route removed).
 
 ## Open Questions (next)
-- Grant transport: return grant in `GET /api/workspaces/:workspaceId/instance/:publicId` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
+- Grant transport: return grant in `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
 - Where AI usage is recorded for billing: Paris-only ledger via an internal San Francisco→Paris report, or a later aggregation pipeline.
 
 ## Links

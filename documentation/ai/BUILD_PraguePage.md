@@ -82,10 +82,10 @@ File:
 
 Rules:
 - Layout only: `blocks[]` contains `id`, `type`, and allowed meta fields (e.g. `visual`).
-- **No copy** in page JSON. Copy always lives in `prague-strings/base`.
+- **No copy** in page JSON. Copy always lives in `prague-strings/base` and compiled strings **overwrite** any inline `copy`.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
-- `visual` is only allowed for block types that support it (see registry).
+- `visual` is only allowed for block types that support it (see registry). For embeds, use `curatedRef.publicId`.
 
 Example shape:
 ```json
@@ -94,7 +94,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta" },
     { "id": "navmeta", "type": "navmeta" },
-    { "id": "hero", "type": "hero", "visual": true },
+    { "id": "hero", "type": "hero", "visual": true, "curatedRef": { "publicId": "wgt_curated_faq.overview.hero" } },
     { "id": "minibob", "type": "minibob" }
   ]
 }
@@ -130,9 +130,10 @@ Rules:
 - Use only ASCII unless the PRD provides non-ASCII.
 
 Required keys (current registry):
+- `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline`
+- `split-creative-left|right|stacked`: `headline`, `subheadline`
 - `steps`: `title`, `items[]`
-- `features`: `title`, `items[]`
 - `cta`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
 - `navmeta`: `title`, `description`

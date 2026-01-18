@@ -18,7 +18,7 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
-- In **DevStudio Local only**, shows superadmin actions (update defaults, reset from JSON, create curated template).
+- In **DevStudio Local only**, shows superadmin actions (update defaults, reset instance from JSON).
 - Optional: **auto-promote** the resulting instance config to **cloud-dev Paris** (so `prague-dev` sees the change).
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
@@ -45,12 +45,11 @@ Required local env vars (DevStudio Local only):
 - `TOKYO_DEV_JWT` — Bearer token for cloud Tokyo upload (only needed when promoting instances that reference local Tokyo assets)
 - `CK_CLOUD_TOKYO_BASE_URL` (optional) — defaults to `https://tokyo.dev.clickeen.com`
 
-### Curated instances (templates + Prague embeds)
+### Curated instances (single source of truth)
 
 DevStudio Local supports curated instances as the single primitive:
 - **Update default config**: pushes current editor state into `tokyo/widgets/{widget}/spec.json` and upserts `wgt_main_{widget}`.
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
-- **Create template instance**: snapshots the current config into `wgt_curated_{widget}.templates.{key}`.
 
 Notes:
 - Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
