@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "widget": "countdown",
+  "page": "overview",
+  "locale": "de",
+  "model": "gpt-5.2",
+  "srcHash": "placeholder_hash_for_countdown"
+}

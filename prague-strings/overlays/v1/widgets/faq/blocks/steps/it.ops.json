@@ -1,42 +1,6 @@
 {
-  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
   "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
-  "ops": [
-    {
-      "op": "set",
-      "path": "strings.title",
-      "value": "Come funziona"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.title",
-      "value": "Scegli un modello"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.title",
-      "value": "Personalizza"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.title",
-      "value": "Incorpora"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.body",
-      "value": "Parti da un layout e una struttura già collaudati."
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.body",
-      "value": "Adatta testo + design per abbinarli al tuo sito."
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.body",
-      "value": "Inserisci lo snippet in qualsiasi sito o piattaforma."
-    }
-  ],
+  "ops": [],
   "v": 1
 }

@@ -50,11 +50,11 @@ Prague validates widget page JSON at load time:
 - Loader: `prague/src/lib/markdown.ts`
 
 Validation rules:
-- A block may only include meta keys registered for its type (example: `visual`).
+- A block may only include meta keys registered for its type (example: `visual`, `curatedRef`).
 - Required copy keys are enforced per block type.
 
 Required copy keys (enforced today):
-- `hero`: `headline`, `subheadline` (meta: `visual` allowed)
+- `hero`: `headline`, `subheadline` (meta: `visual` allowed; `curatedRef` allowed)
 - `steps`: `title`, `items[]`
 - `features`: `title`, `items[]` (meta: `visual` allowed)
 - `cta`: `headline`, `subheadline`
@@ -109,21 +109,20 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, websiteCreative?: { widgetType: string, locale: string, height?: string, title?: string } }`
-- Owns: H1 + subhead + primary/secondary CTA + **deterministic hero visual**
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
+- Owns: H1 + subhead + primary/secondary CTA + curated embed (optional)
 
 Copy contract:
 - `headline` and `subheadline` come from `blocks[].copy`.
 - CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
 
 **Contract (non-negotiable):**
-- This is **not** a generic “slot”. The hero visual (when enabled) is always the website creative for:
-  - `wgt_curated_{widgetType}.overview.hero`
-- Pages enable the hero visual via the canonical page spec:
-  - `tokyo/widgets/{widgetType}/pages/overview.json` → block `{ id: "hero", type: "hero", visual: true }`
+- The hero visual is rendered only when a curated instance is explicitly provided via `curatedRef.publicId`.
+- Pages opt in by adding `curatedRef.publicId` to the hero block in the canonical page spec.
+- `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
-- Prague always embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
+- Prague embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
 - `wgt_curated_*.<locale>` is invalid and must 404 (no legacy support).
 
 ### 2.3 How-it-works
@@ -200,7 +199,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Canonical widget pages:
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-  - Prague renders `blocks[]` by `type` and uses `visual: true` to embed website creatives deterministically.
+  - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
   - Strings are loaded from `prague-strings/compiled/v1/{locale}/widgets/{widget}.json` (overview) and `prague-strings/compiled/v1/{locale}/widgets/{widget}/{page}.json` (subpages), then merged into `copy`.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
 

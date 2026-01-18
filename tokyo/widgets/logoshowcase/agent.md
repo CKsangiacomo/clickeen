@@ -7,7 +7,8 @@
 
 ## State Encoding (DOM `data-*` enums)
 Set on the main element `[data-role="logoshowcase"]`:
-- `data-type`: `grid` | `slider` | `carousel` | `ticker`
+- `data-type`: `grid` | `carousel`
+- `data-motion`: `paged` | `continuous` (only when `data-type="carousel"`)
 
 Set on the header element `[data-role="header"]`:
 - `data-align`: `left` | `center` | `right`
@@ -23,7 +24,7 @@ Set on the header element `[data-role="header"]`:
   - Viewport: `[data-role="strip-viewport"]`
   - Track: `[data-role="strip-track"]`
   - Logos list: `[data-role="logos"]`
-  - Ticker copies (type=ticker): `[data-role="ticker-a"]`, `[data-role="ticker-b"]`
+  - Ticker copies (mode=continuous): `[data-role="ticker-a"]`, `[data-role="ticker-b"]`
 - Logo tile (generated): `[data-role="logo"]`
   - Visual: `[data-role="logo-visual"]` (background-image from `logoFill`)
   - Caption: `[data-role="logo-caption"]`
@@ -40,6 +41,7 @@ Content:
   - `strips[].logos[]` (array)
 - `strips[].logos[].name` (string)
 - `strips[].logos[].logoFill` (string CSS fill from `dropdown-upload`, e.g. `url("...") center / contain no-repeat` or `transparent`)
+  - `strips[].logos[].asset` (object; file metadata for editor display, e.g. `{ name, mime, source }`)
   - `strips[].logos[].caption` (string; hover label; falls back to `name` if empty)
   - `strips[].logos[].href` (string; only valid `http(s)://` becomes clickable)
   - `strips[].logos[].targetBlank` (boolean)
@@ -53,22 +55,19 @@ Content:
   - `cta.style` (`filled` | `outline`)
 
 Type:
-- `type` (`grid` | `slider` | `carousel` | `ticker`)
-- `typeConfig.grid.columnsDesktop|columnsMobile` (number)
-- `typeConfig.slider.showArrows|showDots|allowSwipe|pauseOnHover|autoSlide` (boolean)
-- `typeConfig.slider.autoSlideDelayMs|transitionMs` (number; ms)
-- `typeConfig.carousel.pauseOnHover` (boolean)
+- `type` (`grid` | `carousel`)
+- `typeConfig.carousel.mode` (`paged` | `continuous`)
+- `typeConfig.carousel.step` (`logo` | `page`)
+- `typeConfig.carousel.showArrows|allowSwipe|autoplay|pauseOnHover` (boolean)
 - `typeConfig.carousel.autoSlideDelayMs|transitionMs` (number; ms)
+- `typeConfig.carousel.speed` (number; px/sec)
 - `typeConfig.carousel.direction` (`left` | `right`)
-- `typeConfig.ticker.pauseOnHover` (boolean)
-- `typeConfig.ticker.speed` (number; px/sec)
-- `typeConfig.ticker.direction` (`left` | `right`)
 
 Layout:
 - `spacing.gap|mobileGap` (number; px)
 - `spacing.stripGap|mobileStripGap` (number; px)
 - `spacing.rowGap` (number; px; grid only)
-- `spacing.logoHeight|mobileLogoHeight` (number; px)
+- `spacing.logoHeight` (number; px; drives grid density)
 
 Appearance:
 - `appearance.logoLook` (`original` | `grayscale`)

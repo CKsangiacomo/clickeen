@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "paths": [
+    { "path": "strings.headline", "type": "string" },
+    { "path": "strings.subheadline", "type": "string" }
+  ]
+}
+

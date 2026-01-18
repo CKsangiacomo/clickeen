@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+  "baseUpdatedAt": "2026-01-18T15:53:07.944Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Creatività divisa (destra)"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Questa è la variante con visual a destra, che utilizza la stessa istanza curata dell’hero."
+    }
+  ],
+  "v": 1
+}

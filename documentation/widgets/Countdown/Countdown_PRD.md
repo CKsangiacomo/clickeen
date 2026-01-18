@@ -60,12 +60,41 @@ Top-level groups:
 - `layout.*` — arrangement and spacing
 - `appearance.*` — paint (fills, borders, colors)
 - `behavior.*` — backlink + small toggles
-- `actions.*` — “during” CTA + “after end” behavior
+- `actions.*` — "during" CTA + "after end" behavior
 - `seoGeo.*` — embed optimization toggle (policy-gated)
 - `typography.*` — roles (compiler-injected)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
 
 Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config; Copilot may use it as context.
+
+### Detailed State from Competitor Analysis
+- `timer.mode`: 'date' | 'personal' | 'number' (visual cards with icons: calendar for date, user for personal, numbers for number).
+- `timer.targetDate`: Date/time picker (MM/DD/YYYY + HH:MM AM/PM) for date mode.
+- `timer.timezone`: Dropdown with all timezones (default: browser timezone).
+- `timer.timeAmount`: Numeric (1-999, default 1) for personal mode.
+- `timer.timeUnit`: 'hours' | 'minutes' | 'days' | 'weeks' | 'months' (default: 'hours') for personal mode.
+- `timer.repeat`: '1 minute' | '5 minutes' | '1 hour' | '1 day' | '1 week' | 'never' (default: 'never') for personal mode.
+- `timer.targetNumber`: Numeric (0-9999999) for number mode.
+- `timer.startingNumber`: Numeric (default 0) for number mode.
+- `timer.countDuration`: Numeric seconds (default 5) for number mode.
+- `timer.headline`: Rich text (bold, italic, link, lists; max 500 chars; default: "Get 50% off before it's too late 🎯").
+- `layout.position`: 'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top' (visual cards).
+- `layout.width`: 'auto' | 'full' | 'custom' (px).
+- `layout.alignment`: 'left' | 'center' | 'right'.
+- `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets.
+- `appearance.background`: Fill picker (solid, gradient, image).
+- `appearance.textColor`: Color picker.
+- `appearance.timerBoxColor`: Color picker.
+- `appearance.separator`: Color/style picker.
+- `appearance.animation`: 'fade' (only; skip advanced).
+- `actions.during.type`: 'link' | 'form' (skip 'form' for V1).
+- `actions.during.url`: URL input (supports internal/external).
+- `actions.during.text`: Text input (max 50; default: "Purchase now").
+- `actions.during.style`: 'primary' | 'secondary'.
+- `actions.during.newTab`: Boolean (default true).
+- `actions.after.type`: 'hide' | 'link'.
+- `actions.after.url`: URL (if link).
+- `actions.after.text`: Text (if link).
 
 ## 4) DOM contract (stable hooks)
 All runtime selectors must be scoped within `[data-ck-widget="countdown"]`.
@@ -105,13 +134,45 @@ Panels:
 - **Settings**: workspace website URL setting (policy-gated; not widget instance state)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
+### Detailed Panels from Competitor Analysis
+- **Content Panel**:
+  - Mode selector: Visual cards with icons (calendar for date, user for personal, numbers for number).
+  - Date mode: Date/time pickers, timezone dropdown.
+  - Personal mode: Time amount/unit inputs, repeat dropdown.
+  - Number mode: Target/starting numbers, duration input.
+  - Headline: Rich text editor (bold, italic, link, lists, code view; max 500 chars).
+- **Layout Panel**:
+  - Position: Visual cards for 5 options (inline, full-width, top-bar, bottom-bar, static-top).
+  - Width: Auto/full/custom.
+  - Alignment: Left/center/right.
+  - Stage/Pod: Padding controls (desktop/mobile).
+- **Appearance Panel**:
+  - Theme: Dropdown with custom/light/dark/gradient + holiday presets.
+  - Colors: Background, text, timer box, separators.
+  - Borders/shadows: Radius, width, color; shadow toggles.
+  - Animations: Fade only.
+- **Actions Panel**:
+  - During: Type selector (link/form—skip form), URL/text/style/new-tab toggles.
+  - After: Type selector (hide/link), URL/text if link.
+
 ## 7) Defaults (authoritative `spec.json` → `defaults`)
 The implementer must translate this PRD into a complete defaults object in `tokyo/widgets/countdown/spec.json`.
 Defaults must include:
 - `seoGeo: { enabled: false }`
 - `behavior: { showBacklink: true }`
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
+- `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
+- `layout: { position: 'inline', width: 'auto', alignment: 'center' }`
+- `appearance: { theme: 'custom', background: '#fff', textColor: '#000', timerBoxColor: '#f0f0f0', separator: ':' }`
+- `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
+
+## 8) Additional Notes from Competitor Analysis
+- Unit controls: Show/hide individual units (days/hours/minutes/seconds); format: separated boxes or inline.
+- Separators: Customizable (colon, slash, etc.).
+- Budgets: Include `budget.copilot.turns` if AI interactions are added.
+- Localization: Default strings as above; support i18n overlays.
 
 ## Links
 - `documentation/architecture/CONTEXT.md`
 - `documentation/widgets/WidgetBuildProcess.md`
+- `documentation/widgets/Countdown/Countdown_competitoranalysis.md`

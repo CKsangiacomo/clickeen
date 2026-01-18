@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+  "baseUpdatedAt": "2026-01-18T15:53:01.059Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "분할형 크리에이티브(왼쪽)"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "히어로와 동일한 큐레이션된 인스턴스를 사용하는 왼쪽 비주얼 변형입니다."
+    }
+  ],
+  "v": 1
+}

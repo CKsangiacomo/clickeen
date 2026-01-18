@@ -101,7 +101,7 @@ var Dieter = (() => {
     onOpen: (root) => {
       const state = states.get(root);
       if (!state) return;
-      syncFromValue(state, state.input.value);
+      syncFromInputs(state);
     }
   });
   function hydrateDropdownUpload(scope) {
@@ -114,7 +114,7 @@ var Dieter = (() => {
       states.set(root, state);
       installHandlers(state);
       const initialValue = state.input.value || state.input.getAttribute("value") || "";
-      syncFromValue(state, initialValue);
+      syncFromInputs(state, initialValue);
     });
     hydrateHost(scope);
   }
@@ -133,6 +133,8 @@ var Dieter = (() => {
     const replaceButton = root.querySelector(".diet-dropdown-upload__replace-btn");
     const removeButton = root.querySelector(".diet-dropdown-upload__remove-btn");
     const fileInput = root.querySelector(".diet-dropdown-upload__file-input");
+    const metaInput = root.querySelector(".diet-dropdown-upload__meta-field");
+    const metaHasPath = Boolean(metaInput?.getAttribute("data-bob-path"));
     if (!input || !previewPanel || !previewImg || !previewVideoEl || !previewName || !previewExt || !previewError || !uploadButton || !replaceButton || !removeButton || !fileInput) {
       return null;
     }
@@ -147,6 +149,8 @@ var Dieter = (() => {
     return {
       root,
       input,
+      metaInput,
+      metaHasPath,
       headerLabel,
       baseHeaderLabelText: (headerLabel?.textContent || "").trim(),
       headerValue,
@@ -181,8 +185,12 @@ var Dieter = (() => {
         }
       });
     }
-    state.input.addEventListener("external-sync", () => syncFromValue(state, state.input.value));
-    state.input.addEventListener("input", () => syncFromValue(state, state.input.value));
+    state.input.addEventListener("external-sync", () => syncFromInputs(state));
+    state.input.addEventListener("input", () => syncFromInputs(state));
+    if (state.metaInput) {
+      state.metaInput.addEventListener("external-sync", () => syncFromInputs(state));
+      state.metaInput.addEventListener("input", () => syncFromInputs(state));
+    }
     const pickFile = (event) => {
       event.preventDefault();
       state.fileInput.value = "";
@@ -196,6 +204,7 @@ var Dieter = (() => {
         URL.revokeObjectURL(state.localObjectUrl);
         state.localObjectUrl = null;
       }
+      setMetaValue(state, null, true);
       setFileKey(state, "", true);
     });
     state.fileInput.addEventListener("change", async () => {
@@ -212,8 +221,7 @@ var Dieter = (() => {
       state.localObjectUrl = objectUrl;
       const { kind, ext } = classifyByNameAndType(file.name, file.type);
       state.root.dataset.localName = file.name;
-      state.root.dataset.localExt = ext || "";
-      state.root.dataset.localKind = kind;
+      setMetaValue(state, { name: file.name, mime: file.type || "", source: "user" }, true);
       setHeaderWithFile(state, file.name, false);
       setPreview(state, {
         kind,
@@ -251,6 +259,24 @@ var Dieter = (() => {
     });
     return ok ? null : "File type not allowed";
   }
+  function syncFromInputs(state, fallbackValue) {
+    const value = fallbackValue ?? state.input.value;
+    const meta = readMeta(state);
+    syncFromValue(state, value, meta);
+  }
+  function readMeta(state) {
+    if (!state.metaInput) return null;
+    const raw = state.metaInput.value || state.metaInput.getAttribute("value") || "";
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
   function extractPrimaryUrl(raw) {
     const v = (raw || "").trim();
     if (!v) return null;
@@ -265,47 +291,56 @@ var Dieter = (() => {
   }
   function looksLikeUrl(raw) {
     const url = extractPrimaryUrl(raw);
-    return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url)));
+    return Boolean(url && (/^https?:\/\//i.test(url) || /^blob:/i.test(url) || url.startsWith("/")));
   }
-  function previewFromUrl(state, raw) {
+  function previewFromUrl(state, raw, name, kindName, mime) {
     const url = extractPrimaryUrl(raw);
     if (!url) return;
-    const name = state.root.dataset.localName || "Uploaded file";
-    const ext = (state.root.dataset.localExt || guessExtFromName(name) || "").toLowerCase();
-    const kind = classifyByNameAndType(name, "").kind;
+    const ext = (guessExtFromName(kindName) || "").toLowerCase();
+    const kind = classifyByNameAndType(kindName || "file", mime).kind;
     setPreview(state, { kind, previewUrl: url, name, ext, hasFile: true });
   }
-  function previewFromDataUrl(state, raw) {
+  function previewFromDataUrl(state, raw, name, kindName, mimeOverride) {
     const url = extractPrimaryUrl(raw) || "";
-    const mime = (url.split(";")[0] || "").slice("data:".length);
-    const name = state.root.dataset.localName || "Uploaded file";
-    const ext = (state.root.dataset.localExt || guessExtFromName(name) || "").toLowerCase();
-    const kind = classifyByNameAndType(name, mime).kind;
+    const mime = mimeOverride || (url.split(";")[0] || "").slice("data:".length);
+    const ext = (guessExtFromName(kindName) || "").toLowerCase();
+    const kind = classifyByNameAndType(kindName || "file", mime).kind;
     setPreview(state, { kind, previewUrl: kind === "doc" ? void 0 : url, name, ext, hasFile: true });
   }
-  function syncFromValue(state, raw) {
-    const key = String(raw ?? "").trim();
+  function syncFromValue(state, raw, meta) {
+    let key = String(raw ?? "").trim();
+    if (key === "transparent") key = "";
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
+    const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
+    const metaMime = typeof meta?.mime === "string" ? meta.mime.trim() : "";
+    const expectsMeta = state.metaHasPath;
+    const rawUrl = extractPrimaryUrl(key) || "";
+    const kindName = metaName || guessNameFromUrl(rawUrl) || "";
+    const fallbackName = expectsMeta ? "" : isDataUrl(key) ? state.root.dataset.localName || "Uploaded file" : state.root.dataset.localName || guessNameFromUrl(rawUrl) || rawUrl || key || "Uploaded file";
+    const displayName = metaName || fallbackName || (expectsMeta ? "Unnamed file" : "Uploaded file");
     if (!key) {
       clearError(state);
       setHeaderEmpty(state, placeholder);
       state.root.dataset.hasFile = "false";
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
       delete state.root.dataset.localName;
-      delete state.root.dataset.localExt;
-      delete state.root.dataset.localKind;
       return;
     }
     state.root.dataset.hasFile = "true";
-    clearError(state);
+    const hasMetaError = expectsMeta && !metaName;
+    if (hasMetaError) {
+      setError(state, "Missing file metadata.");
+    } else {
+      clearError(state);
+    }
     if (isDataUrl(key)) {
-      setHeaderWithFile(state, state.root.dataset.localName || "Uploaded file", false);
-      previewFromDataUrl(state, key);
+      setHeaderWithFile(state, displayName, false);
+      previewFromDataUrl(state, key, displayName, kindName || displayName, metaMime);
       return;
     }
     if (looksLikeUrl(key)) {
-      setHeaderWithFile(state, state.root.dataset.localName || key, false);
-      previewFromUrl(state, key);
+      setHeaderWithFile(state, displayName, false);
+      previewFromUrl(state, key, displayName, kindName || displayName, metaMime);
       return;
     }
     setPreview(state, { kind: "unknown", previewUrl: void 0, name: "", ext: "", hasFile: true });
@@ -317,6 +352,12 @@ var Dieter = (() => {
     state.input.value = fileKey;
     state.internalWrite = false;
     if (emit) state.input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function setMetaValue(state, meta, emit) {
+    if (!state.metaInput) return;
+    const next = meta ? JSON.stringify(meta) : "";
+    state.metaInput.value = next;
+    if (emit) state.metaInput.dispatchEvent(new Event("input", { bubbles: true }));
   }
   function setPreview(state, args) {
     state.previewPanel.dataset.hasFile = args.hasFile ? "true" : "false";
@@ -374,6 +415,12 @@ var Dieter = (() => {
     const base = (name || "").split("?")[0];
     const parts = base.split(".").filter(Boolean);
     if (parts.length < 2) return "";
+    return parts[parts.length - 1];
+  }
+  function guessNameFromUrl(url) {
+    const cleaned = url.split("?")[0];
+    const parts = cleaned.split("/").filter(Boolean);
+    if (!parts.length) return "";
     return parts[parts.length - 1];
   }
   function captureNativeValue(input) {

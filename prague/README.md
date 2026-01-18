@@ -10,7 +10,7 @@ Prague is strict: these env vars are required at build/runtime (because they are
 
 - `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
 - `PUBLIC_BOB_URL` — base URL for Bob (used by the MiniBob iframe embed)
-- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for website creative iframes)
+- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for curated instance iframes)
 
 Optional (to pin the Minibob workspace only):
 

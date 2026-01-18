@@ -1,0 +1,208 @@
+{
+  "widgetname": "countdown",
+  "defaults": {
+    "stage": {
+      "canvas": {
+        "mode": "viewport",
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 24,
+          "top": 24,
+          "left": 24,
+          "right": 24,
+          "bottom": 24,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "left": 80,
+          "right": 80,
+          "bottom": 80,
+          "linked": true
+        }
+      },
+      "alignment": "center",
+      "background": "var(--color-system-gray-5)"
+    },
+    "pod": {
+      "radius": "4xl",
+      "padding": {
+        "mobile": {
+          "all": 28,
+          "top": 28,
+          "left": 28,
+          "right": 28,
+          "bottom": 28,
+          "linked": true
+        },
+        "desktop": {
+          "all": 52,
+          "top": 52,
+          "left": 52,
+          "right": 52,
+          "bottom": 52,
+          "linked": true
+        }
+      },
+      "radiusBL": "4xl",
+      "radiusBR": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "widthMode": "wrap",
+      "background": "var(--color-system-white)",
+      "contentWidth": 960,
+      "radiusLinked": true
+    },
+    "typography": {
+      "roles": {
+        "heading": {
+          "family": "Inter",
+          "sizePreset": "custom",
+          "sizeCustom": "32px",
+          "fontStyle": "normal",
+          "weight": "600",
+          "color": "var(--color-system-gray-90)"
+        },
+        "timer": {
+          "family": "Inter",
+          "sizePreset": "custom",
+          "sizeCustom": "48px",
+          "fontStyle": "normal",
+          "weight": "700",
+          "color": "var(--color-system-gray-90)"
+        },
+        "label": {
+          "family": "Inter",
+          "sizePreset": "custom",
+          "sizeCustom": "14px",
+          "fontStyle": "normal",
+          "weight": "400",
+          "color": "var(--color-system-gray-60)"
+        },
+        "button": {
+          "family": "Inter",
+          "sizePreset": "custom",
+          "sizeCustom": "16px",
+          "fontStyle": "normal",
+          "weight": "500",
+          "color": "var(--color-system-white)"
+        }
+      }
+    },
+    "timer": {
+      "mode": "date",
+      "targetDate": "2026-01-20T12:00",
+      "headline": "Get 50% off before it's too late 🎯",
+      "timezone": "UTC",
+      "timeAmount": 1,
+      "timeUnit": "hours",
+      "repeat": "never",
+      "targetNumber": 1000,
+      "startingNumber": 0,
+      "countDuration": 5
+    },
+    "layout": {
+      "position": "inline",
+      "width": "auto",
+      "alignment": "center"
+    },
+    "appearance": {
+      "background": "var(--color-system-white)",
+      "textColor": "var(--color-system-gray-90)",
+      "timerBoxColor": "var(--color-system-gray-10)",
+      "separator": ":"
+    },
+    "behavior": {
+      "showBacklink": true
+    },
+    "actions": {
+      "during": {
+        "type": "link",
+        "url": "",
+        "text": "Purchase now",
+        "style": "primary",
+        "newTab": true
+      },
+      "after": {
+        "type": "hide",
+        "url": "",
+        "text": ""
+      }
+    },
+    "seoGeo": {
+      "enabled": false
+    }
+  },
+  "html": [
+    "<bob-panel id='content'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Timer mode' />",
+    "    <tooldrawer-field type='choice-tiles' size='md' path='timer.mode' label='Select timer type' value='{{timer.mode}}' options='[{&quot;label&quot;:&quot;Countdown to Date&quot;,&quot;value&quot;:&quot;date&quot;,&quot;icon&quot;:&quot;calendar&quot;},{&quot;label&quot;:&quot;Personal Countdown&quot;,&quot;value&quot;:&quot;personal&quot;,&quot;icon&quot;:&quot;person&quot;},{&quot;label&quot;:&quot;Number Counter&quot;,&quot;value&quot;:&quot;number&quot;,&quot;icon&quot;:&quot;plus&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"timer.mode == 'date'\">",
+    "    <tooldrawer-eyebrow text='Date settings' />",
+    "    <tooldrawer-field type='textfield' size='md' path='timer.targetDate' label='Target date & time' value='{{timer.targetDate}}' placeholder='2026-01-20T12:00' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='timer.timezone' label='Timezone' value='{{timer.timezone}}' options='[{&quot;label&quot;:&quot;UTC&quot;,&quot;value&quot;:&quot;UTC&quot;},{&quot;label&quot;:&quot;EST&quot;,&quot;value&quot;:&quot;EST&quot;},{&quot;label&quot;:&quot;PST&quot;,&quot;value&quot;:&quot;PST&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"timer.mode == 'personal'\">",
+    "    <tooldrawer-eyebrow text='Personal settings' />",
+    "    <tooldrawer-field type='textfield' size='md' path='timer.timeAmount' label='Time amount' value='{{timer.timeAmount}}' placeholder='10' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='timer.timeUnit' label='Time unit' value='{{timer.timeUnit}}' options='[{&quot;label&quot;:&quot;Hours&quot;,&quot;value&quot;:&quot;hours&quot;},{&quot;label&quot;:&quot;Minutes&quot;,&quot;value&quot;:&quot;minutes&quot;},{&quot;label&quot;:&quot;Days&quot;,&quot;value&quot;:&quot;days&quot;},{&quot;label&quot;:&quot;Weeks&quot;,&quot;value&quot;:&quot;weeks&quot;},{&quot;label&quot;:&quot;Months&quot;,&quot;value&quot;:&quot;months&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='timer.repeat' label='Repeat' value='{{timer.repeat}}' options='[{&quot;label&quot;:&quot;Never&quot;,&quot;value&quot;:&quot;never&quot;},{&quot;label&quot;:&quot;1 minute&quot;,&quot;value&quot;:&quot;1 minute&quot;},{&quot;label&quot;:&quot;5 minutes&quot;,&quot;value&quot;:&quot;5 minutes&quot;},{&quot;label&quot;:&quot;1 hour&quot;,&quot;value&quot;:&quot;1 hour&quot;},{&quot;label&quot;:&quot;1 day&quot;,&quot;value&quot;:&quot;1 day&quot;},{&quot;label&quot;:&quot;1 week&quot;,&quot;value&quot;:&quot;1 week&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster show-if=\"timer.mode == 'number'\">",
+    "    <tooldrawer-eyebrow text='Number settings' />",
+    "    <tooldrawer-field type='textfield' size='md' path='timer.targetNumber' label='Target number' value='{{timer.targetNumber}}' placeholder='100' />",
+    "    <tooldrawer-field type='textfield' size='md' path='timer.startingNumber' label='Starting number' value='{{timer.startingNumber}}' placeholder='0' />",
+    "    <tooldrawer-field type='textfield' size='md' path='timer.countDuration' label='Count duration (seconds)' value='{{timer.countDuration}}' placeholder='10' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Headline' />",
+    "    <tooldrawer-field type='textfield' size='lg' path='timer.headline' label='Headline text' value='{{timer.headline}}' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='layout'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='layout.position' label='Position' value='{{layout.position}}' options='[{&quot;label&quot;:&quot;Inline&quot;,&quot;value&quot;:&quot;inline&quot;},{&quot;label&quot;:&quot;Sticky top&quot;,&quot;value&quot;:&quot;sticky-top&quot;},{&quot;label&quot;:&quot;Sticky bottom&quot;,&quot;value&quot;:&quot;sticky-bottom&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='layout.width' label='Content width' value='{{layout.width}}' options='[{&quot;label&quot;:&quot;Auto&quot;,&quot;value&quot;:&quot;auto&quot;},{&quot;label&quot;:&quot;Full&quot;,&quot;value&quot;:&quot;full&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='layout.alignment' label='Alignment' value='{{layout.alignment}}' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='appearance'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='Theme & colors' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.background' label='Widget background' value='{{appearance.background}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.textColor' label='Text color' value='{{appearance.textColor}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.timerBoxColor' label='Timer box color' value='{{appearance.timerBoxColor}}' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.separator' label='Separator' value='{{appearance.separator}}' options='[{&quot;label&quot;:&quot;Colon&quot;,&quot;value&quot;:&quot;:&quot;},{&quot;label&quot;:&quot;Slash&quot;,&quot;value&quot;:&quot;/&quot;}]' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='typography'>",
+    "</bob-panel>",
+    "<bob-panel id='behavior'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field type='toggle' size='md' path='behavior.showBacklink' label='Show backlink' value='{{behavior.showBacklink}}' />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>",
+    "<bob-panel id='actions'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='During countdown' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='actions.during.type' label='Action type' value='{{actions.during.type}}' options='[{&quot;label&quot;:&quot;Link&quot;,&quot;value&quot;:&quot;link&quot;}]' />",
+    "    <tooldrawer-field type='textfield' size='md' path='actions.during.url' label='URL' value='{{actions.during.url}}' placeholder='https://example.com' />",
+    "    <tooldrawer-field type='textfield' size='md' path='actions.during.text' label='Button text' value='{{actions.during.text}}' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='actions.during.style' label='Button style' value='{{actions.during.style}}' options='[{&quot;label&quot;:&quot;Primary&quot;,&quot;value&quot;:&quot;primary&quot;},{&quot;label&quot;:&quot;Secondary&quot;,&quot;value&quot;:&quot;secondary&quot;}]' />",
+    "    <tooldrawer-field type='toggle' size='md' path='actions.during.newTab' label='Open in new tab' value='{{actions.during.newTab}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='After countdown ends' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='actions.after.type' label='Action type' value='{{actions.after.type}}' options='[{&quot;label&quot;:&quot;Hide Timer&quot;,&quot;value&quot;:&quot;hide&quot;},{&quot;label&quot;:&quot;Link&quot;,&quot;value&quot;:&quot;link&quot;}]' />",
+    "    <tooldrawer-field type='textfield' size='md' path='actions.after.url' label='URL' value='{{actions.after.url}}' show-if=\"actions.after.type == 'link'\" />",
+    "    <tooldrawer-field type='textfield' size='md' path='actions.after.text' label='Message text' value='{{actions.after.text}}' show-if=\"actions.after.type == 'link'\" />",
+    "  </tooldrawer-cluster>",
+    "</bob-panel>"
+  ]
+}

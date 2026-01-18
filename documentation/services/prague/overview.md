@@ -109,7 +109,7 @@ Defaults (local/dev):
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- “Website creatives” (visual widget embeds inside Prague blocks) remain locale-free instances (e.g. `wgt_curated_{widgetType}.overview.hero`); locale is passed as a query param and/or applied via overlays at runtime.
+- Curated embeds (visual widget instances inside Prague blocks) remain locale-free; locale is passed as a query param and/or applied via overlays at runtime.
 
 ---
 

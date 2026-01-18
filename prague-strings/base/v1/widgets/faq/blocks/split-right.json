@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "blockId": "split-right",
+  "blockKind": "split-creative-right",
+  "strings": {
+    "headline": "Split creative (right)",
+    "subheadline": "This is the right-visual variant, using the same curated instance as the hero."
+  }
+}
+

@@ -60,123 +60,123 @@
         }
       }
     },
-    "widgets/faq/blocks/cta": {
+    "widgets/faq/blocks/big-bang": {
       "base": {
-        "file": "base/v1/widgets/faq/blocks/cta.json",
-        "fingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e"
+        "file": "base/v1/widgets/faq/blocks/big-bang.json",
+        "fingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea"
       },
       "locales": {
         "ar": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/ar.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/ar.ops.json"
         },
         "de": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/de.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/de.ops.json"
         },
         "es": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/es.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/es.ops.json"
         },
         "fr": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/fr.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/fr.ops.json"
         },
         "hi": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/hi.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/hi.ops.json"
         },
         "it": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/it.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/it.ops.json"
         },
         "ja": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/ja.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/ja.ops.json"
         },
         "ko": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/ko.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/ko.ops.json"
         },
         "nl": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/nl.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/nl.ops.json"
         },
         "pl": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/pl.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/pl.ops.json"
         },
         "pt": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/pt.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/pt.ops.json"
         },
         "tr": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/tr.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/tr.ops.json"
         },
         "zh-tw": {
-          "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-          "file": "overlays/v1/widgets/faq/blocks/cta/zh-tw.ops.json"
+          "baseFingerprint": "a13924183a992f69faf04b544e5b532d0587e0748e5103c58bbad0f4e364c4ea",
+          "file": "overlays/v1/widgets/faq/blocks/big-bang/zh-tw.ops.json"
         }
       }
     },
-    "widgets/faq/blocks/features": {
+    "widgets/faq/blocks/cta": {
       "base": {
-        "file": "base/v1/widgets/faq/blocks/features.json",
-        "fingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac"
+        "file": "base/v1/widgets/faq/blocks/cta.json",
+        "fingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37"
       },
       "locales": {
         "ar": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/ar.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ar.ops.json"
         },
         "de": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/de.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/de.ops.json"
         },
         "es": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/es.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/es.ops.json"
         },
         "fr": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/fr.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/fr.ops.json"
         },
         "hi": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/hi.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/hi.ops.json"
         },
         "it": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/it.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/it.ops.json"
         },
         "ja": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/ja.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ja.ops.json"
         },
         "ko": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/ko.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/ko.ops.json"
         },
         "nl": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/nl.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/nl.ops.json"
         },
         "pl": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/pl.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/pl.ops.json"
         },
         "pt": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/pt.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/pt.ops.json"
         },
         "tr": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/tr.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/tr.ops.json"
         },
         "zh-tw": {
-          "baseFingerprint": "c6631a9b1162aa6ccabb29a6dce48822e06181e0b4a494ae10537009de28b4ac",
-          "file": "overlays/v1/widgets/faq/blocks/features/zh-tw.ops.json"
+          "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+          "file": "overlays/v1/widgets/faq/blocks/cta/zh-tw.ops.json"
         }
       }
     },
@@ -243,59 +243,59 @@
     "widgets/faq/blocks/minibob": {
       "base": {
         "file": "base/v1/widgets/faq/blocks/minibob.json",
-        "fingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa"
+        "fingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc"
       },
       "locales": {
         "ar": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/ar.ops.json"
         },
         "de": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/de.ops.json"
         },
         "es": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/es.ops.json"
         },
         "fr": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/fr.ops.json"
         },
         "hi": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/hi.ops.json"
         },
         "it": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/it.ops.json"
         },
         "ja": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/ja.ops.json"
         },
         "ko": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/ko.ops.json"
         },
         "nl": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/nl.ops.json"
         },
         "pl": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/pl.ops.json"
         },
         "pt": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/pt.ops.json"
         },
         "tr": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/tr.ops.json"
         },
         "zh-tw": {
-          "baseFingerprint": "5efbaa564fc71c7a57662c07805bbdca44e2c472ba11006ae848aa2d635d25fa",
+          "baseFingerprint": "e096805944f1053972d10ebe30854ea296ef26123d69209c3a442446cd8bb3dc",
           "file": "overlays/v1/widgets/faq/blocks/minibob/zh-tw.ops.json"
         }
       }
@@ -420,62 +420,362 @@
         }
       }
     },
-    "widgets/faq/blocks/steps": {
+    "widgets/faq/blocks/split-left": {
       "base": {
-        "file": "base/v1/widgets/faq/blocks/steps.json",
-        "fingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf"
+        "file": "base/v1/widgets/faq/blocks/split-left.json",
+        "fingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072"
       },
       "locales": {
         "ar": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "d78e9959680c95b3be139109ca47677489581607ebe93ce498ed13e95385b072",
+          "file": "overlays/v1/widgets/faq/blocks/split-left/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/split-left-2": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/split-left-2.json",
+        "fingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+          "file": "overlays/v1/widgets/faq/blocks/split-left-2/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/split-right": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/split-right.json",
+        "fingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "8671bb45608ef0219537209cb013c78a015032ad45fcb10631f4d99e555d7847",
+          "file": "overlays/v1/widgets/faq/blocks/split-right/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/split-right-2": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/split-right-2.json",
+        "fingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+          "file": "overlays/v1/widgets/faq/blocks/split-right-2/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/split-stacked": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/split-stacked.json",
+        "fingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/ar.ops.json"
+        },
+        "de": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/de.ops.json"
+        },
+        "es": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/es.ops.json"
+        },
+        "fr": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/fr.ops.json"
+        },
+        "hi": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/hi.ops.json"
+        },
+        "it": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/it.ops.json"
+        },
+        "ja": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/ja.ops.json"
+        },
+        "ko": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/ko.ops.json"
+        },
+        "nl": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/nl.ops.json"
+        },
+        "pl": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/pl.ops.json"
+        },
+        "pt": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/pt.ops.json"
+        },
+        "tr": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/tr.ops.json"
+        },
+        "zh-tw": {
+          "baseFingerprint": "84206020d2f1ce569a0d2bbe753185c2eddf8d8f28010ad96fe3bf191acaa314",
+          "file": "overlays/v1/widgets/faq/blocks/split-stacked/zh-tw.ops.json"
+        }
+      }
+    },
+    "widgets/faq/blocks/steps": {
+      "base": {
+        "file": "base/v1/widgets/faq/blocks/steps.json",
+        "fingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a"
+      },
+      "locales": {
+        "ar": {
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/ar.ops.json"
         },
         "de": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/de.ops.json"
         },
         "es": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/es.ops.json"
         },
         "fr": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/fr.ops.json"
         },
         "hi": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/hi.ops.json"
         },
         "it": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/it.ops.json"
         },
         "ja": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/ja.ops.json"
         },
         "ko": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/ko.ops.json"
         },
         "nl": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/nl.ops.json"
         },
         "pl": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/pl.ops.json"
         },
         "pt": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/pt.ops.json"
         },
         "tr": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/tr.ops.json"
         },
         "zh-tw": {
-          "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+          "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
           "file": "overlays/v1/widgets/faq/blocks/steps/zh-tw.ops.json"
         }
       }
@@ -1017,66 +1317,6 @@
         "zh-tw": {
           "baseFingerprint": "acb4784e14e1d94a345dd0f8b79e29687980a972c6b6c55ae75dff7494870ce1",
           "file": "overlays/v1/widgets/logoshowcase/blocks/cta/zh-tw.ops.json"
-        }
-      }
-    },
-    "widgets/logoshowcase/blocks/features": {
-      "base": {
-        "file": "base/v1/widgets/logoshowcase/blocks/features.json",
-        "fingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b"
-      },
-      "locales": {
-        "ar": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ar.ops.json"
-        },
-        "de": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/de.ops.json"
-        },
-        "es": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/es.ops.json"
-        },
-        "fr": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/fr.ops.json"
-        },
-        "hi": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/hi.ops.json"
-        },
-        "it": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/it.ops.json"
-        },
-        "ja": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ja.ops.json"
-        },
-        "ko": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/ko.ops.json"
-        },
-        "nl": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/nl.ops.json"
-        },
-        "pl": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/pl.ops.json"
-        },
-        "pt": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/pt.ops.json"
-        },
-        "tr": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/tr.ops.json"
-        },
-        "zh-tw": {
-          "baseFingerprint": "82de0dd3ded62598b89992d63bf1acbb58bc6db9cd411515d5a5c3d572d2422b",
-          "file": "overlays/v1/widgets/logoshowcase/blocks/features/zh-tw.ops.json"
         }
       }
     },
@@ -1861,6 +2101,6 @@
       }
     }
   },
-  "gitSha": "ba631caa83bdc4cfc099eb714fcb865232558edd",
+  "gitSha": "c677e22e34355f5d1989d89f2a45e443bb845ab5",
   "v": 1
 }

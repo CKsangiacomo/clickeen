@@ -9,7 +9,8 @@
     "labelPlaceholder": { "optional": true },
     "default-item": { "optional": true },
     "toggleLabel": { "optional": true },
-    "togglePath": { "optional": true }
+    "togglePath": { "optional": true },
+    "add-open": { "optional": true }
   },
   "defaults": [
     {

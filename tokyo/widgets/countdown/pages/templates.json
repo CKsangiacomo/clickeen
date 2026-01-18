@@ -1,0 +1,42 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
+      "id": "hero",
+      "type": "hero",
+      "visual": true,
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.templates.hero"
+      }
+    },
+    {
+      "id": "templates-grid",
+      "type": "grid",
+      "copy": {
+        "headline": "Countdown Templates",
+        "items": [
+          {
+            "title": "Minimal Timer",
+            "description": "Clean, simple countdown display."
+          },
+          {
+            "title": "Urgent Sale",
+            "description": "Bold design for flash sales."
+          },
+          {
+            "title": "Event Teaser",
+            "description": "Exciting countdown for upcoming events."
+          },
+          {
+            "title": "Personal Goal",
+            "description": "Motivational tracker for milestones."
+          }
+        ]
+      }
+    }
+  ]
+}

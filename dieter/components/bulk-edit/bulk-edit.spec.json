@@ -1,0 +1,31 @@
+{
+  "component": "bulk-edit",
+  "syntax": "<tooldrawer-field type='bulk-edit' size='{{SIZE}}' path='{{PATH}}' row-path='{{ROW_PATH}}' label='{{LABEL}}' title='{{TITLE}}' columns='{{COLUMNS}}' empty-label='{{EMPTY_LABEL}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": {},
+    "row-path": {},
+    "columns": {},
+    "label": { "optional": true },
+    "title": { "optional": true },
+    "empty-label": { "optional": true },
+    "show-if": { "optional": true },
+    "show-when": { "optional": true }
+  },
+  "defaults": [
+    {
+      "id": "bulk-edit",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["bulk-edit"],
+      "context": {
+        "size": "md",
+        "path": "",
+        "rowPath": "",
+        "label": "Bulk edit",
+        "title": "Bulk edit",
+        "columns": "[]",
+        "emptyLabel": "No rows available"
+      }
+    }
+  ]
+}

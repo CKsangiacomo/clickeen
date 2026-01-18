@@ -13,6 +13,13 @@
     data-max-video-kb="{{maxVideoKb}}"
     data-max-other-kb="{{maxOtherKb}}"
   />
+  <input
+    type="hidden"
+    class="diet-dropdown-upload__meta-field"
+    value=""
+    {{#if metaPath}}data-bob-path="{{metaPath}}"{{/if}}
+    data-bob-json
+  />
 
   <div
     class="diet-dropdown-header diet-dropdown-upload__control"

@@ -131,37 +131,29 @@
       throw new Error('[LogoShowcase] state.cta.style must be filled|outline');
     }
 
-    if (!['grid', 'slider', 'carousel', 'ticker'].includes(state.type)) {
-      throw new Error('[LogoShowcase] state.type must be grid|slider|carousel|ticker');
+    if (!['grid', 'carousel'].includes(state.type)) {
+      throw new Error('[LogoShowcase] state.type must be grid|carousel');
     }
 
     assertObject(state.typeConfig, 'state.typeConfig');
     assertObject(state.typeConfig.grid, 'state.typeConfig.grid');
-    assertNumber(state.typeConfig.grid.columnsDesktop, 'state.typeConfig.grid.columnsDesktop');
-    assertNumber(state.typeConfig.grid.columnsMobile, 'state.typeConfig.grid.columnsMobile');
-
-    assertObject(state.typeConfig.slider, 'state.typeConfig.slider');
-    assertBoolean(state.typeConfig.slider.showArrows, 'state.typeConfig.slider.showArrows');
-    assertBoolean(state.typeConfig.slider.showDots, 'state.typeConfig.slider.showDots');
-    assertBoolean(state.typeConfig.slider.allowSwipe, 'state.typeConfig.slider.allowSwipe');
-    assertBoolean(state.typeConfig.slider.pauseOnHover, 'state.typeConfig.slider.pauseOnHover');
-    assertBoolean(state.typeConfig.slider.autoSlide, 'state.typeConfig.slider.autoSlide');
-    assertNumber(state.typeConfig.slider.autoSlideDelayMs, 'state.typeConfig.slider.autoSlideDelayMs');
-    assertNumber(state.typeConfig.slider.transitionMs, 'state.typeConfig.slider.transitionMs');
 
     assertObject(state.typeConfig.carousel, 'state.typeConfig.carousel');
+    if (!['paged', 'continuous'].includes(state.typeConfig.carousel.mode)) {
+      throw new Error('[LogoShowcase] state.typeConfig.carousel.mode must be paged|continuous');
+    }
+    if (!['logo', 'page'].includes(state.typeConfig.carousel.step)) {
+      throw new Error('[LogoShowcase] state.typeConfig.carousel.step must be logo|page');
+    }
+    assertBoolean(state.typeConfig.carousel.showArrows, 'state.typeConfig.carousel.showArrows');
+    assertBoolean(state.typeConfig.carousel.allowSwipe, 'state.typeConfig.carousel.allowSwipe');
+    assertBoolean(state.typeConfig.carousel.autoplay, 'state.typeConfig.carousel.autoplay');
     assertBoolean(state.typeConfig.carousel.pauseOnHover, 'state.typeConfig.carousel.pauseOnHover');
     assertNumber(state.typeConfig.carousel.autoSlideDelayMs, 'state.typeConfig.carousel.autoSlideDelayMs');
     assertNumber(state.typeConfig.carousel.transitionMs, 'state.typeConfig.carousel.transitionMs');
+    assertNumber(state.typeConfig.carousel.speed, 'state.typeConfig.carousel.speed');
     if (!['left', 'right'].includes(state.typeConfig.carousel.direction)) {
       throw new Error('[LogoShowcase] state.typeConfig.carousel.direction must be left|right');
-    }
-
-    assertObject(state.typeConfig.ticker, 'state.typeConfig.ticker');
-    assertBoolean(state.typeConfig.ticker.pauseOnHover, 'state.typeConfig.ticker.pauseOnHover');
-    assertNumber(state.typeConfig.ticker.speed, 'state.typeConfig.ticker.speed');
-    if (!['left', 'right'].includes(state.typeConfig.ticker.direction)) {
-      throw new Error('[LogoShowcase] state.typeConfig.ticker.direction must be left|right');
     }
 
     assertObject(state.appearance, 'state.appearance');
@@ -215,7 +207,6 @@
     assertNumber(state.spacing.logoHeight, 'state.spacing.logoHeight');
     assertNumber(state.spacing.mobileGap, 'state.spacing.mobileGap');
     assertNumber(state.spacing.mobileStripGap, 'state.spacing.mobileStripGap');
-    assertNumber(state.spacing.mobileLogoHeight, 'state.spacing.mobileLogoHeight');
 
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.randomOrder, 'state.behavior.randomOrder');
@@ -346,10 +337,7 @@
     lsRoot.style.setProperty('--ls-strip-gap-mobile', `${state.spacing.mobileStripGap}px`);
     lsRoot.style.setProperty('--ls-row-gap', `${state.spacing.rowGap}px`);
     lsRoot.style.setProperty('--ls-logo-h', `${state.spacing.logoHeight}px`);
-    lsRoot.style.setProperty('--ls-logo-h-mobile', `${state.spacing.mobileLogoHeight}px`);
-
-    lsRoot.style.setProperty('--ls-grid-cols-desktop', String(state.typeConfig.grid.columnsDesktop));
-    lsRoot.style.setProperty('--ls-grid-cols-mobile', String(state.typeConfig.grid.columnsMobile));
+    lsRoot.style.setProperty('--ls-logo-h-mobile', `${state.spacing.logoHeight}px`);
   }
 
   function applyAppearanceVars(state) {
@@ -391,7 +379,10 @@
     headerEl.hidden = state.header.enabled !== true;
     headerEl.setAttribute('data-align', state.header.alignment);
 
-    titleEl.textContent = state.header.title;
+    const titleHtml = String(state.header.title || '');
+    const titleSanitized = titleHtml ? sanitizeInlineHtml(titleHtml) : '';
+    titleEl.innerHTML = titleSanitized;
+    titleEl.hidden = !titleSanitized;
 
     const subtitleHtml = String(state.header.textHtml || '');
     const sanitized = subtitleHtml ? sanitizeInlineHtml(subtitleHtml) : '';
@@ -494,7 +485,8 @@
         return shuffleWithSeed(strip.logos, fnv1a32(seedString));
       })();
 
-      if (state.type === 'ticker') {
+      const isContinuous = state.type === 'carousel' && state.typeConfig.carousel.mode === 'continuous';
+      if (isContinuous) {
         const copyA = document.createElement('div');
         copyA.className = 'ck-logoshowcase__ticker-copy';
         copyA.setAttribute('data-role', 'ticker-a');
@@ -614,7 +606,7 @@
     }
   }
 
-  function bindSlider(stripEl, state) {
+  function bindPagedMotion(stripEl, state) {
     const viewportEl = stripEl.querySelector('[data-role="strip-viewport"]');
     const navEl = stripEl.querySelector('[data-role="nav"]');
     const dotsEl = stripEl.querySelector('[data-role="dots"]');
@@ -627,15 +619,16 @@
     if (!(prevBtn instanceof HTMLButtonElement)) return;
     if (!(nextBtn instanceof HTMLButtonElement)) return;
 
-    const cfg = state.typeConfig.slider;
+    const cfg = state.typeConfig.carousel;
 
     stripEl.dataset.swipe = cfg.allowSwipe === true ? 'true' : 'false';
+    stripEl.dataset.pauseOnHover = 'false';
 
     prevBtn.hidden = cfg.showArrows !== true;
     nextBtn.hidden = cfg.showArrows !== true;
-    dotsEl.hidden = cfg.showDots !== true;
-    navEl.hidden = cfg.showArrows !== true && cfg.showDots !== true;
-    navEl.dataset.dots = cfg.showDots === true ? 'true' : 'false';
+    dotsEl.hidden = true;
+    navEl.hidden = cfg.showArrows !== true;
+    navEl.dataset.dots = 'false';
     navEl.dataset.arrows = cfg.showArrows === true ? 'true' : 'false';
 
     let hovering = false;
@@ -662,34 +655,12 @@
       const gap = isMobile() ? state.spacing.mobileGap : state.spacing.gap;
       const viewportW = viewportEl.clientWidth;
       const perPage = tileW > 0 ? Math.max(1, Math.floor((viewportW + gap) / (tileW + gap))) : 1;
-      const pageCount = perPage > 0 ? Math.max(1, Math.ceil(itemCount / perPage)) : 1;
-      const stepPx = perPage * (tileW + gap);
+      const stepMode = cfg.step === 'logo' ? 'logo' : 'page';
+      const pageCount =
+        stepMode === 'logo' ? Math.max(1, itemCount) : Math.max(1, Math.ceil(itemCount / perPage));
+      const stepPx = (stepMode === 'logo' ? 1 : perPage) * (tileW + gap);
       const pageIndex = stepPx > 0 ? clamp(Math.round(viewportEl.scrollLeft / stepPx), 0, pageCount - 1) : 0;
       return { itemCount, tileW, viewportW, perPage, pageCount, stepPx, pageIndex };
-    };
-
-    const ensureDots = (pageCount, pageIndex) => {
-      if (cfg.showDots !== true) return;
-      const existing = Array.from(dotsEl.querySelectorAll('button[data-role="dot"]'));
-      if (existing.length !== pageCount) {
-        dotsEl.innerHTML = '';
-        for (let i = 0; i < pageCount; i += 1) {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'ck-logoshowcase__dot';
-          btn.setAttribute('data-role', 'dot');
-          btn.setAttribute('data-page', String(i));
-          btn.setAttribute('aria-label', `Go to page ${i + 1}`);
-          dotsEl.appendChild(btn);
-        }
-      }
-      Array.from(dotsEl.querySelectorAll('button[data-role="dot"]')).forEach((btn, idx) => {
-        if (!(btn instanceof HTMLButtonElement)) return;
-        const active = idx === pageIndex;
-        btn.dataset.active = active ? 'true' : 'false';
-        if (active) btn.setAttribute('aria-current', 'true');
-        else btn.removeAttribute('aria-current');
-      });
     };
 
     const syncUi = () => {
@@ -698,7 +669,6 @@
         prevBtn.disabled = pageIndex <= 0;
         nextBtn.disabled = pageIndex >= pageCount - 1;
       }
-      ensureDots(pageCount, pageIndex);
     };
 
     const scrollToPage = (targetIndex, animate) => {
@@ -720,20 +690,8 @@
       scrollToPage(pageIndex + 1, true);
     };
 
-    const onDotsClick = (event) => {
-      if (cfg.showDots !== true) return;
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const btn = target.closest('button[data-role="dot"]');
-      if (!(btn instanceof HTMLButtonElement)) return;
-      const page = Number(btn.getAttribute('data-page'));
-      if (!Number.isFinite(page)) return;
-      scrollToPage(page, true);
-    };
-
     prevBtn.addEventListener('click', onClickPrev);
     nextBtn.addEventListener('click', onClickNext);
-    dotsEl.addEventListener('click', onDotsClick);
 
     const onScroll = () => syncUi();
     viewportEl.addEventListener('scroll', onScroll, { passive: true });
@@ -746,7 +704,7 @@
       runtime.ro.observe(viewportEl);
     }
 
-    if (cfg.autoSlide === true && cfg.autoSlideDelayMs > 0) {
+    if (cfg.autoplay === true && cfg.autoSlideDelayMs > 0) {
       runtime.interval = window.setInterval(() => {
         if (cfg.pauseOnHover === true && hovering) return;
         const { pageIndex, pageCount } = getPaging();
@@ -767,7 +725,6 @@
       stripEl.removeEventListener('mouseleave', onLeave);
       prevBtn.removeEventListener('click', onClickPrev);
       nextBtn.removeEventListener('click', onClickNext);
-      dotsEl.removeEventListener('click', onDotsClick);
       viewportEl.removeEventListener('scroll', onScroll);
     };
 
@@ -775,102 +732,7 @@
     syncUi();
   }
 
-  function bindCarousel(stripEl, state) {
-    const viewportEl = stripEl.querySelector('[data-role="strip-viewport"]');
-    const navEl = stripEl.querySelector('[data-role="nav"]');
-    const dotsEl = stripEl.querySelector('[data-role="dots"]');
-    const prevBtn = stripEl.querySelector('[data-role="arrow"][data-dir="prev"]');
-    const nextBtn = stripEl.querySelector('[data-role="arrow"][data-dir="next"]');
-
-    if (!(viewportEl instanceof HTMLElement)) return;
-    if (!(navEl instanceof HTMLElement)) return;
-    if (!(dotsEl instanceof HTMLElement)) return;
-    if (!(prevBtn instanceof HTMLButtonElement)) return;
-    if (!(nextBtn instanceof HTMLButtonElement)) return;
-
-    const cfg = state.typeConfig.carousel;
-
-    stripEl.dataset.swipe = 'false';
-    navEl.hidden = true;
-    prevBtn.hidden = true;
-    nextBtn.hidden = true;
-    dotsEl.hidden = true;
-
-    let hovering = false;
-    const onEnter = () => {
-      hovering = true;
-    };
-    const onLeave = () => {
-      hovering = false;
-    };
-    stripEl.addEventListener('mouseenter', onEnter);
-    stripEl.addEventListener('mouseleave', onLeave);
-
-    const runtime = {
-      raf: 0,
-      interval: 0,
-      ro: null,
-      cleanup: () => {},
-    };
-
-    const getPaging = () => {
-      const itemCount = stripEl.querySelectorAll('[data-role="logos"] [data-role="logo"]').length;
-      const first = stripEl.querySelector('[data-role="logos"] [data-role="logo"]');
-      const tileW = first instanceof HTMLElement ? first.getBoundingClientRect().width : 0;
-      const gap = isMobile() ? state.spacing.mobileGap : state.spacing.gap;
-      const viewportW = viewportEl.clientWidth;
-      const perPage = tileW > 0 ? Math.max(1, Math.floor((viewportW + gap) / (tileW + gap))) : 1;
-      const pageCount = perPage > 0 ? Math.max(1, Math.ceil(itemCount / perPage)) : 1;
-      const stepPx = perPage * (tileW + gap);
-      const pageIndex = stepPx > 0 ? clamp(Math.round(viewportEl.scrollLeft / stepPx), 0, pageCount - 1) : 0;
-      return { itemCount, tileW, viewportW, perPage, pageCount, stepPx, pageIndex };
-    };
-
-    const scrollToPage = (targetIndex, animate) => {
-      const { pageCount, stepPx } = getPaging();
-      if (pageCount <= 1 || stepPx <= 0) return;
-      const idx = clamp(targetIndex, 0, pageCount - 1);
-      const targetLeft = idx * stepPx;
-      if (animate) animateScrollLeft(viewportEl, targetLeft, cfg.transitionMs, runtime);
-      else viewportEl.scrollLeft = targetLeft;
-    };
-
-    if (typeof ResizeObserver !== 'undefined') {
-      runtime.ro = new ResizeObserver(() => {
-        const { pageIndex } = getPaging();
-        scrollToPage(pageIndex, false);
-      });
-      runtime.ro.observe(viewportEl);
-    }
-
-    if (cfg.autoSlideDelayMs > 0) {
-      runtime.interval = window.setInterval(() => {
-        if (cfg.pauseOnHover === true && hovering) return;
-        const { pageIndex, pageCount } = getPaging();
-        if (pageCount <= 1) return;
-        const next =
-          cfg.direction === 'right'
-            ? (pageIndex - 1 + pageCount) % pageCount
-            : (pageIndex + 1) % pageCount;
-        scrollToPage(next, true);
-      }, Math.round(cfg.autoSlideDelayMs));
-    }
-
-    runtime.cleanup = () => {
-      if (runtime.raf) cancelAnimationFrame(runtime.raf);
-      runtime.raf = 0;
-      if (runtime.interval) clearInterval(runtime.interval);
-      runtime.interval = 0;
-      if (runtime.ro) runtime.ro.disconnect();
-      runtime.ro = null;
-      stripEl.removeEventListener('mouseenter', onEnter);
-      stripEl.removeEventListener('mouseleave', onLeave);
-    };
-
-    stripBindings.set(stripEl, runtime);
-  }
-
-  function bindTicker(stripEl, state) {
+  function bindContinuousMotion(stripEl, state) {
     const viewportEl = stripEl.querySelector('[data-role="strip-viewport"]');
     const trackEl = stripEl.querySelector('[data-role="strip-track"]');
     const navEl = stripEl.querySelector('[data-role="nav"]');
@@ -885,7 +747,7 @@
     if (!(prevBtn instanceof HTMLButtonElement)) return;
     if (!(nextBtn instanceof HTMLButtonElement)) return;
 
-    const cfg = state.typeConfig.ticker;
+    const cfg = state.typeConfig.carousel;
 
     stripEl.dataset.swipe = 'false';
     stripEl.dataset.pauseOnHover = cfg.pauseOnHover === true ? 'true' : 'false';
@@ -937,10 +799,10 @@
     Array.from(stripsEl.querySelectorAll('[data-role="strip"]')).forEach((stripEl) => {
       cleanupStrip(stripEl);
       if (!(stripEl instanceof HTMLElement)) return;
-      if (state.type === 'slider') bindSlider(stripEl, state);
-      else if (state.type === 'carousel') bindCarousel(stripEl, state);
-      else if (state.type === 'ticker') bindTicker(stripEl, state);
-      else {
+      if (state.type === 'carousel') {
+        if (state.typeConfig.carousel.mode === 'continuous') bindContinuousMotion(stripEl, state);
+        else bindPagedMotion(stripEl, state);
+      } else {
         // grid: no motion bindings
         const navEl = stripEl.querySelector('[data-role="nav"]');
         const dotsEl = stripEl.querySelector('[data-role="dots"]');
@@ -975,13 +837,23 @@
     });
 
     lsRoot.setAttribute('data-type', state.type);
+    if (state.type === 'carousel') {
+      lsRoot.setAttribute('data-motion', state.typeConfig.carousel.mode);
+    } else {
+      lsRoot.removeAttribute('data-motion');
+    }
 
     applyLayoutVars(state);
     applyAppearanceVars(state);
     applyHeader(state);
     applyCta(state);
 
-    const nextSignature = JSON.stringify([state.type, state.behavior.randomOrder === true, state.strips]);
+    const nextSignature = JSON.stringify([
+      state.type,
+      state.type === 'carousel' ? state.typeConfig.carousel.mode : 'grid',
+      state.behavior.randomOrder === true,
+      state.strips,
+    ]);
     if (nextSignature !== lastStripsSignature) {
       lastStripsSignature = nextSignature;
       renderStrips(state);

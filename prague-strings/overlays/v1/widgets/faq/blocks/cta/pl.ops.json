@@ -1,16 +1,16 @@
 {
-  "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-  "baseUpdatedAt": "2026-01-16T17:12:12.366Z",
+  "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+  "baseUpdatedAt": "2026-01-18T16:38:17.667Z",
   "ops": [
     {
       "op": "set",
       "path": "strings.headline",
-      "value": "Utwórz widżet FAQ"
+      "value": "Nawiąż kontakt z każdym klientem, wszędzie"
     },
     {
       "op": "set",
       "path": "strings.subheadline",
-      "value": "Zacznij za darmo. Opublikuj, gdy będziesz gotowy."
+      "value": "FAQ oparte na AI, które mówi ich językiem i rozumie ich potrzeby."
     }
   ],
   "v": 1

@@ -6,9 +6,10 @@ const TOKEN_FILE = path.resolve(__dirname, '../../dieter/tokens/dieter-typograph
 const OUTPUT_FILE = path.resolve(__dirname, '../src/data/typography.generated.json');
 
 const CATEGORY_MARKERS = [
+  { title: 'Marketing Display', pattern: /^\.display-[\w-]+$/ },
   { title: 'Headings', pattern: /^\.heading-[\w-]+$/ },
   { title: 'Body', pattern: /^\.body(?:-[\w-]+)?$/ },
-  { title: 'Labels & Captions', pattern: /^\.(label[\w-]*|caption(?:-small)?|overline)$/ },
+  { title: 'Labels & Captions', pattern: /^\.(label[\w-]*|caption(?:-small)?|overline(?:-small)?)$/ },
 ];
 
 const DEFAULT_SAMPLE = 'The quick brown fox jumps over the lazy dog';
@@ -17,6 +18,7 @@ const tokenCss = fs.readFileSync(TOKEN_FILE, 'utf8');
 
 const ruleRegex = /([^{]+){([^}]+)}/g;
 const result = {
+  'Marketing Display': [],
   'Headings': [],
   'Body': [],
   'Labels & Captions': [],

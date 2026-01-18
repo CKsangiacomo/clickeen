@@ -79,6 +79,25 @@
     return cur;
   }
 
+  function setAt(obj, path, value) {
+    const parts = String(path || "").split(".").filter(Boolean);
+    if (!parts.length) return obj;
+    let cur = obj;
+    for (let i = 0; i < parts.length; i += 1) {
+      const key = parts[i];
+      const last = i === parts.length - 1;
+      if (last) {
+        cur[key] = value;
+      } else {
+        const next = cur[key];
+        const nextObj = next && typeof next === "object" && !Array.isArray(next) ? next : {};
+        cur[key] = nextObj;
+        cur = nextObj;
+      }
+    }
+    return obj;
+  }
+
   function runChildHydrators(scope) {
     if (typeof window === "undefined" || !window.Dieter) return;
     const entries = Object.entries(window.Dieter).filter(
@@ -187,6 +206,12 @@
                 el.checked = Boolean(val);
                 return;
               }
+              if (el.dataset.bobJson != null) {
+                const json = stringify(val);
+                el.value = json;
+                el.setAttribute("data-bob-json", json);
+                return;
+              }
               if (el.type === "hidden" && Array.isArray(val)) {
                 const json = stringify(val);
                 el.value = json;
@@ -230,6 +255,49 @@
       };
 
       hidden.addEventListener("external-sync", handleExternalSync);
+
+      const handleNestedChange = (event) => {
+        const detail = event && event.detail;
+        if (detail && detail.bobIgnore) return;
+        const target = event.target;
+        if (
+          !(target instanceof HTMLInputElement) &&
+          !(target instanceof HTMLTextAreaElement) &&
+          !(target instanceof HTMLSelectElement)
+        ) {
+          return;
+        }
+        if (target === hidden) return;
+        const basePath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
+        if (!basePath) return;
+        const path = target.getAttribute("data-bob-path") || "";
+        if (!path || !path.startsWith(`${basePath}.`)) return;
+        const remainder = path.slice(basePath.length + 1);
+        const parts = remainder.split(".");
+        const indexToken = parts.shift();
+        if (!indexToken || !/^\d+$/.test(indexToken) || parts.length === 0) return;
+        const idx = Number(indexToken);
+        const items = read();
+        const item = items[idx];
+        if (!item || typeof item !== "object" || Array.isArray(item)) return;
+        let nextValue;
+        if (target instanceof HTMLInputElement && target.type === "checkbox") {
+          nextValue = target.checked;
+        } else if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+          try {
+            nextValue = JSON.parse(target.value || "");
+          } catch {
+            return;
+          }
+        } else {
+          nextValue = target.value;
+        }
+        setAt(item, parts.join("."), nextValue);
+        write(items);
+      };
+
+      root.addEventListener("input", handleNestedChange, true);
+      root.addEventListener("change", handleNestedChange, true);
 
       addBtn.addEventListener("click", () => {
         const next = read();

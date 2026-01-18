@@ -1,42 +1,6 @@
 {
-  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
   "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
-  "ops": [
-    {
-      "op": "set",
-      "path": "strings.title",
-      "value": "작동 방식"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.title",
-      "value": "템플릿 선택"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.title",
-      "value": "맞춤 설정"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.title",
-      "value": "임베드"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.body",
-      "value": "검증된 레이아웃과 구조로 시작하세요."
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.body",
-      "value": "사이트에 맞게 문구와 디자인을 조정하세요."
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.body",
-      "value": "어떤 사이트나 플랫폼에도 스니펫을 넣기만 하면 됩니다."
-    }
-  ],
+  "ops": [],
   "v": 1
 }

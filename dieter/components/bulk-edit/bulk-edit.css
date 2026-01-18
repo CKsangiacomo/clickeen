@@ -1,0 +1,148 @@
+.diet-bulk-edit {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.diet-bulk-edit__trigger {
+  display: inline-flex;
+}
+
+.diet-bulk-edit__field {
+  display: none;
+}
+
+.diet-bulk-edit__modal {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.diet-bulk-edit__modal[hidden] {
+  display: none;
+}
+
+.diet-bulk-edit__modal-body {
+  background: var(--color-system-white);
+  color: var(--color-system-black);
+  border-radius: var(--radius-4);
+  padding: var(--space-5);
+  width: min(96vw, 980px);
+  max-height: min(88vh, 860px);
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: 0 18px 60px color-mix(in oklab, var(--color-system-black), transparent 76%);
+  overflow: hidden;
+}
+
+.diet-bulk-edit__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.diet-bulk-edit__title {
+  font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
+}
+
+.diet-bulk-edit__table-wrap {
+  border: 1px solid var(--color-system-gray-5);
+  border-radius: var(--radius-3);
+  background: var(--color-system-white);
+  overflow: auto;
+}
+
+.diet-bulk-edit__table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
+}
+
+.diet-bulk-edit__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-system-gray-6-step5);
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
+  color: color-mix(in oklab, var(--color-system-black), transparent 35%);
+  border-bottom: 1px solid var(--color-system-gray-5);
+  white-space: nowrap;
+}
+
+.diet-bulk-edit__table tbody td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-system-gray-6-step5);
+  vertical-align: middle;
+}
+
+.diet-bulk-edit__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.diet-bulk-edit__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 200px;
+}
+
+.diet-bulk-edit__logo-preview {
+  width: 44px;
+  height: 28px;
+  border-radius: var(--radius-2);
+  background: var(--color-system-gray-6);
+  border: 1px solid var(--color-system-gray-5);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.diet-bulk-edit__logo-name {
+  font: 600 var(--fs-13) / var(--lh-tight) var(--font-ui);
+}
+
+.diet-bulk-edit__input {
+  width: 100%;
+  min-width: 180px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  border: 1px solid var(--color-system-gray-5);
+  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
+  color: var(--color-system-black);
+  background: var(--color-system-white);
+}
+
+.diet-bulk-edit__input:focus {
+  outline: 2px solid color-mix(in oklab, var(--color-system-blue), transparent 50%);
+  outline-offset: 1px;
+}
+
+.diet-bulk-edit__checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-system-blue);
+}
+
+.diet-bulk-edit__empty {
+  padding: var(--space-4);
+  font: 500 var(--fs-13) / var(--lh-tight) var(--font-ui);
+  color: color-mix(in oklab, var(--color-system-black), transparent 40%);
+}
+
+.diet-bulk-edit__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.diet-bulk-edit__upload {
+  min-width: 260px;
+}
+
+.diet-bulk-edit__upload .diet-dropdown-upload__control {
+  min-width: 220px;
+}

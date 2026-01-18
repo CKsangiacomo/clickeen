@@ -49,6 +49,16 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return parsed;
   }
 
+  function parseJsonValue(value) {
+    const decoded = decodeHtmlEntities(value);
+    if (!decoded) return null;
+    try {
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  }
+
   function stringify(value) {
     return JSON.stringify(value);
   }
@@ -231,6 +241,65 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       syncReorderControls();
       render(state);
 
+      const handleFieldChange = (event) => {
+        const detail = event && event.detail;
+        if (detail && detail.bobIgnore) return;
+        const target = event.target;
+        if (
+          !(target instanceof HTMLInputElement) &&
+          !(target instanceof HTMLTextAreaElement) &&
+          !(target instanceof HTMLSelectElement)
+        ) {
+          return;
+        }
+        if (target === hidden) return;
+        const arrayPath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
+        if (!arrayPath) return;
+        const path = target.getAttribute("data-bob-path") || "";
+        if (!path || !path.startsWith(`${arrayPath}.`)) return;
+        const remainder = path.slice(arrayPath.length + 1);
+        const parts = remainder.split(".");
+        const indexToken = parts.shift();
+        if (!indexToken || !/^\d+$/.test(indexToken) || parts.length === 0) return;
+        if (!Array.isArray(state.value)) return;
+        const idx = Number(indexToken);
+        const item = state.value[idx];
+        if (!item || typeof item !== "object" || Array.isArray(item)) return;
+        let nextValue;
+        if (target instanceof HTMLInputElement && target.type === "checkbox") {
+          nextValue = target.checked;
+        } else if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
+          const parsed = parseJsonValue(target.value || "");
+          if (parsed == null) return;
+          nextValue = parsed;
+        } else {
+          nextValue = target.value;
+        }
+        setAt(item, parts.join("."), nextValue);
+      };
+
+      root.addEventListener("input", handleFieldChange, true);
+      root.addEventListener("change", handleFieldChange, true);
+
+      const openAddTarget = () => {
+        const openTarget = root.dataset.addOpen;
+        if (!openTarget) return;
+        const scope = root.closest(".tdmenucontent") || root.closest(".tooldrawer") || document;
+        let target = null;
+        if (openTarget === "bulk-edit") {
+          target = scope.querySelector(".diet-bulk-edit [data-bulk-open]");
+        } else {
+          try {
+            target = scope.querySelector(openTarget);
+          } catch {
+            target = null;
+          }
+        }
+        if (target && typeof target.click === "function") {
+          target.click();
+        }
+      };
+
       addBtn.addEventListener("click", () => {
         const next = Array.isArray(state.value) ? [...state.value] : [];
         const kind = inferItemKind(state);
@@ -243,6 +312,9 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         }
         state.value = next;
         commit(state);
+        if (root.dataset.addOpen) {
+          requestAnimationFrame(openAddTarget);
+        }
       });
 
       reorderBtn.addEventListener("click", () => {
@@ -342,6 +414,10 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         if (el instanceof HTMLInputElement) {
           if (el.type === "checkbox") {
             el.checked = Boolean(val);
+          } else if (el.dataset.bobJson != null) {
+            const json = stringify(val);
+            el.value = json;
+            el.setAttribute("data-bob-json", json);
           } else {
             el.value = String(val);
           }
@@ -404,6 +480,12 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
           const nextChecked = Boolean(val);
           if (el.checked !== nextChecked) {
             el.checked = nextChecked;
+          }
+        } else if (el.dataset.bobJson != null) {
+          const nextVal = stringify(val);
+          if (el.value !== nextVal) {
+            el.value = nextVal;
+            el.setAttribute("data-bob-json", nextVal);
           }
         } else {
           const nextVal = String(val);

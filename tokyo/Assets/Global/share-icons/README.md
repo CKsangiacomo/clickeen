@@ -1,6 +1,6 @@
 # Share icons (curated)
 
-This folder is a curated SVG set for Prague website-creative share UI.
+This folder is a curated SVG set for Prague curated-embed share UI.
 
 - **Functional glyphs** (`share.svg`, `copy.svg`, `sms.svg`, `email.svg`, `more.svg`) are copied from the Dieter icon set at `tokyo/dieter/icons/svg/`.
 - **Brand marks** (e.g. `whatsapp.svg`, `telegram.svg`) are fetched as raw SVGs for design iteration.

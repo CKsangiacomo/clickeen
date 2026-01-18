@@ -54,14 +54,17 @@ The widget must be implemented as the standard 5-file Tokyo package:
 - **Width is Stage/Pod**: do not add a custom “widget width” control. Pod width mode/content width covers this.
 - **Desktop/Mobile contract**: Pod settings frame the experience (width mode, padding, content width, radius), but **responsive behavior must still be explicitly defined by the widget** in `widget.html` + `widget.css` for arrays/items/subparts.
 
-## 2) The 4 types (high level) and how the 4 types differ
-In Clickeen terms, **Type = miniwidget**. A Type is defined by behavior + DOM/CSS structure + relevant controls.
-Type is always selected in the **Content panel** (`state.type`), and it controls what appears under it (Section 4).
+## 2) Types + Motion modes (high level)
+In Clickeen terms, **Type = miniwidget**. LogoShowcase has **two Types**:
+- `grid` (static grid)
+- `carousel` (motion engine with two modes: `paged` or `continuous`)
+
+Type is selected in the **Content panel** (`state.type`) and determines which controls appear (Section 4).
 
 ### Motion implementation (required, editor-only, works forever)
-All motion types must reuse one shared “strip motion engine” so behavior is consistent and doesn’t accrete one-off logic.
+All motion behavior (paged + continuous) must reuse one shared “strip motion engine” so logic stays consistent.
 
-**Shared DOM requirements for motion types** (inside each strip):
+**Shared DOM requirements for motion** (inside each strip):
 - `[data-role="strip-viewport"]` (the scroll viewport)
 - `[data-role="strip-track"]` (the horizontal track)
 - Each logo tile element inside the track is a stable `[data-role="logo"]`
@@ -72,72 +75,53 @@ All motion types must reuse one shared “strip motion engine” so behavior is 
   - `--ls-tile-w-mobile: clamp(80px, calc(var(--ls-logo-h-mobile) * 3), 200px)`
 - Each `[data-role="logo"]` uses `flex: 0 0 var(--ls-tile-w)` (mobile uses `--ls-tile-w-mobile` under 900px).
 
-**Shared paging math** (used by Slider + Carousel):
+**Shared update rule under `ck:state-update`**:
+- Render DOM first (logos list) then (re)bind motion behavior per strip.
+- No global timers; each strip manages its own interval and cleans up on the next update.
+
+### Type: `grid`
+- **User sees**: multi-row grid; all items visible; no motion.
+- **Behavior**: no navigation.
+- **Structure**: CSS grid.
+
+### Type: `carousel` (motion)
+`typeConfig.carousel.mode` determines behavior:
+
+#### Mode: `paged` (slides)
+- **User sees**: one-row paged carousel; movement is discrete.
+- **Step** (`typeConfig.carousel.step`): `logo` (one tile at a time) or `page` (per viewport page).
+- **Navigation**: optional arrows (`showArrows`), optional swipe/drag (`allowSwipe`).
+- **Autoplay**: optional (`autoplay`, `autoSlideDelayMs`), uses `transitionMs` for animation.
+
+**Paging math** (paged only):
 - `viewportW = stripViewport.clientWidth`
 - `tileW = resolved px width of the tile (desktop/mobile var)`
 - `gap = spacing.gap` (or `spacing.mobileGap`)
 - Compute:
   - `perPage = max(1, floor((viewportW + gap) / (tileW + gap)))`
-  - `stepPx = perPage * (tileW + gap)`
-  - `pageCount = ceil(itemCount / perPage)`
-- Scroll position is the source of truth:
-  - `pageIndex = clamp(round(stripViewport.scrollLeft / stepPx), 0, pageCount - 1)`
+  - `stepPx = (step == 'logo' ? 1 : perPage) * (tileW + gap)`
+  - `pageCount = (step == 'logo') ? itemCount : ceil(itemCount / perPage)`
+- `pageIndex = clamp(round(stripViewport.scrollLeft / stepPx), 0, pageCount - 1)`
 
-**Shared resize rule**:
-- Attach `ResizeObserver` to each `[data-role="strip-viewport"]`.
-- On resize, recompute `perPage/stepPx/pageCount` and snap to the nearest `pageIndex`.
+**Implementation rule**:
+- Animate via `animateScrollLeft(stripViewport, pageIndex * stepPx, transitionMs)` (requestAnimationFrame).
+- When `allowSwipe=true`, enable scroll-snap on tiles; otherwise hide horizontal overflow.
+- If `pauseOnHover=true`, pause autoplay while hovered.
 
-**Shared update rule under `ck:state-update`**:
-- Render DOM first (logos list) then (re)bind motion behavior for that strip.
-- No global timers; each strip manages its own interval and cleans up on the next update.
-
-### Type: `grid`
-- **User sees**: each strip renders as a multi-row grid; all items are visible; no motion.
-- **Behavior**: no motion, no navigation.
-- **Structure**: CSS grid.
-
-### Type: `slider` (paged)
-- **User sees**: each strip is its own one-row, paged slider; user navigates pages per strip.
-- **Behavior**: discrete page-to-page movement.
-- **Navigation**: optional arrows, optional dots, optional swipe/drag.
-- **Autoplay**: optional. If enabled, advances one page every `autoSlideDelayMs`. When it reaches the end, it wraps to the start (autoplay never “dies”).
-- **Structure**: viewport + track translating in discrete steps.
-
-**Implementation rule (simple + deterministic)**:
-- Implement navigation by changing `stripViewport.scrollLeft` using a deterministic animation that respects `transitionMs`:
-  - `animateScrollLeft(stripViewport, pageIndex * stepPx, transitionMs)` (requestAnimationFrame; cancel previous animation per strip)
-- Dots count equals `pageCount` (computed).
-- When `allowSwipe=true`, enable `scroll-snap-type: x mandatory` and `scroll-snap-align: start` on tiles.
-- When `allowSwipe=false`, set `overflow-x: hidden` on the viewport so manual scrolling doesn’t fight the state machine.
-
-### Type: `carousel` (automatic discrete loop)
-- **User sees**: each strip is its own one-row, automatically advancing loop.
-- **Behavior**: discrete stepping loop (delay + transition), pauses on hover.
-- **Navigation**: none (not part of this PRD).
-- **Structure**: viewport + track + loop controller.
-
-**Implementation rule (reuse slider paging)**:
-- Carousel is “slider with autoplay always on and no UI”.
-- Every `autoSlideDelayMs`, advance `pageIndex = (pageIndex + 1) % pageCount` and scroll.
-- If `pauseOnHover=true`, pause the interval while the strip is hovered.
-
-### Type: `ticker` (continuous marquee)
-- **User sees**: each strip is its own one-row, continuously moving marquee.
-- **Behavior**: continuous motion at steady speed, pauses on hover.
-- **Navigation**: none.
+#### Mode: `continuous` (marquee)
+- **User sees**: continuous marquee.
+- **Controls**: `speed` (px/sec), `direction`, `pauseOnHover`.
 - **Structure**: duplicated list (A+B) + CSS animation translate.
 
 **Implementation rule (CSS animation + measured duration)**:
-- Render two copies of the logos list back-to-back inside `[data-role="strip-track"]`:
-  - `<div data-role="ticker-a">...</div><div data-role="ticker-b">...</div>`
-- Measure `distancePx = tickerA.scrollWidth` after render.
-- Set CSS vars:
-  - `--ls-ticker-distance: <distancePx>px`
-  - `--ls-ticker-duration: <distancePx / speed> seconds` (speed = `typeConfig.ticker.speed` interpreted as px/sec)
-- Use keyframes translating from `0` to `-var(--ls-ticker-distance)` (direction flips sign).
-- If `pauseOnHover=true`, set `animation-play-state: paused` on hover.
+- Render two copies of the logos list back-to-back inside `[data-role="strip-track"]`.
+- Measure `distancePx = copyA.scrollWidth` after render.
+- Set CSS vars (historical `ticker` names, used for continuous mode):
+  - `--ls-ticker-duration: <distancePx / speed> seconds`
+  - `--ls-ticker-from` / `--ls-ticker-to` based on `direction`
+- Pause on hover when `pauseOnHover=true`.
 
-## 3) ALL THE CONTROLS THAT ARE COMMON FOR THE 4 TYPES (by panel), what they change and how
+## 3) ALL THE CONTROLS THAT ARE COMMON FOR THE 2 TYPES (by panel), what they change and how
 This section lists **only controls that apply to every Type**. Type-specific controls are in Section 4.
 
 ### Global taxonomy + panel distribution (applies to this widget)
@@ -156,7 +140,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
 - **Type picker**: `type`
   - **changes**: selects which miniwidget renders
   - **how**:
-    - Use `dropdown-actions` for the Type picker (4 options). Do not use `choice-tiles` (it only supports 2–3 options).
+    - Use `segmented` for the Type picker (2 options: `grid`, `carousel`).
     - Bob uses `show-if="type == '...'"` to show type-specific controls under the picker
     - runtime sets `data-type="<type>"` on widget root
 
@@ -170,8 +154,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-    - `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
+- `strips[i].logos[j].logoFill` → CSS background for the logo tile (string value produced by `dropdown-upload`)
       - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
+    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
 - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s) (**editable via Logo details popup when `links.enabled` is true**)
 - `strips[i].logos[j].targetBlank=true` → set `target="_blank"` (**editable via Logo details popup when `links.enabled` is true**)
@@ -215,7 +200,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - `cta.style` → `data-variant="filled|outline"` on CTA element
 
 ### Panel: Layout (common)
-- **Logo size**: `spacing.logoHeight`, `spacing.mobileLogoHeight`
+- **Logo size**: `spacing.logoHeight` (used for both desktop + mobile)
   - **changes**: rendered logo height across all types
   - **how**: root CSS vars `--ls-logo-h` and `--ls-logo-h-mobile`
 
@@ -343,11 +328,7 @@ If `websiteUrl` is present and policy allows it, Copilot may:
 
 ### Type = `grid`
 #### Content panel (below Type picker)
-- **Grid columns**
-  - `typeConfig.grid.columnsDesktop`
-  - `typeConfig.grid.columnsMobile`
-- **Row gap (grid-only)**
-  - `spacing.rowGap`
+- **Row gap (grid-only)**: `spacing.rowGap`
 
 #### Other panels when `grid` is selected
 - **Recommended Pod preset**:
@@ -357,50 +338,28 @@ If `websiteUrl` is present and policy allows it, Copilot may:
   - `pod.radius='4xl'` (linked)
 - **Desktop rendering**:
   - strips stack vertically with gap `spacing.stripGap`
-  - each strip uses `typeConfig.grid.columnsDesktop`
+  - grid auto-fits columns based on tile width (derived from `spacing.logoHeight`)
   - logo sizing uses `spacing.logoHeight` + `spacing.gap` + `spacing.rowGap`
 - **Mobile rendering**:
   - strips stack vertically with gap `spacing.mobileStripGap`
-  - each strip uses `typeConfig.grid.columnsMobile`
-  - logo sizing uses `spacing.mobileLogoHeight` + `spacing.mobileGap` + `spacing.rowGap`
+  - grid auto-fits columns based on tile width (derived from `spacing.logoHeight`)
+  - logo sizing uses `spacing.logoHeight` + `spacing.mobileGap` + `spacing.rowGap`
 
-### Type = `slider`
+### Type = `carousel` (motion)
 #### Content panel (below Type picker)
-- **Navigation**
-  - `typeConfig.slider.showArrows`
-  - `typeConfig.slider.showDots`
-  - `typeConfig.slider.allowSwipe`
-- **Autoplay**
-  - `typeConfig.slider.autoSlide`
-  - `typeConfig.slider.autoSlideDelayMs` (show only if `autoSlide=true`)
-- **Motion**
-  - `typeConfig.slider.transitionMs`
-  - `typeConfig.slider.pauseOnHover`
-
-#### Other panels when `slider` is selected
-- **Recommended Pod preset**:
-  - `pod.widthMode='full'`
-  - `pod.padding=16` (linked)
-  - `pod.radius='none'` (linked) by default (full-width strips typically feel better without a card radius)
-- **Desktop rendering**:
-  - strips stack vertically with gap `spacing.stripGap`
-  - each strip is a one-row, paged “slides” carousel
-  - number of logos visible per page is derived from available width and `spacing.logoHeight`/`spacing.gap` (deterministic layout)
-  - if `typeConfig.slider.showArrows=true`, show arrows on desktop
-  - if `typeConfig.slider.allowSwipe=true`, swipe/drag enabled
-- **Mobile rendering**:
-  - strips stack vertically with gap `spacing.mobileStripGap`
-  - each strip is a one-row, paged “slides”
-  - uses `spacing.mobileLogoHeight` and `spacing.mobileGap`
-  - swipe/drag is the primary navigation surface (still gated by `allowSwipe`)
-  - if arrows do not fit, they may be hidden via responsive CSS (deterministic by viewport)
-
-### Type = `carousel`
-#### Content panel (below Type picker)
-- **Loop motion**
-  - `typeConfig.carousel.autoSlideDelayMs`
+- **Mode**
+  - `typeConfig.carousel.mode` (`paged` | `continuous`)
+- **Paged mode controls**
+  - `typeConfig.carousel.step` (`logo` | `page`)
+  - `typeConfig.carousel.showArrows`
+  - `typeConfig.carousel.allowSwipe`
+  - `typeConfig.carousel.autoplay`
+  - `typeConfig.carousel.autoSlideDelayMs` (show only if `autoplay=true`)
   - `typeConfig.carousel.transitionMs`
+- **Continuous mode controls**
+  - `typeConfig.carousel.speed`
   - `typeConfig.carousel.direction` (`left|right`)
+- **Shared**
   - `typeConfig.carousel.pauseOnHover`
 
 #### Other panels when `carousel` is selected
@@ -408,37 +367,15 @@ If `websiteUrl` is present and policy allows it, Copilot may:
   - `pod.widthMode='full'`
   - `pod.padding=16` (linked)
   - `pod.radius='none'` (linked)
+  - Continuous mode often benefits from `pod.padding=0` if you want edge-to-edge motion.
 - **Desktop rendering**:
   - strips stack vertically with gap `spacing.stripGap`
-  - each strip is a one-row, discrete loop (delay + transition)
-  - uses `spacing.logoHeight` + `spacing.gap`
-  - direction from `typeConfig.carousel.direction`
+  - paged mode uses one-row slides with deterministic per-page sizing
+  - continuous mode uses duplicated list (A+B) marquee
 - **Mobile rendering**:
   - strips stack vertically with gap `spacing.mobileStripGap`
-  - same loop semantics per strip
-  - uses `spacing.mobileLogoHeight` + `spacing.mobileGap`
-
-### Type = `ticker`
-#### Content panel (below Type picker)
-- **Continuous motion**
-  - `typeConfig.ticker.speed`
-  - `typeConfig.ticker.direction` (`left|right`)
-  - `typeConfig.ticker.pauseOnHover`
-
-#### Other panels when `ticker` is selected
-- **Recommended Pod preset**:
-  - `pod.widthMode='full'`
-  - `pod.padding=0` (linked) by default (ticker is typically edge-to-edge)
-  - `pod.radius='none'` (linked)
-- **Desktop rendering**:
-  - strips stack vertically with gap `spacing.stripGap`
-  - each strip is a continuous marquee, duplicated list (A+B)
-  - uses `spacing.logoHeight` + `spacing.gap`
-  - speed/direction from `typeConfig.ticker.speed` and `typeConfig.ticker.direction`
-- **Mobile rendering**:
-  - strips stack vertically with gap `spacing.mobileStripGap`
-  - same marquee semantics per strip
-  - uses `spacing.mobileLogoHeight` + `spacing.mobileGap`
+  - paged uses `spacing.logoHeight` + `spacing.mobileGap`
+  - continuous uses the same marquee semantics per strip
 
 ## 5) What the defaults are (and if defaults are different for each type, what they are)
 Defaults are the authoritative state shape. They must be complete (no missing paths).
@@ -479,21 +416,22 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       ]
     }
   ],
-  "cta": { "enabled": false, "label": "Contact us", "href": "https://example.com/contact", "style": "filled" },
+  "cta": { "enabled": true, "label": "Contact us", "href": "https://example.com/contact", "style": "filled" },
   "type": "grid",
   "typeConfig": {
-    "grid": { "columnsDesktop": 5, "columnsMobile": 2 },
-    "slider": {
+    "grid": {},
+    "carousel": {
+      "mode": "paged",
+      "step": "page",
       "showArrows": true,
-      "showDots": false,
       "allowSwipe": true,
+      "autoplay": false,
       "pauseOnHover": true,
-      "autoSlide": false,
       "autoSlideDelayMs": 2500,
-      "transitionMs": 350
-    },
-    "carousel": { "pauseOnHover": true, "autoSlideDelayMs": 2500, "transitionMs": 350, "direction": "left" },
-    "ticker": { "pauseOnHover": true, "speed": 30, "direction": "left" }
+      "transitionMs": 350,
+      "speed": 30,
+      "direction": "left"
+    }
   },
   "appearance": {
     "logoLook": "original",
@@ -519,10 +457,9 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
     "gap": 20,
     "rowGap": 16,
     "stripGap": 16,
-    "logoHeight": 28,
+    "logoHeight": 40,
     "mobileGap": 16,
-    "mobileStripGap": 12,
-    "mobileLogoHeight": 24
+    "mobileStripGap": 12
   },
   "behavior": { "randomOrder": false, "showBacklink": true },
   "stage": {
@@ -577,9 +514,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
 ### Per-type default differences
 Defaults differ by Type primarily via **Pod presets** (because width/containment is part of the experience):
 - **grid**: `pod.widthMode='fixed'`, `pod.contentWidth=960`, `pod.padding=24`, `pod.radius='4xl'`
-- **slider**: `pod.widthMode='full'`, `pod.padding=16`, `pod.radius='none'`
-- **carousel**: `pod.widthMode='full'`, `pod.padding=16`, `pod.radius='none'`
-- **ticker**: `pod.widthMode='full'`, `pod.padding=0`, `pod.radius='none'`
+- **carousel**: `pod.widthMode='full'`, `pod.padding=16`, `pod.radius='none'` (continuous mode often uses `pod.padding=0`)
 
 Implementation requirement:
 - The defaults object uses the `grid` Pod preset because `type='grid'` by default.

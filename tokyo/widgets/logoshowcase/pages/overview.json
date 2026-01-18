@@ -8,7 +8,10 @@
     {
       "id": "hero",
       "type": "hero",
-      "visual": true
+      "visual": true,
+      "curatedRef": {
+        "publicId": "wgt_curated_logoshowcase.overview.hero"
+      }
     },
     {
       "id": "navmeta",
@@ -17,11 +20,6 @@
     {
       "id": "steps",
       "type": "steps"
-    },
-    {
-      "id": "features",
-      "type": "features",
-      "visual": true
     },
     {
       "id": "cta",

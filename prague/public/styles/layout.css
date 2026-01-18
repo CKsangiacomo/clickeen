@@ -16,7 +16,12 @@
 /* Canvas + Inline (Prague analogue of stage/pod without the names) */
 .ck-canvas {
   width: 100%;
-  padding-block: var(--prague-section-pad);
+  padding-block: calc(var(--space-10) * 2); /* 80px for very generous section separation */
+}
+
+/* Hero keeps original spacing for tighter layout */
+.ck-heroCanvas {
+  padding-block: var(--prague-section-pad); /* 40px */
 }
 
 .ck-inline {

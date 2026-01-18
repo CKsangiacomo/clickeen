@@ -1,23 +1,42 @@
 ---
 type Props = {
-  title?: string;
+  title: string;
+  subhead?: string;
   steps: { title: string; body: string }[];
 };
 
-const { title = 'How it works', steps } = Astro.props;
+const { title, subhead, steps } = Astro.props;
+
+// Inline Dieter icons so they inherit `currentColor` (external <img src="...svg"> cannot).
+const ICON_SVGS = [
+  // circle.dotted
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2.45 2.94 27.82 27.7" width="44" height="44" fill="currentColor" aria-hidden="true" focusable="false">
+    <path d="M16.37 5.29C17.01 5.29 17.54 4.76 17.54 4.12C17.54 3.47 17.01 2.94 16.37 2.94C15.72 2.94 15.19 3.47 15.19 4.12C15.19 4.76 15.72 5.29 16.37 5.29ZM20.28 5.93C20.92 5.93 21.45 5.40 21.45 4.76C21.45 4.12 20.92 3.58 20.28 3.58C19.63 3.58 19.10 4.12 19.10 4.76C19.10 5.40 19.63 5.93 20.28 5.93ZM12.46 5.93C13.10 5.93 13.63 5.40 13.63 4.76C13.63 4.12 13.10 3.58 12.46 3.58C11.80 3.58 11.28 4.12 11.28 4.76C11.28 5.40 11.80 5.93 12.46 5.93ZM23.83 7.72C24.47 7.72 25.01 7.19 25.01 6.55C25.01 5.91 24.47 5.37 23.83 5.37C23.19 5.37 22.65 5.91 22.65 6.55C22.65 7.19 23.19 7.72 23.83 7.72ZM8.90 7.72C9.54 7.72 10.08 7.19 10.08 6.55C10.08 5.91 9.54 5.37 8.90 5.37C8.24 5.37 7.72 5.91 7.72 6.55C7.72 7.19 8.24 7.72 8.90 7.72ZM26.63 10.54C27.28 10.54 27.81 10.01 27.81 9.37C27.81 8.72 27.28 8.19 26.63 8.19C25.99 8.19 25.46 8.72 25.46 9.37C25.46 10.01 25.99 10.54 26.63 10.54ZM6.08 10.54C6.73 10.54 7.26 10.01 7.26 9.37C7.26 8.72 6.73 8.19 6.08 8.19C5.44 8.19 4.91 8.72 4.91 9.37C4.91 10.01 5.44 10.54 6.08 10.54ZM28.42 14.04C29.07 14.04 29.60 13.51 29.60 12.87C29.60 12.22 29.07 11.69 28.42 11.69C27.78 11.69 27.25 12.22 27.25 12.87C27.25 13.51 27.78 14.04 28.42 14.04ZM4.29 14.04C4.94 14.04 5.47 13.51 5.47 12.87C5.47 12.22 4.94 11.69 4.29 11.69C3.65 11.69 3.12 12.22 3.12 12.87C3.12 13.51 3.65 14.04 4.29 14.04ZM29.09 17.96C29.74 17.96 30.27 17.43 30.27 16.79C30.27 16.15 29.74 15.61 29.09 15.61C28.45 15.61 27.92 16.15 27.92 16.79C27.92 17.43 28.45 17.96 29.09 17.96ZM3.62 17.96C4.27 17.96 4.80 17.43 4.80 16.79C4.80 16.15 4.27 15.61 3.62 15.61C2.98 15.61 2.45 16.15 2.45 16.79C2.45 17.43 2.98 17.96 3.62 17.96ZM28.42 21.89C29.07 21.89 29.60 21.36 29.60 20.71C29.60 20.07 29.07 19.54 28.42 19.54C27.78 19.54 27.25 20.07 27.25 20.71C27.25 21.36 27.78 21.89 28.42 21.89ZM4.29 21.89C4.94 21.89 5.47 21.36 5.47 20.71C5.47 20.07 4.94 19.54 4.29 19.54C3.65 19.54 3.12 20.07 3.12 20.71C3.12 21.36 3.65 21.89 4.29 21.89ZM26.63 25.40C27.28 25.40 27.81 24.87 27.81 24.23C27.81 23.58 27.28 23.05 26.63 23.05C25.99 23.05 25.46 23.58 25.46 24.23C25.46 24.87 25.99 25.40 26.63 25.40ZM6.08 25.40C6.73 25.40 7.26 24.87 7.26 24.23C7.26 23.58 6.73 23.05 6.08 23.05C5.44 23.05 4.91 23.58 4.91 24.23C4.91 24.87 5.44 25.40 6.08 25.40ZM23.83 28.21C24.47 28.21 25.01 27.67 25.01 27.03C25.01 26.39 24.47 25.85 23.83 25.85C23.19 25.85 22.65 26.39 22.65 27.03C22.65 27.67 23.19 28.21 23.83 28.21ZM8.90 28.21C9.54 28.21 10.08 27.67 10.08 27.03C10.08 26.39 9.54 25.85 8.90 25.85C8.24 25.85 7.72 26.39 7.72 27.03C7.72 27.67 8.24 28.21 8.90 28.21ZM20.28 30.00C20.92 30.00 21.45 29.46 21.45 28.82C21.45 28.18 20.92 27.64 20.28 27.64C19.63 27.64 19.10 28.18 19.10 28.82C19.10 29.46 19.63 30.00 20.28 30.00ZM12.46 30.00C13.10 30.00 13.63 29.46 13.63 28.82C13.63 28.18 13.10 27.64 12.46 27.64C11.80 27.64 11.28 28.18 11.28 28.82C11.28 29.46 11.80 30.00 12.46 30.00ZM16.37 30.64C17.01 30.64 17.54 30.11 17.54 29.46C17.54 28.82 17.01 28.29 16.37 28.29C15.72 28.29 15.19 28.82 15.19 29.46C15.19 30.11 15.72 30.64 16.37 30.64Z" />
+  </svg>`,
+  // clock
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2.45 2.84 27.89 27.89" width="44" height="44" fill="currentColor" aria-hidden="true" focusable="false">
+    <path d="M16.39 30.73C24.09 30.73 30.34 24.49 30.34 16.79C30.34 9.09 24.09 2.84 16.39 2.84C8.70 2.84 2.45 9.09 2.45 16.79C2.45 24.49 8.70 30.73 16.39 30.73ZM16.39 28.41C9.97 28.41 4.77 23.21 4.77 16.79C4.77 10.36 9.97 5.17 16.39 5.17C22.82 5.17 28.01 10.36 28.01 16.79C28.01 23.21 22.82 28.41 16.39 28.41ZM9.24 18.27L16.38 18.27C16.91 18.27 17.34 17.86 17.34 17.31L17.34 8.09C17.34 7.56 16.91 7.15 16.38 7.15C15.85 7.15 15.44 7.56 15.44 8.09L15.44 16.37L9.24 16.37C8.70 16.37 8.29 16.78 8.29 17.31C8.29 17.86 8.70 18.27 9.24 18.27Z" />
+  </svg>`,
+  // creditcard
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="3.49 5.13 32.13 23.35" width="44" height="44" fill="currentColor" aria-hidden="true" focusable="false">
+    <path d="M7.78 28.48L31.32 28.48C34.19 28.48 35.62 27.07 35.62 24.25L35.62 9.37C35.62 6.55 34.19 5.13 31.32 5.13L7.78 5.13C4.92 5.13 3.49 6.55 3.49 9.37L3.49 24.25C3.49 27.07 4.92 28.48 7.78 28.48ZM5.69 9.49C5.69 8.07 6.44 7.33 7.81 7.33L31.29 7.33C32.63 7.33 33.41 8.07 33.41 9.49L33.41 10.57L5.69 10.57ZM7.81 26.28C6.44 26.28 5.69 25.55 5.69 24.13L5.69 13.67L33.41 13.67L33.41 24.13C33.41 25.55 32.63 26.28 31.29 26.28ZM9.63 23.69L12.97 23.69C13.78 23.69 14.31 23.15 14.31 22.38L14.31 19.85C14.31 19.07 13.78 18.54 12.97 18.54L9.63 18.54C8.82 18.54 8.29 19.07 8.29 19.85L8.29 22.38C8.29 23.15 8.82 23.69 9.63 23.69Z" />
+  </svg>`,
+];
 ---
 
-<section class="ck-canvas">
-  <div class="ck-inline ck-stack">
-    <div class="heading-3">{title}</div>
-    <div class="ck-row ck-steps__row">
+<section class="ck-canvas ck-stepsCanvas">
+  <div class="ck-inline ck-stack ck-steps__inline">
+    <header class="ck-steps__header">
+      <h2 class="display-3 ck-m0">{title}</h2>
+      {subhead ? <p class="body-website ck-m0 ck-steps__subhead">{subhead}</p> : null}
+    </header>
+
+    <div class="ck-row ck-steps__row" aria-label={title}>
       {steps.map((step, i) => (
-        <div class="ck-card ck-steps__card">
-          <div class="ck-stack ck-steps__cardInner">
-            <div class="ck-badge">Step {i + 1}</div>
-            <div class="label-l">{step.title}</div>
-            <div class="body-s ck-steps__body ck-text-subtle">{step.body}</div>
-          </div>
+        <div class="ck-steps__tile" role="group" aria-label={`Benefit ${i + 1}`}>
+          <div class="ck-steps__icon" aria-hidden="true" set:html={ICON_SVGS[i] ?? ICON_SVGS[0]} />
+          <div class="heading-2 ck-m0">{step.title}</div>
+          <p class="body-l ck-m0 ck-steps__body ck-text-subtle">{step.body}</p>
         </div>
       ))}
     </div>
@@ -25,20 +44,67 @@ const { title = 'How it works', steps } = Astro.props;
 </section>
 
 <style>
+  .ck-stepsCanvas {
+    /* Match the reference: clean white section between hero and the next gray band. */
+    background: var(--color-system-white);
+  }
+
+  .ck-steps__inline {
+    /* Inline container with no additional vertical padding */
+  }
+
+  .ck-steps__header {
+    max-width: 880px;
+    margin-inline: auto;
+    text-align: center;
+    gap: var(--space-3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ck-steps__subhead {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
   .ck-steps__row {
     align-items: stretch;
-    gap: var(--space-4);
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-top: var(--space-10);
   }
 
-  .ck-steps__card {
+  .ck-steps__tile {
     flex: 1 1 0;
-    min-width: 240px;
-  }
-
-  .ck-steps__cardInner {
-    padding: var(--space-6);
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-3);
+    padding: calc(var(--space-6) + var(--space-6));
+    /* Dieter neutral “gray.5” surface variant (lighter than base gray-5). */
+    background: var(--color-system-gray-5-step5);
+    border-radius: var(--control-radius-4xl);
   }
 
-  .ck-steps__body { }
+  .ck-steps__body {
+    /* In the reference the body reads lighter than the title. */
+  }
+
+  .ck-steps__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    background: transparent;
+    border: 0;
+    color: var(--color-system-gray);
+    margin-bottom: var(--space-6);
+  }
+
+  /* SVGs are inlined via set:html; size is set on the SVG itself (44x44). */
+
+  @media (max-width: 900px) {
+    .ck-steps__row { gap: var(--space-6); }
+    .ck-steps__tile { min-width: 240px; }
+  }
 </style>

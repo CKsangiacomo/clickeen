@@ -646,6 +646,17 @@ export function TdMenuContent({
     lastUpdateRef.current = lastUpdate ?? null;
   }, [lastUpdate]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const flags = session.policy?.flags ?? null;
+    if (!flags || typeof flags !== 'object') {
+      delete container.dataset.ckPolicyFlags;
+      return;
+    }
+    container.dataset.ckPolicyFlags = JSON.stringify(flags);
+  }, [session.policy]);
+
   // Reset caches when switching widgets
   useEffect(() => {
     loadedStyles.clear();
@@ -894,6 +905,15 @@ export function TdMenuContent({
       }
     };
 
+    const handleUpsellEvent = (event: Event) => {
+      const detail = (event as any).detail;
+      const reasonKey =
+        detail && typeof detail.reasonKey === 'string' ? detail.reasonKey : 'coreui.upsell.reason.flagBlocked';
+      const detailText = detail && typeof detail.detail === 'string' ? detail.detail : undefined;
+      event.stopPropagation();
+      session.requestUpsell(reasonKey, detailText);
+    };
+
     const applySet = (path: string, rawValue: unknown) => {
       const applied = applyOps(expandLinkedOps([{ op: 'set', path, value: rawValue }]));
       if (!applied.ok && process.env.NODE_ENV === 'development') {
@@ -912,13 +932,7 @@ export function TdMenuContent({
 
       const nextValue =
         target instanceof HTMLInputElement && target.dataset.bobJson != null
-          ? (() => {
-              try {
-                return prevValue == null ? '[]' : JSON.stringify(prevValue);
-              } catch {
-                return '[]';
-              }
-            })()
+          ? serializeBobJsonValue(prevValue, '[]')
           : prevValue == null
             ? ''
             : String(prevValue);
@@ -1104,6 +1118,7 @@ export function TdMenuContent({
     };
 
     container.addEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+    container.addEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
 
@@ -1114,7 +1129,10 @@ export function TdMenuContent({
       if (!path) return;
 
       const rawValue = getAt(instanceData, path);
-      const value = rawValue;
+      const value =
+        rawValue === undefined && session.compiled?.defaults
+          ? getAt(session.compiled.defaults as Record<string, unknown>, path)
+          : rawValue;
 
       const isActive = activePathRef.current === path;
       const lastUpdate = lastUpdateRef.current;
@@ -1137,16 +1155,21 @@ export function TdMenuContent({
         if (field.checked !== nextChecked) {
           field.checked = nextChecked;
         }
+      } else if (field instanceof HTMLInputElement && field.type === 'range') {
+        if (isActive) return;
+        const fallback = field.min?.trim() || '0';
+        const resolvedNumber = coerceFiniteNumber(value);
+        const resolvedValue = resolvedNumber == null ? fallback : String(resolvedNumber);
+        if (field.value !== resolvedValue) {
+          field.value = resolvedValue;
+        }
+        field.style.setProperty('--value', resolvedValue);
+        field.style.setProperty('--min', field.min || '0');
+        field.style.setProperty('--max', field.max || '100');
       } else if ('value' in field) {
         const nextValue =
           field instanceof HTMLInputElement && field.dataset.bobJson != null
-            ? (() => {
-                try {
-                  return value == null ? '' : JSON.stringify(value);
-                } catch {
-                  return '';
-                }
-              })()
+            ? serializeBobJsonValue(value)
             : value == null
               ? ''
               : String(value);
@@ -1181,10 +1204,11 @@ export function TdMenuContent({
 
     return () => {
       container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+      container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
     };
-  }, [instanceData, applyOps, panelHtml, renderKey]);
+  }, [instanceData, applyOps, panelHtml, renderKey, session.requestUpsell]);
 
   // Re-apply show-if visibility when data changes
   useLayoutEffect(() => {
@@ -1218,7 +1242,7 @@ function resolvePathFromTarget(target: EventTarget | null): string | null {
   const direct = target.closest<HTMLElement>('[data-bob-path]');
   if (direct) return direct.getAttribute('data-bob-path');
 
-  const controlRoot = target.closest<HTMLElement>('.diet-dropdown-edit, .diet-textedit, .diet-repeater');
+  const controlRoot = target.closest<HTMLElement>('.diet-dropdown-edit, .diet-textedit');
   if (controlRoot) {
     const hidden = controlRoot.querySelector<HTMLElement>('[data-bob-path]');
     if (hidden) return hidden.getAttribute('data-bob-path');
@@ -1234,6 +1258,25 @@ function parseBobJsonValue(input: HTMLInputElement, rawValue: string): unknown |
     return JSON.parse(trimmed) as unknown;
   } catch {
     return null;
+  }
+}
+
+function serializeBobJsonValue(value: unknown, fallback = ''): string {
+  if (value == null) return fallback;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    try {
+      JSON.parse(trimmed);
+      return trimmed;
+    } catch {
+      return JSON.stringify(value);
+    }
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return fallback;
   }
 }
 

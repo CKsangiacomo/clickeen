@@ -834,6 +834,18 @@ function useWidgetSessionInternal() {
     setState((prev) => ({ ...prev, upsell: null }));
   }, []);
 
+  const requestUpsell = useCallback((reasonKey: string, detail?: string) => {
+    if (!reasonKey) return;
+    setState((prev) => ({
+      ...prev,
+      upsell: {
+        reasonKey,
+        detail,
+        cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+      },
+    }));
+  }, []);
+
   const publish = useCallback(async () => {
     const publicId = state.meta?.publicId;
     const workspaceId = state.meta?.workspaceId;
@@ -1172,6 +1184,7 @@ function useWidgetSessionInternal() {
       commitLastOps,
       publish,
       dismissUpsell,
+      requestUpsell,
       setSelectedPath,
       setPreview,
       setLocalePreview,
@@ -1189,6 +1202,7 @@ function useWidgetSessionInternal() {
       commitLastOps,
       publish,
       dismissUpsell,
+      requestUpsell,
       loadInstance,
       setPreview,
       setLocalePreview,

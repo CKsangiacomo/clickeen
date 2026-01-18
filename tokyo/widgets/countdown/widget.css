@@ -1,0 +1,204 @@
+:root,
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-system-black);
+  font: 400 var(--fs-14)/var(--lh-body) var(--font-ui);
+}
+
+.ck-countdown-widget {
+  --countdown-bg: var(--color-system-white);
+  --countdown-text-color: var(--color-system-gray-90);
+  --countdown-timer-bg: var(--color-system-gray-10);
+  --countdown-separator: ':';
+  --ck-asset-origin: '';
+}
+
+.stage {
+  width: 100%;
+  background: var(--stage-bg, transparent);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  min-height: auto;
+  padding: var(--stage-pad-desktop-top, 0) var(--stage-pad-desktop-right, 0) var(--stage-pad-desktop-bottom, 0)
+    var(--stage-pad-desktop-left, 0);
+}
+
+.stage[data-canvas-mode='viewport'] {
+  min-height: 100vh;
+}
+
+.stage[data-canvas-mode='fixed'] {
+  width: var(--stage-fixed-width, auto);
+  height: var(--stage-fixed-height, auto);
+  margin-inline: auto;
+}
+
+@media (max-width: 900px) {
+  .stage {
+    padding: var(--stage-pad-mobile-top, var(--stage-pad-desktop-top, 0)) var(--stage-pad-mobile-right, var(--stage-pad-desktop-right, 0))
+      var(--stage-pad-mobile-bottom, var(--stage-pad-desktop-bottom, 0))
+      var(--stage-pad-mobile-left, var(--stage-pad-desktop-left, 0));
+  }
+}
+
+.pod {
+  width: 100%;
+  max-width: var(--pod-max-width, 960px);
+  background: var(--countdown-bg, var(--pod-bg, transparent));
+  border-radius: var(--pod-radius, 0);
+  padding: var(--pod-pad-desktop-top, 0) var(--pod-pad-desktop-right, 0) var(--pod-pad-desktop-bottom, 0)
+    var(--pod-pad-desktop-left, 0);
+  box-sizing: border-box;
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .pod {
+    padding: var(--pod-pad-mobile-top, var(--pod-pad-desktop-top, 0)) var(--pod-pad-mobile-right, var(--pod-pad-desktop-right, 0))
+      var(--pod-pad-mobile-bottom, var(--pod-pad-desktop-bottom, 0))
+      var(--pod-pad-mobile-left, var(--pod-pad-desktop-left, 0));
+  }
+}
+
+.ck-countdown {
+  text-align: center;
+}
+
+.ck-countdown__header {
+  margin-bottom: var(--space-4);
+}
+
+.ck-countdown__title {
+  margin: 0;
+  color: var(--countdown-text-color, var(--typo-heading-color));
+  font-family: var(--typo-heading-family);
+  font-size: var(--typo-heading-size);
+  font-weight: var(--typo-heading-weight);
+}
+
+.ck-countdown__timer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  background: var(--countdown-timer-bg);
+  padding: var(--space-4);
+  border-radius: var(--radius-2xl);
+}
+
+.ck-countdown__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.ck-countdown__value {
+  font-size: var(--typo-timer-size);
+  font-weight: var(--typo-timer-weight);
+  font-family: var(--typo-timer-family);
+  color: var(--countdown-text-color, var(--typo-timer-color));
+  line-height: 1;
+}
+
+.ck-countdown__label {
+  font-size: var(--typo-label-size);
+  font-weight: var(--typo-label-weight);
+  font-family: var(--typo-label-family);
+  color: var(--countdown-text-color, var(--typo-label-color));
+  margin-top: var(--space-1);
+}
+
+.ck-countdown__separator {
+  font-size: var(--typo-timer-size);
+  font-weight: var(--typo-timer-weight);
+  color: var(--countdown-text-color, var(--typo-timer-color));
+}
+
+.ck-countdown__actions {
+  margin-bottom: var(--space-4);
+}
+
+.ck-countdown__cta {
+  display: inline-block;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  font-family: var(--typo-button-family);
+  font-size: var(--typo-button-size);
+  font-weight: var(--typo-button-weight);
+  color: var(--typo-button-color);
+  background: var(--color-system-blue);
+  border: 1px solid var(--color-system-blue);
+  transition: all 0.2s ease;
+}
+
+.ck-countdown__cta:hover {
+  background: var(--color-system-blue-dark);
+  border-color: var(--color-system-blue-dark);
+}
+
+.ck-countdown__cta.button-secondary {
+  background: transparent;
+  border-color: var(--color-system-blue);
+  color: var(--color-system-blue);
+}
+
+.ck-countdown__cta.button-secondary:hover {
+  background: var(--color-system-blue);
+  color: var(--color-system-white);
+}
+
+.ck-countdown__after-message {
+  font-size: var(--fs-16);
+  color: var(--countdown-text-color, var(--color-system-gray-60));
+}
+
+.ck-widget__backlink {
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--fs-12);
+  color: var(--color-system-gray-50);
+}
+
+.ck-widget__backlink a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ck-widget__backlink a:hover {
+  text-decoration: underline;
+}
+
+/* Hide/show elements */
+[data-ck-widget="countdown"] [data-role="cta"][hidden],
+[data-ck-widget="countdown"] [data-role="after-message"][hidden] {
+  display: none;
+}
+
+/* Layout positions */
+[data-ck-widget="countdown"][data-layout-position="sticky-top"] .stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+[data-ck-widget="countdown"][data-layout-position="sticky-bottom"] .stage {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}

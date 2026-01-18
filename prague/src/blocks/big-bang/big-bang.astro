@@ -1,0 +1,68 @@
+---
+type Props = {
+  headline: string;
+  body: string;
+  primaryCta: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
+};
+
+const { headline, body, primaryCta, secondaryCta } = Astro.props;
+---
+
+<section class="ck-canvas ck-bigBang">
+  <div class="ck-inline ck-bigBang__inline">
+    <div class="ck-stack ck-bigBang__content">
+      <div class="ck-stack ck-bigBang__copy">
+        <h2 class="display-2 ck-m0 ck-bigBang__title">{headline}</h2>
+        <p class="body-website-xlarge ck-m0 ck-bigBang__body">{body}</p>
+      </div>
+
+      <div class="ck-row ck-bigBang__ctaRow">
+        <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
+        {secondaryCta ? <a class="ck-btn ck-btn--secondary ck-btn--lg label-l" href={secondaryCta.href}>{secondaryCta.label}</a> : null}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-bigBang {
+    background: var(--color-system-brown-5);
+  }
+
+  /* BigBang wants a bigger page gutter than the Prague default. */
+  .ck-bigBang__inline {
+    padding-inline: var(--space-10);
+    border-radius: var(--control-radius-4xl);
+    overflow: hidden;
+  }
+
+  .ck-bigBang__content {
+    gap: var(--space-8);
+  }
+
+  .ck-bigBang__copy {
+    gap: var(--space-4);
+  }
+
+  .ck-bigBang__title {
+  }
+
+  .ck-bigBang__body {
+  }
+
+  .ck-bigBang__ctaRow {
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 900px) {
+    .ck-bigBang__content {
+      gap: var(--space-6);
+    }
+    .ck-bigBang__title {
+      /* Keep display-1 but avoid extreme wrapping jitter on narrow viewports. */
+      text-wrap: balance;
+    }
+  }
+</style>
+

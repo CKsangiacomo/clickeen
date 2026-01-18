@@ -1,26 +1,26 @@
 import Cta from '../blocks/cta/cta.astro';
-import ExamplesGrid from '../blocks/examples-grid/examples-grid.astro';
-import Features from '../blocks/features/features.astro';
+import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import Outcomes from '../blocks/outcomes/outcomes.astro';
-import PricingPlans from '../blocks/pricing-plans/pricing-plans.astro';
+import SplitCreativeLeft from '../blocks/split-creative-left/split-creative-left.astro';
+import SplitCreativeRight from '../blocks/split-creative-right/split-creative-right.astro';
+import SplitCreativeStacked from '../blocks/split-creative-stacked/split-creative-stacked.astro';
 import Steps from '../blocks/steps/steps.astro';
-import TemplatesGrid from '../blocks/templates-grid/templates-grid.astro';
 
 type StringType = 'string' | 'array';
 type RequiredString = { key: string; type: StringType };
 
 export type BlockType =
+  | 'big-bang'
   | 'hero'
+  | 'split-creative-left'
+  | 'split-creative-right'
+  | 'split-creative-stacked'
   | 'steps'
-  | 'features'
   | 'cta'
   | 'minibob'
   | 'outcomes'
-  | 'templates-grid'
-  | 'examples-grid'
-  | 'pricing-plans'
   | 'navmeta'
   | 'page-meta';
 
@@ -33,6 +33,15 @@ type BlockContract = {
 };
 
 const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
+  'big-bang': {
+    type: 'big-bang',
+    component: BigBang,
+    required: [
+      { key: 'headline', type: 'string' },
+      { key: 'body', type: 'string' },
+    ],
+    meta: [],
+  },
   hero: {
     type: 'hero',
     component: Hero,
@@ -40,7 +49,34 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['visual'],
+    meta: ['visual', 'curatedRef'],
+  },
+  'split-creative-right': {
+    type: 'split-creative-right',
+    component: SplitCreativeRight,
+    required: [
+      { key: 'headline', type: 'string' },
+      { key: 'subheadline', type: 'string' },
+    ],
+    meta: ['curatedRef', 'copy'],
+  },
+  'split-creative-left': {
+    type: 'split-creative-left',
+    component: SplitCreativeLeft,
+    required: [
+      { key: 'headline', type: 'string' },
+      { key: 'subheadline', type: 'string' },
+    ],
+    meta: ['curatedRef', 'copy'],
+  },
+  'split-creative-stacked': {
+    type: 'split-creative-stacked',
+    component: SplitCreativeStacked,
+    required: [
+      { key: 'headline', type: 'string' },
+      { key: 'subheadline', type: 'string' },
+    ],
+    meta: ['curatedRef', 'copy'],
   },
   steps: {
     type: 'steps',
@@ -51,15 +87,6 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
     ],
     meta: [],
   },
-  features: {
-    type: 'features',
-    component: Features,
-    required: [
-      { key: 'title', type: 'string' },
-      { key: 'items', type: 'array' },
-    ],
-    meta: ['visual'],
-  },
   cta: {
     type: 'cta',
     component: Cta,
@@ -67,7 +94,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: [],
+    meta: ['copy', 'primaryCta'],
   },
   minibob: {
     type: 'minibob',
@@ -76,29 +103,11 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'heading', type: 'string' },
       { key: 'subhead', type: 'string' },
     ],
-    meta: [],
+    meta: ['copy'],
   },
   outcomes: {
     type: 'outcomes',
     component: Outcomes,
-    required: [],
-    meta: [],
-  },
-  'templates-grid': {
-    type: 'templates-grid',
-    component: TemplatesGrid,
-    required: [],
-    meta: [],
-  },
-  'examples-grid': {
-    type: 'examples-grid',
-    component: ExamplesGrid,
-    required: [],
-    meta: [],
-  },
-  'pricing-plans': {
-    type: 'pricing-plans',
-    component: PricingPlans,
     required: [],
     meta: [],
   },
@@ -143,6 +152,15 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
   }
   if (contract.meta.includes('visual') && block.visual != null && typeof block.visual !== 'boolean') {
     throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean`);
+  }
+  if (contract.meta.includes('curatedRef') && block.curatedRef != null) {
+    if (typeof block.curatedRef !== 'object' || Array.isArray(block.curatedRef)) {
+      throw new Error(`[prague] ${pagePath}: block "${type}" curatedRef must be an object`);
+    }
+    const publicId = (block.curatedRef as { publicId?: unknown }).publicId;
+    if (publicId != null && typeof publicId !== 'string') {
+      throw new Error(`[prague] ${pagePath}: block "${type}" curatedRef.publicId must be a string`);
+    }
   }
 }
 

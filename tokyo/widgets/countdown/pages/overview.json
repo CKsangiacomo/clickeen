@@ -1,0 +1,104 @@
+{
+  "v": 1,
+  "blocks": [
+    {
+      "id": "page-meta",
+      "type": "page-meta"
+    },
+    {
+      "id": "hero",
+      "type": "hero",
+      "visual": true,
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "navmeta",
+      "type": "navmeta"
+    },
+    {
+      "id": "minibob",
+      "type": "minibob",
+      "copy": {
+        "heading": "Try it live",
+        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+      }
+    },
+    {
+      "id": "split-right",
+      "type": "split-creative-right",
+      "copy": {
+        "headline": "Countdown Timer Widget",
+        "subheadline": "Create urgency and drive action with customizable countdown timers."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "split-left",
+      "type": "split-creative-left",
+      "copy": {
+        "headline": "Flexible Timer Modes",
+        "subheadline": "Date-based, personal, or number counters for any scenario."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "big-bang",
+      "type": "big-bang"
+    },
+    {
+      "id": "split-stacked",
+      "type": "split-creative-stacked",
+      "copy": {
+        "headline": "Easy Customization",
+        "subheadline": "Adjust appearance, layout, and actions to fit your brand."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "steps",
+      "type": "steps"
+    },
+    {
+      "id": "split-right-2",
+      "type": "split-creative-right",
+      "copy": {
+        "headline": "Boost Conversions",
+        "subheadline": "Encourage immediate action with time-sensitive offers."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "split-left-2",
+      "type": "split-creative-left",
+      "copy": {
+        "headline": "SEO and GEO Optimized",
+        "subheadline": "Built-in schema and localization support."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_countdown.overview.hero"
+      }
+    },
+    {
+      "id": "cta",
+      "type": "cta",
+      "copy": {
+        "headline": "Create Urgency, Drive Sales",
+        "subheadline": "Powerful countdown timers that convert visitors into customers."
+      },
+      "primaryCta": {
+        "label": "Get Started",
+        "href": "/signup"
+      }
+    }
+  ]
+}

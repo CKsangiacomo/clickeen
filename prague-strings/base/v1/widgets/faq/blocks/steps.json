@@ -3,11 +3,21 @@
   "blockId": "steps",
   "blockKind": "steps",
   "strings": {
-    "title": "How it works",
+    "title": "FAQs that actually work (so you don't have to)",
+    "subhead": "Your customers have questions. Answer them once, not a hundred times.",
     "items": [
-      { "title": "Pick a template", "body": "Start from a proven layout and structure." },
-      { "title": "Customize", "body": "Tune copy + design to match your site." },
-      { "title": "Embed", "body": "Drop the snippet into any site or platform." }
+      {
+        "title": "Stop losing sales to unanswered questions",
+        "body": "Every question left unanswered is a customer walking away. Visitors leave when they can't find what they need. A well-designed FAQ kills objections before they even form—so customers convince themselves to buy without ever reaching out."
+      },
+      {
+        "title": "Get your time back",
+        "body": "Cut support volume by 40%+ when customers find answers instantly. No more Slack pings. No more \"quick question\" emails. No more context-switching hell. Your FAQ does the heavy lifting while you focus on work that actually matters."
+      },
+      {
+        "title": "Close more deals while you sleep",
+        "body": "The right FAQ anticipates doubt and removes friction at 2 AM when you're offline. Your answers work around the clock. Customers don't wait for you—they get unblocked, trust what they see, and hit \"buy\" without interrupting your day."
+      }
     ]
   }
 }

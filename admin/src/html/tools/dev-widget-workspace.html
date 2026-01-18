@@ -188,98 +188,6 @@
     color: var(--color-system-blue);
   }
 
-  #website-creative-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-
-  #website-creative-modal[hidden] {
-    display: none;
-  }
-
-  .ck-modal__backdrop {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in oklab, var(--color-system-black), transparent 55%);
-    backdrop-filter: blur(2px);
-  }
-
-  .ck-modal__panel {
-    position: relative;
-    inline-size: min(640px, 100%);
-    max-block-size: min(80vh, 720px);
-    overflow: auto;
-    border-radius: var(--radius-8);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    box-shadow: var(--shadow-floating-lg);
-    padding: 20px;
-    display: grid;
-    gap: var(--space-4);
-  }
-
-  .ck-modal__body {
-    display: grid;
-    gap: var(--space-3);
-  }
-
-  .ck-modal__field {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .ck-modal__select {
-    min-block-size: var(--control-size-lg);
-    border-radius: var(--control-radius-lg);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
-    padding-inline: var(--control-padding-inline);
-    background: var(--role-surface-bg);
-    box-shadow: var(--shadow-floating);
-  }
-
-  .ck-modal__segmented {
-    display: flex;
-    gap: var(--space-1);
-    flex-wrap: wrap;
-  }
-
-  .ck-modal__segmented-btn.diet-btn-txt {
-    box-shadow: var(--shadow-floating);
-  }
-
-  .ck-modal__preview {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-radius: var(--radius-6);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 4%);
-  }
-
-  .ck-modal__preview-row {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .ck-modal__code {
-    font: 500 var(--fs-12)/var(--lh-tight) var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
-    padding: 8px 10px;
-    border-radius: var(--radius-4);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 30%);
-    background: var(--color-system-white);
-  }
-
-  .ck-modal__footer {
-    display: flex;
-    gap: var(--space-2);
-    justify-content: flex-end;
-    align-items: center;
-  }
 </style>
 
 <header class="devstudio-page__header" style="flex-shrink: 0;">
@@ -297,11 +205,11 @@
     <button type="button" class="diet-btn-txt" id="superadmin-update-defaults" data-size="md" data-variant="secondary">
       <span class="diet-btn-txt__label">Update default config</span>
     </button>
+    <button type="button" class="diet-btn-txt" id="superadmin-reset-from-json" data-size="md" data-variant="secondary">
+      <span class="diet-btn-txt__label">Reset instance from JSON</span>
+    </button>
     <button type="button" class="diet-btn-txt" id="superadmin-create-template" data-size="md" data-variant="secondary">
       <span class="diet-btn-txt__label">Create template instance</span>
-    </button>
-    <button type="button" class="diet-btn-txt" id="superadmin-create-prague" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Create/update website creative</span>
     </button>
   </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
@@ -334,56 +242,6 @@
   </div>
 </header>
 
-<div id="website-creative-modal" hidden>
-  <div class="ck-modal__backdrop" data-modal-dismiss="true"></div>
-  <div class="ck-modal__panel" role="dialog" aria-modal="true" aria-label="Create/update website creative">
-    <div class="ck-modal__header">
-      <h2 class="heading-3" style="margin:0">Create/update website creative</h2>
-    </div>
-    <div class="ck-modal__body">
-      <div class="ck-modal__field">
-        <label class="label-s" for="website-creative-widget">Widget type</label>
-        <select id="website-creative-widget" class="ck-modal__select body-s"></select>
-      </div>
-      <div class="ck-modal__field">
-        <label class="label-s" for="website-creative-page">Page</label>
-        <div id="website-creative-page" class="ck-modal__segmented" role="radiogroup" aria-label="Page"></div>
-      </div>
-      <div class="ck-modal__field">
-        <label class="label-s" for="website-creative-slot">Block slot</label>
-        <select id="website-creative-slot" class="ck-modal__select body-s"></select>
-      </div>
-      <div class="ck-modal__field">
-        <label class="label-s" for="website-creative-overwrite">
-          <input id="website-creative-overwrite" type="checkbox" />
-          Overwrite existing instance config
-        </label>
-        <span class="caption" style="color: color-mix(in oklab, var(--color-text), transparent 45%);">
-          When enabled, this resets the existing website-creative instance to the widget defaults (wipes edits).
-        </span>
-      </div>
-      <div class="ck-modal__preview">
-        <div class="ck-modal__preview-row">
-          <span class="label-xs" style="color: color-mix(in oklab, var(--color-text), transparent 40%);">creativeKey</span>
-          <code class="ck-modal__code" id="website-creative-preview-key"></code>
-        </div>
-        <div class="ck-modal__preview-row">
-          <span class="label-xs" style="color: color-mix(in oklab, var(--color-text), transparent 40%);">publicId</span>
-          <code class="ck-modal__code" id="website-creative-preview-id"></code>
-        </div>
-      </div>
-    </div>
-    <div class="ck-modal__footer">
-      <button type="button" class="diet-btn-txt" data-size="md" data-variant="secondary" id="website-creative-cancel">
-        <span class="diet-btn-txt__label">Cancel</span>
-      </button>
-      <button type="button" class="diet-btn-txt" data-size="md" data-variant="primary" id="website-creative-submit">
-        <span class="diet-btn-txt__label">Create / Update / Open</span>
-      </button>
-    </div>
-  </div>
-</div>
-
 <div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
   <iframe
     id="bob-iframe"
@@ -394,84 +252,6 @@
 </div>
 
 <script type="module">
-const WEBSITE_CREATIVE_PAGES = ['overview', 'templates', 'examples', 'features'];
-
-function composeWebsiteCreativeKey({ widgetType, page, blockId }) {
-  return `${widgetType}.${page}.${blockId}`;
-}
-
-  function composeWebsiteCreativePublicId({ creativeKey }) {
-    return `wgt_curated_${creativeKey}`;
-  }
-
-const widgetPageJsonCache = new Map();
-
-async function loadWidgetPageJson({ widgetType, page }) {
-  const normalizedWidgetType = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
-  const normalizedPage = String(page || '').trim().toLowerCase();
-  const cacheKey = `${normalizedWidgetType}:${normalizedPage}`;
-  if (widgetPageJsonCache.has(cacheKey)) return widgetPageJsonCache.get(cacheKey);
-
-  const promise = (async () => {
-    const res = await fetch(
-      `/tokyo/widgets/${encodeURIComponent(normalizedWidgetType)}/pages/${encodeURIComponent(normalizedPage)}.json?_t=${Date.now()}`,
-      { cache: 'no-store' },
-    );
-
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      throw new Error(`[DevStudio] Failed to load widget page JSON (${normalizedWidgetType}/${normalizedPage}) (HTTP ${res.status})`);
-    }
-
-    const json = await res.json().catch(() => null);
-    if (!json || typeof json !== 'object') {
-      throw new Error(`[DevStudio] Invalid widget page JSON (${normalizedWidgetType}/${normalizedPage})`);
-    }
-    if (json.v !== 1) {
-      throw new Error(`[DevStudio] Unsupported widget page JSON version (${normalizedWidgetType}/${normalizedPage}): ${String(json.v)}`);
-    }
-    if (!Array.isArray(json.blocks)) {
-      throw new Error(`[DevStudio] Widget page JSON missing blocks[] (${normalizedWidgetType}/${normalizedPage})`);
-    }
-
-    const blocks = json.blocks
-      .map((b) => (b && typeof b === 'object' && !Array.isArray(b) ? b : null))
-      .filter(Boolean)
-      .map((b) => {
-        const id = typeof b.id === 'string' ? b.id.trim() : '';
-        const type = typeof b.type === 'string' ? b.type.trim() : '';
-        const copy = b.copy && typeof b.copy === 'object' && !Array.isArray(b.copy) ? b.copy : {};
-        const visual = b.visual === true;
-        return id && type ? { id, type, copy, visual } : null;
-      })
-      .filter(Boolean);
-
-    return { v: 1, blocks };
-  })();
-
-  widgetPageJsonCache.set(cacheKey, promise);
-  return promise;
-}
-
-  function parseWebsiteCreativePublicId(publicId) {
-    const raw = String(publicId || '').trim();
-    if (!raw.startsWith('wgt_curated_')) return null;
-    const creativeKey = raw.slice('wgt_curated_'.length);
-
-    const firstDot = creativeKey.indexOf('.');
-    if (firstDot <= 0) return null;
-    const widgetType = creativeKey.slice(0, firstDot);
-    const rest = creativeKey.slice(firstDot + 1);
-
-  const secondDot = rest.indexOf('.');
-  if (secondDot <= 0) return null;
-    const page = rest.slice(0, secondDot);
-    const blockId = rest.slice(secondDot + 1);
-    if (!widgetType || !page || !blockId) return null;
-
-    return { widgetType, page, blockId, creativeKey, publicId: raw };
-  }
-
 // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
 // DevStudio swaps DOM but does not automatically remove global event listeners.
 // Use an AbortController keyed on `window` so re-entering this tool page doesn't
@@ -511,7 +291,7 @@ function resolveTokyoBaseUrl() {
 
 const TOKYO_BASE = resolveTokyoBaseUrl();
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-// v1: website creatives live in the single Clickeen-owned workspace in dev, which is ck-dev.
+// v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
 // In prod this will point at the Clickeen marketing workspace.
 const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
 let currentPublicId = null;
@@ -528,22 +308,12 @@ const currentLabel = document.getElementById('current-instance-label');
 const compiledCache = new Map();
 const superadminActions = document.getElementById('superadmin-actions');
 const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
+const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
 const superadminCreateTemplate = document.getElementById('superadmin-create-template');
-const superadminCreatePrague = document.getElementById('superadmin-create-prague');
 const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
 const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
 const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
 let lastPromotePayload = null;
-
-const websiteCreativeModal = document.getElementById('website-creative-modal');
-const websiteCreativeWidgetEl = document.getElementById('website-creative-widget');
-const websiteCreativePageEl = document.getElementById('website-creative-page');
-const websiteCreativeSlotEl = document.getElementById('website-creative-slot');
-const websiteCreativeOverwriteEl = document.getElementById('website-creative-overwrite');
-const websiteCreativePreviewKeyEl = document.getElementById('website-creative-preview-key');
-const websiteCreativePreviewIdEl = document.getElementById('website-creative-preview-id');
-const websiteCreativeCancelEl = document.getElementById('website-creative-cancel');
-const websiteCreativeSubmitEl = document.getElementById('website-creative-submit');
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
@@ -1079,7 +849,7 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
   await persistConfigAssetsToTokyo(config, { scope: 'widget', widgetType: widgetSlug });
 
   // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
-  // so downstream actions (like website creatives) deterministically inherit the updated baseline.
+  // so downstream curated instances deterministically inherit the updated baseline.
   await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: config });
   compiledCache.delete(widgetSlug);
 
@@ -1114,6 +884,35 @@ async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
   return text ? JSON.parse(text) : null;
 }
 
+async function resetMainInstanceFromJson(widgetSlug) {
+  compiledCache.delete(widgetSlug);
+  const compiled = await ensureCompiledWidget(widgetSlug);
+  const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
+  if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+
+  const publicId = `wgt_main_${widgetSlug}`;
+  const ok = window.confirm(
+    `Reset ${publicId} from JSON defaults? This will overwrite the current config.`
+  );
+  if (!ok) throw new Error('[DevStudio] Canceled');
+
+  const config = cloneJson(defaults);
+  await createWorkspaceInstance({
+    workspaceId: DEV_WORKSPACE_ID,
+    widgetType: widgetSlug,
+    publicId,
+    config,
+    status: 'unpublished',
+  });
+  await updateWorkspaceInstance({
+    workspaceId: DEV_WORKSPACE_ID,
+    publicId,
+    config,
+    status: 'unpublished',
+  });
+  return { publicId, config };
+}
+
 async function createTemplateInstance({ widgetSlug, sourceConfig }) {
   const rawKey = window.prompt('Template key');
   const key = slugifyKey(rawKey);
@@ -1129,210 +928,6 @@ async function createTemplateInstance({ widgetSlug, sourceConfig }) {
   });
   return publicId;
 }
-
-let cachedWidgetTypes = null;
-async function fetchWidgetTypes() {
-  if (cachedWidgetTypes) return cachedWidgetTypes;
-  const res = await fetch(`${PARIS_API}/widgets?_t=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`[DevStudio] Failed to load widget types (HTTP ${res.status})`);
-  const json = await res.json().catch(() => null);
-  const types = Array.isArray(json?.widgets) ? json.widgets.map((w) => w?.type).filter(Boolean) : [];
-  cachedWidgetTypes = Array.from(new Set(types));
-  return cachedWidgetTypes;
-}
-
-function ensureWebsiteCreativeModalElements() {
-  if (!(websiteCreativeModal instanceof HTMLElement)) throw new Error('[DevStudio] Missing website creative modal');
-  if (!(websiteCreativeWidgetEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing widget select');
-  if (!(websiteCreativePageEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing page selector');
-  if (!(websiteCreativeSlotEl instanceof HTMLSelectElement)) throw new Error('[DevStudio] Missing slot select');
-  if (!(websiteCreativeOverwriteEl instanceof HTMLInputElement)) throw new Error('[DevStudio] Missing overwrite checkbox');
-  if (!(websiteCreativePreviewKeyEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing creativeKey preview');
-  if (!(websiteCreativePreviewIdEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing publicId preview');
-  if (!(websiteCreativeCancelEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing cancel button');
-  if (!(websiteCreativeSubmitEl instanceof HTMLElement)) throw new Error('[DevStudio] Missing submit button');
-}
-
-function openWebsiteCreativeModal({ defaultWidgetType }) {
-  ensureWebsiteCreativeModalElements();
-  const modal = websiteCreativeModal;
-
-  return new Promise(async (resolve, reject) => {
-    let activePage = 'overview';
-    let pageSpecsByPage = {};
-
-    const cleanup = () => {
-      modal.hidden = true;
-      websiteCreativePageEl.innerHTML = '';
-      websiteCreativeWidgetEl.onchange = null;
-      websiteCreativeSlotEl.onchange = null;
-      websiteCreativeOverwriteEl.onchange = null;
-      websiteCreativeOverwriteEl.checked = false;
-      websiteCreativeOverwriteEl.disabled = true;
-      websiteCreativeCancelEl.onclick = null;
-      websiteCreativeSubmitEl.onclick = null;
-    };
-
-    const loadWidgetPages = async () => {
-      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
-      if (!widgetType) {
-        pageSpecsByPage = {};
-        return;
-      }
-
-      const results = await Promise.allSettled(
-        WEBSITE_CREATIVE_PAGES.map(async (page) => {
-          const spec = await loadWidgetPageJson({ widgetType, page });
-          return { page, spec };
-        })
-      );
-
-      const next = {};
-      results.forEach((r) => {
-        if (r.status !== 'fulfilled') return;
-        if (!r.value?.spec) return;
-        next[r.value.page] = r.value.spec;
-      });
-      pageSpecsByPage = next;
-
-      if (!pageSpecsByPage[activePage]) {
-        const firstEnabled = WEBSITE_CREATIVE_PAGES.find((p) => Boolean(pageSpecsByPage[p]));
-        activePage = firstEnabled || 'overview';
-      }
-    };
-
-    const recomputePreview = () => {
-      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
-      const blockId = (websiteCreativeSlotEl.value || '').trim();
-      const creativeKey = widgetType && blockId ? composeWebsiteCreativeKey({ widgetType, page: activePage, blockId }) : '';
-      const publicId = creativeKey ? composeWebsiteCreativePublicId({ creativeKey }) : '';
-      const exists = Boolean(publicId && instances.some((inst) => inst?.publicId === publicId));
-      const overwrite = websiteCreativeOverwriteEl.checked === true;
-
-      websiteCreativePreviewKeyEl.textContent = creativeKey;
-      websiteCreativePreviewIdEl.textContent = publicId;
-      websiteCreativeSubmitEl.toggleAttribute('disabled', !publicId);
-      websiteCreativeOverwriteEl.toggleAttribute('disabled', !exists);
-      if (!exists) websiteCreativeOverwriteEl.checked = false;
-
-      const submitLabel = websiteCreativeSubmitEl.querySelector('.diet-btn-txt__label');
-      if (submitLabel) {
-        submitLabel.textContent = exists ? (overwrite ? 'Update / Open' : 'Open') : 'Create / Open';
-      }
-    };
-
-    const renderSlots = () => {
-      const blocks = pageSpecsByPage?.[activePage]?.blocks || [];
-      const visualBlocks = Array.isArray(blocks) ? blocks.filter((b) => b && b.visual === true) : [];
-
-      websiteCreativeSlotEl.innerHTML = visualBlocks
-        .map((b) => {
-          const label = b.type && b.type !== b.id ? `${b.id} (${b.type})` : b.id;
-          return `<option value="${b.id}">${label}</option>`;
-        })
-        .join('');
-
-      if (!visualBlocks.length) websiteCreativeSlotEl.innerHTML = `<option value="">(no visual blocks)</option>`;
-      recomputePreview();
-    };
-
-    const renderPages = () => {
-      websiteCreativePageEl.innerHTML = WEBSITE_CREATIVE_PAGES.map((page) => {
-        const enabled = Boolean(pageSpecsByPage?.[page]);
-        const selected = page === activePage;
-        return `
-          <button
-            type="button"
-            class="diet-btn-txt ck-modal__segmented-btn"
-            data-size="md"
-            data-variant="${selected ? 'primary' : 'secondary'}"
-            data-page="${page}"
-            ${enabled ? '' : 'disabled'}
-            aria-pressed="${selected ? 'true' : 'false'}"
-          >
-            <span class="diet-btn-txt__label">${page}</span>
-          </button>
-        `;
-          }).join('');
-
-      websiteCreativePageEl.querySelectorAll('[data-page]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const next = btn.getAttribute('data-page');
-          if (!next) return;
-          activePage = next;
-          renderPages();
-          renderSlots();
-        });
-      });
-    };
-
-    try {
-      const widgetTypes = await fetchWidgetTypes().catch(() => []);
-      const fallbackType = (defaultWidgetType || 'faq').trim();
-      const options = Array.from(new Set([fallbackType, ...widgetTypes])).filter(Boolean);
-      websiteCreativeWidgetEl.innerHTML = options.map((type) => `<option value="${type}">${type}</option>`).join('');
-      websiteCreativeWidgetEl.value = fallbackType;
-      await loadWidgetPages();
-    } catch (err) {
-      cleanup();
-      reject(err);
-      return;
-    }
-
-    renderPages();
-    renderSlots();
-
-    const dismiss = (error) => {
-      cleanup();
-      reject(error || new Error('[DevStudio] Canceled'));
-    };
-
-    websiteCreativeWidgetEl.onchange = async () => {
-      try {
-        await loadWidgetPages();
-        renderPages();
-        renderSlots();
-        recomputePreview();
-      } catch (err) {
-        dismiss(err);
-      }
-    };
-    websiteCreativeSlotEl.onchange = recomputePreview;
-    websiteCreativeOverwriteEl.onchange = recomputePreview;
-
-    websiteCreativeCancelEl.onclick = () => dismiss(new Error('[DevStudio] Canceled'));
-    websiteCreativeSubmitEl.onclick = () => {
-      const widgetType = (websiteCreativeWidgetEl.value || '').trim();
-      const slot = (websiteCreativeSlotEl.value || '').trim();
-      const overwrite = websiteCreativeOverwriteEl.checked === true;
-      if (!widgetType) return dismiss(new Error('[DevStudio] Missing widget type'));
-      if (!slot) return dismiss(new Error('[DevStudio] Missing slot'));
-      cleanup();
-      resolve({ widgetType, page: activePage, slot, overwrite });
-    };
-
-    modal.querySelectorAll('[data-modal-dismiss]').forEach((node) => {
-      node.addEventListener('click', () => dismiss(new Error('[DevStudio] Canceled')), { once: true });
-    });
-
-    modal.hidden = false;
-    recomputePreview();
-  });
-}
-
-  async function ensureWebsiteCreative({ workspaceId, widgetType, page, slot, baselineConfig, overwrite = false }) {
-    const res = await superadminFetch(
-      `${PARIS_API}/website-creative?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ widgetType, page, slot, baselineConfig, overwrite }),
-      }
-    );
-    const text = await res.text().catch(() => '');
-    if (!res.ok) throw new Error(`[DevStudio] Ensure website creative failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
-    return text ? JSON.parse(text) : null;
-  }
 
 async function refreshInstancesAndSelect(publicId) {
   await fetchInstances();
@@ -1406,6 +1001,23 @@ superadminUpdateDefaults?.addEventListener('click', async () => {
   }
 });
 
+superadminResetFromJson?.addEventListener('click', async () => {
+  try {
+    const widgetSlug = requireWidgetSlugForAction();
+    const result = await resetMainInstanceFromJson(widgetSlug);
+    await maybeAutoPromoteToCloud({
+      workspaceId: DEV_WORKSPACE_ID,
+      publicId: result.publicId,
+      widgetType: widgetSlug,
+      config: result.config,
+      status: 'unpublished',
+    });
+    await refreshInstancesAndSelect(result.publicId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
 superadminCreateTemplate?.addEventListener('click', async () => {
   try {
     if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
@@ -1421,104 +1033,6 @@ superadminCreateTemplate?.addEventListener('click', async () => {
       status: 'unpublished',
     });
     await refreshInstancesAndSelect(publicId);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
-
-superadminCreatePrague?.addEventListener('click', async () => {
-  try {
-    // If we're already editing a website creative instance, treat this as "Update":
-    // persist the current editor state into the same website-creative instance (no new instance).
-    const currentCreative = parseWebsiteCreativePublicId(currentPublicId);
-    if (currentCreative) {
-      // Export via Bob so `blob:` URLs can be persisted (DevStudio cannot read Bob-origin blob URLs).
-      const exported = await exportInstanceDataFromBob({ persistAssets: true });
-      const config = exported?.instanceData;
-      if (!config || typeof config !== 'object') {
-        throw new Error('[DevStudio] Bob export did not include instanceData');
-      }
-
-      const exportedPublicId = exported?.meta?.publicId;
-      if (exportedPublicId && exportedPublicId !== currentCreative.publicId) {
-        const ok = window.confirm(
-          `Save the currently loaded editor state (${exportedPublicId}) into website creative (${currentCreative.publicId})?`
-        );
-        if (!ok) throw new Error('[DevStudio] Canceled');
-      }
-
-      await updateWorkspaceInstance({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
-        publicId: currentCreative.publicId,
-        config,
-        status: 'published',
-      });
-      await maybeAutoPromoteToCloud({
-        workspaceId: CLICKEEN_WORKSPACE_ID,
-        publicId: currentCreative.publicId,
-        widgetType: currentCreative.widgetType,
-        config,
-        status: 'published',
-      });
-      await refreshInstancesAndSelect(currentCreative.publicId);
-      return;
-    }
-
-    const instance = instances.find((inst) => inst.publicId === currentPublicId);
-    const defaultWidgetType = instance?.widgetSlug || requireWidgetSlugForAction();
-
-    const selection = await openWebsiteCreativeModal({ defaultWidgetType });
-
-    const creativeKey = composeWebsiteCreativeKey({
-      widgetType: selection.widgetType,
-      page: selection.page,
-      blockId: selection.slot,
-    });
-    const publicId = composeWebsiteCreativePublicId({ creativeKey });
-    const exists = instances.some((inst) => inst?.publicId === publicId);
-
-    try { await navigator.clipboard.writeText(publicId); } catch {}
-
-    // Deterministic behavior:
-    // - If the instance already exists and overwrite is NOT checked, this action is "Open" (no writes).
-    if (exists && selection.overwrite !== true) {
-      await refreshInstancesAndSelect(publicId);
-      return;
-    }
-
-    const compiled = await ensureCompiledWidget(selection.widgetType);
-    const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
-    if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
-
-    const baselineConfig = cloneJson(defaults);
-    await persistConfigAssetsToTokyo(baselineConfig, { scope: 'widget', widgetType: selection.widgetType });
-
-    const result = await ensureWebsiteCreative({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      widgetType: selection.widgetType,
-      page: selection.page,
-      slot: selection.slot,
-      baselineConfig,
-      overwrite: selection.overwrite === true,
-    });
-    const ensuredPublicId = result?.publicId ? String(result.publicId) : publicId;
-
-    // Venice is the public embed runtime; it only serves published instances.
-    // Ensure the newly created/overwritten website creative is published in the local sandbox.
-    await updateWorkspaceInstance({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      publicId: ensuredPublicId,
-      config: baselineConfig,
-      status: 'published',
-    });
-    await maybeAutoPromoteToCloud({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      publicId: ensuredPublicId,
-      widgetType: selection.widgetType,
-      config: baselineConfig,
-      status: 'published',
-    });
-    await refreshInstancesAndSelect(ensuredPublicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }

@@ -192,8 +192,8 @@ export default defineConfig({
             // Curated instances are locale-free. Locale is a runtime parameter and must not be encoded into publicId.
             // This prevents accidental fan-out (wgt_curated_*.<locale>) when promoting to shared cloud-dev.
             if (publicId.startsWith('wgt_curated_')) {
-              const okWebsiteCreative = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(publicId);
-              if (!okWebsiteCreative) {
+              const okCuratedPublicId = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(publicId);
+              if (!okCuratedPublicId) {
                 res.statusCode = 422;
                 res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
                 return;

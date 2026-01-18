@@ -1,0 +1,32 @@
+{
+  "v": 1,
+  "limits": [
+    {
+      "kind": "flag",
+      "key": "seoGeo.enabled",
+      "path": "seoGeo.enabled",
+      "mode": "boolean",
+      "deny": true,
+      "sanitizeTo": false,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "branding.remove",
+      "path": "behavior.showBacklink",
+      "mode": "boolean",
+      "deny": false,
+      "sanitizeTo": true,
+      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "links.enabled",
+      "path": "actions.during.url",
+      "mode": "nonempty-string",
+      "deny": "nonempty",
+      "sanitizeTo": "",
+      "enforce": { "ops": "reject", "publish": "reject" }
+    }
+  ]
+}

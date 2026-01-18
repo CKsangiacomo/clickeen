@@ -1,23 +1,20 @@
 ---
-import WebsiteCreativeEmbed from '../../components/WebsiteCreativeEmbed.astro';
+import CuratedInstanceEmbed from '../../components/CuratedInstanceEmbed.astro';
 
 type Props = {
   headline: string;
   subheadline?: string;
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
-  // Contract-locked: the hero preview (when enabled) is ALWAYS the curated instance for:
-  //   wgt_curated_{widgetType}.overview.hero
-  // This is not a generic slot and cannot visualize arbitrary content.
-  websiteCreative?: {
-    widgetType: string;
+  curatedRef?: {
+    publicId: string;
     locale: string;
     height?: string;
     title?: string;
   };
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, curatedRef } = Astro.props;
 ---
 
 <section class="ck-canvas ck-heroCanvas">
@@ -28,11 +25,7 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
     <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
         <h1 class="display-2 ck-hero__title">{headline}</h1>
-        {subheadline ? (
-          <p class="body-xxl ck-hero__subheadline ck-text-muted">
-            {subheadline}
-          </p>
-        ) : null}
+        {subheadline ? <p class="body-website ck-hero__subheadline">{subheadline}</p> : null}
         <div class="ck-row">
           <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
           {secondaryCta ? (
@@ -41,14 +34,12 @@ const { headline, subheadline, primaryCta, secondaryCta, websiteCreative } = Ast
         </div>
       </div>
       <div class="ck-split__b" aria-hidden="true">
-        {websiteCreative ? (
-          <WebsiteCreativeEmbed
-            widgetType={websiteCreative.widgetType}
-            page="overview"
-            blockId="hero"
-            locale={websiteCreative.locale}
-            height={websiteCreative.height ?? '360px'}
-            title={websiteCreative.title ?? 'Widget preview'}
+        {curatedRef ? (
+          <CuratedInstanceEmbed
+            publicId={curatedRef.publicId}
+            locale={curatedRef.locale}
+            height={curatedRef.height ?? '360px'}
+            title={curatedRef.title ?? 'Widget preview'}
           />
         ) : (
           <div class="ck-media ck-heroPreview">Live widget preview (stub)</div>

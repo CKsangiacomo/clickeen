@@ -2,38 +2,39 @@
 type Props = {
   headline: string;
   subheadline?: string;
-  primaryLabel: string;
-  primaryHref: string;
+  primaryCta?: {
+    label: string;
+    href: string;
+  };
 };
 
-const { headline, subheadline, primaryLabel, primaryHref } = Astro.props;
+const { headline, subheadline, primaryCta } = Astro.props;
 ---
 
 <section class="ck-canvas">
   <div class="ck-inline">
-    <div class="ck-card">
-      <div class="ck-split ck-split--center ck-cta__wrap">
-        <div class="ck-split__a ck-stack ck-cta__copy">
-          <div class="heading-2">{headline}</div>
-          {subheadline ? <div class="body-xxl ck-cta__sub ck-text-subtle">{subheadline}</div> : null}
+    <div class="ck-cta__card">
+      <div class="ck-split ck-split--center">
+        <div class="ck-split__a ck-stack">
+          <div class="display-2 ck-m0">{headline}</div>
+          {subheadline ? <div class="body-website ck-m0 ck-text-subtle">{subheadline}</div> : null}
         </div>
-        <div class="ck-split__b ck-cta__cta">
-          <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryHref}>{primaryLabel}</a>
-        </div>
+        {primaryCta ? (
+          <div class="ck-split__b">
+            <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
+          </div>
+        ) : null}
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .ck-cta__wrap {
+  .ck-cta__card {
+    background: var(--color-system-white);
+    border-radius: var(--control-radius-4xl);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+    box-shadow: var(--shadow-elevated);
     padding: var(--space-8);
-    gap: var(--space-8);
   }
-
-  .ck-cta__copy { gap: var(--space-2); }
-
-  .ck-cta__sub { }
-
-  .ck-cta__cta { flex: 0 0 auto; }
 </style>

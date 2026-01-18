@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "515b12ab4b7d2d93f870276d736ee316f797805ce1d8485460ec0b69c36867a4",
+  "baseUpdatedAt": "2026-01-18T15:53:01.059Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "Creatieve split (links)"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "Dit is de variant met de visual links, die dezelfde zorgvuldig samengestelde instantie gebruikt als de hero."
+    }
+  ],
+  "v": 1
+}

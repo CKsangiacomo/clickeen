@@ -26,6 +26,8 @@ const BODY_SCALE = [
   'body-xxl',
 ];
 
+const WEBSITE_BODY_SCALE = ['body-website', 'body-website-large', 'body-website-xlarge'];
+
 const LABEL_SCALE = [
   'label-xxs',
   'label-xs',
@@ -66,6 +68,14 @@ const buildScale = (classes: string[]): TypographySample[] =>
 
 export const typographySections: TypographySection[] = [
   {
+    title: 'Marketing Display',
+    samples: (generated['Marketing Display'] ?? []).map((entry) => ({
+      name: nameFromClass(entry.className),
+      className: entry.className,
+      sample: entry.sample ?? defaultSample,
+    })),
+  },
+  {
     title: 'Headings',
     samples: generated['Headings'].map((entry) => ({
       name: nameFromClass(entry.className),
@@ -76,6 +86,10 @@ export const typographySections: TypographySection[] = [
   {
     title: 'Body',
     samples: buildScale(BODY_SCALE),
+  },
+  {
+    title: 'Website Body',
+    samples: buildScale(WEBSITE_BODY_SCALE),
   },
   {
     title: 'Labels & Captions',

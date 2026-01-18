@@ -1,16 +1,16 @@
 {
-  "baseFingerprint": "d62ee4dd088e6648ea1fd4d04baca37c392a297c02747016fdb73eb0af3d0c2e",
-  "baseUpdatedAt": "2026-01-16T17:12:12.366Z",
+  "baseFingerprint": "6c98c680f0fedf641751b2657b44ee2936eea46eebbc0aa76fae2119cdca0b37",
+  "baseUpdatedAt": "2026-01-18T16:38:17.667Z",
   "ops": [
     {
       "op": "set",
       "path": "strings.headline",
-      "value": "建立您的常見問題小工具"
+      "value": "與每位客戶連結，無論身在何處"
     },
     {
       "op": "set",
       "path": "strings.subheadline",
-      "value": "免費開始。準備好後再發布。"
+      "value": "AI 驅動的 FAQ，以他們的語言溝通並理解他們的需求。"
     }
   ],
   "v": 1

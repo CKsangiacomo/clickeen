@@ -1,4 +1,18 @@
 {
+  "Marketing Display": [
+    {
+      "className": "display-1",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "display-2",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "display-3",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    }
+  ],
   "Headings": [
     {
       "className": "heading-1",
@@ -55,6 +69,18 @@
       "sample": "The quick brown fox jumps over the lazy dog"
     },
     {
+      "className": "body-website",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-website-large",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "className": "body-website-xlarge",
+      "sample": "The quick brown fox jumps over the lazy dog"
+    },
+    {
       "className": "body",
       "sample": "The quick brown fox jumps over the lazy dog"
     },
@@ -107,6 +133,10 @@
     {
       "className": "overline",
       "sample": "OVERLINE"
+    },
+    {
+      "className": "overline-small",
+      "sample": "The quick brown fox jumps over the lazy dog"
     }
   ]
 }

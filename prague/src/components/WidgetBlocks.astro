@@ -1,13 +1,13 @@
 ---
 import Cta from '../blocks/cta/cta.astro';
-import ExamplesGrid from '../blocks/examples-grid/examples-grid.astro';
-import Features from '../blocks/features/features.astro';
+import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import Outcomes from '../blocks/outcomes/outcomes.astro';
-import PricingPlans from '../blocks/pricing-plans/pricing-plans.astro';
+import SplitCreativeLeft from '../blocks/split-creative-left/split-creative-left.astro';
+import SplitCreativeRight from '../blocks/split-creative-right/split-creative-right.astro';
+import SplitCreativeStacked from '../blocks/split-creative-stacked/split-creative-stacked.astro';
 import Steps from '../blocks/steps/steps.astro';
-import TemplatesGrid from '../blocks/templates-grid/templates-grid.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
 import { resolvePragueHref } from '../lib/links';
@@ -18,7 +18,7 @@ type Block = {
   copy: Record<string, any>;
   visual?: boolean;
   align?: string;
-  creativeRef?: { publicId?: string };
+  curatedRef?: { publicId?: string };
 };
 
 type Props = {
@@ -46,18 +46,29 @@ const heroSecondaryCta =
 {blocks.map((block) => {
   if (!block || !block.type) return null;
   switch (block.type) {
+    case 'big-bang': {
+      const copy = block.copy ?? {};
+      return (
+        <BigBang
+          headline={String(copy.headline ?? '')}
+          body={String(copy.body ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={heroSecondaryCta}
+        />
+      );
+    }
     case 'hero': {
       const copy = block.copy ?? {};
-      const wantsCreative = block.visual === true;
+      const curatedPublicId = block.curatedRef?.publicId;
       return (
         <Hero
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={heroSecondaryCta}
-          websiteCreative={
-            wantsCreative
-              ? { widgetType: widget, locale, height: '640px', title: `${widget} ${activeSubpage} hero` }
+          curatedRef={
+            curatedPublicId
+              ? { publicId: curatedPublicId, locale, height: '640px', title: `${widget} ${activeSubpage} hero` }
               : undefined
           }
         >
@@ -65,13 +76,60 @@ const heroSecondaryCta =
         </Hero>
       );
     }
+    case 'split-creative-right': {
+      const copy = block.copy ?? {};
+      const curatedPublicId = block.curatedRef?.publicId;
+      return (
+        <SplitCreativeRight
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={heroSecondaryCta}
+          curatedRef={
+            curatedPublicId
+              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              : undefined
+          }
+        />
+      );
+    }
+    case 'split-creative-left': {
+      const copy = block.copy ?? {};
+      const curatedPublicId = block.curatedRef?.publicId;
+      return (
+        <SplitCreativeLeft
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={heroSecondaryCta}
+          curatedRef={
+            curatedPublicId
+              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              : undefined
+          }
+        />
+      );
+    }
+    case 'split-creative-stacked': {
+      const copy = block.copy ?? {};
+      const curatedPublicId = block.curatedRef?.publicId;
+      return (
+        <SplitCreativeStacked
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={heroSecondaryCta}
+          curatedRef={
+            curatedPublicId
+              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              : undefined
+          }
+        />
+      );
+    }
     case 'steps': {
       const copy = block.copy ?? {};
-      return <Steps steps={(copy.items ?? []) as { title: string; body: string }[]} />;
-    }
-    case 'features': {
-      const copy = block.copy ?? {};
-      return <Features items={(copy.items ?? []) as { title: string; body?: string }[]} />;
+      return <Steps title={copy.title as string} subhead={copy.subhead as string} steps={(copy.items ?? []) as { title: string; body: string }[]} />;
     }
     case 'cta': {
       const copy = block.copy ?? {};
@@ -79,26 +137,13 @@ const heroSecondaryCta =
         <Cta
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
-          primaryLabel={pragueT(locale, 'prague.cta.createFree')}
-          primaryHref={`/${locale}/create`}
+          primaryCta={heroPrimaryCta}
         />
       );
     }
     case 'minibob': {
       const copy = block.copy ?? {};
       return <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />;
-    }
-    case 'examples-grid': {
-      const copy = block.copy ?? {};
-      return <ExamplesGrid title={copy.title as string} items={(copy.items ?? []) as { title: string; body?: string }[]} />;
-    }
-    case 'templates-grid': {
-      const copy = block.copy ?? {};
-      return <TemplatesGrid title={copy.title as string} items={(copy.items ?? []) as { title: string; body?: string }[]} />;
-    }
-    case 'pricing-plans': {
-      const copy = block.copy ?? {};
-      return <PricingPlans title={copy.title as string} plans={(copy.plans ?? []) as { name: string; price: string; bullets: string[] }[]} />;
     }
     case 'outcomes': {
       const copy = block.copy ?? {};

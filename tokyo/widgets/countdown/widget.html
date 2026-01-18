@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Countdown Widget</title>
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div class="ck-widget ck-countdown-widget" data-ck-widget="countdown" data-role="root">
+          <section class="ck-countdown" data-role="countdown">
+            <header class="ck-countdown__header">
+              <h2 class="ck-countdown__title heading-2" data-role="heading">Countdown</h2>
+            </header>
+            <div class="ck-countdown__timer" data-role="timer">
+              <div class="ck-countdown__unit" data-role="unit" data-unit="days">
+                <div class="ck-countdown__value" data-role="value">00</div>
+                <div class="ck-countdown__label" data-role="label">Days</div>
+              </div>
+              <div class="ck-countdown__separator">:</div>
+              <div class="ck-countdown__unit" data-role="unit" data-unit="hours">
+                <div class="ck-countdown__value" data-role="value">00</div>
+                <div class="ck-countdown__label" data-role="label">Hours</div>
+              </div>
+              <div class="ck-countdown__separator">:</div>
+              <div class="ck-countdown__unit" data-role="unit" data-unit="minutes">
+                <div class="ck-countdown__value" data-role="value">00</div>
+                <div class="ck-countdown__label" data-role="label">Minutes</div>
+              </div>
+              <div class="ck-countdown__separator">:</div>
+              <div class="ck-countdown__unit" data-role="unit" data-unit="seconds">
+                <div class="ck-countdown__value" data-role="value">00</div>
+                <div class="ck-countdown__label" data-role="label">Seconds</div>
+              </div>
+            </div>
+            <div class="ck-countdown__actions">
+              <a class="ck-countdown__cta button-primary" data-role="cta" href="#" hidden>Action</a>
+            </div>
+            <div class="ck-countdown__after-message" data-role="after-message" hidden>Countdown ended</div>
+          </section>
+          <div data-role="backlink" class="ck-widget__backlink">
+            <a href="https://clickeen.com" target="_blank" rel="noopener">Powered by Clickeen</a>
+          </div>
+          <script src="../shared/typography.js" defer></script>
+          <script src="../shared/stagePod.js" defer></script>
+          <script src="../shared/branding.js" defer></script>
+          <script src="./widget.client.js" defer></script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -74,6 +74,7 @@ function writeDieterManifest({ dist, repoRoot }) {
   // Explicit dependencies between Dieter bundles (keeps Bob compilation deterministic).
   // Keep this list small and expand only when a component truly depends on others.
   const deps = {
+    'bulk-edit': ['button', 'dropdown-upload'],
     'dropdown-actions': ['popover', 'button'],
     'dropdown-border': ['popover', 'button', 'textfield', 'slider', 'toggle'],
     'dropdown-edit': ['popover', 'button', 'popaddlink', 'textfield'],

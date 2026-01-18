@@ -1,42 +1,6 @@
 {
-  "baseFingerprint": "d52705741a55a33830a3b5458a0b3663ffac5bc7e5c4a9df52a9c66b5273d5cf",
+  "baseFingerprint": "5f19f530fd18a4cc25a735a16c162f5f1627b81fa4cc8d96cf49d755d8d82a3a",
   "baseUpdatedAt": "2026-01-16T17:11:54.049Z",
-  "ops": [
-    {
-      "op": "set",
-      "path": "strings.title",
-      "value": "運作方式"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.title",
-      "value": "選擇範本"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.title",
-      "value": "自訂"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.title",
-      "value": "嵌入"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.0.body",
-      "value": "從經過驗證的版面與結構開始。"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.1.body",
-      "value": "調整文案與設計以符合你的網站。"
-    },
-    {
-      "op": "set",
-      "path": "strings.items.2.body",
-      "value": "將程式碼片段貼到任何網站或平台中。"
-    }
-  ],
+  "ops": [],
   "v": 1
 }

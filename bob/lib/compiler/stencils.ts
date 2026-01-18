@@ -230,6 +230,7 @@ export async function buildContext(
   const addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
   const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
   const addLabelParams = normalizeJsonDataAttr(addLabelParamsRaw);
+  const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   const reorderLabelKey =
     attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
   const reorderLabelParamsRaw =
@@ -237,6 +238,12 @@ export async function buildContext(
   const reorderLabelParams = normalizeJsonDataAttr(reorderLabelParamsRaw);
   const reorderTitleKey =
     attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
+  const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
+  const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
+  const columnsRaw = attrs.columns || (merged.columns as string) || '';
+  const columns = columnsRaw ? normalizeJsonHtmlAttr(columnsRaw) : '';
+  const title = attrs.title || (merged.title as string) || label;
+  const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
@@ -265,6 +272,9 @@ export async function buildContext(
   const allowImage = component === 'dropdown-fill' ? (allowImageOverride ?? inferredAllowsImage) : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
+
+  const min = attrs.min || (merged.min as string) || '';
+  const max = attrs.max || (merged.max as string) || '';
 
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
@@ -295,6 +305,8 @@ export async function buildContext(
     headerLabel,
     headerIcon,
     allowImage,
+    min,
+    max,
     accept: component === 'dropdown-upload' ? accept : undefined,
     maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
     grantUrl: component === 'dropdown-upload' ? grantUrl : undefined,
@@ -307,6 +319,7 @@ export async function buildContext(
     addLabel: attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item',
     addLabelKey,
     addLabelParams,
+    addOpen,
     labelPath: attrs.labelPath || attrs['label-path'] || (merged.labelPath as string) || '',
     labelInputLabel:
       attrs.labelInputLabel || attrs['label-input-label'] || (merged.labelInputLabel as string) || label || 'Title',
@@ -322,6 +335,11 @@ export async function buildContext(
     reorderLabelPath,
     reorderMode,
     reorderThreshold,
+    rowPath,
+    metaPath,
+    columns,
+    title,
+    emptyLabel,
     template: templateValue,
     defaultItem,
   });

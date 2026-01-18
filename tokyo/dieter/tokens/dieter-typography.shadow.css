@@ -31,18 +31,18 @@
   --lh-tight: 1.15;
   --lh-normal: 1.4;
   --lh-loose: 1.5;
-  --lh-body-ui: 1.45;
+  --lh-body-ui: 1.35; /* Tighter line height for better density */
 }
 
 /* Display (marketing) */
 .display-1 {
-  font: 700 var(--fs-fluid-display-1)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-fluid-display-1)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.015em;
   color: inherit;
 }
 
 .display-2 {
-  font: 700 var(--fs-fluid-display-2)/var(--lh-tight) var(--font-ui);
+  font: 600 var(--fs-fluid-display-2)/var(--lh-tight) var(--font-ui);
   letter-spacing: -0.012em;
   color: inherit;
 }
@@ -61,6 +61,11 @@
 .body-l { font: 400 var(--fs-15)/var(--lh-body-ui) var(--font-ui); }
 .body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
 .body-xxl { font: 400 var(--fs-18)/var(--lh-body-ui) var(--font-ui); }
+
+/* Website body (larger than body-xxl; used in-product) */
+.body-website { font: 400 var(--fs-20)/var(--lh-body-ui) var(--font-ui); }
+.body-website-large { font: 400 var(--fs-24)/var(--lh-body-ui) var(--font-ui); }
+.body-website-xlarge { font: 400 var(--fs-32)/var(--lh-body-ui) var(--font-ui); }
 
 p, .body, .body-xl { font: 400 var(--fs-16)/var(--lh-body-ui) var(--font-ui); }
 .body-small, .body-m { font: 400 var(--fs-14)/var(--lh-body-ui) var(--font-ui); }

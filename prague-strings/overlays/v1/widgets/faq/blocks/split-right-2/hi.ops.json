@@ -1,0 +1,17 @@
+{
+  "baseFingerprint": "b726ffa510f276f13813e395701e6e58db8d97d71095aa677da46fb97c6bb47d",
+  "baseUpdatedAt": "2026-01-18T15:53:07.944Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.headline",
+      "value": "विभाजित क्रिएटिव (दाएँ)"
+    },
+    {
+      "op": "set",
+      "path": "strings.subheadline",
+      "value": "यह दाएँ-विज़ुअल वैरिएंट है, जो हीरो के समान क्यूरेटेड इंस्टेंस का उपयोग करता है।"
+    }
+  ],
+  "v": 1
+}

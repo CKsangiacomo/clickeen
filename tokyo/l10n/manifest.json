@@ -59,6 +59,122 @@
         "file": "zh-tw.5e489b35.ops.json",
         "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
       }
+    },
+    "wgt_main_logoshowcase": {
+      "en": {
+        "file": "en.8048d9c5.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "es": {
+        "file": "es.25cc61e1.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "ko": {
+        "file": "ko.394cb47d.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "pt": {
+        "file": "pt.e9dda1a8.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "ja": {
+        "file": "ja.63abaa5f.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "ar": {
+        "file": "ar.80f0d2b3.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "de": {
+        "file": "de.bffe9f69.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "nl": {
+        "file": "nl.687ef860.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "fr": {
+        "file": "fr.5a773bbc.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "zh-tw": {
+        "file": "zh-tw.1e52fad6.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "hi": {
+        "file": "hi.1a778d11.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "it": {
+        "file": "it.80673b36.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "pl": {
+        "file": "pl.eb881e35.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      },
+      "tr": {
+        "file": "tr.03c68a22.ops.json",
+        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
+      }
+    },
+    "wgt_main_countdown": {
+      "en": {
+        "file": "en.6916385f.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "pt": {
+        "file": "pt.2397fd73.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "ko": {
+        "file": "ko.664a7175.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "ja": {
+        "file": "ja.6ee3e232.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "zh-tw": {
+        "file": "zh-tw.5c9e6854.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "it": {
+        "file": "it.12aa4e17.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "fr": {
+        "file": "fr.7d121e31.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "de": {
+        "file": "de.50936ff1.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "tr": {
+        "file": "tr.0ac04430.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "es": {
+        "file": "es.01ca699e.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "ar": {
+        "file": "ar.80713497.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "pl": {
+        "file": "pl.d9a453d7.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "nl": {
+        "file": "nl.ed3f1581.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      },
+      "hi": {
+        "file": "hi.81042f00.ops.json",
+        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+      }
     }
   }
 }

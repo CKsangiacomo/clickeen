@@ -8,6 +8,7 @@ export { hydrateDropdownUpload } from './dropdown-upload/dropdown-upload';
 export { hydrateDropdownEdit } from './dropdown-edit/dropdown-edit';
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateButton } from './button/button';
+export { hydrateBulkEdit } from './bulk-edit/bulk-edit';
 export { hydrateMenuactions } from './menuactions/menuactions';
 export { hydrateTabs } from './tabs/tabs';
 export { hydrateSegmented } from './segmented/segmented';

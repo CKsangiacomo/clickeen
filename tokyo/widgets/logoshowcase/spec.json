@@ -4,7 +4,7 @@
     "header": {
       "enabled": true,
       "title": "Some of our clients",
-      "textHtml": "",
+      "textHtml": "Trusted by teams worldwide.",
       "alignment": "center"
     },
     "strips": [
@@ -14,6 +14,7 @@
           {
             "id": "l1",
             "name": "Audi",
+            "asset": { "name": "Audi.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -25,6 +26,7 @@
           {
             "id": "l2",
             "name": "BMW",
+            "asset": { "name": "BMW.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -36,6 +38,7 @@
           {
             "id": "l3",
             "name": "Chana",
+            "asset": { "name": "Chana.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -47,6 +50,7 @@
           {
             "id": "l4",
             "name": "Daihatsu",
+            "asset": { "name": "Daihatsu.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -58,6 +62,7 @@
           {
             "id": "l5",
             "name": "Ford",
+            "asset": { "name": "Ford.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -69,6 +74,7 @@
           {
             "id": "l6",
             "name": "Honda",
+            "asset": { "name": "Honda.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -80,6 +86,7 @@
           {
             "id": "l7",
             "name": "Isuzu",
+            "asset": { "name": "Isuzu.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -91,6 +98,7 @@
           {
             "id": "l8",
             "name": "Lambo",
+            "asset": { "name": "Lambo.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -102,6 +110,7 @@
           {
             "id": "l9",
             "name": "Perodua",
+            "asset": { "name": "Perodua.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -113,6 +122,7 @@
           {
             "id": "l10",
             "name": "Peugeot",
+            "asset": { "name": "Peugeot.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -124,6 +134,7 @@
           {
             "id": "l11",
             "name": "Proton",
+            "asset": { "name": "Proton.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -135,6 +146,7 @@
           {
             "id": "l12",
             "name": "Suzuki",
+            "asset": { "name": "Suzuki.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -146,6 +158,7 @@
           {
             "id": "l13",
             "name": "Tesla",
+            "asset": { "name": "Tesla.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -157,6 +170,7 @@
           {
             "id": "l14",
             "name": "Toyota",
+            "asset": { "name": "Toyota.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -168,6 +182,7 @@
           {
             "id": "l15",
             "name": "VW",
+            "asset": { "name": "VW.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -179,6 +194,7 @@
           {
             "id": "l16",
             "name": "Volvo",
+            "asset": { "name": "Volvo.svg", "source": "curated" },
             "logoFill": "url(/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
             "href": "",
             "targetBlank": false,
@@ -191,30 +207,26 @@
       }
     ],
     "cta": {
-      "enabled": false,
+      "enabled": true,
       "label": "Contact us",
       "href": "https://example.com/contact",
       "style": "filled"
     },
     "type": "grid",
     "typeConfig": {
-      "grid": { "columnsDesktop": 5, "columnsMobile": 2 },
-      "slider": {
-        "showArrows": true,
-        "showDots": false,
-        "allowSwipe": true,
-        "pauseOnHover": true,
-        "autoSlide": false,
-        "autoSlideDelayMs": 2500,
-        "transitionMs": 350
-      },
+      "grid": {},
       "carousel": {
+        "mode": "paged",
+        "step": "page",
+        "showArrows": true,
+        "allowSwipe": true,
+        "autoplay": false,
         "pauseOnHover": true,
         "autoSlideDelayMs": 2500,
         "transitionMs": 350,
+        "speed": 30,
         "direction": "left"
-      },
-      "ticker": { "pauseOnHover": true, "speed": 30, "direction": "left" }
+      }
     },
     "appearance": {
       "logoLook": "original",
@@ -253,27 +265,63 @@
       "gap": 20,
       "rowGap": 16,
       "stripGap": 16,
-      "logoHeight": 28,
+      "logoHeight": 40,
       "mobileGap": 16,
-      "mobileStripGap": 12,
-      "mobileLogoHeight": 24
+      "mobileStripGap": 12
     },
-    "behavior": { "randomOrder": false, "showBacklink": true },
-    "seoGeo": { "enabled": false },
+    "behavior": {
+      "randomOrder": false,
+      "showBacklink": true
+    },
+    "seoGeo": {
+      "enabled": false
+    },
     "stage": {
       "background": "var(--color-system-gray-5)",
       "alignment": "center",
-      "canvas": { "mode": "viewport", "width": 0, "height": 0 },
+      "canvas": {
+        "mode": "viewport",
+        "width": 0,
+        "height": 0
+      },
       "padding": {
-        "desktop": { "linked": true, "all": 80, "top": 80, "right": 80, "bottom": 80, "left": 80 },
-        "mobile": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 }
+        "desktop": {
+          "linked": true,
+          "all": 80,
+          "top": 80,
+          "right": 80,
+          "bottom": 80,
+          "left": 80
+        },
+        "mobile": {
+          "linked": true,
+          "all": 24,
+          "top": 24,
+          "right": 24,
+          "bottom": 24,
+          "left": 24
+        }
       }
     },
     "pod": {
       "background": "var(--color-system-white)",
       "padding": {
-        "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
-        "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
+        "desktop": {
+          "linked": true,
+          "all": 24,
+          "top": 24,
+          "right": 24,
+          "bottom": 24,
+          "left": 24
+        },
+        "mobile": {
+          "linked": true,
+          "all": 16,
+          "top": 16,
+          "right": 16,
+          "bottom": 16,
+          "left": 16
+        }
       },
       "widthMode": "fixed",
       "contentWidth": 960,
@@ -287,8 +335,20 @@
     "typography": {
       "globalFamily": "Inter",
       "roleScales": {
-        "title": { "xs": "18px", "s": "20px", "m": "24px", "l": "28px", "xl": "32px" },
-        "body": { "xs": "12px", "s": "13px", "m": "14px", "l": "16px", "xl": "18px" }
+        "title": {
+          "xs": "18px",
+          "s": "20px",
+          "m": "24px",
+          "l": "28px",
+          "xl": "32px"
+        },
+        "body": {
+          "xs": "12px",
+          "s": "13px",
+          "m": "14px",
+          "l": "16px",
+          "xl": "18px"
+        }
       },
       "roles": {
         "title": {
@@ -313,67 +373,52 @@
   "html": [
     "<bob-panel id='content'>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-eyebrow text='Type' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='type' label='Type' value='{{type}}' options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;},{&quot;label&quot;:&quot;Slider&quot;,&quot;value&quot;:&quot;slider&quot;},{&quot;label&quot;:&quot;Carousel&quot;,&quot;value&quot;:&quot;carousel&quot;},{&quot;label&quot;:&quot;Ticker&quot;,&quot;value&quot;:&quot;ticker&quot;}]' />",
+    "    <tooldrawer-field type='choice-tiles' size='md' path='type' label='Layout' value='{{type}}' options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Carousel&quot;,&quot;value&quot;:&quot;carousel&quot;,&quot;icon&quot;:&quot;ellipsis&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Header' />",
     "    <tooldrawer-field type='toggle' size='md' path='header.enabled' label='Show header' />",
-    "    <tooldrawer-field type='textfield' size='lg' path='header.title' label='Title' show-if=\"header.enabled == true\" />",
+    "    <tooldrawer-field type='dropdown-edit' size='lg' path='header.title' label='Title' placeholder='Add title text' show-if=\"header.enabled == true\" />",
     "    <tooldrawer-field type='dropdown-edit' size='md' path='header.textHtml' label='Subtitle' placeholder='Add subtitle text' show-if=\"header.enabled == true\" />",
-    "    <tooldrawer-field type='segmented' size='md' path='header.alignment' label='Alignment' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' show-if=\"header.enabled == true\" />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='header.alignment' label='Alignment' value='{{header.alignment}}' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' show-if=\"header.enabled == true\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Call to action' />",
     "    <tooldrawer-field type='toggle' size='md' path='cta.enabled' label='Show CTA button' />",
     "    <tooldrawer-field type='textfield' size='md' path='cta.label' label='CTA label' show-if=\"cta.enabled == true\" />",
     "    <tooldrawer-field type='textfield' size='lg' path='cta.href' label='CTA link' placeholder='https://example.com' show-if=\"cta.enabled == true\" />",
-    "    <tooldrawer-field type='segmented' size='md' path='cta.style' label='CTA style' options='[{&quot;label&quot;:&quot;Filled&quot;,&quot;value&quot;:&quot;filled&quot;},{&quot;label&quot;:&quot;Outline&quot;,&quot;value&quot;:&quot;outline&quot;}]' show-if=\"cta.enabled == true\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Strips' />",
-    "    <tooldrawer-field class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; default-item=&apos;{&quot;name&quot;:&quot;New logo&quot;,&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}&apos; template=&apos;&lt;tooldrawer-field type=&quot;dropdown-upload&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.logoFill&quot; label=&quot;Logo&quot; placeholder=&quot;Upload logo&quot; accept=&quot;image/*,.svg&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.name&quot; label=&quot;Name&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.caption&quot; label=&quot;Caption (hover)&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.href&quot; label=&quot;Link URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.targetBlank&quot; label=&quot;Open in new tab&quot; /&gt;&lt;tooldrawer-field type=&quot;toggle&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.nofollow&quot; label=&quot;Nofollow&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.alt&quot; label=&quot;Alt text&quot; /&gt;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;lg&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.title&quot; label=&quot;Title (tooltip)&quot; /&gt;&apos; /&gt;' />",
+    "    <tooldrawer-field type='slider' size='md' path='spacing.logoHeight' label='Logo size' min='40' max='400' />",
+    "    <tooldrawer-field class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;asset&quot;:{&quot;name&quot;:&quot;&quot;,&quot;source&quot;:&quot;user&quot;},&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; add-open=&quot;bulk-edit&quot; default-item=&apos;{&quot;name&quot;:&quot;New logo&quot;,&quot;asset&quot;:{&quot;name&quot;:&quot;&quot;,&quot;source&quot;:&quot;user&quot;},&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}&apos; template=&apos;&lt;tooldrawer-field type=&quot;textfield&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos.__INDEX__.name&quot; label=&quot;Logo name&quot; placeholder=&quot;Logo name&quot; /&gt;&apos; /&gt;' />",
+    "    <tooldrawer-field type='bulk-edit' size='md' path='strips' row-path='logos' label='Logo details...' title='Logo details' columns='[{&quot;label&quot;:&quot;Logo&quot;,&quot;path&quot;:&quot;logoFill&quot;,&quot;metaPath&quot;:&quot;asset&quot;,&quot;autoNamePath&quot;:&quot;name&quot;,&quot;control&quot;:&quot;upload&quot;,&quot;placeholder&quot;:&quot;Upload logo&quot;,&quot;accept&quot;:&quot;image/*,.svg&quot;},{&quot;label&quot;:&quot;Name&quot;,&quot;path&quot;:&quot;name&quot;,&quot;control&quot;:&quot;text&quot;},{&quot;label&quot;:&quot;Caption&quot;,&quot;path&quot;:&quot;caption&quot;,&quot;control&quot;:&quot;text&quot;},{&quot;label&quot;:&quot;URL&quot;,&quot;path&quot;:&quot;href&quot;,&quot;control&quot;:&quot;text&quot;,&quot;placeholder&quot;:&quot;https://example.com&quot;,&quot;flag&quot;:&quot;links.enabled&quot;},{&quot;label&quot;:&quot;Open in new tab&quot;,&quot;path&quot;:&quot;targetBlank&quot;,&quot;control&quot;:&quot;checkbox&quot;,&quot;flag&quot;:&quot;links.enabled&quot;},{&quot;label&quot;:&quot;Nofollow&quot;,&quot;path&quot;:&quot;nofollow&quot;,&quot;control&quot;:&quot;checkbox&quot;,&quot;flag&quot;:&quot;links.enabled&quot;},{&quot;label&quot;:&quot;Alt text&quot;,&quot;path&quot;:&quot;alt&quot;,&quot;control&quot;:&quot;text&quot;,&quot;flag&quot;:&quot;media.meta.enabled&quot;},{&quot;label&quot;:&quot;Title (tooltip)&quot;,&quot;path&quot;:&quot;title&quot;,&quot;control&quot;:&quot;text&quot;,&quot;flag&quot;:&quot;media.meta.enabled&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"type == 'grid'\">",
-    "    <tooldrawer-eyebrow text='Grid' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.grid.columnsDesktop' label='Columns (desktop)' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.grid.columnsMobile' label='Columns (mobile)' />",
     "    <tooldrawer-field type='textfield' size='md' path='spacing.rowGap' label='Row gap (px)' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster show-if=\"type == 'slider'\">",
-    "    <tooldrawer-eyebrow text='Slider' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.showArrows' label='Show arrows' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.showDots' label='Show dots' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.allowSwipe' label='Allow swipe/drag' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.autoSlide' label='Autoplay' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.slider.autoSlideDelayMs' label='Autoplay delay (ms)' show-if=\"typeConfig.slider.autoSlide == true\" />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.slider.transitionMs' label='Transition (ms)' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.slider.pauseOnHover' label='Pause on hover' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"type == 'carousel'\">",
     "    <tooldrawer-eyebrow text='Carousel' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.autoSlideDelayMs' label='Delay (ms)' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.transitionMs' label='Transition (ms)' />",
-    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.carousel.direction' label='Direction' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' />",
+    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.carousel.mode' label='Mode' options='[{&quot;label&quot;:&quot;Paged&quot;,&quot;value&quot;:&quot;paged&quot;},{&quot;label&quot;:&quot;Continuous&quot;,&quot;value&quot;:&quot;continuous&quot;}]' />",
+    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.carousel.step' label='Step' options='[{&quot;label&quot;:&quot;By logo&quot;,&quot;value&quot;:&quot;logo&quot;},{&quot;label&quot;:&quot;By page&quot;,&quot;value&quot;:&quot;page&quot;}]' show-if=\"typeConfig.carousel.mode == 'paged'\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.carousel.showArrows' label='Show arrows' show-if=\"typeConfig.carousel.mode == 'paged'\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.carousel.allowSwipe' label='Allow swipe/drag' show-if=\"typeConfig.carousel.mode == 'paged'\" />",
+    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.carousel.autoplay' label='Autoplay' show-if=\"typeConfig.carousel.mode == 'paged'\" />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.autoSlideDelayMs' label='Autoplay delay (ms)' show-if=\"typeConfig.carousel.mode == 'paged' && typeConfig.carousel.autoplay == true\" />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.transitionMs' label='Transition (ms)' show-if=\"typeConfig.carousel.mode == 'paged'\" />",
+    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.carousel.speed' label='Speed (px/sec)' show-if=\"typeConfig.carousel.mode == 'continuous'\" />",
+    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.carousel.direction' label='Direction' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' show-if=\"typeConfig.carousel.mode == 'continuous'\" />",
     "    <tooldrawer-field type='toggle' size='md' path='typeConfig.carousel.pauseOnHover' label='Pause on hover' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster show-if=\"type == 'ticker'\">",
-    "    <tooldrawer-eyebrow text='Ticker' />",
-    "    <tooldrawer-field type='textfield' size='md' path='typeConfig.ticker.speed' label='Speed (px/sec)' />",
-    "    <tooldrawer-field type='segmented' size='md' path='typeConfig.ticker.direction' label='Direction' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' />",
-    "    <tooldrawer-field type='toggle' size='md' path='typeConfig.ticker.pauseOnHover' label='Pause on hover' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='layout'>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Spacing' />",
-    "    <tooldrawer-field type='textfield' size='md' path='spacing.logoHeight' label='Logo height (px)' />",
     "    <tooldrawer-field type='textfield' size='md' path='spacing.gap' label='Logo gap (px)' />",
     "    <tooldrawer-field type='textfield' size='md' path='spacing.stripGap' label='Strip gap (px)' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Mobile spacing' />",
-    "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileLogoHeight' label='Logo height (mobile px)' />",
     "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileGap' label='Logo gap (mobile px)' />",
     "    <tooldrawer-field type='textfield' size='md' path='spacing.mobileStripGap' label='Strip gap (mobile px)' />",
     "  </tooldrawer-cluster>",
@@ -407,6 +452,7 @@
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='CTA' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='cta.style' label='CTA style' value='{{cta.style}}' options='[{&quot;label&quot;:&quot;Filled&quot;,&quot;value&quot;:&quot;filled&quot;},{&quot;label&quot;:&quot;Outline&quot;,&quot;value&quot;:&quot;outline&quot;}]' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.ctaBackground' label='CTA background' value='{{appearance.ctaBackground}}' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.ctaTextColor' label='CTA text color' value='{{appearance.ctaTextColor}}' />",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.ctaRadius' label='CTA radius' placeholder='Choose radius' value='{{appearance.ctaRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2XL&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",

@@ -100,22 +100,15 @@ Use `prague-strings` for **Clickeen-owned website copy** (Prague pages and chrom
 - Compile fails if any non-en locale is missing an overlay.
 - Same staleness guard as instance overlays (`baseFingerprint`).
 
-## Website creatives (Prague visuals)
+## Curated embeds (Prague visuals)
 
-Website creatives are **curated instances** (Clickeen-owned) used as Prague visual embeds **and** template pickers.
-They are the same objects; “creative” and “template” are distribution surfaces, not different instance types.
-
-### Identity (non-negotiable)
-
-- `creativeKey = {widgetType}.{page}.{slot}`
-- `publicId = wgt_curated_{creativeKey}` (locale-free)
-
-There is exactly **one** instance row per creative in Michael. Locale selection happens at render time.
+Prague visuals are **curated instances** (Clickeen-owned) embedded directly by `curatedRef.publicId`.
+There is exactly **one** instance row per curated embed in Michael. Locale selection happens at render time.
 
 ### Render algorithm (Phase 1)
 
 1. Prague embeds Venice with canonical `publicId`:
-   - `/e/wgt_curated_{creativeKey}?locale=...`
+   - `/e/wgt_curated_{...}?locale=...`
 2. Venice loads the base instance config from Paris/Michael.
 3. Venice applies Tokyo `l10n` overlay for the request locale (if present).
 4. Venice bootstraps `window.CK_WIDGET.state` with the localized config.

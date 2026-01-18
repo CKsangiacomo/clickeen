@@ -8,28 +8,97 @@
     {
       "id": "hero",
       "type": "hero",
-      "visual": true
+      "visual": true,
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
     },
     {
       "id": "navmeta",
       "type": "navmeta"
     },
     {
+      "id": "minibob",
+      "type": "minibob",
+      "copy": {
+        "heading": "Try it live",
+        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+      }
+    },
+    {
+      "id": "split-right",
+      "type": "split-creative-right",
+      "copy": {
+        "headline": "Placeholder Headline Right",
+        "subheadline": "Placeholder subheadline for right-aligned creative block"
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
+    },
+    {
+      "id": "split-left",
+      "type": "split-creative-left",
+      "copy": {
+        "headline": "Placeholder Headline Left",
+        "subheadline": "Placeholder subheadline for left-aligned creative block"
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
+    },
+    {
+      "id": "big-bang",
+      "type": "big-bang"
+    },
+    {
+      "id": "split-stacked",
+      "type": "split-creative-stacked",
+      "copy": {
+        "headline": "Placeholder Headline Stacked",
+        "subheadline": "Placeholder subheadline for stacked creative block"
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
+    },
+    {
       "id": "steps",
       "type": "steps"
     },
     {
-      "id": "features",
-      "type": "features",
-      "visual": true
+      "id": "split-right-2",
+      "type": "split-creative-right",
+      "copy": {
+        "headline": "Placeholder Headline Right 2",
+        "subheadline": "Placeholder subheadline for second right-aligned creative block"
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
+    },
+    {
+      "id": "split-left-2",
+      "type": "split-creative-left",
+      "copy": {
+        "headline": "Placeholder Headline Left 2",
+        "subheadline": "Placeholder subheadline for second left-aligned creative block"
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.overview.hero"
+      }
     },
     {
       "id": "cta",
-      "type": "cta"
-    },
-    {
-      "id": "minibob",
-      "type": "minibob"
+      "type": "cta",
+      "copy": {
+        "headline": "Connect with every customer, everywhere",
+        "subheadline": "AI-powered FAQ that speaks their language and understands their needs."
+      },
+      "primaryCta": {
+        "label": "Get Started",
+        "href": "/signup"
+      }
     }
   ]
 }

@@ -1,7 +1,8 @@
 {
   "v": 1,
-  "gitSha": "55d147ce6189d3648ceed61b35976f67b3af0713",
+  "gitSha": "498c87f616d4139ac57783de45e64e0fa27fea15",
   "components": [
+    "bulk-edit",
     "button",
     "choice-tiles",
     "dropdown-actions",
@@ -25,6 +26,7 @@
     "toggle"
   ],
   "componentsWithJs": [
+    "bulk-edit",
     "button",
     "choice-tiles",
     "dropdown-actions",
@@ -59,6 +61,10 @@
     "dropdown-header-icon"
   ],
   "deps": {
+    "bulk-edit": [
+      "button",
+      "dropdown-upload"
+    ],
     "dropdown-actions": [
       "popover",
       "button"

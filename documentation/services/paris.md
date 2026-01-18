@@ -8,7 +8,7 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId`, `GET/POST /api/workspaces/:workspaceId/instances`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/workspaces/:workspaceId/website-creative` (local-only, legacy), `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all current endpoints are gated by `PARIS_DEV_JWT`.
 
@@ -90,7 +90,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `POST /api/workspaces/:workspaceId/instances` — Creates the instance in that workspace if missing; if the `publicId` already exists in the same workspace it returns the existing snapshot (idempotent). If the `publicId` exists in a *different* workspace, returns 409 `PUBLIC_ID_CONFLICT`.
 - `GET /api/workspaces/:workspaceId/instance/:publicId` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
 - `PUT /api/workspaces/:workspaceId/instance/:publicId` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
-- `POST /api/workspaces/:workspaceId/website-creative` — Ensures a website creative exists for that workspace (intentionally **local-only**; not a cloud-dev workflow).
+- `POST /api/workspaces/:workspaceId/website-creative` — Legacy helper for website creatives (local-only; not used in curated-only flow).
 
 ### Curated vs user instance routing
 
@@ -292,9 +292,9 @@ Required env vars:
 - `publicId` is provided by the caller (internal services / DevStudio Local superadmin flows) and persisted in Michael.
 - The stable contract is `widget_instances.public_id` + `widget_instances.config` (+ `workspace_id`), not internal UUIDs.
 
-### Website creatives (local-only superadmin)
+### Website creative endpoint (legacy, local-only)
 
-Paris provides a **local-only** endpoint for ensuring the Clickeen-owned website-creative instances used by Prague embeds.
+Paris provides a **local-only** legacy endpoint for ensuring website-creative instances (no longer used in curated-only Prague).
 
 Endpoint:
 - `POST /api/workspaces/:workspaceId/website-creative` (requires dev auth; rejects non-local `ENV_STAGE`)
