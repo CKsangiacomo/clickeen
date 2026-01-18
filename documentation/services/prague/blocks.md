@@ -224,5 +224,5 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 ## Links
 
-- Prague overview: `documentation/services/prague/overview.md`
+- Prague overview: `documentation/services/prague/prague-overview.md`
 - Localization contract: `documentation/capabilities/localization.md`

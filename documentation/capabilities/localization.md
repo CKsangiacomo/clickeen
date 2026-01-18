@@ -228,6 +228,6 @@ The durable contract remains: **one instance identity + locale overlays applied 
 
 ## Links
 
-- Prague overview: `documentation/services/prague/overview.md`
+- Prague overview: `documentation/services/prague/prague-overview.md`
 - Tokyo (CDN): `documentation/services/tokyo.md`
 - San Francisco: `documentation/services/sanfrancisco.md`

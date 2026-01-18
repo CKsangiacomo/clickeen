@@ -22,7 +22,7 @@ Stop and ask if:
 
 Only read these:
 - `documentation/architecture/CONTEXT.md`
-- `documentation/services/prague/overview.md`
+- `documentation/services/prague/prague-overview.md`
 - `documentation/services/prague/blocks.md`
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
@@ -175,6 +175,6 @@ If any requirement is unmet, stop and ask.
 
 ## References (do not expand scope)
 
-- `documentation/services/prague/overview.md`
+- `documentation/services/prague/prague-overview.md`
 - `documentation/services/prague/blocks.md`
 - `documentation/capabilities/localization.md`
