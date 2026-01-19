@@ -18,7 +18,7 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
-- In **DevStudio Local only**, shows superadmin actions (update defaults, reset instance from JSON).
+- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, create new version).
 - Optional: **auto-promote** the resulting instance config to **cloud-dev Paris** (so `prague-dev` sees the change).
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
@@ -50,10 +50,13 @@ Required local env vars (DevStudio Local only):
 DevStudio Local supports curated instances as the single primitive:
 - **Update default config**: pushes current editor state into `tokyo/widgets/{widget}/spec.json` and upserts `wgt_main_{widget}`.
 - **Reset instance from JSON**: pulls from compiled defaults (`spec.json`) and overwrites `wgt_main_{widget}`.
+- **Create curated instance**: creates `wgt_curated_{widget}.{styleSlug}.v01` from the current editor config, storing metadata (style name + tags).
+- **Create new instance version**: creates the next `vNN` for the same style slug.
 
 Notes:
 - Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
+- Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, version, tags }`. Tags are system-managed (ICP / objective / style).
 
 ## Troubleshooting
 

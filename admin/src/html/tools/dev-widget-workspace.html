@@ -52,18 +52,68 @@
     box-shadow: var(--shadow-floating);
   }
 
-  #superadmin-actions .dev-widget-workspace__badge {
+  #superadmin-actions .dev-widget-workspace__actions {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .dev-widget-workspace__autopromote {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     padding: 6px 10px;
     border-radius: var(--control-radius-lg);
     border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: color-mix(in oklab, var(--color-system-blue), transparent 92%);
-    color: var(--color-system-blue);
-    font: 600 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    background: var(--color-system-white);
+    box-shadow: var(--shadow-floating);
+  }
+
+  .dev-widget-workspace__autopromote-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dev-widget-workspace__autopromote-label {
+    font: 600 var(--fs-11)/var(--lh-tight) var(--font-ui);
     letter-spacing: -0.01em;
     text-transform: uppercase;
+  }
+
+  #superadmin-actions .dev-widget-workspace__action,
+  .dev-widget-workspace__modal .dev-widget-workspace__action {
+    --btn-border-width: 0px;
+    --btn-border-color: transparent;
+    --btn-bg: var(--action-bg);
+    --btn-color: var(--color-system-black);
+    --btn-icon-color: var(--color-system-black);
+    --btn-hover-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 8%);
+    --btn-hover-border-color: transparent;
+    --btn-clicked-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 14%);
+    --btn-clicked-border-color: transparent;
+    box-shadow: var(--shadow-floating);
+  }
+
+  #superadmin-actions .dev-widget-workspace__action[data-tone="green4"],
+  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="green4"] {
+    --action-bg: var(--color-system-green-4);
+  }
+
+  #superadmin-actions .dev-widget-workspace__action[data-tone="purple4"],
+  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="purple4"] {
+    --action-bg: var(--color-system-purple-4);
+  }
+
+  #superadmin-actions .dev-widget-workspace__action[data-tone="pink4"],
+  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="pink4"] {
+    --action-bg: var(--color-system-pink-4);
+  }
+
+  #superadmin-actions .dev-widget-workspace__action[data-tone="indigo4"],
+  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="indigo4"] {
+    --action-bg: var(--color-system-indigo-4);
   }
 
   .dev-widget-workspace-header #instance-dropdown {
@@ -188,29 +238,164 @@
     color: var(--color-system-blue);
   }
 
+  .dev-widget-workspace__modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    background: color-mix(in oklab, var(--color-system-black), transparent 65%);
+    z-index: 50;
+  }
+
+  .dev-widget-workspace__modal[hidden] {
+    display: none;
+  }
+
+  .dev-widget-workspace__modal-body {
+    inline-size: min(720px, 100%);
+    max-block-size: min(80vh, 720px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-4);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: var(--color-system-white);
+    box-shadow: var(--shadow-floating-lg);
+  }
+
+  .dev-widget-workspace__modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .dev-widget-workspace__modal-title {
+    font: 600 var(--fs-16)/var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+  }
+
+  .dev-widget-workspace__modal-subtitle {
+    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    color: color-mix(in oklab, var(--color-text), transparent 40%);
+  }
+
+  .dev-widget-workspace__modal-content {
+    overflow: auto;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .dev-widget-workspace__tag-groups {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .dev-widget-workspace__tag-group {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .dev-widget-workspace__tag-group-title {
+    font: 600 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+
+  .dev-widget-workspace__tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .dev-widget-workspace__tag-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 6px 8px;
+    border-radius: var(--control-radius-md);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: var(--color-system-white);
+    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .dev-widget-workspace__tag-option input {
+    accent-color: var(--color-system-blue);
+  }
+
+  .dev-widget-workspace__modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
 </style>
 
 <header class="devstudio-page__header" style="flex-shrink: 0;">
   <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
   <div id="superadmin-actions">
-    <span class="dev-widget-workspace__badge">Superadmin</span>
-    <label class="body-s" style="display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: var(--control-radius-lg); border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%); background: var(--color-system-white); box-shadow: var(--shadow-floating);">
+    <label class="dev-widget-workspace__autopromote">
       <input id="auto-promote-cloud" type="checkbox" />
-      <span>Auto-promote to cloud-dev</span>
-      <span id="auto-promote-status" class="caption" style="margin-left: 6px; color: color-mix(in oklab, var(--color-text), transparent 45%);"></span>
+      <span class="dev-widget-workspace__autopromote-text">
+        <span class="dev-widget-workspace__autopromote-label">Auto-promote</span>
+        <span id="auto-promote-status" class="caption"></span>
+      </span>
     </label>
     <button type="button" class="diet-btn-txt" id="auto-promote-retry" data-size="md" data-variant="secondary" disabled>
       <span class="diet-btn-txt__label">Retry promote</span>
     </button>
-    <button type="button" class="diet-btn-txt" id="superadmin-update-defaults" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Update default config</span>
-    </button>
-    <button type="button" class="diet-btn-txt" id="superadmin-reset-from-json" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Reset instance from JSON</span>
-    </button>
-    <button type="button" class="diet-btn-txt" id="superadmin-create-template" data-size="md" data-variant="secondary">
-      <span class="diet-btn-txt__label">Create template instance</span>
-    </button>
+    <div class="dev-widget-workspace__actions">
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="superadmin-update-defaults"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="purple4"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.clockwise"></span>
+        <span class="diet-btn-ictxt__label body-s">Update default config</span>
+      </button>
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="superadmin-reset-from-json"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="pink4"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.and.arrow.down"></span>
+        <span class="diet-btn-ictxt__label body-s">Reset instance from JSON</span>
+      </button>
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="create-curated-instance"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="green4"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
+        <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
+      </button>
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="create-curated-version"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="indigo4"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
+        <span class="diet-btn-ictxt__label body-s">Create new instance version</span>
+      </button>
+    </div>
   </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
     <div
@@ -249,6 +434,51 @@
     style="width: 100%; height: 100%; border: 0; display: block;"
     title="Bob Widget Builder"
   ></iframe>
+</div>
+
+<div class="dev-widget-workspace__modal" id="curated-modal" hidden>
+  <div class="dev-widget-workspace__modal-body" role="dialog" aria-modal="true" aria-labelledby="curated-modal-title">
+    <div class="dev-widget-workspace__modal-header">
+      <div>
+        <div class="dev-widget-workspace__modal-title" id="curated-modal-title">Create curated instance</div>
+        <div class="dev-widget-workspace__modal-subtitle" id="curated-modal-subtitle"></div>
+      </div>
+      <button class="diet-btn-txt" type="button" data-size="sm" data-variant="neutral" id="curated-modal-close">
+        <span class="diet-btn-txt__label">Close</span>
+      </button>
+    </div>
+    <div class="dev-widget-workspace__modal-content">
+      <div class="diet-textfield" data-size="md">
+        <label class="diet-textfield__control">
+          <span class="diet-textfield__display-label">Curated style name:</span>
+          <input
+            id="curated-style-name"
+            type="text"
+            class="diet-textfield__field"
+            placeholder="Liquid glass, Brutalism, Yellow..."
+            autocomplete="off"
+          />
+        </label>
+      </div>
+      <div class="dev-widget-workspace__tag-groups" id="curated-tag-groups"></div>
+    </div>
+    <div class="dev-widget-workspace__modal-actions">
+      <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" id="curated-modal-cancel">
+        <span class="diet-btn-txt__label">Cancel</span>
+      </button>
+      <button
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        type="button"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="green4"
+        id="curated-modal-confirm"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
+        <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -309,14 +539,63 @@ const compiledCache = new Map();
 const superadminActions = document.getElementById('superadmin-actions');
 const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
 const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
-const superadminCreateTemplate = document.getElementById('superadmin-create-template');
+const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
+const createCuratedVersionBtn = document.getElementById('create-curated-version');
 const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
 const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
 const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
+const curatedModal = document.getElementById('curated-modal');
+const curatedModalTitle = document.getElementById('curated-modal-title');
+const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
+const curatedModalClose = document.getElementById('curated-modal-close');
+const curatedModalCancel = document.getElementById('curated-modal-cancel');
+const curatedModalConfirm = document.getElementById('curated-modal-confirm');
+const curatedStyleNameField = document.getElementById('curated-style-name');
+const curatedTagGroups = document.getElementById('curated-tag-groups');
 let lastPromotePayload = null;
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
+
+const CURATED_TAG_GROUPS = [
+  {
+    id: 'icp',
+    label: 'ICP',
+    options: [
+      { id: 'saas', label: 'SaaS' },
+      { id: 'ecommerce', label: 'E-commerce' },
+      { id: 'agencies', label: 'Agencies' },
+      { id: 'education', label: 'Education' },
+      { id: 'healthcare', label: 'Healthcare' },
+      { id: 'restaurants', label: 'Restaurants' },
+    ],
+  },
+  {
+    id: 'objective',
+    label: 'Objective',
+    options: [
+      { id: 'conversion', label: 'Conversion' },
+      { id: 'lead-gen', label: 'Lead Gen' },
+      { id: 'support-deflection', label: 'Support Deflection' },
+      { id: 'social-proof', label: 'Social Proof' },
+      { id: 'onboarding', label: 'Onboarding' },
+    ],
+  },
+  {
+    id: 'style',
+    label: 'Style',
+    options: [
+      { id: 'minimal', label: 'Minimal' },
+      { id: 'bold', label: 'Bold' },
+      { id: 'playful', label: 'Playful' },
+      { id: 'brutalist', label: 'Brutalist' },
+      { id: 'glass', label: 'Glass' },
+      { id: 'editorial', label: 'Editorial' },
+    ],
+  },
+];
+const CURATED_VERSION_PAD = 2;
+let curatedModalState = null;
 
 const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
 bobUrl.searchParams.set('subject', 'devstudio');
@@ -492,6 +771,7 @@ async function fetchInstances() {
     widgetSlug: normalizeWidgetname(inst.widgetname),
     label: inst.displayName || inst.publicId,
     config: inst.config ?? null,
+    meta: normalizeCuratedMeta(inst.meta ?? null),
   }));
 
   const uniqueWidgetnames = Array.from(new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)));
@@ -626,13 +906,101 @@ function slugifyKey(raw) {
     .replace(/^_+|_+$/g, '');
 }
 
-async function createWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
+function isCuratedPublicId(publicId) {
+  return typeof publicId === 'string' && publicId.startsWith('wgt_curated_');
+}
+
+function parseCuratedPublicId(publicId) {
+  if (!isCuratedPublicId(publicId)) return null;
+  const match = /^wgt_curated_([^\\.]+)\\.([^\\.]+)\\.v(\\d+)$/.exec(publicId);
+  if (!match) return null;
+  return {
+    widgetSlug: match[1],
+    styleSlug: match[2],
+    version: Number(match[3]),
+  };
+}
+
+function normalizeCuratedTags(raw) {
+  const tags = {};
+  CURATED_TAG_GROUPS.forEach((group) => {
+    tags[group.id] = [];
+  });
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return tags;
+  CURATED_TAG_GROUPS.forEach((group) => {
+    const values = raw[group.id];
+    if (Array.isArray(values)) {
+      tags[group.id] = values.map((value) => String(value)).filter(Boolean);
+    }
+  });
+  return tags;
+}
+
+function normalizeCuratedMeta(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const styleName = typeof raw.styleName === 'string' ? raw.styleName.trim() : '';
+  const styleSlug = typeof raw.styleSlug === 'string' ? raw.styleSlug.trim() : '';
+  const version = typeof raw.version === 'number' && Number.isFinite(raw.version)
+    ? Math.max(1, Math.round(raw.version))
+    : null;
+  const tags = normalizeCuratedTags(raw.tags);
+  return {
+    styleName: styleName || null,
+    styleSlug: styleSlug || null,
+    version,
+    tags,
+  };
+}
+
+function resolveCuratedStyle(instance) {
+  if (!instance) return null;
+  const meta = normalizeCuratedMeta(instance.meta);
+  const parsed = parseCuratedPublicId(instance.publicId);
+  const styleSlug = meta?.styleSlug || parsed?.styleSlug || null;
+  const styleName =
+    meta?.styleName ||
+    (styleSlug ? styleSlug.replace(/_/g, ' ') : null);
+  const version = meta?.version ?? parsed?.version ?? null;
+  const tags = meta?.tags ?? normalizeCuratedTags(null);
+  return {
+    styleName,
+    styleSlug,
+    version,
+    tags,
+    widgetSlug: instance.widgetSlug || parsed?.widgetSlug || null,
+  };
+}
+
+function formatCuratedVersion(version) {
+  return `v${String(version).padStart(CURATED_VERSION_PAD, '0')}`;
+}
+
+function buildCuratedPublicId(widgetSlug, styleSlug, version) {
+  return `wgt_curated_${widgetSlug}.${styleSlug}.${formatCuratedVersion(version)}`;
+}
+
+function getCuratedVersions(widgetSlug, styleSlug) {
+  return instances
+    .filter((inst) => isCuratedPublicId(inst.publicId))
+    .map((inst) => resolveCuratedStyle(inst))
+    .filter((style) => style && style.widgetSlug === widgetSlug && style.styleSlug === styleSlug)
+    .map((style) => style.version)
+    .filter((version) => typeof version === 'number');
+}
+
+function getNextCuratedVersion(widgetSlug, styleSlug) {
+  const versions = getCuratedVersions(widgetSlug, styleSlug);
+  const max = versions.length ? Math.max(...versions) : 0;
+  return max + 1;
+}
+
+async function createWorkspaceInstance({ workspaceId, widgetType, publicId, config, status, meta }) {
   const res = await superadminFetch(
     `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ widgetType, publicId, config, status }),
+      body: JSON.stringify({ widgetType, publicId, config, status, meta }),
     }
   );
   const text = await res.text().catch(() => '');
@@ -640,13 +1008,13 @@ async function createWorkspaceInstance({ workspaceId, widgetType, publicId, conf
   return text ? JSON.parse(text) : null;
 }
 
-async function updateWorkspaceInstance({ workspaceId, publicId, config, status }) {
+async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
   const res = await superadminFetch(
     `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
     {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ config, status }),
+      body: JSON.stringify({ config, status, meta }),
     }
   );
   const text = await res.text().catch(() => '');
@@ -913,20 +1281,160 @@ async function resetMainInstanceFromJson(widgetSlug) {
   return { publicId, config };
 }
 
-async function createTemplateInstance({ widgetSlug, sourceConfig }) {
-  const rawKey = window.prompt('Template key');
-  const key = slugifyKey(rawKey);
-  if (!key) throw new Error('[DevStudio] Missing key');
+function renderCuratedTagGroups(selectedTags) {
+  if (!curatedTagGroups) return;
+  curatedTagGroups.innerHTML = CURATED_TAG_GROUPS.map((group) => {
+    const tags = group.options
+      .map((option) => {
+        const isChecked = Array.isArray(selectedTags?.[group.id])
+          ? selectedTags[group.id].includes(option.id)
+          : false;
+        return `
+          <label class="dev-widget-workspace__tag-option">
+            <input type="checkbox" data-tag-group="${group.id}" value="${option.id}" ${isChecked ? 'checked' : ''} />
+            <span>${option.label}</span>
+          </label>
+        `;
+      })
+      .join('');
+    return `
+      <div class="dev-widget-workspace__tag-group">
+        <div class="dev-widget-workspace__tag-group-title">${group.label}</div>
+        <div class="dev-widget-workspace__tag-list">${tags}</div>
+      </div>
+    `;
+  }).join('');
+}
 
-  const publicId = `wgt_curated_${widgetSlug}.templates.${key}`;
+function readCuratedTagSelections() {
+  const tags = {};
+  CURATED_TAG_GROUPS.forEach((group) => {
+    tags[group.id] = [];
+  });
+  if (!curatedTagGroups) return tags;
+  curatedTagGroups.querySelectorAll('input[type="checkbox"][data-tag-group]').forEach((input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    if (!input.checked) return;
+    const groupId = input.dataset.tagGroup;
+    if (!groupId || !tags[groupId]) return;
+    tags[groupId].push(input.value);
+  });
+  return tags;
+}
+
+function updateCuratedModalConfirmState() {
+  if (!(curatedModalConfirm instanceof HTMLButtonElement)) return;
+  if (!curatedModalState) {
+    curatedModalConfirm.disabled = true;
+    return;
+  }
+  if (curatedModalState.mode === 'create') {
+    const name = curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value.trim() : '';
+    curatedModalConfirm.disabled = !name;
+  } else {
+    curatedModalConfirm.disabled = false;
+  }
+}
+
+function openCuratedModal(mode, { widgetSlug, baseInstance }) {
+  if (!curatedModal || !curatedModalConfirm || !(curatedStyleNameField instanceof HTMLInputElement)) return;
+  const style = baseInstance ? resolveCuratedStyle(baseInstance) : null;
+  if (mode === 'version' && (!style?.styleName || !style?.styleSlug)) {
+    throw new Error('[DevStudio] Select a curated instance with a style name first.');
+  }
+  curatedModalState = {
+    mode,
+    widgetSlug,
+    styleName: style?.styleName ?? '',
+    styleSlug: style?.styleSlug ?? '',
+  };
+
+  if (curatedModalTitle instanceof HTMLElement) {
+    curatedModalTitle.textContent = mode === 'create' ? 'Create curated instance' : 'Create instance version';
+  }
+  if (curatedModalSubtitle instanceof HTMLElement) {
+    if (mode === 'create') {
+      curatedModalSubtitle.textContent = `Creates v01 for ${widgetSlug}.`;
+    } else {
+      const nextVersion = getNextCuratedVersion(widgetSlug, style.styleSlug);
+      curatedModalSubtitle.textContent = `Creates ${style.styleName} ${formatCuratedVersion(nextVersion)}.`;
+    }
+  }
+
+  curatedStyleNameField.readOnly = mode === 'version';
+  curatedStyleNameField.value = mode === 'version' ? style.styleName : '';
+
+  const icon = curatedModalConfirm.querySelector('.diet-btn-ictxt__icon');
+  if (icon) icon.setAttribute('data-icon', mode === 'create' ? 'plus.square' : 'square.on.square');
+  const label = curatedModalConfirm.querySelector('.diet-btn-ictxt__label');
+  if (label) label.textContent = mode === 'create' ? 'Create curated instance' : 'Create new instance version';
+  curatedModalConfirm.dataset.tone = mode === 'create' ? 'green4' : 'indigo4';
+
+  const tags = mode === 'version' ? style.tags : normalizeCuratedTags(null);
+  renderCuratedTagGroups(tags);
+  updateCuratedModalConfirmState();
+  curatedModal.hidden = false;
+  curatedStyleNameField.focus();
+}
+
+function closeCuratedModal() {
+  if (curatedModal) curatedModal.hidden = true;
+  curatedModalState = null;
+  if (curatedStyleNameField instanceof HTMLInputElement) curatedStyleNameField.value = '';
+  updateCuratedModalConfirmState();
+}
+
+async function submitCuratedModal() {
+  if (!curatedModalState) return;
+  if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+  const sourceConfig = await fetchInstanceConfig(currentPublicId);
+  const tags = readCuratedTagSelections();
+
+  let styleName = curatedModalState.styleName;
+  let styleSlug = curatedModalState.styleSlug;
+  let version = 1;
+
+  if (curatedModalState.mode === 'create') {
+    const inputName = curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value.trim() : '';
+    styleName = inputName;
+    styleSlug = slugifyKey(inputName);
+    if (!styleName || !styleSlug) throw new Error('[DevStudio] Enter a style name.');
+    if (getCuratedVersions(curatedModalState.widgetSlug, styleSlug).length > 0) {
+      throw new Error('[DevStudio] Style already exists. Use Create new instance version.');
+    }
+    version = 1;
+  } else {
+    if (!styleName || !styleSlug) throw new Error('[DevStudio] Missing style metadata.');
+    version = getNextCuratedVersion(curatedModalState.widgetSlug, styleSlug);
+  }
+
+  const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug, version);
+  const meta = {
+    styleName,
+    styleSlug,
+    version,
+    tags,
+  };
+
   await createWorkspaceInstance({
     workspaceId: CLICKEEN_WORKSPACE_ID,
-    widgetType: widgetSlug,
+    widgetType: curatedModalState.widgetSlug,
     publicId,
-    config: sourceConfig,
+    config: sourceConfig ?? {},
+    status: 'unpublished',
+    meta,
+  });
+
+  await maybeAutoPromoteToCloud({
+    workspaceId: CLICKEEN_WORKSPACE_ID,
+    publicId,
+    widgetType: curatedModalState.widgetSlug,
+    config: sourceConfig ?? {},
     status: 'unpublished',
   });
-  return publicId;
+
+  closeCuratedModal();
+  await refreshInstancesAndSelect(publicId);
 }
 
 async function refreshInstancesAndSelect(publicId) {
@@ -944,8 +1452,8 @@ if (isLocalDevStudio && superadminActions) {
 
 if (isLocalDevStudio && autoPromoteCloudToggle instanceof HTMLInputElement) {
   autoPromoteCloudToggle.checked = isAutoPromoteEnabled();
-  const localLabel = `local (${BOB_ORIGIN}) → cloud (paris.dev.clickeen.com)`;
-  setAutoPromoteStatus(isAutoPromoteEnabled() ? localLabel : 'local only');
+  const cloudLabel = 'cloud-dev';
+  setAutoPromoteStatus(isAutoPromoteEnabled() ? cloudLabel : 'local only');
   autoPromoteCloudToggle.addEventListener('change', () => {
     const next = autoPromoteCloudToggle.checked === true;
     if (next) {
@@ -958,7 +1466,7 @@ if (isLocalDevStudio && autoPromoteCloudToggle instanceof HTMLInputElement) {
         return;
       }
       setAutoPromoteEnabled(true);
-      setAutoPromoteStatus(localLabel);
+      setAutoPromoteStatus(cloudLabel);
       return;
     }
     setAutoPromoteEnabled(false);
@@ -1018,25 +1526,50 @@ superadminResetFromJson?.addEventListener('click', async () => {
   }
 });
 
-superadminCreateTemplate?.addEventListener('click', async () => {
+createCuratedInstanceBtn?.addEventListener('click', () => {
   try {
     if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
     const instance = instances.find((inst) => inst.publicId === currentPublicId);
     const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-    const config = await fetchInstanceConfig(currentPublicId);
-    const publicId = await createTemplateInstance({ widgetSlug, sourceConfig: config ?? {} });
-    await maybeAutoPromoteToCloud({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      publicId,
-      widgetType: widgetSlug,
-      config: config ?? {},
-      status: 'unpublished',
-    });
-    await refreshInstancesAndSelect(publicId);
+    openCuratedModal('create', { widgetSlug, baseInstance: instance });
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }
 });
+
+createCuratedVersionBtn?.addEventListener('click', () => {
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    const instance = instances.find((inst) => inst.publicId === currentPublicId);
+    if (!instance || !isCuratedPublicId(instance.publicId)) {
+      throw new Error('[DevStudio] Select a curated instance first.');
+    }
+    const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
+    openCuratedModal('version', { widgetSlug, baseInstance: instance });
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+curatedModalConfirm?.addEventListener('click', async () => {
+  try {
+    await submitCuratedModal();
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+curatedModalClose?.addEventListener('click', () => {
+  closeCuratedModal();
+});
+
+curatedModalCancel?.addEventListener('click', () => {
+  closeCuratedModal();
+});
+
+if (curatedStyleNameField instanceof HTMLInputElement) {
+  curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);
+}
 
 async function sendInstanceToIframe(publicId) {
   if (!publicId) {

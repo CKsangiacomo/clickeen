@@ -110,10 +110,20 @@ Between load and publish:
 **Naming convention for Clickeen starters:**
 ```
 wgt_main_{widgetType}
-wgt_curated_{curatedKey}
+wgt_curated_{widgetType}.{styleSlug}.vNN
 Examples:
   wgt_main_faq
-  wgt_curated_faq.overview.hero
+  wgt_curated_faq.liquid_glass.v01
+```
+
+Curated metadata lives alongside the instance (not in the publicId):
+```
+curated_widget_instances.meta = {
+  styleName: "Liquid Glass",
+  styleSlug: "liquid_glass",
+  version: 1,
+  tags: { icp: ["saas"], objective: ["conversion"], style: ["glass"] }
+}
 ```
 
 ---

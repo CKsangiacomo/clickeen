@@ -94,7 +94,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta" },
     { "id": "navmeta", "type": "navmeta" },
-    { "id": "hero", "type": "hero", "visual": true, "curatedRef": { "publicId": "wgt_curated_faq.overview.hero" } },
+    { "id": "hero", "type": "hero", "visual": true, "curatedRef": { "publicId": "wgt_curated_faq.liquid_glass.v01" } },
     { "id": "minibob", "type": "minibob" }
   ]
 }

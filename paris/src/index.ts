@@ -39,6 +39,7 @@ type CuratedInstanceRow = {
   kind?: CuratedInstanceKind | null;
   status: 'published' | 'unpublished';
   config: Record<string, unknown>;
+  meta?: Record<string, unknown> | null;
   created_at: string;
   updated_at?: string | null;
 };
@@ -62,6 +63,7 @@ type WorkspaceRow = {
 type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'published' | 'unpublished';
+  meta?: Record<string, unknown> | null;
 };
 
 type CreateInstancePayload = {
@@ -71,6 +73,7 @@ type CreateInstancePayload = {
   config: Record<string, unknown>;
   status?: 'published' | 'unpublished';
   widgetName?: string;
+  meta?: Record<string, unknown> | null;
 };
 
 type CkErrorKind = 'DENY' | 'VALIDATION' | 'AUTH' | 'NOT_FOUND' | 'INTERNAL';
@@ -855,7 +858,7 @@ async function handleCuratedInstances(req: Request, env: Env) {
   if (!auth.ok) return auth.response;
 
   const params = new URLSearchParams({
-    select: 'public_id,widget_type,status,config,created_at,updated_at,kind',
+    select: 'public_id,widget_type,status,config,created_at,updated_at,kind,meta',
     order: 'created_at.desc',
     limit: '100',
   });
@@ -867,14 +870,33 @@ async function handleCuratedInstances(req: Request, env: Env) {
   }
 
   const rows = ((await res.json()) as CuratedInstanceRow[]).filter(Boolean);
-  const instances = rows.map((row) => ({
-    publicId: row.public_id,
-    widgetname: row.widget_type || 'unknown',
-    displayName: row.public_id,
-    config: row.config,
-  }));
+  const instances = rows.map((row) => {
+    const meta = readCuratedMeta(row.meta);
+    return {
+      publicId: row.public_id,
+      widgetname: row.widget_type || 'unknown',
+      displayName: formatCuratedDisplayName(meta, row.public_id),
+      config: row.config,
+      meta,
+    };
+  });
 
   return json({ instances });
+}
+
+function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return raw as Record<string, unknown>;
+}
+
+function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
+  if (!meta) return fallback;
+  const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
+  const versionRaw = meta.version;
+  const versionNum = typeof versionRaw === 'number' && Number.isFinite(versionRaw) ? versionRaw : null;
+  const versionLabel = versionNum ? ` v${String(Math.max(1, Math.round(versionNum))).padStart(2, '0')}` : '';
+  if (!styleName) return fallback;
+  return `${styleName}${versionLabel}`;
 }
 
 async function loadUserInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
@@ -894,7 +916,7 @@ async function loadUserInstanceByPublicId(env: Env, publicId: string): Promise<I
 
 async function loadCuratedInstanceByPublicId(env: Env, publicId: string): Promise<CuratedInstanceRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,widget_type,status,config,created_at,updated_at,kind',
+    select: 'public_id,widget_type,status,config,created_at,updated_at,kind,meta',
     public_id: `eq.${publicId}`,
     limit: '1',
   });
@@ -1656,6 +1678,7 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
     status: instance.status,
     widgetType,
     config: instance.config,
+    meta: isCuratedInstanceRow(instance) ? instance.meta ?? null : null,
     updatedAt: instance.updated_at ?? null,
     policy: policyResult.policy,
     workspace: {
@@ -1952,10 +1975,16 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' }, 422);
   }
 
+  const metaResult = payload.meta !== undefined ? assertMeta(payload.meta) : { ok: true as const, value: undefined };
+  if (!metaResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
   const config = configResult.value;
   const status = statusResult.value;
+  const meta = metaResult.value;
 
-  if (config === undefined && status === undefined) {
+  if (config === undefined && status === undefined && meta === undefined) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' }, 422);
   }
 
@@ -1968,6 +1997,9 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   const isCurated = resolveInstanceKind(instance) === 'curated';
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
+  if (!isCurated && payload.meta !== undefined) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
   if (isCurated) {
     const isValidType = await isKnownWidgetType(env, widgetType);
@@ -1997,6 +2029,7 @@ async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId
   const update: Record<string, unknown> = {};
   if (config !== undefined) update.config = config;
   if (status !== undefined) update.status = status;
+  if (meta !== undefined) update.meta = meta;
 
   let updatedInstance: InstanceRow | CuratedInstanceRow | null = instance;
   const patchPath = isCurated
@@ -2070,8 +2103,9 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const publicIdResult = assertPublicId((payload as any).publicId);
   const configResult = assertConfig((payload as any).config);
   const statusResult = assertStatus((payload as any).status);
+  const metaResult = (payload as any).meta !== undefined ? assertMeta((payload as any).meta) : { ok: true as const, value: undefined };
 
-  if (!widgetTypeResult.ok || !publicIdResult.ok || !configResult.ok || !statusResult.ok) {
+  if (!widgetTypeResult.ok || !publicIdResult.ok || !configResult.ok || !statusResult.ok || !metaResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
@@ -2079,11 +2113,15 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
   const publicId = publicIdResult.value;
   const config = configResult.value;
   const status = statusResult.value ?? 'unpublished';
+  const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
 
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
+  if (!isCurated && (payload as any).meta !== undefined) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
   const existing = await loadInstanceByPublicId(env, publicId);
@@ -2127,6 +2165,7 @@ async function handleWorkspaceCreateInstance(req: Request, env: Env, workspaceId
         kind: resolveCuratedRowKind(publicId),
         status,
         config,
+        meta,
       }),
     });
     if (!curatedInsert.ok) {
@@ -2246,6 +2285,10 @@ async function handleCreateInstance(req: Request, env: Env) {
   if (!statusResult.ok) issues.push(...statusResult.issues);
 
   const widgetName = asTrimmedString((payload as any).widgetName);
+  const metaResult = (payload as any).meta !== undefined ? assertMeta((payload as any).meta) : { ok: true as const, value: undefined };
+  if (!metaResult.ok) {
+    issues.push({ path: 'meta', message: 'meta must be an object' });
+  }
 
   if (issues.length) return json(issues, { status: 422 });
 
@@ -2254,11 +2297,15 @@ async function handleCreateInstance(req: Request, env: Env) {
   const workspaceId = workspaceIdRaw as string;
   const config = configResult.value!;
   const status = statusResult.value ?? 'unpublished';
+  const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
 
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
+  }
+  if (!isCurated && (payload as any).meta !== undefined) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
   const existing = await loadInstanceByPublicId(env, publicId);
@@ -2284,6 +2331,7 @@ async function handleCreateInstance(req: Request, env: Env) {
         kind: resolveCuratedRowKind(publicId),
         status,
         config,
+        meta,
       }),
     });
     if (!curatedInsert.ok) {
@@ -2339,6 +2387,16 @@ function assertConfig(config: unknown) {
     return { ok: false as const, issues: [{ path: 'config', message: 'config must be an object' }] };
   }
   return { ok: true as const, value: config as Record<string, unknown> };
+}
+
+function assertMeta(meta: unknown) {
+  if (meta === null) {
+    return { ok: true as const, value: null };
+  }
+  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) {
+    return { ok: false as const, issues: [{ path: 'meta', message: 'meta must be an object' }] };
+  }
+  return { ok: true as const, value: meta as Record<string, unknown> };
 }
 
 function containsNonPersistableUrl(value: string): boolean {

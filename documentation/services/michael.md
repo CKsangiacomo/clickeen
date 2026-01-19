@@ -121,15 +121,28 @@ Examples:
 These are instances created by Clickeen (via Bob) that serve as starter designs **and** Prague embeds.
 
 **Naming**
-- `wgt_curated_{curatedKey}`
+- `wgt_curated_{widgetType}.{styleSlug}.vNN`
 
 Where:
-- `curatedKey` is stable and dot-separated; it starts with the widget type (allowed chars: `a-z 0-9 . - _`)
+- `styleSlug` is a stable, human-chosen style key (allowed chars: `a-z 0-9 _`)
+- `vNN` is the version index for that style (zero-padded)
 - locale is a runtime parameter; it must not be encoded into `public_id`
 
 Examples:
-- `wgt_curated_faq.overview.hero`
-- `wgt_curated_faq.templates.card.1`
+- `wgt_curated_faq.liquid_glass.v01`
+- `wgt_curated_logoshowcase.brutalist.v02`
+
+**Metadata**
+Curated instances also store metadata in `curated_widget_instances.meta`:
+```
+{
+  "styleName": "Liquid Glass",
+  "styleSlug": "liquid_glass",
+  "version": 1,
+  "tags": { "icp": ["saas"], "objective": ["conversion"], "style": ["glass"] }
+}
+```
+Metadata is used for DevStudio display + filtering; the `public_id` is still the canonical identifier.
 
 ### C) User instance
 Instances created by users (usually by cloning either a `main` instance or a curated instance).
