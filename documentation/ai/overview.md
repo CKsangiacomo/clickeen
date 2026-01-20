@@ -112,7 +112,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `SF_R2` (raw event storage)
 - Agent IDs currently recognized by the worker:
   - `sdr.copilot`
-  - `sdr.widget.copilot.v1`
+  - `cs.copilot.v1` (alias: `sdr.widget.copilot.v1`)
   - `debug.grantProbe` (dev only)
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
@@ -145,6 +145,14 @@ type AIGrant = {
     maxRequests?: number; // optional session window
   };
   mode: 'editor' | 'ops'; // editor copilots vs operational agents
+  ai?: {
+    profile: 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
+    allowedProviders: Array<'deepseek' | 'openai' | 'anthropic'>;
+    selectedProvider?: 'deepseek' | 'openai' | 'anthropic';
+    selectedModel?: string;
+    allowProviderChoice?: boolean;
+    allowModelChoice?: boolean;
+  };
   trace: { sessionId?: string; instancePublicId?: string };
 };
 ```
@@ -222,7 +230,7 @@ Request:
 ```json
 {
   "grant": "<string>",
-  "agentId": "sdr.widget.copilot.v1",
+  "agentId": "cs.copilot.v1",
   "input": {},
   "trace": { "requestId": "optional-uuid", "client": "minibob|bob|ops" }
 }
@@ -230,12 +238,12 @@ Request:
 
 Response:
 ```json
-{ "requestId": "uuid", "agentId": "sdr.widget.copilot.v1", "result": {}, "usage": {} }
+{ "requestId": "uuid", "agentId": "cs.copilot.v1", "result": {}, "usage": {} }
 ```
 
 Behavior:
 - verifies grant signature + expiry
-- asserts capability `agent:${agentId}`
+- asserts capability `agent:${agentId}` (aliases are resolved to canonical IDs)
 - executes the agent
 - enqueues an `InteractionEvent` into `SF_EVENTS` (non-blocking)
 
@@ -254,10 +262,10 @@ Orchestration is San Francisco’s “meat” and is built incrementally behind 
 Phase‑1 (shipped orchestration surface):
 - Multiple agents behind the same `/v1/execute` interface:
   - `sdr.copilot`
-  - `sdr.widget.copilot.v1` (Minibob/Bob widget editing Copilot)
+  - `cs.copilot.v1` (Minibob/Bob widget editing Copilot; alias: `sdr.widget.copilot.v1`)
   - `debug.grantProbe` (dev only)
 - Provider/model is explicit per agent; strict errors if unavailable (no silent provider switching).
-- No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: `sdr.widget.copilot.v1` includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
+- No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: `cs.copilot.v1` includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
 
 GA roadmap (still behind the same interface):

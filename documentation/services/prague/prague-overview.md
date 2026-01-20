@@ -109,6 +109,19 @@ Defaults (local/dev):
 
 ---
 
+## 3.1) Acquisition personalization preview (shipped)
+
+Prague exposes a lightweight “Make this widget yours” preview on widget overview pages:
+- UI: modal in the hero block (`prague/src/components/PersonalizationPreview.astro`)
+- API: `POST /api/personalization/preview` on Paris (public)
+- Polling: `GET /api/personalization/preview/:jobId`
+- Copy overrides are applied client-side via `data-ck-copy` hooks (hero, steps, CTA).
+
+Required env:
+- `PUBLIC_PARIS_URL` for the client to call Paris from Prague.
+
+---
+
 ## 4) Determinism rules (why this is strict)
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.

@@ -94,6 +94,14 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/dropdown-fill.ts
+  var MODE_ORDER = ["color", "gradient", "image", "video"];
+  var MODE_LABELS = {
+    color: "Color fill",
+    gradient: "Gradient fill",
+    image: "Image fill",
+    video: "Video fill"
+  };
+  var DEFAULT_GRADIENT = { angle: 135, start: "#ff3b30", end: "#007aff" };
   var states = /* @__PURE__ */ new Map();
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-fill",
@@ -109,10 +117,21 @@ var Dieter = (() => {
       wireModes(state);
       states.set(root, state);
       installHandlers(state);
-      const initialValue = state.input.value || state.input.getAttribute("value") || "";
+      const initialValue = state.input.value || state.input.getAttribute("data-bob-json") || state.input.getAttribute("value") || "";
       syncFromValue(state, initialValue);
     });
     hydrateHost(scope);
+  }
+  function parseAllowedModes(root) {
+    const raw = (root.dataset.fillModes || "").trim();
+    if (raw) {
+      const modes = raw.split(",").map((mode) => mode.trim().toLowerCase()).filter((mode) => MODE_ORDER.includes(mode));
+      return modes.length ? modes : ["color"];
+    }
+    const allowImageAttr = (root.dataset.allowImage || "").trim().toLowerCase();
+    const allowImage = allowImageAttr === "" || allowImageAttr === "true" || allowImageAttr === "1" || allowImageAttr === "yes";
+    if (!allowImage) return ["color"];
+    return ["color", "gradient", "image"];
   }
   function createState(root) {
     const input = root.querySelector(".diet-dropdown-fill__value-field");
@@ -129,19 +148,40 @@ var Dieter = (() => {
     const svCanvas = root.querySelector(".diet-dropdown-fill__sv-canvas");
     const svThumb = root.querySelector(".diet-dropdown-fill__sv-thumb");
     const colorPreview = root.querySelector(".diet-dropdown-fill__color-preview");
-    const removeFillAction = root.querySelector(".diet-dropdown-fill__remove-fill");
-    const removeFillLabel = removeFillAction?.querySelector(".diet-btn-menuactions__label") ?? null;
+    const removeFillActions = Array.from(root.querySelectorAll(".diet-dropdown-fill__remove-fill"));
+    const removeFillLabels = removeFillActions.map(
+      (action) => action.querySelector(".diet-btn-menuactions__label") ?? null
+    );
     const swatches = Array.from(root.querySelectorAll(".diet-dropdown-fill__swatch"));
+    const gradientPreview = root.querySelector(".diet-dropdown-fill__gradient-preview");
+    const gradientAngleInput = root.querySelector(".diet-dropdown-fill__gradient-angle");
+    const gradientEditor = root.querySelector(".diet-dropdown-fill__gradient-editor");
+    const gradientStopStart = root.querySelector('.diet-dropdown-fill__gradient-stop-btn[data-stop="start"]');
+    const gradientStopEnd = root.querySelector('.diet-dropdown-fill__gradient-stop-btn[data-stop="end"]');
+    const gradientStopSv = root.querySelector(".diet-dropdown-fill__gradient-sv");
+    const gradientStopSvThumb = root.querySelector(".diet-dropdown-fill__gradient-sv-thumb");
+    const gradientStopHueInput = root.querySelector(".diet-dropdown-fill__gradient-hue");
+    const gradientStopAlphaInput = root.querySelector(".diet-dropdown-fill__gradient-alpha");
+    const gradientStopHexInput = root.querySelector(".diet-dropdown-fill__gradient-hex");
+    const gradientStopAlphaField = root.querySelector(".diet-dropdown-fill__gradient-alpha-field");
     const imagePanel = root.querySelector(".diet-dropdown-fill__panel--image");
     const imagePreview = root.querySelector(".diet-dropdown-fill__image-preview");
     const uploadButton = root.querySelector(".diet-dropdown-fill__upload-btn");
     const replaceButton = root.querySelector(".diet-dropdown-fill__replace-btn");
     const removeButton = root.querySelector(".diet-dropdown-fill__remove-btn");
     const fileInput = root.querySelector(".diet-dropdown-fill__file-input");
+    const videoPanel = root.querySelector(".diet-dropdown-fill__panel--video");
+    const videoPreview = root.querySelector(".diet-dropdown-fill__video-preview");
+    const videoUploadButton = root.querySelector(".diet-dropdown-fill__video-upload-btn");
+    const videoReplaceButton = root.querySelector(".diet-dropdown-fill__video-replace-btn");
+    const videoRemoveButton = root.querySelector(".diet-dropdown-fill__video-remove-btn");
+    const videoFileInput = root.querySelector(".diet-dropdown-fill__video-file-input");
     if (!input || !hueInput || !alphaInput || !hexField || !alphaField || !svCanvas || !svThumb) {
       return null;
     }
     const nativeValue = captureNativeValue(input);
+    const allowedModes = parseAllowedModes(root);
+    const mode = allowedModes[0] || "color";
     swatches.forEach((swatch) => {
       const color = swatch.dataset.color || "";
       swatch.style.setProperty("--swatch-color", color);
@@ -156,8 +196,8 @@ var Dieter = (() => {
       preview,
       nativeColorInput,
       colorPreview,
-      removeFillAction,
-      removeFillLabel,
+      removeFillActions,
+      removeFillLabels,
       hueInput,
       alphaInput,
       hexField,
@@ -165,6 +205,23 @@ var Dieter = (() => {
       svCanvas,
       svThumb,
       swatches,
+      hsv: { h: 0, s: 0, v: 0, a: 0 },
+      gradientPreview,
+      gradientAngleInput,
+      gradientEditor,
+      gradientStopStart,
+      gradientStopEnd,
+      gradientStopSv,
+      gradientStopSvThumb,
+      gradientStopHueInput,
+      gradientStopAlphaInput,
+      gradientStopHexInput,
+      gradientStopAlphaField,
+      gradientActiveStop: "start",
+      gradientStartHsv: { h: 0, s: 0, v: 0, a: 1 },
+      gradientEndHsv: { h: 0, s: 0, v: 0, a: 1 },
+      gradient: { ...DEFAULT_GRADIENT },
+      gradientCss: null,
       imagePanel,
       imagePreview,
       uploadButton,
@@ -173,10 +230,20 @@ var Dieter = (() => {
       fileInput,
       imageSrc: null,
       imageName: null,
-      localObjectUrl: null,
+      imageObjectUrl: null,
+      videoPanel,
+      videoPreview,
+      videoUploadButton,
+      videoReplaceButton,
+      videoRemoveButton,
+      videoFileInput,
+      videoSrc: null,
+      videoName: null,
+      videoObjectUrl: null,
+      allowedModes,
+      mode,
       nativeValue,
-      internalWrite: false,
-      hsv: { h: 0, s: 0, v: 0, a: 0 }
+      internalWrite: false
     };
   }
   function installHandlers(state) {
@@ -190,17 +257,19 @@ var Dieter = (() => {
         }
       });
     }
-    state.input.addEventListener("external-sync", () => syncFromValue(state, state.input.value));
-    state.input.addEventListener("input", () => syncFromValue(state, state.input.value));
+    const readValue = () => state.input.value || state.input.getAttribute("data-bob-json") || "";
+    state.input.addEventListener("external-sync", () => syncFromValue(state, readValue()));
+    state.input.addEventListener("input", () => syncFromValue(state, readValue()));
     state.hueInput.addEventListener("input", () => {
       const hue = clampNumber(Number(state.hueInput.value), 0, 360);
       state.hsv.h = hue;
-      syncUI(state, { commit: true });
+      if (state.hsv.a === 0) state.hsv.a = 1;
+      syncColorUI(state, { commit: true });
     });
     state.alphaInput.addEventListener("input", () => {
       const alpha = clampNumber(Number(state.alphaInput.value) / 100, 0, 1);
       state.hsv.a = alpha;
-      syncUI(state, { commit: true });
+      syncColorUI(state, { commit: true });
     });
     state.hexField.addEventListener("change", () => handleHexInput(state));
     state.hexField.addEventListener("blur", () => handleHexInput(state));
@@ -208,14 +277,17 @@ var Dieter = (() => {
     state.alphaField.addEventListener("blur", () => handleAlphaField(state));
     installSvCanvasHandlers(state);
     installSwatchHandlers(state);
+    installGradientHandlers(state);
     installImageHandlers(state);
+    installVideoHandlers(state);
     installNativeColorPicker(state);
-    if (state.removeFillAction) {
-      state.removeFillAction.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (state.removeFillAction?.disabled) return;
-        state.hsv.a = 0;
-        syncUI(state, { commit: true });
+    if (state.removeFillActions.length) {
+      state.removeFillActions.forEach((action) => {
+        action.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (action.disabled) return;
+          setInputValue(state, { type: "none" }, true);
+        });
       });
     }
   }
@@ -231,9 +303,209 @@ var Dieter = (() => {
     nativeColorInput.addEventListener("input", () => {
       const rgba = hexToRgba(nativeColorInput.value);
       if (!rgba) return;
-      state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a };
-      syncUI(state, { commit: true });
+      state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a || 1 };
+      syncColorUI(state, { commit: true });
     });
+  }
+  function installGradientHandlers(state) {
+    if (state.gradientAngleInput) {
+      state.gradientAngleInput.addEventListener("input", () => {
+        const angle = clampNumber(Number(state.gradientAngleInput?.value), 0, 360);
+        state.gradientCss = null;
+        state.gradient.angle = angle;
+        syncGradientUI(state, { commit: true });
+      });
+    }
+    installGradientStopBarHandlers(state);
+    installGradientEditorHandlers(state);
+  }
+  function getGradientStopHsv(state, stop) {
+    return stop === "start" ? state.gradientStartHsv : state.gradientEndHsv;
+  }
+  function syncGradientStopState(state, stop) {
+    const raw = stop === "start" ? state.gradient.start : state.gradient.end;
+    const parsed = parseColor(raw, state.root);
+    if (!parsed) return;
+    const target = getGradientStopHsv(state, stop);
+    target.h = parsed.h;
+    target.s = parsed.s;
+    target.v = parsed.v;
+    target.a = parsed.a;
+  }
+  function syncGradientStopButtons(state) {
+    if (state.gradientStopStart) {
+      state.gradientStopStart.style.background = colorStringFromHsv(state.gradientStartHsv);
+      state.gradientStopStart.classList.toggle("is-active", state.gradientActiveStop === "start");
+      state.gradientStopStart.setAttribute("aria-pressed", state.gradientActiveStop === "start" ? "true" : "false");
+    }
+    if (state.gradientStopEnd) {
+      state.gradientStopEnd.style.background = colorStringFromHsv(state.gradientEndHsv);
+      state.gradientStopEnd.classList.toggle("is-active", state.gradientActiveStop === "end");
+      state.gradientStopEnd.setAttribute("aria-pressed", state.gradientActiveStop === "end" ? "true" : "false");
+    }
+  }
+  function syncActiveGradientStopUI(state) {
+    const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+    const hex = formatHex({ h: hsv.h, s: hsv.s, v: hsv.v, a: 1 });
+    const alphaPercent = Math.round(hsv.a * 100);
+    if (state.gradientEditor) {
+      state.gradientEditor.style.setProperty("--picker-hue", hsv.h.toString());
+      state.gradientEditor.style.setProperty("--picker-rgb", `${rgb.r} ${rgb.g} ${rgb.b}`);
+    }
+    if (state.gradientStopHueInput) {
+      state.gradientStopHueInput.value = hsv.h.toString();
+      state.gradientStopHueInput.style.setProperty("--value", state.gradientStopHueInput.value);
+      state.gradientStopHueInput.style.setProperty("--min", "0");
+      state.gradientStopHueInput.style.setProperty("--max", "360");
+    }
+    if (state.gradientStopAlphaInput) {
+      state.gradientStopAlphaInput.value = alphaPercent.toString();
+      state.gradientStopAlphaInput.style.setProperty("--value", state.gradientStopAlphaInput.value);
+      state.gradientStopAlphaInput.style.setProperty("--min", "0");
+      state.gradientStopAlphaInput.style.setProperty("--max", "100");
+    }
+    if (state.gradientStopHexInput) {
+      state.gradientStopHexInput.value = hex;
+    }
+    if (state.gradientStopAlphaField) {
+      state.gradientStopAlphaField.value = `${alphaPercent}%`;
+    }
+    if (state.gradientStopSvThumb) {
+      const left = `${hsv.s * 100}%`;
+      const top = `${(1 - hsv.v) * 100}%`;
+      state.gradientStopSvThumb.style.left = left;
+      state.gradientStopSvThumb.style.top = top;
+    }
+    const normalizedCurrent = normalizeHex(hex);
+    state.swatches.forEach((swatch) => {
+      if (getSwatchTarget(swatch) !== "gradient") return;
+      const swatchHex = normalizeHex(swatch.dataset.color || "");
+      const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
+      swatch.classList.toggle("is-selected", match);
+      swatch.setAttribute("aria-pressed", match ? "true" : "false");
+    });
+  }
+  function setActiveGradientStop(state, stop) {
+    state.gradientActiveStop = stop;
+    syncGradientStopButtons(state);
+    syncActiveGradientStopUI(state);
+  }
+  function commitGradientStopFromHsv(state, stop) {
+    const hsv = getGradientStopHsv(state, stop);
+    const colorString = colorStringFromHsv(hsv);
+    if (stop === "start") state.gradient.start = colorString;
+    else state.gradient.end = colorString;
+    state.gradientCss = null;
+    syncGradientUI(state, { commit: true });
+  }
+  function handleGradientStopHexInput(state) {
+    if (!state.gradientStopHexInput) return;
+    const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+    const raw = state.gradientStopHexInput.value.trim();
+    if (!raw) {
+      state.gradientStopHexInput.value = formatHex(hsv);
+      return;
+    }
+    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
+    const rgba = hexToRgba(normalized);
+    if (!rgba) {
+      state.gradientStopHexInput.value = formatHex(hsv);
+      return;
+    }
+    const next = rgbToHsv(rgba.r, rgba.g, rgba.b, 1);
+    hsv.h = next.h;
+    hsv.s = next.s;
+    hsv.v = next.v;
+    commitGradientStopFromHsv(state, state.gradientActiveStop);
+  }
+  function handleGradientStopAlphaField(state) {
+    if (!state.gradientStopAlphaField) return;
+    const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+    const raw = state.gradientStopAlphaField.value.trim().replace("%", "");
+    if (!raw) {
+      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      state.gradientStopAlphaField.value = `${Math.round(hsv.a * 100)}%`;
+      return;
+    }
+    const percent = clampNumber(parsed, 0, 100);
+    hsv.a = percent / 100;
+    commitGradientStopFromHsv(state, state.gradientActiveStop);
+  }
+  function installGradientStopBarHandlers(state) {
+    if (state.gradientStopStart) {
+      state.gradientStopStart.addEventListener("click", (event) => {
+        event.preventDefault();
+        setActiveGradientStop(state, "start");
+      });
+    }
+    if (state.gradientStopEnd) {
+      state.gradientStopEnd.addEventListener("click", (event) => {
+        event.preventDefault();
+        setActiveGradientStop(state, "end");
+      });
+    }
+  }
+  function installGradientEditorHandlers(state) {
+    if (state.gradientStopSv) {
+      const move = (event) => {
+        const rect = state.gradientStopSv?.getBoundingClientRect();
+        if (!rect) return;
+        const x = clampNumber(event.clientX - rect.left, 0, rect.width);
+        const y = clampNumber(event.clientY - rect.top, 0, rect.height);
+        const s = rect.width ? x / rect.width : 0;
+        const v = rect.height ? 1 - y / rect.height : 0;
+        const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+        hsv.s = clampNumber(s, 0, 1);
+        hsv.v = clampNumber(v, 0, 1);
+        if (hsv.a === 0) hsv.a = 1;
+        commitGradientStopFromHsv(state, state.gradientActiveStop);
+      };
+      const handlePointerDown = (event) => {
+        event.preventDefault();
+        state.gradientStopSv?.setPointerCapture(event.pointerId);
+        move(event);
+      };
+      state.gradientStopSv.addEventListener("pointerdown", handlePointerDown);
+      state.gradientStopSv.addEventListener("pointermove", (event) => {
+        if (event.pressure === 0 && event.buttons === 0) return;
+        move(event);
+      });
+      state.gradientStopSv.addEventListener("click", (event) => {
+        move(event);
+      });
+    }
+    if (state.gradientStopHueInput) {
+      state.gradientStopHueInput.addEventListener("input", () => {
+        const hue = clampNumber(Number(state.gradientStopHueInput?.value), 0, 360);
+        const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+        hsv.h = hue;
+        if (hsv.a === 0) hsv.a = 1;
+        commitGradientStopFromHsv(state, state.gradientActiveStop);
+      });
+    }
+    if (state.gradientStopAlphaInput) {
+      state.gradientStopAlphaInput.addEventListener("input", () => {
+        const alpha = clampNumber(Number(state.gradientStopAlphaInput?.value) / 100, 0, 1);
+        const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+        hsv.a = alpha;
+        commitGradientStopFromHsv(state, state.gradientActiveStop);
+      });
+    }
+    if (state.gradientStopHexInput) {
+      const handler = () => handleGradientStopHexInput(state);
+      state.gradientStopHexInput.addEventListener("change", handler);
+      state.gradientStopHexInput.addEventListener("blur", handler);
+    }
+    if (state.gradientStopAlphaField) {
+      const handler = () => handleGradientStopAlphaField(state);
+      state.gradientStopAlphaField.addEventListener("change", handler);
+      state.gradientStopAlphaField.addEventListener("blur", handler);
+    }
   }
   function installSvCanvasHandlers(state) {
     const move = (event) => {
@@ -244,7 +516,8 @@ var Dieter = (() => {
       const v = rect.height ? 1 - y / rect.height : 0;
       state.hsv.s = clampNumber(s, 0, 1);
       state.hsv.v = clampNumber(v, 0, 1);
-      syncUI(state, { commit: true });
+      if (state.hsv.a === 0) state.hsv.a = 1;
+      syncColorUI(state, { commit: true });
     };
     const handlePointerDown = (event) => {
       event.preventDefault();
@@ -254,6 +527,9 @@ var Dieter = (() => {
     state.svCanvas.addEventListener("pointerdown", handlePointerDown);
     state.svCanvas.addEventListener("pointermove", (event) => {
       if (event.pressure === 0 && event.buttons === 0) return;
+      move(event);
+    });
+    state.svCanvas.addEventListener("click", (event) => {
       move(event);
     });
   }
@@ -276,9 +552,9 @@ var Dieter = (() => {
     if (removeButton) {
       removeButton.addEventListener("click", (event) => {
         event.preventDefault();
-        if (state.localObjectUrl) {
-          URL.revokeObjectURL(state.localObjectUrl);
-          state.localObjectUrl = null;
+        if (state.imageObjectUrl) {
+          URL.revokeObjectURL(state.imageObjectUrl);
+          state.imageObjectUrl = null;
         }
         setImageSrc(state, null, { commit: true });
       });
@@ -288,55 +564,162 @@ var Dieter = (() => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         state.imageName = file.name || null;
-        if (state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl);
+        if (state.imageObjectUrl) URL.revokeObjectURL(state.imageObjectUrl);
         const objectUrl = URL.createObjectURL(file);
-        state.localObjectUrl = objectUrl;
+        state.imageObjectUrl = objectUrl;
         setImageSrc(state, objectUrl, { commit: true });
       });
     }
   }
+  function installVideoHandlers(state) {
+    const { videoUploadButton, videoReplaceButton, videoRemoveButton, videoFileInput } = state;
+    if (videoUploadButton && videoFileInput) {
+      videoUploadButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        videoFileInput.value = "";
+        videoFileInput.click();
+      });
+    }
+    if (videoReplaceButton && videoFileInput) {
+      videoReplaceButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        videoFileInput.value = "";
+        videoFileInput.click();
+      });
+    }
+    if (videoRemoveButton) {
+      videoRemoveButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (state.videoObjectUrl) {
+          URL.revokeObjectURL(state.videoObjectUrl);
+          state.videoObjectUrl = null;
+        }
+        setVideoSrc(state, null, { commit: true });
+      });
+    }
+    if (videoFileInput) {
+      videoFileInput.addEventListener("change", async () => {
+        const file = videoFileInput.files && videoFileInput.files[0];
+        if (!file) return;
+        state.videoName = file.name || null;
+        if (state.videoObjectUrl) URL.revokeObjectURL(state.videoObjectUrl);
+        const objectUrl = URL.createObjectURL(file);
+        state.videoObjectUrl = objectUrl;
+        setVideoSrc(state, objectUrl, { commit: true });
+      });
+    }
+  }
   function setInputValue(state, value, emit) {
+    const json = JSON.stringify(value);
     state.internalWrite = true;
-    state.input.value = value;
+    state.input.value = json;
+    state.input.setAttribute("data-bob-json", json);
     state.internalWrite = false;
     if (emit) {
       state.input.dispatchEvent(new Event("input", { bubbles: true }));
     }
   }
+  function colorStringFromHsv(hsv) {
+    const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+    return hsv.a < 1 ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${roundTo(hsv.a, 2)})` : formatHex({ ...hsv, a: 1 });
+  }
+  function resolveFallbackFromState(state) {
+    if (state.hsv.a <= 0) return "var(--color-system-white)";
+    return colorStringFromHsv(state.hsv);
+  }
   function setImageSrc(state, src, opts) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
     const prev = state.imageSrc;
-    if (state.localObjectUrl && prev && prev === state.localObjectUrl && src !== prev) {
-      URL.revokeObjectURL(state.localObjectUrl);
-      state.localObjectUrl = null;
+    if (state.imageObjectUrl && prev && prev === state.imageObjectUrl && src !== prev) {
+      URL.revokeObjectURL(state.imageObjectUrl);
+      state.imageObjectUrl = null;
     }
     state.imageSrc = src;
+    if (!src) {
+      state.imageName = null;
+    } else if (!state.imageObjectUrl || src !== state.imageObjectUrl) {
+      state.imageName = null;
+    }
     if (opts.commit) {
-      const priorValue = String(state.input.value || "").trim();
-      const hasPriorUrl = /\burl\(\s*/i.test(priorValue);
-      const fallbackRaw = !hasPriorUrl && priorValue ? priorValue : "var(--color-system-white)";
-      const fallback = fallbackRaw.trim() === "transparent" ? "var(--color-system-white)" : fallbackRaw;
-      const fallbackLayer = /^-?(?:repeating-)?(?:linear|radial|conic)-gradient\(/i.test(fallback) ? fallback : `linear-gradient(${fallback}, ${fallback})`;
-      const cssValue = src ? `url("${src}") center center / cover no-repeat, ${fallbackLayer}` : "transparent";
-      setInputValue(state, cssValue, true);
+      const fallback = resolveFallbackFromState(state);
+      const fill = src ? { type: "image", image: { src, fit: "cover", position: "center", repeat: "no-repeat", fallback } } : { type: "none" };
+      setInputValue(state, fill, true);
     }
     if (state.imagePanel) {
       state.imagePanel.dataset.hasImage = src ? "true" : "false";
     }
     if (state.imagePreview) {
+      state.imagePreview.style.backgroundImage = src ? `url("${src}")` : "none";
+    }
+    if (shouldUpdateHeader) {
+      const placeholder = state.headerValue?.dataset.placeholder ?? "";
       if (src) {
-        state.imagePreview.style.backgroundImage = `url("${src}")`;
+        const label = state.imageName || extractFileName(src) || "Image selected";
+        updateHeader(state, { text: label, muted: false, chipColor: null });
       } else {
-        state.imagePreview.style.backgroundImage = "none";
+        updateHeader(state, { text: placeholder, muted: true, chipColor: null });
       }
     }
-    const placeholder = state.headerValue?.dataset.placeholder ?? "";
-    if (src) {
-      const label = state.imageName || extractFileName(state.input.value) || "Image selected";
-      updateHeader(state, { text: label, muted: false, chipColor: null });
-    } else {
-      state.imageName = null;
-      updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+    if (shouldUpdateRemove) {
+      setRemoveFillState(state, !src);
     }
+  }
+  function setVideoSrc(state, src, opts) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    const prev = state.videoSrc;
+    if (state.videoObjectUrl && prev && prev === state.videoObjectUrl && src !== prev) {
+      URL.revokeObjectURL(state.videoObjectUrl);
+      state.videoObjectUrl = null;
+    }
+    state.videoSrc = src;
+    if (!src) {
+      state.videoName = null;
+    } else if (!state.videoObjectUrl || src !== state.videoObjectUrl) {
+      state.videoName = null;
+    }
+    if (opts.commit) {
+      const fallback = resolveFallbackFromState(state);
+      const fill = src ? {
+        type: "video",
+        video: { src, fit: "cover", position: "center", loop: true, muted: true, autoplay: true, fallback }
+      } : { type: "none" };
+      setInputValue(state, fill, true);
+    }
+    if (state.videoPanel) {
+      state.videoPanel.dataset.hasVideo = src ? "true" : "false";
+    }
+    if (state.videoPreview) {
+      state.videoPreview.src = src || "";
+      if (src) state.videoPreview.load();
+    }
+    if (shouldUpdateHeader) {
+      const placeholder = state.headerValue?.dataset.placeholder ?? "";
+      if (src) {
+        const label = state.videoName || extractFileName(src) || "Video selected";
+        updateHeader(state, { text: label, muted: false, chipColor: null });
+      } else {
+        updateHeader(state, { text: placeholder, muted: true, chipColor: null });
+      }
+    }
+    if (shouldUpdateRemove) {
+      setRemoveFillState(state, !src);
+    }
+  }
+  function setRemoveFillState(state, isEmpty) {
+    if (!state.removeFillActions.length) return;
+    state.removeFillActions.forEach((action, index) => {
+      action.disabled = isEmpty;
+      const label = state.removeFillLabels[index];
+      if (label) {
+        label.textContent = isEmpty ? "No fill to remove" : "Remove fill";
+      }
+    });
+  }
+  function getSwatchTarget(swatch) {
+    const container = swatch.closest(".diet-dropdown-fill__swatches");
+    return container?.dataset.swatchTarget === "gradient" ? "gradient" : "color";
   }
   function installSwatchHandlers(state) {
     state.swatches.forEach((swatch) => {
@@ -345,8 +728,18 @@ var Dieter = (() => {
         const color = swatch.dataset.color || "";
         const parsed = parseColor(color, state.root);
         if (!parsed) return;
+        const target = getSwatchTarget(swatch);
+        if (target === "gradient") {
+          const hsv = getGradientStopHsv(state, state.gradientActiveStop);
+          hsv.h = parsed.h;
+          hsv.s = parsed.s;
+          hsv.v = parsed.v;
+          hsv.a = 1;
+          commitGradientStopFromHsv(state, state.gradientActiveStop);
+          return;
+        }
         state.hsv = { ...parsed, a: 1 };
-        syncUI(state, { commit: true });
+        syncColorUI(state, { commit: true });
       });
     });
   }
@@ -362,8 +755,8 @@ var Dieter = (() => {
       state.hexField.value = formatHex(state.hsv).replace(/^#/, "");
       return;
     }
-    state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a };
-    syncUI(state, { commit: true });
+    state.hsv = { ...rgbToHsv(rgba.r, rgba.g, rgba.b, 1), a: state.hsv.a || 1 };
+    syncColorUI(state, { commit: true });
   }
   function handleAlphaField(state) {
     const raw = state.alphaField.value.trim().replace("%", "");
@@ -378,39 +771,249 @@ var Dieter = (() => {
     }
     const percent = clampNumber(parsed, 0, 100);
     state.hsv.a = percent / 100;
-    syncUI(state, { commit: true });
+    syncColorUI(state, { commit: true });
   }
-  function syncFromValue(state, raw) {
-    const value = String(raw ?? "").trim();
-    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (urlMatch && urlMatch[2]) {
-      delete state.root.dataset.invalid;
-      setImageSrc(state, urlMatch[2], { commit: false });
-      return;
-    }
-    if (!value) {
-      state.imageSrc = null;
-      state.imageName = null;
-      state.hsv = { h: 0, s: 0, v: 0, a: 0 };
-      syncUI(state, { commit: false });
-      return;
+  function normalizeGradientColor(state, raw, fallback) {
+    let value = raw.trim();
+    if (!value) return fallback;
+    if (!value.startsWith("#") && /^[0-9a-f]{3,8}$/i.test(value)) {
+      value = `#${value}`;
     }
     const parsed = parseColor(value, state.root);
-    if (!parsed) {
-      state.imageSrc = null;
-      state.imageName = null;
-      state.hsv = { h: 0, s: 0, v: 0, a: 0 };
+    return parsed ? value : fallback;
+  }
+  function buildGradientFill(state) {
+    const angle = clampNumber(state.gradient.angle, 0, 360);
+    const start = normalizeGradientColor(state, state.gradient.start, DEFAULT_GRADIENT.start);
+    const end = normalizeGradientColor(state, state.gradient.end, DEFAULT_GRADIENT.end);
+    return {
+      type: "gradient",
+      gradient: {
+        kind: "linear",
+        angle,
+        stops: [
+          { color: start, position: 0 },
+          { color: end, position: 100 }
+        ]
+      }
+    };
+  }
+  function buildGradientCss(state) {
+    const angle = clampNumber(state.gradient.angle, 0, 360);
+    const start = normalizeGradientColor(state, state.gradient.start, DEFAULT_GRADIENT.start);
+    const end = normalizeGradientColor(state, state.gradient.end, DEFAULT_GRADIENT.end);
+    return `linear-gradient(${angle}deg, ${start} 0%, ${end} 100%)`;
+  }
+  function syncGradientUI(state, opts) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
+    if (state.gradientAngleInput) {
+      state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
+      state.gradientAngleInput.style.setProperty("--value", state.gradientAngleInput.value);
+      state.gradientAngleInput.style.setProperty("--min", "0");
+      state.gradientAngleInput.style.setProperty("--max", "360");
+    }
+    syncGradientStopState(state, "start");
+    syncGradientStopState(state, "end");
+    syncGradientStopButtons(state);
+    syncActiveGradientStopUI(state);
+    const css = state.gradientCss || buildGradientCss(state);
+    if (state.gradientPreview) state.gradientPreview.style.backgroundImage = css;
+    if (opts.commit) {
+      setInputValue(state, buildGradientFill(state), true);
+    }
+    if (shouldUpdateHeader) {
+      updateHeader(state, { text: "", muted: false, chipColor: css });
+    }
+    if (shouldUpdateRemove) {
+      setRemoveFillState(state, false);
+    }
+  }
+  function normalizeImageValue(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { src: "", fit: "cover", position: "center", repeat: "no-repeat", fallback: "" };
+    }
+    const value = raw;
+    const src = typeof value.src === "string" ? value.src.trim() : "";
+    const fit = value.fit === "contain" ? "contain" : "cover";
+    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
+    const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
+    const fallback = typeof value.fallback === "string" ? value.fallback.trim() : "";
+    return { src, fit, position, repeat, fallback };
+  }
+  function normalizeVideoValue(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { src: "", poster: "", fit: "cover", position: "center", loop: true, muted: true, autoplay: true, fallback: "" };
+    }
+    const value = raw;
+    const src = typeof value.src === "string" ? value.src.trim() : "";
+    const poster = typeof value.poster === "string" ? value.poster.trim() : "";
+    const fit = value.fit === "contain" ? "contain" : "cover";
+    const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
+    const loop = typeof value.loop === "boolean" ? value.loop : true;
+    const muted = typeof value.muted === "boolean" ? value.muted : true;
+    const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
+    const fallback = typeof value.fallback === "string" ? value.fallback.trim() : "";
+    return { src, poster, fit, position, loop, muted, autoplay, fallback };
+  }
+  function normalizeGradientValue(raw) {
+    if (typeof raw === "string") {
+      const css2 = raw.trim();
+      return css2 ? { css: css2 } : void 0;
+    }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return void 0;
+    const value = raw;
+    const css = typeof value.css === "string" ? value.css.trim() : "";
+    if (css) return { css };
+    const kindRaw = typeof value.kind === "string" ? value.kind.trim() : "";
+    const kind = kindRaw === "radial" || kindRaw === "conic" ? kindRaw : "linear";
+    const angle = clampNumber(typeof value.angle === "number" ? value.angle : 0, 0, 360);
+    const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
+    const stops = stopsRaw.map((stop) => {
+      if (!stop || typeof stop !== "object" || Array.isArray(stop)) return null;
+      const entry = stop;
+      const color = typeof entry.color === "string" ? entry.color.trim() : "";
+      if (!color) return null;
+      const position = clampNumber(typeof entry.position === "number" ? entry.position : 0, 0, 100);
+      return { color, position };
+    }).filter((stop) => Boolean(stop));
+    return { kind, angle, stops };
+  }
+  function coerceFillValue(raw) {
+    const typeRaw = typeof raw.type === "string" ? raw.type.trim().toLowerCase() : "";
+    if (!typeRaw) return { type: "none" };
+    if (typeRaw === "none") return { type: "none" };
+    if (!MODE_ORDER.includes(typeRaw)) return null;
+    if (typeRaw === "color") {
+      const color = typeof raw.color === "string" ? raw.color.trim() : "";
+      const value = typeof raw.value === "string" ? raw.value.trim() : "";
+      return { type: "color", color: color || value || "transparent" };
+    }
+    if (typeRaw === "gradient") {
+      return { type: "gradient", gradient: normalizeGradientValue(raw.gradient) };
+    }
+    if (typeRaw === "image") {
+      return { type: "image", image: normalizeImageValue(raw.image) };
+    }
+    if (typeRaw === "video") {
+      return { type: "video", video: normalizeVideoValue(raw.video) };
+    }
+    return { type: "none" };
+  }
+  function parseLegacyFill(value, root) {
+    if (!value) return { type: "none" };
+    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    if (urlMatch && urlMatch[2]) {
+      return { type: "image", image: { src: urlMatch[2], fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
+    }
+    if (/^(?:https?:|data:|blob:)/i.test(value)) {
+      return { type: "image", image: { src: value, fit: "cover", position: "center", repeat: "no-repeat", fallback: "" } };
+    }
+    if (/-gradient\(/i.test(value)) {
+      return { type: "gradient", gradient: { css: value } };
+    }
+    const parsed = parseColor(value, root);
+    if (!parsed) return null;
+    return { type: "color", color: value };
+  }
+  function parseFillValue(raw, root) {
+    const value = String(raw ?? "").trim();
+    if (!value) return { type: "none" };
+    if (value.startsWith("{") || value.startsWith("[") || value.startsWith('"')) {
+      try {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === "string") return parseLegacyFill(parsed, root);
+        if (parsed == null) return { type: "none" };
+        if (typeof parsed !== "object" || Array.isArray(parsed)) return null;
+        return coerceFillValue(parsed);
+      } catch {
+        return parseLegacyFill(value, root);
+      }
+    }
+    return parseLegacyFill(value, root);
+  }
+  function resolveModeFromFill(state, fill) {
+    const desired = fill.type === "none" ? state.mode : fill.type;
+    if (desired !== "none" && state.allowedModes.includes(desired)) return desired;
+    return state.allowedModes[0] || "color";
+  }
+  function applyGradientFromFill(state, gradient) {
+    state.gradient = { ...DEFAULT_GRADIENT };
+    state.gradientCss = null;
+    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient)) return;
+    if ("css" in gradient) {
+      const css = typeof gradient.css === "string" ? gradient.css.trim() : "";
+      state.gradientCss = css || null;
+      return;
+    }
+    const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
+    state.gradient.angle = clampNumber(angle, 0, 360);
+    if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
+      const start = gradient.stops[0];
+      const end = gradient.stops[gradient.stops.length - 1];
+      if (start?.color) state.gradient.start = String(start.color);
+      if (end?.color) state.gradient.end = String(end.color);
+    }
+  }
+  function syncFromValue(state, raw) {
+    const fill = parseFillValue(raw, state.root);
+    if (!fill) {
       state.root.dataset.invalid = "true";
-      syncUI(state, { commit: false });
+      updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
+      setRemoveFillState(state, true);
       return;
     }
     delete state.root.dataset.invalid;
-    state.imageSrc = null;
-    state.imageName = null;
-    state.hsv = parsed;
-    syncUI(state, { commit: false });
+    const nextMode = resolveModeFromFill(state, fill);
+    setMode(state, nextMode);
+    if (fill.type === "none") {
+      if (nextMode === "image") {
+        setImageSrc(state, null, { commit: false });
+        return;
+      }
+      if (nextMode === "video") {
+        setVideoSrc(state, null, { commit: false });
+        return;
+      }
+      if (nextMode === "gradient") {
+        state.gradient = { ...DEFAULT_GRADIENT };
+        state.gradientCss = null;
+        syncGradientUI(state, { commit: false });
+        return;
+      }
+      state.hsv = { h: 0, s: 0, v: 0, a: 0 };
+      syncColorUI(state, { commit: false });
+      return;
+    }
+    if (fill.type === "color") {
+      const parsed = parseColor(fill.color || "", state.root);
+      if (!parsed) {
+        state.root.dataset.invalid = "true";
+        state.hsv = { h: 0, s: 0, v: 0, a: 0 };
+        syncColorUI(state, { commit: false });
+        return;
+      }
+      state.hsv = parsed;
+      syncColorUI(state, { commit: false });
+      return;
+    }
+    if (fill.type === "gradient") {
+      applyGradientFromFill(state, fill.gradient);
+      syncGradientUI(state, { commit: false });
+      return;
+    }
+    if (fill.type === "image") {
+      setImageSrc(state, fill.image?.src || null, { commit: false });
+      return;
+    }
+    if (fill.type === "video") {
+      setVideoSrc(state, fill.video?.src || null, { commit: false });
+      return;
+    }
   }
-  function syncUI(state, opts) {
+  function syncColorUI(state, opts) {
+    const shouldUpdateHeader = opts.updateHeader !== false;
+    const shouldUpdateRemove = opts.updateRemove !== false;
     const { h, s, v, a } = state.hsv;
     const rgb = hsvToRgb(h, s, v);
     const hex = formatHex({ h, s, v, a: 1 });
@@ -434,29 +1037,29 @@ var Dieter = (() => {
     state.svThumb.style.left = left;
     state.svThumb.style.top = top;
     if (opts.commit) {
-      setInputValue(state, colorString, true);
+      const fill = alphaPercent === 0 ? { type: "none" } : { type: "color", color: colorString };
+      setInputValue(state, fill, true);
     }
-    const isInvalid = state.root.dataset.invalid === "true";
-    if (isInvalid) {
-      updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
-    } else if (alphaPercent === 0) {
-      updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
-    } else {
-      const label = alphaPercent < 100 ? `${alphaPercent}%` : "";
-      updateHeader(state, { text: label, muted: false, chipColor: colorString });
+    if (shouldUpdateHeader) {
+      const isInvalid = state.root.dataset.invalid === "true";
+      if (isInvalid) {
+        updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
+      } else if (alphaPercent === 0) {
+        updateHeader(state, { text: "", muted: true, chipColor: null, noneChip: true });
+      } else {
+        const label = alphaPercent < 100 ? `${alphaPercent}%` : "";
+        updateHeader(state, { text: label, muted: false, chipColor: colorString });
+      }
     }
     if (state.colorPreview) {
       state.colorPreview.style.backgroundColor = colorString;
     }
-    if (state.removeFillAction) {
-      const isEmpty = alphaPercent === 0;
-      state.removeFillAction.disabled = isEmpty;
-      if (state.removeFillLabel) {
-        state.removeFillLabel.textContent = isEmpty ? "No fill to remove" : "Remove fill";
-      }
+    if (shouldUpdateRemove) {
+      setRemoveFillState(state, alphaPercent === 0);
     }
     const normalizedCurrent = normalizeHex(hex);
     state.swatches.forEach((swatch) => {
+      if (getSwatchTarget(swatch) !== "color") return;
       const swatchHex = normalizeHex(swatch.dataset.color || "");
       const match = Boolean(normalizedCurrent && swatchHex && swatchHex === normalizedCurrent);
       swatch.classList.toggle("is-selected", match);
@@ -491,30 +1094,63 @@ var Dieter = (() => {
       }
     }
   }
-  function wireModes(state) {
-    const { root, headerLabel } = state;
-    const buttons = Array.from(root.querySelectorAll(".diet-dropdown-fill__mode-btn"));
-    if (!buttons.length) return;
-    const setMode = (mode) => {
-      root.dataset.mode = mode;
-      buttons.forEach((btn) => {
-        const isActive = btn.dataset.mode === mode;
-        btn.classList.toggle("is-active", isActive);
-        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  function setMode(state, mode) {
+    const next = state.allowedModes.includes(mode) ? mode : state.allowedModes[0] || "color";
+    state.mode = next;
+    state.root.dataset.mode = next;
+    state.root.dataset.hasModes = state.allowedModes.length > 1 ? "true" : "false";
+    const buttons = Array.from(state.root.querySelectorAll(".diet-dropdown-fill__mode-btn"));
+    buttons.forEach((btn) => {
+      const btnMode = btn.dataset.mode || "";
+      const isAllowed = state.allowedModes.includes(btnMode);
+      btn.hidden = !isAllowed;
+      btn.disabled = !isAllowed;
+      const isActive = isAllowed && btnMode === next;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+    if (state.headerLabel) {
+      state.headerLabel.textContent = MODE_LABELS[next] || state.headerLabel.textContent;
+    }
+  }
+  function syncModeUI(state, opts) {
+    if (state.mode === "gradient") {
+      syncGradientUI(state, opts);
+      return;
+    }
+    if (state.mode === "image") {
+      const shouldCommit = opts.commit && Boolean(state.imageSrc);
+      setImageSrc(state, state.imageSrc, {
+        commit: shouldCommit,
+        updateHeader: opts.updateHeader,
+        updateRemove: opts.updateRemove
       });
-      if (headerLabel) {
-        headerLabel.textContent = mode === "image" ? "Photo/Video fill" : "Color fill";
-      }
-    };
+      return;
+    }
+    if (state.mode === "video") {
+      const shouldCommit = opts.commit && Boolean(state.videoSrc);
+      setVideoSrc(state, state.videoSrc, {
+        commit: shouldCommit,
+        updateHeader: opts.updateHeader,
+        updateRemove: opts.updateRemove
+      });
+      return;
+    }
+    syncColorUI(state, opts);
+  }
+  function wireModes(state) {
+    const buttons = Array.from(state.root.querySelectorAll(".diet-dropdown-fill__mode-btn"));
+    if (!buttons.length) return;
     buttons.forEach((btn) => {
       btn.addEventListener("click", (event) => {
         event.preventDefault();
-        const mode = btn.dataset.mode === "image" ? "image" : "color";
-        setMode(mode);
+        const mode = btn.dataset.mode || "color";
+        setMode(state, mode);
+        syncModeUI(state, { commit: true });
       });
     });
-    const initial = root.dataset.mode === "image" ? "image" : "color";
-    setMode(initial);
+    const initial = state.root.dataset.mode || state.mode;
+    setMode(state, initial);
   }
   function parseColor(value, root) {
     const rgba = colorStringToRgba(value, root);
@@ -561,14 +1197,15 @@ var Dieter = (() => {
     return null;
   }
   function extractFileName(value) {
-    const urlMatch = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (urlMatch && urlMatch[2]) {
-      const raw = urlMatch[2];
-      const parts = raw.split("/").filter(Boolean);
-      const last = parts[parts.length - 1];
-      if (last) return last.split("?")[0];
-    }
-    return null;
+    const raw = value.trim();
+    if (!raw) return null;
+    const urlMatch = raw.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+    const source = urlMatch && urlMatch[2] ? urlMatch[2] : raw;
+    if (/^(?:data:|blob:)/i.test(source)) return null;
+    const trimmed = source.split("#")[0]?.split("?")[0] ?? "";
+    if (!trimmed) return null;
+    const parts = trimmed.split("/").filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : null;
   }
   function hexToRgba(value) {
     const raw = value.trim().replace(/^#/, "");

@@ -1,0 +1,310 @@
+---
+type Props = {
+  locale: string;
+  widget: string;
+  page: string;
+  allowedOverrides?: string[];
+};
+
+const { locale, widget, page, allowedOverrides } = Astro.props;
+const PARIS_URL = import.meta.env.PUBLIC_PARIS_URL as string | undefined;
+const overrides = Array.isArray(allowedOverrides) && allowedOverrides.length
+  ? allowedOverrides
+  : ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
+const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]+/gi, '-');
+---
+
+<div
+  class="ck-personalize"
+  id={rootId}
+  data-ck-personalize="true"
+  data-paris-url={PARIS_URL ?? ''}
+  data-widget={widget}
+  data-page={page}
+  data-locale={locale}
+  data-overrides={overrides.join(',')}
+>
+  <button class="ck-btn ck-btn--secondary ck-btn--md label-m" type="button" data-action="open">
+    Make this widget yours
+  </button>
+
+  <div class="ck-personalize__overlay" data-role="overlay" hidden>
+    <div class="ck-card ck-personalize__modal" role="dialog" aria-modal="true" aria-label="Personalize preview">
+      <div class="ck-personalize__header">
+        <div class="heading-3">Personalize this preview</div>
+        <button class="ck-btn ck-btn--secondary ck-btn--sm label-s" type="button" data-action="close">
+          Close
+        </button>
+      </div>
+
+      <p class="body-website ck-text-muted">
+        Enter a business website and we'll tailor the page copy in seconds.
+      </p>
+
+      <form class="ck-personalize__form" data-role="form">
+        <label class="ck-personalize__field">
+          <span class="label-s">Business website</span>
+          <input class="ck-personalize__input body-s" type="url" name="url" placeholder="https://example.com" required />
+        </label>
+        <button class="ck-btn ck-btn--primary ck-btn--md label-m" type="submit" data-role="submit">
+          Generate preview
+        </button>
+      </form>
+
+      <div class="ck-personalize__status body-s" data-role="status" aria-live="polite"></div>
+      <div class="ck-personalize__notes caption" data-role="notes"></div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    const roots = document.querySelectorAll('.ck-personalize[data-ck-personalize="true"]');
+    roots.forEach((root) => {
+      if (!(root instanceof HTMLElement)) return;
+      if (root.dataset.ckPreviewBound === 'true') return;
+      root.dataset.ckPreviewBound = 'true';
+
+      const parisBase = (root.dataset.parisUrl || '').replace(/\/+$/, '');
+      const widget = root.dataset.widget || '';
+      const page = root.dataset.page || '';
+      const locale = root.dataset.locale || '';
+      const allowedOverrides = (root.dataset.overrides || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const overlay = root.querySelector('[data-role="overlay"]');
+      const form = root.querySelector('[data-role="form"]');
+      const statusEl = root.querySelector('[data-role="status"]');
+      const notesEl = root.querySelector('[data-role="notes"]');
+      const submitBtn = root.querySelector('[data-role="submit"]');
+      const openBtn = root.querySelector('[data-action="open"]');
+      const closeBtn = root.querySelector('[data-action="close"]');
+
+      if (!overlay || !form || !statusEl || !notesEl || !submitBtn || !openBtn || !closeBtn) return;
+
+      const setStatus = (text, tone) => {
+        statusEl.textContent = text || '';
+        statusEl.dataset.tone = tone || '';
+      };
+
+      const setNotes = (notes) => {
+        if (!Array.isArray(notes) || notes.length === 0) {
+          notesEl.textContent = '';
+          return;
+        }
+        notesEl.textContent = notes.join(' - ');
+      };
+
+      const showOverlay = () => {
+        overlay.hidden = false;
+        setStatus('', '');
+        setNotes([]);
+      };
+
+      const hideOverlay = () => {
+        overlay.hidden = true;
+      };
+
+      const normalizeUrl = (value) => {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return '';
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return 'https://' + trimmed;
+      };
+
+      const applyOverrides = (overrides) => {
+        if (!overrides || typeof overrides !== 'object') return 0;
+        let applied = 0;
+        Object.keys(overrides).forEach((key) => {
+          const value = String(overrides[key] || '').trim();
+          if (!value) return;
+          document.querySelectorAll('[data-ck-copy="' + key + '"]').forEach((node) => {
+            if (!node.dataset.ckOriginal) {
+              node.dataset.ckOriginal = node.textContent || '';
+            }
+            node.textContent = value;
+            applied += 1;
+          });
+        });
+        return applied;
+      };
+
+      const postJson = async (url, body) => {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          const message = payload && payload.error && payload.error.message ? payload.error.message : 'Request failed';
+          throw new Error(message);
+        }
+        return payload;
+      };
+
+      const getJson = async (url) => {
+        const res = await fetch(url, { method: 'GET' });
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          const message = payload && payload.error && payload.error.message ? payload.error.message : 'Request failed';
+          throw new Error(message);
+        }
+        return payload;
+      };
+
+      const runPreview = async (rawUrl) => {
+        if (!parisBase) {
+          throw new Error('Preview is not configured (missing PUBLIC_PARIS_URL).');
+        }
+        const url = normalizeUrl(rawUrl);
+        if (!url) throw new Error('Enter a valid website URL.');
+
+        const sessionId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now());
+        const payload = await postJson(parisBase + '/api/personalization/preview', {
+          url: url,
+          locale: locale,
+          templateContext: { widget: widget, page: page },
+          allowedOverrides: allowedOverrides,
+          sessionId: sessionId,
+        });
+
+        const jobId = payload && payload.jobId ? String(payload.jobId) : '';
+        if (!jobId) throw new Error('Preview job did not return a jobId.');
+        return jobId;
+      };
+
+      const pollPreview = async (jobId) => {
+        let attempts = 0;
+        const poll = async () => {
+          attempts += 1;
+          const payload = await getJson(parisBase + '/api/personalization/preview/' + encodeURIComponent(jobId));
+          if (payload && payload.status && payload.status !== 'completed' && payload.status !== 'failed') {
+            if (attempts > 30) {
+              throw new Error('Preview is taking too long. Please try again.');
+            }
+            return null;
+          }
+          return payload;
+        };
+
+        while (true) {
+          const result = await poll();
+          if (result) return result;
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+      };
+
+      openBtn.addEventListener('click', () => {
+        showOverlay();
+      });
+
+      closeBtn.addEventListener('click', () => {
+        hideOverlay();
+      });
+
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) hideOverlay();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (!overlay.hidden) hideOverlay();
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const input = form.querySelector('input[name="url"]');
+        const value = input ? input.value : '';
+
+        submitBtn.disabled = true;
+        setStatus('Generating preview...', 'loading');
+        setNotes([]);
+
+        try {
+          const jobId = await runPreview(value);
+          setStatus('Analyzing your site...', 'loading');
+          const payload = await pollPreview(jobId);
+          if (payload && payload.status === 'failed') {
+            throw new Error('Preview failed. Try another website.');
+          }
+          const result = payload && payload.result ? payload.result : {};
+          const overrides = result && result.copyOverrides ? result.copyOverrides : {};
+          const applied = applyOverrides(overrides);
+          setStatus(
+            applied ? 'Preview applied. Scroll to see updates.' : 'Preview completed, but no updates were applied.',
+            applied ? 'success' : 'warning'
+          );
+          setNotes(result && result.notes ? result.notes : []);
+        } catch (err) {
+          setStatus(err && err.message ? err.message : 'Preview failed.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  })();
+</script>
+
+<style>
+  .ck-personalize {
+    margin-top: var(--space-3);
+  }
+
+  .ck-personalize__overlay[hidden] {
+    display: none;
+  }
+
+  .ck-personalize__overlay {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in oklab, var(--color-system-black), transparent 70%);
+    display: grid;
+    place-items: center;
+    z-index: 50;
+    padding: var(--space-5);
+  }
+
+  .ck-personalize__modal {
+    width: min(520px, 92vw);
+    padding: var(--space-6);
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .ck-personalize__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .ck-personalize__form {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .ck-personalize__field {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .ck-personalize__input {
+    width: 100%;
+    padding: 0 var(--space-3);
+    min-height: 44px;
+    border-radius: var(--control-radius-md);
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 80%);
+    background: var(--color-system-white);
+  }
+
+  .ck-personalize__status {
+    min-height: 1.2em;
+  }
+
+  .ck-personalize__status[data-tone="success"] { color: var(--color-system-green); }
+  .ck-personalize__status[data-tone="warning"] { color: var(--color-system-orange-contrast); }
+  .ck-personalize__status[data-tone="error"] { color: var(--color-system-red); }
+</style>

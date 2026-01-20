@@ -8,8 +8,8 @@ If you find a mismatch, update this document; execution continues even if docs d
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_locales`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_locales`, `workspace_business_profiles`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
@@ -99,7 +99,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `wgt_main_*` and `wgt_curated_*` → `curated_widget_instances`
 - `wgt_*_u_*` → `widget_instances`
 
-Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **cloud-dev** (one-way publish from local to cloud-dev). Production remains blocked.
+Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud-dev is read-only for curated instances. Production remains blocked.
 
 **Validation contract (fail-fast):** before writing curated instances, Paris validates `widget_type` against the Tokyo widget registry (or cached manifest) and rejects unknown types.
 
@@ -171,8 +171,10 @@ Issues an **AI Grant** that San Francisco can verify and execute under.
 
 Current repo behavior:
 - **Auth (dev/local only):** requires `Authorization: Bearer ${PARIS_DEV_JWT}`.
-- **Agent allowlist:** only known `agentId`s are accepted (e.g. `sdr.copilot`, `sdr.widget.copilot.v1`, `debug.grantProbe`).
-- **Budgets are capped server-side** (tokens/timeout/requests) to keep the edge path safe.
+- **Agent registry:** only known `agentId`s are accepted (registry-backed, with alias support; canonical IDs returned).
+- **Policy context:** `subject` + `workspaceId` determine the policy profile (defaults to `minibob` when missing).
+- **Budgets are derived from policy** and capped server-side (tokens/timeout/requests) to keep the edge path safe.
+- **AI policy capsule:** grants include `ai.profile` + `ai.allowedProviders` for SF enforcement.
 - `trace.envStage` is stamped from `ENV_STAGE` (used by San Francisco learning indexes).
 
 Request:
@@ -181,18 +183,32 @@ Request:
   "agentId": "sdr.widget.copilot.v1",
   "mode": "ops",
   "trace": { "sessionId": "anon", "instancePublicId": "wgt_..." },
+  "subject": "workspace",
+  "workspaceId": "uuid",
   "budgets": { "maxTokens": 420, "timeoutMs": 25000, "maxRequests": 2 }
 }
 ```
 
 Response:
 ```json
-{ "grant": "v1....", "exp": 1735521234, "agentId": "sdr.widget.copilot.v1" }
+{ "grant": "v1....", "exp": 1735521234, "agentId": "cs.copilot.v1" }
 ```
 
 Required env vars:
 - `AI_GRANT_HMAC_SECRET` (secret): used to sign grants
 - `ENV_STAGE` (string): `local|cloud-dev|uat|limited-ga|ga` (used for learning attribution)
+
+### Personalization Preview (acquisition, async)
+- `POST /api/personalization/preview` — issues a preview grant and creates a SF job; returns `jobId`.
+- `GET /api/personalization/preview/:jobId` — polls SF for status/result.
+- Paris is the public entrypoint; SF stores job state in KV and executes the agent.
+
+### Personalization Onboarding (workspace, async)
+- `POST /api/personalization/onboarding` — issues an onboarding grant and creates a SF job; returns `jobId`.
+- `GET /api/personalization/onboarding/:jobId` — polls SF for status/result.
+- On success, SF persists the workspace business profile in `workspace_business_profiles`.
+- `GET /api/workspaces/:workspaceId/business-profile` returns the stored profile (dev auth required).
+- `POST /api/workspaces/:workspaceId/business-profile` upserts the profile (internal; used by SF).
 
 #### `POST /api/ai/outcome`
 Forwards an outcome event to San Francisco `/v1/outcome` with a signed `x-paris-signature`.

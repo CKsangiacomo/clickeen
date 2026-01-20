@@ -75,17 +75,16 @@
     };
   }
 
-  function normalizeBackgroundFill(raw) {
+  function resolveBackgroundFill(raw) {
+    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
+      return window.CKFill.toCssBackground(raw);
+    }
     const v = typeof raw === 'string' ? raw.trim() : '';
     if (!v) return 'transparent';
-    // Allow full CSS background shorthands (colors, gradients, url(...), etc).
     if (/^url\(\s*/i.test(v)) {
-      // Ensure image fills always have a paintable fallback layer while the image decodes/loads.
-      // Without this, browsers may show the underlying page (often grey) for a frame or more.
       if (v.includes(',')) return v;
       return `${v}, linear-gradient(var(--color-system-white), var(--color-system-white))`;
     }
-    // Accept a plain URL string as a convenience (some editor flows store the primary URL only).
     if (/^(?:https?:\/\/|data:|blob:)/i.test(v)) {
       return `url("${v}") center center / cover no-repeat, linear-gradient(var(--color-system-white), var(--color-system-white))`;
     }
@@ -133,7 +132,10 @@
       throw new Error('[CKStagePod] Missing .stage/.pod wrappers for scope');
     }
 
-    stageEl.style.setProperty('--stage-bg', normalizeBackgroundFill(stageCfg.background));
+    stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
+    if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
+      window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
+    }
     const stagePads = resolvePaddingV2(stageCfg);
     applyPaddingVars(stageEl, 'stage-pad-desktop', stagePads.desktop);
     applyPaddingVars(stageEl, 'stage-pad-mobile', stagePads.mobile);
@@ -154,7 +156,10 @@
     stageEl.style.justifyContent = resolved.justify;
     stageEl.style.alignItems = resolved.alignItems;
 
-    podEl.style.setProperty('--pod-bg', normalizeBackgroundFill(podCfg.background));
+    podEl.style.setProperty('--pod-bg', resolveBackgroundFill(podCfg.background));
+    if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
+      window.CKFill.applyMediaLayer(podEl, podCfg.background, { contentEl: scopeEl });
+    }
     const podPads = resolvePaddingV2(podCfg);
     applyPaddingVars(podEl, 'pod-pad-desktop', podPads.desktop);
     applyPaddingVars(podEl, 'pod-pad-mobile', podPads.mobile);

@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 2000,
+  },
   resolve: {
     alias: {
       '@dieter': path.resolve(__dirname, '../dieter'),
@@ -252,7 +255,11 @@ export default defineConfig({
                 const u = new URL(candidate);
                 const host = u.host.toLowerCase();
                 if (host !== 'localhost:4000' && host !== '127.0.0.1:4000') return false;
-                return u.pathname.startsWith('/workspace-assets/') || u.pathname.startsWith('/widgets/');
+                return (
+                  u.pathname.startsWith('/workspace-assets/') ||
+                  u.pathname.startsWith('/curated-assets/') ||
+                  u.pathname.startsWith('/widgets/')
+                );
               } catch {
                 return false;
               }
@@ -295,7 +302,8 @@ export default defineConfig({
                   }
                   issues.push({
                     path: nodePath,
-                    message: 'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/* or /widgets/*).',
+                    message:
+                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, or /widgets/*).',
                   });
                 }
                 return;
@@ -334,7 +342,15 @@ export default defineConfig({
             if (localUrlRefs.length) {
               const cloudTokyoBase = (process.env.CK_CLOUD_TOKYO_BASE_URL || 'https://tokyo.dev.clickeen.com').trim().replace(/\/+$/, '');
               const tokyoJwt = (process.env.TOKYO_DEV_JWT || '').trim();
-              if (!tokyoJwt) {
+              const requiresUpload = localUrlRefs.some((ref) => {
+                try {
+                  const u = new URL(ref.primaryUrl);
+                  return u.pathname.startsWith('/workspace-assets/') || u.pathname.startsWith('/curated-assets/');
+                } catch {
+                  return true;
+                }
+              });
+              if (requiresUpload && !tokyoJwt) {
                 res.statusCode = 500;
                 res.end(
                   JSON.stringify({
@@ -356,21 +372,43 @@ export default defineConfig({
 
               const uploadToCloudTokyo = async (sourceUrl: string): Promise<string> => {
                 if (cache.has(sourceUrl)) return cache.get(sourceUrl)!;
+                const source = new URL(sourceUrl);
+
+                if (source.pathname.startsWith('/widgets/')) {
+                  const rewritten = `${cloudTokyoBase}${source.pathname}`;
+                  cache.set(sourceUrl, rewritten);
+                  return rewritten;
+                }
+
                 const localRes = await fetch(sourceUrl);
                 if (!localRes.ok) {
                   throw new Error(`Failed to fetch local asset (HTTP ${localRes.status}): ${sourceUrl}`);
                 }
                 const contentType = (localRes.headers.get('content-type') || '').trim() || 'application/octet-stream';
                 const bytes = await localRes.arrayBuffer();
-                const uploadRes = await fetch(`${cloudTokyoBase}/workspace-assets/upload?_t=${Date.now()}`, {
+
+                let endpoint = '';
+                const headers: Record<string, string> = {
+                  authorization: `Bearer ${tokyoJwt}`,
+                  'content-type': contentType,
+                  'x-filename': filenameFromUrl(sourceUrl),
+                  'x-variant': 'original',
+                };
+
+                if (source.pathname.startsWith('/workspace-assets/')) {
+                  endpoint = '/workspace-assets/upload';
+                  headers['x-workspace-id'] = workspaceId;
+                } else if (source.pathname.startsWith('/curated-assets/')) {
+                  endpoint = '/curated-assets/upload';
+                  headers['x-public-id'] = publicId;
+                  headers['x-widget-type'] = widgetType;
+                } else {
+                  throw new Error(`Unsupported local Tokyo asset path: ${source.pathname}`);
+                }
+
+                const uploadRes = await fetch(`${cloudTokyoBase}${endpoint}?_t=${Date.now()}`, {
                   method: 'POST',
-                  headers: {
-                    authorization: `Bearer ${tokyoJwt}`,
-                    'content-type': contentType,
-                    'x-workspace-id': workspaceId,
-                    'x-filename': filenameFromUrl(sourceUrl),
-                    'x-variant': 'original',
-                  },
+                  headers,
                   body: bytes,
                 });
                 if (!uploadRes.ok) {

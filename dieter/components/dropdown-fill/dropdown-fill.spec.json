@@ -1,6 +1,6 @@
 {
   "component": "dropdown-fill",
-  "syntax": "<tooldrawer-field type='dropdown-fill' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-fill' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' fillModes='{{FILL_MODES}}' allowImage='{{ALLOW_IMAGE}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -8,7 +8,9 @@
     "headerLabel": { "optional": true },
     "headerIcon": { "optional": true },
     "placeholder": { "optional": true, "default": "Select a fill" },
-    "value": { "optional": true }
+    "value": { "optional": true },
+    "allowImage": { "optional": true },
+    "fillModes": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "string" },
   "defaults": [
@@ -23,6 +25,8 @@
         "placeholder": "Select a fill",
         "value": "",
         "path": "",
+        "allowImage": true,
+        "fillModes": "color,gradient,image",
         "popoverLabel": "Fill options",
         "labelClass": "label-s",
         "bodyClass": "body-s",

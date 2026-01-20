@@ -18,6 +18,22 @@
 - Cloudflare Workers (edge).
 - Uses KV + R2 + Queues.
 
+## Copilot execution (shipped)
+- Endpoint: `POST /v1/execute`.
+- Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
+- Agent routing uses the registry canonical IDs (aliases accepted).
+
+## Personalization Preview (acquisition)
+- Endpoint: `POST /v1/personalization/preview` (internal, requires `PARIS_DEV_JWT`).
+- Status: `GET /v1/personalization/preview/:jobId` (internal).
+- Jobs are stored in KV with TTL; execution uses the `agent.personalization.preview.v1` policy grant.
+
+## Personalization Onboarding (workspace)
+- Endpoint: `POST /v1/personalization/onboarding` (internal, requires `PARIS_DEV_JWT`).
+- Status: `GET /v1/personalization/onboarding/:jobId` (internal).
+- Jobs are stored in KV with TTL; execution uses the `agent.personalization.onboarding.v1` policy grant.
+- On success, SF calls Paris to persist the workspace business profile.
+
 ## l10n Agent Flow (executed)
 - Triggered by `instance-l10n-generate-{env}` jobs.
 - Fetches instance config from Paris.

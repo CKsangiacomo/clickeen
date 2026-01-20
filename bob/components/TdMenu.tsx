@@ -17,6 +17,7 @@ export const DEFAULT_PANELS: Panel[] = [
   { id: 'layout', icon: 'circle.grid.2x2', label: 'Layout' },
   { id: 'typography', icon: 'character.circle', label: 'Typography' },
   { id: 'appearance', icon: 'paintbrush.pointed', label: 'Appearance' },
+  { id: 'localization', icon: 'translate', label: 'Localization' },
   { id: 'settings', icon: 'gearshape', label: 'Settings' },
 ];
 

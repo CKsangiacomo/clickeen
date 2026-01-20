@@ -9,7 +9,6 @@ type Props = {
   curatedRef?: {
     publicId: string;
     locale: string;
-    height?: string;
     title?: string;
   };
 };
@@ -35,7 +34,6 @@ const { headline, subheadline, primaryCta, secondaryCta, curatedRef } = Astro.pr
           <CuratedInstanceEmbed
             publicId={curatedRef.publicId}
             locale={curatedRef.locale}
-            height={curatedRef.height ?? '520px'}
             title={curatedRef.title ?? 'Widget preview'}
           />
         ) : (

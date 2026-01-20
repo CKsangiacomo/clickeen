@@ -1,5 +1,6 @@
 ---
 import CuratedInstanceEmbed from '../../components/CuratedInstanceEmbed.astro';
+import PersonalizationPreview from '../../components/PersonalizationPreview.astro';
 
 type Props = {
   headline: string;
@@ -9,12 +10,12 @@ type Props = {
   curatedRef?: {
     publicId: string;
     locale: string;
-    height?: string;
     title?: string;
   };
+  personalization?: { widget: string; page: string; locale: string };
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, curatedRef } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, curatedRef, personalization } = Astro.props;
 ---
 
 <section class="ck-canvas ck-heroCanvas">
@@ -24,21 +25,29 @@ const { headline, subheadline, primaryCta, secondaryCta, curatedRef } = Astro.pr
     </div>
     <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
-        <h1 class="display-2 ck-hero__title">{headline}</h1>
-        {subheadline ? <p class="body-website ck-hero__subheadline">{subheadline}</p> : null}
+        <h1 class="display-2 ck-hero__title" data-ck-copy="heroTitle">{headline}</h1>
+        {subheadline ? <p class="body-website ck-hero__subheadline" data-ck-copy="heroSubtitle">{subheadline}</p> : null}
         <div class="ck-row">
-          <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
+          <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href} data-ck-copy="ctaText">
+            {primaryCta.label}
+          </a>
           {secondaryCta ? (
             <a class="ck-btn ck-btn--secondary ck-btn--lg label-l" href={secondaryCta.href}>{secondaryCta.label}</a>
           ) : null}
         </div>
+        {personalization ? (
+          <PersonalizationPreview
+            locale={personalization.locale}
+            widget={personalization.widget}
+            page={personalization.page}
+          />
+        ) : null}
       </div>
       <div class="ck-split__b" aria-hidden="true">
         {curatedRef ? (
           <CuratedInstanceEmbed
             publicId={curatedRef.publicId}
             locale={curatedRef.locale}
-            height={curatedRef.height ?? '360px'}
             title={curatedRef.title ?? 'Widget preview'}
           />
         ) : (

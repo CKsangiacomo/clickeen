@@ -21,7 +21,9 @@ const { headline, subheadline, primaryCta } = Astro.props;
         </div>
         {primaryCta ? (
           <div class="ck-split__b">
-            <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
+            <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href} data-ck-copy="ctaText">
+              {primaryCta.label}
+            </a>
           </div>
         ) : null}
       </div>

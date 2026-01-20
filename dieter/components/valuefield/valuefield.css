@@ -1,0 +1,148 @@
+/* Dieter Valuefield - compact numeric input with left label */
+.diet-valuefield {
+  --valuefield-border-width: 1px;
+  --valuefield-input-min: var(--control-size-md, 1.5rem);
+  display: block;
+  color: var(--color-system-black);
+  width: 100%;
+}
+
+.diet-valuefield__control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-inline-size: 0;
+  padding-inline: var(--control-padding-inline);
+  box-sizing: border-box;
+}
+
+.diet-valuefield__label {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui);
+  letter-spacing: -0.02em;
+  color: var(--color-system-black);
+}
+
+.diet-valuefield__label.is-hidden {
+  display: none;
+}
+
+.diet-valuefield__input {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font: 400 var(--fs-13)/var(--lh-tight) var(--font-ui);
+  inline-size: max(
+    var(--valuefield-input-min),
+    calc(
+      var(--valuefield-ch, 1ch) +
+      (var(--control-padding-inline) * 2) +
+      (var(--valuefield-border-width) * 2)
+    )
+  );
+  min-inline-size: 0;
+  min-block-size: var(--control-size-md, 1.5rem);
+  padding-inline: var(--control-padding-inline);
+  border-radius: var(--control-radius-md, 0.375rem);
+  border: var(--valuefield-border-width) solid transparent;
+  background: var(--color-system-white);
+  box-sizing: border-box;
+  transition: background-color var(--duration-base, 160ms) ease, border-color var(--duration-base, 160ms) ease;
+  cursor: text;
+}
+
+.diet-valuefield__control:hover:not(:focus-within) .diet-valuefield__input {
+  background: color-mix(in oklab, var(--color-system-white), var(--color-system-black) 6%);
+}
+
+.diet-valuefield__input:focus-within {
+  background: var(--color-system-white);
+  border-color: var(--color-system-blue);
+}
+
+.diet-valuefield__field {
+  width: 100%;
+  min-inline-size: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-system-black);
+  font: inherit;
+  line-height: 1.2;
+  padding: 0;
+  outline: none;
+  text-align: right;
+}
+
+.diet-valuefield__field::placeholder {
+  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
+}
+
+.diet-valuefield__field:disabled {
+  cursor: not-allowed;
+  color: color-mix(in oklab, var(--color-system-black), transparent 40%);
+}
+
+.diet-valuefield__field::-webkit-outer-spin-button,
+.diet-valuefield__field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.diet-valuefield__field[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.diet-valuefield[data-size="sm"] {
+  --valuefield-input-min: var(--control-size-sm, 1.25rem);
+}
+
+.diet-valuefield[data-size="lg"] {
+  --valuefield-input-min: var(--control-size-lg, 1.75rem);
+}
+
+.diet-valuefield[data-size="sm"] .diet-valuefield__input {
+  min-block-size: var(--control-size-sm, 1.25rem);
+  border-radius: var(--control-radius-sm, 0.25rem);
+  font: 400 var(--fs-11)/var(--lh-tight) var(--font-ui);
+}
+
+.diet-valuefield[data-size="sm"] .diet-valuefield__label {
+  font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui);
+}
+
+.diet-valuefield[data-size="md"] .diet-valuefield__input {
+  min-block-size: var(--control-size-md, 1.5rem);
+  border-radius: var(--control-radius-md, 0.25rem);
+}
+
+.diet-valuefield[data-size="md"] .diet-valuefield__label {
+  font: 500 var(--fs-13)/var(--lh-tight) var(--font-ui);
+}
+
+.diet-valuefield[data-size="lg"] .diet-valuefield__input {
+  min-block-size: var(--control-size-lg, 1.75rem);
+  border-radius: var(--control-radius-lg, 0.3125rem);
+  font: 400 var(--fs-14)/var(--lh-tight) var(--font-ui);
+}
+
+.diet-valuefield[data-size="lg"] .diet-valuefield__label {
+  font: 500 var(--fs-14)/var(--lh-tight) var(--font-ui);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-valuefield__input {
+    transition: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .diet-valuefield__input {
+    background: var(--color-system-gray-5);
+  }
+}

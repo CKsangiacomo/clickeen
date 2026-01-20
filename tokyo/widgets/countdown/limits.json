@@ -27,6 +27,15 @@
       "deny": "nonempty",
       "sanitizeTo": "",
       "enforce": { "ops": "reject", "publish": "reject" }
+    },
+    {
+      "kind": "flag",
+      "key": "links.enabled",
+      "path": "actions.after.url",
+      "mode": "nonempty-string",
+      "deny": "nonempty",
+      "sanitizeTo": "",
+      "enforce": { "ops": "reject", "publish": "reject" }
     }
   ]
 }

@@ -33,6 +33,24 @@ mkdir -p "$WRANGLER_PERSIST_DIR"
 TOKYO_WORKER_INSPECTOR_PORT=9231
 PARIS_INSPECTOR_PORT=9232
 SANFRANCISCO_INSPECTOR_PORT=9233
+DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
+DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
+
+wait_for_url() {
+  local url="$1"
+  local label="$2"
+  local i
+
+  for i in $(seq 1 "$DEV_UP_HEALTH_ATTEMPTS"); do
+    if curl -sf "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep "$DEV_UP_HEALTH_INTERVAL"
+  done
+
+  echo "[dev-up] Timeout waiting for $label @ $url"
+  return 1
+}
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
   echo "[dev-up] Loading $ROOT_DIR/.env.local"
@@ -166,12 +184,7 @@ echo "[dev-up] Starting Tokyo CDN stub on 4000"
   TOKYO_PID=$!
   echo "[dev-up] Tokyo PID: $TOKYO_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:4000/healthz" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:4000/healthz" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Tokyo @ http://localhost:4000/healthz"
+if ! wait_for_url "http://localhost:4000/healthz" "Tokyo"; then
   exit 1
 fi
 
@@ -189,12 +202,7 @@ echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
   TOKYO_WORKER_PID=$!
   echo "[dev-up] Tokyo Worker PID: $TOKYO_WORKER_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:8791/healthz" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:8791/healthz" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Tokyo Worker @ http://localhost:8791/healthz"
+if ! wait_for_url "http://localhost:8791/healthz" "Tokyo Worker"; then
   exit 1
 fi
 
@@ -219,12 +227,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
   PARIS_PID=$!
   echo "[dev-up] Paris PID: $PARIS_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:3001/api/healthz" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:3001/api/healthz" >/dev/null 2>&1; then
-echo "[dev-up] Timeout waiting for Paris @ http://localhost:3001/api/healthz"
+if ! wait_for_url "http://localhost:3001/api/healthz" "Paris"; then
   exit 1
 fi
 
@@ -237,12 +240,7 @@ echo "[dev-up] Starting Venice embed runtime (3003)"
   VENICE_PID=$!
   echo "[dev-up] Venice PID: $VENICE_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:3003/dieter/tokens/tokens.css" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:3003/dieter/tokens/tokens.css" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Venice @ http://localhost:3003"
+if ! wait_for_url "http://localhost:3003/dieter/tokens/tokens.css" "Venice"; then
   exit 1
 fi
 
@@ -273,12 +271,7 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     SF_PID=$!
     echo "[dev-up] SanFrancisco PID: $SF_PID"
   )
-  for i in {1..30}; do
-    if curl -sf "http://localhost:3002/healthz" >/dev/null 2>&1; then break; fi
-    sleep 0.5
-  done
-  if ! curl -sf "http://localhost:3002/healthz" >/dev/null 2>&1; then
-    echo "[dev-up] Timeout waiting for SanFrancisco @ http://localhost:3002/healthz"
+  if ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco"; then
     exit 1
   fi
 fi
@@ -287,19 +280,14 @@ fi
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
     # Always prefer local Workers in local dev (avoid accidentally pointing at Cloudflare URLs from .env.local).
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   else
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
   fi
   BOB_PID=$!
   echo "[dev-up] Bob PID: $BOB_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:3000" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:3000" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Bob @ http://localhost:3000"
+if ! wait_for_url "http://localhost:3000" "Bob"; then
   exit 1
 fi
 
@@ -309,12 +297,7 @@ fi
   DEVSTUDIO_PID=$!
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:5173" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:5173" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for DevStudio @ http://localhost:5173"
+if ! wait_for_url "http://localhost:5173" "DevStudio"; then
   exit 1
 fi
 
@@ -325,12 +308,7 @@ echo "[dev-up] Starting Pitch Agent worker (8790)"
   PITCH_PID=$!
   echo "[dev-up] Pitch PID: $PITCH_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:8790/healthz" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:8790/healthz" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Pitch @ http://localhost:8790/healthz"
+if ! wait_for_url "http://localhost:8790/healthz" "Pitch"; then
   exit 1
 fi
 
@@ -351,12 +329,7 @@ echo "[dev-up] Starting Prague marketing site (4321)"
   PRAGUE_PID=$!
   echo "[dev-up] Prague PID: $PRAGUE_PID"
 )
-for i in {1..30}; do
-  if curl -sf "http://localhost:4321" >/dev/null 2>&1; then break; fi
-  sleep 0.5
-done
-if ! curl -sf "http://localhost:4321" >/dev/null 2>&1; then
-  echo "[dev-up] Timeout waiting for Prague @ http://localhost:4321"
+if ! wait_for_url "http://localhost:4321" "Prague"; then
   exit 1
 fi
 

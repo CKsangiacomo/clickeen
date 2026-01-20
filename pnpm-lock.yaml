@@ -190,6 +190,9 @@ importers:
 
   sanfrancisco:
     dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../tooling/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../tooling/l10n
@@ -203,6 +206,9 @@ importers:
 
   tokyo-worker:
     dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../tooling/ck-policy
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../tooling/l10n

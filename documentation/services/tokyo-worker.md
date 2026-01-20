@@ -7,25 +7,28 @@
 ## Interfaces
 - `POST /workspace-assets/upload` (auth required; writes to R2)
 - `GET /workspace-assets/**` (public, cacheable)
+- `POST /curated-assets/upload` (auth required; writes to R2)
+- `GET /curated-assets/**` (public, cacheable)
 - `POST /l10n/publish` (internal; publish or delete a locale overlay)
 - `POST /l10n/instances/:publicId/:locale` (dev auth; direct overlay write)
-- `GET /l10n/**` (public; manifest short-TTL, hashed overlays immutable)
+- `GET /l10n/**` (public; deterministic overlay paths, immutable)
 
 ## Dependencies
-- Supabase (service role) for `widget_instance_locales`
+- Supabase (service role) for `widget_instance_locales` + `l10n_publish_state`
 - Tokyo R2 bucket for artifacts
 - Paris for queueing publish jobs
 
 ## Deployment
 - Cloudflare Workers + Queues
 - Queue names: `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`)
-- Scheduled cron republish (daily, 03:00 UTC) to refresh l10n outputs.
+- Scheduled repair publishes only dirty rows (bounded; no full-table scans).
 
 ## l10n Publish Flow (executed)
 - Reads `widget_instance_locales` from Supabase.
 - Merges `ops + user_ops` (user_ops applied last).
-- Writes `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`.
-- Updates `tokyo/l10n/manifest.json` atomically.
+- Writes `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`.
+- Marks publish state clean in `l10n_publish_state`.
+- Records versions in `l10n_overlay_versions` and prunes older versions per tier.
 
 ## Local Dev
 - If `TOKYO_L10N_HTTP_BASE` is set, publishes to the Tokyo dev server over HTTP.

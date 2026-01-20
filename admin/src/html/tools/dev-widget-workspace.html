@@ -116,6 +116,11 @@
     --action-bg: var(--color-system-indigo-4);
   }
 
+  #superadmin-actions .dev-widget-workspace__action[data-tone="brown.5"],
+  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="brown.5"] {
+    --action-bg: var(--color-system-brown-5);
+  }
+
   .dev-widget-workspace-header #instance-dropdown {
     margin-left: auto;
     min-inline-size: 240px;
@@ -395,6 +400,17 @@
         <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
         <span class="diet-btn-ictxt__label body-s">Create new instance version</span>
       </button>
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="update-curated-instance"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="brown.5"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.2.counterclockwise"></span>
+        <span class="diet-btn-ictxt__label body-s">Update curated instance</span>
+      </button>
     </div>
   </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
@@ -541,6 +557,7 @@ const superadminUpdateDefaults = document.getElementById('superadmin-update-defa
 const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
 const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
 const createCuratedVersionBtn = document.getElementById('create-curated-version');
+const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
 const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
 const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
 const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
@@ -1046,7 +1063,14 @@ async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, conf
   throw new Error(`[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
 }
 
-async function exportInstanceDataFromBob({ timeoutMs = 2500, persistAssets = false } = {}) {
+async function exportInstanceDataFromBob({
+  timeoutMs = 2500,
+  persistAssets = false,
+  exportMode = 'base',
+  assetScope = 'workspace',
+  assetPublicId,
+  assetWidgetType,
+} = {}) {
   const target = iframe.contentWindow;
   if (!target) throw new Error('[DevStudio] Bob iframe not ready');
   const requestId = crypto.randomUUID();
@@ -1077,7 +1101,18 @@ async function exportInstanceDataFromBob({ timeoutMs = 2500, persistAssets = fal
     };
 
     window.addEventListener('message', onMessage);
-    target.postMessage({ type: 'devstudio:export-instance-data', requestId, persistAssets }, BOB_ORIGIN);
+    target.postMessage(
+      {
+        type: 'devstudio:export-instance-data',
+        requestId,
+        persistAssets,
+        exportMode,
+        assetScope,
+        assetPublicId,
+        assetWidgetType,
+      },
+      BOB_ORIGIN
+    );
   });
 }
 
@@ -1120,7 +1155,7 @@ function extFromMime(mime) {
   return 'bin';
 }
 
-async function uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename, variant = 'original' }) {
+async function uploadTokyoAsset({ scope, workspaceId, widgetType, publicId, blob, filename, variant = 'original' }) {
   const headers = new Headers();
   headers.set('content-type', blob.type || 'application/octet-stream');
   headers.set('x-filename', filename || 'upload.bin');
@@ -1131,6 +1166,13 @@ async function uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename
     if (!workspaceId) throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
     headers.set('x-workspace-id', workspaceId);
     endpoint = `${TOKYO_BASE}/workspace-assets/upload`;
+  } else if (scope === 'curated') {
+    if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
+    const normalized = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
+    if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
+    headers.set('x-public-id', publicId);
+    headers.set('x-widget-type', normalized);
+    endpoint = `${TOKYO_BASE}/curated-assets/upload`;
   } else if (scope === 'widget') {
     const normalized = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
     if (!normalized) throw new Error('[DevStudio] Missing widgetType for widget asset upload');
@@ -1157,7 +1199,7 @@ async function uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename
   return url;
 }
 
-async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetType }) {
+async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetType, publicId }) {
   if (!config || typeof config !== 'object') return config;
 
   const cache = new Map();
@@ -1170,7 +1212,15 @@ async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetTy
         const blob = await fetch(url).then((r) => r.blob());
         const ext = extFromMime(blob.type);
         const filename = `upload.${ext}`;
-        const uploadedUrl = await uploadTokyoAsset({ scope, workspaceId, widgetType, blob, filename, variant: 'original' });
+        const uploadedUrl = await uploadTokyoAsset({
+          scope,
+          workspaceId,
+          widgetType,
+          publicId,
+          blob,
+          filename,
+          variant: 'original',
+        });
         cache.set(url, uploadedUrl);
       }
       const uploaded = cache.get(url);
@@ -1196,14 +1246,50 @@ async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetTy
   return config;
 }
 
+function stripTokyoBaseFromConfig(config, tokyoBase) {
+  if (!config || typeof config !== 'object') return config;
+  const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
+  if (!base) return config;
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const baseRegex = new RegExp(escaped, 'g');
+
+  const visit = (node) => {
+    if (typeof node === 'string') {
+      if (!node.includes(base)) return;
+      return node.replace(baseRegex, '');
+    }
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        const replaced = visit(node[i]);
+        if (typeof replaced === 'string') node[i] = replaced;
+      }
+      return;
+    }
+    for (const [key, value] of Object.entries(node)) {
+      const replaced = visit(value);
+      if (typeof replaced === 'string') node[key] = replaced;
+    }
+  };
+
+  visit(config);
+  return config;
+}
+
 async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
-  const exported = await exportInstanceDataFromBob();
+  const publicId = `wgt_main_${widgetSlug}`;
+  const exported = await exportInstanceDataFromBob({
+    persistAssets: true,
+    exportMode: 'current',
+    assetScope: 'curated',
+    assetPublicId: publicId,
+    assetWidgetType: widgetSlug,
+  });
   const config = exported?.instanceData;
   if (!config || typeof config !== 'object') {
     throw new Error('[DevStudio] Bob export did not include instanceData');
   }
 
-  const publicId = `wgt_main_${widgetSlug}`;
   const exportedPublicId = exported?.meta?.publicId;
   if (exportedPublicId && exportedPublicId !== publicId) {
     const ok = window.confirm(
@@ -1212,13 +1298,10 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
   if (!ok) throw new Error('[DevStudio] Canceled');
   }
 
-  // Defaults are platform-owned; persist any uploads into tokyo/widgets/** (git-tracked),
-  // never into workspace-scoped storage.
-  await persistConfigAssetsToTokyo(config, { scope: 'widget', widgetType: widgetSlug });
-
   // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
   // so downstream curated instances deterministically inherit the updated baseline.
-  await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: config });
+  const defaultsForSpec = stripTokyoBaseFromConfig(cloneJson(config), TOKYO_BASE);
+  await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
   compiledCache.delete(widgetSlug);
 
   await createWorkspaceInstance({
@@ -1278,6 +1361,56 @@ async function resetMainInstanceFromJson(widgetSlug) {
     config,
     status: 'unpublished',
   });
+  return { publicId, config };
+}
+
+async function updateCuratedInstanceFromEditor(instance) {
+  if (!instance || !isCuratedPublicId(instance.publicId)) {
+    throw new Error('[DevStudio] Select a curated instance first.');
+  }
+  const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
+  const publicId = instance.publicId;
+  const exported = await exportInstanceDataFromBob({
+    persistAssets: true,
+    exportMode: 'current',
+    assetScope: 'curated',
+    assetPublicId: publicId,
+    assetWidgetType: widgetSlug,
+  });
+  const config = exported?.instanceData;
+  if (!config || typeof config !== 'object') {
+    throw new Error('[DevStudio] Bob export did not include instanceData');
+  }
+
+  const exportedPublicId = exported?.meta?.publicId;
+  if (exportedPublicId && exportedPublicId !== publicId) {
+    const ok = window.confirm(
+      `Update curated instance (${publicId}) with the currently loaded editor state (${exportedPublicId})?`
+    );
+    if (!ok) throw new Error('[DevStudio] Canceled');
+  }
+
+  const ok = window.confirm(
+    `Update curated instance ${publicId} in place? This will overwrite the current config.`
+  );
+  if (!ok) throw new Error('[DevStudio] Canceled');
+
+  await updateWorkspaceInstance({
+    workspaceId: CLICKEEN_WORKSPACE_ID,
+    publicId,
+    config,
+    status: 'unpublished',
+    meta: instance.meta ?? undefined,
+  });
+
+  await maybeAutoPromoteToCloud({
+    workspaceId: CLICKEEN_WORKSPACE_ID,
+    publicId,
+    widgetType: widgetSlug,
+    config,
+    status: 'unpublished',
+  });
+
   return { publicId, config };
 }
 
@@ -1387,7 +1520,6 @@ function closeCuratedModal() {
 async function submitCuratedModal() {
   if (!curatedModalState) return;
   if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-  const sourceConfig = await fetchInstanceConfig(currentPublicId);
   const tags = readCuratedTagSelections();
 
   let styleName = curatedModalState.styleName;
@@ -1409,6 +1541,17 @@ async function submitCuratedModal() {
   }
 
   const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug, version);
+  const exported = await exportInstanceDataFromBob({
+    persistAssets: true,
+    exportMode: 'current',
+    assetScope: 'curated',
+    assetPublicId: publicId,
+    assetWidgetType: curatedModalState.widgetSlug,
+  });
+  const sourceConfig = exported?.instanceData;
+  if (!sourceConfig || typeof sourceConfig !== 'object') {
+    throw new Error('[DevStudio] Bob export did not include instanceData');
+  }
   const meta = {
     styleName,
     styleSlug,
@@ -1420,7 +1563,7 @@ async function submitCuratedModal() {
     workspaceId: CLICKEEN_WORKSPACE_ID,
     widgetType: curatedModalState.widgetSlug,
     publicId,
-    config: sourceConfig ?? {},
+    config: sourceConfig,
     status: 'unpublished',
     meta,
   });
@@ -1429,7 +1572,7 @@ async function submitCuratedModal() {
     workspaceId: CLICKEEN_WORKSPACE_ID,
     publicId,
     widgetType: curatedModalState.widgetSlug,
-    config: sourceConfig ?? {},
+    config: sourceConfig,
     status: 'unpublished',
   });
 
@@ -1546,6 +1689,17 @@ createCuratedVersionBtn?.addEventListener('click', () => {
     }
     const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
     openCuratedModal('version', { widgetSlug, baseInstance: instance });
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+updateCuratedInstanceBtn?.addEventListener('click', async () => {
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    const instance = instances.find((inst) => inst.publicId === currentPublicId);
+    const result = await updateCuratedInstanceFromEditor(instance);
+    await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }

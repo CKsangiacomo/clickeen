@@ -172,9 +172,9 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const translateNote = (() => {
     if (!isTranslatePanel) return null;
     if (!isLocaleMode) {
-      return `Translation-only mode. Choose a locale to translate. To add or remove content, switch to Edit (${baseLocale}).`;
+      return `Translation-only mode. Choose a locale to translate. To add or remove content, switch to Content (${baseLocale}).`;
     }
-    return `Translation-only mode. To add or remove content, switch to Edit (${baseLocale}), edit, then publish to regenerate translations.`;
+    return `Translation-only mode. To add or remove content, switch to Content (${baseLocale}), edit, then publish to regenerate translations.`;
   })();
 
   const overrideLocales = useMemo(() => {
@@ -337,7 +337,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
           {overrideLabel ? (
             <div className="settings-panel__success">
               Manual overrides detected for {overrideLabel}. Auto-translation continues for other fields, and overridden
-              fields stay manual. Click "Revert to auto-translate" to remove overrides.
+              fields stay manual. Click &quot;Revert to auto-translate&quot; to remove overrides.
             </div>
           ) : null}
           {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}

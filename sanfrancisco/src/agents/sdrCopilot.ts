@@ -1,6 +1,7 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
+import { callChatCompletion } from '../ai/chat';
 
 type SdrInput = {
   sessionId: string;
@@ -11,12 +12,6 @@ export type SdrResult = {
   message: string;
   cta?: { kind: 'signup'; label: string; href: string };
   next: 'continue' | 'end';
-};
-
-type OpenAIChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
-  model?: string;
 };
 
 type SdrSession = {
@@ -37,29 +32,29 @@ function parseSdrInput(input: unknown): SdrInput {
   return { sessionId: sessionId as string, message: message as string };
 }
 
-function parseSdrResult(raw: string): SdrResult {
+function parseSdrResult(raw: string, provider: string): SdrResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model did not return valid JSON' });
+    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model did not return valid JSON' });
   }
 
-  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output must be an object' });
   const message = asString(parsed.message);
   const next = asString(parsed.next);
-  if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing message' });
-  if (next !== 'continue' && next !== 'end') throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output next must be continue|end' });
+  if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing message' });
+  if (next !== 'continue' && next !== 'end') throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output next must be continue|end' });
 
   const ctaRaw = parsed.cta;
   let cta: SdrResult['cta'];
   if (ctaRaw !== undefined) {
-    if (!isRecord(ctaRaw)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output cta must be an object' });
+    if (!isRecord(ctaRaw)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output cta must be an object' });
     const kind = asString(ctaRaw.kind);
     const label = asString(ctaRaw.label);
     const href = asString(ctaRaw.href);
     if (kind !== 'signup' || !label || !href) {
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output cta must be { kind:\"signup\", label, href }' });
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output cta must be { kind:\"signup\", label, href }' });
     }
     cta = { kind, label, href };
   }
@@ -89,19 +84,9 @@ export async function executeSdrCopilot(params: { grant: AIGrant; input: unknown
   const { grant } = params;
   const input = parseSdrInput(params.input);
 
-  if (!env.DEEPSEEK_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-  }
-
   const session = await getSession(env, input.sessionId);
   const maxTokens = getGrantMaxTokens(grant);
   const timeoutMs = getGrantTimeoutMs(grant);
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  const baseUrl = env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
-  const model = env.DEEPSEEK_MODEL ?? 'deepseek-chat';
 
   const system = [
     'You are Clickeen SDR Copilot for a public website chat.',
@@ -117,47 +102,16 @@ export async function executeSdrCopilot(params: { grant: AIGrant; input: unknown
     { role: 'user', content: input.message },
   ];
 
-  const startedAt = Date.now();
-  let responseJson: OpenAIChatResponse;
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-          'content-type': 'application/json',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature: 0.2,
-          max_tokens: maxTokens,
-        }),
-      });
-    } catch (err: unknown) {
-      const name = isRecord(err) ? asString(err.name) : null;
-      if (name === 'AbortError') {
-        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Upstream request failed' });
-    }
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: `Upstream error (${res.status}) ${text}`.trim() });
-    }
-    responseJson = (await res.json()) as OpenAIChatResponse;
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  const latencyMs = Date.now() - startedAt;
-  const content = responseJson.choices?.[0]?.message?.content;
-  if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
-
-  const result = parseSdrResult(content);
+  const { content, usage } = await callChatCompletion({
+    env,
+    grant,
+    agentId: 'sdr.copilot',
+    messages,
+    temperature: 0.2,
+    maxTokens,
+    timeoutMs,
+  });
+  const result = parseSdrResult(content, usage.provider);
 
   session.lastActiveAtMs = Date.now();
   const nextTurns: SdrSession['turns'] = [
@@ -167,14 +121,6 @@ export async function executeSdrCopilot(params: { grant: AIGrant; input: unknown
   ];
   session.turns = nextTurns.slice(-10);
   await putSession(env, session);
-
-  const usage: Usage = {
-    provider: 'deepseek',
-    model: responseJson.model ?? model,
-    promptTokens: responseJson.usage?.prompt_tokens ?? 0,
-    completionTokens: responseJson.usage?.completion_tokens ?? 0,
-    latencyMs,
-  };
 
   return { result, usage };
 }

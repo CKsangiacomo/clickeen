@@ -91,6 +91,13 @@ function normalizePublicId(raw) {
   return v;
 }
 
+function normalizeCuratedPublicId(raw) {
+  const v = normalizePublicId(raw);
+  if (!v) return null;
+  if (v.startsWith('wgt_curated_') || v.startsWith('wgt_main_')) return v;
+  return null;
+}
+
 function normalizeLocale(raw) {
   const v = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
   if (!v) return null;
@@ -502,12 +509,60 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && pathname === '/curated-assets/upload') {
+    (async () => {
+      const publicId = normalizeCuratedPublicId(req.headers['x-public-id']);
+      if (!publicId) {
+        sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
+        return;
+      }
+
+      const widgetType = normalizeWidgetType(req.headers['x-widget-type']);
+      if (!widgetType) {
+        sendJson(res, 422, { error: 'INVALID_WIDGET_TYPE' });
+        return;
+      }
+
+      const filename = String(req.headers['x-filename'] || '').trim();
+      const variant = String(req.headers['x-variant'] || 'original').trim() || 'original';
+      if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
+        sendJson(res, 422, { error: 'INVALID_VARIANT' });
+        return;
+      }
+
+      const assetId = crypto.randomUUID();
+      const body = await readRequestBody(req);
+      if (!body || body.length === 0) {
+        sendJson(res, 422, { error: 'EMPTY_BODY' });
+        return;
+      }
+
+      const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
+      const baseRel = path.posix.join('curated-assets', widgetType, publicId, assetId);
+      const relativePath = path.posix.join(baseRel, `${variant}.${ext}`);
+      const absDir = path.join(baseDir, baseRel);
+      const absPath = path.join(baseDir, relativePath);
+      ensureDir(absDir);
+      fs.writeFileSync(absPath, body);
+
+      const host = req.headers.host || `localhost:${port}`;
+      const publicUrl = `http://${host}/${relativePath}`;
+      sendJson(res, 200, { widgetType, publicId, assetId, variant, ext, relativePath, url: publicUrl });
+    })().catch((err) => {
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end(err instanceof Error ? err.message : 'Internal server error');
+    });
+    return;
+  }
+
   if (
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
     serveStatic(req, res, '/l10n/') ||
     serveStatic(req, res, '/widgets/') ||
-    serveStatic(req, res, '/workspace-assets/')
+    serveStatic(req, res, '/workspace-assets/') ||
+    serveStatic(req, res, '/curated-assets/')
   ) {
     return;
   }

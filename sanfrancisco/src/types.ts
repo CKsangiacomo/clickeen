@@ -1,3 +1,5 @@
+import type { AiGrantPolicy } from '@clickeen/ck-policy';
+
 export type GrantSubject =
   | { kind: 'anon'; sessionId: string }
   | { kind: 'user'; userId: string; workspaceId: string }
@@ -16,6 +18,7 @@ export type AIGrant = {
     maxRequests?: number;
   };
   mode: 'editor' | 'ops';
+  ai?: AiGrantPolicy;
   trace?: {
     sessionId?: string;
     instancePublicId?: string;
@@ -84,6 +87,10 @@ export type InteractionEvent = {
   occurredAtMs: number;
   subject: GrantSubject;
   trace?: AIGrant['trace'];
+  ai?: {
+    profile?: AiGrantPolicy['profile'];
+    taskClass?: string;
+  };
   input: unknown;
   result: unknown;
   usage: Usage;
@@ -102,6 +109,8 @@ export type Env = {
   TOKYO_DEV_JWT?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
+  ANTHROPIC_API_KEY?: string;
+  ANTHROPIC_MODEL?: string;
   PITCH_SERVICE_KEY?: string;
   PITCH_MODEL?: string;
   SF_KV: KVNamespace;

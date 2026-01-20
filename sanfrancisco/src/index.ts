@@ -1,4 +1,5 @@
-import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent, OutcomeAttachRequest } from './types';
+import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent, OutcomeAttachRequest, Usage } from './types';
+import { resolveAiAgent } from '@clickeen/ck-policy';
 import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
 import { executeSdrCopilot } from './agents/sdrCopilot';
@@ -7,6 +8,8 @@ import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
 import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
+import { executePersonalizationPreview, type PersonalizationPreviewInput, type PersonalizationPreviewResult } from './agents/personalizationPreview';
+import { executePersonalizationOnboarding, type PersonalizationOnboardingInput, type PersonalizationOnboardingResult } from './agents/personalizationOnboarding';
 
 const MAX_INFLIGHT_PER_ISOLATE = 8;
 let inflight = 0;
@@ -17,6 +20,109 @@ function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const s = value.trim();
   return s ? s : null;
+}
+
+function previewJobKey(jobId: string): string {
+  return `personalization:preview:${jobId}`;
+}
+
+function onboardingJobKey(jobId: string): string {
+  return `personalization:onboarding:${jobId}`;
+}
+
+function normalizeOverrideKeys(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return PREVIEW_DEFAULT_OVERRIDES.slice();
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const value of raw) {
+    if (typeof value !== 'string') continue;
+    const trimmed = value.trim();
+    if (!trimmed || !PREVIEW_OVERRIDE_KEY_RE.test(trimmed)) continue;
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= 12) break;
+  }
+  return out.length ? out : PREVIEW_DEFAULT_OVERRIDES.slice();
+}
+
+async function loadPreviewJob(env: Env, jobId: string): Promise<PreviewJobRecord | null> {
+  const stored = await env.SF_KV.get(previewJobKey(jobId), 'json').catch(() => null);
+  if (!stored || !isRecord(stored)) return null;
+  if (stored.v !== 1) return null;
+  return stored as PreviewJobRecord;
+}
+
+async function savePreviewJob(env: Env, record: PreviewJobRecord): Promise<void> {
+  await env.SF_KV.put(previewJobKey(record.jobId), JSON.stringify(record), { expirationTtl: PREVIEW_JOB_TTL_SEC });
+}
+
+async function loadOnboardingJob(env: Env, jobId: string): Promise<OnboardingJobRecord | null> {
+  const stored = await env.SF_KV.get(onboardingJobKey(jobId), 'json').catch(() => null);
+  if (!stored || !isRecord(stored)) return null;
+  if (stored.v !== 1) return null;
+  return stored as OnboardingJobRecord;
+}
+
+async function saveOnboardingJob(env: Env, record: OnboardingJobRecord): Promise<void> {
+  await env.SF_KV.put(onboardingJobKey(record.jobId), JSON.stringify(record), { expirationTtl: ONBOARDING_JOB_TTL_SEC });
+}
+
+function assertInternalAuth(request: Request, env: Env): void {
+  const expected = asTrimmedString(env.PARIS_DEV_JWT);
+  if (!expected) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing PARIS_DEV_JWT' });
+  }
+  const auth = asTrimmedString(request.headers.get('Authorization'));
+  const [scheme, token] = auth ? auth.split(' ') : [];
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing auth token' });
+  }
+  if (token.trim() !== expected) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid auth token' });
+  }
+}
+
+async function persistWorkspaceBusinessProfile(args: {
+  env: Env;
+  workspaceId: string;
+  profile: Record<string, unknown>;
+  sources?: Record<string, unknown>;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const baseUrl = asTrimmedString(args.env.PARIS_BASE_URL);
+  if (!baseUrl) {
+    return { ok: false, message: 'Missing PARIS_BASE_URL' };
+  }
+  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
+  if (!token) {
+    return { ok: false, message: 'Missing PARIS_DEV_JWT' };
+  }
+
+  const url = new URL(`/api/workspaces/${encodeURIComponent(args.workspaceId)}/business-profile`, baseUrl).toString();
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        profile: args.profile,
+        ...(args.sources ? { sources: args.sources } : {}),
+      }),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, message: `Paris request failed: ${message}` };
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    return { ok: false, message: `Paris returned ${res.status}: ${text || 'error'}` };
+  }
+
+  return { ok: true };
 }
 
 function toIsoDay(ms: number): string {
@@ -49,6 +155,51 @@ const OUTCOME_EVENTS = new Set([
   'ux_keep',
   'ux_undo',
 ]);
+
+type PreviewJobStatus = 'queued' | 'running' | 'completed' | 'failed';
+
+type PreviewJobRecord = {
+  v: 1;
+  jobId: string;
+  status: PreviewJobStatus;
+  createdAtMs: number;
+  updatedAtMs: number;
+  input: PersonalizationPreviewInput;
+  result?: PersonalizationPreviewResult;
+  usage?: Usage;
+  error?: { message: string };
+};
+
+const PREVIEW_JOB_TTL_SEC = 60 * 20;
+const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
+const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,40}$/;
+
+type OnboardingJobStatus = 'queued' | 'running' | 'completed' | 'failed';
+
+type OnboardingJobRecord = {
+  v: 1;
+  jobId: string;
+  status: OnboardingJobStatus;
+  createdAtMs: number;
+  updatedAtMs: number;
+  input: PersonalizationOnboardingInput;
+  result?: PersonalizationOnboardingResult;
+  usage?: Usage;
+  error?: { message: string };
+  persisted?: boolean;
+  persistError?: string;
+};
+
+const ONBOARDING_JOB_TTL_SEC = 60 * 30;
+
+type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Promise<{ result: unknown; usage: any }>;
+
+const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
+  'sdr.copilot': executeSdrCopilot,
+  'cs.copilot.v1': executeSdrWidgetCopilot,
+  'editor.faq.answer.v1': executeEditorFaqAnswer,
+  'debug.grantProbe': executeDebugGrantProbe,
+};
 
 function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
   if (!isRecord(value)) return false;
@@ -136,6 +287,8 @@ async function ensureD1Schema(env: Env): Promise<void> {
         promptVersion TEXT,
         policyVersion TEXT,
         dictionaryHash TEXT,
+        aiProfile TEXT,
+        taskClass TEXT,
         provider TEXT,
         model TEXT,
         latencyMs INTEGER
@@ -151,6 +304,8 @@ async function ensureD1Schema(env: Env): Promise<void> {
     };
     await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN sessionId TEXT`);
     await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN instancePublicId TEXT`);
+    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN aiProfile TEXT`);
+    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN taskClass TEXT`);
 
     await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent ON copilot_events_v1(day, agentId)`).run();
     await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage ON copilot_events_v1(day, envStage)`).run();
@@ -248,12 +403,14 @@ async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
   const provider = asTrimmedString(e.usage?.provider) ?? null;
   const model = asTrimmedString(e.usage?.model) ?? null;
   const latencyMs = typeof e.usage?.latencyMs === 'number' && Number.isFinite(e.usage.latencyMs) ? e.usage.latencyMs : null;
+  const aiProfile = asTrimmedString(e.ai?.profile) ?? null;
+  const taskClass = asTrimmedString(e.ai?.taskClass) ?? null;
 
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, provider, model, latencyMs)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         e.requestId,
@@ -276,6 +433,8 @@ async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
         promptVersion,
         policyVersion,
         dictionaryHash,
+        aiProfile,
+        taskClass,
         provider,
         model,
         latencyMs,
@@ -315,33 +474,33 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     }
 
     const grant: AIGrant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);
-    assertCap(grant, `agent:${body.agentId}`);
+    const resolvedAgent = resolveAiAgent(body.agentId);
+    if (!resolvedAgent) {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
+    }
+    const canonicalId = resolvedAgent.canonicalId;
+    assertCap(grant, `agent:${canonicalId}`);
 
     const requestId = asString(body.trace?.requestId) ?? crypto.randomUUID();
     const occurredAtMs = Date.now();
 
-    const executed =
-      body.agentId === 'sdr.copilot'
-        ? await executeSdrCopilot({ grant, input: body.input }, env)
-        : body.agentId === 'sdr.widget.copilot.v1'
-          ? await executeSdrWidgetCopilot({ grant, input: body.input }, env)
-        : body.agentId === 'editor.faq.answer.v1'
-          ? await executeEditorFaqAnswer({ grant, input: body.input }, env)
-          : body.agentId === 'debug.grantProbe'
-            ? await executeDebugGrantProbe({ grant, input: body.input }, env)
-          : null;
-
-    if (!executed) {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
+    const executor = AGENT_EXECUTORS[canonicalId];
+    if (!executor) {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${canonicalId}` });
     }
+    const executed = await executor({ grant, input: body.input }, env);
 
     const event: InteractionEvent = {
       v: 1,
       requestId,
-      agentId: body.agentId,
+      agentId: canonicalId,
       occurredAtMs,
       subject: grant.sub,
       trace: grant.trace,
+      ai: {
+        profile: grant.ai?.profile,
+        taskClass: resolvedAgent.entry.taskClass,
+      },
       input: body.input,
       result: executed.result,
       usage: executed.usage,
@@ -353,7 +512,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       }),
     );
 
-    const response: ExecuteResponse = { requestId, agentId: body.agentId, result: executed.result, usage: executed.usage };
+    const response: ExecuteResponse = { requestId, agentId: canonicalId, result: executed.result, usage: executed.usage };
     return noStore(json(response));
   } finally {
     inflight--;
@@ -505,6 +664,248 @@ async function handlePragueStringsTranslate(request: Request, env: Env): Promise
   }
 }
 
+async function runPersonalizationPreviewJob(args: { env: Env; jobId: string; grant: AIGrant; input: PersonalizationPreviewInput }): Promise<void> {
+  const existing = await loadPreviewJob(args.env, args.jobId);
+  const baseRecord: PreviewJobRecord =
+    existing ?? ({
+      v: 1,
+      jobId: args.jobId,
+      status: 'queued',
+      createdAtMs: Date.now(),
+      updatedAtMs: Date.now(),
+      input: args.input,
+    } as PreviewJobRecord);
+
+  const runningRecord: PreviewJobRecord = { ...baseRecord, status: 'running', updatedAtMs: Date.now() };
+  await savePreviewJob(args.env, runningRecord);
+
+  try {
+    const { result, usage } = await executePersonalizationPreview({ env: args.env, grant: args.grant, input: args.input });
+    const completed: PreviewJobRecord = {
+      ...runningRecord,
+      status: 'completed',
+      result,
+      usage,
+      error: undefined,
+      updatedAtMs: Date.now(),
+    };
+    await savePreviewJob(args.env, completed);
+  } catch (err) {
+    const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
+    const failed: PreviewJobRecord = {
+      ...runningRecord,
+      status: 'failed',
+      error: { message },
+      updatedAtMs: Date.now(),
+    };
+    await savePreviewJob(args.env, failed);
+  }
+}
+
+async function handlePersonalizationPreviewCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  assertInternalAuth(request, env);
+
+  const payload = await readJson(request);
+  if (!isRecord(payload)) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  const url = asTrimmedString((payload as any).url);
+  if (!url) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing url' });
+  }
+
+  const agentId = asTrimmedString((payload as any).agentId) ?? 'agent.personalization.preview.v1';
+  if (agentId !== 'agent.personalization.preview.v1') {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported agentId' });
+  }
+
+  const grantRaw = asTrimmedString((payload as any).grant);
+  if (!grantRaw) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing grant' });
+  }
+
+  const grant = await verifyGrant(grantRaw, env.AI_GRANT_HMAC_SECRET);
+  assertCap(grant, `agent:${agentId}`);
+
+  const locale = asTrimmedString((payload as any).locale);
+  const templateContext = isRecord((payload as any).templateContext) ? ((payload as any).templateContext as Record<string, unknown>) : undefined;
+  const allowedOverrides = normalizeOverrideKeys((payload as any).allowedOverrides);
+
+  const jobId = crypto.randomUUID();
+  const now = Date.now();
+  const input: PersonalizationPreviewInput = {
+    url,
+    ...(locale ? { locale } : {}),
+    ...(templateContext ? { templateContext } : {}),
+    allowedOverrides,
+  };
+
+  const record: PreviewJobRecord = {
+    v: 1,
+    jobId,
+    status: 'queued',
+    createdAtMs: now,
+    updatedAtMs: now,
+    input,
+  };
+  await savePreviewJob(env, record);
+
+  ctx.waitUntil(runPersonalizationPreviewJob({ env, jobId, grant, input }));
+  return noStore(json({ jobId }));
+}
+
+async function handlePersonalizationPreviewStatus(request: Request, env: Env, jobId: string): Promise<Response> {
+  assertInternalAuth(request, env);
+  const record = await loadPreviewJob(env, jobId);
+  if (!record) {
+    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Job not found' });
+  }
+
+  return noStore(
+    json({
+      jobId: record.jobId,
+      status: record.status,
+      ...(record.result ? { result: record.result } : {}),
+      ...(record.error ? { error: record.error } : {}),
+      updatedAtMs: record.updatedAtMs,
+    }),
+  );
+}
+
+async function runPersonalizationOnboardingJob(args: {
+  env: Env;
+  jobId: string;
+  grant: AIGrant;
+  input: PersonalizationOnboardingInput;
+}): Promise<void> {
+  const existing = await loadOnboardingJob(args.env, args.jobId);
+  const baseRecord: OnboardingJobRecord =
+    existing ?? ({
+      v: 1,
+      jobId: args.jobId,
+      status: 'queued',
+      createdAtMs: Date.now(),
+      updatedAtMs: Date.now(),
+      input: args.input,
+    } as OnboardingJobRecord);
+
+  const runningRecord: OnboardingJobRecord = { ...baseRecord, status: 'running', updatedAtMs: Date.now() };
+  await saveOnboardingJob(args.env, runningRecord);
+
+  try {
+    const { result, usage } = await executePersonalizationOnboarding({ env: args.env, grant: args.grant, input: args.input });
+    const sourcesMeta: Record<string, unknown> = {
+      sourcesUsed: result.sourcesUsed,
+      confidence: result.confidence,
+      ...(result.recommendations ? { recommendations: result.recommendations } : {}),
+      ...(result.notes ? { notes: result.notes } : {}),
+      inputUrl: args.input.url,
+      locale: args.input.locale ?? null,
+      agentId: 'agent.personalization.onboarding.v1',
+    };
+
+    const persist = await persistWorkspaceBusinessProfile({
+      env: args.env,
+      workspaceId: args.input.workspaceId,
+      profile: result.businessProfile,
+      sources: sourcesMeta,
+    });
+
+    const completed: OnboardingJobRecord = {
+      ...runningRecord,
+      status: 'completed',
+      result,
+      usage,
+      persisted: persist.ok,
+      ...(persist.ok ? {} : { persistError: persist.message }),
+      updatedAtMs: Date.now(),
+    };
+    await saveOnboardingJob(args.env, completed);
+  } catch (err) {
+    const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
+    const failed: OnboardingJobRecord = {
+      ...runningRecord,
+      status: 'failed',
+      error: { message },
+      updatedAtMs: Date.now(),
+    };
+    await saveOnboardingJob(args.env, failed);
+  }
+}
+
+async function handlePersonalizationOnboardingCreate(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  assertInternalAuth(request, env);
+
+  const payload = await readJson(request);
+  if (!isRecord(payload)) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
+  }
+
+  const grantRaw = asTrimmedString((payload as any).grant);
+  if (!grantRaw) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing grant' });
+  }
+
+  const agentId = asTrimmedString((payload as any).agentId) ?? 'agent.personalization.onboarding.v1';
+  if (agentId !== 'agent.personalization.onboarding.v1') {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Unsupported agentId' });
+  }
+
+  const workspaceId = asTrimmedString((payload as any).workspaceId);
+  const url = asTrimmedString((payload as any).url);
+  if (!workspaceId || !url) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId or url' });
+  }
+
+  const grant = await verifyGrant(grantRaw, env.AI_GRANT_HMAC_SECRET);
+  assertCap(grant, `agent:${agentId}`);
+
+  const input: PersonalizationOnboardingInput = {
+    workspaceId,
+    url,
+    ...(typeof (payload as any).locale === 'string' ? { locale: (payload as any).locale } : {}),
+    ...(typeof (payload as any).websiteDepth === 'number' ? { websiteDepth: (payload as any).websiteDepth } : {}),
+    ...(typeof (payload as any).gbpPlaceId === 'string' ? { gbpPlaceId: (payload as any).gbpPlaceId } : {}),
+    ...(typeof (payload as any).facebookPageId === 'string' ? { facebookPageId: (payload as any).facebookPageId } : {}),
+    ...(typeof (payload as any).instagramHandle === 'string' ? { instagramHandle: (payload as any).instagramHandle } : {}),
+  };
+
+  const jobId = crypto.randomUUID();
+  const now = Date.now();
+  const record: OnboardingJobRecord = {
+    v: 1,
+    jobId,
+    status: 'queued',
+    createdAtMs: now,
+    updatedAtMs: now,
+    input,
+  };
+  await saveOnboardingJob(env, record);
+
+  ctx.waitUntil(runPersonalizationOnboardingJob({ env, jobId, grant, input }));
+  return noStore(json({ jobId }));
+}
+
+async function handlePersonalizationOnboardingStatus(request: Request, env: Env, jobId: string): Promise<Response> {
+  assertInternalAuth(request, env);
+  const record = await loadOnboardingJob(env, jobId);
+  if (!record) {
+    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Job not found' });
+  }
+
+  return noStore(
+    json({
+      jobId: record.jobId,
+      status: record.status,
+      ...(record.result ? { result: record.result } : {}),
+      ...(record.error ? { error: record.error } : {}),
+      ...(record.persisted === false ? { persistError: record.persistError } : {}),
+      updatedAtMs: record.updatedAtMs,
+    }),
+  );
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -513,6 +914,22 @@ export default {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
+      if (request.method === 'POST' && url.pathname === '/v1/personalization/preview') {
+        return await handlePersonalizationPreviewCreate(request, env, ctx);
+      }
+      const previewStatusMatch = url.pathname.match(/^\/v1\/personalization\/preview\/([^/]+)$/);
+      if (previewStatusMatch && request.method === 'GET') {
+        const jobId = decodeURIComponent(previewStatusMatch[1]);
+        return await handlePersonalizationPreviewStatus(request, env, jobId);
+      }
+      if (request.method === 'POST' && url.pathname === '/v1/personalization/onboarding') {
+        return await handlePersonalizationOnboardingCreate(request, env, ctx);
+      }
+      const onboardingStatusMatch = url.pathname.match(/^\/v1\/personalization\/onboarding\/([^/]+)$/);
+      if (onboardingStatusMatch && request.method === 'GET') {
+        const jobId = decodeURIComponent(onboardingStatusMatch[1]);
+        return await handlePersonalizationOnboardingStatus(request, env, jobId);
+      }
       if (request.method === 'POST' && url.pathname === '/v1/l10n') return await handleL10nDispatch(request, env, ctx);
       if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
 

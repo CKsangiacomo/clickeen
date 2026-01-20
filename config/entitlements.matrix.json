@@ -35,6 +35,72 @@
         "tier3": null
       }
     },
+    "l10n.versions.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 0,
+        "free": 1,
+        "tier1": 3,
+        "tier2": 10,
+        "tier3": 10
+      }
+    },
+    "personalization.preview.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": true,
+        "free": true,
+        "tier1": true,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "personalization.onboarding.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": true,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "personalization.sources.website.depth": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 1,
+        "free": 1,
+        "tier1": 2,
+        "tier2": 3,
+        "tier3": 5
+      }
+    },
+    "personalization.sources.gbp.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "personalization.sources.facebook.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
     "branding.remove": {
       "kind": "flag",
       "values": {

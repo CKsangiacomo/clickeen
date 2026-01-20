@@ -2,7 +2,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,33 +25,8 @@ function prettyStableJson(value) {
   return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
-function sha8(value) {
-  return crypto.createHash('sha256').update(value).digest('hex').slice(0, 8);
-}
-
 function sha256Hex(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
-}
-
-function tryGetGitSha() {
-  const fromEnv =
-    process.env.CF_PAGES_COMMIT_SHA ||
-    process.env.GITHUB_SHA ||
-    process.env.VERCEL_GIT_COMMIT_SHA ||
-    process.env.COMMIT_SHA;
-  if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
-
-  try {
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'l10n', 'scripts/l10n/build.mjs'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    });
-    if (res.status === 0) {
-      const sha = String(res.stdout || '').trim();
-      if (sha) return sha;
-    }
-  } catch {}
-  return 'unknown';
 }
 
 function ensureDir(dir) {
@@ -222,12 +196,11 @@ function assertOverlayShape({ publicId, locale, data, allowlist }) {
   }
 }
 
-function cleanOldOutputs(outputDir, locale) {
+function cleanOldOutputs(outputDir, keepName) {
   if (!fs.existsSync(outputDir)) return;
   const files = fs.readdirSync(outputDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
   for (const file of files) {
-    if (file === `${locale}.ops.json`) continue;
-    if (file.startsWith(`${locale}.`) && file.endsWith('.ops.json')) {
+    if (file !== keepName && file.endsWith('.ops.json')) {
       fs.unlinkSync(path.join(outputDir, file));
     }
   }
@@ -235,25 +208,23 @@ function cleanOldOutputs(outputDir, locale) {
 
 async function main() {
   if (!fs.existsSync(srcRoot)) {
-    // No sources yet is fine; write an empty manifest for deterministic runtime behavior.
     ensureDir(outRoot);
-    const manifest = { v: 1, gitSha: tryGetGitSha(), instances: {} };
-    fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    console.log(`[l10n] No sources found (missing ${srcRoot}); wrote empty tokyo/l10n/manifest.json`);
+    console.log(`[l10n] No sources found (missing ${srcRoot}); nothing to build`);
     return;
   }
 
   const instancesRoot = path.join(srcRoot, 'instances');
-  const manifest = { v: 1, gitSha: tryGetGitSha(), instances: {} };
 
   ensureDir(outRoot);
   ensureDir(path.join(outRoot, 'instances'));
 
   if (!fs.existsSync(instancesRoot)) {
-    fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    console.log(`[l10n] No sources found under l10n/instances; wrote empty tokyo/l10n/manifest.json`);
+    console.log('[l10n] No sources found under l10n/instances; nothing to build');
     return;
   }
+
+  let instanceCount = 0;
+  let overlayCount = 0;
 
   const publicIds = fs
     .readdirSync(instancesRoot, { withFileTypes: true })
@@ -271,8 +242,7 @@ async function main() {
       .filter((d) => d.isFile() && d.name.endsWith('.ops.json'))
       .map((d) => d.name.replace(/\.ops\.json$/, ''))
       .sort();
-
-    const mapping = {};
+    if (!locales.length) continue;
 
     const widgetType = resolveWidgetTypeFromPublicId(publicId);
     if (!widgetType) {
@@ -280,6 +250,7 @@ async function main() {
     }
     const allowlist = loadAllowlist(widgetType);
 
+    let wroteInstance = false;
     for (const localeRaw of locales) {
       const locale = normalizeLocaleToken(localeRaw);
       if (!locale) {
@@ -290,20 +261,18 @@ async function main() {
       assertOverlayShape({ publicId, locale, data: overlay, allowlist });
 
       const stable = prettyStableJson(overlay);
-      const hash = sha8(stable);
-      const outName = `${locale}.${hash}.ops.json`;
-      cleanOldOutputs(instanceOutDir, locale);
-      fs.writeFileSync(path.join(instanceOutDir, outName), stable, 'utf8');
-      mapping[locale] = { file: outName, baseUpdatedAt: overlay.baseUpdatedAt ?? null };
+      const outName = `${overlay.baseFingerprint}.ops.json`;
+      const localeOutDir = path.join(instanceOutDir, locale);
+      ensureDir(localeOutDir);
+      cleanOldOutputs(localeOutDir, outName);
+      fs.writeFileSync(path.join(localeOutDir, outName), stable, 'utf8');
+      overlayCount += 1;
+      wroteInstance = true;
     }
-
-    if (Object.keys(mapping).length) {
-      manifest.instances[publicId] = mapping;
-    }
+    if (wroteInstance) instanceCount += 1;
   }
 
-  fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`[l10n] Built ${Object.keys(manifest.instances).length} instance overlay set(s) → tokyo/l10n (gitSha=${manifest.gitSha})`);
+  console.log(`[l10n] Built ${overlayCount} overlays across ${instanceCount} instance(s) → tokyo/l10n`);
 }
 
 main().catch((err) => {

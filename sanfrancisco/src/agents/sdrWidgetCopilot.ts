@@ -1,6 +1,8 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
+import { callChatCompletion } from '../ai/chat';
+import { extractUrlCandidates, fetchSinglePageText, isBlockedFetchUrl, normalizeUrl } from '../utils/webFetch';
 import globalDictionary from '../lexicon/global_dictionary.json';
 
 type ControlSummary = {
@@ -43,12 +45,6 @@ type WidgetCopilotResult = {
     policyVersion?: string;
     dictionaryHash?: string;
   };
-};
-
-type OpenAIChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
-  model?: string;
 };
 
 type CopilotSession = {
@@ -120,246 +116,6 @@ function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: 
   return { status: Number.isFinite(code) ? code : undefined, reason: 'cloudflare_error_page' };
 }
 
-function extractUrlCandidates(text: string): string[] {
-  const urls = new Set<string>();
-  const httpRanges: Array<{ start: number; end: number }> = [];
-
-  const add = (raw: string) => {
-    const trimmed = raw.trim().replace(/[),.;]+$/g, '');
-    if (!trimmed) return;
-    urls.add(trimmed);
-  };
-
-  for (const m of text.matchAll(/\bhttps?:\/\/[^\s<>"')]+/gi)) {
-    add(m[0]);
-    if (typeof m.index === 'number') httpRanges.push({ start: m.index, end: m.index + m[0].length });
-  }
-
-  const isInsideHttpUrl = (index: number) => httpRanges.some((r) => index >= r.start && index < r.end);
-
-  // Bare domains (optionally with a path). Avoid emails.
-  for (const m of text.matchAll(/\b(?![\w.+-]+@)([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/gi)) {
-    if (typeof m.index === 'number' && isInsideHttpUrl(m.index)) continue;
-    add(m[0]);
-  }
-
-  return Array.from(urls);
-}
-
-function normalizeUrl(candidate: string): URL | null {
-  const raw = candidate.trim();
-  if (!raw) return null;
-  try {
-    if (/^https?:\/\//i.test(raw)) return new URL(raw);
-    return new URL(`https://${raw}`);
-  } catch {
-    return null;
-  }
-}
-
-function isBlockedFetchUrl(url: URL): string | null {
-  const protocol = url.protocol.toLowerCase();
-  if (protocol !== 'https:' && protocol !== 'http:') return 'unsupported_protocol';
-  if (url.username || url.password) return 'userinfo_not_allowed';
-
-  const port = url.port ? Number(url.port) : protocol === 'https:' ? 443 : 80;
-  if (!Number.isFinite(port)) return 'invalid_port';
-  if (port !== 80 && port !== 443) return 'port_not_allowed';
-
-  const host = url.hostname.toLowerCase();
-  if (!host) return 'invalid_host';
-  if (host === 'localhost' || host.endsWith('.localhost')) return 'localhost_not_allowed';
-  if (host.endsWith('.local')) return 'local_domain_not_allowed';
-
-  // Block direct IPs (SSRF hard-stop). Hostnames may still resolve privately, but this is a V1 guardrail.
-  const isIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-  if (isIpv4) {
-    const parts = host.split('.').map((p) => Number(p));
-    if (parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) return 'invalid_ip';
-    const [a, b] = parts;
-    if (a === 0) return 'private_ip';
-    if (a === 10) return 'private_ip';
-    if (a === 127) return 'private_ip';
-    if (a === 169 && b === 254) return 'private_ip';
-    if (a === 172 && b >= 16 && b <= 31) return 'private_ip';
-    if (a === 192 && b === 168) return 'private_ip';
-    if (a === 100 && b >= 64 && b <= 127) return 'private_ip';
-    return null;
-  }
-
-  const isIpv6 = host.includes(':');
-  if (isIpv6) {
-    if (host === '::1') return 'private_ip';
-    if (host.startsWith('fe80:')) return 'private_ip';
-    if (host.startsWith('fc') || host.startsWith('fd')) return 'private_ip';
-    return 'ip_not_allowed';
-  }
-
-  return null;
-}
-
-async function readResponseTextWithLimit(res: Response, maxBytes: number): Promise<{ text: string; truncated: boolean }> {
-  const reader = res.body?.getReader();
-  if (!reader) {
-    const text = await res.text();
-    if (text.length > maxBytes) return { text: text.slice(0, maxBytes), truncated: true };
-    return { text, truncated: false };
-  }
-
-  const decoder = new TextDecoder();
-  const chunks: string[] = [];
-  let received = 0;
-  let truncated = false;
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-
-    received += value.byteLength;
-    if (received > maxBytes) {
-      truncated = true;
-      const allowed = Math.max(0, value.byteLength - (received - maxBytes));
-      chunks.push(decoder.decode(value.slice(0, allowed), { stream: true }));
-      break;
-    }
-    chunks.push(decoder.decode(value, { stream: true }));
-  }
-
-  chunks.push(decoder.decode());
-  return { text: chunks.join(''), truncated };
-}
-
-function decodeHtmlEntities(input: string): string {
-  return input
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&#(\d+);/g, (_, n) => {
-      const code = Number(n);
-      if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return '';
-      try {
-        return String.fromCodePoint(code);
-      } catch {
-        return '';
-      }
-    })
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
-      const code = Number.parseInt(String(hex), 16);
-      if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return '';
-      try {
-        return String.fromCodePoint(code);
-      } catch {
-        return '';
-      }
-    });
-}
-
-function htmlToText(html: string): { title?: string; text: string } {
-  const raw = html || '';
-  const titleMatch = raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  const title = titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/\s+/g, ' ').trim()) : undefined;
-
-  let cleaned = raw;
-  cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, ' ');
-  cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, ' ');
-  cleaned = cleaned.replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ');
-
-  cleaned = cleaned.replace(/<(br|hr)\s*\/?>/gi, '\n');
-  cleaned = cleaned.replace(/<\/(p|div|section|article|header|footer|main|nav|li|h\d|pre|blockquote)>/gi, '\n');
-  cleaned = cleaned.replace(/<[^>]+>/g, ' ');
-  cleaned = decodeHtmlEntities(cleaned);
-
-  cleaned = cleaned.replace(/[ \t\r\f\v]+/g, ' ');
-  cleaned = cleaned.replace(/\n[ \t]+/g, '\n');
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  cleaned = cleaned.trim();
-
-  return { title, text: cleaned };
-}
-
-async function fetchSinglePageText(args: { url: URL; timeoutMs: number }): Promise<
-  | {
-      ok: true;
-      finalUrl: string;
-      status: number;
-      contentType: string;
-      title?: string;
-      text: string;
-      truncated: boolean;
-    }
-  | { ok: false; status?: number; message: string }
-> {
-  const maxRedirects = 3;
-  const maxBytes = 750_000;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Math.max(250, args.timeoutMs));
-
-  try {
-    let current = args.url;
-    for (let i = 0; i <= maxRedirects; i++) {
-      const blocked = isBlockedFetchUrl(current);
-      if (blocked) return { ok: false, message: `URL is not allowed (${blocked}).` };
-
-      let res: Response;
-      try {
-        res = await fetch(current.toString(), {
-          method: 'GET',
-          redirect: 'manual',
-          signal: controller.signal,
-          headers: {
-            accept: 'text/html, text/plain;q=0.9, */*;q=0.1',
-            'user-agent': 'ClickeenCopilot/1.0 (single-page-fetch)',
-          },
-        });
-      } catch (err) {
-        const name = isRecord(err) ? asString((err as any).name) : null;
-        if (name === 'AbortError') return { ok: false, message: 'Timed out fetching the page.' };
-        return { ok: false, message: 'Failed to fetch the page.' };
-      }
-
-      if ([301, 302, 303, 307, 308].includes(res.status)) {
-        const location = res.headers.get('location') || '';
-        if (!location) return { ok: false, status: res.status, message: 'Redirect response missing Location header.' };
-        try {
-          current = new URL(location, current);
-          continue;
-        } catch {
-          return { ok: false, status: res.status, message: 'Redirected to an invalid URL.' };
-        }
-      }
-
-      if (!res.ok) return { ok: false, status: res.status, message: `Request failed (HTTP ${res.status}).` };
-
-      const contentType = (res.headers.get('content-type') || '').toLowerCase();
-      const isHtml = contentType.includes('text/html');
-      const isText = contentType.includes('text/plain');
-      if (!isHtml && !isText) return { ok: false, status: res.status, message: `Unsupported content-type: ${contentType || 'unknown'}.` };
-
-      const { text: bodyText, truncated } = await readResponseTextWithLimit(res, maxBytes);
-      const extracted = isHtml ? htmlToText(bodyText) : { text: bodyText.trim() };
-      if (!extracted.text) return { ok: false, status: res.status, message: 'Page content was empty.' };
-
-      return {
-        ok: true,
-        finalUrl: current.toString(),
-        status: res.status,
-        contentType: contentType || 'unknown',
-        title: isHtml ? extracted.title : undefined,
-        text: extracted.text,
-        truncated,
-      };
-    }
-
-    return { ok: false, message: 'Too many redirects.' };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
 
 function parseJsonFromModel(raw: string): unknown {
   const trimmed = raw.trim();
@@ -625,71 +381,6 @@ type OpsValidationResult = { ok: true } | { ok: false; issues: OpsValidationIssu
 
 function isNumericString(value: string): boolean {
   return /^-?\d+(?:\.\d+)?$/.test(value.trim());
-}
-
-async function callDeepSeekChat(args: {
-  apiKey: string;
-  baseUrl: string;
-  model: string;
-  messages: Array<{ role: string; content: string }>;
-  maxTokens: number;
-  timeoutMs: number;
-  temperature: number;
-}): Promise<{ responseJson: OpenAIChatResponse; latencyMs: number }> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), args.timeoutMs);
-  const startedAt = Date.now();
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${args.baseUrl.replace(/\/+$/, '')}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${args.apiKey}`,
-          'content-type': 'application/json',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: args.model,
-          messages: args.messages,
-          temperature: args.temperature,
-          max_tokens: args.maxTokens,
-        }),
-      });
-    } catch (err: unknown) {
-      const name = isRecord(err) ? asString((err as any).name) : null;
-      if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Upstream request failed' });
-    }
-
-    if (!res.ok) {
-      let text = '';
-      try {
-        text = await res.text();
-      } catch (err: unknown) {
-        const name = isRecord(err) ? asString((err as any).name) : null;
-        if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      }
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: 'deepseek',
-        message: `Upstream error (${res.status}) ${text}`.trim(),
-      });
-    }
-
-    let responseJson: OpenAIChatResponse;
-    try {
-      responseJson = (await res.json()) as OpenAIChatResponse;
-    } catch (err: unknown) {
-      const name = isRecord(err) ? asString((err as any).name) : null;
-      if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Invalid upstream JSON' });
-    }
-
-    return { responseJson, latencyMs: Date.now() - startedAt };
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 function validateOpsAgainstControls(args: { ops: WidgetOp[]; controls: ControlSummary[] }): OpsValidationResult {
@@ -1200,10 +891,6 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         };
       }
 
-      if (!env.DEEPSEEK_API_KEY) {
-        throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-      }
-
       const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(12_000, Math.max(1_500, timeoutMs - 1_000)) });
       if (!fetchRes.ok) {
         const msg =
@@ -1241,12 +928,6 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     }
   }
 
-  if (!env.DEEPSEEK_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-  }
-
-  const baseUrl = env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
-  const model = env.DEEPSEEK_MODEL ?? 'deepseek-chat';
   const maxRequests = typeof params.grant.budgets?.maxRequests === 'number' ? params.grant.budgets.maxRequests : 1;
 
   const user = [
@@ -1297,28 +978,26 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   ];
 
   const overallStartedAt = Date.now();
-  const first = await callDeepSeekChat({
-    apiKey: env.DEEPSEEK_API_KEY,
-    baseUrl,
-    model,
+  const first = await callChatCompletion({
+    env,
+    grant: params.grant,
+    agentId: 'cs.copilot.v1',
     messages,
     temperature: 0.2,
     maxTokens,
     timeoutMs,
   });
 
-  let responseJson: OpenAIChatResponse = first.responseJson;
-  let promptTokens = responseJson.usage?.prompt_tokens ?? 0;
-  let completionTokens = responseJson.usage?.completion_tokens ?? 0;
-
-  let content = responseJson.choices?.[0]?.message?.content;
-  if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
+  let content = first.content;
+  let lastUsage = first.usage;
+  let promptTokens = lastUsage.promptTokens;
+  let completionTokens = lastUsage.completionTokens;
 
   let parsed = parseJsonFromModel(content);
-  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output must be an object' });
 
   let message = (asString(parsed.message) ?? '').trim();
-  if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing message' });
+  if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output missing message' });
 
   let opsRaw = parsed.ops;
   let ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
@@ -1360,10 +1039,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     const repairTimeoutMs = Math.min(4_000, Math.max(1_000, remainingTimeoutMs - 500));
     const repairMaxTokens = Math.min(160, maxTokens);
 
-    const repaired = await callDeepSeekChat({
-      apiKey: env.DEEPSEEK_API_KEY,
-      baseUrl,
-      model,
+    const repaired = await callChatCompletion({
+      env,
+      grant: params.grant,
+      agentId: 'cs.copilot.v1',
       messages: [
         { role: 'system', content: repairSystem },
         { role: 'user', content: repairUser },
@@ -1373,16 +1052,15 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
       timeoutMs: repairTimeoutMs,
     });
 
-    responseJson = repaired.responseJson;
-    promptTokens += responseJson.usage?.prompt_tokens ?? 0;
-    completionTokens += responseJson.usage?.completion_tokens ?? 0;
-    content = responseJson.choices?.[0]?.message?.content;
-    if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
+    lastUsage = repaired.usage;
+    promptTokens += repaired.usage.promptTokens;
+    completionTokens += repaired.usage.completionTokens;
+    content = repaired.content;
 
     parsed = parseJsonFromModel(content);
-    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output must be an object' });
     message = (asString(parsed.message) ?? '').trim();
-    if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing message' });
+    if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output missing message' });
     opsRaw = parsed.ops;
     ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
   }
@@ -1454,8 +1132,8 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   };
 
   const usage: Usage = {
-    provider: 'deepseek',
-    model: responseJson.model ?? model,
+    provider: lastUsage.provider,
+    model: lastUsage.model,
     promptTokens,
     completionTokens,
     latencyMs,

@@ -1,6 +1,7 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
+import { callChatCompletion } from '../ai/chat';
 
 type FaqCopilotAction = 'answer' | 'rewrite_question' | 'add_faqs' | 'new_section';
 
@@ -48,13 +49,7 @@ type FaqCopilotResult = {
   >;
 };
 
-type OpenAIChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
-  model?: string;
-};
-
-function parseJsonFromModel(raw: string): unknown {
+function parseJsonFromModel(raw: string, provider: string): unknown {
   const trimmed = raw.trim();
   let cleaned = trimmed;
 
@@ -89,7 +84,7 @@ function parseJsonFromModel(raw: string): unknown {
         // continue
       }
     }
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model did not return valid JSON' });
+    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model did not return valid JSON' });
   }
 }
 
@@ -213,74 +208,26 @@ function newId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
-async function deepseekChat(args: {
+async function callFaqChat(args: {
   env: Env;
   grant: AIGrant;
   system: string;
   user: string;
+  maxTokens: number;
+  timeoutMs: number;
 }): Promise<{ content: string; usage: Usage }> {
-  const { env, grant } = args;
-  if (!env.DEEPSEEK_API_KEY) throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-
-  const maxTokens = getGrantMaxTokens(grant);
-  const timeoutMs = getGrantTimeoutMs(grant);
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  const baseUrl = env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
-  const model = env.DEEPSEEK_MODEL ?? 'deepseek-chat';
-
-  const startedAt = Date.now();
-  let responseJson: OpenAIChatResponse;
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-          'content-type': 'application/json',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model,
-          temperature: 0.3,
-          max_tokens: maxTokens,
-          messages: [
-            { role: 'system', content: args.system },
-            { role: 'user', content: args.user },
-          ],
-        }),
-      });
-    } catch (err: unknown) {
-      const name = isRecord(err) ? asString((err as any).name) : null;
-      if (name === 'AbortError') throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Upstream request failed' });
-    }
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: `Upstream error (${res.status}) ${text}`.trim() });
-    }
-    responseJson = (await res.json()) as OpenAIChatResponse;
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  const latencyMs = Date.now() - startedAt;
-  const content = responseJson.choices?.[0]?.message?.content;
-  if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
-
-  const usage: Usage = {
-    provider: 'deepseek',
-    model: responseJson.model ?? model,
-    promptTokens: responseJson.usage?.prompt_tokens ?? 0,
-    completionTokens: responseJson.usage?.completion_tokens ?? 0,
-    latencyMs,
-  };
-
-  return { content, usage };
+  return callChatCompletion({
+    env: args.env,
+    grant: args.grant,
+    agentId: 'editor.faq.answer.v1',
+    messages: [
+      { role: 'system', content: args.system },
+      { role: 'user', content: args.user },
+    ],
+    temperature: 0.3,
+    maxTokens: args.maxTokens,
+    timeoutMs: args.timeoutMs,
+  });
 }
 
 function faqSystemBase(): string {
@@ -301,6 +248,8 @@ function faqSystemBase(): string {
 
 export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: unknown }, env: Env): Promise<{ result: FaqCopilotResult; usage: Usage }> {
   const input = parseFaqCopilotInput(params.input);
+  const maxTokens = getGrantMaxTokens(params.grant);
+  const timeoutMs = getGrantTimeoutMs(params.grant);
 
   if (input.action === 'answer') {
     const system = [
@@ -321,11 +270,12 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
       .filter(Boolean)
       .join('\n');
 
-    const { content, usage } = await deepseekChat({ env, grant: params.grant, system, user });
-    const parsed = parseJsonFromModel(content);
-    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+    const { content, usage } = await callFaqChat({ env, grant: params.grant, system, user, maxTokens, timeoutMs });
+    const provider = usage.provider;
+    const parsed = parseJsonFromModel(content, provider);
+    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output must be an object' });
     const answerHtml = (asString(parsed.answerHtml) ?? asString((parsed as any).answer) ?? '').trim();
-    if (!answerHtml) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing answerHtml' });
+    if (!answerHtml) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing answerHtml' });
 
     return { result: { ops: [{ op: 'set', path: input.path, value: answerHtml }] }, usage };
   }
@@ -349,11 +299,12 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
       .filter(Boolean)
       .join('\n');
 
-    const { content, usage } = await deepseekChat({ env, grant: params.grant, system, user });
-    const parsed = parseJsonFromModel(content);
-    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+    const { content, usage } = await callFaqChat({ env, grant: params.grant, system, user, maxTokens, timeoutMs });
+    const provider = usage.provider;
+    const parsed = parseJsonFromModel(content, provider);
+    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output must be an object' });
     const question = (asString((parsed as any).question) ?? '').trim();
-    if (!question) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing question' });
+    if (!question) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing question' });
 
     return { result: { ops: [{ op: 'set', path: input.path, value: question }] }, usage };
   }
@@ -379,11 +330,12 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
       .filter(Boolean)
       .join('\n');
 
-    const { content, usage } = await deepseekChat({ env, grant: params.grant, system, user });
-    const parsed = parseJsonFromModel(content);
-    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+    const { content, usage } = await callFaqChat({ env, grant: params.grant, system, user, maxTokens, timeoutMs });
+    const provider = usage.provider;
+    const parsed = parseJsonFromModel(content, provider);
+    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output must be an object' });
     const items = Array.isArray((parsed as any).items) ? ((parsed as any).items as any[]) : null;
-    if (!items || items.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing items' });
+    if (!items || items.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing items' });
 
     const ops: FaqCopilotResult['ops'] = [];
     for (let i = 0; i < Math.min(input.count, items.length); i++) {
@@ -398,7 +350,7 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
         value: { id: newId('q'), question: q, answer: a, defaultOpen: false },
       });
     }
-    if (ops.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model items were invalid' });
+    if (ops.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model items were invalid' });
 
     return { result: { ops }, usage };
   }
@@ -423,13 +375,14 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
     .filter(Boolean)
     .join('\n');
 
-  const { content, usage } = await deepseekChat({ env, grant: params.grant, system, user });
-  const parsed = parseJsonFromModel(content);
-  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output must be an object' });
+  const { content, usage } = await callFaqChat({ env, grant: params.grant, system, user, maxTokens, timeoutMs });
+  const provider = usage.provider;
+  const parsed = parseJsonFromModel(content, provider);
+  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output must be an object' });
   const title = (asString((parsed as any).title) ?? '').trim();
   const items = Array.isArray((parsed as any).items) ? ((parsed as any).items as any[]) : null;
-  if (!title) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing title' });
-  if (!items || items.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model output missing items' });
+  if (!title) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing title' });
+  if (!items || items.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model output missing items' });
 
   const faqs: Array<{ id: string; question: string; answer: string; defaultOpen: boolean }> = [];
   for (let i = 0; i < Math.min(input.count, items.length); i++) {
@@ -439,7 +392,7 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
     if (!q || !a) continue;
     faqs.push({ id: newId('q'), question: q, answer: a, defaultOpen: false });
   }
-  if (faqs.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Model items were invalid' });
+  if (faqs.length === 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Model items were invalid' });
 
   const section = { id: newId('s'), title, faqs };
   const result: FaqCopilotResult = {
@@ -447,4 +400,3 @@ export async function executeEditorFaqAnswer(params: { grant: AIGrant; input: un
   };
   return { result, usage };
 }
-

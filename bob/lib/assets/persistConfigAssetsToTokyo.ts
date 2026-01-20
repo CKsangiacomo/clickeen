@@ -1,19 +1,6 @@
 'use client';
 
-type PersistScope = 'workspace';
-
-function resolveTokyoBaseUrl(): string {
-  const raw = (process.env.NEXT_PUBLIC_TOKYO_URL || '').trim();
-  if (raw) return raw.replace(/\/+$/, '');
-
-  // Local dev fallback only. In deployed environments, missing Tokyo URL is a hard misconfiguration.
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4000';
-  }
-
-  throw new Error('[persistConfigAssetsToTokyo] Missing NEXT_PUBLIC_TOKYO_URL');
-}
+type PersistScope = 'workspace' | 'curated';
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -35,6 +22,17 @@ function replacePrimaryUrl(raw: string, nextUrl: string): string {
   return nextUrl;
 }
 
+function tryParseJsonValue(raw: string): unknown | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^[{["]/.test(trimmed)) return null;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 function isNonPersistableUrl(rawUrl: string): boolean {
   const v = String(rawUrl || '').trim();
   return /^(?:data|blob):/i.test(v);
@@ -54,34 +52,43 @@ function extFromMime(mime: string): string {
 }
 
 async function uploadTokyoAsset({
-  tokyoBaseUrl,
   scope,
   workspaceId,
+  publicId,
+  widgetType,
   blob,
   filename,
   variant = 'original',
+  uploadEndpoint,
 }: {
-  tokyoBaseUrl: string;
   scope: PersistScope;
-  workspaceId: string;
+  workspaceId?: string;
+  publicId?: string;
+  widgetType?: string;
   blob: Blob;
   filename: string;
   variant?: string;
+  uploadEndpoint: string;
 }): Promise<string> {
   const headers = new Headers();
   headers.set('content-type', blob.type || 'application/octet-stream');
   headers.set('x-filename', filename || 'upload.bin');
   headers.set('x-variant', variant);
 
-  let endpoint = '';
   if (scope === 'workspace') {
+    if (!workspaceId) throw new Error('[persistConfigAssetsToTokyo] Missing workspaceId for workspace asset upload');
     headers.set('x-workspace-id', workspaceId);
-    endpoint = `${tokyoBaseUrl.replace(/\/$/, '')}/workspace-assets/upload`;
+  } else if (scope === 'curated') {
+    if (!publicId) throw new Error('[persistConfigAssetsToTokyo] Missing publicId for curated asset upload');
+    if (!widgetType) throw new Error('[persistConfigAssetsToTokyo] Missing widgetType for curated asset upload');
+    headers.set('x-public-id', publicId);
+    headers.set('x-widget-type', widgetType);
   } else {
     throw new Error(`[persistConfigAssetsToTokyo] Unknown asset upload scope: ${String(scope)}`);
   }
 
-  const res = await fetch(`${endpoint}?_t=${Date.now()}`, { method: 'POST', headers, body: blob });
+  const endpoint = `${uploadEndpoint.replace(/\/$/, '')}?scope=${encodeURIComponent(scope)}&_t=${Date.now()}`;
+  const res = await fetch(endpoint, { method: 'POST', headers, body: blob });
   const text = await res.text().catch(() => '');
   if (!res.ok) {
     throw new Error(`[persistConfigAssetsToTokyo] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
@@ -97,14 +104,38 @@ export async function persistConfigAssetsToTokyo(
   {
     scope = 'workspace',
     workspaceId,
-    tokyoBaseUrl = resolveTokyoBaseUrl(),
-  }: { scope?: PersistScope; workspaceId: string; tokyoBaseUrl?: string }
+    publicId,
+    widgetType,
+    uploadEndpoint = '/api/assets/upload',
+  }: {
+    scope?: PersistScope;
+    workspaceId?: string;
+    publicId?: string;
+    widgetType?: string;
+    uploadEndpoint?: string;
+  }
 ): Promise<Record<string, unknown>> {
   const next = cloneJson(config);
   const cache = new Map<string, string>();
 
   const visit = async (node: unknown): Promise<string | void> => {
     if (typeof node === 'string') {
+      const parsed = tryParseJsonValue(node);
+      if (parsed != null) {
+        if (typeof parsed === 'string') {
+          const replaced = await visit(parsed);
+          if (typeof replaced === 'string') {
+            return JSON.stringify(replaced);
+          }
+          return;
+        }
+        if (parsed && typeof parsed === 'object') {
+          await visit(parsed);
+          const nextJson = JSON.stringify(parsed);
+          if (nextJson !== node) return nextJson;
+          return;
+        }
+      }
       const url = extractPrimaryUrl(node);
       if (!url || !isNonPersistableUrl(url)) return;
 
@@ -113,12 +144,14 @@ export async function persistConfigAssetsToTokyo(
         const ext = extFromMime(blob.type);
         const filename = `upload.${ext}`;
         const uploadedUrl = await uploadTokyoAsset({
-          tokyoBaseUrl,
           scope,
           workspaceId,
+          publicId,
+          widgetType,
           blob,
           filename,
           variant: 'original',
+          uploadEndpoint,
         });
         cache.set(url, uploadedUrl);
       }

@@ -14,6 +14,7 @@ function readJson(filePath) {
 }
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+const LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z0-9]+)*$/;
 
 function hasProhibitedSegment(pathStr) {
   return String(pathStr || '')
@@ -46,37 +47,57 @@ function assertOverlayShape({ ref, data }) {
 }
 
 function main() {
-  const manifestPath = path.join(outRoot, 'manifest.json');
-  if (!fs.existsSync(manifestPath)) throw new Error(`[l10n] Missing manifest: ${manifestPath}`);
-
-  const manifest = readJson(manifestPath);
-  if (!manifest || typeof manifest !== 'object' || manifest.v !== 1) {
-    throw new Error('[l10n] manifest.json must be { v: 1, ... }');
-  }
-  if (!manifest.instances || typeof manifest.instances !== 'object') {
-    throw new Error('[l10n] manifest.instances missing or invalid');
-  }
-
   const baseDir = path.join(outRoot, 'instances');
-  for (const [publicId, locales] of Object.entries(manifest.instances)) {
-    if (!locales || typeof locales !== 'object' || Array.isArray(locales)) {
-      throw new Error(`[l10n] manifest.instances.${publicId} must be an object`);
-    }
-    for (const [locale, entry] of Object.entries(locales)) {
-      const file = entry && typeof entry === 'object' ? entry.file : null;
-      if (typeof file !== 'string' || !file.trim()) {
-        throw new Error(`[l10n] manifest.instances.${publicId}.${locale}.file missing`);
+  if (!fs.existsSync(baseDir)) {
+    console.log('[l10n] OK: no instance overlays found');
+    return;
+  }
+
+  let overlayCount = 0;
+
+  const publicIds = fs
+    .readdirSync(baseDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
+    .map((d) => d.name)
+    .sort();
+
+  for (const publicId of publicIds) {
+    const instanceDir = path.join(baseDir, publicId);
+    const locales = fs
+      .readdirSync(instanceDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
+      .map((d) => d.name)
+      .sort();
+
+    for (const locale of locales) {
+      if (!LOCALE_PATTERN.test(locale)) {
+        throw new Error(`[l10n] Invalid locale folder name: ${publicId}/${locale}`);
       }
-      const filePath = path.join(baseDir, publicId, file);
-      if (!fs.existsSync(filePath)) {
-        throw new Error(`[l10n] Missing overlay file for ${publicId}/${locale}: ${filePath}`);
+      const localeDir = path.join(instanceDir, locale);
+      const files = fs
+        .readdirSync(localeDir, { withFileTypes: true })
+        .filter((d) => d.isFile() && d.name.endsWith('.ops.json'))
+        .map((d) => d.name)
+        .sort();
+
+      if (!files.length) {
+        throw new Error(`[l10n] Missing overlay file for ${publicId}/${locale}`);
       }
-      const data = readJson(filePath);
-      assertOverlayShape({ ref: `${publicId}/${locale}`, data });
+
+      for (const file of files) {
+        const filePath = path.join(localeDir, file);
+        const data = readJson(filePath);
+        assertOverlayShape({ ref: `${publicId}/${locale}`, data });
+        const expected = `${data.baseFingerprint}.ops.json`;
+        if (file !== expected) {
+          throw new Error(`[l10n] ${publicId}/${locale}: file name must be ${expected}`);
+        }
+        overlayCount += 1;
+      }
     }
   }
 
-  console.log('[l10n] OK: manifest + overlays validated');
+  console.log(`[l10n] OK: validated ${overlayCount} overlay file(s)`);
 }
 
 main();

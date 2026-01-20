@@ -18,6 +18,7 @@ import {
   hydrateTextrename,
   hydrateTextedit,
   hydrateTextfield,
+  hydrateValuefield,
 } from '@dieter/components';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, getTypographySampleText } from './data/typography';
@@ -119,6 +120,7 @@ function hydrateIcons(scope: ParentNode) {
 function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydrateChoiceTiles(scope);
   hydrateTextfield(scope);
+  hydrateValuefield(scope);
   hydrateTextedit(scope);
   hydrateTextrename(scope);
   hydrateDropdownActions(scope);

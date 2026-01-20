@@ -44,11 +44,23 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       }
       return { allow: true };
     }
+    case 'embed.seoGeo.toggle': {
+      if (policy.flags['seoGeo.enabled'] !== true) {
+        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.embed.seoGeo' };
+      }
+      return { allow: true };
+    }
     case 'platform.upload': {
       const uploadBudget = policy.budgets['budget.uploads'];
       if (uploadBudget && uploadBudget.max === 0) {
         return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.platform.uploads' };
       }
+      return { allow: true };
+    }
+    case 'widget.faq.section.add': {
+      return { allow: true };
+    }
+    case 'widget.faq.qa.add': {
       return { allow: true };
     }
     default: {

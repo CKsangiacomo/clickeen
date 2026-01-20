@@ -10,8 +10,8 @@ Source path:
 - `l10n/instances/<publicId>/<locale>.ops.json`
 
 Built output:
-- `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`
-- `tokyo/l10n/manifest.json`
+- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+No global manifest is produced; consumers use deterministic baseFingerprint paths.
 
 Overlay format:
 ```json

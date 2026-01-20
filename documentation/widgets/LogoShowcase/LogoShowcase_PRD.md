@@ -173,7 +173,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
-      - value stored is a **CSS fill string** (same contract as other image fills)
+      - value stored is a **CSS fill string** (dropdown-upload legacy format, not a dropdown-fill object)
     - the popover template stays minimal (caption/name only; see Section 4)
       - selecting an image while editing is in-memory only (Data URL fill)
 
@@ -436,7 +436,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
   "appearance": {
     "logoLook": "original",
     "logoOpacity": 0.9,
-    "itemBackground": "transparent",
+    "itemBackground": { "type": "none" },
     "itemCard": {
       "radiusLinked": true,
       "radius": "4xl",
@@ -447,10 +447,10 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "border": { "enabled": false, "width": 1, "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)" },
       "shadow": { "enabled": false, "inset": false, "x": 0, "y": 8, "blur": 24, "spread": 0, "color": "#000000", "alpha": 18 }
     },
-    "titleColor": "var(--color-system-black)",
-    "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
-    "ctaBackground": "var(--color-system-blue)",
-    "ctaTextColor": "var(--color-system-white)",
+    "titleColor": { "type": "color", "color": "var(--color-system-black)" },
+    "textColor": { "type": "color", "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)" },
+    "ctaBackground": { "type": "color", "color": "var(--color-system-blue)" },
+    "ctaTextColor": { "type": "color", "color": "var(--color-system-white)" },
     "ctaRadius": "md"
   },
   "spacing": {
@@ -463,7 +463,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
   },
   "behavior": { "randomOrder": false, "showBacklink": true },
   "stage": {
-    "background": "var(--color-system-gray-5)",
+    "background": { "type": "color", "color": "var(--color-system-gray-5)" },
     "alignment": "center",
     "canvas": { "mode": "viewport", "width": 0, "height": 0 },
     "padding": {
@@ -472,7 +472,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
     }
   },
   "pod": {
-    "background": "var(--color-system-white)",
+    "background": { "type": "color", "color": "var(--color-system-white)" },
     "padding": {
       "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
       "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
@@ -496,7 +496,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
         "sizeCustom": "24px",
         "fontStyle": "normal",
         "weight": "700",
-        "color": "var(--color-system-black)"
+        "color": { "type": "color", "color": "var(--color-system-black)" }
       },
       "body": {
         "family": "Inter",
@@ -504,7 +504,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
         "sizeCustom": "14px",
         "fontStyle": "normal",
         "weight": "400",
-        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+        "color": { "type": "color", "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)" }
       }
     }
   }

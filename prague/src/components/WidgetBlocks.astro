@@ -29,6 +29,7 @@ type Props = {
 };
 
 const { blocks, widget, locale, activeSubpage = 'overview' } = Astro.props;
+const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
 const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
 const heroPrimaryCta = {
   label: pragueT(locale, 'prague.cta.createFree'),
@@ -68,9 +69,10 @@ const heroSecondaryCta =
           secondaryCta={heroSecondaryCta}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, height: '640px', title: `${widget} ${activeSubpage} hero` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero` }
               : undefined
           }
+          personalization={personalization ?? undefined}
         >
           <WidgetSubnav slot="subnav" locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
@@ -87,7 +89,7 @@ const heroSecondaryCta =
           secondaryCta={heroSecondaryCta}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
               : undefined
           }
         />
@@ -104,7 +106,7 @@ const heroSecondaryCta =
           secondaryCta={heroSecondaryCta}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
               : undefined
           }
         />
@@ -121,7 +123,7 @@ const heroSecondaryCta =
           secondaryCta={heroSecondaryCta}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, height: '520px', title: `${widget} ${activeSubpage} split` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
               : undefined
           }
         />

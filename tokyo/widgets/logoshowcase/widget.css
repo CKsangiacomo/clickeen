@@ -111,8 +111,8 @@ body {
 }
 
 .ck-logoshowcase {
-  --ls-tile-w: clamp(96px, calc(var(--ls-logo-h) * 3), 600px);
-  --ls-tile-w-mobile: var(--ls-tile-w);
+  --ls-tile-w: clamp(96px, calc(var(--ls-logo-h) * 3), 240px);
+  --ls-tile-w-mobile: clamp(80px, calc(var(--ls-logo-h-mobile) * 3), 200px);
   --ls-tile-w-resolved: var(--ls-tile-w);
   display: grid;
   gap: var(--space-6);
@@ -227,6 +227,8 @@ body {
 .ck-logoshowcase__strips {
   display: grid;
   gap: var(--ls-strip-gap);
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
@@ -237,11 +239,14 @@ body {
 
 .ck-logoshowcase__strip {
   position: relative;
+  width: 100%;
+  min-width: 0;
 }
 
 .ck-logoshowcase__strip-viewport {
   width: 100%;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .ck-logoshowcase__strip-track {

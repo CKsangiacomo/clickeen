@@ -29,6 +29,7 @@ Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace
 - Entitlement keys:
   - `l10n.enabled` (flag)
   - `l10n.locales.max` (cap)
+  - `l10n.versions.max` (cap)
 - Tier rules (V0):
   - Minibob / Free / Tier 1: ❌ no localization
   - Tier 2: ✅ up to 3 locales
@@ -55,8 +56,7 @@ Rule: catalogs are content-hashed and cacheable; the manifest is the indirection
 Use `l10n` when the surface is “content inside an instance config” (copy, headings, CTA labels, etc.).
 
 **Tokyo output**
-- `tokyo/l10n/manifest.json`
-- `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`
+- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 
@@ -64,7 +64,8 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 - Paris enqueues localization jobs on publish/update.
 - San Francisco runs the localization agent and emits set-only ops.
 - Paris stores overlays in Supabase (`widget_instance_locales`).
-- Tokyo-worker materializes overlays into Tokyo/R2 and updates the `l10n/manifest.json` indirection map.
+- Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
+- Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest).
 - Venice applies the overlay at render time (if present and not stale).
 
 **Widget allowlist (authoritative)**
@@ -76,6 +77,8 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 - `ops` = agent/manual base overlay ops.
 - `user_ops` = per-field manual overrides (set-only ops).
 - Tokyo overlay files contain the merged ops (`ops + user_ops`, user_ops applied last).
+- `l10n_overlay_versions` is the version ledger used for cleanup and future rollbacks.
+- Tokyo-worker prunes versions using the `l10n.versions.max` entitlement cap.
 
 ### Prague strings (system-owned, repo-local)
 
@@ -117,11 +120,11 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 
 ## Overlay format (set-only)
 
-Manual overlay files (dev-only):
-- `l10n/instances/<publicId>/<locale>.ops.json`
+Manual overlay sources (dev-only, repo-local):
+- `l10n/instances/<publicId>/<locale>.ops.json` (build computes `baseFingerprint`)
 
 Materialized output (Tokyo/R2):
-- `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`
+- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
 
 Example:
 ```json
@@ -160,7 +163,7 @@ This keeps “locale overlays” deterministic across file-based content (Prague
 
 We use ops overlays because they scale cleanly:
 - **No DB fan-out:** one canonical base config per instance.
-- **Cacheable at the edge:** hashed overlay files can be `immutable`.
+- **Cacheable at the edge:** baseFingerprint-named overlay files can be `immutable`.
 - **Diff-friendly:** small changes don’t require re-storing the entire JSON blob.
 - **Safe by construction:** set-only prevents structural drift and merge conflicts.
 
@@ -197,7 +200,7 @@ Apply:
 1. Paris enqueues an l10n job on publish/update.
 2. San Francisco runs the localization agent (allowlist + budgets).
 3. Paris writes overlays to Supabase (`widget_instance_locales`).
-4. Tokyo-worker publishes overlays to Tokyo/R2 and updates `tokyo/l10n/manifest.json`.
+4. Tokyo-worker publishes overlays to Tokyo/R2 using deterministic paths.
 
 Manual override (optional, dev-only for curated overlays):
 - Create/update: `l10n/instances/<publicId>/<locale>.ops.json`

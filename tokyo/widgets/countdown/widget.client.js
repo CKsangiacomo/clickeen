@@ -1,5 +1,5 @@
 // Countdown widget runtime (strict, deterministic).
-// Assumes canonical, typed state from the editor; no runtime fallbacks.
+// Assumes canonical, typed state from the editor; no runtime fallbacks/merges.
 
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -17,6 +17,11 @@
     throw new Error('[Countdown] Missing [data-role="countdown"] root');
   }
 
+  const innerEl = countdownRoot.querySelector('[data-role="inner"]');
+  if (!(innerEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing [data-role="inner"]');
+  }
+
   const headingEl = countdownRoot.querySelector('[data-role="heading"]');
   if (!(headingEl instanceof HTMLElement)) {
     throw new Error('[Countdown] Missing [data-role="heading"]');
@@ -27,6 +32,21 @@
     throw new Error('[Countdown] Missing [data-role="timer"]');
   }
 
+  const numberDisplayEl = timerEl.querySelector('[data-role="number-display"]');
+  if (!(numberDisplayEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing [data-role="number-display"]');
+  }
+
+  const numberValueEl = timerEl.querySelector('[data-role="number-value"]');
+  if (!(numberValueEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing [data-role="number-value"]');
+  }
+
+  const unitsDisplayEl = timerEl.querySelector('[data-role="units-display"]');
+  if (!(unitsDisplayEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing [data-role="units-display"]');
+  }
+
   const ctaEl = countdownRoot.querySelector('[data-role="cta"]');
   if (!(ctaEl instanceof HTMLElement)) {
     throw new Error('[Countdown] Missing [data-role="cta"]');
@@ -35,6 +55,21 @@
   const afterMsgEl = countdownRoot.querySelector('[data-role="after-message"]');
   if (!(afterMsgEl instanceof HTMLElement)) {
     throw new Error('[Countdown] Missing [data-role="after-message"]');
+  }
+
+  const afterLinkEl = afterMsgEl.querySelector('[data-role="after-link"]');
+  if (!(afterLinkEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing [data-role="after-link"]');
+  }
+
+  const stageEl = widgetRoot.closest('.stage');
+  if (!(stageEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing .stage wrapper');
+  }
+
+  const podEl = widgetRoot.closest('.pod');
+  if (!(podEl instanceof HTMLElement)) {
+    throw new Error('[Countdown] Missing .pod wrapper');
   }
 
   const assetOriginRaw = typeof window.CK_ASSET_ORIGIN === 'string' ? window.CK_ASSET_ORIGIN : '';
@@ -57,6 +92,77 @@
     return candidate || '';
   })();
   if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
+
+  const THEME_PRESETS = {
+    light: {
+      background: 'var(--color-system-white)',
+      textColor: 'var(--color-system-black)',
+      timerBoxColor: 'var(--color-system-gray-5)',
+    },
+    dark: {
+      background: 'var(--color-system-black)',
+      textColor: 'var(--color-system-white)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-gray), transparent 70%)',
+    },
+    gradient: {
+      background: 'linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))',
+      textColor: 'var(--color-system-white)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 75%)',
+    },
+    pastel: {
+      background: 'linear-gradient(135deg, var(--color-system-blue-5), var(--color-system-purple-4))',
+      textColor: 'var(--color-system-indigo-contrast)',
+      timerBoxColor: 'var(--color-system-white)',
+    },
+    halloween: {
+      background: 'color-mix(in oklab, var(--color-system-black), var(--color-system-orange) 35%)',
+      textColor: 'var(--color-system-orange)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-orange), black 80%)',
+    },
+    thanksgiving: {
+      background: 'linear-gradient(135deg, var(--color-system-brown-3), var(--color-system-orange-4))',
+      textColor: 'var(--color-system-brown-contrast)',
+      timerBoxColor: 'var(--color-system-brown-5)',
+    },
+    'black-friday': {
+      background: 'var(--color-system-black)',
+      textColor: 'var(--color-system-yellow)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-yellow), black 80%)',
+    },
+    'cyber-monday': {
+      background: 'linear-gradient(135deg, var(--color-system-indigo), var(--color-system-purple))',
+      textColor: 'var(--color-system-white)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 75%)',
+    },
+    christmas: {
+      background: 'linear-gradient(135deg, var(--color-system-red), var(--color-system-green))',
+      textColor: 'var(--color-system-white)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 70%)',
+    },
+    'new-year': {
+      background: 'linear-gradient(135deg, var(--color-system-indigo), var(--color-system-blue))',
+      textColor: 'var(--color-system-white)',
+      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 80%)',
+    },
+    valentines: {
+      background: 'linear-gradient(135deg, var(--color-system-pink-3), var(--color-system-red-4))',
+      textColor: 'var(--color-system-red-contrast)',
+      timerBoxColor: 'var(--color-system-white)',
+    },
+    easter: {
+      background: 'linear-gradient(135deg, var(--color-system-mint-4), var(--color-system-purple-4))',
+      textColor: 'var(--color-system-purple-contrast)',
+      timerBoxColor: 'var(--color-system-white)',
+    },
+    summer: {
+      background: 'linear-gradient(135deg, var(--color-system-yellow), var(--color-system-orange))',
+      textColor: 'var(--color-system-black)',
+      timerBoxColor: 'var(--color-system-white)',
+    },
+  };
+
+  const THEME_KEYS = new Set(['custom', ...Object.keys(THEME_PRESETS)]);
+  const ANIMATION_KEYS = new Set(['fade']);
 
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') {
@@ -82,6 +188,46 @@
     }
   }
 
+  function assertFill(value, path) {
+    if (typeof value === 'string') return;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`[Countdown] ${path} must be a fill`);
+    }
+    if (typeof value.type !== 'string' || !value.type.trim()) {
+      throw new Error(`[Countdown] ${path}.type must be a string`);
+    }
+  }
+
+  function parseTargetDate(raw) {
+    const value = String(raw || '').trim();
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!match) {
+      throw new Error('[Countdown] state.timer.targetDate must be ISO YYYY-MM-DDTHH:MM(:SS)');
+    }
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const hour = Number(match[4]);
+    const minute = Number(match[5]);
+    const second = match[6] ? Number(match[6]) : 0;
+    if (month < 1 || month > 12) throw new Error('[Countdown] state.timer.targetDate month must be 1..12');
+    if (day < 1 || day > 31) throw new Error('[Countdown] state.timer.targetDate day must be 1..31');
+    if (hour < 0 || hour > 23) throw new Error('[Countdown] state.timer.targetDate hour must be 0..23');
+    if (minute < 0 || minute > 59) throw new Error('[Countdown] state.timer.targetDate minute must be 0..59');
+    if (second < 0 || second > 59) throw new Error('[Countdown] state.timer.targetDate second must be 0..59');
+    return { year, month, day, hour, minute, second };
+  }
+
+  function isValidTimeZone(value) {
+    if (!value || typeof value !== 'string') return false;
+    try {
+      Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function assertCountdownState(state) {
     assertObject(state, 'state');
     assertObject(state.timer, 'state.timer');
@@ -92,12 +238,21 @@
     if (state.timer.mode === 'date') {
       assertString(state.timer.targetDate, 'state.timer.targetDate');
       assertString(state.timer.timezone, 'state.timer.timezone');
+      parseTargetDate(state.timer.targetDate);
+      if (state.timer.timezone !== 'browser' && !isValidTimeZone(state.timer.timezone)) {
+        throw new Error('[Countdown] state.timer.timezone must be a valid IANA timezone or "browser"');
+      }
     } else if (state.timer.mode === 'personal') {
       assertNumber(state.timer.timeAmount, 'state.timer.timeAmount');
+      if (state.timer.timeAmount <= 0) {
+        throw new Error('[Countdown] state.timer.timeAmount must be > 0');
+      }
       if (!['minutes', 'hours', 'days', 'weeks', 'months'].includes(state.timer.timeUnit)) {
         throw new Error('[Countdown] state.timer.timeUnit must be minutes|hours|days|weeks|months');
       }
-      assertString(state.timer.repeat, 'state.timer.repeat');
+      if (!['never', '1 minute', '5 minutes', '1 hour', '1 day', '1 week'].includes(state.timer.repeat)) {
+        throw new Error('[Countdown] state.timer.repeat must be never|1 minute|5 minutes|1 hour|1 day|1 week');
+      }
     } else if (state.timer.mode === 'number') {
       assertNumber(state.timer.targetNumber, 'state.timer.targetNumber');
       assertNumber(state.timer.startingNumber, 'state.timer.startingNumber');
@@ -107,19 +262,33 @@
       }
     }
     assertObject(state.layout, 'state.layout');
-    if (!['inline', 'sticky-top', 'sticky-bottom'].includes(state.layout.position)) {
-      throw new Error('[Countdown] state.layout.position must be inline|sticky-top|sticky-bottom');
+    if (!['inline', 'full-width', 'top-bar', 'bottom-bar', 'static-top'].includes(state.layout.position)) {
+      throw new Error('[Countdown] state.layout.position must be inline|full-width|top-bar|bottom-bar|static-top');
     }
-    if (!['auto', 'full'].includes(state.layout.width)) {
-      throw new Error('[Countdown] state.layout.width must be auto|full');
+    if (!['auto', 'full', 'custom'].includes(state.layout.width)) {
+      throw new Error('[Countdown] state.layout.width must be auto|full|custom');
     }
     if (!['left', 'center', 'right'].includes(state.layout.alignment)) {
       throw new Error('[Countdown] state.layout.alignment must be left|center|right');
     }
+    if (state.layout.width === 'custom') {
+      assertNumber(state.layout.customWidth, 'state.layout.customWidth');
+      if (state.layout.customWidth <= 0) {
+        throw new Error('[Countdown] state.layout.customWidth must be > 0');
+      }
+    }
     assertObject(state.appearance, 'state.appearance');
-    assertString(state.appearance.background, 'state.appearance.background');
-    assertString(state.appearance.textColor, 'state.appearance.textColor');
-    assertString(state.appearance.timerBoxColor, 'state.appearance.timerBoxColor');
+    assertString(state.appearance.theme, 'state.appearance.theme');
+    if (!THEME_KEYS.has(state.appearance.theme)) {
+      throw new Error(`[Countdown] state.appearance.theme must be one of: ${Array.from(THEME_KEYS).join(', ')}`);
+    }
+    assertString(state.appearance.animation, 'state.appearance.animation');
+    if (!ANIMATION_KEYS.has(state.appearance.animation)) {
+      throw new Error(`[Countdown] state.appearance.animation must be one of: ${Array.from(ANIMATION_KEYS).join(', ')}`);
+    }
+    assertFill(state.appearance.background, 'state.appearance.background');
+    assertFill(state.appearance.textColor, 'state.appearance.textColor');
+    assertFill(state.appearance.timerBoxColor, 'state.appearance.timerBoxColor');
     assertString(state.appearance.separator, 'state.appearance.separator');
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
@@ -138,10 +307,8 @@
     if (!['hide', 'link'].includes(state.actions.after.type)) {
       throw new Error('[Countdown] state.actions.after.type must be hide|link');
     }
-    if (state.actions.after.type === 'link') {
-      assertString(state.actions.after.url, 'state.actions.after.url');
-      assertString(state.actions.after.text, 'state.actions.after.text');
-    }
+    assertString(state.actions.after.url, 'state.actions.after.url');
+    assertString(state.actions.after.text, 'state.actions.after.text');
     assertObject(state.stage, 'state.stage');
     assertObject(state.pod, 'state.pod');
     assertObject(state.typography, 'state.typography');
@@ -149,8 +316,136 @@
     assertBoolean(state.seoGeo.enabled, 'state.seoGeo.enabled');
   }
 
+  function sanitizeInlineHtml(html) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = String(html);
+    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
+    wrapper.querySelectorAll('*').forEach((node) => {
+      const el = node;
+      const tag = el.tagName;
+      if (!allowed.has(tag)) {
+        const parent = el.parentNode;
+        if (!parent) return;
+        const before = el.previousSibling;
+        const after = el.nextSibling;
+        const needsSpaceBefore =
+          before &&
+          before.nodeType === Node.TEXT_NODE &&
+          before.textContent &&
+          !/\s$/.test(before.textContent);
+        const needsSpaceAfter =
+          after &&
+          after.nodeType === Node.TEXT_NODE &&
+          after.textContent &&
+          !/^\s/.test(after.textContent);
+        if (needsSpaceBefore) parent.insertBefore(document.createTextNode(' '), el);
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        if (needsSpaceAfter) parent.insertBefore(document.createTextNode(' '), el.nextSibling);
+        parent.removeChild(el);
+        return;
+      }
+
+      if (tag === 'A') {
+        const href = el.getAttribute('href') || '';
+        if (!/^(?:https?:\/\/|\/|#)/i.test(href)) {
+          el.removeAttribute('href');
+          el.removeAttribute('target');
+          el.removeAttribute('rel');
+        } else {
+          if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener');
+          else el.removeAttribute('rel');
+        }
+        Array.from(el.attributes).forEach((attr) => {
+          if (['href', 'target', 'rel'].includes(attr.name)) return;
+          if (attr.name === 'class' && /\bdiet-dropdown-edit-link\b/.test(attr.value)) return;
+          el.removeAttribute(attr.name);
+        });
+      } else {
+        Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
+      }
+    });
+    return wrapper.innerHTML;
+  }
+
+  function normalizeHref(raw) {
+    const v = String(raw || '').trim();
+    if (!v) return null;
+    if (/^(?:https?:\/\/|\/|#)/i.test(v)) return v;
+    return null;
+  }
+
+  function getTimeZoneOffset(date, timeZone) {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    const parts = dtf.formatToParts(date);
+    const map = {};
+    parts.forEach((part) => {
+      if (part.type === 'literal') return;
+      map[part.type] = part.value;
+    });
+    const asUtc = Date.UTC(
+      Number(map.year),
+      Number(map.month) - 1,
+      Number(map.day),
+      Number(map.hour),
+      Number(map.minute),
+      Number(map.second),
+    );
+    return asUtc - date.getTime();
+  }
+
+  function resolveTargetTimestamp(parts, timeZone) {
+    const { year, month, day, hour, minute, second } = parts;
+    if (timeZone === 'browser') {
+      return new Date(year, month - 1, day, hour, minute, second).getTime();
+    }
+    const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    const offset = getTimeZoneOffset(utcDate, timeZone);
+    return utcDate.getTime() - offset;
+  }
+
+  function getDurationSeconds(amount, unit) {
+    const multipliers = {
+      minutes: 60,
+      hours: 3600,
+      days: 86400,
+      weeks: 604800,
+      months: 2592000,
+    };
+    return amount * (multipliers[unit] || 3600);
+  }
+
+  function getRepeatSeconds(value) {
+    const map = {
+      never: 0,
+      '1 minute': 60,
+      '5 minutes': 300,
+      '1 hour': 3600,
+      '1 day': 86400,
+      '1 week': 604800,
+    };
+    return map[value] || 0;
+  }
+
+  function resolveStorageKey(state) {
+    const instanceId = typeof state.instanceId === 'string' ? state.instanceId.trim() : '';
+    if (instanceId) return instanceId;
+    if (resolvedPublicId) return resolvedPublicId;
+    return null;
+  }
+
   let currentAnimationFrame = null;
   let timerInterval = null;
+  let hasDuringCta = false;
+  let hasAfterLink = false;
 
   function applyState(state) {
     assertCountdownState(state);
@@ -170,106 +465,227 @@
       button: { varKey: 'button' },
     });
 
-    // Apply custom appearance vars
-    applyAppearanceVars(state, widgetRoot);
+    applyAppearanceVars(state);
+    applyLayoutVars(state);
+    applyHeading(state);
+    applyActionsDuring(state);
+    applyAfterMessage(state);
 
-    // Apply layout vars
-    applyLayoutVars(state, widgetRoot);
+    countdownRoot.setAttribute('data-mode', state.timer.mode);
 
-    // Apply behavior
-    applyBehavior(state, widgetRoot);
-
-    // Set data attributes
-    widgetRoot.setAttribute('data-mode', state.timer.mode);
-    widgetRoot.setAttribute('data-layout-position', state.layout.position);
-
-    // Toggle display modes
-    const numberDisplay = timerEl.querySelector('[data-role="number-display"]');
-    const unitsDisplay = timerEl.querySelector('[data-role="units-display"]');
     if (state.timer.mode === 'number') {
-      numberDisplay.hidden = false;
-      unitsDisplay.hidden = true;
+      numberDisplayEl.hidden = false;
+      unitsDisplayEl.hidden = true;
     } else {
-      numberDisplay.hidden = true;
-      unitsDisplay.hidden = false;
+      numberDisplayEl.hidden = true;
+      unitsDisplayEl.hidden = false;
     }
 
-    // Update heading
-    headingEl.textContent = state.timer.headline;
-
-    // Update timer
     updateTimer(state);
+  }
 
-    // Update CTA
-    if (state.actions.during.type === 'link' && state.actions.during.url) {
-      ctaEl.href = state.actions.during.url;
-      ctaEl.textContent = state.actions.during.text || 'Action';
-      ctaEl.className = `ck-countdown__cta button-${state.actions.during.style}`;
-      ctaEl.target = state.actions.during.newTab ? '_blank' : '_self';
-      ctaEl.hidden = false;
-    } else {
-      ctaEl.hidden = true;
+  function resolveFillBackground(value) {
+    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
+      return window.CKFill.toCssBackground(value);
+    }
+    return String(value ?? '');
+  }
+
+  function resolveFillColor(value) {
+    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
+      return window.CKFill.toCssColor(value);
+    }
+    return String(value ?? '');
+  }
+
+  function applyAppearanceVars(state) {
+    const theme = state.appearance.theme;
+    const preset = theme !== 'custom' ? THEME_PRESETS[theme] : null;
+    const background = resolveFillBackground(preset ? preset.background : state.appearance.background);
+    const textColor = resolveFillColor(preset ? preset.textColor : state.appearance.textColor);
+    const timerBoxColor = resolveFillBackground(preset ? preset.timerBoxColor : state.appearance.timerBoxColor);
+
+    countdownRoot.setAttribute('data-theme', theme);
+    countdownRoot.setAttribute('data-animation', state.appearance.animation);
+    countdownRoot.style.setProperty('--countdown-bg', background);
+    countdownRoot.style.setProperty('--countdown-text-color', textColor);
+    countdownRoot.style.setProperty('--countdown-timer-bg', timerBoxColor);
+
+    const separatorText = String(state.appearance.separator || ':');
+    timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {
+      el.textContent = separatorText;
+    });
+  }
+
+  function applyLayoutVars(state) {
+    const position = state.layout.position;
+    const alignment = state.layout.alignment;
+    const widthMode = state.layout.width;
+
+    countdownRoot.setAttribute('data-layout-position', position);
+    countdownRoot.setAttribute('data-layout-align', alignment);
+    countdownRoot.setAttribute('data-layout-width', widthMode);
+
+    stageEl.setAttribute('data-layout-position', position);
+    podEl.setAttribute('data-layout-position', position);
+
+    let widthValue = 'max-content';
+    if (widthMode === 'full') widthValue = '100%';
+    if (widthMode === 'custom') widthValue = `${state.layout.customWidth}px`;
+    countdownRoot.style.setProperty('--countdown-content-width', widthValue);
+  }
+
+  function applyHeading(state) {
+    const headingHtml = sanitizeInlineHtml(state.timer.headline);
+    headingEl.innerHTML = headingHtml;
+    headingEl.hidden = !headingHtml;
+  }
+
+  function applyActionsDuring(state) {
+    const href = normalizeHref(state.actions.during.url);
+    hasDuringCta = state.actions.during.type === 'link' && Boolean(href);
+
+    ctaEl.setAttribute('data-variant', state.actions.during.style);
+    ctaEl.textContent = state.actions.during.text;
+
+    if (!hasDuringCta) {
+      ctaEl.removeAttribute('href');
+      ctaEl.removeAttribute('target');
+      ctaEl.removeAttribute('rel');
+      return;
     }
 
-    // Update after message
-    if (state.actions.after.type === 'link' && state.actions.after.url) {
-      afterMsgEl.textContent = state.actions.after.text || 'Offer ended';
-      afterMsgEl.hidden = false;
+    ctaEl.setAttribute('href', href);
+    if (state.actions.during.newTab) {
+      ctaEl.setAttribute('target', '_blank');
+      ctaEl.setAttribute('rel', 'noopener');
     } else {
-      afterMsgEl.hidden = true;
+      ctaEl.setAttribute('target', '_self');
+      ctaEl.removeAttribute('rel');
     }
   }
 
+  function applyAfterMessage(state) {
+    const href = normalizeHref(state.actions.after.url);
+    hasAfterLink = state.actions.after.type === 'link' && Boolean(href);
+
+    afterLinkEl.textContent = state.actions.after.text;
+
+    if (!hasAfterLink) {
+      afterLinkEl.removeAttribute('href');
+      afterLinkEl.removeAttribute('target');
+      afterLinkEl.removeAttribute('rel');
+      return;
+    }
+
+    afterLinkEl.setAttribute('href', href);
+    afterLinkEl.setAttribute('target', '_self');
+    afterLinkEl.removeAttribute('rel');
+  }
+
+  function renderPhase(state, phase) {
+    if (phase === 'active') {
+      stageEl.hidden = false;
+      timerEl.hidden = false;
+      afterMsgEl.hidden = true;
+      ctaEl.hidden = !hasDuringCta;
+      return;
+    }
+
+    if (state.actions.after.type === 'hide') {
+      stageEl.hidden = true;
+      return;
+    }
+
+    stageEl.hidden = false;
+    timerEl.hidden = true;
+    ctaEl.hidden = true;
+    afterMsgEl.hidden = !hasAfterLink;
+  }
+
   function updateTimer(state) {
-    // Clear any existing animation/interval
     if (currentAnimationFrame) cancelAnimationFrame(currentAnimationFrame);
     if (timerInterval) clearInterval(timerInterval);
 
-    const separators = timerEl.querySelectorAll('.ck-countdown__separator');
-    separators.forEach(s => s.textContent = state.appearance.separator);
-
     if (state.timer.mode === 'date') {
-      timerInterval = setInterval(() => {
-        const now = new Date();
-        const target = new Date(state.timer.targetDate + 'Z'); // Assume UTC if not specified
-        const totalSeconds = Math.max(0, Math.floor((target - now) / 1000));
+      const targetParts = parseTargetDate(state.timer.targetDate);
+      const targetTimeMs = resolveTargetTimestamp(targetParts, state.timer.timezone);
+
+      const tick = () => {
+        const totalSeconds = Math.max(0, Math.floor((targetTimeMs - Date.now()) / 1000));
         updateUnits(totalSeconds);
-        handleEnd(state, totalSeconds === 0);
-      }, 1000);
-    } else if (state.timer.mode === 'personal') {
-      const key = `countdown_${resolvedPublicId || 'default'}`;
-      let startTime = localStorage.getItem(key);
-      if (!startTime) {
-        startTime = Date.now();
-        localStorage.setItem(key, startTime);
-      }
-      const duration = state.timer.timeAmount * getMultiplier(state.timer.timeUnit);
-      timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - parseInt(startTime)) / 1000);
-        const remaining = Math.max(0, duration - elapsed);
-        updateUnits(remaining);
-        handleEnd(state, remaining === 0);
-        if (remaining === 0 && state.timer.repeat !== 'never') {
-          // Reset for repeat
-          localStorage.setItem(key, Date.now());
+        renderPhase(state, totalSeconds === 0 ? 'ended' : 'active');
+      };
+
+      tick();
+      timerInterval = setInterval(tick, 1000);
+      return;
+    }
+
+    if (state.timer.mode === 'personal') {
+      const storageKey = resolveStorageKey(state);
+      let startMs = Date.now();
+      if (storageKey) {
+        try {
+          const stored = localStorage.getItem(`countdown_${storageKey}`);
+          if (stored) startMs = Number(stored);
+          if (!Number.isFinite(startMs)) startMs = Date.now();
+          if (!stored || !Number.isFinite(Number(stored))) {
+            localStorage.setItem(`countdown_${storageKey}`, String(startMs));
+          }
+        } catch {
+          startMs = Date.now();
         }
-      }, 1000);
-    } else if (state.timer.mode === 'number') {
+      }
+
+      const durationSeconds = getDurationSeconds(state.timer.timeAmount, state.timer.timeUnit);
+      const repeatSeconds = getRepeatSeconds(state.timer.repeat);
+      const cycleSeconds = repeatSeconds > 0 ? durationSeconds + repeatSeconds : durationSeconds;
+
+      const tick = () => {
+        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+        if (repeatSeconds > 0) {
+          const cycleElapsed = elapsedSeconds % cycleSeconds;
+          if (cycleElapsed < durationSeconds) {
+            const remaining = Math.max(0, durationSeconds - cycleElapsed);
+            updateUnits(remaining);
+            renderPhase(state, 'active');
+            return;
+          }
+          updateUnits(0);
+          renderPhase(state, 'ended');
+          return;
+        }
+
+        const remaining = Math.max(0, durationSeconds - elapsedSeconds);
+        updateUnits(remaining);
+        renderPhase(state, remaining === 0 ? 'ended' : 'active');
+      };
+
+      tick();
+      timerInterval = setInterval(tick, 1000);
+      return;
+    }
+
+    if (state.timer.mode === 'number') {
       const start = state.timer.startingNumber;
       const end = state.timer.targetNumber;
-      const duration = state.timer.countDuration * 1000; // ms
+      const durationMs = state.timer.countDuration * 1000;
       const startTime = Date.now();
+
       const animate = () => {
         const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+        const progress = Math.min(elapsed / durationMs, 1);
         const current = start + (end - start) * progress;
         updateNumber(current);
         if (progress < 1) {
           currentAnimationFrame = requestAnimationFrame(animate);
         } else {
-          handleEnd(state, true);
+          renderPhase(state, 'ended');
         }
       };
+
+      renderPhase(state, 'active');
       animate();
     }
   }
@@ -279,69 +695,19 @@
       days: Math.floor(totalSeconds / 86400),
       hours: Math.floor((totalSeconds % 86400) / 3600),
       minutes: Math.floor((totalSeconds % 3600) / 60),
-      seconds: totalSeconds % 60
+      seconds: totalSeconds % 60,
     };
-    ['days', 'hours', 'minutes', 'seconds'].forEach(unit => {
+    ['days', 'hours', 'minutes', 'seconds'].forEach((unit) => {
       const unitEl = timerEl.querySelector(`[data-unit="${unit}"]`);
-      if (unitEl) {
-        const valueEl = unitEl.querySelector('[data-role="value"]');
-        if (valueEl) {
-          valueEl.textContent = time[unit].toString().padStart(2, '0');
-        }
-      }
+      if (!unitEl) return;
+      const valueEl = unitEl.querySelector('[data-role="value"]');
+      if (!valueEl) return;
+      valueEl.textContent = String(time[unit]).padStart(2, '0');
     });
   }
 
   function updateNumber(value) {
-    const numberEl = timerEl.querySelector('[data-role="number-value"]');
-    if (numberEl) {
-      numberEl.textContent = Math.floor(value).toString();
-    }
-  }
-
-  function handleEnd(state, ended) {
-    if (ended) {
-      timerEl.hidden = state.actions.after.type === 'hide';
-      afterMsgEl.hidden = state.actions.after.type !== 'link';
-      ctaEl.hidden = state.actions.after.type !== 'link' || !state.actions.after.url;
-      if (state.actions.after.type === 'link') {
-        ctaEl.href = state.actions.after.url;
-        ctaEl.textContent = state.actions.after.text || 'Action';
-      }
-    } else {
-      timerEl.hidden = false;
-      afterMsgEl.hidden = true;
-      ctaEl.hidden = !(state.actions.during.type === 'link' && state.actions.during.url);
-    }
-  }
-
-  function getMultiplier(unit) {
-    const multipliers = {
-      minutes: 60,
-      hours: 3600,
-      days: 86400,
-      weeks: 604800,
-      months: 2592000
-    };
-    return multipliers[unit] || 3600;
-  }
-
-  function applyAppearanceVars(state, root) {
-    root.style.setProperty('--countdown-bg', state.appearance.background);
-    root.style.setProperty('--countdown-text-color', state.appearance.textColor);
-    root.style.setProperty('--countdown-timer-bg', state.appearance.timerBoxColor);
-  }
-
-  function applyLayoutVars(state, root) {
-    root.style.setProperty('--pod-max-width', state.layout.width === 'full' ? 'none' : '960px');
-    countdownRoot.style.textAlign = state.layout.alignment;
-  }
-
-  function applyBehavior(state, root) {
-    const backlink = root.querySelector('[data-role="backlink"]');
-    if (backlink) {
-      backlink.style.display = state.behavior.showBacklink ? 'block' : 'none';
-    }
+    numberValueEl.textContent = String(Math.round(value));
   }
 
   window.addEventListener('message', (event) => {

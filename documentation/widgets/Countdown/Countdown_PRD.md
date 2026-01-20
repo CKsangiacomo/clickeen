@@ -70,7 +70,7 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 ### Detailed State from Competitor Analysis
 - `timer.mode`: 'date' | 'personal' | 'number' (visual cards with icons: calendar for date, user for personal, numbers for number).
 - `timer.targetDate`: Date/time picker (MM/DD/YYYY + HH:MM AM/PM) for date mode.
-- `timer.timezone`: Dropdown with all timezones (default: browser timezone).
+- `timer.timezone`: Dropdown with all timezones (default: UTC; browser option allowed).
 - `timer.timeAmount`: Numeric (1-999, default 1) for personal mode.
 - `timer.timeUnit`: 'hours' | 'minutes' | 'days' | 'weeks' | 'months' (default: 'hours') for personal mode.
 - `timer.repeat`: '1 minute' | '5 minutes' | '1 hour' | '1 day' | '1 week' | 'never' (default: 'never') for personal mode.
@@ -80,11 +80,12 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `timer.headline`: Rich text (bold, italic, link, lists; max 500 chars; default: "Get 50% off before it's too late 🎯").
 - `layout.position`: 'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top' (visual cards).
 - `layout.width`: 'auto' | 'full' | 'custom' (px).
+- `layout.customWidth`: Numeric px value when width is `custom`.
 - `layout.alignment`: 'left' | 'center' | 'right'.
 - `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets.
-- `appearance.background`: Fill picker (solid, gradient, image).
-- `appearance.textColor`: Color picker.
-- `appearance.timerBoxColor`: Color picker.
+- `appearance.background`: Fill picker (color/gradient/image), stored as a fill object.
+- `appearance.textColor`: Color picker (fill object, type `color`).
+- `appearance.timerBoxColor`: Color picker (fill object, type `color`).
 - `appearance.separator`: Color/style picker.
 - `appearance.animation`: 'fade' (only; skip advanced).
 - `actions.during.type`: 'link' | 'form' (skip 'form' for V1).
@@ -162,8 +163,8 @@ Defaults must include:
 - `behavior: { showBacklink: true }`
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 - `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
-- `layout: { position: 'inline', width: 'auto', alignment: 'center' }`
-- `appearance: { theme: 'custom', background: '#fff', textColor: '#000', timerBoxColor: '#f0f0f0', separator: ':' }`
+- `layout: { position: 'inline', width: 'auto', alignment: 'center', customWidth: 960 }`
+- `appearance: { theme: 'custom', animation: 'fade', background: { type: 'color', color: '#fff' }, textColor: { type: 'color', color: '#000' }, timerBoxColor: { type: 'color', color: '#f0f0f0' }, separator: ':' }`
 - `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
 
 ## 8) Additional Notes from Competitor Analysis

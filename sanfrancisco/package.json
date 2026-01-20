@@ -8,6 +8,7 @@
     "deploy": "node ../scripts/infra/ensure-queues.mjs --queue instance-l10n-generate-cloud-dev && wrangler deploy"
   },
   "dependencies": {
+    "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*"
   },
   "devDependencies": {

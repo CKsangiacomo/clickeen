@@ -10,14 +10,6 @@ export type InstanceOverlay = {
   ops: LocalizationOp[];
 };
 
-type L10nManifest = {
-  v: 1;
-  gitSha: string;
-  instances: Record<string, Record<string, { file: string; baseUpdatedAt?: string | null; geoCountries?: string[] | null }>>;
-};
-
-const manifestCache = new Map<string, Promise<L10nManifest>>();
-
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 
 function hasProhibitedSegment(path: string): boolean {
@@ -76,47 +68,17 @@ function applySetOps(config: Record<string, unknown>, ops: LocalizationOp[]): Re
   return (working && typeof working === 'object' && !Array.isArray(working) ? (working as Record<string, unknown>) : config);
 }
 
-async function loadL10nManifest(): Promise<L10nManifest> {
-  const url = `/l10n/manifest.json`;
-  const cached = manifestCache.get(url);
-  if (cached) return cached;
-
-  const promise = (async () => {
-    const res = await tokyoFetch(url, { method: 'GET' });
-    if (!res.ok) throw new Error(`[VeniceL10n] Failed to load l10n manifest (${res.status})`);
-    const json = (await res.json().catch(() => null)) as L10nManifest | null;
-    if (!json || typeof json !== 'object' || json.v !== 1 || typeof json.gitSha !== 'string') {
-      throw new Error('[VeniceL10n] Invalid l10n manifest');
-    }
-    if (!json.instances || typeof json.instances !== 'object') {
-      throw new Error('[VeniceL10n] Invalid l10n manifest.instances');
-    }
-    return json;
-  })();
-
-  manifestCache.set(url, promise);
-  return promise;
-}
-
-async function fetchOverlay(publicId: string, locale: string): Promise<InstanceOverlay | null> {
-  let manifest: L10nManifest;
-  try {
-    manifest = await loadL10nManifest();
-  } catch {
-    return null;
-  }
-
-  const entries = manifest.instances?.[publicId];
-  if (!entries || typeof entries !== 'object') return null;
+async function fetchOverlay(publicId: string, locale: string, baseFingerprint: string): Promise<InstanceOverlay | null> {
+  if (!baseFingerprint) return null;
 
   for (const candidate of localeCandidates(locale)) {
-    const meta = entries[candidate];
-    const file = meta?.file ? String(meta.file).trim() : '';
-    if (!file) continue;
-
-    const res = await tokyoFetch(`/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(file)}`, {
-      method: 'GET',
-    });
+    const res = await tokyoFetch(
+      `/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(candidate)}/${encodeURIComponent(
+        baseFingerprint
+      )}.ops.json`,
+      { method: 'GET' }
+    );
+    if (res.status === 404) continue;
     if (!res.ok) return null;
     const json = (await res.json().catch(() => null)) as InstanceOverlay | null;
     if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.ops)) return null;
@@ -132,30 +94,6 @@ export async function resolveTokyoLocale(args: {
   explicit: boolean;
   country?: string | null;
 }): Promise<string> {
-  if (args.explicit) return args.locale;
-  const country = String(args.country || '').trim().toUpperCase();
-  if (!country) return args.locale;
-
-  let manifest: L10nManifest;
-  try {
-    manifest = await loadL10nManifest();
-  } catch {
-    return args.locale;
-  }
-
-  const entries = manifest.instances?.[args.publicId];
-  if (!entries || typeof entries !== 'object') return args.locale;
-
-  const locales = Object.keys(entries).sort();
-  for (const locale of locales) {
-    const meta = entries[locale];
-    const geo = Array.isArray(meta?.geoCountries) ? meta.geoCountries : null;
-    if (!geo || geo.length === 0) continue;
-    if (geo.some((code) => String(code || '').trim().toUpperCase() === country)) {
-      return locale;
-    }
-  }
-
   return args.locale;
 }
 
@@ -163,12 +101,14 @@ export async function applyTokyoInstanceOverlay(args: {
   publicId: string;
   locale: string;
   baseUpdatedAt?: string | null;
+  baseFingerprint?: string | null;
   config: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
   const locale = normalizeLocaleToken(args.locale);
   if (!locale) return args.config;
 
-  const overlay = await fetchOverlay(args.publicId, locale);
+  const baseFingerprint = args.baseFingerprint ?? (await computeBaseFingerprint(args.config));
+  const overlay = await fetchOverlay(args.publicId, locale, baseFingerprint);
   if (!overlay) {
     if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
       throw new Error(`[VeniceL10n] Missing overlay for ${args.publicId} (${locale})`);
@@ -177,7 +117,6 @@ export async function applyTokyoInstanceOverlay(args: {
   }
 
   if (overlay.baseFingerprint) {
-    const baseFingerprint = await computeBaseFingerprint(args.config);
     if (overlay.baseFingerprint !== baseFingerprint) {
       if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
         throw new Error(`[VeniceL10n] Stale overlay for ${args.publicId} (${locale})`);

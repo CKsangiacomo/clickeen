@@ -23,7 +23,8 @@
     "textedit",
     "textfield",
     "textrename",
-    "toggle"
+    "toggle",
+    "valuefield"
   ],
   "componentsWithJs": [
     "bulk-edit",
@@ -44,7 +45,8 @@
     "textedit",
     "textfield",
     "textrename",
-    "toggle"
+    "toggle",
+    "valuefield"
   ],
   "aliases": {
     "btn": "button",

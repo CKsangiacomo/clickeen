@@ -14,7 +14,7 @@ import type { CompiledWidget } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
-import type { BudgetDecision, Policy } from '@clickeen/ck-policy';
+import type { BudgetDecision, BudgetKey, Policy } from '@clickeen/ck-policy';
 import { can, canConsume, consume, evaluateLimits, sanitizeConfig, resolvePolicy as resolveCkPolicy } from '@clickeen/ck-policy';
 import { persistConfigAssetsToTokyo } from '../assets/persistConfigAssetsToTokyo';
 import {
@@ -107,6 +107,10 @@ type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
   requestId: string;
   persistAssets?: boolean;
+  exportMode?: 'current' | 'base';
+  assetScope?: 'workspace' | 'curated';
+  assetPublicId?: string;
+  assetWidgetType?: string;
 };
 
 type BobExportInstanceDataResponseMessage = {
@@ -194,19 +198,55 @@ function enforceReadOnlyPolicy(policy: Policy): Policy {
   return { ...policy, role: 'viewer' };
 }
 
-function isUploadValue(value: unknown): boolean {
-  if (typeof value !== 'string') return false;
-  const trimmed = value.trim();
-  return trimmed.startsWith('blob:') || trimmed.startsWith('data:');
+function extractUploadUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^(?:blob|data):/i.test(trimmed)) return trimmed;
+  const match = trimmed.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (match && match[2] && /^(?:blob|data):/i.test(match[2])) return match[2];
+  return null;
+}
+
+function tryParseJsonValue(raw: string): unknown | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^[{["]/.test(trimmed)) return null;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function collectUploadUrls(value: unknown, found: Set<string>): void {
+  if (typeof value === 'string') {
+    const direct = extractUploadUrl(value);
+    if (direct) {
+      found.add(direct);
+      return;
+    }
+    const parsed = tryParseJsonValue(value);
+    if (parsed != null) {
+      collectUploadUrls(parsed, found);
+    }
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    value.forEach((entry) => collectUploadUrls(entry, found));
+    return;
+  }
+  Object.values(value as Record<string, unknown>).forEach((entry) => collectUploadUrls(entry, found));
 }
 
 function countUploadOps(ops: WidgetOp[]): number {
-  return ops.reduce((count, op) => {
-    if (!op || typeof op !== 'object') return count;
-    if (op.op !== 'set') return count;
-    if (!isUploadValue((op as any).value)) return count;
-    return count + 1;
-  }, 0);
+  const found = new Set<string>();
+  ops.forEach((op) => {
+    if (!op || typeof op !== 'object') return;
+    if (op.op !== 'set') return;
+    collectUploadUrls((op as any).value, found);
+  });
+  return found.size;
 }
 
 function useWidgetSessionInternal() {
@@ -890,7 +930,13 @@ function useWidgetSessionInternal() {
 
     setState((prev) => ({ ...prev, isPublishing: true, error: null }));
     try {
-      const persisted = await persistConfigAssetsToTokyo(state.baseInstanceData, { workspaceId });
+      const isCurated = isCuratedPublicId(publicId);
+      const persisted = await persistConfigAssetsToTokyo(state.baseInstanceData, {
+        scope: isCurated ? 'curated' : 'workspace',
+        workspaceId,
+        publicId,
+        widgetType,
+      });
       const res = await fetch(
         `/api/paris/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(
           workspaceId
@@ -1040,7 +1086,7 @@ function useWidgetSessionInternal() {
   );
 
   const consumeBudget = useCallback(
-    (key: string, amount = 1): BudgetDecision => {
+    (key: BudgetKey, amount = 1): BudgetDecision => {
       const budget = state.policy.budgets[key];
       if (!budget) return { ok: true, nextUsed: 0 };
 
@@ -1101,18 +1147,31 @@ function useWidgetSessionInternal() {
         if (!requestId) return;
         const snapshot = stateRef.current;
         const persistAssets = (data as DevstudioExportInstanceDataMessage).persistAssets === true;
+        const exportMode = (data as DevstudioExportInstanceDataMessage).exportMode === 'current' ? 'current' : 'base';
+        const exportScope = (data as DevstudioExportInstanceDataMessage).assetScope === 'curated' ? 'curated' : 'workspace';
 
         (async () => {
           try {
+            const baseData = exportMode === 'current' ? snapshot.instanceData : snapshot.baseInstanceData;
             const instanceData = persistAssets
               ? (() => {
+                  const publicId = (data as DevstudioExportInstanceDataMessage).assetPublicId || snapshot.meta?.publicId;
+                  const widgetType = (data as DevstudioExportInstanceDataMessage).assetWidgetType || snapshot.meta?.widgetname;
                   const workspaceId = snapshot.meta?.workspaceId;
-                  if (!workspaceId) {
+                  if (exportScope === 'workspace' && !workspaceId) {
                     throw new Error('[Bob] Missing workspaceId for asset persistence');
                   }
-                  return persistConfigAssetsToTokyo(snapshot.baseInstanceData, { workspaceId });
+                  if (exportScope === 'curated' && (!publicId || !widgetType)) {
+                    throw new Error('[Bob] Missing publicId or widgetType for curated asset persistence');
+                  }
+                  return persistConfigAssetsToTokyo(baseData, {
+                    scope: exportScope,
+                    workspaceId,
+                    publicId,
+                    widgetType,
+                  });
                 })()
-              : snapshot.baseInstanceData;
+              : baseData;
 
             const reply: BobExportInstanceDataResponseMessage = {
               type: 'bob:export-instance-data',

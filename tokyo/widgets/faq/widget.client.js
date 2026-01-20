@@ -77,6 +77,16 @@
     }
   }
 
+  function assertFill(value, path) {
+    if (typeof value === 'string') return;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`[FAQ] ${path} must be a fill`);
+    }
+    if (typeof value.type !== 'string' || !value.type.trim()) {
+      throw new Error(`[FAQ] ${path}.type must be a string`);
+    }
+  }
+
   function assertArray(value, path) {
     if (!Array.isArray(value)) {
       throw new Error(`[FAQ] ${path} must be an array`);
@@ -105,13 +115,13 @@
     assertNumber(state.layout.itemPaddingLeft, 'state.layout.itemPaddingLeft');
 
     assertObject(state.appearance, 'state.appearance');
-    assertString(state.appearance.itemBackground, 'state.appearance.itemBackground');
+    assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
     if (!['underline', 'highlight', 'color'].includes(state.appearance.linkStyle)) {
       throw new Error('[FAQ] state.appearance.linkStyle must be underline|highlight|color');
     }
-    assertString(state.appearance.linkUnderlineColor, 'state.appearance.linkUnderlineColor');
-    assertString(state.appearance.linkHighlightColor, 'state.appearance.linkHighlightColor');
-    assertString(state.appearance.linkTextColor, 'state.appearance.linkTextColor');
+    assertFill(state.appearance.linkUnderlineColor, 'state.appearance.linkUnderlineColor');
+    assertFill(state.appearance.linkHighlightColor, 'state.appearance.linkHighlightColor');
+    assertFill(state.appearance.linkTextColor, 'state.appearance.linkTextColor');
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
@@ -375,17 +385,31 @@
     return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
   }
 
+  function resolveFillBackground(value) {
+    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
+      return window.CKFill.toCssBackground(value);
+    }
+    return String(value ?? '');
+  }
+
+  function resolveFillColor(value) {
+    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
+      return window.CKFill.toCssColor(value);
+    }
+    return String(value ?? '');
+  }
+
   function applyAppearance(appearance) {
-    faqRoot.style.setProperty('--faq-item-bg', appearance.itemBackground);
+    faqRoot.style.setProperty('--faq-item-bg', resolveFillBackground(appearance.itemBackground));
     const border = appearance.itemCard.border;
     const borderEnabled = border.enabled === true && border.width > 0;
     faqRoot.style.setProperty('--faq-card-border-width', borderEnabled ? `${border.width}px` : '0px');
     faqRoot.style.setProperty('--faq-card-border-color', borderEnabled ? border.color : 'transparent');
     faqRoot.style.setProperty('--faq-item-shadow', computeShadowBoxShadow(appearance.itemCard.shadow));
     faqRoot.setAttribute('data-link-style', appearance.linkStyle);
-    faqRoot.style.setProperty('--faq-link-underline-color', appearance.linkUnderlineColor);
-    faqRoot.style.setProperty('--faq-link-highlight-color', appearance.linkHighlightColor);
-    faqRoot.style.setProperty('--faq-link-text-color', appearance.linkTextColor);
+    faqRoot.style.setProperty('--faq-link-underline-color', resolveFillColor(appearance.linkUnderlineColor));
+    faqRoot.style.setProperty('--faq-link-highlight-color', resolveFillBackground(appearance.linkHighlightColor));
+    faqRoot.style.setProperty('--faq-link-text-color', resolveFillColor(appearance.linkTextColor));
 
     const tokenize = (value) => {
       const normalized = String(value || '').trim();

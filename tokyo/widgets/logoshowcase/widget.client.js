@@ -85,6 +85,16 @@
     }
   }
 
+  function assertFill(value, path) {
+    if (typeof value === 'string') return;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`[LogoShowcase] ${path} must be a fill`);
+    }
+    if (typeof value.type !== 'string' || !value.type.trim()) {
+      throw new Error(`[LogoShowcase] ${path}.type must be a string`);
+    }
+  }
+
   function assertArray(value, path) {
     if (!Array.isArray(value)) throw new Error(`[LogoShowcase] ${path} must be an array`);
   }
@@ -165,7 +175,7 @@
       throw new Error('[LogoShowcase] state.appearance.logoOpacity must be 0..1');
     }
 
-    assertString(state.appearance.itemBackground, 'state.appearance.itemBackground');
+    assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
     assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
 
     assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
@@ -193,11 +203,11 @@
       throw new Error('[LogoShowcase] state.appearance.itemCard.shadow.alpha must be 0..100');
     }
 
-    assertString(state.appearance.titleColor, 'state.appearance.titleColor');
-    assertString(state.appearance.textColor, 'state.appearance.textColor');
+    assertFill(state.appearance.titleColor, 'state.appearance.titleColor');
+    assertFill(state.appearance.textColor, 'state.appearance.textColor');
 
-    assertString(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
-    assertString(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
+    assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
+    assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
     assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
 
     assertObject(state.spacing, 'state.spacing');
@@ -275,13 +285,26 @@
     return v;
   }
 
-  function extractPrimaryUrl(raw) {
+  function resolveAssetUrl(raw, origin) {
     const v = String(raw || '').trim();
     if (!v) return null;
-    if (/^(?:data:|blob:|https?:\/\/)/i.test(v)) return v;
+    if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(v)) return v;
+    if (!origin) return v;
+    try {
+      return new URL(v, origin).toString();
+    } catch {
+      return v;
+    }
+  }
+
+  function extractPrimaryUrl(raw, origin) {
+    const v = String(raw || '').trim();
+    if (!v) return null;
+    if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(v)) return v;
     // CSS fill string, e.g. url("data:...") center center / cover no-repeat
     const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-    if (m && m[2]) return m[2];
+    if (m && m[2]) return resolveAssetUrl(m[2], origin);
+    if (/^(?:\/|\.\/|\.\.\/)/.test(v)) return resolveAssetUrl(v, origin);
     return null;
   }
 
@@ -330,6 +353,20 @@
     return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
   }
 
+  function resolveFillBackground(value) {
+    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
+      return window.CKFill.toCssBackground(value);
+    }
+    return String(value ?? '');
+  }
+
+  function resolveFillColor(value) {
+    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
+      return window.CKFill.toCssColor(value);
+    }
+    return String(value ?? '');
+  }
+
   function applyLayoutVars(state) {
     lsRoot.style.setProperty('--ls-gap', `${state.spacing.gap}px`);
     lsRoot.style.setProperty('--ls-gap-mobile', `${state.spacing.mobileGap}px`);
@@ -344,7 +381,7 @@
     lsRoot.style.setProperty('--ls-logo-opacity', String(state.appearance.logoOpacity));
     lsRoot.style.setProperty('--ls-logo-filter', state.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
-    lsRoot.style.setProperty('--ls-item-bg', state.appearance.itemBackground);
+    lsRoot.style.setProperty('--ls-item-bg', resolveFillBackground(state.appearance.itemBackground));
     const border = state.appearance.itemCard.border;
     const borderEnabled = border.enabled === true && border.width > 0;
     lsRoot.style.setProperty('--ls-item-border-width', borderEnabled ? `${border.width}px` : '0px');
@@ -367,11 +404,11 @@
           })();
     lsRoot.style.setProperty('--ls-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
 
-    lsRoot.style.setProperty('--ls-title-color', state.appearance.titleColor);
-    lsRoot.style.setProperty('--ls-text-color', state.appearance.textColor);
+    lsRoot.style.setProperty('--ls-title-color', resolveFillColor(state.appearance.titleColor));
+    lsRoot.style.setProperty('--ls-text-color', resolveFillColor(state.appearance.textColor));
 
-    lsRoot.style.setProperty('--ls-cta-bg', state.appearance.ctaBackground);
-    lsRoot.style.setProperty('--ls-cta-fg', state.appearance.ctaTextColor);
+    lsRoot.style.setProperty('--ls-cta-bg', resolveFillBackground(state.appearance.ctaBackground));
+    lsRoot.style.setProperty('--ls-cta-fg', resolveFillColor(state.appearance.ctaTextColor));
     lsRoot.style.setProperty('--ls-cta-radius', tokenizeRadius(state.appearance.ctaRadius));
   }
 
@@ -439,7 +476,7 @@
     visualEl.setAttribute('role', 'img');
     if (aria) visualEl.setAttribute('aria-label', aria);
 
-    const primaryUrl = extractPrimaryUrl(logo.logoFill);
+    const primaryUrl = extractPrimaryUrl(logo.logoFill, assetOrigin);
     if (primaryUrl) {
       const safeUrl = primaryUrl.replace(/"/g, '%22');
       visualEl.style.backgroundImage = `url("${safeUrl}")`;

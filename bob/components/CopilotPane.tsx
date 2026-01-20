@@ -89,6 +89,10 @@ export function CopilotPane() {
 
   const widgetType = compiled?.widgetname ?? null;
   const instancePublicId = session.meta?.publicId ?? null;
+  const workspaceId = session.meta?.workspaceId ?? null;
+  const policyProfile = session.policy?.profile ?? 'minibob';
+  const subject = policyProfile === 'devstudio' || policyProfile === 'minibob' ? policyProfile : 'workspace';
+  const aiSubject = subject === 'workspace' && !workspaceId ? 'minibob' : subject;
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -287,6 +291,8 @@ export function CopilotPane() {
           controls: controlsForAi,
           sessionId,
           instancePublicId,
+          workspaceId,
+          subject: aiSubject,
         }),
       });
 

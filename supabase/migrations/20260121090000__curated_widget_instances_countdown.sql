@@ -60,6 +60,37 @@ SELECT 'wgt_main_countdown', 'countdown', 'baseline', 'published', $json${
     "radiusLinked": true
   },
   "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "heading": {
+        "xs": "24px",
+        "s": "28px",
+        "m": "32px",
+        "l": "36px",
+        "xl": "40px"
+      },
+      "timer": {
+        "xs": "32px",
+        "s": "40px",
+        "m": "48px",
+        "l": "56px",
+        "xl": "64px"
+      },
+      "label": {
+        "xs": "11px",
+        "s": "12px",
+        "m": "14px",
+        "l": "16px",
+        "xl": "18px"
+      },
+      "button": {
+        "xs": "12px",
+        "s": "14px",
+        "m": "16px",
+        "l": "18px",
+        "xl": "20px"
+      }
+    },
     "roles": {
       "heading": {
         "family": "Inter",
@@ -67,7 +98,7 @@ SELECT 'wgt_main_countdown', 'countdown', 'baseline', 'published', $json${
         "sizeCustom": "32px",
         "fontStyle": "normal",
         "weight": "600",
-        "color": "var(--color-system-gray-90)"
+        "color": "var(--color-system-black)"
       },
       "timer": {
         "family": "Inter",
@@ -75,7 +106,7 @@ SELECT 'wgt_main_countdown', 'countdown', 'baseline', 'published', $json${
         "sizeCustom": "48px",
         "fontStyle": "normal",
         "weight": "700",
-        "color": "var(--color-system-gray-90)"
+        "color": "var(--color-system-black)"
       },
       "label": {
         "family": "Inter",
@@ -83,7 +114,7 @@ SELECT 'wgt_main_countdown', 'countdown', 'baseline', 'published', $json${
         "sizeCustom": "14px",
         "fontStyle": "normal",
         "weight": "400",
-        "color": "var(--color-system-gray-60)"
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
       },
       "button": {
         "family": "Inter",
@@ -110,13 +141,15 @@ SELECT 'wgt_main_countdown', 'countdown', 'baseline', 'published', $json${
   "layout": {
     "position": "inline",
     "width": "auto",
-    "alignment": "center"
+    "alignment": "center",
+    "customWidth": 960
   },
   "appearance": {
     "theme": "custom",
+    "animation": "fade",
     "background": "var(--color-system-white)",
-    "textColor": "var(--color-system-gray-90)",
-    "timerBoxColor": "var(--color-system-gray-10)",
+    "textColor": "var(--color-system-black)",
+    "timerBoxColor": "var(--color-system-gray-5)",
     "separator": ":"
   },
   "behavior": {

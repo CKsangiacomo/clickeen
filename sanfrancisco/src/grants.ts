@@ -76,12 +76,64 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   const nowSec = Math.floor(Date.now() / 1000);
   if (exp <= nowSec) throw new HttpError(401, { code: 'GRANT_EXPIRED', message: 'Grant expired' });
 
+  const ai = normalizeAiPolicy((payload as any).ai);
+  if (ai) {
+    (payload as any).ai = ai;
+  }
+
   return payload as AIGrant;
+}
+
+function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
+  if (!isRecord(value)) return undefined;
+  const profile = asString(value.profile);
+  const allowedProvidersRaw = (value as any).allowedProviders;
+  const allowedProviders =
+    Array.isArray(allowedProvidersRaw) && allowedProvidersRaw.every((p) => typeof p === 'string' && p.trim())
+      ? (allowedProvidersRaw.map((p) => p.trim()) as string[])
+      : null;
+  if (!profile || !allowedProviders || allowedProviders.length === 0) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy missing required fields' });
+  }
+  const allowProviderChoice = (value as any).allowProviderChoice === true;
+  const allowModelChoice = (value as any).allowModelChoice === true;
+  const selectedProvider = asString((value as any).selectedProvider);
+  if (selectedProvider && !allowedProviders.includes(selectedProvider)) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy selectedProvider is not allowed' });
+  }
+  const selectedModel = asString((value as any).selectedModel);
+  const tokenBudgetDay = asNumber((value as any).tokenBudgetDay);
+  const tokenBudgetMonth = asNumber((value as any).tokenBudgetMonth);
+
+  const policy: AIGrant['ai'] = {
+    profile: profile as AIGrant['ai']['profile'],
+    allowedProviders: allowedProviders as AIGrant['ai']['allowedProviders'],
+    ...(allowProviderChoice ? { allowProviderChoice: true } : {}),
+    ...(allowModelChoice ? { allowModelChoice: true } : {}),
+    ...(selectedProvider ? { selectedProvider: selectedProvider as AIGrant['ai']['selectedProvider'] } : {}),
+    ...(selectedModel ? { selectedModel } : {}),
+    ...(tokenBudgetDay != null ? { tokenBudgetDay } : {}),
+    ...(tokenBudgetMonth != null ? { tokenBudgetMonth } : {}),
+  };
+
+  return policy;
 }
 
 export function assertCap(grant: AIGrant, capability: string): void {
   if (!grant.caps.includes(capability)) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Capability denied: ${capability}` });
+  }
+}
+
+export function assertProviderAllowed(grant: AIGrant, provider: string): void {
+  const allowed = grant.ai?.allowedProviders;
+  if (!allowed) return;
+  const selected = grant.ai?.selectedProvider;
+  if (selected && selected !== provider) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider mismatch: ${provider} != ${selected}` });
+  }
+  if (!allowed.includes(provider)) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider not allowed: ${provider}` });
   }
 }
 

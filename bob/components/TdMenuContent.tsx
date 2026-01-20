@@ -450,7 +450,9 @@ function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unkn
       }
     }
     const hideTarget =
-      entry.el.closest<HTMLElement>('[data-bob-group], .diet-textfield, .diet-toggle, [data-bob-control]') || entry.el;
+      entry.el.closest<HTMLElement>(
+        '[data-bob-group], .diet-textfield, .diet-valuefield, .diet-toggle, [data-bob-control]'
+      ) || entry.el;
     hideTarget.toggleAttribute('hidden', !isVisible);
     hideTarget.setAttribute('style', isVisible ? '' : 'display: none;');
   });
@@ -507,7 +509,7 @@ function normalizeBobPath(raw: string): string {
 function resolveTranslateRoot(field: HTMLElement): HTMLElement {
   return (
     field.closest<HTMLElement>(
-      '.diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
+      '.diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-valuefield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
     ) || field
   );
 }
@@ -638,6 +640,7 @@ export function TdMenuContent({
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderKey, setRenderKey] = useState(0);
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
+  const instanceDataRef = useRef(instanceData);
   const activePathRef = useRef<string | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const lastUpdateRef = useRef<TdMenuContentProps['lastUpdate']>();
@@ -645,6 +648,10 @@ export function TdMenuContent({
   useEffect(() => {
     lastUpdateRef.current = lastUpdate ?? null;
   }, [lastUpdate]);
+
+  useEffect(() => {
+    instanceDataRef.current = instanceData;
+  }, [instanceData]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -700,6 +707,8 @@ export function TdMenuContent({
     container.innerHTML = panelHtml || '';
     autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
+    showIfEntriesRef.current = buildShowIfEntries(container);
+    applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
 
     ensureAssets(dieterAssets)
       .then(() => {

@@ -272,7 +272,7 @@ HTTP semantics:
 ## 6) San Francisco agent contract
 
 Current agent:
-- `agentId: "sdr.widget.copilot"`
+- `agentId: "cs.copilot.v1"` (alias: `sdr.widget.copilot.v1`)
 
 The agent is expected to return:
 - `message` (always)

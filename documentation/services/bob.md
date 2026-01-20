@@ -196,13 +196,17 @@ The compiler and ToolDrawer support:
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
 
-### Asset persistence (workspace uploads)
+### Asset persistence (workspace + curated uploads)
 
-Before publish (and during certain DevStudio superadmin flows), Bob scans config for `data:`/`blob:` URLs, uploads binaries to Tokyo workspace assets, and rewrites the config with stable `http(s)` URLs.
+Before publish (and during certain DevStudio superadmin flows), Bob scans config for `data:`/`blob:` URLs, uploads binaries to Tokyo, and rewrites the config with stable `http(s)` URLs.
 
 Implementation:
 - Client persistence utility: `bob/lib/assets/persistConfigAssetsToTokyo.ts`
-- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to `TOKYO_URL/workspace-assets/upload`)
+- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to Tokyo `workspace-assets` or `curated-assets` uploads)
+
+Scopes:
+- **Workspace instances** → `tokyo/workspace-assets/{workspaceId}/...`
+- **Curated instances** (`wgt_main_*`, `wgt_curated_*`) → `tokyo/curated-assets/{widgetType}/{publicId}/...`
 
 ---
 
@@ -223,6 +227,17 @@ Behavior:
 ### Copilot env vars (local + Cloud-dev)
 - `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.
 - `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/sdr-copilot` also has local fallbacks + health probing.)
+
+---
+
+## Personalization onboarding (Settings panel)
+
+Bob exposes a lightweight onboarding personalization control in `Settings`:
+- Collects a website URL and starts a job via `POST /api/paris/personalization/onboarding`.
+- Polls job status via `GET /api/paris/personalization/onboarding/:jobId`.
+- Reads stored business profiles from `GET /api/paris/workspaces/:workspaceId/business-profile`.
+
+This is a thin UX wrapper; San Francisco executes the agent and Paris persists `workspace_business_profiles`.
 
 ---
 
@@ -253,7 +268,7 @@ type WidgetOp =
 - `enumValues` / `options`
 - `min` / `max`
 - `itemIdPath` (arrays/repeaters)
-- `allowImage` (fill controls representing `background` vs `color`)
+- `allowImage` (dropdown-fill only; derived from `fill-modes`/`allow-image` markup and signals whether image/video modes are allowed)
 
 This is the foundation for both strict manual editing and future Copilot editing.
 
@@ -322,6 +337,8 @@ Reference:
 ### Required
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
 - `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (preview-shadow embed loader; local dev defaults to `http://localhost:3003`)
+### Optional
+- `TOKYO_DEV_JWT` (server-only; used by `/api/assets/upload` when targeting Tokyo dev worker)
 
 ### Paris proxy (current code)
 Bob proxies Paris via:

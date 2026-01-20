@@ -158,7 +158,7 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
 
   if (control.type === 'toggle') return { kind: 'boolean' };
   if (control.type === 'slider') return { kind: 'number' };
-  if (control.type === 'dropdown-fill') return { kind: 'color' };
+  if (control.type === 'dropdown-fill') return { kind: 'json' };
   const samplePath = samplePathForDefaults(control.path);
   const sample = getAt<unknown>(defaults, samplePath);
 
@@ -197,6 +197,15 @@ function parseNumberAttr(value: string | undefined): number | undefined {
   return Number.isFinite(num) ? num : undefined;
 }
 
+function parseFillModes(value: string | undefined): string[] | null {
+  if (!value) return null;
+  const modes = value
+    .split(',')
+    .map((mode) => mode.trim().toLowerCase())
+    .filter(Boolean);
+  return modes.length ? modes : null;
+}
+
 function collectControlsFromMarkup(markup: string, panelId: string, controls: CompiledControl[]) {
   // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
   const tdRegex =
@@ -225,6 +234,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     if (type && path) {
       const min = parseNumberAttr(attrs.min);
       const max = parseNumberAttr(attrs.max);
+      const fillModes = type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
       const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
       const inferredAllowsImage = (() => {
         const pathLower = path.toLowerCase();
@@ -232,7 +242,9 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         const labelLower = (attrs.label || '').toLowerCase();
         return labelLower.includes('background');
       })();
-      const allowImage = type === 'dropdown-fill' ? (allowImageOverride ?? inferredAllowsImage) : undefined;
+      const allowImageFromModes = fillModes ? fillModes.some((mode) => mode === 'image' || mode === 'video') : undefined;
+      const allowImage =
+        type === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
       controls.push({
         panelId,
         groupId,

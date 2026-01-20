@@ -129,15 +129,15 @@ Where:
 - locale is a runtime parameter; it must not be encoded into `public_id`
 
 Examples:
-- `wgt_curated_faq.liquid_glass.v01`
+- `wgt_curated_faq.lightblurs.v01`
 - `wgt_curated_logoshowcase.brutalist.v02`
 
 **Metadata**
 Curated instances also store metadata in `curated_widget_instances.meta`:
 ```
 {
-  "styleName": "Liquid Glass",
-  "styleSlug": "liquid_glass",
+  "styleName": "Light Blurs",
+  "styleSlug": "lightblurs",
   "version": 1,
   "tags": { "icp": ["saas"], "objective": ["conversion"], "style": ["glass"] }
 }

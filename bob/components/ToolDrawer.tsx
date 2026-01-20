@@ -17,21 +17,19 @@ export function ToolDrawer() {
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
-  const [contentMode, setContentMode] = useState<'edit' | 'translate'>('edit');
 
   // Reset active panel when widget changes
   useEffect(() => {
     if (compiled?.panels && compiled.panels.length > 0) {
       setActivePanel(compiled.panels[0].id as PanelId);
-      setContentMode('edit');
     }
   }, [compiled?.widgetname, compiled?.panels]);
 
   useEffect(() => {
-    if (contentMode !== 'edit') return;
+    if (activePanel === 'localization') return;
     if (session.locale.activeLocale === session.locale.baseLocale) return;
     session.setLocalePreview(session.locale.baseLocale);
-  }, [contentMode, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
+  }, [activePanel, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
 
   useEffect(() => {
     // Provide a stable place for Dieter upload controls (dropdown-fill/dropdown-upload) to find
@@ -55,82 +53,19 @@ export function ToolDrawer() {
     return map;
   }, [compiled]);
 
-  const activePanelHtml = activePanel ? panelsById[activePanel]?.html ?? null : null;
-  const isContentPanel = activePanel === 'content';
-  const contentHeader = isContentPanel ? (
-    <div className="tdmenucontent__mode">
-      <div
-        className="diet-segmented diet-segmented-ictxt tdmenucontent__mode-switch"
-        role="radiogroup"
-        aria-label="Content mode"
-        data-size="md"
-      >
-        <label className="diet-segment">
-          <input
-            className="diet-segment__input"
-            type="radio"
-            name="content-mode"
-            value="edit"
-            checked={contentMode === 'edit'}
-            onChange={() => setContentMode('edit')}
-          />
-          <span className="diet-segment__surface" />
-          <button
-            className="diet-btn-ictxt"
-            data-size="md"
-            data-variant="neutral"
-            tabIndex={-1}
-            type="button"
-            aria-pressed={contentMode === 'edit'}
-          >
-            <span
-              className="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: getIcon('pencil') }}
-            />
-            <span className="diet-btn-ictxt__label body-s">Edit</span>
-          </button>
-        </label>
-        <label className="diet-segment">
-          <input
-            className="diet-segment__input"
-            type="radio"
-            name="content-mode"
-            value="translate"
-            checked={contentMode === 'translate'}
-            onChange={() => setContentMode('translate')}
-          />
-          <span className="diet-segment__surface" />
-          <button
-            className="diet-btn-ictxt"
-            data-size="md"
-            data-variant="neutral"
-            tabIndex={-1}
-            type="button"
-            aria-pressed={contentMode === 'translate'}
-          >
-            <span
-              className="diet-btn-ictxt__icon"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: getIcon('globe') }}
-            />
-            <span className="diet-btn-ictxt__label body-s">Translate</span>
-          </button>
-        </label>
-      </div>
-      {contentMode === 'translate' ? (
-        <div className="tdmenucontent__translate tdmenucontent__translate-top">
-          <LocalizationControls mode="translate" section="selector" />
-        </div>
-      ) : null}
+  const isLocalizationPanel = activePanel === 'localization';
+  const activePanelHtml =
+    activePanel === 'localization' ? panelsById['content']?.html ?? null : panelsById[activePanel]?.html ?? null;
+  const contentHeader = isLocalizationPanel ? (
+    <div className="tdmenucontent__translate tdmenucontent__translate-top">
+      <LocalizationControls mode="translate" section="selector" />
     </div>
   ) : null;
-  const contentFooter =
-    isContentPanel && contentMode === 'translate' ? (
-      <div className="tdmenucontent__footer tdmenucontent__translate">
-        <LocalizationControls mode="translate" section="footer" />
-      </div>
-    ) : null;
+  const contentFooter = isLocalizationPanel ? (
+    <div className="tdmenucontent__footer tdmenucontent__translate">
+      <LocalizationControls mode="translate" section="footer" />
+    </div>
+  ) : null;
 
   return (
     <aside className="tooldrawer">
@@ -240,7 +175,7 @@ export function ToolDrawer() {
                   dieterAssets={compiled.assets.dieter}
                   header={contentHeader}
                   footer={contentFooter}
-                  translateMode={isContentPanel && contentMode === 'translate'}
+                  translateMode={isLocalizationPanel}
                   translateAllowlist={session.locale.allowlist}
                 />
               )

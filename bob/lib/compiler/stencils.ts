@@ -71,6 +71,15 @@ function parseBooleanAttr(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
+function parseFillModes(value: string | undefined): string[] | null {
+  if (!value) return null;
+  const modes = value
+    .split(',')
+    .map((mode) => mode.trim().toLowerCase())
+    .filter(Boolean);
+  return modes.length ? modes : null;
+}
+
 const stencilCache = new Map<string, Promise<{ stencil: string; spec?: ComponentSpec }>>();
 
 export async function loadComponentStencil(type: string): Promise<{ stencil: string; spec?: ComponentSpec }> {
@@ -268,8 +277,20 @@ export async function buildContext(
     const labelLower = label.toLowerCase();
     return labelLower.includes('background');
   })();
+  const fillModesAttr = attrs.fillModes || attrs['fill-modes'];
+  const mergedFillModes = (merged.fillModes as string) || '';
+  let fillModes = typeof fillModesAttr === 'string' ? fillModesAttr.trim() : '';
+  if (component === 'dropdown-fill' && !fillModes) {
+    if (allowImageOverride === false) fillModes = 'color';
+    else if (allowImageOverride === true) fillModes = mergedFillModes || 'color,gradient,image';
+    else fillModes = mergedFillModes;
+  }
+  const allowImageFromModes = fillModes
+    ? parseFillModes(fillModes)?.some((mode) => mode === 'image' || mode === 'video')
+    : undefined;
 
-  const allowImage = component === 'dropdown-fill' ? (allowImageOverride ?? inferredAllowsImage) : undefined;
+  const allowImage =
+    component === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
 
@@ -305,6 +326,7 @@ export async function buildContext(
     headerLabel,
     headerIcon,
     allowImage,
+    fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,
     accept: component === 'dropdown-upload' ? accept : undefined,

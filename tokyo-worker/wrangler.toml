@@ -7,11 +7,23 @@ workers_dev = true
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
 
+[[queues.producers]]
+binding = "L10N_PUBLISH_QUEUE"
+queue = "instance-l10n-publish-cloud-dev"
+
 [[queues.consumers]]
 queue = "instance-l10n-publish-cloud-dev"
 
 [env.local]
 name = "tokyo-assets-local"
+
+[[env.local.r2_buckets]]
+binding = "TOKYO_R2"
+bucket_name = "tokyo-assets-dev"
+
+[[env.local.queues.producers]]
+binding = "L10N_PUBLISH_QUEUE"
+queue = "instance-l10n-publish-local"
 
 [[env.local.queues.consumers]]
 queue = "instance-l10n-publish-local"

@@ -149,6 +149,10 @@ async function getAiGrant(args: {
   mode: 'editor' | 'ops';
   sessionId: string;
   instancePublicId?: string;
+  workspaceId?: string;
+  subject?: string;
+  provider?: string;
+  model?: string;
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
 }) {
   let parisBaseUrl = '';
@@ -172,6 +176,10 @@ async function getAiGrant(args: {
         agentId: args.agentId,
         mode: args.mode,
         trace: { sessionId: args.sessionId, ...(args.instancePublicId ? { instancePublicId: args.instancePublicId } : {}) },
+        ...(args.workspaceId ? { workspaceId: args.workspaceId } : {}),
+        ...(args.subject ? { subject: args.subject } : {}),
+        ...(args.provider ? { provider: args.provider } : {}),
+        ...(args.model ? { model: args.model } : {}),
         budgets: args.budgets,
       }),
     });
@@ -200,7 +208,7 @@ async function getAiGrant(args: {
   return { ok: true as const, value: grant };
 }
 
-async function executeOnSanFrancisco(args: { grant: string; agentId: string; input: unknown }) {
+async function executeOnSanFrancisco(args: { grant: string; agentId: string; input: unknown; traceClient?: string }) {
   const resolved = await resolveSanFranciscoBaseUrl();
   if (!resolved) return { ok: false as const, error: 'AI_NOT_CONFIGURED', message: 'SanFrancisco is not reachable' };
 
@@ -214,7 +222,7 @@ async function executeOnSanFrancisco(args: { grant: string; agentId: string; inp
         grant: args.grant,
         agentId: args.agentId,
         input: args.input,
-        trace: { client: 'minibob' },
+        trace: { client: args.traceClient || 'bob' },
       }),
     });
   } catch (err) {
@@ -262,6 +270,8 @@ export async function POST(req: Request) {
     const widgetType = asTrimmedString(body?.widgetType);
     const sessionId = asTrimmedString(body?.sessionId);
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
+    const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
+    const subject = asTrimmedString(body?.subject) || undefined;
     const currentConfig = body?.currentConfig;
     const controls = body?.controls;
 
@@ -279,6 +289,8 @@ export async function POST(req: Request) {
       mode: 'ops',
       sessionId,
       instancePublicId,
+      workspaceId,
+      subject,
       // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.
       budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
     });
@@ -289,9 +301,11 @@ export async function POST(req: Request) {
       );
     }
 
+    const traceClient = subject === 'minibob' ? 'minibob' : 'bob';
     const executed = await executeOnSanFrancisco({
       grant: grantRes.value,
       agentId,
+      traceClient,
       input: {
         prompt,
         widgetType,

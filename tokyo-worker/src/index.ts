@@ -1,8 +1,10 @@
+import { getEntitlementsMatrix } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 
 type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
+  L10N_PUBLISH_QUEUE?: Queue<L10nPublishJob>;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   TOKYO_L10N_HTTP_BASE?: string;
@@ -138,12 +140,6 @@ type L10nOverlay = {
   ops: Array<{ op: 'set'; path: string; value: string }>;
 };
 
-type L10nManifest = {
-  v: 1;
-  gitSha: string;
-  instances: Record<string, Record<string, { file: string; baseUpdatedAt?: string | null; geoCountries?: string[] | null }>>;
-};
-
 type L10nPublishJob = {
   v: 1;
   publicId: string;
@@ -165,6 +161,26 @@ type InstanceLocaleRow = {
   base_updated_at?: string | null;
   base_fingerprint?: string | null;
   geo_countries?: string[] | null;
+  workspace_id?: string | null;
+};
+
+type L10nPublishStateRow = {
+  public_id: string;
+  locale: string;
+  base_fingerprint: string;
+  published_fingerprint?: string | null;
+  publish_state: string;
+  publish_attempts?: number | null;
+  publish_next_at?: string | null;
+  last_error?: string | null;
+};
+
+type L10nPublishResult = {
+  publicId: string;
+  locale: string;
+  baseFingerprint: string;
+  baseUpdatedAt: string | null;
+  workspaceId: string | null;
 };
 
 function normalizePublicId(raw: string): string | null {
@@ -175,6 +191,20 @@ function normalizePublicId(raw: string): string | null {
     /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(value);
   const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(value);
   if (!okMain && !okCurated && !okUser) return null;
+  return value;
+}
+
+function normalizeCuratedPublicId(raw: string): string | null {
+  const value = normalizePublicId(raw);
+  if (!value) return null;
+  if (value.startsWith('wgt_curated_') || value.startsWith('wgt_main_')) return value;
+  return null;
+}
+
+function normalizeWidgetType(raw: string): string | null {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!value) return null;
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(value)) return null;
   return value;
 }
 
@@ -199,15 +229,6 @@ function stableStringify(value: any): string {
 function prettyStableJson(value: any): string {
   const parsed = JSON.parse(stableStringify(value));
   return `${JSON.stringify(parsed, null, 2)}\n`;
-}
-
-async function sha8(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  const bytes = new Uint8Array(digest);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .slice(0, 8);
 }
 
 function assertOverlayShape(payload: any): L10nOverlay {
@@ -237,32 +258,8 @@ function assertOverlayShape(payload: any): L10nOverlay {
   return { v: 1, baseUpdatedAt: payload.baseUpdatedAt ?? null, baseFingerprint, ops };
 }
 
-async function loadL10nManifest(env: Env): Promise<L10nManifest> {
-  const key = 'l10n/manifest.json';
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) {
-    return { v: 1, gitSha: 'runtime', instances: {} };
-  }
-  const text = await obj.text();
-  const json = JSON.parse(text);
-  if (!json || typeof json !== 'object' || json.v !== 1 || typeof json.gitSha !== 'string' || typeof json.instances !== 'object') {
-    throw new Error('[tokyo] invalid l10n manifest');
-  }
-  return json as L10nManifest;
-}
-
-async function saveL10nManifest(env: Env, manifest: L10nManifest): Promise<void> {
-  const body = `${JSON.stringify(manifest, null, 2)}\n`;
-  await env.TOKYO_R2.put('l10n/manifest.json', body, {
-    httpMetadata: {
-      contentType: 'application/json; charset=utf-8',
-      cacheControl: 'public, max-age=60, must-revalidate',
-    },
-  });
-}
-
 async function cleanOldL10nOutputs(env: Env, publicId: string, locale: string, keepKey: string): Promise<void> {
-  const prefix = `l10n/instances/${publicId}/${locale}.`;
+  const prefix = `l10n/instances/${publicId}/${locale}/`;
   let cursor: string | undefined = undefined;
   do {
     const list = await env.TOKYO_R2.list({ prefix, cursor });
@@ -290,15 +287,6 @@ async function deleteLocaleArtifacts(env: Env, publicId: string, locale: string)
   }
 
   await cleanOldL10nOutputs(env, publicId, locale, '');
-  const manifest = await loadL10nManifest(env);
-  const entries = manifest.instances?.[publicId];
-  if (!entries || typeof entries !== 'object') return;
-  if (!entries[locale]) return;
-  delete entries[locale];
-  if (Object.keys(entries).length === 0) {
-    delete manifest.instances[publicId];
-  }
-  await saveL10nManifest(env, manifest);
 }
 
 async function publishOverlayArtifacts(
@@ -306,7 +294,6 @@ async function publishOverlayArtifacts(
   publicId: string,
   locale: string,
   overlay: L10nOverlay,
-  geoCountries?: string[] | null,
 ): Promise<string> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
@@ -317,7 +304,6 @@ async function publishOverlayArtifacts(
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           ...overlay,
-          geoCountries: Array.isArray(geoCountries) ? geoCountries : undefined,
         }),
       }
     );
@@ -334,9 +320,12 @@ async function publishOverlayArtifacts(
   }
 
   const stable = prettyStableJson(overlay);
-  const hash = await sha8(stable);
-  const outName = `${locale}.${hash}.ops.json`;
-  const key = `l10n/instances/${publicId}/${outName}`;
+  const fingerprint = overlay.baseFingerprint ?? '';
+  if (!/^[a-f0-9]{64}$/i.test(fingerprint)) {
+    throw new Error('[tokyo] Missing baseFingerprint for deterministic l10n path');
+  }
+  const outName = `${fingerprint}.ops.json`;
+  const key = `l10n/instances/${publicId}/${locale}/${outName}`;
 
   await env.TOKYO_R2.put(key, stable, {
     httpMetadata: {
@@ -345,23 +334,12 @@ async function publishOverlayArtifacts(
     },
   });
 
-  await cleanOldL10nOutputs(env, publicId, locale, key);
-
-  const manifest = await loadL10nManifest(env);
-  manifest.instances[publicId] = manifest.instances[publicId] || {};
-  manifest.instances[publicId][locale] = {
-    file: outName,
-    baseUpdatedAt: overlay.baseUpdatedAt ?? null,
-    geoCountries: Array.isArray(geoCountries) && geoCountries.length ? geoCountries : undefined,
-  };
-  await saveL10nManifest(env, manifest);
-
   return outName;
 }
 
 async function loadInstanceLocaleRow(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries',
+    select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries,workspace_id',
     public_id: `eq.${publicId}`,
     locale: `eq.${locale}`,
     limit: '1',
@@ -406,16 +384,16 @@ function isPublishJob(value: unknown): value is L10nPublishJob {
   return true;
 }
 
-async function publishLocaleFromSupabase(env: Env, publicId: string, locale: string): Promise<void> {
+async function publishLocaleFromSupabase(env: Env, publicId: string, locale: string): Promise<L10nPublishResult | null> {
   const row = await loadInstanceLocaleRow(env, publicId, locale);
-  if (!row) return;
-  await publishLocaleRow(env, row);
+  if (!row) return null;
+  return publishLocaleRow(env, row);
 }
 
-async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<void> {
+async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<L10nPublishResult | null> {
   const publicId = normalizePublicId(row.public_id);
   const locale = normalizeLocale(row.locale);
-  if (!publicId || !locale) return;
+  if (!publicId || !locale) return null;
   const baseOps = Array.isArray(row.ops) ? row.ops : [];
   const userOps = Array.isArray(row.user_ops) ? row.user_ops : [];
   const mergedOps = [...baseOps, ...userOps];
@@ -431,7 +409,14 @@ async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<void>
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(`[tokyo] Invalid overlay row: ${detail}`);
   }
-  await publishOverlayArtifacts(env, publicId, locale, overlay, row.geo_countries ?? null);
+  await publishOverlayArtifacts(env, publicId, locale, overlay);
+  return {
+    publicId,
+    locale,
+    baseFingerprint: overlay.baseFingerprint ?? '',
+    baseUpdatedAt: row.base_updated_at ?? null,
+    workspaceId: row.workspace_id ?? null,
+  };
 }
 
 async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Response> {
@@ -458,36 +443,219 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
   const resolvedAction = action === 'delete' ? 'delete' : 'upsert';
   if (resolvedAction === 'delete') {
     await deleteLocaleArtifacts(env, publicId, locale);
+    await deleteL10nOverlayVersions(env, publicId, locale);
+    const stateRow = await loadPublishStateRow(env, publicId, locale);
+    if (stateRow?.base_fingerprint) {
+      await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
+    }
   } else {
-    await publishLocaleFromSupabase(env, publicId, locale);
+    const result = await publishLocaleFromSupabase(env, publicId, locale);
+    if (result?.baseFingerprint) {
+      await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
+      await recordL10nOverlayVersion(env, result);
+    }
   }
 
   return json({ publicId, locale, action: resolvedAction }, { status: 200 });
 }
 
-async function listInstanceLocales(env: Env): Promise<InstanceLocaleRow[]> {
-  const rows: InstanceLocaleRow[] = [];
-  const limit = 1000;
-  let offset = 0;
-  while (true) {
-    const params = new URLSearchParams({
-      select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries',
-      limit: String(limit),
-      offset: String(offset),
-      order: 'public_id.asc,locale.asc',
-    });
-    const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`[tokyo] Supabase list failed (${res.status}) ${text}`.trim());
-    }
-    const batch = (await res.json().catch(() => [])) as InstanceLocaleRow[];
-    if (!batch.length) break;
-    rows.push(...batch);
-    if (batch.length < limit) break;
-    offset += batch.length;
+async function loadPublishStateRow(env: Env, publicId: string, locale: string): Promise<L10nPublishStateRow | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,locale,base_fingerprint,published_fingerprint,publish_state,publish_attempts,publish_next_at,last_error',
+    public_id: `eq.${publicId}`,
+    locale: `eq.${locale}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase publish state read failed (${res.status}) ${text}`.trim());
   }
-  return rows;
+  const rows = (await res.json().catch(() => [])) as L10nPublishStateRow[];
+  return rows?.[0] ?? null;
+}
+
+async function upsertPublishState(env: Env, payload: Record<string, unknown>): Promise<void> {
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,locale`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase publish state upsert failed (${res.status}) ${text}`.trim());
+  }
+}
+
+async function markPublishStateClean(env: Env, publicId: string, locale: string, baseFingerprint: string): Promise<void> {
+  await upsertPublishState(env, {
+    public_id: publicId,
+    locale,
+    base_fingerprint: baseFingerprint,
+    published_fingerprint: baseFingerprint,
+    publish_state: 'clean',
+    publish_attempts: 0,
+    publish_next_at: null,
+    last_error: null,
+  });
+}
+
+async function markPublishStateFailed(
+  env: Env,
+  publicId: string,
+  locale: string,
+  baseFingerprint: string,
+  error: string,
+): Promise<void> {
+  const existing = await loadPublishStateRow(env, publicId, locale);
+  const attempts = (existing?.publish_attempts ?? 0) + 1;
+  const delayMs = Math.min(60_000 * attempts, 15 * 60_000);
+  const nextAt = new Date(Date.now() + delayMs).toISOString();
+  await upsertPublishState(env, {
+    public_id: publicId,
+    locale,
+    base_fingerprint: baseFingerprint,
+    publish_state: 'failed',
+    publish_attempts: attempts,
+    publish_next_at: nextAt,
+    last_error: error,
+  });
+}
+
+async function listDirtyPublishStates(env: Env, limit = 200): Promise<L10nPublishStateRow[]> {
+  const now = new Date().toISOString();
+  const params = new URLSearchParams({
+    select: 'public_id,locale,base_fingerprint,publish_state,publish_next_at',
+    publish_state: 'in.(dirty,failed)',
+    order: 'publish_next_at.asc.nullsfirst,updated_at.asc',
+    limit: String(limit),
+  });
+  params.set('or', `(publish_next_at.is.null,publish_next_at.lte.${now})`);
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase dirty publish list failed (${res.status}) ${text}`.trim());
+  }
+  return (await res.json().catch(() => [])) as L10nPublishStateRow[];
+}
+
+const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
+const DEFAULT_L10N_VERSION_LIMIT = 1;
+
+function resolveL10nVersionLimit(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[L10N_VERSION_CAP_KEY];
+  if (!entry || entry.kind !== 'cap') return DEFAULT_L10N_VERSION_LIMIT;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_L10N_VERSION_LIMIT;
+  return Math.max(1, Math.floor(value));
+}
+
+async function loadWorkspaceTier(env: Env, workspaceId: string): Promise<string | null> {
+  if (!isUuid(workspaceId)) return null;
+  const params = new URLSearchParams({
+    select: 'tier',
+    id: `eq.${workspaceId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase workspace read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ tier?: string | null }>;
+  return rows?.[0]?.tier ?? null;
+}
+
+async function recordL10nOverlayVersion(env: Env, result: L10nPublishResult): Promise<void> {
+  const workspaceId = result.workspaceId;
+  if (!workspaceId) return;
+  const tier = await loadWorkspaceTier(env, workspaceId);
+  const limit = resolveL10nVersionLimit(tier);
+  if (!result.baseFingerprint) return;
+
+  const r2Path = `l10n/instances/${result.publicId}/${result.locale}/${result.baseFingerprint}.ops.json`;
+  const payload = {
+    workspace_id: workspaceId,
+    public_id: result.publicId,
+    locale: result.locale,
+    base_fingerprint: result.baseFingerprint,
+    base_updated_at: result.baseUpdatedAt,
+    r2_path: r2Path,
+  };
+
+  const insertRes = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?on_conflict=public_id,locale,base_fingerprint`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify(payload),
+  });
+  if (!insertRes.ok) {
+    const text = await insertRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase l10n version insert failed (${insertRes.status}) ${text}`.trim());
+  }
+
+  if (limit != null) {
+    await cleanupL10nOverlayVersions(env, result.publicId, result.locale, limit);
+  }
+}
+
+async function cleanupL10nOverlayVersions(
+  env: Env,
+  publicId: string,
+  locale: string,
+  keepCount: number
+): Promise<void> {
+  if (keepCount <= 0) return;
+  const limit = 1000;
+  const params = new URLSearchParams({
+    select: 'id,r2_path',
+    public_id: `eq.${publicId}`,
+    locale: `eq.${locale}`,
+    order: 'created_at.desc',
+    offset: String(keepCount),
+    limit: String(limit),
+  });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase l10n version list failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ id: string; r2_path: string }>;
+  if (!rows.length) return;
+
+  for (const row of rows) {
+    if (row?.r2_path) {
+      await env.TOKYO_R2.delete(row.r2_path);
+    }
+  }
+
+  const ids = rows.map((row) => row.id).filter(Boolean);
+  if (!ids.length) return;
+  const deleteParams = new URLSearchParams({ id: `in.(${ids.join(',')})` });
+  const deleteRes = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?${deleteParams.toString()}`, {
+    method: 'DELETE',
+  });
+  if (!deleteRes.ok) {
+    const text = await deleteRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase l10n version delete failed (${deleteRes.status}) ${text}`.trim());
+  }
+}
+
+async function deleteL10nOverlayVersions(env: Env, publicId: string, locale: string): Promise<void> {
+  const params = new URLSearchParams({
+    public_id: `eq.${publicId}`,
+    locale: `eq.${locale}`,
+  });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?${params.toString()}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase l10n version purge failed (${res.status}) ${text}`.trim());
+  }
 }
 
 async function handleGetL10nAsset(env: Env, key: string): Promise<Response> {
@@ -495,11 +663,7 @@ async function handleGetL10nAsset(env: Env, key: string): Promise<Response> {
   if (!obj) return new Response('Not found', { status: 404 });
   const headers = new Headers();
   headers.set('content-type', obj.httpMetadata?.contentType || 'application/json; charset=utf-8');
-  if (key.endsWith('/manifest.json')) {
-    headers.set('cache-control', 'public, max-age=60, must-revalidate');
-  } else {
-    headers.set('cache-control', 'public, max-age=31536000, immutable');
-  }
+  headers.set('cache-control', 'public, max-age=31536000, immutable');
   return new Response(obj.body, { status: 200, headers });
 }
 
@@ -535,7 +699,56 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   return json({ workspaceId, assetId, variant, ext, key, url }, { status: 200 });
 }
 
+async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  const publicId = normalizeCuratedPublicId(req.headers.get('x-public-id') || '');
+  if (!publicId) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }, { status: 422 });
+  }
+
+  const widgetType = normalizeWidgetType(req.headers.get('x-widget-type') || '');
+  if (!widgetType) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
+  }
+
+  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
+  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
+  }
+
+  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
+  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
+  const ext = pickExtension(filename, contentType);
+
+  const body = await req.arrayBuffer();
+  if (!body || body.byteLength === 0) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
+  }
+
+  const assetId = crypto.randomUUID();
+  const key = `curated-assets/${widgetType}/${publicId}/${assetId}/${variant}.${ext}`;
+  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
+
+  const origin = new URL(req.url).origin;
+  const url = `${origin}/${key}`;
+  return json({ publicId, widgetType, assetId, variant, ext, key, url }, { status: 200 });
+}
+
 async function handleGetWorkspaceAsset(req: Request, env: Env, key: string): Promise<Response> {
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+
+  const ext = key.split('.').pop() || '';
+  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const headers = new Headers();
+  headers.set('content-type', contentType);
+  headers.set('cache-control', 'public, max-age=31536000, immutable');
+  return new Response(obj.body, { status: 200, headers });
+}
+
+async function handleGetCuratedAsset(req: Request, env: Env, key: string): Promise<Response> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
 
@@ -577,6 +790,17 @@ export default {
         return withCors(await handleGetWorkspaceAsset(req, env, key));
       }
 
+      if (pathname === '/curated-assets/upload') {
+        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        return withCors(await handleUploadCuratedAsset(req, env));
+      }
+
+      if (pathname.startsWith('/curated-assets/')) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const key = pathname.replace(/^\//, '');
+        return withCors(await handleGetCuratedAsset(req, env, key));
+      }
+
       const l10nMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
       if (l10nMatch) {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
@@ -612,11 +836,30 @@ export default {
         const action = body.action === 'delete' ? 'delete' : 'upsert';
         if (action === 'delete') {
           await deleteLocaleArtifacts(env, publicId, locale);
+          await deleteL10nOverlayVersions(env, publicId, locale);
+          const stateRow = await loadPublishStateRow(env, publicId, locale);
+          if (stateRow?.base_fingerprint) {
+            await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
+          }
         } else {
-          await publishLocaleFromSupabase(env, publicId, locale);
+          const result = await publishLocaleFromSupabase(env, publicId, locale);
+          if (result?.baseFingerprint) {
+            await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
+            await recordL10nOverlayVersion(env, result);
+          }
         }
       } catch (err) {
         console.error('[tokyo] publish job failed', err);
+        try {
+          const stateRow = await loadPublishStateRow(env, publicId, locale);
+          const baseFingerprint = stateRow?.base_fingerprint ?? '';
+          if (baseFingerprint) {
+            const detail = err instanceof Error ? err.message : String(err);
+            await markPublishStateFailed(env, publicId, locale, baseFingerprint, detail);
+          }
+        } catch (markErr) {
+          console.error('[tokyo] publish state update failed', markErr);
+        }
       }
     }
   },
@@ -625,13 +868,15 @@ export default {
     ctx.waitUntil(
       (async () => {
         try {
-          const rows = await listInstanceLocales(env);
+          if (!env.L10N_PUBLISH_QUEUE) return;
+          const rows = await listDirtyPublishStates(env);
           for (const row of rows) {
-            try {
-              await publishLocaleRow(env, row);
-            } catch (err) {
-              console.error('[tokyo] publish row failed', err);
-            }
+            await env.L10N_PUBLISH_QUEUE.send({
+              v: 1,
+              publicId: row.public_id,
+              locale: row.locale,
+              action: 'upsert',
+            });
           }
         } catch (err) {
           console.error('[tokyo] scheduled publish failed', err);

@@ -67,7 +67,7 @@ Venice must **never** serve unpublished instances.
 **Render algorithm (high level):**
 1. Fetch instance snapshot from Paris (`GET /api/instance/:publicId?subject=venice`) to get `widgetType`, `status`, and `config`. Venice forwards `Authorization` and `X-Embed-Token` headers when present and varies responses on those headers.
 2. Fetch `widget.html` from Tokyo via Venice’s proxy routes.
-3. Apply Tokyo `l10n` overlay (if present) from `tokyo/l10n/manifest.json`:
+3. Apply Tokyo `l10n` overlay (if present) from deterministic overlay paths:
    - Overlay must be set-only ops.
    - Overlay ops are already merged (agent ops + per-field user overrides).
    - Overlay must include `baseFingerprint` and match `computeBaseFingerprint(instance.config)` (stale guard).
@@ -92,7 +92,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
 - `device=desktop|mobile` (optional, defaults to `desktop`)
-- `locale=<bcp47-ish>` (optional, defaults to `en`; when omitted, Venice may select a geo-matched locale from the Tokyo l10n manifest using `CF-IPCountry`)
+- `locale=<bcp47-ish>` (optional, defaults to `en`; when omitted, Venice uses `Accept-Language` with a simple fallback)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Non-goal (strict):**
@@ -116,7 +116,7 @@ Response includes (as implemented today):
 Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`.
 
 **Locale resolution (shipped):**
-- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` and may be overridden by a geo-matched locale from the Tokyo l10n manifest using `CF-IPCountry`.
+- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` with a safe fallback (no l10n manifest lookup).
 
 ### Tokyo Asset Proxy Routes (Shipped)
 

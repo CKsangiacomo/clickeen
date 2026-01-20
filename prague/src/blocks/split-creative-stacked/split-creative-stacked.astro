@@ -9,7 +9,6 @@ type Props = {
   curatedRef?: {
     publicId: string;
     locale: string;
-    height?: string;
     title?: string;
   };
 };
@@ -31,12 +30,11 @@ const { headline, subheadline, primaryCta, secondaryCta, curatedRef } = Astro.pr
 
     <div class="ck-splitCreative__visual" aria-hidden="true">
       {curatedRef ? (
-        <CuratedInstanceEmbed
-          publicId={curatedRef.publicId}
-          locale={curatedRef.locale}
-          height={curatedRef.height ?? '520px'}
-          title={curatedRef.title ?? 'Widget preview'}
-        />
+          <CuratedInstanceEmbed
+            publicId={curatedRef.publicId}
+            locale={curatedRef.locale}
+            title={curatedRef.title ?? 'Widget preview'}
+          />
       ) : (
         <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
       )}

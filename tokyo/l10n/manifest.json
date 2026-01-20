@@ -2,178 +2,62 @@
   "v": 1,
   "gitSha": "4692ac7dea3c98f889a76cf254f6da3aba0d83de",
   "instances": {
-    "wgt_curated_faq.overview.hero": {
+    "wgt_curated_faq.lightblurs.v01": {
       "ar": {
-        "file": "ar.312cfb69.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "ar.28eb843e.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "de": {
-        "file": "de.b95aa1ec.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "de.6c4e2c0a.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "en": {
-        "file": "en.1b49dfc0.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "en.9ea76385.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "es": {
-        "file": "es.8f7325af.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "es.396158e7.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "fr": {
-        "file": "fr.1226c80e.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "fr.b5b8eb75.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "hi": {
-        "file": "hi.5b78cc4d.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "hi.d08f2b3f.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "it": {
-        "file": "it.2ebaf817.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "it.2686c325.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "ja": {
-        "file": "ja.687d79e4.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "ja.4893b9bc.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "ko": {
-        "file": "ko.eec9a0dc.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "ko.968695d3.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "nl": {
-        "file": "nl.b9845a03.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "nl.f0d37ae2.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "pl": {
-        "file": "pl.343e14d5.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "pl.1b36591d.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "pt": {
-        "file": "pt.b63deee5.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "pt.b55e5e17.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "tr": {
-        "file": "tr.3fd5f1ad.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
+        "file": "tr.5485588e.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       },
       "zh-tw": {
-        "file": "zh-tw.5e489b35.ops.json",
-        "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00"
-      }
-    },
-    "wgt_main_logoshowcase": {
-      "en": {
-        "file": "en.8048d9c5.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "es": {
-        "file": "es.25cc61e1.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "ko": {
-        "file": "ko.394cb47d.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "pt": {
-        "file": "pt.e9dda1a8.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "ja": {
-        "file": "ja.63abaa5f.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "ar": {
-        "file": "ar.80f0d2b3.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "de": {
-        "file": "de.bffe9f69.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "nl": {
-        "file": "nl.687ef860.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "fr": {
-        "file": "fr.5a773bbc.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "zh-tw": {
-        "file": "zh-tw.1e52fad6.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "hi": {
-        "file": "hi.1a778d11.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "it": {
-        "file": "it.80673b36.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "pl": {
-        "file": "pl.eb881e35.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      },
-      "tr": {
-        "file": "tr.03c68a22.ops.json",
-        "baseUpdatedAt": "2026-01-18T15:52:35.196975+00:00"
-      }
-    },
-    "wgt_main_countdown": {
-      "en": {
-        "file": "en.6916385f.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "pt": {
-        "file": "pt.2397fd73.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "ko": {
-        "file": "ko.664a7175.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "ja": {
-        "file": "ja.6ee3e232.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "zh-tw": {
-        "file": "zh-tw.5c9e6854.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "it": {
-        "file": "it.12aa4e17.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "fr": {
-        "file": "fr.7d121e31.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "de": {
-        "file": "de.50936ff1.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "tr": {
-        "file": "tr.0ac04430.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "es": {
-        "file": "es.01ca699e.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "ar": {
-        "file": "ar.80713497.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "pl": {
-        "file": "pl.d9a453d7.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "nl": {
-        "file": "nl.ed3f1581.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
-      },
-      "hi": {
-        "file": "hi.81042f00.ops.json",
-        "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00"
+        "file": "zh-tw.fb97e2db.ops.json",
+        "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"
       }
     }
   }

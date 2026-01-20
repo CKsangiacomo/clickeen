@@ -5,6 +5,7 @@ import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } 
 import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
 import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } from './compiler/modules/stagePod';
 import { buildTypographyPanel } from './compiler/modules/typography';
+import { resolveTokyoBaseUrl } from './env/tokyo';
 
 function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const rawHtml = Array.isArray(widgetJson.html) ? widgetJson.html : [];
@@ -107,6 +108,78 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   return filtered;
 }
 
+function extractPrimaryUrl(raw: string): string | null {
+  const v = String(raw || '').trim();
+  if (!v) return null;
+  if (/^(?:https?:\/\/|data:|blob:|\/)/i.test(v)) return v;
+  const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (match && match[2]) return match[2];
+  return null;
+}
+
+function replacePrimaryUrl(raw: string, nextUrl: string): string {
+  const v = String(raw || '');
+  const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+  if (match && match[2]) return v.replace(match[2], nextUrl);
+  return nextUrl;
+}
+
+function isTokyoAssetPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/workspace-assets/') ||
+    pathname.startsWith('/curated-assets/') ||
+    pathname.startsWith('/widgets/') ||
+    pathname.startsWith('/dieter/')
+  );
+}
+
+function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase: string): Record<string, unknown> {
+  const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
+  if (!base) return defaults;
+  const next = JSON.parse(JSON.stringify(defaults)) as Record<string, unknown>;
+
+  const visit = (node: unknown): string | void => {
+    if (typeof node === 'string') {
+      const primaryUrl = extractPrimaryUrl(node);
+      if (!primaryUrl || /^(?:data|blob):/i.test(primaryUrl)) return;
+
+      if (primaryUrl.startsWith('/')) {
+        if (!isTokyoAssetPath(primaryUrl)) return;
+        return replacePrimaryUrl(node, `${base}${primaryUrl}`);
+      }
+
+      if (/^https?:\/\//i.test(primaryUrl)) {
+        try {
+          const parsed = new URL(primaryUrl);
+          if (!isTokyoAssetPath(parsed.pathname)) return;
+          return replacePrimaryUrl(node, `${base}${parsed.pathname}`);
+        } catch {
+          return;
+        }
+      }
+
+      return;
+    }
+
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        const replaced = visit(node[i]);
+        if (typeof replaced === 'string') node[i] = replaced;
+      }
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      const replaced = visit(value);
+      if (typeof replaced === 'string') (node as Record<string, unknown>)[key] = replaced;
+    }
+  };
+
+  visit(next);
+  return next;
+}
+
 export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidget> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
@@ -127,7 +200,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
 
   const htmlWithGenerated = buildHtmlWithGeneratedPanels(widgetJson);
   const parsed = parsePanels(htmlWithGenerated);
-  const controls = compileControlsFromPanels({ panels: parsed.panels, defaults });
+  const defaultsWithAssets = rewriteAssetUrlsInDefaults(defaults, resolveTokyoBaseUrl());
+  const controls = compileControlsFromPanels({ panels: parsed.panels, defaults: defaultsWithAssets });
 
   const panels: CompiledPanel[] = parsed.panels.map((panel) => {
     return panel;
@@ -216,7 +290,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   return {
     widgetname,
     displayName,
-    defaults,
+    defaults: defaultsWithAssets,
     panels: renderedPanels,
     controls,
     assets,

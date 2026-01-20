@@ -136,6 +136,10 @@ Copy contract:
 - Prague embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
 - `wgt_curated_*.<locale>` is invalid and must 404 (no legacy support).
 
+Acquisition preview hook:
+- Hero headline and subheadline expose `data-ck-copy="heroTitle|heroSubtitle"` for personalization preview.
+- The primary CTA label uses `data-ck-copy="ctaText"` for preview overrides.
+
 ### 2.3 Big bang
 
 `blocks/big-bang/big-bang`
@@ -168,6 +172,9 @@ Copy contract:
 - `title` (required by registry, used as section heading)
 - `items[]` (mapped to `steps[]`)
 
+Acquisition preview hook:
+- Steps header exposes `data-ck-copy="sectionTitle"` for personalization preview.
+
 ### 2.6 Outcomes
 
 `blocks/outcomes/outcomes`
@@ -179,6 +186,9 @@ Copy contract:
 `blocks/cta/cta`
 - Props: `{ headline: string, subheadline?: string, primaryCta?: { label: string, href: string } }`
 - CTA label/href are currently derived from Prague chrome strings; per-block CTA metadata is ignored (reserved for future use).
+
+Acquisition preview hook:
+- CTA primary button uses `data-ck-copy="ctaText"` for personalization preview.
 
 ### 2.8 Minibob island
 

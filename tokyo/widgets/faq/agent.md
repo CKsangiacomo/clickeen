@@ -66,8 +66,8 @@ Behavior:
 - `behavior.showBacklink` (boolean; controls global branding badge)
 
 Stage/Pod (layout spacing lives here; no widget-level padding):
-- `stage.background`, `stage.alignment`, `stage.padding*`
-- `pod.background`, `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
+- `stage.background` (fill object), `stage.alignment`, `stage.padding*`
+- `pod.background` (fill object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
 
 ## Rendering Notes
 - Inline HTML is sanitized; allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).

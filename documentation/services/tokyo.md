@@ -67,9 +67,11 @@ Rules:
 Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
+- `tokyo/dev-server.mjs` serves `/curated-assets/*` from `tokyo/curated-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
+  - `POST /curated-assets/upload` (curated instance assets; required headers: `x-public-id`, `x-widget-type`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:locale` (dev-only; writes localized overlays into `tokyo/l10n/**`)
   - `DELETE /l10n/instances/:publicId/:locale` (dev-only; removes localized overlays from `tokyo/l10n/**`)
@@ -78,16 +80,15 @@ Local dev:
 
 ## l10n overlays (executed)
 
-Tokyo serves **instance localization overlays** as content-hashed ops patches:
+Tokyo serves **instance localization overlays** as deterministic baseFingerprint ops patches:
 
-- Build output path: `tokyo/l10n/instances/<publicId>/<locale>.<hash>.ops.json`
-- Manifest: `tokyo/l10n/manifest.json`
+- Build output path: `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
 
 Rules:
 - Overlays are set-only ops (no structural mutations).
 - Overlays include `baseFingerprint` and are rejected if missing.
 - Instance identity is locale-free (`publicId` never contains locale).
-- Consumers should treat overlay files as cacheable (hashed filenames); `manifest.json` is the indirection layer and should be short-TTL.
+- Consumers should treat overlay files as cacheable (immutable baseFingerprint filenames); no global manifest is used.
 - Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_locales` (`ops + user_ops`, user_ops applied last).
 
 Build command (repo root):
@@ -97,8 +98,10 @@ Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:
   - `POST /workspace-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-workspace-id`)
   - `GET /workspace-assets/**` (public, cacheable; content-addressed by `assetId`)
+  - `POST /curated-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required headers: `x-public-id`, `x-widget-type`)
+  - `GET /curated-assets/**` (public, cacheable; content-addressed by `assetId`)
   - `POST /l10n/instances/:publicId/:locale` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
-  - `GET /l10n/**` (public; manifest short-TTL, hashed overlays immutable)
+  - `GET /l10n/**` (public; deterministic overlay paths, immutable)
   - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):

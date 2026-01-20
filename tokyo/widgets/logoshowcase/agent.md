@@ -72,18 +72,18 @@ Layout:
 Appearance:
 - `appearance.logoLook` (`original` | `grayscale`)
 - `appearance.logoOpacity` (number; 0..1)
-- `appearance.itemBackground` (string; CSS fill)
+- `appearance.itemBackground` (fill object; type: color | gradient | image)
 - Tile card:
   - `appearance.itemCard.radiusLinked` (boolean)
   - `appearance.itemCard.radius|radiusTL|radiusTR|radiusBR|radiusBL` (radius token, e.g. `none|2xl|4xl|6xl|10xl`)
   - `appearance.itemCard.border` (object; Dieter `dropdown-border` schema)
   - `appearance.itemCard.shadow` (object; Dieter `dropdown-shadow` schema)
 - Header colors:
-  - `appearance.titleColor` (string; CSS fill)
-  - `appearance.textColor` (string; CSS fill)
+  - `appearance.titleColor` (fill object; type: color)
+  - `appearance.textColor` (fill object; type: color)
 - CTA appearance:
-  - `appearance.ctaBackground` (string; CSS fill)
-  - `appearance.ctaTextColor` (string; CSS fill)
+  - `appearance.ctaBackground` (fill object; type: color)
+  - `appearance.ctaTextColor` (fill object; type: color)
   - `appearance.ctaRadius` (radius token, e.g. `none|sm|md|lg|xl|2xl`)
 
 Behavior / Settings:
@@ -92,8 +92,8 @@ Behavior / Settings:
 - `seoGeo.enabled` (boolean)
 
 Stage/Pod (layout spacing lives here; no widget-level width/padding):
-- `stage.background`, `stage.alignment`, `stage.padding*`
-- `pod.background`, `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
+- `stage.background` (fill object), `stage.alignment`, `stage.padding*`
+- `pod.background` (fill object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
 
 ## Rendering Notes
 - Breakpoint: widgets use a single breakpoint at `900px`.

@@ -4,11 +4,10 @@ import Icon from './Icon.astro';
 type Props = {
   publicId: string;
   locale: string;
-  height?: string;
   title?: string;
 };
 
-const { publicId, locale, height = '360px', title = 'Widget preview' } = Astro.props;
+const { publicId, locale, title = 'Widget preview' } = Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 const okCuratedPublicId = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(
@@ -61,7 +60,6 @@ const brandSvgs = {
         class="ck-curatedEmbed__iframe"
         title={title}
         src={iframeSrc}
-        style={`height: ${height};`}
         loading="lazy"
         referrerpolicy="no-referrer"
         sandbox="allow-scripts allow-same-origin allow-forms"
@@ -419,6 +417,7 @@ const brandSvgs = {
     background: var(--color-system-white);
     position: relative;
     z-index: 1;
+    min-height: 200px; /* Minimum height while loading */
   }
 
   .ck-curatedEmbed__stub {
@@ -441,6 +440,24 @@ const brandSvgs = {
     if (!(creative instanceof HTMLElement)) return;
     if (creative.dataset.ckShareBound === '1') return;
     creative.dataset.ckShareBound = '1';
+
+    // Handle dynamic iframe resizing
+    const iframe = creative.querySelector('.ck-curatedEmbed__iframe');
+    if (iframe instanceof HTMLIFrameElement) {
+      const resizeHandler = (event) => {
+        if (event.source !== iframe.contentWindow) return;
+        if (!event.data || typeof event.data !== 'object') return;
+        if (event.data.type !== 'ck:resize') return;
+
+        const height = event.data.height;
+        if (typeof height === 'number' && height > 0) {
+          iframe.style.height = `${height}px`;
+        }
+      };
+
+      window.addEventListener('message', resizeHandler);
+      creative.dataset.ckResizeBound = '1';
+    }
 
     const anchorId = creative.getAttribute('data-ck-curated-id') || creative.id || '';
     const widgetType = creative.getAttribute('data-ck-widget-type') || '';

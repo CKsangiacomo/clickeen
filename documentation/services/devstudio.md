@@ -57,6 +57,8 @@ Notes:
 - Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.
 - Curated IDs are locale-free; do not create `wgt_curated_*.<locale>` variants. Locale is a runtime query param.
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, version, tags }`. Tags are system-managed (ICP / objective / style).
+- Curated assets (including `wgt_main_*`) are stored under `tokyo/curated-assets/{widgetType}/{publicId}/...` and served from Tokyo CDN.
+- Curated actions export the current editor state from Bob (not the last published config).
 
 ## Troubleshooting
 

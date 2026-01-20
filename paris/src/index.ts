@@ -1,6 +1,15 @@
 import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
-import { can, resolvePolicy, evaluateLimits, parseLimitsSpec } from '@clickeen/ck-policy';
-import type { Policy, PolicyProfile, LimitsSpec } from '@clickeen/ck-policy';
+import {
+  can,
+  resolvePolicy,
+  evaluateLimits,
+  parseLimitsSpec,
+  resolveAiAgent,
+  resolveAiBudgets,
+  resolveAiPolicyCapsule,
+  isPolicyEntitled,
+} from '@clickeen/ck-policy';
+import type { Policy, PolicyProfile, LimitsSpec, AiGrantPolicy } from '@clickeen/ck-policy';
 import supportedLocalesRaw from '../../config/locales.json';
 
 type Env = {
@@ -60,6 +69,14 @@ type WorkspaceRow = {
   l10n_locales?: unknown;
 };
 
+type WorkspaceBusinessProfileRow = {
+  workspace_id: string;
+  profile: Record<string, unknown>;
+  sources?: Record<string, unknown> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 type UpdatePayload = {
   config?: Record<string, unknown>;
   status?: 'published' | 'unpublished';
@@ -109,6 +126,7 @@ type AIGrant = {
     maxRequests?: number;
   };
   mode: 'editor' | 'ops';
+  ai?: AiGrantPolicy;
   trace?: {
     sessionId?: string;
     instancePublicId?: string;
@@ -395,6 +413,137 @@ function resolveEditorPolicyFromRequest(req: Request, workspace: WorkspaceRow) {
   return { ok: true as const, policy, profile };
 }
 
+function normalizeAiSubject(value: unknown): 'devstudio' | 'minibob' | 'workspace' | null {
+  const raw = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (raw === 'devstudio' || raw === 'minibob' || raw === 'workspace') return raw;
+  return null;
+}
+
+function clampBudget(requested: number | null, allowed: number, hardCap: number): number {
+  const allowedInt = Math.max(1, Math.floor(allowed));
+  const capped = Math.min(allowedInt, hardCap);
+  if (requested && Number.isFinite(requested) && requested > 0) {
+    return Math.min(capped, Math.floor(requested));
+  }
+  return capped;
+}
+
+function resolveAiSubjectPolicy(args: {
+  subject: 'devstudio' | 'minibob' | 'workspace';
+  workspace?: WorkspaceRow | null;
+}): { policy: Policy; profile: PolicyProfile } {
+  if (args.subject === 'devstudio') {
+    const policy = resolvePolicy({ profile: 'devstudio', role: 'owner' });
+    return { policy, profile: 'devstudio' };
+  }
+  if (args.subject === 'minibob') {
+    const policy = resolvePolicy({ profile: 'minibob', role: 'editor' });
+    return { policy, profile: 'minibob' };
+  }
+  const tier = args.workspace?.tier ?? 'free';
+  const policy = resolvePolicy({ profile: tier, role: 'editor' });
+  return { policy, profile: tier };
+}
+
+async function issueAiGrant(args: {
+  env: Env;
+  agentId: string;
+  mode?: 'editor' | 'ops';
+  requestedProvider?: string;
+  requestedModel?: string;
+  subject?: 'devstudio' | 'minibob' | 'workspace';
+  workspaceId?: string;
+  workspace?: WorkspaceRow | null;
+  trace?: { sessionId?: string; instancePublicId?: string };
+  budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
+}): Promise<{ ok: true; grant: string; exp: number; agentId: string } | { ok: false; response: Response }> {
+  const resolvedAgent = args.agentId ? resolveAiAgent(args.agentId) : null;
+  if (!resolvedAgent) {
+    return { ok: false, response: json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 }) };
+  }
+  const entry = resolvedAgent.entry;
+
+  const subject = args.subject ?? (args.workspaceId ? 'workspace' : 'minibob');
+  let workspace: WorkspaceRow | null = args.workspace ?? null;
+  if (subject === 'workspace') {
+    const workspaceIdRaw = args.workspaceId ?? '';
+    if (!workspaceIdRaw || !isUuid(workspaceIdRaw)) {
+      return { ok: false, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' }, 422) };
+    }
+    if (!workspace) {
+      const workspaceRes = await requireWorkspace(args.env, workspaceIdRaw);
+      if (!workspaceRes.ok) return { ok: false, response: workspaceRes.response };
+      workspace = workspaceRes.workspace;
+    }
+  }
+
+  const { policy, profile } = resolveAiSubjectPolicy({ subject, workspace });
+
+  if (entry.requiredEntitlements?.length) {
+    const denied = entry.requiredEntitlements.find((key) => !isPolicyEntitled(policy, key));
+    if (denied) {
+      return { ok: false, response: ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP', detail: denied }, 403) };
+    }
+  }
+
+  const ai = resolveAiPolicyCapsule({
+    entry,
+    policyProfile: profile,
+    requestedProvider: args.requestedProvider,
+    requestedModel: args.requestedModel,
+    isCurated: false,
+  });
+
+  const traceRaw = args.trace ?? {};
+  const sessionId = typeof traceRaw.sessionId === 'string' && traceRaw.sessionId.trim() ? traceRaw.sessionId.trim() : crypto.randomUUID();
+  const instancePublicId =
+    typeof traceRaw.instancePublicId === 'string' && traceRaw.instancePublicId.trim() ? traceRaw.instancePublicId.trim() : undefined;
+
+  const envStage = typeof args.env.ENV_STAGE === 'string' && args.env.ENV_STAGE.trim() ? args.env.ENV_STAGE.trim() : 'cloud-dev';
+  const trace: AIGrant['trace'] = {
+    sessionId,
+    ...(instancePublicId ? { instancePublicId } : {}),
+    envStage,
+  };
+
+  const budgetsRaw = args.budgets ?? {};
+  const requestedMaxTokens = typeof budgetsRaw.maxTokens === 'number' ? budgetsRaw.maxTokens : null;
+  const requestedTimeoutMs = typeof budgetsRaw.timeoutMs === 'number' ? budgetsRaw.timeoutMs : null;
+  const requestedMaxRequests = typeof budgetsRaw.maxRequests === 'number' ? budgetsRaw.maxRequests : null;
+
+  const MAX_TOKENS_CAP = 1200;
+  const TIMEOUT_MS_CAP = 60_000;
+  const MAX_REQUESTS_CAP = 3;
+
+  const baseBudgets = resolveAiBudgets(entry, ai.profile);
+  const maxTokens = clampBudget(requestedMaxTokens, baseBudgets.maxTokens, MAX_TOKENS_CAP);
+  const timeoutMs = clampBudget(requestedTimeoutMs, baseBudgets.timeoutMs, TIMEOUT_MS_CAP);
+  const maxRequests = clampBudget(requestedMaxRequests, baseBudgets.maxRequests ?? 1, MAX_REQUESTS_CAP);
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const exp = nowSec + 60;
+
+  const grantPayload: AIGrant = {
+    v: 1,
+    iss: 'paris',
+    sub: { kind: 'anon', sessionId: trace.sessionId || crypto.randomUUID() },
+    exp,
+    caps: [`agent:${resolvedAgent.canonicalId}`],
+    budgets: { maxTokens, timeoutMs, maxRequests },
+    mode: args.mode === 'ops' ? 'ops' : 'editor',
+    ai,
+    trace,
+  };
+
+  const secret = args.env.AI_GRANT_HMAC_SECRET?.trim();
+  if (!secret) {
+    return { ok: false, response: json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 }) };
+  }
+
+  const grant = await mintGrant(grantPayload, secret);
+  return { ok: true, grant, exp, agentId: resolvedAgent.canonicalId };
+}
+
 async function handleHealthz() {
   return json({ up: true });
 }
@@ -421,71 +570,43 @@ async function handleAiGrant(req: Request, env: Env) {
   }
 
   const agentId = typeof body.agentId === 'string' ? body.agentId.trim() : '';
-  const mode = body.mode === 'ops' ? 'ops' : 'editor';
+  const requestedProvider = typeof (body as any).provider === 'string' ? (body as any).provider.trim() : '';
+  const requestedModel = typeof (body as any).model === 'string' ? (body as any).model.trim() : '';
 
-  const allowedAgentIds = new Set(['sdr.copilot', 'sdr.widget.copilot.v1', 'debug.grantProbe']);
-  if (!agentId || !allowedAgentIds.has(agentId)) {
-    return json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 });
-  }
+  const workspaceIdRaw = typeof (body as any).workspaceId === 'string' ? (body as any).workspaceId.trim() : '';
+  const subjectRaw = normalizeAiSubject((body as any).subject);
+  const subject = subjectRaw ?? (workspaceIdRaw ? 'workspace' : 'minibob');
 
   const traceRaw = isRecord(body.trace) ? body.trace : null;
-  const sessionId = typeof traceRaw?.sessionId === 'string' && traceRaw.sessionId.trim() ? traceRaw.sessionId.trim() : crypto.randomUUID();
-  const instancePublicId =
-    typeof traceRaw?.instancePublicId === 'string' && traceRaw.instancePublicId.trim()
-      ? traceRaw.instancePublicId.trim()
-      : undefined;
-
-  const envStage = typeof env.ENV_STAGE === 'string' && env.ENV_STAGE.trim() ? env.ENV_STAGE.trim() : 'cloud-dev';
-
-  const trace: AIGrant['trace'] = {
-    sessionId,
-    ...(instancePublicId ? { instancePublicId } : {}),
-    envStage,
-  };
+  const trace = traceRaw
+    ? {
+        sessionId: typeof (traceRaw as any).sessionId === 'string' ? (traceRaw as any).sessionId : undefined,
+        instancePublicId: typeof (traceRaw as any).instancePublicId === 'string' ? (traceRaw as any).instancePublicId : undefined,
+      }
+    : undefined;
 
   const budgetsRaw = isRecord(body.budgets) ? body.budgets : null;
-  const requestedMaxTokens = budgetsRaw && typeof budgetsRaw.maxTokens === 'number' ? budgetsRaw.maxTokens : null;
-  const requestedTimeoutMs = budgetsRaw && typeof budgetsRaw.timeoutMs === 'number' ? budgetsRaw.timeoutMs : null;
-  const requestedMaxRequests = budgetsRaw && typeof budgetsRaw.maxRequests === 'number' ? budgetsRaw.maxRequests : null;
+  const budgets = budgetsRaw
+    ? {
+        maxTokens: typeof (budgetsRaw as any).maxTokens === 'number' ? (budgetsRaw as any).maxTokens : undefined,
+        timeoutMs: typeof (budgetsRaw as any).timeoutMs === 'number' ? (budgetsRaw as any).timeoutMs : undefined,
+        maxRequests: typeof (budgetsRaw as any).maxRequests === 'number' ? (budgetsRaw as any).maxRequests : undefined,
+      }
+    : undefined;
 
-  const MAX_TOKENS_CAP = 1200;
-  const TIMEOUT_MS_CAP = 25_000;
-  const MAX_REQUESTS_CAP = 3;
-
-  const maxTokens =
-    requestedMaxTokens && Number.isFinite(requestedMaxTokens) && requestedMaxTokens > 0
-      ? Math.min(MAX_TOKENS_CAP, Math.floor(requestedMaxTokens))
-      : 280;
-  const timeoutMs =
-    requestedTimeoutMs && Number.isFinite(requestedTimeoutMs) && requestedTimeoutMs > 0
-      ? Math.min(TIMEOUT_MS_CAP, Math.floor(requestedTimeoutMs))
-      : 15_000;
-  const maxRequests =
-    requestedMaxRequests && Number.isFinite(requestedMaxRequests) && requestedMaxRequests > 0
-      ? Math.min(MAX_REQUESTS_CAP, Math.floor(requestedMaxRequests))
-      : 1;
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const exp = nowSec + 60; // short-lived grant for a single interaction
-
-  const grantPayload: AIGrant = {
-    v: 1,
-    iss: 'paris',
-    sub: { kind: 'anon', sessionId: trace.sessionId || crypto.randomUUID() },
-    exp,
-    caps: [`agent:${agentId}`],
-    budgets: { maxTokens, timeoutMs, maxRequests },
-    mode,
+  const issued = await issueAiGrant({
+    env,
+    agentId,
+    mode: body.mode === 'ops' ? 'ops' : 'editor',
+    requestedProvider,
+    requestedModel,
+    subject,
+    workspaceId: workspaceIdRaw || undefined,
     trace,
-  };
-
-  const secret = env.AI_GRANT_HMAC_SECRET?.trim();
-  if (!secret) {
-    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
-  }
-
-  const grant = await mintGrant(grantPayload, secret);
-  return json({ grant, exp, agentId });
+    budgets,
+  });
+  if (!issued.ok) return issued.response;
+  return json({ grant: issued.grant, exp: issued.exp, agentId: issued.agentId });
 }
 
 const OUTCOME_EVENTS = new Set([
@@ -700,7 +821,7 @@ function isCuratedPublicId(publicId: string): boolean {
 
 function allowCuratedWrites(env: Env): boolean {
   const stage = (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase();
-  return stage === 'local' || stage === 'cloud-dev';
+  return stage === 'local';
 }
 
 function isCuratedInstanceRow(instance: InstanceRow | CuratedInstanceRow): instance is CuratedInstanceRow {
@@ -793,6 +914,377 @@ async function handleAiOutcome(req: Request, env: Env) {
 
   const data = await readJson(res);
   return json({ ok: true, upstream: data });
+}
+
+const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
+const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,40}$/;
+
+function normalizePreviewOverrideKeys(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return PREVIEW_DEFAULT_OVERRIDES.slice();
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const value of raw) {
+    if (typeof value !== 'string') continue;
+    const trimmed = value.trim();
+    if (!trimmed || !PREVIEW_OVERRIDE_KEY_RE.test(trimmed)) continue;
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= 12) break;
+  }
+  return out.length ? out : PREVIEW_DEFAULT_OVERRIDES.slice();
+}
+
+async function dispatchPersonalizationPreviewJob(args: {
+  env: Env;
+  job: {
+    agentId: string;
+    grant: string;
+    url: string;
+    locale?: string;
+    templateContext?: Record<string, unknown>;
+    allowedOverrides: string[];
+  };
+}): Promise<{ ok: true; jobId: string } | { ok: false; response: Response }> {
+  const sfBaseUrl = asTrimmedString(args.env.SANFRANCISCO_BASE_URL);
+  if (!sfBaseUrl) {
+    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 }) };
+  }
+  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
+  if (!token) {
+    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 }) };
+  }
+
+  const res = await fetch(new URL('/v1/personalization/preview', sfBaseUrl).toString(), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(args.job),
+  });
+
+  const payload = await readJson(res);
+  if (!res.ok) {
+    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 }) };
+  }
+
+  const jobId = asTrimmedString((payload as any)?.jobId);
+  if (!jobId) {
+    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', message: 'Missing jobId' }, { status: 502 }) };
+  }
+
+  return { ok: true, jobId };
+}
+
+async function handlePersonalizationPreviewCreate(req: Request, env: Env): Promise<Response> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+
+  if (!isRecord(body)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const url = asTrimmedString((body as any).url);
+  if (!url) {
+    return json([{ path: 'url', message: 'url is required' }], { status: 422 });
+  }
+
+  const localeRaw = normalizeLocaleToken((body as any).locale);
+  const locale = localeRaw ? localeRaw : undefined;
+  if ((body as any).locale && !localeRaw) {
+    return json([{ path: 'locale', message: 'invalid locale' }], { status: 422 });
+  }
+
+  const templateContext = isRecord((body as any).templateContext) ? ((body as any).templateContext as Record<string, unknown>) : undefined;
+  const allowedOverrides = normalizePreviewOverrideKeys((body as any).allowedOverrides);
+  const sessionId = asTrimmedString((body as any).sessionId) || crypto.randomUUID();
+
+  const issued = await issueAiGrant({
+    env,
+    agentId: 'agent.personalization.preview.v1',
+    subject: 'minibob',
+    trace: { sessionId },
+  });
+  if (!issued.ok) return issued.response;
+
+  const dispatch = await dispatchPersonalizationPreviewJob({
+    env,
+    job: {
+      agentId: issued.agentId,
+      grant: issued.grant,
+      url,
+      ...(locale ? { locale } : {}),
+      ...(templateContext ? { templateContext } : {}),
+      allowedOverrides,
+    },
+  });
+  if (!dispatch.ok) return dispatch.response;
+
+  return json({ jobId: dispatch.jobId });
+}
+
+async function handlePersonalizationPreviewStatus(req: Request, env: Env, jobId: string): Promise<Response> {
+  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
+  if (!sfBaseUrl) {
+    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
+  }
+  const token = asTrimmedString(env.PARIS_DEV_JWT);
+  if (!token) {
+    return json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 });
+  }
+
+  const res = await fetch(new URL(`/v1/personalization/preview/${encodeURIComponent(jobId)}`, sfBaseUrl).toString(), {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  const payload = await readJson(res);
+  if (!res.ok) {
+    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 });
+  }
+
+  return json(payload);
+}
+
+function resolveWebsiteDepthCap(policy: Policy): number {
+  const cap = policy.caps['personalization.sources.website.depth'];
+  if (cap == null) return 5;
+  if (typeof cap !== 'number' || !Number.isFinite(cap)) return 1;
+  return Math.max(1, Math.min(5, Math.floor(cap)));
+}
+
+function isFlagEnabled(policy: Policy, key: string): boolean {
+  return policy.flags[key] === true;
+}
+
+async function loadWorkspaceBusinessProfile(env: Env, workspaceId: string): Promise<WorkspaceBusinessProfileRow | null> {
+  const params = new URLSearchParams({
+    select: 'workspace_id,profile,sources,created_at,updated_at',
+    workspace_id: `eq.${workspaceId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspace_business_profiles?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load workspace profile (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as WorkspaceBusinessProfileRow[];
+  return rows?.[0] ?? null;
+}
+
+async function upsertWorkspaceBusinessProfile(args: {
+  env: Env;
+  workspaceId: string;
+  profile: Record<string, unknown>;
+  sources?: Record<string, unknown>;
+}): Promise<WorkspaceBusinessProfileRow | null> {
+  const payload = {
+    workspace_id: args.workspaceId,
+    profile: args.profile,
+    ...(args.sources ? { sources: args.sources } : {}),
+  };
+  const res = await supabaseFetch(args.env, `/rest/v1/workspace_business_profiles?on_conflict=workspace_id`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to upsert workspace profile (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as WorkspaceBusinessProfileRow[];
+  return rows?.[0] ?? null;
+}
+
+async function handleWorkspaceBusinessProfileGet(req: Request, env: Env, workspaceId: string): Promise<Response> {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  try {
+    const row = await loadWorkspaceBusinessProfile(env, workspaceId);
+    if (!row) return json({ error: 'NOT_FOUND' }, { status: 404 });
+    return json({ profile: row.profile, sources: row.sources ?? null, updatedAt: row.updated_at ?? null });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return json({ error: 'DB_ERROR', detail }, { status: 500 });
+  }
+}
+
+async function handleWorkspaceBusinessProfileUpsert(req: Request, env: Env, workspaceId: string): Promise<Response> {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+  if (!isRecord(body)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const profile = isRecord((body as any).profile) ? ((body as any).profile as Record<string, unknown>) : null;
+  if (!profile) {
+    return json([{ path: 'profile', message: 'profile must be an object' }], { status: 422 });
+  }
+  const sources = isRecord((body as any).sources) ? ((body as any).sources as Record<string, unknown>) : undefined;
+
+  try {
+    const row = await upsertWorkspaceBusinessProfile({ env, workspaceId, profile, sources });
+    return json({ profile: row?.profile ?? profile, sources: row?.sources ?? sources ?? null, updatedAt: row?.updated_at ?? null });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return json({ error: 'DB_ERROR', detail }, { status: 500 });
+  }
+}
+
+async function dispatchPersonalizationOnboardingJob(args: {
+  env: Env;
+  job: {
+    agentId: string;
+    grant: string;
+    workspaceId: string;
+    url: string;
+    locale?: string;
+    websiteDepth: number;
+    gbpPlaceId?: string;
+    facebookPageId?: string;
+    instagramHandle?: string;
+  };
+}): Promise<{ ok: true; jobId: string } | { ok: false; response: Response }> {
+  const sfBaseUrl = asTrimmedString(args.env.SANFRANCISCO_BASE_URL);
+  if (!sfBaseUrl) {
+    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 }) };
+  }
+  const token = asTrimmedString(args.env.PARIS_DEV_JWT);
+  if (!token) {
+    return { ok: false, response: json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 }) };
+  }
+
+  const res = await fetch(new URL('/v1/personalization/onboarding', sfBaseUrl).toString(), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(args.job),
+  });
+
+  const payload = await readJson(res);
+  if (!res.ok) {
+    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 }) };
+  }
+
+  const jobId = asTrimmedString((payload as any)?.jobId);
+  if (!jobId) {
+    return { ok: false, response: json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', message: 'Missing jobId' }, { status: 502 }) };
+  }
+
+  return { ok: true, jobId };
+}
+
+async function handlePersonalizationOnboardingCreate(req: Request, env: Env): Promise<Response> {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+  if (!isRecord(body)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const workspaceId = asTrimmedString((body as any).workspaceId);
+  const url = asTrimmedString((body as any).url);
+  if (!workspaceId || !url) {
+    return json([{ path: 'workspaceId', message: 'workspaceId and url are required' }], { status: 422 });
+  }
+
+  const workspaceRes = await requireWorkspace(env, workspaceId);
+  if (!workspaceRes.ok) return workspaceRes.response;
+  const workspace = workspaceRes.workspace;
+
+  const policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
+  const websiteDepth = resolveWebsiteDepthCap(policy);
+  const allowGbp = isFlagEnabled(policy, 'personalization.sources.gbp.enabled');
+  const allowFacebook = isFlagEnabled(policy, 'personalization.sources.facebook.enabled');
+
+  const localeRaw = normalizeLocaleToken((body as any).locale);
+  if ((body as any).locale && !localeRaw) {
+    return json([{ path: 'locale', message: 'invalid locale' }], { status: 422 });
+  }
+
+  const gbpPlaceId = allowGbp ? asTrimmedString((body as any).gbpPlaceId) : '';
+  const facebookPageId = allowFacebook ? asTrimmedString((body as any).facebookPageId) : '';
+  const instagramHandle = allowFacebook ? asTrimmedString((body as any).instagramHandle) : '';
+
+  const sessionId = asTrimmedString((body as any).sessionId) || crypto.randomUUID();
+  const issued = await issueAiGrant({
+    env,
+    agentId: 'agent.personalization.onboarding.v1',
+    subject: 'workspace',
+    workspaceId,
+    workspace,
+    trace: { sessionId },
+  });
+  if (!issued.ok) return issued.response;
+
+  const dispatch = await dispatchPersonalizationOnboardingJob({
+    env,
+    job: {
+      agentId: issued.agentId,
+      grant: issued.grant,
+      workspaceId,
+      url,
+      websiteDepth,
+      ...(localeRaw ? { locale: localeRaw } : {}),
+      ...(gbpPlaceId ? { gbpPlaceId } : {}),
+      ...(facebookPageId ? { facebookPageId } : {}),
+      ...(instagramHandle ? { instagramHandle } : {}),
+    },
+  });
+  if (!dispatch.ok) return dispatch.response;
+
+  return json({ jobId: dispatch.jobId });
+}
+
+async function handlePersonalizationOnboardingStatus(req: Request, env: Env, jobId: string): Promise<Response> {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const sfBaseUrl = asTrimmedString(env.SANFRANCISCO_BASE_URL);
+  if (!sfBaseUrl) {
+    return json({ error: 'MISCONFIGURED', message: 'Missing SANFRANCISCO_BASE_URL' }, { status: 503 });
+  }
+  const token = asTrimmedString(env.PARIS_DEV_JWT);
+  if (!token) {
+    return json({ error: 'MISCONFIGURED', message: 'Missing PARIS_DEV_JWT' }, { status: 503 });
+  }
+
+  const res = await fetch(new URL(`/v1/personalization/onboarding/${encodeURIComponent(jobId)}`, sfBaseUrl).toString(), {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  const payload = await readJson(res);
+  if (!res.ok) {
+    return json({ error: 'UPSTREAM_ERROR', upstream: 'sanfrancisco', status: res.status, details: payload }, { status: 502 });
+  }
+
+  return json(payload);
 }
 
 async function handleInstances(req: Request, env: Env) {
@@ -964,6 +1456,34 @@ async function loadInstanceLocales(env: Env, publicId: string): Promise<Instance
     throw new Error(`[ParisWorker] Failed to load instance locales (${res.status}): ${JSON.stringify(details)}`);
   }
   return ((await res.json()) as InstanceLocaleRow[]).filter(Boolean);
+}
+
+async function markL10nPublishDirty(args: {
+  env: Env;
+  publicId: string;
+  locale: string;
+  baseFingerprint: string;
+}): Promise<Response | null> {
+  const { env, publicId, locale, baseFingerprint } = args;
+  const payload = {
+    public_id: publicId,
+    locale,
+    base_fingerprint: baseFingerprint,
+    publish_state: 'dirty',
+    publish_attempts: 0,
+    publish_next_at: null,
+    last_error: null,
+  };
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,locale`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const detail = await readJson(res);
+    return apiError('INTERNAL_ERROR', 'Failed to mark l10n publish state', 500, detail);
+  }
+  return null;
 }
 
 async function loadUserInstanceByWorkspaceAndPublicId(
@@ -1277,6 +1797,24 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return json({ error: 'WIDGET_NOT_FOUND' }, { status: 500 });
 
+  const baseFingerprint = await computeBaseFingerprint(instance.config);
+  let policy: Policy | null = null;
+  if (resolveInstanceKind(instance) === 'curated') {
+    policy = resolvePolicy({ profile: 'devstudio', role: 'owner' });
+  } else {
+    const workspaceId = resolveInstanceWorkspaceId(instance);
+    if (workspaceId) {
+      try {
+        const workspace = await loadWorkspaceById(env, workspaceId);
+        if (workspace) {
+          policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
+        }
+      } catch {
+        policy = null;
+      }
+    }
+  }
+
   if (!isDev) {
     return json({
       publicId: instance.public_id,
@@ -1284,6 +1822,8 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
       widgetType,
       config: instance.config,
       updatedAt: instance.updated_at ?? null,
+      baseFingerprint,
+      policy,
     });
   }
 
@@ -1293,6 +1833,8 @@ async function handleGetInstance(req: Request, env: Env, publicId: string) {
     widgetType,
     config: instance.config,
     updatedAt: instance.updated_at ?? null,
+    baseFingerprint,
+    policy,
     workspaceId: resolveInstanceWorkspaceId(instance),
   });
 }
@@ -1532,6 +2074,13 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
   if (!env.L10N_PUBLISH_QUEUE) {
     return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
   }
+  const markDirty = await markL10nPublishDirty({
+    env,
+    publicId: publicIdResult.value,
+    locale,
+    baseFingerprint: computedFingerprint,
+  });
+  if (markDirty) return markDirty;
   try {
     await env.L10N_PUBLISH_QUEUE.send({
       v: 1,
@@ -1576,6 +2125,8 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
 
   const instance = await loadInstanceByPublicId(env, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const computedFingerprint = await computeBaseFingerprint(instance.config);
 
   const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
   const url = new URL(req.url);
@@ -1625,6 +2176,13 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
   if (!env.L10N_PUBLISH_QUEUE) {
     return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
   }
+  const markDirty = await markL10nPublishDirty({
+    env,
+    publicId: publicIdResult.value,
+    locale,
+    baseFingerprint: computedFingerprint,
+  });
+  if (markDirty) return markDirty;
   try {
     await env.L10N_PUBLISH_QUEUE.send({
       v: 1,
@@ -1673,6 +2231,8 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
+  const baseFingerprint = await computeBaseFingerprint(instance.config);
+
   return json({
     publicId: instance.public_id,
     status: instance.status,
@@ -1680,6 +2240,7 @@ async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: s
     config: instance.config,
     meta: isCuratedInstanceRow(instance) ? instance.meta ?? null : null,
     updatedAt: instance.updated_at ?? null,
+    baseFingerprint,
     policy: policyResult.policy,
     workspace: {
       id: workspace.id,
@@ -2548,6 +3109,25 @@ export default {
         return handleAiOutcome(req, env);
       }
 
+      if (pathname === '/api/personalization/preview') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handlePersonalizationPreviewCreate(req, env);
+      }
+      const previewStatusMatch = pathname.match(/^\/api\/personalization\/preview\/([^/]+)$/);
+      if (previewStatusMatch) {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handlePersonalizationPreviewStatus(req, env, decodeURIComponent(previewStatusMatch[1]));
+      }
+      if (pathname === '/api/personalization/onboarding') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handlePersonalizationOnboardingCreate(req, env);
+      }
+      const onboardingStatusMatch = pathname.match(/^\/api\/personalization\/onboarding\/([^/]+)$/);
+      if (onboardingStatusMatch) {
+        if (req.method !== 'GET') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handlePersonalizationOnboardingStatus(req, env, decodeURIComponent(onboardingStatusMatch[1]));
+      }
+
       const workspaceLocalesMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/locales$/);
       if (workspaceLocalesMatch) {
         const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceLocalesMatch[1]));
@@ -2581,6 +3161,15 @@ export default {
         const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceWebsiteCreativeMatch[1]));
         if (!workspaceIdResult.ok) return workspaceIdResult.response;
         if (req.method === 'POST') return handleWorkspaceEnsureWebsiteCreative(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceBusinessProfileMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/business-profile$/);
+      if (workspaceBusinessProfileMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceBusinessProfileMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        if (req.method === 'GET') return handleWorkspaceBusinessProfileGet(req, env, workspaceIdResult.value);
+        if (req.method === 'POST') return handleWorkspaceBusinessProfileUpsert(req, env, workspaceIdResult.value);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

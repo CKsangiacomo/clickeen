@@ -30,7 +30,10 @@
       "radiusTL": "4xl",
       "radiusTR": "4xl",
       "widthMode": "full",
-      "background": "var(--color-system-white)",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
       "contentWidth": 960,
       "radiusLinked": true
     },
@@ -64,7 +67,10 @@
         }
       },
       "alignment": "center",
-      "background": "var(--color-system-gray-5)"
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-gray-5)"
+      }
     },
     "title": "Frequently Asked Questions",
     "layout": {
@@ -151,15 +157,30 @@
       },
       "iconStyle": "plus",
       "linkStyle": "underline",
-      "linkTextColor": "var(--color-system-blue)",
-      "itemBackground": "var(--color-system-white)",
-      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkUnderlineColor": "var(--color-system-blue)"
+      "linkTextColor": {
+        "type": "color",
+        "color": "var(--color-system-blue)"
+      },
+      "itemBackground": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "linkHighlightColor": {
+        "type": "color",
+        "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+      },
+      "linkUnderlineColor": {
+        "type": "color",
+        "color": "var(--color-system-blue)"
+      }
     },
     "typography": {
       "roles": {
         "title": {
-          "color": "var(--color-system-black)",
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
@@ -167,7 +188,10 @@
           "sizePreset": "m"
         },
         "answer": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+          "color": {
+            "type": "color",
+            "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
+          },
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
@@ -175,7 +199,10 @@
           "sizePreset": "m"
         },
         "section": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+          "color": {
+            "type": "color",
+            "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
+          },
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
@@ -183,7 +210,10 @@
           "sizePreset": "m"
         },
         "question": {
-          "color": "var(--color-system-black)",
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
@@ -240,7 +270,7 @@
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Widget layout' />",
     "    <tooldrawer-field type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.gap' label='Gap (px)' />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.gap' label='Gap (px)' />",
     "    <tooldrawer-field type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
     "    <tooldrawer-field type='toggle' size='md' path='behavior.multiOpen' label='Allow multiple open' show-if=\"layout.type == 'accordion'\" />",
     "    <tooldrawer-field type='toggle' size='md' path='behavior.expandAll' label='Expand all questions' show-if=\"layout.type == 'accordion'\" />",
@@ -248,35 +278,35 @@
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Item card layout' />",
     "    <tooldrawer-field type='toggle' size='md' path='layout.itemPaddingLinked' label='Link item padding' value='{{layout.itemPaddingLinked}}' default='true' />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.itemPadding' label='Item padding (px)' show-if=\"layout.itemPaddingLinked == true\" />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.itemPaddingTop' label='Item top padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.itemPaddingRight' label='Item right padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.itemPaddingBottom' label='Item bottom padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.itemPaddingLeft' label='Item left padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPadding' label='Item padding (px)' show-if=\"layout.itemPaddingLinked == true\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingTop' label='Item top padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingRight' label='Item right padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingBottom' label='Item bottom padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingLeft' label='Item left padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"layout.type == 'multicolumn'\">",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
-    "    <tooldrawer-field type='textfield' size='md' path='layout.columns.mobile' label='Columns (mobile)' />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.columns.mobile' label='Columns (mobile)' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='appearance'>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Widget appearance' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.itemBackground' label='Item background' value='{{appearance.itemBackground}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color,gradient,image' path='appearance.itemBackground' label='Item background' value='{{appearance.itemBackground}}' />",
     "    <div data-bob-showif=\"contains(sections, 'href=')\">",
     "      <tooldrawer-field type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' />",
-    "      <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
-    "      <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.linkHighlightColor' label='Highlight color' value='{{appearance.linkHighlightColor}}' show-if=\"appearance.linkStyle == 'highlight'\" />",
-    "      <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='appearance.linkTextColor' label='Link text color' value='{{appearance.linkTextColor}}' show-if=\"appearance.linkStyle == 'color'\" />",
+    "      <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
+    "      <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkHighlightColor' label='Highlight color' value='{{appearance.linkHighlightColor}}' show-if=\"appearance.linkStyle == 'highlight'\" />",
+    "      <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkTextColor' label='Link text color' value='{{appearance.linkTextColor}}' show-if=\"appearance.linkStyle == 'color'\" />",
     "    </div>",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Typography appearance' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.title.color' label='Title text color' value='{{typography.roles.title.color}}' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.section.color' label='Section title color' value='{{typography.roles.section.color}}' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.question.color' label='Question text color' value='{{typography.roles.question.color}}' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.answer.color' label='Answer text color' value='{{typography.roles.answer.color}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.title.color' label='Title text color' value='{{typography.roles.title.color}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.section.color' label='Section title color' value='{{typography.roles.section.color}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.question.color' label='Question text color' value='{{typography.roles.question.color}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.answer.color' label='Answer text color' value='{{typography.roles.answer.color}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Item card appearance' />",
@@ -291,8 +321,8 @@
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
-    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Background' value='{{stage.background}}' />",
-    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='settings'>",

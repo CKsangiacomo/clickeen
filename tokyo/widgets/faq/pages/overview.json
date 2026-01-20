@@ -10,7 +10,7 @@
       "type": "hero",
       "visual": true,
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
@@ -33,7 +33,7 @@
         "subheadline": "Placeholder subheadline for right-aligned creative block"
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
@@ -44,7 +44,7 @@
         "subheadline": "Placeholder subheadline for left-aligned creative block"
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
@@ -59,7 +59,7 @@
         "subheadline": "Placeholder subheadline for stacked creative block"
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
@@ -74,7 +74,7 @@
         "subheadline": "Placeholder subheadline for second right-aligned creative block"
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
@@ -85,7 +85,7 @@
         "subheadline": "Placeholder subheadline for second left-aligned creative block"
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.overview.hero"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {

@@ -126,10 +126,14 @@ Copy/paste this cluster into your `<bob-panel id='appearance'>`:
 ```json
 "  <tooldrawer-cluster>",
 "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
-"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='stage.background' label='Stage background' value='{{stage.background}}' />",
-"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
+"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
 "  </tooldrawer-cluster>",
 ```
+
+**Fill value contract**
+- `dropdown-fill` stores a fill object (e.g. `{ "type": "color", "color": "var(--color-system-white)" }`).
+- Use `fill-modes` on `dropdown-fill` to constrain allowed modes (`color`, `gradient`, `image`, `video`).
 
 #### Pod is the widget container (mental model + DOM map)
 
@@ -612,7 +616,7 @@ Notes for agents:
     "",
     "<bob-panel id='appearance'>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field type='dropdown-fill' size='md' path='appearance.headingColor' label='Heading color' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.headingColor' label='Heading color' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>"
   ]
