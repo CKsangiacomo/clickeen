@@ -25,6 +25,28 @@ const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
 const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
 
+async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
+  const keys = [...locales].sort((a, b) => a.localeCompare(b));
+  if (!keys.length) return;
+  const lastPublishedFingerprint = {};
+  for (const locale of keys) {
+    lastPublishedFingerprint[locale] = baseFingerprint;
+  }
+  const index = {
+    v: 1,
+    publicId: pageId,
+    layers: {
+      locale: {
+        keys,
+        lastPublishedFingerprint,
+      },
+    },
+  };
+  const outPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'index.json');
+  await ensureDir(path.dirname(outPath));
+  await fs.writeFile(outPath, prettyStableJson(index));
+}
+
 function getSfBaseUrl() {
   return String(process.env.SANFRANCISCO_BASE_URL || 'http://localhost:3002').replace(/\/+$/, '');
 }
@@ -255,7 +277,7 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
   if (!items.length) return;
 
   for (const locale of locales) {
-    const outDir = path.join(TOKYO_PRAGUE_ROOT, 'chrome', locale);
+    const outDir = path.join(TOKYO_PRAGUE_ROOT, 'chrome', 'locale', locale);
     const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
     if (await fileExists(outPath)) continue;
     const job = {
@@ -274,6 +296,7 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
     await ensureDir(outDir);
     await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
   }
+  await writeLayerIndex({ pageId: 'chrome', locales, baseFingerprint });
 }
 
 async function translatePage({ pageId, base, baseFingerprint, baseUpdatedAt, locales }) {
@@ -292,12 +315,15 @@ async function translatePage({ pageId, base, baseFingerprint, baseUpdatedAt, loc
   const missingLocales = [];
   const overlaysByLocale = new Map();
   for (const locale of locales) {
-    const outPath = path.join(TOKYO_PRAGUE_ROOT, pageId, locale, `${baseFingerprint}.ops.json`);
+    const outPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'locale', locale, `${baseFingerprint}.ops.json`);
     if (await fileExists(outPath)) continue;
     overlaysByLocale.set(locale, []);
     missingLocales.push(locale);
   }
-  if (!missingLocales.length) return;
+  if (!missingLocales.length) {
+    await writeLayerIndex({ pageId, locales, baseFingerprint });
+    return;
+  }
 
   for (const [blockId, blockType] of blockTypeMap.entries()) {
     const allowlistPath = path.join(ALLOWLIST_ROOT, 'blocks', `${blockType}.allowlist.json`);
@@ -336,11 +362,13 @@ async function translatePage({ pageId, base, baseFingerprint, baseUpdatedAt, loc
 
   for (const locale of missingLocales) {
     const ops = overlaysByLocale.get(locale) ?? [];
-    const outDir = path.join(TOKYO_PRAGUE_ROOT, pageId, locale);
+    const outDir = path.join(TOKYO_PRAGUE_ROOT, pageId, 'locale', locale);
     await ensureDir(outDir);
     const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
     await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
   }
+
+  await writeLayerIndex({ pageId, locales, baseFingerprint });
 }
 
 async function main() {

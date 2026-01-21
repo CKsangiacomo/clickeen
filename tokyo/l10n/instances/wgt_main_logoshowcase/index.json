@@ -1,48 +1,40 @@
 {
-  "locales": [
-    {
-      "locale": "ar"
-    },
-    {
-      "locale": "de"
-    },
-    {
-      "locale": "en"
-    },
-    {
-      "locale": "es"
-    },
-    {
-      "locale": "fr"
-    },
-    {
-      "locale": "hi"
-    },
-    {
-      "locale": "it"
-    },
-    {
-      "locale": "ja"
-    },
-    {
-      "locale": "ko"
-    },
-    {
-      "locale": "nl"
-    },
-    {
-      "locale": "pl"
-    },
-    {
-      "locale": "pt"
-    },
-    {
-      "locale": "tr"
-    },
-    {
-      "locale": "zh-tw"
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "de": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "en": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "es": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "fr": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "hi": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "it": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "ja": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "ko": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "nl": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "pl": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "pt": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "tr": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+        "zh-tw": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804"
+      }
     }
-  ],
+  },
   "publicId": "wgt_main_logoshowcase",
   "v": 1
 }

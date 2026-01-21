@@ -105,6 +105,48 @@ function normalizeLocale(raw) {
   return v;
 }
 
+const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
+const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
+
+function normalizeLayer(raw) {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!value || !L10N_LAYER_ALLOWED.has(value)) return null;
+  return value;
+}
+
+function normalizeLayerKey(layer, raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (layer === 'locale') return normalizeLocale(value);
+  if (layer === 'geo') {
+    const upper = value.toUpperCase();
+    return /^[A-Z]{2}$/.test(upper) ? upper : null;
+  }
+  if (layer === 'industry') {
+    const lower = value.toLowerCase();
+    return LAYER_KEY_SLUG.test(lower) ? lower : null;
+  }
+  if (layer === 'experiment') {
+    const lower = value.toLowerCase();
+    return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
+  }
+  if (layer === 'account') {
+    const lower = value.toLowerCase();
+    return LAYER_KEY_SLUG.test(lower) ? lower : null;
+  }
+  if (layer === 'behavior') {
+    const lower = value.toLowerCase();
+    return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
+  }
+  if (layer === 'user') {
+    if (value === 'global') return 'global';
+    return normalizeLocale(value);
+  }
+  return null;
+}
+
 function normalizeGeoCountries(raw) {
   if (!Array.isArray(raw)) return null;
   const list = raw
@@ -135,29 +177,32 @@ function prettyStableJson(value) {
   return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
-function loadLocaleIndex(publicId) {
+function loadLayerIndex(publicId) {
   const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
   if (!fs.existsSync(indexPath)) return null;
   const json = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.locales)) {
+  if (!json || typeof json !== 'object' || json.v !== 1) {
     throw new Error('[tokyo-dev] invalid l10n index');
   }
-  return json;
+  if (json.layers && typeof json.layers === 'object') {
+    return json;
+  }
+  throw new Error('[tokyo-dev] invalid l10n index');
 }
 
-function writeLocaleIndex(publicId, locales) {
+function writeLayerIndex(publicId, layers) {
   const indexDir = path.join(baseDir, 'l10n', 'instances', publicId);
   ensureDir(indexDir);
-  const payload = { v: 1, publicId, locales };
+  const payload = { v: 1, publicId, layers };
   fs.writeFileSync(path.join(indexDir, 'index.json'), prettyStableJson(payload), 'utf8');
 }
 
-function deleteLocaleIndex(publicId) {
+function deleteLayerIndex(publicId) {
   const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
   if (fs.existsSync(indexPath)) fs.unlinkSync(indexPath);
 }
 
-function assertLocaleIndexShape(payload, publicId) {
+function normalizeLayerIndex(payload, publicId) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('[tokyo-dev] index must be an object');
   }
@@ -165,48 +210,79 @@ function assertLocaleIndexShape(payload, publicId) {
   if (payload.publicId && String(payload.publicId) !== publicId) {
     throw new Error('[tokyo-dev] index.publicId mismatch');
   }
-  if (!Array.isArray(payload.locales)) {
-    throw new Error('[tokyo-dev] index.locales must be an array');
+
+  const layers = {};
+  if (payload.layers && typeof payload.layers === 'object') {
+    for (const [layer, entry] of Object.entries(payload.layers)) {
+      const normalizedLayer = normalizeLayer(layer);
+      if (!normalizedLayer || !entry || typeof entry !== 'object') continue;
+      const keys = Array.isArray(entry.keys) ? entry.keys : [];
+      const normalizedKeys = [];
+      for (const key of keys) {
+        const normalizedKey = normalizeLayerKey(normalizedLayer, key);
+        if (normalizedKey && !normalizedKeys.includes(normalizedKey)) normalizedKeys.push(normalizedKey);
+      }
+      if (!normalizedKeys.length) continue;
+      const nextEntry = { keys: normalizedKeys.sort((a, b) => a.localeCompare(b)) };
+      if (normalizedLayer === 'locale' && entry.geoTargets && typeof entry.geoTargets === 'object') {
+        const geoTargets = {};
+        for (const [key, countries] of Object.entries(entry.geoTargets)) {
+          const normalizedKey = normalizeLayerKey('locale', key);
+          const normalizedGeo = normalizeGeoCountries(countries);
+          if (normalizedKey && normalizedGeo) geoTargets[normalizedKey] = normalizedGeo;
+        }
+        if (Object.keys(geoTargets).length) nextEntry.geoTargets = geoTargets;
+      }
+      layers[normalizedLayer] = nextEntry;
+    }
+  } else {
+    throw new Error('[tokyo-dev] index.layers must be an object');
   }
 
-  const locales = [];
-  const seen = new Set();
-  for (const entry of payload.locales) {
-    if (!entry || typeof entry !== 'object') continue;
-    const locale = normalizeLocale(entry.locale);
-    if (!locale || seen.has(locale)) continue;
-    seen.add(locale);
-    const geoCountries = normalizeGeoCountries(entry.geoCountries);
-    locales.push(geoCountries ? { locale, geoCountries } : { locale });
+  return { v: 1, publicId, layers };
+}
+
+function updateLayerIndexEntry(publicId, layer, layerKey, geoTargets) {
+  const normalizedLayer = normalizeLayer(layer);
+  const normalizedKey = normalizedLayer ? normalizeLayerKey(normalizedLayer, layerKey) : null;
+  if (!normalizedLayer || !normalizedKey) return;
+  const existing = loadLayerIndex(publicId);
+  const layers = existing?.layers ? { ...existing.layers } : {};
+  const entry = layers[normalizedLayer] ? { ...layers[normalizedLayer] } : { keys: [] };
+  entry.keys = (entry.keys || []).filter((key) => key !== normalizedKey);
+  entry.keys.push(normalizedKey);
+  entry.keys.sort((a, b) => a.localeCompare(b));
+  if (normalizedLayer === 'locale') {
+    const normalizedGeo = normalizeGeoCountries(geoTargets);
+    if (normalizedGeo) {
+      entry.geoTargets = entry.geoTargets ? { ...entry.geoTargets } : {};
+      entry.geoTargets[normalizedKey] = normalizedGeo;
+    }
   }
-
-  locales.sort((a, b) => a.locale.localeCompare(b.locale));
-  return { v: 1, publicId, locales };
+  layers[normalizedLayer] = entry;
+  writeLayerIndex(publicId, layers);
 }
 
-function updateLocaleIndexEntry(publicId, locale, geoCountries) {
-  const normalizedLocale = normalizeLocale(locale);
-  if (!normalizedLocale) return;
-  const normalizedGeo = normalizeGeoCountries(geoCountries);
-  const existing = loadLocaleIndex(publicId);
-  const nextLocales = existing?.locales?.filter((entry) => normalizeLocale(entry.locale) !== normalizedLocale) || [];
-  nextLocales.push(normalizedGeo ? { locale: normalizedLocale, geoCountries: normalizedGeo } : { locale: normalizedLocale });
-  nextLocales.sort((a, b) => a.locale.localeCompare(b.locale));
-  writeLocaleIndex(publicId, nextLocales);
-}
-
-function removeLocaleIndexEntry(publicId, locale) {
-  const normalizedLocale = normalizeLocale(locale);
-  if (!normalizedLocale) return;
-  const existing = loadLocaleIndex(publicId);
-  if (!existing) return;
-  const nextLocales = existing.locales.filter((entry) => normalizeLocale(entry.locale) !== normalizedLocale);
-  if (!nextLocales.length) {
-    deleteLocaleIndex(publicId);
+function removeLayerIndexEntry(publicId, layer, layerKey) {
+  const normalizedLayer = normalizeLayer(layer);
+  const normalizedKey = normalizedLayer ? normalizeLayerKey(normalizedLayer, layerKey) : null;
+  if (!normalizedLayer || !normalizedKey) return;
+  const existing = loadLayerIndex(publicId);
+  if (!existing?.layers) return;
+  const layers = { ...existing.layers };
+  const entry = layers[normalizedLayer];
+  if (!entry || !Array.isArray(entry.keys)) return;
+  const nextKeys = entry.keys.filter((key) => key !== normalizedKey);
+  if (!nextKeys.length) {
+    delete layers[normalizedLayer];
+  } else {
+    layers[normalizedLayer] = { ...entry, keys: nextKeys };
+  }
+  if (!Object.keys(layers).length) {
+    deleteLayerIndex(publicId);
     return;
   }
-  nextLocales.sort((a, b) => a.locale.localeCompare(b.locale));
-  writeLocaleIndex(publicId, nextLocales);
+  writeLayerIndex(publicId, layers);
 }
 
 function assertOverlayShape(payload) {
@@ -225,7 +301,6 @@ function assertOverlayShape(payload) {
     if (!path) throw new Error(`[tokyo-dev] overlay.ops[${index}].path is required`);
     if (hasProhibitedSegment(path)) throw new Error(`[tokyo-dev] overlay.ops[${index}].path contains prohibited segment`);
     if (!('value' in op)) throw new Error(`[tokyo-dev] overlay.ops[${index}].value is required`);
-    if (typeof op.value !== 'string') throw new Error(`[tokyo-dev] overlay.ops[${index}].value must be string`);
     return { op: 'set', path, value: op.value };
   });
 
@@ -431,24 +506,25 @@ const server = http.createServer((req, res) => {
           sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
           return;
         }
-        deleteLocaleIndex(publicId);
+        deleteLayerIndex(publicId);
         sendJson(res, 200, { publicId, deleted: true });
         return;
       }
 
-      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
+      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
       if (!match) {
         sendJson(res, 404, { error: 'NOT_FOUND' });
         return;
       }
       const publicId = normalizePublicId(decodeURIComponent(match[1]));
-      const locale = normalizeLocale(decodeURIComponent(match[2]));
-      if (!publicId || !locale) {
+      const layer = normalizeLayer(decodeURIComponent(match[2]));
+      const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(match[3])) : null;
+      if (!publicId || !layer || !layerKey) {
         sendJson(res, 422, { error: 'INVALID_L10N_PATH' });
         return;
       }
 
-      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, locale);
+      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, layer, layerKey);
       let removed = false;
       if (fs.existsSync(localeDir)) {
         const files = fs.readdirSync(localeDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
@@ -463,9 +539,9 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      removeLocaleIndexEntry(publicId, locale);
+      removeLayerIndexEntry(publicId, layer, layerKey);
 
-      sendJson(res, 200, { publicId, locale, deleted: removed });
+      sendJson(res, 200, { publicId, layer, layerKey, deleted: removed });
     })().catch((err) => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -494,31 +570,32 @@ const server = http.createServer((req, res) => {
 
         let index;
         try {
-          index = assertLocaleIndexShape(payload, publicId);
+          index = normalizeLayerIndex(payload, publicId);
         } catch (err) {
           sendJson(res, 422, { error: 'INVALID_INDEX', detail: err instanceof Error ? err.message : String(err) });
           return;
         }
 
-        if (!index.locales.length) {
-          deleteLocaleIndex(publicId);
-          sendJson(res, 200, { publicId, locales: [] });
+        if (!Object.keys(index.layers || {}).length) {
+          deleteLayerIndex(publicId);
+          sendJson(res, 200, { publicId, layers: {} });
           return;
         }
 
-        writeLocaleIndex(publicId, index.locales);
-        sendJson(res, 200, { publicId, locales: index.locales });
+        writeLayerIndex(publicId, index.layers);
+        sendJson(res, 200, { publicId, layers: index.layers });
         return;
       }
 
-      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
+      const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
       if (!match) {
         sendJson(res, 404, { error: 'NOT_FOUND' });
         return;
       }
       const publicId = normalizePublicId(decodeURIComponent(match[1]));
-      const locale = normalizeLocale(decodeURIComponent(match[2]));
-      if (!publicId || !locale) {
+      const layer = normalizeLayer(decodeURIComponent(match[2]));
+      const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(match[3])) : null;
+      if (!publicId || !layer || !layerKey) {
         sendJson(res, 422, { error: 'INVALID_L10N_PATH' });
         return;
       }
@@ -542,13 +619,13 @@ const server = http.createServer((req, res) => {
 
       const stable = prettyStableJson(overlay);
       const outName = `${overlay.baseFingerprint}.ops.json`;
-      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, locale);
+      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, layer, layerKey);
       ensureDir(localeDir);
       fs.writeFileSync(path.join(localeDir, outName), stable, 'utf8');
       cleanOldL10nOutputs(localeDir, outName);
-      updateLocaleIndexEntry(publicId, locale, payload.geoCountries);
+      updateLayerIndexEntry(publicId, layer, layerKey, payload.geoTargets ?? payload.geoCountries);
 
-      sendJson(res, 200, { publicId, locale, file: outName });
+      sendJson(res, 200, { publicId, layer, layerKey, file: outName });
     })().catch((err) => {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

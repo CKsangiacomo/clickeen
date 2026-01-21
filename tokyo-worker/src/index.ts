@@ -4,7 +4,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
-  L10N_PUBLISH_QUEUE?: Queue<L10nPublishJob>;
+  L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   TOKYO_L10N_HTTP_BASE?: string;
@@ -137,47 +137,55 @@ type L10nOverlay = {
   v: 1;
   baseUpdatedAt?: string | null;
   baseFingerprint?: string | null;
-  ops: Array<{ op: 'set'; path: string; value: string }>;
+  ops: Array<{ op: 'set'; path: string; value: unknown }>;
 };
 
-type L10nLocaleIndexEntry = {
-  locale: string;
-  geoCountries?: string[] | null;
+type LayerIndexEntry = {
+  keys: string[];
+  lastPublishedFingerprint?: Record<string, string>;
+  geoTargets?: Record<string, string[]>;
 };
 
-type L10nLocaleIndex = {
+type LayerIndex = {
   v: 1;
   publicId: string;
-  locales: L10nLocaleIndexEntry[];
+  layers: Record<string, LayerIndexEntry>;
 };
 
-type L10nPublishJob = {
-  v: 1;
+type LayerPublishJob = {
+  v: 2;
   publicId: string;
-  locale: string;
+  layer: string;
+  layerKey: string;
   action?: 'upsert' | 'delete';
 };
+
+type L10nPublishQueueJob = LayerPublishJob;
 
 type L10nPublishRequest = {
   publicId: string;
-  locale: string;
+  layer: string;
+  layerKey: string;
   action?: 'upsert' | 'delete';
 };
 
-type InstanceLocaleRow = {
+type InstanceOverlayRow = {
   public_id: string;
-  locale: string;
-  ops: Array<{ op: 'set'; path: string; value: string }>;
-  user_ops?: Array<{ op: 'set'; path: string; value: string }>;
+  layer: string;
+  layer_key: string;
+  ops: Array<{ op: 'set'; path: string; value: unknown }>;
+  user_ops?: Array<{ op: 'set'; path: string; value: unknown }>;
   base_updated_at?: string | null;
   base_fingerprint?: string | null;
-  geo_countries?: string[] | null;
+  geo_targets?: string[] | null;
   workspace_id?: string | null;
 };
 
 type L10nPublishStateRow = {
   public_id: string;
-  locale: string;
+  locale?: string | null;
+  layer: string;
+  layer_key: string;
   base_fingerprint: string;
   published_fingerprint?: string | null;
   publish_state: string;
@@ -188,7 +196,8 @@ type L10nPublishStateRow = {
 
 type L10nPublishResult = {
   publicId: string;
-  locale: string;
+  layer: string;
+  layerKey: string;
   baseFingerprint: string;
   baseUpdatedAt: string | null;
   workspaceId: string | null;
@@ -221,6 +230,53 @@ function normalizeWidgetType(raw: string): string | null {
 
 function normalizeLocale(raw: string): string | null {
   return normalizeLocaleToken(raw);
+}
+
+const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
+const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
+
+function normalizeLayer(raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!value || !L10N_LAYER_ALLOWED.has(value)) return null;
+  return value;
+}
+
+function normalizeLayerKey(layer: string, raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  switch (layer) {
+    case 'locale': {
+      return normalizeLocale(value);
+    }
+    case 'geo': {
+      const upper = value.toUpperCase();
+      return /^[A-Z]{2}$/.test(upper) ? upper : null;
+    }
+    case 'industry': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'experiment': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
+    }
+    case 'account': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'behavior': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
+    }
+    case 'user': {
+      if (value === 'global') return 'global';
+      return normalizeLocale(value);
+    }
+    default:
+      return null;
+  }
 }
 
 function normalizeGeoCountries(raw: unknown): string[] | null {
@@ -267,7 +323,6 @@ function assertOverlayShape(payload: any): L10nOverlay {
     if (!path) throw new Error(`[tokyo] overlay.ops[${index}].path is required`);
     if (hasProhibitedSegment(path)) throw new Error(`[tokyo] overlay.ops[${index}].path contains prohibited segment`);
     if (!('value' in op)) throw new Error(`[tokyo] overlay.ops[${index}].value is required`);
-    if (typeof op.value !== 'string') throw new Error(`[tokyo] overlay.ops[${index}].value must be string`);
     return { op: 'set' as const, path, value: op.value };
   });
 
@@ -278,8 +333,14 @@ function assertOverlayShape(payload: any): L10nOverlay {
   return { v: 1, baseUpdatedAt: payload.baseUpdatedAt ?? null, baseFingerprint, ops };
 }
 
-async function cleanOldL10nOutputs(env: Env, publicId: string, locale: string, keepKey: string): Promise<void> {
-  const prefix = `l10n/instances/${publicId}/${locale}/`;
+async function cleanOldLayerOutputs(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+  keepKey: string
+): Promise<void> {
+  const prefix = `l10n/instances/${publicId}/${layer}/${layerKey}/`;
   let cursor: string | undefined = undefined;
   do {
     const list = await env.TOKYO_R2.list({ prefix, cursor });
@@ -292,11 +353,13 @@ async function cleanOldL10nOutputs(env: Env, publicId: string, locale: string, k
   } while (cursor);
 }
 
-async function deleteLocaleArtifacts(env: Env, publicId: string, locale: string): Promise<void> {
+async function deleteLayerArtifacts(env: Env, publicId: string, layer: string, layerKey: string): Promise<void> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(
-      `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(locale)}`,
+      `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(layer)}/${encodeURIComponent(
+        layerKey
+      )}`,
       { method: 'DELETE' }
     );
     if (!res.ok) {
@@ -306,19 +369,22 @@ async function deleteLocaleArtifacts(env: Env, publicId: string, locale: string)
     return;
   }
 
-  await cleanOldL10nOutputs(env, publicId, locale, '');
+  await cleanOldLayerOutputs(env, publicId, layer, layerKey, '');
 }
 
-async function publishOverlayArtifacts(
+async function publishLayerOverlayArtifacts(
   env: Env,
   publicId: string,
-  locale: string,
+  layer: string,
+  layerKey: string,
   overlay: L10nOverlay,
 ): Promise<string> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(
-      `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(locale)}`,
+      `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(layer)}/${encodeURIComponent(
+        layerKey
+      )}`,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -345,7 +411,7 @@ async function publishOverlayArtifacts(
     throw new Error('[tokyo] Missing baseFingerprint for deterministic l10n path');
   }
   const outName = `${fingerprint}.ops.json`;
-  const key = `l10n/instances/${publicId}/${locale}/${outName}`;
+  const key = `l10n/instances/${publicId}/${layer}/${layerKey}/${outName}`;
 
   await env.TOKYO_R2.put(key, stable, {
     httpMetadata: {
@@ -357,37 +423,43 @@ async function publishOverlayArtifacts(
   return outName;
 }
 
-async function loadInstanceLocaleRow(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
+async function loadInstanceOverlayRow(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string
+): Promise<InstanceOverlayRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,ops,user_ops,base_updated_at,base_fingerprint,geo_countries,workspace_id',
+    select: 'public_id,layer,layer_key,ops,user_ops,base_updated_at,base_fingerprint,geo_targets,workspace_id',
     public_id: `eq.${publicId}`,
-    locale: `eq.${locale}`,
+    layer: `eq.${layer}`,
+    layer_key: `eq.${layerKey}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase read failed (${res.status}) ${text}`.trim());
+    throw new Error(`[tokyo] Supabase overlay read failed (${res.status}) ${text}`.trim());
   }
-  const rows = (await res.json().catch(() => [])) as InstanceLocaleRow[];
+  const rows = (await res.json().catch(() => [])) as InstanceOverlayRow[];
   return rows?.[0] ?? null;
 }
 
-async function loadInstanceLocalesForPublicId(env: Env, publicId: string): Promise<InstanceLocaleRow[]> {
+async function loadInstanceOverlaysForPublicId(env: Env, publicId: string): Promise<InstanceOverlayRow[]> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,geo_countries',
+    select: 'public_id,layer,layer_key,base_fingerprint,geo_targets',
     public_id: `eq.${publicId}`,
-    order: 'locale.asc',
+    order: 'layer.asc,layer_key.asc',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`[tokyo] Supabase locale list failed (${res.status}) ${text}`.trim());
+    throw new Error(`[tokyo] Supabase overlay list failed (${res.status}) ${text}`.trim());
   }
-  return ((await res.json().catch(() => [])) as InstanceLocaleRow[]).filter(Boolean);
+  return ((await res.json().catch(() => [])) as InstanceOverlayRow[]).filter(Boolean);
 }
 
-async function deleteLocaleIndex(env: Env, publicId: string): Promise<void> {
+async function deleteLayerIndex(env: Env, publicId: string): Promise<void> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, { method: 'DELETE' });
@@ -400,24 +472,49 @@ async function deleteLocaleIndex(env: Env, publicId: string): Promise<void> {
   await env.TOKYO_R2.delete(`l10n/instances/${publicId}/index.json`);
 }
 
-async function publishLocaleIndex(env: Env, publicId: string): Promise<void> {
-  const rows = await loadInstanceLocalesForPublicId(env, publicId);
-  const locales = rows
-    .map((row) => {
-      const locale = normalizeLocale(row.locale);
-      if (!locale) return null;
-      const geoCountries = normalizeGeoCountries(row.geo_countries);
-      return geoCountries ? { locale, geoCountries } : { locale };
-    })
-    .filter((entry): entry is L10nLocaleIndexEntry => Boolean(entry))
-    .sort((a, b) => a.locale.localeCompare(b.locale));
+async function publishLayerIndex(env: Env, publicId: string): Promise<void> {
+  const overlays = await loadInstanceOverlaysForPublicId(env, publicId);
+  const layers: Record<string, LayerIndexEntry> = {};
 
-  if (!locales.length) {
-    await deleteLocaleIndex(env, publicId);
+  function ensureLayerEntry(layer: string): LayerIndexEntry {
+    if (!layers[layer]) {
+      layers[layer] = { keys: [] };
+    }
+    return layers[layer]!;
+  }
+
+  function addLayerKey(layer: string, key: string, baseFingerprint?: string | null, geoTargets?: string[] | null) {
+    const entry = ensureLayerEntry(layer);
+    if (!entry.keys.includes(key)) {
+      entry.keys.push(key);
+    }
+    if (baseFingerprint && /^[a-f0-9]{64}$/i.test(baseFingerprint)) {
+      if (!entry.lastPublishedFingerprint) entry.lastPublishedFingerprint = {};
+      entry.lastPublishedFingerprint[key] = baseFingerprint;
+    }
+    if (geoTargets && layer === 'locale') {
+      if (!entry.geoTargets) entry.geoTargets = {};
+      entry.geoTargets[key] = geoTargets;
+    }
+  }
+
+  for (const row of overlays) {
+    const layer = normalizeLayer(row.layer);
+    const layerKey = layer ? normalizeLayerKey(layer, row.layer_key) : null;
+    if (!layer || !layerKey) continue;
+    addLayerKey(layer, layerKey, row.base_fingerprint ?? null, row.geo_targets ?? null);
+  }
+
+  for (const entry of Object.values(layers)) {
+    entry.keys.sort((a, b) => a.localeCompare(b));
+  }
+
+  if (!Object.keys(layers).length) {
+    await deleteLayerIndex(env, publicId);
     return;
   }
 
-  const index: L10nLocaleIndex = { v: 1, publicId, locales };
+  const index: LayerIndex = { v: 1, publicId, layers };
   const payload = prettyStableJson(index);
 
   const httpBase = resolveL10nHttpBase(env);
@@ -442,7 +539,13 @@ async function publishLocaleIndex(env: Env, publicId: string): Promise<void> {
   });
 }
 
-async function handlePutL10nOverlay(req: Request, env: Env, publicId: string, locale: string): Promise<Response> {
+async function handlePutL10nOverlay(
+  req: Request,
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string
+): Promise<Response> {
   const authErr = requireDevAuth(req, env);
   if (authErr) return authErr;
 
@@ -461,30 +564,46 @@ async function handlePutL10nOverlay(req: Request, env: Env, publicId: string, lo
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail } }, { status: 422 });
   }
 
-  const outName = await publishOverlayArtifacts(env, publicId, locale, overlay);
-  return json({ publicId, locale, file: outName }, { status: 200 });
+  const outName = await publishLayerOverlayArtifacts(env, publicId, layer, layerKey, overlay);
+  return json({ publicId, layer, layerKey, file: outName }, { status: 200 });
 }
 
-function isPublishJob(value: unknown): value is L10nPublishJob {
+function isPublishJob(value: unknown): value is L10nPublishQueueJob {
   if (!value || typeof value !== 'object') return false;
-  const job = value as L10nPublishJob;
-  if (job.v !== 1 || typeof job.publicId !== 'string' || typeof job.locale !== 'string') return false;
+  const job = value as L10nPublishQueueJob;
+  if (job.v !== 2) return false;
+  if (typeof job.publicId !== 'string' || typeof job.layer !== 'string' || typeof job.layerKey !== 'string') {
+    return false;
+  }
   if (job.action && job.action !== 'upsert' && job.action !== 'delete') return false;
   return true;
 }
 
-async function publishLocaleFromSupabase(env: Env, publicId: string, locale: string): Promise<L10nPublishResult | null> {
-  const row = await loadInstanceLocaleRow(env, publicId, locale);
-  if (!row) return null;
-  return publishLocaleRow(env, row);
+async function publishLayerFromSupabase(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string
+): Promise<L10nPublishResult | null> {
+  const row = await loadInstanceOverlayRow(env, publicId, layer, layerKey);
+  if (row) {
+    const includeUserOps = layer === 'user';
+    return publishLayerRow(env, row, includeUserOps);
+  }
+  return null;
 }
 
-async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<L10nPublishResult | null> {
+async function publishLayerRow(
+  env: Env,
+  row: InstanceOverlayRow,
+  includeUserOps: boolean
+): Promise<L10nPublishResult | null> {
   const publicId = normalizePublicId(row.public_id);
-  const locale = normalizeLocale(row.locale);
-  if (!publicId || !locale) return null;
+  const layer = normalizeLayer(row.layer);
+  const layerKey = layer ? normalizeLayerKey(layer, row.layer_key) : null;
+  if (!publicId || !layer || !layerKey) return null;
   const baseOps = Array.isArray(row.ops) ? row.ops : [];
-  const userOps = Array.isArray(row.user_ops) ? row.user_ops : [];
+  const userOps = includeUserOps && Array.isArray(row.user_ops) ? row.user_ops : [];
   const mergedOps = [...baseOps, ...userOps];
   let overlay: L10nOverlay;
   try {
@@ -498,10 +617,11 @@ async function publishLocaleRow(env: Env, row: InstanceLocaleRow): Promise<L10nP
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(`[tokyo] Invalid overlay row: ${detail}`);
   }
-  await publishOverlayArtifacts(env, publicId, locale, overlay);
+  await publishLayerOverlayArtifacts(env, publicId, layer, layerKey, overlay);
   return {
     publicId,
-    locale,
+    layer,
+    layerKey,
     baseFingerprint: overlay.baseFingerprint ?? '',
     baseUpdatedAt: row.base_updated_at ?? null,
     workspaceId: row.workspace_id ?? null,
@@ -522,39 +642,47 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
     return json({ error: 'INVALID_PAYLOAD' }, { status: 422 });
   }
 
-  const { publicId: rawPublicId, locale: rawLocale, action } = payload as L10nPublishRequest;
+  const { publicId: rawPublicId, layer: rawLayer, layerKey: rawLayerKey, action } = payload as L10nPublishRequest;
   const publicId = normalizePublicId(String(rawPublicId || ''));
-  const locale = normalizeLocale(String(rawLocale || ''));
-  if (!publicId || !locale) {
+  const layer = normalizeLayer(String(rawLayer || ''));
+  const layerKey = layer ? normalizeLayerKey(layer, String(rawLayerKey || '')) : null;
+  if (!publicId || !layer || !layerKey) {
     return json({ error: 'INVALID_L10N_PATH' }, { status: 422 });
   }
 
   const resolvedAction = action === 'delete' ? 'delete' : 'upsert';
   if (resolvedAction === 'delete') {
-    await deleteLocaleArtifacts(env, publicId, locale);
-    await deleteL10nOverlayVersions(env, publicId, locale);
-    const stateRow = await loadPublishStateRow(env, publicId, locale);
+    await deleteLayerArtifacts(env, publicId, layer, layerKey);
+    await deleteL10nOverlayVersions(env, publicId, layer, layerKey);
+    const stateRow = await loadPublishStateRow(env, publicId, layer, layerKey);
     if (stateRow?.base_fingerprint) {
-      await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
+      await markPublishStateClean(env, publicId, layer, layerKey, stateRow.base_fingerprint);
     }
-    await publishLocaleIndex(env, publicId);
+    await publishLayerIndex(env, publicId);
   } else {
-    const result = await publishLocaleFromSupabase(env, publicId, locale);
+    const result = await publishLayerFromSupabase(env, publicId, layer, layerKey);
     if (result?.baseFingerprint) {
-      await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
+      await markPublishStateClean(env, publicId, layer, layerKey, result.baseFingerprint);
       await recordL10nOverlayVersion(env, result);
     }
-    await publishLocaleIndex(env, publicId);
+    await publishLayerIndex(env, publicId);
   }
 
-  return json({ publicId, locale, action: resolvedAction }, { status: 200 });
+  return json({ publicId, layer, layerKey, action: resolvedAction }, { status: 200 });
 }
 
-async function loadPublishStateRow(env: Env, publicId: string, locale: string): Promise<L10nPublishStateRow | null> {
+async function loadPublishStateRow(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string
+): Promise<L10nPublishStateRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,base_fingerprint,published_fingerprint,publish_state,publish_attempts,publish_next_at,last_error',
+    select:
+      'public_id,locale,layer,layer_key,base_fingerprint,published_fingerprint,publish_state,publish_attempts,publish_next_at,last_error',
     public_id: `eq.${publicId}`,
-    locale: `eq.${locale}`,
+    layer: `eq.${layer}`,
+    layer_key: `eq.${layerKey}`,
     limit: '1',
   });
   const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?${params.toString()}`, { method: 'GET' });
@@ -567,7 +695,7 @@ async function loadPublishStateRow(env: Env, publicId: string, locale: string): 
 }
 
 async function upsertPublishState(env: Env, payload: Record<string, unknown>): Promise<void> {
-  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,locale`, {
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,layer,layer_key`, {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify(payload),
@@ -578,10 +706,18 @@ async function upsertPublishState(env: Env, payload: Record<string, unknown>): P
   }
 }
 
-async function markPublishStateClean(env: Env, publicId: string, locale: string, baseFingerprint: string): Promise<void> {
+async function markPublishStateClean(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+  baseFingerprint: string
+): Promise<void> {
   await upsertPublishState(env, {
     public_id: publicId,
-    locale,
+    locale: layer === 'locale' ? layerKey : null,
+    layer,
+    layer_key: layerKey,
     base_fingerprint: baseFingerprint,
     published_fingerprint: baseFingerprint,
     publish_state: 'clean',
@@ -594,17 +730,20 @@ async function markPublishStateClean(env: Env, publicId: string, locale: string,
 async function markPublishStateFailed(
   env: Env,
   publicId: string,
-  locale: string,
+  layer: string,
+  layerKey: string,
   baseFingerprint: string,
   error: string,
 ): Promise<void> {
-  const existing = await loadPublishStateRow(env, publicId, locale);
+  const existing = await loadPublishStateRow(env, publicId, layer, layerKey);
   const attempts = (existing?.publish_attempts ?? 0) + 1;
   const delayMs = Math.min(60_000 * attempts, 15 * 60_000);
   const nextAt = new Date(Date.now() + delayMs).toISOString();
   await upsertPublishState(env, {
     public_id: publicId,
-    locale,
+    locale: layer === 'locale' ? layerKey : null,
+    layer,
+    layer_key: layerKey,
     base_fingerprint: baseFingerprint,
     publish_state: 'failed',
     publish_attempts: attempts,
@@ -616,7 +755,7 @@ async function markPublishStateFailed(
 async function listDirtyPublishStates(env: Env, limit = 200): Promise<L10nPublishStateRow[]> {
   const now = new Date().toISOString();
   const params = new URLSearchParams({
-    select: 'public_id,locale,base_fingerprint,publish_state,publish_next_at',
+    select: 'public_id,layer,layer_key,base_fingerprint,publish_state,publish_next_at',
     publish_state: 'in.(dirty,failed)',
     order: 'publish_next_at.asc.nullsfirst,updated_at.asc',
     limit: String(limit),
@@ -670,17 +809,19 @@ async function recordL10nOverlayVersion(env: Env, result: L10nPublishResult): Pr
   const limit = resolveL10nVersionLimit(tier);
   if (!result.baseFingerprint) return;
 
-  const r2Path = `l10n/instances/${result.publicId}/${result.locale}/${result.baseFingerprint}.ops.json`;
+  const r2Path = `l10n/instances/${result.publicId}/${result.layer}/${result.layerKey}/${result.baseFingerprint}.ops.json`;
   const payload = {
     workspace_id: workspaceId,
     public_id: result.publicId,
-    locale: result.locale,
+    locale: result.layer === 'locale' ? result.layerKey : null,
+    layer: result.layer,
+    layer_key: result.layerKey,
     base_fingerprint: result.baseFingerprint,
     base_updated_at: result.baseUpdatedAt,
     r2_path: r2Path,
   };
 
-  const insertRes = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?on_conflict=public_id,locale,base_fingerprint`, {
+  const insertRes = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?on_conflict=public_id,layer,layer_key,base_fingerprint`, {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify(payload),
@@ -691,14 +832,15 @@ async function recordL10nOverlayVersion(env: Env, result: L10nPublishResult): Pr
   }
 
   if (limit != null) {
-    await cleanupL10nOverlayVersions(env, result.publicId, result.locale, limit);
+    await cleanupL10nOverlayVersions(env, result.publicId, result.layer, result.layerKey, limit);
   }
 }
 
 async function cleanupL10nOverlayVersions(
   env: Env,
   publicId: string,
-  locale: string,
+  layer: string,
+  layerKey: string,
   keepCount: number
 ): Promise<void> {
   if (keepCount <= 0) return;
@@ -706,7 +848,8 @@ async function cleanupL10nOverlayVersions(
   const params = new URLSearchParams({
     select: 'id,r2_path',
     public_id: `eq.${publicId}`,
-    locale: `eq.${locale}`,
+    layer: `eq.${layer}`,
+    layer_key: `eq.${layerKey}`,
     order: 'created_at.desc',
     offset: String(keepCount),
     limit: String(limit),
@@ -737,10 +880,11 @@ async function cleanupL10nOverlayVersions(
   }
 }
 
-async function deleteL10nOverlayVersions(env: Env, publicId: string, locale: string): Promise<void> {
+async function deleteL10nOverlayVersions(env: Env, publicId: string, layer: string, layerKey: string): Promise<void> {
   const params = new URLSearchParams({
     public_id: `eq.${publicId}`,
-    locale: `eq.${locale}`,
+    layer: `eq.${layer}`,
+    layer_key: `eq.${layerKey}`,
   });
   const res = await supabaseFetch(env, `/rest/v1/l10n_overlay_versions?${params.toString()}`, { method: 'DELETE' });
   if (!res.ok) {
@@ -892,15 +1036,16 @@ export default {
         return withCors(await handleGetCuratedAsset(req, env, key));
       }
 
-      const l10nMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
-      if (l10nMatch) {
+      const l10nLayerMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
+      if (l10nLayerMatch) {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        const publicId = normalizePublicId(decodeURIComponent(l10nMatch[1]));
-        const locale = normalizeLocale(decodeURIComponent(l10nMatch[2]));
-        if (!publicId || !locale) {
+        const publicId = normalizePublicId(decodeURIComponent(l10nLayerMatch[1]));
+        const layer = normalizeLayer(decodeURIComponent(l10nLayerMatch[2]));
+        const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(l10nLayerMatch[3])) : null;
+        if (!publicId || !layer || !layerKey) {
           return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
         }
-        return withCors(await handlePutL10nOverlay(req, env, publicId, locale));
+        return withCors(await handlePutL10nOverlay(req, env, publicId, layer, layerKey));
       }
 
       if (pathname.startsWith('/l10n/')) {
@@ -916,39 +1061,41 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<L10nPublishJob>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<L10nPublishQueueJob>, env: Env): Promise<void> {
     for (const msg of batch.messages) {
       const body = msg.body;
       if (!isPublishJob(body)) continue;
       const publicId = normalizePublicId(body.publicId);
-      const locale = normalizeLocale(body.locale);
-      if (!publicId || !locale) continue;
+      if (!publicId) continue;
+      const layer = normalizeLayer(body.layer);
+      const layerKey = layer ? normalizeLayerKey(layer, body.layerKey) : null;
+      if (!layer || !layerKey) continue;
       try {
         const action = body.action === 'delete' ? 'delete' : 'upsert';
         if (action === 'delete') {
-          await deleteLocaleArtifacts(env, publicId, locale);
-          await deleteL10nOverlayVersions(env, publicId, locale);
-          const stateRow = await loadPublishStateRow(env, publicId, locale);
+          await deleteLayerArtifacts(env, publicId, layer, layerKey);
+          await deleteL10nOverlayVersions(env, publicId, layer, layerKey);
+          const stateRow = await loadPublishStateRow(env, publicId, layer, layerKey);
           if (stateRow?.base_fingerprint) {
-            await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
+            await markPublishStateClean(env, publicId, layer, layerKey, stateRow.base_fingerprint);
           }
-          await publishLocaleIndex(env, publicId);
+          await publishLayerIndex(env, publicId);
         } else {
-          const result = await publishLocaleFromSupabase(env, publicId, locale);
+          const result = await publishLayerFromSupabase(env, publicId, layer, layerKey);
           if (result?.baseFingerprint) {
-            await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
+            await markPublishStateClean(env, publicId, layer, layerKey, result.baseFingerprint);
             await recordL10nOverlayVersion(env, result);
           }
-          await publishLocaleIndex(env, publicId);
+          await publishLayerIndex(env, publicId);
         }
       } catch (err) {
         console.error('[tokyo] publish job failed', err);
         try {
-          const stateRow = await loadPublishStateRow(env, publicId, locale);
+          const stateRow = await loadPublishStateRow(env, publicId, layer, layerKey);
           const baseFingerprint = stateRow?.base_fingerprint ?? '';
           if (baseFingerprint) {
             const detail = err instanceof Error ? err.message : String(err);
-            await markPublishStateFailed(env, publicId, locale, baseFingerprint, detail);
+            await markPublishStateFailed(env, publicId, layer, layerKey, baseFingerprint, detail);
           }
         } catch (markErr) {
           console.error('[tokyo] publish state update failed', markErr);
@@ -965,9 +1112,10 @@ export default {
           const rows = await listDirtyPublishStates(env);
           for (const row of rows) {
             await env.L10N_PUBLISH_QUEUE.send({
-              v: 1,
+              v: 2,
               publicId: row.public_id,
-              locale: row.locale,
+              layer: row.layer,
+              layerKey: row.layer_key,
               action: 'upsert',
             });
           }

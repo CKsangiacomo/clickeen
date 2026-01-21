@@ -25,6 +25,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
+  const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const localeResult = (() => {
     const raw = (url.searchParams.get('locale') || '').trim();
     const normalized = normalizeLocaleToken(raw);
@@ -34,7 +35,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const ts = url.searchParams.get('ts');
   let locale = localeResult.locale;
   if (!localeResult.explicit) {
-    const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
     locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
   }
 
@@ -92,7 +92,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(html, { status: 404, headers });
   }
   const nonce = crypto.randomUUID();
-  const responseHtml = await renderInstancePage({ instance, theme, device, locale, nonce });
+  const responseHtml = await renderInstancePage({ instance, theme, device, locale, country, nonce });
 
   // Conditional request handling
   let etag: string | undefined;
@@ -173,12 +173,14 @@ async function renderInstancePage({
   theme,
   device,
   locale,
+  country,
   nonce,
 }: {
   instance: InstanceResponse;
   theme: string;
   device: string;
   locale: string;
+  country?: string | null;
   nonce: string;
 }) {
   const tokyoBase = getTokyoBase();
@@ -202,6 +204,7 @@ async function renderInstancePage({
   const localizedState = await applyTokyoInstanceOverlay({
     publicId: instance.publicId,
     locale,
+    country,
     baseUpdatedAt: instance.updatedAt ?? null,
     config: instance.config,
   });

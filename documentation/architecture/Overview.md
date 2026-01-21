@@ -133,7 +133,8 @@ Each release proceeds in 3 steps:
 #### Paris (Workers)
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
-  - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
+- Locale endpoints are the locale-layer wrapper; new layers use the `/layers` endpoints.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.
@@ -149,7 +150,7 @@ Each release proceeds in 3 steps:
 - Prague website base content lives in-repo (`prague/content/base/**`), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest).
 
 #### Tokyo Worker (Workers + Queues)
-- Reads `widget_instance_locales` from Supabase, merges `ops + user_ops`, and publishes overlays to Tokyo/R2.
+- Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops`, and publishes overlays to Tokyo/R2.
 
 #### San Francisco (Workers + D1/KV/R2/Queues)
 - `/healthz`, `/v1/execute`, `/v1/outcome`, queue consumer for non-blocking log writes.
@@ -305,7 +306,7 @@ Notes:
 
 ## Bob's Two-API-Call Architecture
 
-Config exists in EXACTLY 2 places during editing:
+Base config exists in EXACTLY 2 places during editing:
 1. **Michael (database)** — Published version
 2. **Bob's React state** — Working copy (`instanceData`)
 
@@ -319,7 +320,9 @@ Config exists in EXACTLY 2 places during editing:
 
 `subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
 
-**Between load and publish:** Zero database writes. 10,000 users editing = 10,000 in-memory states, zero server load.
+Localization is separate: overlay edits write to `widget_instance_overlays` via Paris and do not touch the base config.
+
+**Between load and publish:** Zero base-config writes. 10,000 users editing = 10,000 in-memory states, no server load for base config.
 
 ---
 
@@ -559,7 +562,7 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 - Compile-all widgets gate (`node scripts/compile-all-widgets.mjs`)
 - Auto-generated Typography and Stage/Pod panels
 - Shared runtime modules (CKStagePod, CKTypography)
-- Two-API-Call pattern
+- Two-API-Call pattern (base config)
 - Ops validation against controls[] allowlist
 - Paris instance API with entitlements
 - Dieter component library (16+ components)

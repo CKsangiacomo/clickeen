@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
@@ -85,7 +85,6 @@ function runHydrators(scope: HTMLElement) {
       (fn as (el?: HTMLElement) => void)(scope);
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Hydrator error', err);
       }
     }
@@ -428,7 +427,6 @@ function buildShowIfEntries(container: HTMLElement): ShowIfEntry[] {
       entries.push({ el: node, ast, raw });
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Failed to parse show-if', raw, err);
       }
     }
@@ -444,7 +442,6 @@ function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<string, unkn
         isVisible = evalAst(entry.ast, data);
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.warn('[TdMenuContent] show-if evaluation failed', entry.raw, err);
         }
       }
@@ -627,8 +624,6 @@ export function TdMenuContent({
   widgetKey,
   instanceData,
   applyOps,
-  canUndo,
-  undoLastOps,
   dieterAssets,
   lastUpdate,
   header,
@@ -694,7 +689,7 @@ export function TdMenuContent({
       container.removeEventListener('focusin', handleFocusIn);
       container.removeEventListener('focusout', handleFocusOut);
     };
-  }, [panelHtml]);
+  }, [panelHtml, session]);
 
   useEffect(() => {
     // (reserved for future per-path UX enhancements)
@@ -716,7 +711,6 @@ export function TdMenuContent({
           runHydrators(container);
           applyI18nToDom(container, session.compiled?.widgetname ?? null).catch((err) => {
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] i18n apply failed', err);
             }
           });
@@ -726,11 +720,10 @@ export function TdMenuContent({
       })
       .catch((err) => {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('[TdMenuContent] Failed to load Dieter assets', err);
         }
       });
-  }, [panelHtml, dieterAssets?.styles, dieterAssets?.scripts, session.compiled?.widgetname]);
+  }, [panelHtml, dieterAssets, session.compiled?.widgetname]);
 
   // Bind controls: render values from instanceData, emit strict ops, honor showIf
   useEffect(() => {
@@ -909,7 +902,6 @@ export function TdMenuContent({
       event.stopPropagation();
       const applied = applyOps(expandLinkedOps(ops));
       if (!applied.ok && process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Failed to apply ops event', applied.errors);
       }
     };
@@ -926,7 +918,6 @@ export function TdMenuContent({
     const applySet = (path: string, rawValue: unknown) => {
       const applied = applyOps(expandLinkedOps([{ op: 'set', path, value: rawValue }]));
       if (!applied.ok && process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.warn('[TdMenuContent] Failed to apply set op', applied.errors);
       }
     };
@@ -1064,7 +1055,6 @@ export function TdMenuContent({
           const parsed = parseBobJsonValue(target, rawValue);
           if (parsed == null) {
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] Ignoring invalid JSON input for path', path);
             }
             return;
@@ -1073,7 +1063,6 @@ export function TdMenuContent({
           if (!applied.ok) {
             revertTargetValue(target, path);
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] Denied JSON input for path', path, applied.errors);
             }
           }
@@ -1084,7 +1073,6 @@ export function TdMenuContent({
           const trimmed = rawValue.trim();
           if (!trimmed) {
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] Ignoring empty numeric input for path', path);
             }
             return;
@@ -1092,7 +1080,6 @@ export function TdMenuContent({
           const parsed = Number(trimmed);
           if (!Number.isFinite(parsed)) {
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
               console.warn('[TdMenuContent] Ignoring invalid numeric input for path', path);
             }
             return;
@@ -1114,7 +1101,6 @@ export function TdMenuContent({
                 { op: 'set', path, value: rawValue },
               ]);
               if (!applied.ok && process.env.NODE_ENV === 'development') {
-                // eslint-disable-next-line no-console
                 console.warn('[TdMenuContent] Failed to apply typography sizePreset ops', applied.errors);
               }
               return;
@@ -1217,7 +1203,7 @@ export function TdMenuContent({
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
     };
-  }, [instanceData, applyOps, panelHtml, renderKey, session.requestUpsell]);
+  }, [instanceData, applyOps, panelHtml, renderKey, session, session.requestUpsell]);
 
   // Re-apply show-if visibility when data changes
   useLayoutEffect(() => {

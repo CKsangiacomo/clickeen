@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "baseFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "baseUpdatedAt": "2026-01-20T00:00:00Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Hello"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
-STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
+STATUS: REFERENCE — MUST MATCH RUNTIME
 This document describes the intended boundary between Paris and San Francisco.
-When debugging reality, treat runtime code, `supabase/migrations/`, and deployed Cloudflare config as truth.
-If you find a mismatch, update this document; execution continues even if docs drift.
+Runtime code + `supabase/migrations/` + deployed Cloudflare config are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 # System: San Francisco — AI Workforce Operating System
 
@@ -83,6 +82,7 @@ Keeping Paris and San Francisco separate prevents:
 - **AI Grant**: A signed authorization payload from Paris that defines what San Francisco is allowed to do for a subject (user/workspace) for a short time window.
 - **Execution Request**: The payload sent to San Francisco containing `agentId`, input, and the AI Grant.
 - **Result**: Structured output from San Francisco (`ops[]` for editor agents, or a typed payload for non-editor agents).
+- **Playbook**: A versioned runtime contract attached to an `agentId` via the registry (server-resolved, not client-selected).
 
 ## High‑Level Data Flow
 

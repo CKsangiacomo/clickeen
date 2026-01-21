@@ -52,6 +52,53 @@ function normalizeLocaleToken(raw) {
   return value;
 }
 
+const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
+const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
+
+function normalizeLayer(raw) {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!value || !L10N_LAYER_ALLOWED.has(value)) return null;
+  return value;
+}
+
+function normalizeLayerKey(layer, raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  switch (layer) {
+    case 'locale': {
+      return normalizeLocaleToken(value);
+    }
+    case 'geo': {
+      const upper = value.toUpperCase();
+      return /^[A-Z]{2}$/.test(upper) ? upper : null;
+    }
+    case 'industry': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'experiment': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
+    }
+    case 'account': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'behavior': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
+    }
+    case 'user': {
+      if (value === 'global') return 'global';
+      return normalizeLocaleToken(value);
+    }
+    default:
+      return null;
+  }
+}
+
 function normalizeGeoCountries(raw) {
   if (!Array.isArray(raw)) return null;
   const list = raw
@@ -125,6 +172,21 @@ function loadAllowlist(widgetType) {
     .filter(Boolean);
 }
 
+function loadLayerAllowlist(widgetType, layer) {
+  if (layer === 'locale') return loadAllowlist(widgetType);
+  const filePath = path.join(widgetsRoot, widgetType, 'layers', `${layer}.allowlist.json`);
+  if (!fs.existsSync(filePath)) {
+    return loadAllowlist(widgetType);
+  }
+  const json = readJson(filePath);
+  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.paths)) {
+    throw new Error(`[l10n] Invalid layer allowlist: ${filePath}`);
+  }
+  return json.paths
+    .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
+    .filter(Boolean);
+}
+
 async function fetchInstanceConfig(publicId) {
   const baseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -172,36 +234,34 @@ async function ensureBaseFingerprint({ publicId, data }) {
   };
 }
 
-function assertOverlayShape({ publicId, locale, data, allowlist }) {
+function assertOverlayShape({ publicId, layer, layerKey, data, allowlist }) {
+  const ref = `${publicId}/${layer}/${layerKey}`;
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error(`[l10n] ${publicId}/${locale}: overlay must be an object`);
+    throw new Error(`[l10n] ${ref}: overlay must be an object`);
   }
-  if (data.v !== 1) throw new Error(`[l10n] ${publicId}/${locale}: v must be 1`);
-  if (!Array.isArray(data.ops)) throw new Error(`[l10n] ${publicId}/${locale}: ops must be an array`);
+  if (data.v !== 1) throw new Error(`[l10n] ${ref}: v must be 1`);
+  if (!Array.isArray(data.ops)) throw new Error(`[l10n] ${ref}: ops must be an array`);
   if (!data.baseFingerprint || typeof data.baseFingerprint !== 'string' || !/^[a-f0-9]{64}$/i.test(data.baseFingerprint)) {
-    throw new Error(`[l10n] ${publicId}/${locale}: baseFingerprint is required`);
+    throw new Error(`[l10n] ${ref}: baseFingerprint is required`);
   }
 
   for (let i = 0; i < data.ops.length; i += 1) {
     const op = data.ops[i];
     if (!op || typeof op !== 'object' || Array.isArray(op)) {
-      throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}] must be an object`);
+      throw new Error(`[l10n] ${ref}: ops[${i}] must be an object`);
     }
     if (op.op !== 'set') {
-      throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].op must be "set"`);
+      throw new Error(`[l10n] ${ref}: ops[${i}].op must be "set"`);
     }
     const p = typeof op.path === 'string' ? normalizeOpPath(op.path) : '';
-    if (!p) throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].path is required`);
-    if (hasProhibitedSegment(p)) throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].path contains prohibited segment`);
+    if (!p) throw new Error(`[l10n] ${ref}: ops[${i}].path is required`);
+    if (hasProhibitedSegment(p)) throw new Error(`[l10n] ${ref}: ops[${i}].path contains prohibited segment`);
     if (allowlist && !allowlist.some((allow) => pathMatchesAllowlist(p, allow))) {
-      throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].path not allowlisted (${p})`);
+      throw new Error(`[l10n] ${ref}: ops[${i}].path not allowlisted (${p})`);
     }
     op.path = p;
-    if (!('value' in op)) throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].value is required`);
-    if (typeof op.value !== 'string') {
-      throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].value must be a string`);
-    }
-    if (op.value === undefined) throw new Error(`[l10n] ${publicId}/${locale}: ops[${i}].value cannot be undefined`);
+    if (!('value' in op)) throw new Error(`[l10n] ${ref}: ops[${i}].value is required`);
+    if (op.value === undefined) throw new Error(`[l10n] ${ref}: ops[${i}].value cannot be undefined`);
   }
 }
 
@@ -212,6 +272,15 @@ function cleanOldOutputs(outputDir, keepName) {
     if (file !== keepName && file.endsWith('.ops.json')) {
       fs.unlinkSync(path.join(outputDir, file));
     }
+  }
+}
+
+function removeLegacyLayerDirs(instanceOutDir) {
+  if (!fs.existsSync(instanceOutDir)) return;
+  const entries = fs.readdirSync(instanceOutDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+  for (const entry of entries) {
+    if (L10N_LAYER_ALLOWED.has(entry.name)) continue;
+    fs.rmSync(path.join(instanceOutDir, entry.name), { recursive: true, force: true });
   }
 }
 
@@ -245,54 +314,89 @@ async function main() {
     const instanceSrcDir = path.join(instancesRoot, publicId);
     const instanceOutDir = path.join(outRoot, 'instances', publicId);
     ensureDir(instanceOutDir);
-
-    const locales = fs
-      .readdirSync(instanceSrcDir, { withFileTypes: true })
-      .filter((d) => d.isFile() && d.name.endsWith('.ops.json'))
-      .map((d) => d.name.replace(/\.ops\.json$/, ''))
-      .sort();
-    if (!locales.length) continue;
+    removeLegacyLayerDirs(instanceOutDir);
 
     const widgetType = resolveWidgetTypeFromPublicId(publicId);
     if (!widgetType) {
       throw new Error(`[l10n] ${publicId}: Unable to resolve widgetType for allowlist validation`);
     }
-    const allowlist = loadAllowlist(widgetType);
+
+    const layerDirs = fs
+      .readdirSync(instanceSrcDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
+      .map((d) => d.name)
+      .sort();
+    if (!layerDirs.length) continue;
 
     let wroteInstance = false;
-    const indexEntries = [];
-    for (const localeRaw of locales) {
-      const locale = normalizeLocaleToken(localeRaw);
-      if (!locale) {
-        throw new Error(`[l10n] ${publicId}/${localeRaw}: invalid locale token`);
+    const indexLayers = {};
+    for (const layerRaw of layerDirs) {
+      const layer = normalizeLayer(layerRaw);
+      if (!layer) {
+        throw new Error(`[l10n] ${publicId}/${layerRaw}: invalid layer`);
       }
-      const srcPath = path.join(instanceSrcDir, `${localeRaw}.ops.json`);
-      const source = readJson(srcPath);
-      const geoCountries = normalizeGeoCountries(source.geoCountries);
-      const overlay = await ensureBaseFingerprint({ publicId, data: source });
-      assertOverlayShape({ publicId, locale, data: overlay, allowlist });
+      const layerSrcDir = path.join(instanceSrcDir, layerRaw);
+      const layerFiles = fs
+        .readdirSync(layerSrcDir, { withFileTypes: true })
+        .filter((d) => d.isFile() && d.name.endsWith('.ops.json'))
+        .map((d) => d.name)
+        .sort();
+      if (!layerFiles.length) continue;
 
-      const overlayOut = {
-        v: overlay.v,
-        baseUpdatedAt: overlay.baseUpdatedAt ?? null,
-        baseFingerprint: overlay.baseFingerprint,
-        ops: overlay.ops,
-      };
-      const stable = prettyStableJson(overlayOut);
-      const outName = `${overlay.baseFingerprint}.ops.json`;
-      const localeOutDir = path.join(instanceOutDir, locale);
-      ensureDir(localeOutDir);
-      cleanOldOutputs(localeOutDir, outName);
-      fs.writeFileSync(path.join(localeOutDir, outName), stable, 'utf8');
-      overlayCount += 1;
-      indexEntries.push(geoCountries ? { locale, geoCountries } : { locale });
-      wroteInstance = true;
+      const allowlist = loadLayerAllowlist(widgetType, layer);
+      for (const fileName of layerFiles) {
+        const layerKeyRaw = fileName.replace(/\.ops\.json$/, '');
+        const layerKey = normalizeLayerKey(layer, layerKeyRaw);
+        if (!layerKey) {
+          throw new Error(`[l10n] ${publicId}/${layer}: invalid layer key (${layerKeyRaw})`);
+        }
+        const srcPath = path.join(layerSrcDir, fileName);
+        const source = readJson(srcPath);
+        const geoCountries = layer === 'locale' ? normalizeGeoCountries(source.geoCountries) : null;
+        const overlay = await ensureBaseFingerprint({ publicId, data: source });
+        assertOverlayShape({ publicId, layer, layerKey, data: overlay, allowlist });
+
+        const overlayOut = {
+          v: overlay.v,
+          baseUpdatedAt: overlay.baseUpdatedAt ?? null,
+          baseFingerprint: overlay.baseFingerprint,
+          ops: overlay.ops,
+        };
+        const stable = prettyStableJson(overlayOut);
+        const outName = `${overlay.baseFingerprint}.ops.json`;
+        const layerOutDir = path.join(instanceOutDir, layer, layerKey);
+        ensureDir(layerOutDir);
+        cleanOldOutputs(layerOutDir, outName);
+        fs.writeFileSync(path.join(layerOutDir, outName), stable, 'utf8');
+        overlayCount += 1;
+
+        if (!indexLayers[layer]) {
+          indexLayers[layer] = {
+            keys: [],
+            lastPublishedFingerprint: {},
+            ...(layer === 'locale' ? { geoTargets: {} } : {}),
+          };
+        }
+        if (!indexLayers[layer].keys.includes(layerKey)) {
+          indexLayers[layer].keys.push(layerKey);
+        }
+        indexLayers[layer].lastPublishedFingerprint[layerKey] = overlay.baseFingerprint;
+        if (layer === 'locale' && geoCountries) {
+          indexLayers[layer].geoTargets[layerKey] = geoCountries;
+        }
+        wroteInstance = true;
+      }
     }
     if (wroteInstance) {
-      indexEntries.sort((a, b) => a.locale.localeCompare(b.locale));
+      for (const layer of Object.keys(indexLayers)) {
+        indexLayers[layer].keys.sort((a, b) => a.localeCompare(b));
+        if (indexLayers[layer].geoTargets && !Object.keys(indexLayers[layer].geoTargets).length) {
+          delete indexLayers[layer].geoTargets;
+        }
+      }
       fs.writeFileSync(
         path.join(instanceOutDir, 'index.json'),
-        prettyStableJson({ v: 1, publicId, locales: indexEntries }),
+        prettyStableJson({ v: 1, publicId, layers: indexLayers }),
         'utf8',
       );
       instanceCount += 1;

@@ -31,6 +31,28 @@ const NEW_ALLOWLIST_BLOCKS = path.join(NEW_ALLOWLIST_ROOT, 'blocks');
 
 const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
 
+async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
+  const keys = [...locales].sort((a, b) => a.localeCompare(b));
+  if (!keys.length) return;
+  const lastPublishedFingerprint = {};
+  for (const locale of keys) {
+    lastPublishedFingerprint[locale] = baseFingerprint;
+  }
+  const index = {
+    v: 1,
+    publicId: pageId,
+    layers: {
+      locale: {
+        keys,
+        lastPublishedFingerprint,
+      },
+    },
+  };
+  const outPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'index.json');
+  await ensureDir(path.dirname(outPath));
+  await fs.writeFile(outPath, prettyStableJson(index));
+}
+
 function computeBaseFingerprint(config) {
   return sha256Hex(stableStringify(config));
 }
@@ -249,11 +271,12 @@ async function migrateOverlays() {
           ops.push({ op: 'set', path: rawPath, value: op.value });
         }
         ops.sort((a, b) => a.path.localeCompare(b.path));
-        const outDir = path.join(outBaseDir, locale);
+        const outDir = path.join(outBaseDir, 'locale', locale);
         await ensureDir(outDir);
         const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
         await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
       }
+      await writeLayerIndex({ pageId: 'chrome', locales: overlayLocales, baseFingerprint });
       continue;
     }
 
@@ -303,11 +326,12 @@ async function migrateOverlays() {
     for (const locale of overlayLocales) {
       const ops = overlaysByLocale.get(locale) ?? [];
       ops.sort((a, b) => a.path.localeCompare(b.path));
-      const outDir = path.join(outBaseDir, locale);
+      const outDir = path.join(outBaseDir, 'locale', locale);
       await ensureDir(outDir);
       const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
       await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
     }
+    await writeLayerIndex({ pageId, locales: overlayLocales, baseFingerprint });
   }
 }
 

@@ -1,6 +1,6 @@
-STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
+STATUS: REFERENCE — MUST MATCH RUNTIME
 This document describes the shipped Venice behavior and the intended Venice contracts.
-When debugging reality, treat runtime code and deployed Cloudflare config as truth.
+Runtime code + deployed Cloudflare config are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 ## AIs Quick Scan
 
@@ -126,6 +126,14 @@ Venice exposes a stable asset origin for widget packages:
 - `GET /dieter/*` proxies Tokyo `/dieter/*`
 
 This keeps widget definitions portable and prevents hard-coded Tokyo origins inside widget HTML/CSS/JS.
+
+**Cache policy (shipped):**
+- Path-aware caching is enforced in Venice (not pass-through):
+  - `l10n` overlays, `workspace-assets`, `curated-assets`: `force-cache` with 1-year revalidate.
+  - `i18n` bundles: `force-cache` with 1-year revalidate; `i18n/manifest.json`: short TTL (5 min).
+  - `l10n` `index.json`: short TTL (5 min) for locale selection.
+  - `widgets/` + `dieter/`: short TTL (5 min) for fast iteration.
+  - Everything else: `no-store`.
 
 **Asset origin constant (shipped):**
 

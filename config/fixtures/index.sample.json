@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "publicId": "wgt_sample",
+  "layers": {
+    "locale": {
+      "keys": ["en", "fr"],
+      "lastPublishedFingerprint": {
+        "en": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "fr": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "geoTargets": {
+        "fr": ["FR", "CA"]
+      }
+    },
+    "experiment": {
+      "keys": ["exp_01:a", "exp_02:b"]
+    }
+  }
+}

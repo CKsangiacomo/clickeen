@@ -1,6 +1,6 @@
-STATUS: REFERENCE — LEARNING LOOP (MAY DRIFT)
+STATUS: REFERENCE — MUST MATCH RUNTIME
 This document describes how San Francisco “learns” via outcomes: what is logged, what is indexed, what is considered success/failure, and how we prevent regressions.
-When debugging reality, treat runtime code and deployed Cloudflare bindings as truth.
+Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 # San Francisco — Learning Loop
 

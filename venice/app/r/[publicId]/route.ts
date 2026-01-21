@@ -114,10 +114,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const ts = url.searchParams.get('ts');
+  const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const localeResult = resolveLocale(req);
   let locale = localeResult.locale;
   if (!localeResult.explicit) {
-    const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
     locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
   }
 
@@ -201,6 +201,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const localizedState = await applyTokyoInstanceOverlay({
     publicId: instance.publicId,
     locale,
+    country,
     baseUpdatedAt: instance.updatedAt ?? null,
     config: instance.config,
   });

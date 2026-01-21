@@ -1,4 +1,12 @@
-import { computeBaseFingerprint, localeCandidates, normalizeLocaleToken } from '@clickeen/l10n';
+import {
+  computeBaseFingerprint,
+  GEO_TARGETS_SEMANTICS,
+  LAYER_MULTI_KEY_ORDER,
+  LAYER_ORDER,
+  USER_FALLBACK_ORDER,
+  localeCandidates,
+  normalizeLocaleToken,
+} from '@clickeen/l10n';
 import { tokyoFetch } from './tokyo';
 
 export type LocalizationOp = { op: 'set'; path: string; value: unknown };
@@ -10,18 +18,23 @@ export type InstanceOverlay = {
   ops: LocalizationOp[];
 };
 
-type LocaleIndexEntry = {
-  locale: string;
-  geoCountries?: string[] | null;
+type LayerIndexEntry = {
+  keys: string[];
+  lastPublishedFingerprint?: Record<string, string>;
+  geoTargets?: Record<string, string[]>;
 };
 
-type LocaleIndex = {
+type LayerIndex = {
   v: 1;
   publicId: string;
-  locales: LocaleIndexEntry[];
+  layers: Record<string, LayerIndexEntry>;
 };
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
+const MAX_LAYER_APPLICATIONS = 8;
 
 function hasProhibitedSegment(path: string): boolean {
   return path
@@ -40,6 +53,42 @@ function isCuratedPublicId(publicId: string): boolean {
 
 function isDevStrict(): boolean {
   return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+}
+
+function normalizeLayerKey(layer: string, raw: string | null | undefined): string | null {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  switch (layer) {
+    case 'locale': {
+      return normalizeLocaleToken(value);
+    }
+    case 'geo': {
+      const upper = value.toUpperCase();
+      return /^[A-Z]{2}$/.test(upper) ? upper : null;
+    }
+    case 'industry': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'experiment': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
+    }
+    case 'account': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'behavior': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
+    }
+    case 'user': {
+      if (value === 'global') return 'global';
+      return normalizeLocaleToken(value);
+    }
+    default:
+      return null;
+  }
 }
 
 function setAt(obj: unknown, path: string, value: unknown): unknown {
@@ -79,24 +128,34 @@ function applySetOps(config: Record<string, unknown>, ops: LocalizationOp[]): Re
   return (working && typeof working === 'object' && !Array.isArray(working) ? (working as Record<string, unknown>) : config);
 }
 
-async function fetchOverlay(publicId: string, locale: string, baseFingerprint: string): Promise<InstanceOverlay | null> {
+async function fetchOverlay(
+  publicId: string,
+  layer: string,
+  layerKey: string,
+  baseFingerprint: string
+): Promise<InstanceOverlay | null> {
   if (!baseFingerprint) return null;
+  const res = await tokyoFetch(
+    `/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(layer)}/${encodeURIComponent(
+      layerKey
+    )}/${encodeURIComponent(baseFingerprint)}.ops.json`,
+    { method: 'GET' }
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as InstanceOverlay | null;
+  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.ops)) return null;
+  return json;
+}
 
-  for (const candidate of localeCandidates(locale)) {
-    const res = await tokyoFetch(
-      `/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(candidate)}/${encodeURIComponent(
-        baseFingerprint
-      )}.ops.json`,
-      { method: 'GET' }
-    );
-    if (res.status === 404) continue;
-    if (!res.ok) return null;
-    const json = (await res.json().catch(() => null)) as InstanceOverlay | null;
-    if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.ops)) return null;
-    return json;
-  }
-
-  return null;
+async function fetchLayerIndex(publicId: string): Promise<LayerIndex | null> {
+  const res = await tokyoFetch(`/l10n/instances/${encodeURIComponent(publicId)}/index.json`, { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as LayerIndex | null;
+  if (!json || typeof json !== 'object' || json.v !== 1) return null;
+  if (!json.layers || typeof json.layers !== 'object') return null;
+  return json;
 }
 
 function normalizeCountryCode(raw?: string | null): string | null {
@@ -114,29 +173,23 @@ function normalizeGeoCountries(raw: unknown): string[] | null {
   return Array.from(new Set(list));
 }
 
-async function fetchLocaleIndex(publicId: string): Promise<LocaleIndex | null> {
-  const res = await tokyoFetch(`/l10n/instances/${encodeURIComponent(publicId)}/index.json`, { method: 'GET' });
-  if (res.status === 404) return null;
-  if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as LocaleIndex | null;
-  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.locales)) return null;
-  return json;
-}
-
-function resolveLocaleFromIndex(args: { index: LocaleIndex; locale: string; country?: string | null }): string | null {
-  if (!args.index.locales.length) return null;
+function resolveLocaleFromIndex(args: {
+  entry: LayerIndexEntry;
+  locale: string;
+  country?: string | null;
+}): string | null {
+  if (!args.entry.keys.length) return null;
   const supported = new Set(
-    args.index.locales
-      .map((entry) => normalizeLocaleToken(entry.locale))
-      .filter((value): value is string => Boolean(value)),
+    args.entry.keys.map((entry) => normalizeLocaleToken(entry)).filter((value): value is string => Boolean(value)),
   );
 
   const country = normalizeCountryCode(args.country);
-  if (country) {
-    for (const entry of args.index.locales) {
-      const locale = normalizeLocaleToken(entry.locale);
+  if (country && GEO_TARGETS_SEMANTICS === 'locale-selection-only') {
+    const geoTargets = args.entry.geoTargets ?? {};
+    for (const localeKey of args.entry.keys) {
+      const locale = normalizeLocaleToken(localeKey);
       if (!locale) continue;
-      const geoCountries = normalizeGeoCountries(entry.geoCountries);
+      const geoCountries = normalizeGeoCountries(geoTargets[locale]);
       if (geoCountries && geoCountries.includes(country)) {
         return locale;
       }
@@ -147,9 +200,126 @@ function resolveLocaleFromIndex(args: { index: LocaleIndex; locale: string; coun
   if (preferredCandidates.length) return preferredCandidates[0]!;
 
   if (supported.has('en')) return 'en';
-  return args.index.locales
-    .map((entry) => normalizeLocaleToken(entry.locale))
+  return args.entry.keys
+    .map((entry) => normalizeLocaleToken(entry))
     .find((value): value is string => Boolean(value)) ?? null;
+}
+
+function sortExperimentKeys(keys: string[]): string[] {
+  if (LAYER_MULTI_KEY_ORDER.experiment !== 'expId-asc') return keys;
+  return [...keys].sort((a, b) => {
+    const [aId = '', aVariant = ''] = a.split(':');
+    const [bId = '', bVariant = ''] = b.split(':');
+    if (aId === bId) return aVariant.localeCompare(bVariant);
+    return aId.localeCompare(bId);
+  });
+}
+
+function sortBehaviorKeys(keys: string[]): string[] {
+  if (LAYER_MULTI_KEY_ORDER.behavior !== 'lex') return keys;
+  return [...keys].sort((a, b) => a.localeCompare(b));
+}
+
+type LayerContext = {
+  industryKey?: string | null;
+  accountKey?: string | null;
+  experimentKeys?: string[] | null;
+  behaviorKeys?: string[] | null;
+};
+
+type LayerTarget = {
+  layer: string;
+  key: string;
+  required?: boolean;
+};
+
+function resolveLayerTargets(args: {
+  index: LayerIndex | null;
+  locale: string;
+  country?: string | null;
+  layerContext?: LayerContext;
+}): { targets: LayerTarget[]; missingRequired: string[] } {
+  const targets: LayerTarget[] = [];
+  const missingRequired: string[] = [];
+  const layers = args.index?.layers ?? {};
+
+  const localeKey = normalizeLayerKey('locale', args.locale);
+  if (localeKey && localeKey !== 'en') {
+    const entry = layers.locale;
+    if (!entry || !entry.keys.includes(localeKey)) {
+      missingRequired.push(`locale:${localeKey}`);
+    } else {
+      targets.push({ layer: 'locale', key: localeKey, required: true });
+    }
+  }
+
+  const geoKey = normalizeLayerKey('geo', normalizeCountryCode(args.country));
+  if (geoKey) {
+    const entry = layers.geo;
+    if (entry && entry.keys.includes(geoKey)) {
+      targets.push({ layer: 'geo', key: geoKey });
+    }
+  }
+
+  const industryKey = normalizeLayerKey('industry', args.layerContext?.industryKey ?? null);
+  if (industryKey) {
+    const entry = layers.industry;
+    if (entry && entry.keys.includes(industryKey)) {
+      targets.push({ layer: 'industry', key: industryKey });
+    }
+  }
+
+  const accountKey = normalizeLayerKey('account', args.layerContext?.accountKey ?? null);
+  if (accountKey) {
+    const entry = layers.account;
+    if (entry && entry.keys.includes(accountKey)) {
+      targets.push({ layer: 'account', key: accountKey });
+    }
+  }
+
+  const experimentEntry = layers.experiment;
+  if (experimentEntry && Array.isArray(args.layerContext?.experimentKeys)) {
+    const normalized = Array.from(
+      new Set(
+        args.layerContext!.experimentKeys
+          .map((key) => normalizeLayerKey('experiment', key))
+          .filter((key): key is string => Boolean(key)),
+      ),
+    ).filter((key) => experimentEntry.keys.includes(key));
+    const ordered = sortExperimentKeys(normalized);
+    ordered.forEach((key) => targets.push({ layer: 'experiment', key }));
+  }
+
+  const behaviorEntry = layers.behavior;
+  if (behaviorEntry && Array.isArray(args.layerContext?.behaviorKeys)) {
+    const normalized = Array.from(
+      new Set(
+        args.layerContext!.behaviorKeys
+          .map((key) => normalizeLayerKey('behavior', key))
+          .filter((key): key is string => Boolean(key)),
+      ),
+    ).filter((key) => behaviorEntry.keys.includes(key));
+    const ordered = sortBehaviorKeys(normalized);
+    ordered.forEach((key) => targets.push({ layer: 'behavior', key }));
+  }
+
+  const userEntry = layers.user;
+  if (userEntry && userEntry.keys.length) {
+    const fallbackCandidates = USER_FALLBACK_ORDER.map((mode) => (mode === 'locale' ? args.locale : 'global'));
+    for (const candidate of fallbackCandidates) {
+      const key = normalizeLayerKey('user', candidate);
+      if (key && userEntry.keys.includes(key)) {
+        targets.push({ layer: 'user', key });
+        break;
+      }
+    }
+  }
+
+  const orderedTargets = LAYER_ORDER.filter((layer) => layer !== 'base').flatMap((layer) =>
+    targets.filter((target) => target.layer === layer),
+  );
+
+  return { targets: orderedTargets, missingRequired };
 }
 
 export async function resolveTokyoLocale(args: {
@@ -161,45 +331,87 @@ export async function resolveTokyoLocale(args: {
   const normalized = normalizeLocaleToken(args.locale) ?? 'en';
   if (args.explicit) return normalized;
 
-  const index = await fetchLocaleIndex(args.publicId).catch(() => null);
-  if (!index) return normalized;
+  const index = await fetchLayerIndex(args.publicId).catch(() => null);
+  if (!index || !index.layers?.locale) return normalized;
 
-  return resolveLocaleFromIndex({ index, locale: normalized, country: args.country }) ?? normalized;
+  return resolveLocaleFromIndex({ entry: index.layers.locale, locale: normalized, country: args.country }) ?? normalized;
 }
 
 export async function applyTokyoInstanceOverlay(args: {
   publicId: string;
   locale: string;
+  country?: string | null;
   baseUpdatedAt?: string | null;
   baseFingerprint?: string | null;
   config: Record<string, unknown>;
+  layerContext?: LayerContext;
 }): Promise<Record<string, unknown>> {
   const locale = normalizeLocaleToken(args.locale);
   if (!locale) return args.config;
 
   const baseFingerprint = args.baseFingerprint ?? (await computeBaseFingerprint(args.config));
-  const overlay = await fetchOverlay(args.publicId, locale, baseFingerprint);
-  if (!overlay) {
+  const index = await fetchLayerIndex(args.publicId).catch(() => null);
+
+  if (!index) {
     if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-      throw new Error(`[VeniceL10n] Missing overlay for ${args.publicId} (${locale})`);
+      throw new Error(`[VeniceL10n] Missing layer index for ${args.publicId}`);
     }
     return args.config;
   }
 
-  if (overlay.baseFingerprint) {
-    if (overlay.baseFingerprint !== baseFingerprint) {
-      if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-        throw new Error(`[VeniceL10n] Stale overlay for ${args.publicId} (${locale})`);
+  const { targets, missingRequired } = resolveLayerTargets({
+    index,
+    locale,
+    country: args.country,
+    layerContext: args.layerContext,
+  });
+
+  if (missingRequired.length) {
+    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+      throw new Error(`[VeniceL10n] Missing required layer keys for ${args.publicId}: ${missingRequired.join(', ')}`);
+    }
+    return args.config;
+  }
+
+  if (!targets.length) return args.config;
+  const cappedTargets = targets.slice(0, MAX_LAYER_APPLICATIONS);
+  const overlayResults = await Promise.all(
+    cappedTargets.map(async (target) => {
+      const entry = index.layers[target.layer];
+      const expected = entry?.lastPublishedFingerprint?.[target.key];
+      if (expected && expected !== baseFingerprint) {
+        return { target, overlay: null, stale: true };
       }
-      return args.config;
+      const overlay = await fetchOverlay(args.publicId, target.layer, target.key, baseFingerprint);
+      if (!overlay) return { target, overlay: null, stale: false };
+      if (overlay.baseFingerprint && overlay.baseFingerprint !== baseFingerprint) {
+        return { target, overlay: null, stale: true };
+      }
+      if (!overlay.baseFingerprint) {
+        return { target, overlay: null, stale: true };
+      }
+      return { target, overlay, stale: false };
+    }),
+  );
+
+  let localized = args.config;
+  for (const result of overlayResults) {
+    if (!result.overlay) {
+      if (result.stale && isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+        throw new Error(
+          `[VeniceL10n] Stale overlay for ${args.publicId} (${result.target.layer}:${result.target.key})`,
+        );
+      }
+      if (result.target.required && isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
+        throw new Error(
+          `[VeniceL10n] Missing overlay for ${args.publicId} (${result.target.layer}:${result.target.key})`,
+        );
+      }
+      continue;
     }
-  } else {
-    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-      throw new Error(`[VeniceL10n] Missing baseFingerprint for ${args.publicId} (${locale})`);
-    }
-    return args.config;
+    const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
+    localized = applySetOps(localized, ops);
   }
 
-  const ops = overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
-  return applySetOps(args.config, ops);
+  return localized;
 }

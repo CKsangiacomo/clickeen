@@ -1,0 +1,38 @@
+{
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "de": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "es": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "fr": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "hi": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "it": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "ja": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "ko": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "nl": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "pl": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "pt": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "tr": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+        "zh-tw": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0"
+      }
+    }
+  },
+  "publicId": "widgets/faq/features",
+  "v": 1
+}

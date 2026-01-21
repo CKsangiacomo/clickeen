@@ -256,7 +256,6 @@ export async function buildContext(
   const idBase = pathAttr || label || `${component}-${size}`;
   const id = sanitizeId(`${component}-${idBase}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const defaultOptions = (defaults?.context as any)?.options;
   let options = defaultOptions;
   if (attrs.options) {

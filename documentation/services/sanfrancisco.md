@@ -38,7 +38,7 @@
 - Triggered by `instance-l10n-generate-{env}` jobs.
 - Fetches instance config from Paris.
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
-- Generates set-only ops and writes to Paris (`widget_instance_locales.ops`).
+- Generates set-only ops and writes to Paris (`widget_instance_overlays.ops`, Phase 1: locale layer).
 - Paris preserves `user_ops` and enqueues publish to Tokyo-worker.
 
 ## Prague localization translation (local-only)

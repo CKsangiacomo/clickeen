@@ -55,16 +55,16 @@ Rule: catalogs are content-hashed and cacheable; the manifest is the indirection
 
 Use `l10n` when the surface is “content inside an instance config” (copy, headings, CTA labels, etc.).
 
-**Tokyo output**
-- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
-- `tokyo/l10n/instances/<publicId>/index.json` (locale metadata + geo targeting)
+**Tokyo output (layered)**
+- `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
+- `tokyo/l10n/instances/<publicId>/index.json` (layer keys + optional geoTargets for locale selection)
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 
 **Generation (current)**
 - Paris enqueues localization jobs on publish/update.
 - San Francisco runs the localization agent and emits set-only ops.
-- Paris stores overlays in Supabase (`widget_instance_locales`).
+- Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
 - Venice applies the overlay at render time (if present and not stale).
@@ -74,13 +74,13 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 - Agents must not mutate paths outside this allowlist.
 
 **Canonical store (Supabase)**
-- `widget_instance_locales` is the source of truth for instance overlays.
+- `widget_instance_overlays` is the layered source of truth for instance overlays.
 - `ops` = agent/manual base overlay ops.
-- `user_ops` = per-field manual overrides (set-only ops).
+- `user_ops` = per-field manual overrides (set-only ops), merged last for layer=user.
 - Tokyo overlay files contain the merged ops (`ops + user_ops`, user_ops applied last).
 - `l10n_overlay_versions` is the version ledger used for cleanup and future rollbacks.
 - Tokyo-worker prunes versions using the `l10n.versions.max` entitlement cap.
-- `geo_countries` optionally scopes a locale overlay to ISO-3166 country codes; Venice uses it to select a locale when no explicit locale is provided.
+- `geo_targets` scopes locale selection only (fr vs fr-CA); geo overrides live in the geo layer.
 
 ### Prague localization (system-owned, Babel-aligned)
 
@@ -89,7 +89,7 @@ Use Prague base content + Tokyo overlays for **Clickeen-owned website copy** (Pr
 **Filesystem layout**
 - Base content: `prague/content/base/v1/**`
 - Allowlists: `prague/content/allowlists/v1/**`
-- Overlays: `tokyo/l10n/prague/{pageId}/{locale}/{baseFingerprint}.ops.json`
+- Overlays: `tokyo/l10n/prague/{pageId}/{layer}/{layerKey}/{baseFingerprint}.ops.json` (locale layer only in Phase 1)
 
 **Pipeline**
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local-only; requires `PARIS_DEV_JWT`).
@@ -113,7 +113,7 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 1. Prague embeds Venice with canonical `publicId`:
    - `/e/wgt_curated_{...}?locale=...`
 2. Venice loads the base instance config from Paris/Michael.
-3. Venice applies Tokyo `l10n` overlay for the request locale (if present).
+3. Venice applies Tokyo layered overlays for the request locale (Phase 1: locale only).
 4. Venice bootstraps `window.CK_WIDGET.state` with the localized config.
 
 **Strict rule:** `wgt_curated_*.<locale>` URLs are invalid and must 404 (no legacy support).
@@ -121,27 +121,37 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 ## Overlay format (set-only)
 
 Manual overlay sources (dev-only, repo-local):
-- `l10n/instances/<publicId>/<locale>.ops.json` (build computes `baseFingerprint`)
+- `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json` (build computes `baseFingerprint`; locale layer uses layerKey=<locale>)
 
 Materialized output (Tokyo/R2):
-- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+- `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
 
 Locale index (Tokyo/R2):
 - `tokyo/l10n/instances/<publicId>/index.json`
-- `index.json` shape:
+- `index.json` shape (layered, hybrid):
 ```json
 {
   "v": 1,
   "publicId": "wgt_main_faq",
-  "locales": [
-    { "locale": "en" },
-    { "locale": "fr", "geoCountries": ["FR", "BE"] }
-  ]
+  "layers": {
+    "locale": {
+      "keys": ["en", "fr"],
+      "lastPublishedFingerprint": {
+        "en": "sha256-hex",
+        "fr": "sha256-hex"
+      },
+      "geoTargets": {
+        "fr": ["FR", "BE"]
+      }
+    },
+    "industry": { "keys": ["dentist"] }
+  }
 }
 ```
 Rules:
 - `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
-- `geoCountries` is optional; when present, Venice uses it to map a country to a locale.
+- `geoTargets` is optional; when present, Venice uses it to map a country to a locale (locale selection only).
+- Runtime applies overlays only when `overlay.baseFingerprint` matches the current base.
 
 Example:
 ```json
@@ -217,17 +227,18 @@ Apply:
 
 1. Paris enqueues an l10n job on publish/update.
 2. San Francisco runs the localization agent (allowlist + budgets).
-3. Paris writes overlays to Supabase (`widget_instance_locales`).
+3. Paris writes overlays to Supabase (`widget_instance_overlays`).
 4. Tokyo-worker publishes overlays to Tokyo/R2 using deterministic paths.
 
 Manual override (optional, dev-only for curated overlays):
-- Create/update: `l10n/instances/<publicId>/<locale>.ops.json`
+- Create/update: `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json` (locale layer: layerKey=<locale>)
 - Overlay files must include `baseFingerprint` (or be built with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY so the build can compute it).
 - Build + validate: `pnpm build:l10n` (enforces allowlists + fingerprints)
 - Ensure Tokyo serves the output (`tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**` locally).
 
 User overrides (interactive):
 - Saved via Bob to Supabase (`user_ops`), never written directly to `tokyo/l10n/**`.
+- vNext: stored under layer=user with layerKey=<locale> (optional global fallback).
 
 ### 3) Consume overlays
 
@@ -236,7 +247,7 @@ User overrides (interactive):
 
 ## User-owned localization (current)
 
-Higher-tier workspaces can edit per-field translations in Bob. These edits are stored as `user_ops` and persist across agent re-translation.
+Higher-tier workspaces can edit per-field translations in Bob. These edits are stored as `user_ops` (vNext: layer=user, layerKey=<locale>) and persist across agent re-translation.
 
 Non-goals for Phase 1:
 - Storing per-locale copies of the full instance config in Michael.

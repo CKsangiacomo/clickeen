@@ -7,10 +7,6 @@ function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function titleCase(input: string): string {
   const s = String(input || '')
     .replace(/[_-]+/g, ' ')
@@ -107,7 +103,7 @@ export function CopilotPane() {
   }, [widgetType, instancePublicId]);
 
   const thread = threadKey ? session.copilotThreads?.[threadKey] ?? null : null;
-  const messages = thread?.messages ?? [];
+  const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const copilotSessionId = thread?.sessionId ?? '';
 
   const getPendingDecisionMessage = (): CopilotMessage | null => {

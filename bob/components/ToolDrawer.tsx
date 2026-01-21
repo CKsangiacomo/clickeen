@@ -29,7 +29,7 @@ export function ToolDrawer() {
     if (activePanel === 'localization') return;
     if (session.locale.activeLocale === session.locale.baseLocale) return;
     session.setLocalePreview(session.locale.baseLocale);
-  }, [activePanel, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
+  }, [activePanel, session, session.locale.activeLocale, session.locale.baseLocale, session.setLocalePreview]);
 
   useEffect(() => {
     // Provide a stable place for Dieter upload controls (dropdown-fill/dropdown-upload) to find

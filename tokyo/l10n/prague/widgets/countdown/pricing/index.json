@@ -1,0 +1,38 @@
+{
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "de": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "es": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "fr": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "hi": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "it": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "ja": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "ko": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "nl": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "pl": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "pt": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "tr": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+        "zh-tw": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0"
+      }
+    }
+  },
+  "publicId": "widgets/countdown/pricing",
+  "v": 1
+}

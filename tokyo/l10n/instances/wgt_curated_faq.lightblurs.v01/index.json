@@ -1,48 +1,40 @@
 {
-  "locales": [
-    {
-      "locale": "ar"
-    },
-    {
-      "locale": "de"
-    },
-    {
-      "locale": "en"
-    },
-    {
-      "locale": "es"
-    },
-    {
-      "locale": "fr"
-    },
-    {
-      "locale": "hi"
-    },
-    {
-      "locale": "it"
-    },
-    {
-      "locale": "ja"
-    },
-    {
-      "locale": "ko"
-    },
-    {
-      "locale": "nl"
-    },
-    {
-      "locale": "pl"
-    },
-    {
-      "locale": "pt"
-    },
-    {
-      "locale": "tr"
-    },
-    {
-      "locale": "zh-tw"
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "de": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "en": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "es": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "fr": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "hi": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "it": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "ja": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "ko": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "nl": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "pl": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "pt": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "tr": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+        "zh-tw": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c"
+      }
     }
-  ],
+  },
   "publicId": "wgt_curated_faq.lightblurs.v01",
   "v": 1
 }

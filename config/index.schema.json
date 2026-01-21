@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clickeen.com/schemas/l10n-index.schema.json",
+  "title": "Clickeen L10n Index",
+  "type": "object",
+  "required": ["v", "publicId", "layers"],
+  "additionalProperties": false,
+  "properties": {
+    "v": { "type": "integer", "const": 1 },
+    "publicId": { "type": "string", "minLength": 1 },
+    "layers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["keys"],
+        "additionalProperties": false,
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "lastPublishedFingerprint": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "geoTargets": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

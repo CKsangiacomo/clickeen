@@ -18,9 +18,6 @@ export function Workspace() {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const displayName =
-    meta?.label || meta?.publicId || compiled?.displayName || compiled?.widgetname || 'No instance loaded';
-
   const latestRef = useRef({ compiled, instanceData, device, theme });
   useEffect(() => {
     latestRef.current = { compiled, instanceData, device, theme };
@@ -34,7 +31,7 @@ export function Workspace() {
       )}&device=${encodeURIComponent(device)}`;
     }
     return compiled.assets.htmlUrl;
-  }, [hasWidget, compiled, compiled?.assets.htmlUrl, seoGeoEnabled, publicId, theme, device]);
+  }, [hasWidget, compiled, seoGeoEnabled, publicId, theme, device]);
 
   const iframeBackdrop = (() => {
     const raw = (instanceData as any)?.stage?.background;

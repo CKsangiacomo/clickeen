@@ -84,28 +84,15 @@ tokyo/widgets/faq/
 
 ### 2. Dimensional Overlays
 
-**Structure:**
+**Structure (deterministic paths):**
 ```
-tokyo/overlays/
-├── locale/
-│   ├── fr.ops.json            # French translations
-│   ├── es.ops.json            # Spanish translations
-│   └── ja.ops.json            # Japanese translations
-├── geo/
-│   ├── eu.ops.json            # EU-specific (pricing, legal)
-│   └── us.ops.json            # US-specific
-├── industry/
-│   ├── healthcare.ops.json    # Healthcare positioning
-│   └── finance.ops.json       # Finance positioning
-├── experiment/
-│   ├── exp_001_variant_a.ops.json
-│   └── exp_001_variant_b.ops.json
-├── account/ (ABM)
-│   ├── salesforce.ops.json
-│   └── google.ops.json
-└── behavior/
-    ├── first_visit.ops.json
-    └── returning.ops.json
+tokyo/l10n/instances/<publicId>/
+├── locale/<locale>/<baseFingerprint>.ops.json
+├── geo/<geo>/<baseFingerprint>.ops.json
+├── industry/<industry>/<baseFingerprint>.ops.json
+├── experiment/<expKey>/<baseFingerprint>.ops.json
+├── account/<accountKey>/<baseFingerprint>.ops.json
+└── behavior/<behaviorKey>/<baseFingerprint>.ops.json
 ```
 
 **Overlay format (ops-based):**
@@ -241,6 +228,29 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 
 ---
 
+### 3.5 Layer Keys + Selection Contract
+
+**LayerKey rules (canonicalized):**
+- locale: BCP47 (en, fr-CA)
+- geo: ISO-3166 (US, DE) or explicit market groupings
+- industry: slug enum (dentist, restaurant)
+- experiment: exp_<id>:<variant>
+- account: stable account token (not raw domain)
+- behavior: behavior_<id>
+- user: locale key first, then optional global fallback
+
+**Selection rules:**
+- locale/geo/industry/account: select 0 or 1 key deterministically from request context
+- experiment: allow multiple keys; apply in deterministic order (sorted by expId)
+- behavior: allow multiple keys; apply in deterministic order
+- user: apply locale-specific user overlay first; if absent, apply global fallback
+
+**GeoTargets semantics:**
+- geoTargets (if present) only drive locale selection (fr vs fr-CA), not geo overrides.
+- Geo-specific overrides live in the geo layer.
+
+---
+
 ### 4. Overlay Precedence & Composition
 
 **The critical problem:** Multiple overlays may set the same field. We need deterministic precedence.
@@ -254,8 +264,12 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 5. experiment overlay
 6. account overlay (ABM)
 7. behavior overlay
-8. user_ops (user manual overrides - always last)
+8. user overlay (locale first, then optional global fallback)
 ```
+
+**Index semantics:**
+- `index.json` may include `lastPublishedFingerprint` to reduce 404 misses.
+- Runtime never applies an overlay if `overlay.baseFingerprint` mismatches the current base.
 
 **Composition algorithm:**
 ```typescript
@@ -271,10 +285,10 @@ function composeVariant(
     overlays.locale.get(context.locale),
     overlays.geo.get(context.geo),
     overlays.industry.get(context.industry),
-    ...resolveExperimentOverlays(context.experiment, overlays),
+    ...resolveExperimentOverlays(context.experiments, overlays),
     overlays.account.get(context.account),
-    overlays.behavior.get(context.behavior),
-    overlays.userOps.get(context.userId)
+    ...resolveBehaviorOverlays(context.behaviors, overlays),
+    overlays.user.get(context.locale) ?? overlays.user.get('global')
   ];
 
   for (const overlay of layers) {
@@ -332,7 +346,7 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 | **experiment** | `cta`, `hero.title`, `pricing.amount` | A/B test variants |
 | **account** | `hero.title`, `logos`, `testimonials` | ABM customization |
 | **behavior** | `hero.cta`, `hero.subtitle` | Lifecycle messaging |
-| **user_ops** | `*` (all paths) | User manual overrides |
+| **user** | `*` (all paths) | User manual overrides |
 
 **Enforcement:**
 ```typescript
@@ -343,7 +357,7 @@ const PATH_CONTRACTS: Record<string, string[]> = {
   experiment: ['cta', 'hero.title', 'pricing.amount'],
   account: ['hero.title', 'logos', 'testimonials'],
   behavior: ['hero.cta', 'hero.subtitle'],
-  user_ops: ['*']  // User overrides can touch anything
+  user: ['*']  // User overrides can touch anything
 };
 
 function validateOverlay(overlay: Overlay): boolean {

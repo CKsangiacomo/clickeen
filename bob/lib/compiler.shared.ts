@@ -1,4 +1,4 @@
-import { CompiledPanel, CompiledWidget } from './types';
+import { CompiledPanel } from './types';
 
 export type RawWidget = {
   widgetname?: unknown;

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clickeen.com/schemas/overlay.schema.json",
+  "title": "Clickeen Layered Overlay",
+  "type": "object",
+  "required": ["v", "baseFingerprint", "ops"],
+  "additionalProperties": true,
+  "properties": {
+    "v": { "type": "integer", "const": 1 },
+    "baseFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "baseUpdatedAt": { "type": ["string", "null"] },
+    "ops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op", "path", "value"],
+        "additionalProperties": true,
+        "properties": {
+          "op": { "type": "string", "const": "set" },
+          "path": { "type": "string", "minLength": 1 },
+          "value": {}
+        }
+      }
+    }
+  }
+}

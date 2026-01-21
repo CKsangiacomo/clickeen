@@ -1,0 +1,18 @@
+{
+  "order": ["base", "locale", "geo", "industry", "experiment", "account", "behavior", "user"],
+  "selection": {
+    "locale": "single",
+    "geo": "single",
+    "industry": "single",
+    "experiment": "multi",
+    "account": "single",
+    "behavior": "multi",
+    "user": "locale+global"
+  },
+  "multiKeyOrder": {
+    "experiment": "expId-asc",
+    "behavior": "lex"
+  },
+  "userFallbackOrder": ["locale", "global"],
+  "geoTargetsSemantics": "locale-selection-only"
+}

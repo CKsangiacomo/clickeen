@@ -58,41 +58,6 @@ function moveAtPath(data: Record<string, unknown>, path: string, from: number, t
   return setAt(data, path, next) as Record<string, unknown>;
 }
 
-function splitPath(path: string): string[] {
-  return String(path ?? '')
-    .split('.')
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-}
-
-function commonPrefixLen(a: string[], b: string[]): number {
-  const len = Math.min(a.length, b.length);
-  let count = 0;
-  for (let i = 0; i < len; i += 1) {
-    if (a[i] !== b[i]) break;
-    count += 1;
-  }
-  return count;
-}
-
-function findBestOpIndexForPath(path: string, ops: WidgetOp[]): number {
-  const target = splitPath(path);
-  let bestIndex = 0;
-  let bestScore = -1;
-
-  for (let idx = 0; idx < ops.length; idx += 1) {
-    const opPath = (ops[idx] as any)?.path;
-    if (typeof opPath !== 'string') continue;
-    const score = commonPrefixLen(target, splitPath(opPath));
-    if (score > bestScore || (score === bestScore && idx > bestIndex)) {
-      bestScore = score;
-      bestIndex = idx;
-    }
-  }
-
-  return bestIndex;
-}
-
 export function applyWidgetOps(args: {
   data: Record<string, unknown>;
   ops: WidgetOp[];
@@ -111,7 +76,6 @@ export function applyWidgetOps(args: {
     if (!op || typeof op !== 'object') {
       return { ok: false, errors: [{ opIndex: idx, message: 'Op must be an object' }] };
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw = op as any;
     const opType = raw.op;
     const path = raw.path;

@@ -1,15 +1,14 @@
-STATUS: REFERENCE — LIVING DOC (MAY DRIFT)
+STATUS: REFERENCE — MUST MATCH RUNTIME
 This document describes the intended Paris responsibilities and APIs.
-When debugging reality, treat runtime code, `supabase/migrations/`, and deployed Cloudflare config as truth.
-If you find a mismatch, update this document; execution continues even if docs drift.
+Runtime code + `supabase/migrations/` are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 ## AIs Quick Scan
 
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_locales`, `workspace_business_profiles`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `workspace_business_profiles`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
@@ -27,23 +26,26 @@ If you need the exact shipped behavior, inspect `paris/src/index.ts`.
 
 ### 🔑 CRITICAL: Bob's Two-API-Call Pattern (NEW ARCHITECTURE)
 
-**Bob makes EXACTLY 2 calls to Paris per editing session:**
+**Bob makes EXACTLY 2 calls to Paris per editing session for core instance config:**
 
 1. **Load** - `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when Bob mounts → gets instance snapshot (`config` + `status`)
 2. **Publish** - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish → saves working copy
 
 `subject` is required on workspace endpoints (`workspace`, `devstudio`, `minibob`) to resolve policy.
 
+Localization is separate and writes overlays via Paris; these do not change the base config.
+
 **Between load and publish:**
-- User edits in ToolDrawer → Bob updates React state (NO API calls to Paris)
-- Bob sends updated config to preview via postMessage (NO API calls to Paris)
-- Preview updates in real-time (NO API calls to Paris)
-- ZERO database writes
+- User edits in ToolDrawer → Bob updates React state (NO API calls to Paris for base config)
+- Bob sends updated config to preview via postMessage (NO API calls to Paris for base config)
+- Preview updates in real-time (NO API calls to Paris for base config)
+- ZERO base-config database writes (overlay writes are allowed)
 
 **Why This Matters:**
-- **Scalability:** 10,000 users editing simultaneously → no server load, all edits in memory
-- **Database cost savings:** Only published widgets stored → no database pollution from abandoned edits
-- **Landing page demos:** Millions of visitors playing with widgets → ZERO database writes until they sign up and publish
+- **Scalability:** 10,000 users editing simultaneously → no server load for base config, all edits in memory
+- **Database cost savings:** Only published base config stored → no pollution from abandoned edits
+- **Localization UX:** overlay writes preserve manual edits while base config stays clean
+- **Landing page demos:** Millions of visitors playing with widgets → ZERO base-config writes until they sign up and publish
 
 **For Paris:**
 - Paris expects `GET` once on mount, `PUT` once on publish
@@ -108,7 +110,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud
 - On create/publish, Paris loads `tokyo/widgets/{widget}/limits.json` and rejects configs that violate caps/flags.
 - Budgets are per-session and enforced in Bob; Paris only enforces caps/flags at the product boundary.
 
-### Localization (l10n) (V0)
+### Localization (l10n) (Phase 1: locale layer, current)
 - Workspace locale selection lives in `workspaces.l10n_locales`.
 - Endpoints:
   - `GET /api/workspaces/:workspaceId/locales`
@@ -124,9 +126,21 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud
   - User instances → `workspaces.l10n_locales` (within cap).
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Instance locale overlays (`PUT/DELETE /api/instances/:publicId/locales/:locale`) enqueue `L10N_PUBLISH_QUEUE`.
-  - Per-field manual overrides live in `widget_instance_locales.user_ops`; agent writes update `ops` only.
+  - Per-field manual overrides live in `widget_instance_overlays.user_ops`; agent writes update `ops` only.
+  - These locale endpoints are thin wrappers for layer=locale in `widget_instance_overlays`.
+  - vNext: overrides live in `widget_instance_overlays` with layer=user (layerKey=<locale>).
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
 - Prague website strings use repo-local base content plus Tokyo-hosted overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`) and do not go through Paris.
+
+### Localization (l10n) (Layered, canonical API)
+- Workspace locale selection remains in `workspaces.l10n_locales`.
+- Layered endpoints (workspace-scoped):
+  - `GET /api/workspaces/:workspaceId/instances/:publicId/layers`
+  - `GET /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`
+  - `PUT /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`
+  - `DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`
+- Canonical store: `widget_instance_overlays` (layer + layer_key).
+- `user_ops` merged last for layer=user; user overrides are per-locale with optional global fallback.
 
 # Paris — HTTP API Service (Phase-1)
 

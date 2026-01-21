@@ -7,10 +7,10 @@ Output is built into `tokyo/l10n/**` so it can be cached on the Tokyo CDN (softw
 ## Instance overlays
 
 Source path:
-- `l10n/instances/<publicId>/<locale>.ops.json`
+- `l10n/instances/<publicId>/<layer>/<layerKey>.ops.json`
 
 Built output:
-- `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+- `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
 No global manifest is produced; consumers use deterministic baseFingerprint paths.
 
 Overlay format:
@@ -27,6 +27,6 @@ Overlay format:
 
 Rules:
 - Only `set` ops are allowed.
-- Locale is a runtime parameter; it must never be encoded into `publicId`.
+- `publicId` is locale-free; locale is a runtime layer key.
 - `baseFingerprint` is required; runtime applies the overlay only when it matches the base instance config.
 - `baseUpdatedAt` is metadata only.

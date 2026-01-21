@@ -11,12 +11,9 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const rawHtml = Array.isArray(widgetJson.html) ? widgetJson.html : [];
   const htmlLines: string[] = rawHtml.filter((line): line is string => typeof line === 'string');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const typography = (widgetJson.defaults as any)?.typography;
   const typographyRoles = typography?.roles;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasStage = (widgetJson.defaults as any)?.stage != null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hasPod = (widgetJson.defaults as any)?.pod != null;
 
   const filtered: string[] = [];

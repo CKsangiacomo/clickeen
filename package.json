@@ -22,6 +22,7 @@
     "lint": "turbo lint",
     "test": "turbo test",
     "test:contracts": "node scripts/verify-contracts.mjs",
+    "test:layer-pipeline": "node scripts/verify-layer-pipeline.mjs",
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
     "compile:widgets": "node scripts/compile-all-widgets.mjs",

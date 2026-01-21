@@ -25,7 +25,6 @@ function resolveKey(key: string, stack: StencilContext[]): unknown {
   const ctxIndex = stack.length - 1 - upLevels;
   if (ctxIndex < 0) return undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let value: any = stack[ctxIndex];
   for (let i = 0; i < segments.length; i += 1) {
     if (value == null) return undefined;
@@ -189,7 +188,6 @@ export function renderStencil(stencil: string, context: StencilContext): string 
           const value = resolveKey(node.key, stack);
           if (!Array.isArray(value)) return '';
           return value
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map((item: any) =>
               renderNodes(node.body, [...stack, typeof item === 'object' && item !== null ? item : { this: item }]),
             )

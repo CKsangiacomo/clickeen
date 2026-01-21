@@ -1,0 +1,38 @@
+{
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "de": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "es": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "fr": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "hi": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "it": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "ja": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "ko": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "nl": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "pl": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "pt": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "tr": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+        "zh-tw": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80"
+      }
+    }
+  },
+  "publicId": "widgets/countdown/examples",
+  "v": 1
+}

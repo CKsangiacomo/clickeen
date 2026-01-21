@@ -81,8 +81,8 @@ Notes:
 Localization is applied via base content + ops overlays:
 - base content (overview): `prague/content/base/v1/widgets/{widget}.json`
 - base content (subpages): `prague/content/base/v1/widgets/{widget}/{page}.json`
-- overlays: `tokyo/l10n/prague/widgets/{widget}/{locale}/{baseFingerprint}.ops.json`
-- overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/{locale}/{baseFingerprint}.ops.json`
+- overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
+- overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized base content into `blocks[].copy` at load time
 
 Validation:

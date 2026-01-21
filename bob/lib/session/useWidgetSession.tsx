@@ -852,7 +852,6 @@ function useWidgetSessionInternal() {
       }));
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[useWidgetSession] Failed to load instance', err, message);
       }
       const messageText = err instanceof Error ? err.message : String(err);
@@ -1014,7 +1013,13 @@ function useWidgetSessionInternal() {
       const messageText = err instanceof Error ? err.message : String(err);
       setState((prev) => ({ ...prev, isPublishing: false, error: { source: 'publish', message: messageText } }));
     }
-  }, [state.instanceData, state.meta?.publicId, state.meta?.workspaceId, state.meta?.widgetname, state.policy]);
+  }, [
+    state.baseInstanceData,
+    state.meta?.publicId,
+    state.meta?.workspaceId,
+    state.meta?.widgetname,
+    state.policy,
+  ]);
 
   const loadFromUrlParams = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -1135,7 +1140,6 @@ function useWidgetSessionInternal() {
 
       if (data.type === 'devstudio:load-instance') {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.log('[useWidgetSession] load-instance payload', data);
         }
         loadInstance(data);

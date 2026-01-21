@@ -1,8 +1,10 @@
 import './bob_app.css';
+import { Inter_Tight } from 'next/font/google';
 import { resolveTokyoBaseUrl } from '../lib/env/tokyo';
 
 const TOKYO_BASE = resolveTokyoBaseUrl();
 const DIETER_BASE = `${TOKYO_BASE}/dieter`;
+const interTight = Inter_Tight({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export default function RootLayout({
   children,
@@ -17,12 +19,10 @@ export default function RootLayout({
         <link rel="stylesheet" href={`${DIETER_BASE}/components/button/button.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/toggle/toggle.css`} />
         <link rel="stylesheet" href={`${DIETER_BASE}/components/popover/popover.css`} />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
-        />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body className={interTight.className} suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

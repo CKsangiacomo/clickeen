@@ -16,6 +16,18 @@ export type PragueOverlay = {
   ops: Array<{ op: 'set'; path: string; value: string }>;
 };
 
+type LayerIndexEntry = {
+  keys: string[];
+  lastPublishedFingerprint?: Record<string, string>;
+  geoTargets?: Record<string, string[]>;
+};
+
+type LayerIndex = {
+  v: 1;
+  publicId: string;
+  layers: Record<string, LayerIndexEntry>;
+};
+
 let cachedLocales: string[] | null = null;
 
 async function readJson(filePath: string): Promise<unknown> {
@@ -125,12 +137,39 @@ function encodePathSegments(pathStr: string): string {
     .join('/');
 }
 
-async function fetchOverlay(args: { pageId: string; locale: string; baseFingerprint: string }): Promise<PragueOverlay | null> {
+async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
+  const baseUrl = getTokyoBaseUrl();
+  const path = `/l10n/prague/${encodePathSegments(pageId)}/index.json`;
+  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as LayerIndex | null;
+  if (!json || typeof json !== 'object' || json.v !== 1) return null;
+  if (!json.layers || typeof json.layers !== 'object') return null;
+  return json;
+}
+
+function resolveLocaleFromIndex(args: { entry: LayerIndexEntry; locale: string }): string | null {
+  if (!args.entry.keys.length) return null;
+  const supported = new Set(
+    args.entry.keys.map((entry) => normalizeLocaleToken(entry)).filter((value): value is string => Boolean(value)),
+  );
+  const candidates = localeCandidates(args.locale, supported);
+  if (candidates.length) return candidates[0]!;
+  return null;
+}
+
+async function fetchOverlay(args: {
+  pageId: string;
+  layer: string;
+  layerKey: string;
+  baseFingerprint: string;
+}): Promise<PragueOverlay | null> {
   if (!args.baseFingerprint) return null;
   const baseUrl = getTokyoBaseUrl();
-  const path = `/l10n/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.locale)}/${encodeURIComponent(
-    args.baseFingerprint
-  )}.ops.json`;
+  const path = `/l10n/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
+    args.layerKey
+  )}/${encodeURIComponent(args.baseFingerprint)}.ops.json`;
   const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
   if (res.status === 404) return null;
   if (!res.ok) return null;
@@ -153,15 +192,40 @@ export async function loadPraguePageContent(args: { locale: string; pageId: stri
   if (!isPlainObject((json as any).blocks)) {
     throw new Error(`[prague] Prague base missing blocks: ${basePath}`);
   }
+
+  const index = await fetchLayerIndex(args.pageId);
+  if (!index || !index.layers?.locale) {
+    throw new Error(`[prague] Missing layer index for ${args.pageId}`);
+  }
+  if (index.publicId && index.publicId !== args.pageId) {
+    throw new Error(`[prague] Layer index publicId mismatch for ${args.pageId}`);
+  }
   if (resolved === 'en') return json as Record<string, unknown>;
+  const localeKey = resolveLocaleFromIndex({ entry: index.layers.locale, locale: resolved });
+  if (!localeKey) {
+    throw new Error(`[prague] Missing locale entry for ${args.pageId} (${resolved})`);
+  }
+  if (localeKey === 'en') return json as Record<string, unknown>;
 
   const baseFingerprint = await computeBaseFingerprint(json as Record<string, unknown>);
-  const overlay = await fetchOverlay({ pageId: args.pageId, locale: resolved, baseFingerprint });
+  const expectedFingerprint = index.layers.locale.lastPublishedFingerprint?.[localeKey];
+  if (expectedFingerprint && expectedFingerprint !== baseFingerprint) {
+    throw new Error(`[prague] Stale overlay fingerprint for ${args.pageId} (${localeKey})`);
+  }
+  const overlay = await fetchOverlay({
+    pageId: args.pageId,
+    layer: 'locale',
+    layerKey: localeKey,
+    baseFingerprint,
+  });
   if (!overlay) {
-    throw new Error(`[prague] Missing overlay for ${args.pageId} (${resolved})`);
+    throw new Error(`[prague] Missing overlay for ${args.pageId} (${localeKey})`);
   }
   if (overlay.baseFingerprint && overlay.baseFingerprint !== baseFingerprint) {
-    throw new Error(`[prague] Stale overlay for ${args.pageId} (${resolved})`);
+    throw new Error(`[prague] Stale overlay for ${args.pageId} (${localeKey})`);
+  }
+  if (!overlay.baseFingerprint) {
+    throw new Error(`[prague] Missing overlay fingerprint for ${args.pageId} (${localeKey})`);
   }
   return applySetOps(json as Record<string, unknown>, overlay.ops);
 }
@@ -173,15 +237,33 @@ export async function loadPragueChromeStrings(locale: string): Promise<Record<st
   if (!isPlainObject(json) || (json as any).v !== 1 || !isPlainObject((json as any).strings)) {
     throw new Error(`[prague] Invalid chrome base file: ${basePath}`);
   }
+  const index = await fetchLayerIndex('chrome');
+  if (!index || !index.layers?.locale) {
+    throw new Error('[prague] Missing chrome layer index');
+  }
+  if (index.publicId && index.publicId !== 'chrome') {
+    throw new Error('[prague] Chrome layer index publicId mismatch');
+  }
   if (resolved === 'en') return (json as any).strings as Record<string, unknown>;
+  const localeKey = resolveLocaleFromIndex({ entry: index.layers.locale, locale: resolved });
+  if (!localeKey) {
+    throw new Error(`[prague] Missing chrome locale entry for ${resolved}`);
+  }
 
   const baseFingerprint = await computeBaseFingerprint(json as Record<string, unknown>);
-  const overlay = await fetchOverlay({ pageId: 'chrome', locale: resolved, baseFingerprint });
+  const expectedFingerprint = index.layers.locale.lastPublishedFingerprint?.[localeKey];
+  if (expectedFingerprint && expectedFingerprint !== baseFingerprint) {
+    throw new Error(`[prague] Stale chrome overlay fingerprint for ${localeKey}`);
+  }
+  const overlay = await fetchOverlay({ pageId: 'chrome', layer: 'locale', layerKey: localeKey, baseFingerprint });
   if (!overlay) {
-    throw new Error(`[prague] Missing chrome overlay for ${resolved}`);
+    throw new Error(`[prague] Missing chrome overlay for ${localeKey}`);
   }
   if (overlay.baseFingerprint && overlay.baseFingerprint !== baseFingerprint) {
-    throw new Error(`[prague] Stale chrome overlay for ${resolved}`);
+    throw new Error(`[prague] Stale chrome overlay for ${localeKey}`);
+  }
+  if (!overlay.baseFingerprint) {
+    throw new Error(`[prague] Missing chrome overlay fingerprint for ${localeKey}`);
   }
   const localized = applySetOps(json as Record<string, unknown>, overlay.ops);
   const strings = (localized as any).strings;

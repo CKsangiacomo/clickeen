@@ -1,0 +1,38 @@
+{
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "de": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "es": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "fr": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "hi": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "it": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "ja": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "ko": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "nl": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "pl": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "pt": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "tr": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+        "zh-tw": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d"
+      }
+    }
+  },
+  "publicId": "widgets/countdown/templates",
+  "v": 1
+}

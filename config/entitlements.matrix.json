@@ -24,6 +24,72 @@
         "tier3": true
       }
     },
+    "l10n.layer.geo.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.layer.industry.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.layer.experiment.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.layer.account.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.layer.behavior.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
+    "l10n.layer.user.enabled": {
+      "kind": "flag",
+      "values": {
+        "devstudio": true,
+        "minibob": false,
+        "free": false,
+        "tier1": false,
+        "tier2": true,
+        "tier3": true
+      }
+    },
     "l10n.locales.max": {
       "kind": "cap",
       "values": {

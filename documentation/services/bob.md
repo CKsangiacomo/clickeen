@@ -322,10 +322,13 @@ See also:
 
 Bob supports instance-content localization (not editor chrome):
 
-- Locale preview uses Paris overlays (`/api/instances/:publicId/locales/:locale`).
+- Locale preview uses Paris overlays via the locale-layer wrapper (`/api/instances/:publicId/locales/:locale`).
+- Multi-layer overlays use `/api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`.
 - In Translate mode, edits are saved as per-field overrides (`user_ops`) and never change structure.
 - Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate overlays.
 - "Revert to auto-translate" clears overrides (DELETE locale endpoint) and re-applies agent ops.
+
+Note: localization writes are separate from the base-config two-call pattern; overlays persist in `widget_instance_overlays` without publishing the base config.
 
 Reference:
 - `documentation/capabilities/localization.md`

@@ -2,15 +2,15 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: do **not** spend cycles on backward compatibility, migrations, fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic.
+**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/widgets/*`), defaults (`spec.json` → `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
 1. Runtime code + `supabase/migrations/` — actual behavior + DB schema truth
 2. Deployed Cloudflare config — environment variables/bindings can differ by stage
-3. `documentation/services/` + `documentation/widgets/` — best-effort guides (may drift)
+3. `documentation/services/` + `documentation/widgets/` — operational guides (kept in sync with runtime)
 4. `documentation/architecture/Overview.md` + this file — concepts and glossary
 
-Docs are not “single source of truth”. If docs and code disagree, prefer code/schema and update the docs.
+Docs are the source of truth for intended behavior; runtime code + schema are the source of truth for what is running. Any mismatch is a P0 doc bug: update the docs immediately to match reality.
 
 **Docs maintenance:** See `documentation/README.md`. Treat doc updates as part of the definition of done for any change that affects runtime behavior, APIs, env vars, or operational workflows.
 
@@ -64,7 +64,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 ### The Two-API-Call Pattern
 
-Bob makes EXACTLY 2 calls to Paris per editing session:
+Bob makes EXACTLY 2 calls to Paris per editing session for **core instance config**:
 1. **Load**: `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when Bob mounts
 2. **Publish**: `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` when user clicks Publish
 
@@ -72,12 +72,15 @@ Bob makes EXACTLY 2 calls to Paris per editing session:
 
 In the browser these typically flow through Bob’s same-origin proxy (`/api/paris/instance/:publicId?workspaceId=...&subject=workspace`) which forwards to the workspace-scoped Paris endpoints.
 
-Between load and publish:
-- All edits happen in Bob's React state (in memory)
-- Preview updates via postMessage (NO Paris API calls)
-- ZERO database writes
+Localization is separate: Bob also calls workspace/instance locale endpoints when translating or applying overlay edits. Those writes are intentional and do **not** publish the base config.
 
-**Why:** 10,000 users editing simultaneously = zero server load. Millions of landing page visitors = zero DB pollution until signup + publish.
+Between load and publish:
+- Base config edits happen in Bob's React state (in memory)
+- Preview updates via postMessage (no Paris API calls for base config)
+- Localization edits persist to overlays via Paris (writes to `widget_instance_overlays`)
+- ZERO database writes for base config until Publish
+
+**Why:** 10,000 users editing simultaneously = no server load for base config. Localization writes are scoped overlays, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
 
 ### Key Terms
 
@@ -235,9 +238,9 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
-- Instance/content translation uses Tokyo-hosted `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops).
-- Prague marketing strings use repo-local base content (`prague/content/base/**`) with ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest).
-- Canonical overlay truth for instances lives in Supabase (`widget_instance_locales`) with per-field manual overrides stored in `user_ops` and merged at publish time.
+- Instance/content translation uses Tokyo-hosted layered `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops). Phase 1 uses locale layer only.
+- Prague marketing strings use repo-local base content (`prague/content/base/**`) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest).
+- Canonical overlay truth for instances lives in Supabase (`widget_instance_overlays`). Per-field manual overrides live in `user_ops` and are merged at publish time.
 
 Canonical reference:
 - `documentation/capabilities/localization.md`

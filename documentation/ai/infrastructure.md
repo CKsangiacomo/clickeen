@@ -1,6 +1,6 @@
-STATUS: REFERENCE — OPERATIONS (MAY DRIFT)
+STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
-When debugging reality, treat runtime code and deployed Cloudflare bindings as truth.
+Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
 
 # San Francisco — Infrastructure & Operations
 

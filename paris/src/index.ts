@@ -24,7 +24,7 @@ type Env = {
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
-  L10N_PUBLISH_QUEUE?: Queue<L10nPublishJob>;
+  L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
 };
 
 type InstanceKind = 'curated' | 'user';
@@ -145,22 +145,26 @@ type L10nJob = {
   envStage: string;
 };
 
-type L10nPublishJob = {
-  v: 1;
+type LayerPublishJob = {
+  v: 2;
   publicId: string;
-  locale: string;
+  layer: string;
+  layerKey: string;
   action?: 'upsert' | 'delete';
 };
 
-type InstanceLocaleRow = {
+type L10nPublishQueueJob = LayerPublishJob;
+
+type InstanceOverlayRow = {
   public_id: string;
-  locale: string;
+  layer: string;
+  layer_key: string;
   ops: Array<{ op: 'set'; path: string; value: unknown }>;
   user_ops?: Array<{ op: 'set'; path: string; value: unknown }>;
   base_fingerprint: string | null;
   base_updated_at?: string | null;
   source: string;
-  geo_countries?: string[] | null;
+  geo_targets?: string[] | null;
   workspace_id?: string | null;
   updated_at?: string | null;
 };
@@ -170,8 +174,12 @@ type L10nAllowlistFile = { v: 1; paths: L10nAllowlistEntry[] };
 
 const L10N_ALLOWED_SOURCES = new Set(['agent', 'manual', 'import', 'user']);
 const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
+const L10N_MAX_OPS = 1000;
+const L10N_MAX_OVERLAY_BYTES = 1024 * 1024;
+const L10N_MAX_OP_VALUE_BYTES = 100 * 1024;
 
-function resolveUserOps(row: InstanceLocaleRow | null) {
+function resolveUserOps(row: { user_ops?: Array<{ op: 'set'; path: string; value: unknown }> } | null) {
   const userOps = Array.isArray(row?.user_ops) ? row.user_ops : [];
   return { userOps };
 }
@@ -205,6 +213,16 @@ async function publishLocaleLocal(
   locale: string,
   action: 'upsert' | 'delete'
 ): Promise<Response | null> {
+  return publishLayerLocal(env, publicId, 'locale', locale, action);
+}
+
+async function publishLayerLocal(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+  action: 'upsert' | 'delete'
+): Promise<Response | null> {
   const base = resolveLocalTokyoWorkerBase(env);
   if (!base) return null;
   const token = asTrimmedString(env.TOKYO_DEV_JWT) ?? asTrimmedString(env.PARIS_DEV_JWT);
@@ -214,7 +232,7 @@ async function publishLocaleLocal(
   const res = await fetch(`${base}/l10n/publish`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ publicId, locale, action }),
+    body: JSON.stringify({ v: 2, publicId, layer, layerKey, action }),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
@@ -716,6 +734,52 @@ function normalizeGeoCountries(raw: unknown, path: string) {
   return { ok: true as const, geoCountries: geoCountries.length ? geoCountries : null };
 }
 
+const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
+const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
+
+function normalizeLayer(raw: unknown): string | null {
+  const value = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+  if (!value || !L10N_LAYER_ALLOWED.has(value)) return null;
+  return value;
+}
+
+function normalizeLayerKey(layer: string, raw: unknown): string | null {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  if (!value) return null;
+  switch (layer) {
+    case 'locale': {
+      return normalizeSupportedLocaleToken(value);
+    }
+    case 'geo': {
+      const upper = value.toUpperCase();
+      return /^[A-Z]{2}$/.test(upper) ? upper : null;
+    }
+    case 'industry': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'experiment': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_EXPERIMENT.test(lower) ? lower : null;
+    }
+    case 'account': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_SLUG.test(lower) ? lower : null;
+    }
+    case 'behavior': {
+      const lower = value.toLowerCase();
+      return LAYER_KEY_BEHAVIOR.test(lower) ? lower : null;
+    }
+    case 'user': {
+      if (value === 'global') return 'global';
+      return normalizeSupportedLocaleToken(value);
+    }
+    default:
+      return null;
+  }
+}
+
 function hasLocaleSuffix(publicId: string, locale: string): boolean {
   const lower = publicId.toLowerCase();
   return lower.endsWith(`.${locale}`) || lower.endsWith(`-${locale}`);
@@ -779,11 +843,39 @@ async function loadWidgetLocalizationAllowlist(env: Env, widgetType: string): Pr
     .filter(Boolean);
 }
 
+async function loadWidgetLayerAllowlist(env: Env, widgetType: string, layer: string): Promise<string[]> {
+  if (layer === 'locale') {
+    return loadWidgetLocalizationAllowlist(env, widgetType);
+  }
+
+  const base = requireTokyoBase(env);
+  const url = `${base}/widgets/${encodeURIComponent(widgetType)}/layers/${encodeURIComponent(layer)}.allowlist.json`;
+  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if (res.status === 404) {
+    return loadWidgetLocalizationAllowlist(env, widgetType);
+  }
+  if (!res.ok) {
+    const details = await res.text().catch(() => '');
+    throw new Error(`[ParisWorker] Failed to load layer allowlist (${res.status}): ${details}`);
+  }
+  const json = (await res.json().catch(() => null)) as L10nAllowlistFile | null;
+  if (!json || json.v !== 1 || !Array.isArray(json.paths)) {
+    throw new Error('[ParisWorker] Invalid layer allowlist');
+  }
+  return json.paths
+    .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
+    .filter(Boolean);
+}
+
 function validateL10nOps(opsRaw: unknown, allowlist: string[]) {
   if (!Array.isArray(opsRaw)) {
     return { ok: false as const, code: 'OPS_INVALID_TYPE', message: 'ops must be an array' };
   }
+  if (opsRaw.length > L10N_MAX_OPS) {
+    return { ok: false as const, code: 'OPS_TOO_LARGE', message: `ops exceeds max (${L10N_MAX_OPS})` };
+  }
 
+  const encoder = new TextEncoder();
   const ops: Array<{ op: 'set'; path: string; value: unknown }> = [];
   for (let i = 0; i < opsRaw.length; i += 1) {
     const op = opsRaw[i] as any;
@@ -808,7 +900,20 @@ function validateL10nOps(opsRaw: unknown, allowlist: string[]) {
     if (!('value' in op)) {
       return { ok: false as const, code: 'OPS_INVALID_TYPE', message: `ops[${i}].value is required` };
     }
+    const valueBytes = encoder.encode(JSON.stringify(op.value)).length;
+    if (valueBytes > L10N_MAX_OP_VALUE_BYTES) {
+      return {
+        ok: false as const,
+        code: 'OPS_TOO_LARGE',
+        message: `ops[${i}].value exceeds max size (${L10N_MAX_OP_VALUE_BYTES} bytes)`,
+      };
+    }
     ops.push({ op: 'set', path, value: op.value });
+  }
+
+  const payloadBytes = encoder.encode(JSON.stringify(ops)).length;
+  if (payloadBytes > L10N_MAX_OVERLAY_BYTES) {
+    return { ok: false as const, code: 'OPS_TOO_LARGE', message: `ops payload exceeds max (${L10N_MAX_OVERLAY_BYTES} bytes)` };
   }
 
   return { ok: true as const, ops };
@@ -1456,53 +1561,57 @@ async function loadInstanceByPublicId(env: Env, publicId: string): Promise<Insta
   return loadUserInstanceByPublicId(env, publicId);
 }
 
-async function loadInstanceLocale(env: Env, publicId: string, locale: string): Promise<InstanceLocaleRow | null> {
+async function loadInstanceOverlay(env: Env, publicId: string, layer: string, layerKey: string): Promise<InstanceOverlayRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,ops,user_ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    select: 'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
-    locale: `eq.${locale}`,
+    layer: `eq.${layer}`,
+    layer_key: `eq.${layerKey}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance locale (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(`[ParisWorker] Failed to load instance overlay (${res.status}): ${JSON.stringify(details)}`);
   }
-  const rows = (await res.json()) as InstanceLocaleRow[];
+  const rows = (await res.json()) as InstanceOverlayRow[];
   return rows?.[0] ?? null;
 }
 
-async function loadInstanceLocales(env: Env, publicId: string): Promise<InstanceLocaleRow[]> {
+async function loadInstanceOverlays(env: Env, publicId: string): Promise<InstanceOverlayRow[]> {
   const params = new URLSearchParams({
-    select: 'public_id,locale,user_ops,base_fingerprint,base_updated_at,source,geo_countries,workspace_id,updated_at',
+    select: 'public_id,layer,layer_key,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
-    order: 'locale.asc',
+    order: 'layer.asc,layer_key.asc',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance locales (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(`[ParisWorker] Failed to load instance overlays (${res.status}): ${JSON.stringify(details)}`);
   }
-  return ((await res.json()) as InstanceLocaleRow[]).filter(Boolean);
+  return ((await res.json()) as InstanceOverlayRow[]).filter(Boolean);
 }
 
 async function markL10nPublishDirty(args: {
   env: Env;
   publicId: string;
-  locale: string;
+  layer: string;
+  layerKey: string;
   baseFingerprint: string;
 }): Promise<Response | null> {
-  const { env, publicId, locale, baseFingerprint } = args;
+  const { env, publicId, layer, layerKey, baseFingerprint } = args;
   const payload = {
     public_id: publicId,
-    locale,
+    locale: layer === 'locale' ? layerKey : null,
+    layer,
+    layer_key: layerKey,
     base_fingerprint: baseFingerprint,
     publish_state: 'dirty',
     publish_attempts: 0,
     publish_next_at: null,
     last_error: null,
   };
-  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,locale`, {
+  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,layer,layer_key`, {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify(payload),
@@ -1879,18 +1988,19 @@ async function handleInstanceLocalesList(req: Request, env: Env, publicId: strin
   const instance = await loadInstanceByPublicId(env, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
 
-  const rows = await loadInstanceLocales(env, publicIdResult.value);
+  const rows = await loadInstanceOverlays(env, publicIdResult.value);
+  const localeRows = rows.filter((row) => row.layer === 'locale');
   return json({
     publicId: instance.public_id,
     workspaceId: resolveInstanceWorkspaceId(instance),
-    locales: rows.map((row) => {
+    locales: localeRows.map((row) => {
       const { userOps } = resolveUserOps(row);
       return {
-        locale: row.locale,
+        locale: row.layer_key,
         source: row.source,
         baseFingerprint: row.base_fingerprint,
         baseUpdatedAt: row.base_updated_at ?? null,
-        geoCountries: row.geo_countries ?? null,
+        geoCountries: row.geo_targets ?? null,
         updatedAt: row.updated_at ?? null,
         hasUserOps: userOps.length > 0,
       };
@@ -1917,7 +2027,7 @@ async function handleInstanceLocaleGet(req: Request, env: Env, publicId: string,
   const instance = await loadInstanceByPublicId(env, publicIdResult.value);
   if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
 
-  const row = await loadInstanceLocale(env, publicIdResult.value, locale);
+  const row = await loadInstanceOverlay(env, publicIdResult.value, 'locale', locale);
   if (!row) {
     return apiError('INSTANCE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
   }
@@ -1925,13 +2035,13 @@ async function handleInstanceLocaleGet(req: Request, env: Env, publicId: string,
   const { userOps } = resolveUserOps(row);
   return json({
     publicId: row.public_id,
-    locale: row.locale,
+    locale: row.layer_key,
     source: row.source,
     ops: row.ops,
     userOps,
     baseFingerprint: row.base_fingerprint,
     baseUpdatedAt: row.base_updated_at ?? null,
-    geoCountries: row.geo_countries ?? null,
+    geoCountries: row.geo_targets ?? null,
     workspaceId: row.workspace_id ?? null,
     updatedAt: row.updated_at ?? null,
   });
@@ -2033,13 +2143,13 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
 
   let allowlist: string[];
   try {
-    allowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
+    allowlist = await loadWidgetLayerAllowlist(env, widgetType, 'locale');
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return apiError('INTERNAL_ERROR', 'Failed to load localization allowlist', 500, detail);
   }
 
-  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
+  const existing = await loadInstanceOverlay(env, publicIdResult.value, 'locale', locale);
   const existingUserOps = resolveUserOps(existing).userOps;
   if (hasUserOps && !existing) {
     return apiError('LOCALE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
@@ -2060,22 +2170,23 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
   }
 
-  let row: InstanceLocaleRow | null = null;
+  let row: InstanceOverlayRow | null = null;
   if (hasOps) {
-    const geoCountries = hasGeoCountries ? geoResult?.geoCountries ?? null : existing?.geo_countries ?? null;
+    const geoCountries = hasGeoCountries ? geoResult?.geoCountries ?? null : existing?.geo_targets ?? null;
     const payloadRow = {
       public_id: publicIdResult.value,
-      locale,
+      layer: 'locale',
+      layer_key: locale,
       ops: opsResult?.ok ? opsResult.ops : [],
       user_ops: hasUserOps && userOpsResult?.ok ? userOpsResult.ops : existingUserOps,
       base_fingerprint: computedFingerprint,
       base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
       source,
-      geo_countries: geoCountries,
+      geo_targets: geoCountries,
       workspace_id: instanceWorkspaceId,
     };
 
-    const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_locales?on_conflict=public_id,locale`, {
+    const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`, {
       method: 'POST',
       headers: {
         Prefer: 'resolution=merge-duplicates,return=representation',
@@ -2087,12 +2198,12 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
       return apiError('INTERNAL_ERROR', 'Failed to upsert locale', 500, details);
     }
 
-    const rows = (await upsertRes.json().catch(() => [])) as InstanceLocaleRow[];
+    const rows = (await upsertRes.json().catch(() => [])) as InstanceOverlayRow[];
     row = rows?.[0] ?? null;
   } else if (hasUserOps && userOpsResult?.ok) {
     const patchRes = await supabaseFetch(
       env,
-      `/rest/v1/widget_instance_locales?public_id=eq.${encodeURIComponent(publicIdResult.value)}&locale=eq.${encodeURIComponent(
+      `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(publicIdResult.value)}&layer=eq.locale&layer_key=eq.${encodeURIComponent(
         locale,
       )}`,
       {
@@ -2107,7 +2218,7 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
       const details = await readJson(patchRes);
       return apiError('INTERNAL_ERROR', 'Failed to update locale overrides', 500, details);
     }
-    const rows = (await patchRes.json().catch(() => [])) as InstanceLocaleRow[];
+    const rows = (await patchRes.json().catch(() => [])) as InstanceOverlayRow[];
     row = rows?.[0] ?? null;
   }
 
@@ -2117,17 +2228,19 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
   const markDirty = await markL10nPublishDirty({
     env,
     publicId: publicIdResult.value,
-    locale,
+    layer: 'locale',
+    layerKey: locale,
     baseFingerprint: computedFingerprint,
   });
   if (markDirty) return markDirty;
   try {
     await env.L10N_PUBLISH_QUEUE.send({
-      v: 1,
+      v: 2,
       publicId: publicIdResult.value,
-      locale,
+      layer: 'locale',
+      layerKey: locale,
       action: 'upsert',
-    } satisfies L10nPublishJob);
+    } satisfies L10nPublishQueueJob);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
@@ -2187,7 +2300,7 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
     }
   }
 
-  const existing = await loadInstanceLocale(env, publicIdResult.value, locale);
+  const existing = await loadInstanceOverlay(env, publicIdResult.value, 'locale', locale);
   if (!existing) {
     return json({ publicId: publicIdResult.value, locale, deleted: false, cleared: false, reason: 'not_found' });
   }
@@ -2199,7 +2312,7 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
 
   const patchRes = await supabaseFetch(
     env,
-    `/rest/v1/widget_instance_locales?public_id=eq.${encodeURIComponent(publicIdResult.value)}&locale=eq.${encodeURIComponent(
+    `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(publicIdResult.value)}&layer=eq.locale&layer_key=eq.${encodeURIComponent(
       locale,
     )}`,
     {
@@ -2219,17 +2332,19 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
   const markDirty = await markL10nPublishDirty({
     env,
     publicId: publicIdResult.value,
-    locale,
+    layer: 'locale',
+    layerKey: locale,
     baseFingerprint: computedFingerprint,
   });
   if (markDirty) return markDirty;
   try {
     await env.L10N_PUBLISH_QUEUE.send({
-      v: 1,
+      v: 2,
       publicId: publicIdResult.value,
-      locale,
+      layer: 'locale',
+      layerKey: locale,
       action: 'upsert',
-    } satisfies L10nPublishJob);
+    } satisfies L10nPublishQueueJob);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
@@ -2239,6 +2354,467 @@ async function handleInstanceLocaleDelete(req: Request, env: Env, publicId: stri
   if (localPublish) return localPublish;
 
   return json({ publicId: publicIdResult.value, locale, deleted: true, cleared: true });
+}
+
+async function handleWorkspaceInstanceLayersList(req: Request, env: Env, workspaceId: string, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const rows = await loadInstanceOverlays(env, publicIdResult.value);
+  return json({
+    publicId: instance.public_id,
+    workspaceId: resolveInstanceWorkspaceId(instance),
+    layers: rows.map((row) => {
+      const { userOps } = resolveUserOps(row);
+      return {
+        layer: row.layer,
+        layerKey: row.layer_key,
+        source: row.source,
+        baseFingerprint: row.base_fingerprint,
+        baseUpdatedAt: row.base_updated_at ?? null,
+        geoTargets: row.geo_targets ?? null,
+        updatedAt: row.updated_at ?? null,
+        hasUserOps: userOps.length > 0,
+      };
+    }),
+  });
+}
+
+async function handleWorkspaceInstanceLayerGet(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+  layerRaw: string,
+  layerKeyRaw: string
+) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const layer = normalizeLayer(layerRaw);
+  if (!layer) {
+    return apiError('LAYER_INVALID', 'Invalid layer', 400, { layer: layerRaw });
+  }
+  const layerKey = normalizeLayerKey(layer, layerKeyRaw);
+  if (!layerKey) {
+    return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
+  }
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const row = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  if (!row) {
+    return apiError('LAYER_NOT_FOUND', 'Layer overlay not found', 404, { publicId, layer, layerKey });
+  }
+
+  const { userOps } = resolveUserOps(row);
+  return json({
+    publicId: row.public_id,
+    layer: row.layer,
+    layerKey: row.layer_key,
+    source: row.source,
+    ops: row.ops,
+    userOps,
+    baseFingerprint: row.base_fingerprint,
+    baseUpdatedAt: row.base_updated_at ?? null,
+    geoTargets: row.geo_targets ?? null,
+    workspaceId: row.workspace_id ?? null,
+    updatedAt: row.updated_at ?? null,
+  });
+}
+
+async function handleWorkspaceInstanceLayerUpsert(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+  layerRaw: string,
+  layerKeyRaw: string
+) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const layer = normalizeLayer(layerRaw);
+  if (!layer) {
+    return apiError('LAYER_INVALID', 'Invalid layer', 400, { layer: layerRaw });
+  }
+  const layerKey = normalizeLayerKey(layer, layerKeyRaw);
+  if (!layerKey) {
+    return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
+  }
+  if (layer === 'locale' && hasLocaleSuffix(publicIdResult.value, layerKey)) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale: layerKey });
+  }
+  if (layer === 'user' && layerKey !== 'global' && hasLocaleSuffix(publicIdResult.value, layerKey)) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale: layerKey });
+  }
+
+  const entitlementGate = enforceLayerEntitlement(policyResult.policy, layer);
+  if (entitlementGate) return entitlementGate;
+
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return apiError('OPS_INVALID_TYPE', 'Invalid JSON payload', 400);
+  }
+  if (!isRecord(payload)) {
+    return apiError('OPS_INVALID_TYPE', 'Payload must be an object', 400);
+  }
+
+  const hasOps = Object.prototype.hasOwnProperty.call(payload, 'ops');
+  const hasUserOps = Object.prototype.hasOwnProperty.call(payload, 'userOps');
+  if (!hasOps && !hasUserOps) {
+    return apiError('OPS_INVALID_TYPE', 'ops or userOps required', 400);
+  }
+  if (hasUserOps && layer !== 'user') {
+    return apiError('OPS_INVALID_TYPE', 'userOps only allowed for layer=user', 400, { layer });
+  }
+
+  const hasGeoTargets = Object.prototype.hasOwnProperty.call(payload, 'geoTargets');
+  if (hasGeoTargets && layer !== 'locale') {
+    return apiError('OPS_INVALID_TYPE', 'geoTargets only allowed for layer=locale', 400, { layer });
+  }
+  if (hasGeoTargets && !hasOps) {
+    return apiError('OPS_INVALID_TYPE', 'geoTargets requires ops', 400);
+  }
+
+  const source = hasOps ? normalizeL10nSource((payload as any).source) : null;
+  if (hasOps && !source) {
+    return apiError('OPS_INVALID_TYPE', 'Invalid source', 400);
+  }
+
+  const baseFingerprintRaw = asTrimmedString((payload as any).baseFingerprint);
+  const baseUpdatedAtRaw = asTrimmedString((payload as any).baseUpdatedAt);
+  const widgetTypeRaw = asTrimmedString((payload as any).widgetType);
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const instanceKind = resolveInstanceKind(instance);
+  const instanceWorkspaceId = resolveInstanceWorkspaceId(instance);
+  if (instanceKind === 'user') {
+    if (!instanceWorkspaceId) {
+      return apiError('WORKSPACE_MISMATCH', 'Instance missing workspace', 403, { publicId });
+    }
+    if (instanceWorkspaceId !== workspaceId) {
+      return apiError('WORKSPACE_MISMATCH', 'Instance does not belong to workspace', 403, {
+        publicId,
+        workspaceId,
+      });
+    }
+    if (layer === 'locale') {
+      const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+      if (!normalized.ok) {
+        return apiError('LOCALE_INVALID', 'Workspace locales invalid', 500, normalized.issues);
+      }
+      if (!normalized.locales.includes(layerKey)) {
+        return apiError('LOCALE_NOT_ENTITLED', 'Locale not enabled for workspace', 403, {
+          locale: layerKey,
+          workspaceId: instanceWorkspaceId,
+        });
+      }
+    }
+  }
+
+  const computedFingerprint = await computeBaseFingerprint(instance.config);
+  if (!baseFingerprintRaw) {
+    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint required', 409);
+  }
+  if (baseFingerprintRaw !== computedFingerprint) {
+    return apiError('FINGERPRINT_MISMATCH', 'baseFingerprint does not match', 409, {
+      provided: baseFingerprintRaw,
+    });
+  }
+
+  let widgetTypeFallback: string | null = null;
+  if (widgetTypeRaw) {
+    const widgetTypeResult = assertWidgetType(widgetTypeRaw);
+    if (!widgetTypeResult.ok) {
+      return apiError('OPS_INVALID_TYPE', 'Invalid widgetType', 400, widgetTypeResult.issues);
+    }
+    widgetTypeFallback = widgetTypeResult.value;
+  }
+  const widgetType = await resolveWidgetTypeForInstance(env, instance, widgetTypeFallback);
+  if (!widgetType) {
+    return apiError('INTERNAL_ERROR', 'widgetType required for allowlist', 500);
+  }
+
+  let allowlist: string[];
+  try {
+    allowlist = await loadWidgetLayerAllowlist(env, widgetType, layer);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to load layer allowlist', 500, detail);
+  }
+
+  const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  const existingUserOps = resolveUserOps(existing).userOps;
+
+  const geoResult = hasGeoTargets ? normalizeGeoCountries((payload as any).geoTargets, 'geoTargets') : null;
+  if (geoResult && !geoResult.ok) {
+    return apiError('OPS_INVALID_TYPE', 'Invalid geoTargets', 400, geoResult.issues);
+  }
+
+  const opsResult = hasOps ? validateL10nOps((payload as any).ops, allowlist) : null;
+  if (hasOps && opsResult && !opsResult.ok) {
+    return apiError(opsResult.code, opsResult.message, 400, opsResult.detail);
+  }
+
+  const userOpsResult = hasUserOps ? validateL10nOps((payload as any).userOps, allowlist) : null;
+  if (hasUserOps && userOpsResult && !userOpsResult.ok) {
+    return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
+  }
+
+  let row: InstanceOverlayRow | null = null;
+  if (hasOps) {
+    const geoTargets = hasGeoTargets ? geoResult?.geoCountries ?? null : existing?.geo_targets ?? null;
+    const payloadRow = {
+      public_id: publicIdResult.value,
+      layer,
+      layer_key: layerKey,
+      ops: opsResult?.ok ? opsResult.ops : [],
+      user_ops:
+        layer === 'user'
+          ? hasUserOps && userOpsResult?.ok
+            ? userOpsResult.ops
+            : existingUserOps
+          : [],
+      base_fingerprint: computedFingerprint,
+      base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
+      source,
+      geo_targets: geoTargets,
+      workspace_id: instanceWorkspaceId,
+    };
+
+    const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`, {
+      method: 'POST',
+      headers: {
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify(payloadRow),
+    });
+    if (!upsertRes.ok) {
+      const details = await readJson(upsertRes);
+      return apiError('INTERNAL_ERROR', 'Failed to upsert layer', 500, details);
+    }
+
+    const rows = (await upsertRes.json().catch(() => [])) as InstanceOverlayRow[];
+    row = rows?.[0] ?? null;
+  } else if (hasUserOps && userOpsResult?.ok) {
+    if (!existing) {
+      const payloadRow = {
+        public_id: publicIdResult.value,
+        layer,
+        layer_key: layerKey,
+        ops: [],
+        user_ops: userOpsResult.ops,
+        base_fingerprint: computedFingerprint,
+        base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
+        source: 'user',
+        geo_targets: null,
+        workspace_id: instanceWorkspaceId,
+      };
+      const insertRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`, {
+        method: 'POST',
+        headers: {
+          Prefer: 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify(payloadRow),
+      });
+      if (!insertRes.ok) {
+        const details = await readJson(insertRes);
+        return apiError('INTERNAL_ERROR', 'Failed to create layer overrides', 500, details);
+      }
+      const rows = (await insertRes.json().catch(() => [])) as InstanceOverlayRow[];
+      row = rows?.[0] ?? null;
+    } else {
+      const patchRes = await supabaseFetch(
+        env,
+        `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(
+          publicIdResult.value,
+        )}&layer=eq.${encodeURIComponent(layer)}&layer_key=eq.${encodeURIComponent(layerKey)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            Prefer: 'return=representation',
+          },
+          body: JSON.stringify({ user_ops: userOpsResult.ops }),
+        },
+      );
+      if (!patchRes.ok) {
+        const details = await readJson(patchRes);
+        return apiError('INTERNAL_ERROR', 'Failed to update layer overrides', 500, details);
+      }
+      const rows = (await patchRes.json().catch(() => [])) as InstanceOverlayRow[];
+      row = rows?.[0] ?? null;
+    }
+  }
+
+  if (!env.L10N_PUBLISH_QUEUE) {
+    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
+  }
+  const markDirty = await markL10nPublishDirty({
+    env,
+    publicId: publicIdResult.value,
+    layer,
+    layerKey,
+    baseFingerprint: computedFingerprint,
+  });
+  if (markDirty) return markDirty;
+  try {
+    await env.L10N_PUBLISH_QUEUE.send({
+      v: 2,
+      publicId: publicIdResult.value,
+      layer,
+      layerKey,
+      action: 'upsert',
+    } satisfies L10nPublishQueueJob);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  }
+
+  const localPublish = await publishLayerLocal(env, publicIdResult.value, layer, layerKey, 'upsert');
+  if (localPublish) return localPublish;
+
+  const resolvedSource = row?.source ?? source ?? null;
+  return json({
+    publicId: publicIdResult.value,
+    layer,
+    layerKey,
+    source: resolvedSource,
+    baseFingerprint: row?.base_fingerprint ?? computedFingerprint,
+    baseUpdatedAt: row?.base_updated_at ?? baseUpdatedAtRaw ?? instance.updated_at ?? null,
+    updatedAt: row?.updated_at ?? null,
+  });
+}
+
+async function handleWorkspaceInstanceLayerDelete(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+  layerRaw: string,
+  layerKeyRaw: string
+) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+  }
+
+  const layer = normalizeLayer(layerRaw);
+  if (!layer) {
+    return apiError('LAYER_INVALID', 'Invalid layer', 400, { layer: layerRaw });
+  }
+  const layerKey = normalizeLayerKey(layer, layerKeyRaw);
+  if (!layerKey) {
+    return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
+  }
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  if (!instance) return apiError('INSTANCE_NOT_FOUND', 'Instance not found', 404, { publicId });
+
+  const computedFingerprint = await computeBaseFingerprint(instance.config);
+
+  const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
+  if (!existing) {
+    return json({ publicId: publicIdResult.value, layer, layerKey, deleted: false, reason: 'not_found' });
+  }
+
+  const deleteRes = await supabaseFetch(
+    env,
+    `/rest/v1/widget_instance_overlays?public_id=eq.${encodeURIComponent(
+      publicIdResult.value,
+    )}&layer=eq.${encodeURIComponent(layer)}&layer_key=eq.${encodeURIComponent(layerKey)}`,
+    {
+      method: 'DELETE',
+      headers: { Prefer: 'return=representation' },
+    },
+  );
+  if (!deleteRes.ok) {
+    const details = await readJson(deleteRes);
+    return apiError('INTERNAL_ERROR', 'Failed to delete layer overlay', 500, details);
+  }
+
+  if (!env.L10N_PUBLISH_QUEUE) {
+    return apiError('INTERNAL_ERROR', 'L10N_PUBLISH_QUEUE missing', 500);
+  }
+  const markDirty = await markL10nPublishDirty({
+    env,
+    publicId: publicIdResult.value,
+    layer,
+    layerKey,
+    baseFingerprint: computedFingerprint,
+  });
+  if (markDirty) return markDirty;
+  try {
+    await env.L10N_PUBLISH_QUEUE.send({
+      v: 2,
+      publicId: publicIdResult.value,
+      layer,
+      layerKey,
+      action: 'delete',
+    } satisfies L10nPublishQueueJob);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
+  }
+
+  const localPublish = await publishLayerLocal(env, publicIdResult.value, layer, layerKey, 'delete');
+  if (localPublish) return localPublish;
+
+  return json({ publicId: publicIdResult.value, layer, layerKey, deleted: true });
 }
 
 async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
@@ -2438,6 +3014,29 @@ function enforceL10nSelection(policy: Policy, locales: string[]) {
       },
       403
     );
+  }
+  return null;
+}
+
+const LAYER_FLAG_MAP: Record<string, string> = {
+  geo: 'l10n.layer.geo.enabled',
+  industry: 'l10n.layer.industry.enabled',
+  experiment: 'l10n.layer.experiment.enabled',
+  account: 'l10n.layer.account.enabled',
+  behavior: 'l10n.layer.behavior.enabled',
+  user: 'l10n.layer.user.enabled',
+};
+
+function enforceLayerEntitlement(policy: Policy, layer: string): Response | null {
+  const enabled = requirePolicyFlag(policy, 'l10n.enabled');
+  if (!enabled) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
+  }
+  if (layer === 'locale') return null;
+  const flagKey = LAYER_FLAG_MAP[layer];
+  if (!flagKey) return null;
+  if (!requirePolicyFlag(policy, flagKey)) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
   }
   return null;
 }
@@ -3193,6 +3792,38 @@ export default {
         const publicId = decodeURIComponent(workspaceInstanceMatch[2]);
         if (req.method === 'GET') return handleWorkspaceGetInstance(req, env, workspaceIdResult.value, publicId);
         if (req.method === 'PUT') return handleWorkspaceUpdateInstance(req, env, workspaceIdResult.value, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstanceLayersMatch = pathname.match(/^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/layers$/);
+      if (workspaceInstanceLayersMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceLayersMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstanceLayersMatch[2]);
+        if (req.method === 'GET') {
+          return handleWorkspaceInstanceLayersList(req, env, workspaceIdResult.value, publicId);
+        }
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstanceLayerMatch = pathname.match(
+        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/layers\/([^/]+)\/([^/]+)$/
+      );
+      if (workspaceInstanceLayerMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceLayerMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstanceLayerMatch[2]);
+        const layer = decodeURIComponent(workspaceInstanceLayerMatch[3]);
+        const layerKey = decodeURIComponent(workspaceInstanceLayerMatch[4]);
+        if (req.method === 'GET') {
+          return handleWorkspaceInstanceLayerGet(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+        }
+        if (req.method === 'PUT') {
+          return handleWorkspaceInstanceLayerUpsert(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+        }
+        if (req.method === 'DELETE') {
+          return handleWorkspaceInstanceLayerDelete(req, env, workspaceIdResult.value, publicId, layer, layerKey);
+        }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

@@ -1,5 +1,4 @@
 import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
-import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
 import { getAt } from '../utils/paths';
 
@@ -130,9 +129,7 @@ function parseControlOptions(args: {
   const options = parsed
     .map((opt) => {
       if (!opt || typeof opt !== 'object') return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const label = 'label' in opt ? String((opt as any).label) : '';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const value = 'value' in opt ? String((opt as any).value) : '';
       if (!label && !value) return null;
       return { label, value };

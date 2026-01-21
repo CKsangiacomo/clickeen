@@ -11,6 +11,35 @@ export function getTokyoBase() {
   throw new Error('[Venice] Missing TOKYO_URL (base URL for Tokyo widget assets)');
 }
 
+type NextRevalidate = { revalidate?: number };
+
+function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: NextRevalidate } {
+  const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  const isL10n = normalized.startsWith('/l10n/');
+  const isL10nIndex = isL10n && normalized.endsWith('/index.json');
+  const isL10nOverlay = isL10n && normalized.endsWith('.ops.json');
+  const isI18n = normalized.startsWith('/i18n/');
+  const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
+  const isWorkspaceAsset = normalized.startsWith('/workspace-assets/');
+  const isCuratedAsset = normalized.startsWith('/curated-assets/');
+  const isDieter = normalized.startsWith('/dieter/');
+  const isWidget = normalized.startsWith('/widgets/');
+
+  if (isL10nOverlay || isWorkspaceAsset || isCuratedAsset) {
+    return { cache: 'force-cache', next: { revalidate: 31536000 } };
+  }
+  if (isI18n && !isI18nManifest) {
+    return { cache: 'force-cache', next: { revalidate: 31536000 } };
+  }
+  if (isL10nIndex || isI18nManifest) {
+    return { cache: 'force-cache', next: { revalidate: 300 } };
+  }
+  if (isDieter || isWidget) {
+    return { cache: 'force-cache', next: { revalidate: 300 } };
+  }
+  return { cache: 'no-store' };
+}
+
 export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
   const base = getTokyoBase();
   const url = `${base}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
@@ -19,7 +48,19 @@ export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
   try {
     const headers = new Headers(init.headers as HeadersInit);
     if (!headers.has('X-Request-ID')) headers.set('X-Request-ID', crypto.randomUUID());
-    return await fetch(url, { ...init, headers, signal: controller.signal });
+    const requestInit = {
+      ...init,
+      headers,
+      signal: controller.signal,
+    } as RequestInit & { next?: NextRevalidate };
+    if (!requestInit.cache) {
+      const cachePolicy = resolveTokyoCache(pathname);
+      requestInit.cache = cachePolicy.cache;
+      if (!requestInit.next && cachePolicy.next) {
+        requestInit.next = cachePolicy.next;
+      }
+    }
+    return await fetch(url, requestInit);
   } finally {
     clearTimeout(timer);
   }

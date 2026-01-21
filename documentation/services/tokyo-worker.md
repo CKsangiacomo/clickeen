@@ -9,12 +9,12 @@
 - `GET /workspace-assets/**` (public, cacheable)
 - `POST /curated-assets/upload` (auth required; writes to R2)
 - `GET /curated-assets/**` (public, cacheable)
-- `POST /l10n/publish` (internal; publish or delete a locale overlay)
-- `POST /l10n/instances/:publicId/:locale` (dev auth; direct overlay write)
+- `POST /l10n/publish` (internal; publish or delete a layer overlay; body: `{ publicId, layer, layerKey, action? }`)
+- `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)
 - `GET /l10n/**` (public; deterministic overlay paths, immutable)
 
 ## Dependencies
-- Supabase (service role) for `widget_instance_locales` + `l10n_publish_state`
+- Supabase (service role) for `widget_instance_overlays` + `l10n_publish_state`
 - Tokyo R2 bucket for artifacts
 - Paris for queueing publish jobs
 
@@ -24,10 +24,10 @@
 - Scheduled repair publishes only dirty rows (bounded; no full-table scans).
 
 ## l10n Publish Flow (executed)
-- Reads `widget_instance_locales` from Supabase.
-- Merges `ops + user_ops` (user_ops applied last).
-- Writes `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`.
-- Writes `tokyo/l10n/instances/<publicId>/index.json` for locale selection + geo targeting.
+- Reads `widget_instance_overlays` from Supabase (Phase 1: locale layer only).
+- Merges `ops + user_ops` (user_ops applied last for layer=user).
+- Writes `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`.
+- Writes `tokyo/l10n/instances/<publicId>/index.json` with layer keys (hybrid index).
 - Marks publish state clean in `l10n_publish_state`.
 - Records versions in `l10n_overlay_versions` and prunes older versions per tier.
 

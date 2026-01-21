@@ -1,5 +1,22 @@
 const LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z0-9]+)*$/;
 
+export const LAYER_ORDER = ['base', 'locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user'] as const;
+export const LAYER_SELECTION = {
+  locale: 'single',
+  geo: 'single',
+  industry: 'single',
+  experiment: 'multi',
+  account: 'single',
+  behavior: 'multi',
+  user: 'locale+global',
+} as const;
+export const LAYER_MULTI_KEY_ORDER = {
+  experiment: 'expId-asc',
+  behavior: 'lex',
+} as const;
+export const USER_FALLBACK_ORDER = ['locale', 'global'] as const;
+export const GEO_TARGETS_SEMANTICS = 'locale-selection-only' as const;
+
 export function normalizeLocaleToken(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
   if (!value) return null;

@@ -1,4 +1,4 @@
-import type { CompiledControl, CompiledControlOption } from '../types';
+import type { CompiledControl } from '../types';
 
 export type ControlMatcher = {
   control: CompiledControl;

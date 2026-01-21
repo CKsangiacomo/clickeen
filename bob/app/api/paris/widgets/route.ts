@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { resolveParisBaseUrl } from '../../../../lib/env/paris';
 
 export const runtime = 'edge';
@@ -37,7 +37,7 @@ async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs = 50
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const paris = resolveParisBaseOrResponse();
   if (!paris.ok) return paris.response;
 

@@ -1,48 +1,40 @@
 {
-  "locales": [
-    {
-      "locale": "ar"
-    },
-    {
-      "locale": "de"
-    },
-    {
-      "locale": "en"
-    },
-    {
-      "locale": "es"
-    },
-    {
-      "locale": "fr"
-    },
-    {
-      "locale": "hi"
-    },
-    {
-      "locale": "it"
-    },
-    {
-      "locale": "ja"
-    },
-    {
-      "locale": "ko"
-    },
-    {
-      "locale": "nl"
-    },
-    {
-      "locale": "pl"
-    },
-    {
-      "locale": "pt"
-    },
-    {
-      "locale": "tr"
-    },
-    {
-      "locale": "zh-tw"
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "de",
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt",
+        "tr",
+        "zh-tw"
+      ],
+      "lastPublishedFingerprint": {
+        "ar": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "de": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "en": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "es": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "fr": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "hi": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "it": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "ja": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "ko": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "nl": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "pl": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "pt": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "tr": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+        "zh-tw": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7"
+      }
     }
-  ],
+  },
   "publicId": "wgt_main_countdown",
   "v": 1
 }

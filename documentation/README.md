@@ -119,4 +119,4 @@ Avoid mixing planned APIs with shipped ones in the "Quick Scan" sections.
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
 
-When drift is found: update docs to match the shipped code/config (don't block execution on drift).
+When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.
