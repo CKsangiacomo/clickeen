@@ -1,9 +1,0 @@
-{
-  "v": 1,
-  "blockId": "hero",
-  "blockKind": "hero",
-  "strings": {
-    "headline": "Countdown Templates",
-    "subheadline": "Ready-made layouts for common countdown use cases."
-  }
-}

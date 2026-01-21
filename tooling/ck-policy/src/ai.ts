@@ -2,6 +2,7 @@ import type { Policy, PolicyProfile } from './types';
 
 export type AiProvider = 'deepseek' | 'openai' | 'anthropic';
 export type AiProfile = 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
+export type AiExecutionSurface = 'execute' | 'endpoint' | 'queue';
 
 export type AiBudget = {
   maxTokens: number;
@@ -25,7 +26,9 @@ export type AiRegistryEntry = {
   category: 'copilot' | 'agent';
   taskClass: string;
   description: string;
-  defaultProviders: AiProvider[];
+  supportedProviders: AiProvider[];
+  defaultProvider: AiProvider;
+  executionSurface: AiExecutionSurface;
   allowProviderChoice?: boolean;
   requiredEntitlements?: string[];
   budgetsByProfile: Record<AiProfile, AiBudget>;
@@ -45,13 +48,6 @@ const CS_BUDGETS: Record<AiProfile, AiBudget> = {
   paid_standard: { maxTokens: 900, timeoutMs: 45_000, maxRequests: 3 },
   paid_premium: { maxTokens: 1400, timeoutMs: 60_000, maxRequests: 3 },
   curated_premium: { maxTokens: 1600, timeoutMs: 60_000, maxRequests: 3 },
-};
-
-const FAQ_BUDGETS: Record<AiProfile, AiBudget> = {
-  free_low: { maxTokens: 320, timeoutMs: 20_000, maxRequests: 1 },
-  paid_standard: { maxTokens: 600, timeoutMs: 25_000, maxRequests: 1 },
-  paid_premium: { maxTokens: 900, timeoutMs: 35_000, maxRequests: 1 },
-  curated_premium: { maxTokens: 1200, timeoutMs: 45_000, maxRequests: 1 },
 };
 
 const DEBUG_BUDGETS: Record<AiProfile, AiBudget> = {
@@ -95,7 +91,9 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'copilot',
     taskClass: 'copilot.sdr.chat',
     description: 'Public SDR copilot for acquisition conversations.',
-    defaultProviders: ['deepseek'],
+    supportedProviders: ['deepseek'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'execute',
     allowProviderChoice: false,
     budgetsByProfile: SDR_BUDGETS,
   },
@@ -104,26 +102,21 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'copilot',
     taskClass: 'copilot.cs.editor',
     description: 'In-product editor copilot (CS).',
-    defaultProviders: ['deepseek'],
+    supportedProviders: ['deepseek', 'openai', 'anthropic'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'execute',
     allowProviderChoice: true,
     budgetsByProfile: CS_BUDGETS,
     aliases: ['sdr.widget.copilot.v1'],
-  },
-  {
-    agentId: 'editor.faq.answer.v1',
-    category: 'agent',
-    taskClass: 'editor.faq.answer',
-    description: 'Legacy FAQ answer helper (deprecated).',
-    defaultProviders: ['deepseek'],
-    allowProviderChoice: false,
-    budgetsByProfile: FAQ_BUDGETS,
   },
   {
     agentId: 'l10n.instance.v1',
     category: 'agent',
     taskClass: 'l10n.instance',
     description: 'Instance localization pipeline.',
-    defaultProviders: ['deepseek'],
+    supportedProviders: ['deepseek'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'queue',
     allowProviderChoice: false,
     budgetsByProfile: L10N_INSTANCE_BUDGETS,
   },
@@ -132,7 +125,9 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'agent',
     taskClass: 'l10n.prague.systemStrings',
     description: 'Prague system strings translation (local-only).',
-    defaultProviders: ['openai'],
+    supportedProviders: ['openai'],
+    defaultProvider: 'openai',
+    executionSurface: 'endpoint',
     allowProviderChoice: false,
     budgetsByProfile: L10N_PRAGUE_BUDGETS,
   },
@@ -141,7 +136,9 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'agent',
     taskClass: 'personalization.acquisitionPreview',
     description: 'Acquisition preview personalization (copy overrides only).',
-    defaultProviders: ['deepseek'],
+    supportedProviders: ['deepseek'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'endpoint',
     allowProviderChoice: false,
     budgetsByProfile: PERSONALIZATION_PREVIEW_BUDGETS,
     requiredEntitlements: ['personalization.preview.enabled'],
@@ -152,7 +149,9 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'agent',
     taskClass: 'personalization.onboardingProfile',
     description: 'Onboarding personalization (business profile enrichment).',
-    defaultProviders: ['deepseek', 'openai', 'anthropic'],
+    supportedProviders: ['deepseek', 'openai', 'anthropic'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'endpoint',
     allowProviderChoice: true,
     budgetsByProfile: PERSONALIZATION_ONBOARDING_BUDGETS,
     requiredEntitlements: ['personalization.onboarding.enabled'],
@@ -163,7 +162,9 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'agent',
     taskClass: 'ops.debug',
     description: 'Grant validation probe.',
-    defaultProviders: ['deepseek'],
+    supportedProviders: ['deepseek'],
+    defaultProvider: 'deepseek',
+    executionSurface: 'execute',
     allowProviderChoice: false,
     budgetsByProfile: DEBUG_BUDGETS,
   },
@@ -173,6 +174,12 @@ const AGENT_LOOKUP = new Map<string, AiRegistryEntry>();
 for (const entry of AI_AGENT_REGISTRY) {
   if (!entry.agentId || !entry.agentId.trim()) {
     throw new Error('[ck-policy] AI registry entry missing agentId');
+  }
+  if (!entry.supportedProviders.length) {
+    throw new Error(`[ck-policy] AI registry entry missing supported providers: ${entry.agentId}`);
+  }
+  if (!entry.supportedProviders.includes(entry.defaultProvider)) {
+    throw new Error(`[ck-policy] AI registry entry defaultProvider not supported: ${entry.agentId}`);
   }
   const canonical = entry.agentId.trim();
   if (AGENT_LOOKUP.has(canonical)) {
@@ -238,8 +245,8 @@ export function resolveAiProfile(args: { policyProfile: PolicyProfile; taskClass
 
 export function resolveAiAllowedProviders(entry: AiRegistryEntry, profile: AiProfile): AiProvider[] {
   const allowed = ALLOWED_PROVIDERS_BY_PROFILE[profile] ?? ALLOWED_PROVIDERS_BY_PROFILE.free_low;
-  const filtered = entry.defaultProviders.filter((provider) => allowed.includes(provider));
-  return uniqProviders(filtered.length ? filtered : allowed);
+  const filtered = entry.supportedProviders.filter((provider) => allowed.includes(provider));
+  return uniqProviders(filtered);
 }
 
 export function resolveAiBudgets(entry: AiRegistryEntry, profile: AiProfile): AiBudget {
@@ -255,7 +262,10 @@ export function resolveAiPolicyCapsule(args: {
 }): AiGrantPolicy {
   const profile = resolveAiProfile({ policyProfile: args.policyProfile, taskClass: args.entry.taskClass, isCurated: args.isCurated });
   const allowedProviders = resolveAiAllowedProviders(args.entry, profile);
-  const allowProviderChoice = Boolean(args.entry.allowProviderChoice);
+  if (!allowedProviders.length) {
+    throw new Error(`[ck-policy] No allowed providers for ${args.entry.agentId} (${profile})`);
+  }
+  const allowProviderChoice = Boolean(args.entry.allowProviderChoice) && allowedProviders.length > 1;
   const providerCandidate = typeof args.requestedProvider === 'string' ? args.requestedProvider.trim() : '';
   const selectedProvider = allowProviderChoice && allowedProviders.includes(providerCandidate as AiProvider)
     ? (providerCandidate as AiProvider)

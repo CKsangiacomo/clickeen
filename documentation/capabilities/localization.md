@@ -57,6 +57,7 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 
 **Tokyo output**
 - `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+- `tokyo/l10n/instances/<publicId>/index.json` (locale metadata + geo targeting)
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 
@@ -65,7 +66,7 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 - San Francisco runs the localization agent and emits set-only ops.
 - Paris stores overlays in Supabase (`widget_instance_locales`).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
-- Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest).
+- Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
 - Venice applies the overlay at render time (if present and not stale).
 
 **Widget allowlist (authoritative)**
@@ -79,28 +80,27 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 - Tokyo overlay files contain the merged ops (`ops + user_ops`, user_ops applied last).
 - `l10n_overlay_versions` is the version ledger used for cleanup and future rollbacks.
 - Tokyo-worker prunes versions using the `l10n.versions.max` entitlement cap.
+- `geo_countries` optionally scopes a locale overlay to ISO-3166 country codes; Venice uses it to select a locale when no explicit locale is provided.
 
-### Prague strings (system-owned, repo-local)
+### Prague localization (system-owned, Babel-aligned)
 
-Use `prague-strings` for **Clickeen-owned website copy** (Prague pages and chrome). This is a file-based overlay system that mirrors instance l10n semantics but is not stored in Supabase or served via Tokyo.
+Use Prague base content + Tokyo overlays for **Clickeen-owned website copy** (Prague pages + chrome). This mirrors instance l10n semantics with deterministic overlay keys and no manifest.
 
 **Filesystem layout**
-- Base chunks: `prague-strings/base/v1/**`
-- Allowlists: `prague-strings/allowlists/v1/**`
-- Overlays: `prague-strings/overlays/v1/**`
-- Manifest: `prague-strings/manifest.v1.json`
-- Compiled outputs: `prague-strings/compiled/v1/{locale}/**`
+- Base content: `prague/content/base/v1/**`
+- Allowlists: `prague/content/allowlists/v1/**`
+- Overlays: `tokyo/l10n/prague/{pageId}/{locale}/{baseFingerprint}.ops.json`
 
 **Pipeline**
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local-only; requires `PARIS_DEV_JWT`).
 - Provider: OpenAI for Prague strings; instance l10n agents use DeepSeek.
-- `scripts/prague-strings/translate.mjs` calls San Francisco and writes overlay ops.
-- `scripts/prague-strings/compile.mjs` validates allowlists/overlays and emits compiled outputs.
-- Prague loads compiled outputs at runtime; no Supabase/Tokyo dependency.
+- `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
+- `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths (wired into Prague build/dev-up).
+- Prague loads base content and applies overlays at runtime via Tokyo fetch.
 
 **Strict rules**
 - Overlays are set-only ops and must include `baseFingerprint`.
-- Compile fails if any non-en locale is missing an overlay.
+- Verification fails if any non-en locale is missing an overlay.
 - Same staleness guard as instance overlays (`baseFingerprint`).
 
 ## Curated embeds (Prague visuals)
@@ -125,6 +125,23 @@ Manual overlay sources (dev-only, repo-local):
 
 Materialized output (Tokyo/R2):
 - `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+
+Locale index (Tokyo/R2):
+- `tokyo/l10n/instances/<publicId>/index.json`
+- `index.json` shape:
+```json
+{
+  "v": 1,
+  "publicId": "wgt_main_faq",
+  "locales": [
+    { "locale": "en" },
+    { "locale": "fr", "geoCountries": ["FR", "BE"] }
+  ]
+}
+```
+Rules:
+- `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
+- `geoCountries` is optional; when present, Venice uses it to map a country to a locale.
 
 Example:
 ```json
@@ -170,18 +187,19 @@ We use ops overlays because they scale cleanly:
 ## Default locale (Phase 1)
 
 If a request does not include a locale signal:
-- Venice uses a deterministic default: `en`.
+- Venice uses Tokyo `index.json` and `cf-ipcountry` to pick a locale; if no geo match exists, it falls back to `en`.
 
 This is a deterministic runtime choice (for cache stability), not an identity rule.
 
 ## Operational runbook (Phase 1)
 
-### 0) Prague strings (system-owned)
+### 0) Prague localization (system-owned)
 
-1. Author base strings under `prague-strings/base/v1/**`.
-2. Generate overlays via `pnpm prague:strings:translate` (requires San Francisco local).
-3. Compile outputs via `pnpm prague:strings:compile`.
-4. Prague reads compiled outputs directly (no Tokyo/Supabase publish).
+1. Author base content under `prague/content/base/v1/**`.
+2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
+3. Generate overlays via `pnpm prague:l10n:translate` (requires San Francisco local).
+4. Verify overlays via `pnpm prague:l10n:verify`.
+5. Prague reads base content + Tokyo overlays (`tokyo/l10n/prague/**`), no Supabase publish.
 
 ### 1) Enforce locale-free curated instances in Michael
 

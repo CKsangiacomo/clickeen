@@ -27,8 +27,8 @@ Only read these:
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
 - `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-- `prague-strings/base/v1/**`
-- `prague-strings/allowlists/v1/**`
+- `prague/content/base/v1/**`
+- `prague/content/allowlists/v1/**`
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
 
@@ -38,15 +38,14 @@ Do **not** repo-grep or read other folders unless explicitly instructed.
 
 Default scope:
 - `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-- `prague-strings/base/v1/widgets/{widget}/blocks/{blockId}.json` (overview)
-- `prague-strings/base/v1/widgets/{widget}/{page}/blocks/{blockId}.json` (subpages)
+- `prague/content/base/v1/widgets/{widget}.json` (overview)
+- `prague/content/base/v1/widgets/{widget}/{page}.json` (subpages)
 
 Only if the PRD explicitly requires new string keys:
-- `prague-strings/allowlists/v1/blocks/{blockKind}.allowlist.json`
+- `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
 Do **not** edit:
-- `prague-strings/compiled/**` (generated)
-- `prague-strings/overlays/**` (generated)
+- `tokyo/l10n/prague/**` (generated overlays)
 - `scripts/prague-localize.mjs` (deprecated)
 
 ---
@@ -82,7 +81,7 @@ File:
 
 Rules:
 - Layout only: `blocks[]` contains `id`, `type`, and allowed meta fields (e.g. `visual`).
-- **No copy** in page JSON. Copy always lives in `prague-strings/base` and compiled strings **overwrite** any inline `copy`.
+- **No copy** in page JSON. Copy lives in `prague/content/base` and localized overlays **overwrite** any inline `copy`.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
 - `visual` is only allowed for block types that support it (see registry). For embeds, use `curatedRef.publicId`.
@@ -102,31 +101,34 @@ Example shape:
 
 ---
 
-### Step 3 — Add base strings (one file per block instance)
+### Step 3 — Add base copy (per page)
 
-Overview page strings:
-- `prague-strings/base/v1/widgets/{widget}/blocks/{blockId}.json`
+Overview base:
+- `prague/content/base/v1/widgets/{widget}.json`
 
-Subpage strings:
-- `prague-strings/base/v1/widgets/{widget}/{page}/blocks/{blockId}.json`
+Subpage base:
+- `prague/content/base/v1/widgets/{widget}/{page}.json`
 
 File shape (required):
 ```json
 {
   "v": 1,
-  "blockId": "hero",
-  "blockKind": "hero",
-  "strings": {
-    "headline": "...",
-    "subheadline": "..."
+  "pageId": "widgets/{widget}",
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "...",
+        "subheadline": "..."
+      }
+    }
   }
 }
 ```
 
 Rules:
-- `blockId` must equal the `id` in page JSON.
-- `blockKind` must equal the `type` in page JSON.
-- `strings` must contain all required keys for the block type (see `blockRegistry`).
+- `pageId` must match the file path (e.g. `widgets/faq/templates`).
+- Each `blocks.{id}` must match a block `id` in page JSON.
+- `copy` must contain all required keys for the block type (see `blockRegistry`).
 - Use only ASCII unless the PRD provides non-ASCII.
 
 Required keys (current registry):
@@ -144,17 +146,17 @@ Required keys (current registry):
 ### Step 4 — Update allowlists only when required
 
 If you add **new string keys** for an existing block type:
-- Update `prague-strings/allowlists/v1/blocks/{blockKind}.allowlist.json`
+- Update `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
 If you need a **new block type**, stop and ask (requires a PRD and registry update).
 
 ---
 
-### Step 5 — Translation + compile (only when asked)
+### Step 5 — Translation + verify (only when asked)
 
 Do not call providers directly. Translation is system-owned:
-- `pnpm prague:strings:translate`
-- `pnpm prague:strings:compile`
+- `pnpm prague:l10n:translate`
+- `pnpm prague:l10n:verify`
 
 These are run **only** with human approval.
 
@@ -165,7 +167,7 @@ These are run **only** with human approval.
 Before you finish:
 - Every page has `page-meta` (and overview has `navmeta`).
 - All block IDs are unique and stable.
-- Every block has a matching base strings file.
+- Every page has a matching base copy file and includes all block IDs.
 - Base strings include required keys for the block type.
 - No compiled/overlay files were edited.
 

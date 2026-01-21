@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "8195a1d10f47c5b7f0fe175273741fea4544f526d218b1e02aa79c5e1d8d270b",
+  "baseUpdatedAt": "2026-01-21T02:59:11.500Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo-Showcase-Vorlagen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Beginnen Sie mit einem ausgefeilten Layout – und machen Sie es dann zu Ihrem eigenen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Starten Sie mit einem durchdachten Layout und passen Sie Ihr Logo-Showcase an."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo-Showcase-Vorlagen – Clickeen"
+    }
+  ],
+  "v": 1
+}

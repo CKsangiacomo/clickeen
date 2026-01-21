@@ -13,12 +13,18 @@ type Props = {
 
 const { locale, widget, active, variant = 'page' } = Astro.props;
 
+const overviewLabel = await pragueT(locale, 'prague.tabs.overview');
+const templatesLabel = await pragueT(locale, 'prague.tabs.templates');
+const examplesLabel = await pragueT(locale, 'prague.tabs.examples');
+const featuresLabel = await pragueT(locale, 'prague.tabs.features');
+const pricingLabel = await pragueT(locale, 'prague.tabs.pricing');
+
 const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
-  { key: 'overview', label: pragueT(locale, 'prague.tabs.overview'), href: `/${locale}/widgets/${widget}` },
-  { key: 'templates', label: pragueT(locale, 'prague.tabs.templates'), href: `/${locale}/widgets/${widget}/templates` },
-  { key: 'examples', label: pragueT(locale, 'prague.tabs.examples'), href: `/${locale}/widgets/${widget}/examples` },
-  { key: 'features', label: pragueT(locale, 'prague.tabs.features'), href: `/${locale}/widgets/${widget}/features` },
-  { key: 'pricing', label: pragueT(locale, 'prague.tabs.pricing'), href: `/${locale}/widgets/${widget}/pricing` },
+  { key: 'overview', label: overviewLabel, href: `/${locale}/widgets/${widget}` },
+  { key: 'templates', label: templatesLabel, href: `/${locale}/widgets/${widget}/templates` },
+  { key: 'examples', label: examplesLabel, href: `/${locale}/widgets/${widget}/examples` },
+  { key: 'features', label: featuresLabel, href: `/${locale}/widgets/${widget}/features` },
+  { key: 'pricing', label: pricingLabel, href: `/${locale}/widgets/${widget}/pricing` },
 ];
 ---
 
@@ -81,4 +87,3 @@ const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
     background: color-mix(in oklab, var(--color-system-black), transparent 92%);
   }
 </style>
-

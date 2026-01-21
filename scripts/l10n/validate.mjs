@@ -46,6 +46,44 @@ function assertOverlayShape({ ref, data }) {
   }
 }
 
+function normalizeGeoCountries(raw) {
+  if (!Array.isArray(raw)) return null;
+  const list = raw
+    .map((code) => String(code || '').trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
+  if (!list.length) return null;
+  return Array.from(new Set(list));
+}
+
+function assertLocaleIndexShape({ ref, data, publicId }) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error(`[l10n] ${ref}: index must be an object`);
+  }
+  if (data.v !== 1) throw new Error(`[l10n] ${ref}: index v must be 1`);
+  if (data.publicId && data.publicId !== publicId) {
+    throw new Error(`[l10n] ${ref}: index publicId mismatch`);
+  }
+  if (!Array.isArray(data.locales)) {
+    throw new Error(`[l10n] ${ref}: index locales must be an array`);
+  }
+  const locales = [];
+  for (const entry of data.locales) {
+    if (!entry || typeof entry !== 'object') continue;
+    const locale = typeof entry.locale === 'string' ? entry.locale.trim().toLowerCase() : '';
+    if (!locale || !LOCALE_PATTERN.test(locale)) {
+      throw new Error(`[l10n] ${ref}: index locale invalid (${entry.locale})`);
+    }
+    if (entry.geoCountries !== undefined) {
+      const normalized = normalizeGeoCountries(entry.geoCountries);
+      if (entry.geoCountries != null && !normalized) {
+        throw new Error(`[l10n] ${ref}: index geoCountries invalid for ${locale}`);
+      }
+    }
+    locales.push(locale);
+  }
+  return Array.from(new Set(locales));
+}
+
 function main() {
   const baseDir = path.join(outRoot, 'instances');
   if (!fs.existsSync(baseDir)) {
@@ -63,6 +101,16 @@ function main() {
 
   for (const publicId of publicIds) {
     const instanceDir = path.join(baseDir, publicId);
+    const indexPath = path.join(instanceDir, 'index.json');
+    if (!fs.existsSync(indexPath)) {
+      throw new Error(`[l10n] Missing index.json for ${publicId}`);
+    }
+    const indexData = readJson(indexPath);
+    const indexedLocales = assertLocaleIndexShape({
+      ref: `${publicId}/index.json`,
+      data: indexData,
+      publicId,
+    });
     const locales = fs
       .readdirSync(instanceDir, { withFileTypes: true })
       .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
@@ -72,6 +120,9 @@ function main() {
     for (const locale of locales) {
       if (!LOCALE_PATTERN.test(locale)) {
         throw new Error(`[l10n] Invalid locale folder name: ${publicId}/${locale}`);
+      }
+      if (!indexedLocales.includes(locale)) {
+        throw new Error(`[l10n] ${publicId}: index.json missing locale ${locale}`);
       }
       const localeDir = path.join(instanceDir, locale);
       const files = fs
@@ -92,9 +143,15 @@ function main() {
         if (file !== expected) {
           throw new Error(`[l10n] ${publicId}/${locale}: file name must be ${expected}`);
         }
-        overlayCount += 1;
+      overlayCount += 1;
+    }
+
+    for (const locale of indexedLocales) {
+      if (!locales.includes(locale)) {
+        throw new Error(`[l10n] ${publicId}: index.json references missing locale ${locale}`);
       }
     }
+  }
   }
 
   console.log(`[l10n] OK: validated ${overlayCount} overlay file(s)`);

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-21T02:59:11.487Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Geri Sayım Widget'ı - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Özelleştirilebilir geri sayım sayaçlarıyla aciliyet yaratın. Güvenle başlatın, satın ve duyurun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Geri Sayım Zamanlayıcı Widget’ı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Hızlı ve esnek geri sayımlarla aciliyet yaratın ve harekete geçirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Geri sayım"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Esnek zamanlayıcılarla aciliyet katın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Canlı deneyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Minibob’da bir demo örneğini düzenleyin. Hazır olduğunuzda yayınlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Geri Sayım Sayacı Widget'ı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Özelleştirilebilir geri sayım sayaçlarıyla aciliyet duygusu yaratın ve harekete geçirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Esnek Zamanlayıcı Modları"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Her senaryo için tarih tabanlı, kişisel veya sayı sayaçları."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Dikkati eyleme dönüştürün"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Lansmanlara, indirimlere, etkinliklere ve kişisel hedeflere uygun sayaçlar kullanın. Bir kez ayarlayın ve her yerde çalışmasına izin verin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Kolay Özelleştirme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Görünümü, düzeni ve eylemleri markanıza uyacak şekilde ayarlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Geri sayımlarla daha hızlı yayına çıkın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Kurulumdan yayına dakikalar içinde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Zamanlayıcınızı seçin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Markanızla uyumlu hale getirin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Yayınlayın ve yerelleştirin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "İhtiyacınıza göre tarih, sürekli (evergreen) veya sayı sayaçları seçin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Her siteye uyacak şekilde renkleri, etiketleri ve yerleşimi özelleştirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Hızla yayına alın ve yerleşik yerelleştirme ile küresel kitlelere ulaşın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Dönüşümleri Artırın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Zamana duyarlı tekliflerle anında harekete geçmeyi teşvik edin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO ve GEO için optimize edildi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dahili şema ve yerelleştirme desteği."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Aciliyet Yaratın, Satışları Artırın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Ziyaretçileri müşterilere dönüştüren güçlü geri sayım sayaçları."
+    }
+  ],
+  "v": 1
+}

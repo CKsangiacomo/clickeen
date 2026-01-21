@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bc03b976b94d6fdcf00c1b1f71f90878d266ab4999fbee78657698ff52420780",
+  "baseUpdatedAt": "2026-01-21T02:59:11.495Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ मूल्य निर्धारण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "सरल स्तर। जब आपको और विजेट्स की ज़रूरत हो, तब अपग्रेड करें और ब्रांडिंग हटाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "FAQ विजेट के लिए सरल मूल्य निर्धारण। जब आपको अधिक की आवश्यकता हो, तब अपग्रेड करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ मूल्य निर्धारण - Clickeen"
+    }
+  ],
+  "v": 1
+}

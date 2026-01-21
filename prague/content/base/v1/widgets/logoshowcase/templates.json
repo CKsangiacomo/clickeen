@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "Logo Showcase Templates",
+        "subheadline": "Start from a polished layout -- then make it yours."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Start from a polished layout and customize your logo showcase.",
+        "title": "Logo Showcase Templates - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/logoshowcase/templates",
+  "v": 1
+}

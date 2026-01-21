@@ -8,7 +8,7 @@
 - Upload APIs, signed URLs
 - Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
-- Prague website strings are repo-local (`prague-strings/**`), not served by Tokyo
+- Prague website base content is repo-local (`prague/content/base/**`); localized overlays are served by Tokyo under `tokyo/l10n/prague/**`
 
 ## Dependencies
 - Used by: Venice, Bob, Prague
@@ -75,6 +75,8 @@ Local dev:
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:locale` (dev-only; writes localized overlays into `tokyo/l10n/**`)
   - `DELETE /l10n/instances/:publicId/:locale` (dev-only; removes localized overlays from `tokyo/l10n/**`)
+  - `POST /l10n/instances/:publicId/index` (dev-only; writes locale index into `tokyo/l10n/**`)
+  - `DELETE /l10n/instances/:publicId/index` (dev-only; removes locale index from `tokyo/l10n/**`)
 - Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set.
 - `scripts/dev-up.sh` starts the dev server and workers but does **not** build/push instance l10n overlays; run `pnpm build:l10n` or trigger the Paris/SF pipeline when you need instance overlays.
 
@@ -83,6 +85,7 @@ Local dev:
 Tokyo serves **instance localization overlays** as deterministic baseFingerprint ops patches:
 
 - Build output path: `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`
+- Locale index: `tokyo/l10n/instances/<publicId>/index.json`
 
 Rules:
 - Overlays are set-only ops (no structural mutations).
@@ -90,6 +93,7 @@ Rules:
 - Instance identity is locale-free (`publicId` never contains locale).
 - Consumers should treat overlay files as cacheable (immutable baseFingerprint filenames); no global manifest is used.
 - Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_locales` (`ops + user_ops`, user_ops applied last).
+- `index.json` is materialized by `tokyo-worker` and lists available locales plus optional geo targeting.
 
 Build command (repo root):
 - `pnpm build:l10n`

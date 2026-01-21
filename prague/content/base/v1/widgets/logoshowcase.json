@@ -1,0 +1,55 @@
+{
+  "blocks": {
+    "cta": {
+      "copy": {
+        "headline": "Create your logo showcase",
+        "subheadline": "Start free. Publish when you're ready."
+      }
+    },
+    "hero": {
+      "copy": {
+        "headline": "Logo Showcase. Instant social proof.",
+        "subheadline": "Show customer logos beautifully -- build trust and increase conversions."
+      }
+    },
+    "minibob": {
+      "copy": {
+        "heading": "Try it live",
+        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+      }
+    },
+    "navmeta": {
+      "copy": {
+        "description": "Show logos beautifully. Build trust.",
+        "title": "Logo Showcase"
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Highlight customer logos with a fast, flexible showcase widget.",
+        "title": "Logo Showcase Widget - Clickeen"
+      }
+    },
+    "steps": {
+      "copy": {
+        "items": [
+          {
+            "body": "Upload your customer logos (SVG/PNG) in seconds.",
+            "title": "Add logos"
+          },
+          {
+            "body": "Choose layout + spacing to match your site.",
+            "title": "Arrange"
+          },
+          {
+            "body": "Paste the snippet into any platform.",
+            "title": "Embed"
+          }
+        ],
+        "title": "How it works"
+      }
+    }
+  },
+  "pageId": "widgets/logoshowcase",
+  "v": 1
+}

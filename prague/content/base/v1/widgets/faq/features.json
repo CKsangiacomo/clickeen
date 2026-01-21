@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "FAQ Features",
+        "subheadline": "Everything you need to ship a fast, polished FAQ."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Everything you need to ship a polished FAQ widget.",
+        "title": "FAQ Features - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/faq/features",
+  "v": 1
+}

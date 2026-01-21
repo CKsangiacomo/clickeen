@@ -1,9 +1,0 @@
-{
-  "v": 1,
-  "blockId": "minibob",
-  "blockKind": "minibob",
-  "strings": {
-    "heading": "Try it live",
-    "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
-  }
-}

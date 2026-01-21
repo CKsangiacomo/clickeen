@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { loadCompiledPageStrings } from './pragueStrings';
+import { loadPraguePageContent } from './pragueL10n';
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 const TOKYO_WIDGETS_DIR = path.join(REPO_ROOT, 'tokyo', 'widgets');
@@ -34,41 +34,41 @@ export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: 
   if (!base) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
-  const compiled = await loadCompiledPageStrings({ locale: opts.locale, pagePath });
-  const blocksById = (compiled as any)?.blocks;
+  const localized = await loadPraguePageContent({ locale: opts.locale, pageId: pagePath });
+  const blocksById = (localized as any)?.blocks;
 
   if (!blocksById || typeof blocksById !== 'object' || Array.isArray(blocksById)) {
-    throw new Error(`[prague-strings] Invalid compiled blocks for ${pagePath}`);
+    throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
   if (!base || typeof base !== 'object' || Array.isArray(base)) {
-    throw new Error(`[prague-strings] Invalid base JSON for ${opts.widget}/${opts.page}`);
+    throw new Error(`[prague] Invalid base JSON for ${opts.widget}/${opts.page}`);
   }
 
   const baseBlocks = (base as any).blocks;
   if (!Array.isArray(baseBlocks)) {
-    throw new Error(`[prague-strings] Missing blocks[] in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    throw new Error(`[prague] Missing blocks[] in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
   }
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
-      throw new Error(`[prague-strings] Invalid block entry in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+      throw new Error(`[prague] Invalid block entry in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
     }
     const blockId = String(block.id || '');
-    if (!blockId) throw new Error(`[prague-strings] Missing block id in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    if (!blockId) throw new Error(`[prague] Missing block id in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
     const blockType = typeof block.type === 'string' ? block.type : '';
-    if (!blockType) throw new Error(`[prague-strings] Missing block type in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    if (!blockType) throw new Error(`[prague] Missing block type in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
     validateBlockMeta({ block: block as Record<string, unknown>, pagePath });
     const compiledBlock = blocksById[blockId];
     if (!compiledBlock || typeof compiledBlock !== 'object') {
-      throw new Error(`[prague-strings] Missing compiled strings for ${pagePath} block ${blockId}`);
+      throw new Error(`[prague] Missing localized copy for ${pagePath} block ${blockId}`);
     }
-    const strings = (compiledBlock as any).strings;
-    if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
-      throw new Error(`[prague-strings] Invalid compiled strings for ${pagePath} block ${blockId}`);
+    const copy = (compiledBlock as any).copy;
+    if (!copy || typeof copy !== 'object' || Array.isArray(copy)) {
+      throw new Error(`[prague] Invalid localized copy for ${pagePath} block ${blockId}`);
     }
-    validateBlockStrings({ blockType, strings: strings as Record<string, unknown>, pagePath, blockId });
-    return { ...block, id: blockId, type: blockType, copy: strings };
+    validateBlockStrings({ blockType, strings: copy as Record<string, unknown>, pagePath, blockId });
+    return { ...block, id: blockId, type: blockType, copy };
   });
 
   return { ...(base as any), blocks: mergedBlocks };

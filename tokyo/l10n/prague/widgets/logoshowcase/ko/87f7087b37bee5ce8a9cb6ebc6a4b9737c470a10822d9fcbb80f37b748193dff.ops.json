@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-21T02:59:11.496Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "로고 쇼케이스를 만드세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "무료로 시작하세요. 준비되면 게시하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "로고 쇼케이스. 즉각적인 사회적 증거."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "고객 로고를 아름답게 보여주고 신뢰를 쌓아 전환율을 높이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "라이브로 사용해 보기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Minibob에서 데모 인스턴스를 편집하세요. 준비되면 게시하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "로고를 아름답게 보여주세요. 신뢰를 구축하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "로고 쇼케이스"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "빠르고 유연한 쇼케이스 위젯으로 고객 로고를 강조하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "로고 쇼케이스 위젯 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "고객 로고(SVG/PNG)를 몇 초 만에 업로드하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "로고 추가"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "사이트에 맞게 레이아웃과 간격을 선택하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "배치"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "어떤 플랫폼이든 스니펫을 붙여넣으세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "임베드"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "작동 방식"
+    }
+  ],
+  "v": 1
+}

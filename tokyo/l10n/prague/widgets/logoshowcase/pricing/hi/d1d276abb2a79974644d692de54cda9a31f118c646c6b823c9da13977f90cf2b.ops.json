@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d1d276abb2a79974644d692de54cda9a31f118c646c6b823c9da13977f90cf2b",
+  "baseUpdatedAt": "2026-01-21T02:59:11.499Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "लोगो शोकेस की कीमतें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "मुफ़्त में शुरू करें। जब आपको अधिक विजेट और बिना ब्रांडिंग चाहिए, तब अपग्रेड करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "लोगो शोकेस विजेट के लिए सरल मूल्य निर्धारण। मुफ्त में शुरू करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "लोगो शोकेस मूल्य निर्धारण - Clickeen"
+    }
+  ],
+  "v": 1
+}

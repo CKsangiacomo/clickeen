@@ -69,7 +69,8 @@ function resolveLocale(req: Request): { locale: string; explicit: boolean } {
   const first = header.split(',')[0]?.trim() || '';
   const candidate = first.split(';')[0]?.trim() || '';
   const normalized = normalizeLocaleToken(candidate);
-  return { locale: normalized ?? 'en', explicit: false };
+  if (normalized) return { locale: normalized, explicit: true };
+  return { locale: 'en', explicit: false };
 }
 
 function resolveWidgetAssetPath(widgetType: string, raw: string): string {

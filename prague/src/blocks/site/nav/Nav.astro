@@ -14,8 +14,8 @@ type Props = {
 const { title, locale, homeHref = `/${locale}/`, cta, overlay = false } = Astro.props;
 const ctaVariant = cta?.variant ?? 'secondary';
 
-const widgetsLabel = pragueT(locale, 'prague.nav.widgets');
-const viewAllWidgetsLabel = pragueT(locale, 'prague.nav.viewAllWidgets');
+const widgetsLabel = await pragueT(locale, 'prague.nav.widgets');
+const viewAllWidgetsLabel = await pragueT(locale, 'prague.nav.viewAllWidgets');
 
 const mega = await resolveWidgetsMegaMenu({ locale });
 ---

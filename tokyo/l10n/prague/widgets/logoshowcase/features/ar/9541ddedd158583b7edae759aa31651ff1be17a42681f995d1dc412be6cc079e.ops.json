@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "9541ddedd158583b7edae759aa31651ff1be17a42681f995d1dc412be6cc079e",
+  "baseUpdatedAt": "2026-01-21T02:59:11.498Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ميزات عرض الشعارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "سريع ومرن ومصمم ليبدو رائعًا في كل مكان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "سريعة ومرنة ومصممة لتبدو رائعة في كل مكان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ميزات عرض الشعارات - Clickeen"
+    }
+  ],
+  "v": 1
+}

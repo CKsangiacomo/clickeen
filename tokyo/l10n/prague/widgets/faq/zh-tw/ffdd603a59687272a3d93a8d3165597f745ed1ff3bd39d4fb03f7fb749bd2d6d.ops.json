@@ -1,0 +1,77 @@
+{
+  "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "與每位客戶連結，無論身在何處"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI 驅動的 FAQ，以他們的語言溝通並理解他們的需求。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 小工具。精美解答。專為速度而生。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "精緻設計、輕鬆更新與 SEO 基礎——支援任何語言，由 AI 驅動。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "打造專屬於你"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "就在這裡設計你的完美 FAQ。立即查看變更。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "幫助訪客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "打造快速、美觀的 FAQ 小工具。幾分鐘內即可自訂、發佈並進行本地化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 小工具 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "分割創意（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "這是左側視覺版本，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "分割創意（右）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "這是右側視覺變體，使用與主視覺相同的精選實例。"
+    }
+  ],
+  "v": 1
+}

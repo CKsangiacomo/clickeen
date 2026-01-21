@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-21T02:59:11.496Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Crea la tua vetrina di loghi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Inizia gratis. Pubblica quando sei pronto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vetrina dei loghi. Prova sociale immediata."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mostra i loghi dei clienti in modo impeccabile — crea fiducia e aumenta le conversioni."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Provalo dal vivo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Modifica un'istanza demo in Minibob. Pubblica quando sei pronto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Mostra i loghi in modo elegante. Costruisci fiducia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Vetrina loghi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Metti in evidenza i loghi dei clienti con un widget vetrina veloce e flessibile."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget Vetrina Loghi - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Carica i loghi dei tuoi clienti (SVG/PNG) in pochi secondi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Aggiungi loghi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Scegli layout e spaziatura per adattarli al tuo sito."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Disponi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Incolla lo snippet su qualsiasi piattaforma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Incorpora"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Come funziona"
+    }
+  ],
+  "v": 1
+}

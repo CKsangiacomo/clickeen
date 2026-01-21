@@ -143,8 +143,8 @@ else
   node "$ROOT_DIR/scripts/i18n/build.mjs"
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-  echo "[dev-up] Compiling Prague strings (local, no Supabase writes)"
-  node "$ROOT_DIR/scripts/prague-strings/compile.mjs"
+  echo "[dev-up] Verifying Prague l10n overlays (local, no Supabase writes)"
+  node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"
 fi
 
 echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"

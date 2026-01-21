@@ -126,7 +126,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud
   - Instance locale overlays (`PUT/DELETE /api/instances/:publicId/locales/:locale`) enqueue `L10N_PUBLISH_QUEUE`.
   - Per-field manual overrides live in `widget_instance_locales.user_ops`; agent writes update `ops` only.
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
-- Prague website strings use the repo-local `prague-strings/**` pipeline and do not go through Paris.
+- Prague website strings use repo-local base content plus Tokyo-hosted overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`) and do not go through Paris.
 
 # Paris — HTTP API Service (Phase-1)
 

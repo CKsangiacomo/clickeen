@@ -1,8 +1,0 @@
-{
-  "v": 1,
-  "paths": [
-    { "path": "strings.headline", "type": "string" },
-    { "path": "strings.body", "type": "string" }
-  ]
-}
-

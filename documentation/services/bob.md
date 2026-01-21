@@ -371,7 +371,7 @@ bash scripts/dev-up.sh
 It:
 - Builds Dieter into `tokyo/dieter`
 - Builds i18n bundles into `tokyo/i18n`
-- Compiles Prague strings into `prague-strings/compiled`
+- Verifies Prague l10n overlays (repo base + `tokyo/l10n/prague/**`)
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790)
 - Uses **local Supabase by default**; to point local Workers at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`

@@ -1,9 +1,0 @@
-{
-  "v": 1,
-  "paths": [
-    { "path": "strings.title", "type": "string" },
-    { "path": "strings.subhead", "type": "string" },
-    { "path": "strings.items.*.title", "type": "string" },
-    { "path": "strings.items.*.body", "type": "string" }
-  ]
-}

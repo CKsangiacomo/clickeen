@@ -1,0 +1,77 @@
+{
+  "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "모든 고객과 어디서든 연결하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "고객의 언어로 말하고 니즈를 이해하는 AI 기반 FAQ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 위젯. 아름다운 답변. 빠르게 만들었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "세련된 디자인, 손쉬운 업데이트, 그리고 SEO 기반까지—어떤 언어에도 준비되어 있으며 AI로 구동됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "나만의 것으로 만들기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "여기에서 완벽한 FAQ를 디자인해 보세요. 변경 사항을 즉시 확인할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "방문자가 빠르게 답을 찾도록 도와주세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "빠르고 아름다운 FAQ 위젯을 구축하세요. 몇 분 만에 맞춤 설정, 게시, 현지화를 완료할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 위젯 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "분할형 크리에이티브(왼쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "히어로와 동일한 큐레이션된 인스턴스를 사용하는 왼쪽 비주얼 변형입니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "크리에이티브 분할(오른쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "이는 오른쪽 비주얼 변형으로, 히어로와 동일한 큐레이션된 인스턴스를 사용합니다."
+    }
+  ],
+  "v": 1
+}

@@ -10,6 +10,17 @@ export type InstanceOverlay = {
   ops: LocalizationOp[];
 };
 
+type LocaleIndexEntry = {
+  locale: string;
+  geoCountries?: string[] | null;
+};
+
+type LocaleIndex = {
+  v: 1;
+  publicId: string;
+  locales: LocaleIndexEntry[];
+};
+
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 
 function hasProhibitedSegment(path: string): boolean {
@@ -88,13 +99,72 @@ async function fetchOverlay(publicId: string, locale: string, baseFingerprint: s
   return null;
 }
 
+function normalizeCountryCode(raw?: string | null): string | null {
+  const value = String(raw || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(value)) return null;
+  return value;
+}
+
+function normalizeGeoCountries(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const list = raw
+    .map((code) => String(code || '').trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
+  if (!list.length) return null;
+  return Array.from(new Set(list));
+}
+
+async function fetchLocaleIndex(publicId: string): Promise<LocaleIndex | null> {
+  const res = await tokyoFetch(`/l10n/instances/${encodeURIComponent(publicId)}/index.json`, { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as LocaleIndex | null;
+  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.locales)) return null;
+  return json;
+}
+
+function resolveLocaleFromIndex(args: { index: LocaleIndex; locale: string; country?: string | null }): string | null {
+  if (!args.index.locales.length) return null;
+  const supported = new Set(
+    args.index.locales
+      .map((entry) => normalizeLocaleToken(entry.locale))
+      .filter((value): value is string => Boolean(value)),
+  );
+
+  const country = normalizeCountryCode(args.country);
+  if (country) {
+    for (const entry of args.index.locales) {
+      const locale = normalizeLocaleToken(entry.locale);
+      if (!locale) continue;
+      const geoCountries = normalizeGeoCountries(entry.geoCountries);
+      if (geoCountries && geoCountries.includes(country)) {
+        return locale;
+      }
+    }
+  }
+
+  const preferredCandidates = localeCandidates(args.locale, supported);
+  if (preferredCandidates.length) return preferredCandidates[0]!;
+
+  if (supported.has('en')) return 'en';
+  return args.index.locales
+    .map((entry) => normalizeLocaleToken(entry.locale))
+    .find((value): value is string => Boolean(value)) ?? null;
+}
+
 export async function resolveTokyoLocale(args: {
   publicId: string;
   locale: string;
   explicit: boolean;
   country?: string | null;
 }): Promise<string> {
-  return args.locale;
+  const normalized = normalizeLocaleToken(args.locale) ?? 'en';
+  if (args.explicit) return normalized;
+
+  const index = await fetchLocaleIndex(args.publicId).catch(() => null);
+  if (!index) return normalized;
+
+  return resolveLocaleFromIndex({ index, locale: normalized, country: args.country }) ?? normalized;
 }
 
 export async function applyTokyoInstanceOverlay(args: {

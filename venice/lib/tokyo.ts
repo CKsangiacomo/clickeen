@@ -19,7 +19,7 @@ export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
   try {
     const headers = new Headers(init.headers as HeadersInit);
     if (!headers.has('X-Request-ID')) headers.set('X-Request-ID', crypto.randomUUID());
-    return await fetch(url, { ...init, headers, signal: controller.signal, cache: 'no-store' });
+    return await fetch(url, { ...init, headers, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }

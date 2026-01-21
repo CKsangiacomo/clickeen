@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.491Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "قوالب العدّ التنازلي - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "تصفّح قوالب أداة العدّ التنازلي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "قوالب العدّ التنازلي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "تخطيطات جاهزة لحالات الاستخدام الشائعة للعدّ التنازلي."
+    }
+  ],
+  "v": 1
+}

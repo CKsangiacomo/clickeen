@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Veelgestelde Vragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle Vragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Is er een gratis abonnement?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wat is Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Hoe installeer ik een widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Waarom zou ik Clickeen gebruiken"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ja, één actieve widget met kernfuncties."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Insluitbare widgets met ingebouwde conversies."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kopieer de insluitcode en plak deze vóór </body> op je site."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Omdat Clickeen een geweldig nieuw platform is om het web mooi en gebruiksvriendelijk te maken."
+    }
+  ]
+}

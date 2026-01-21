@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-21T02:59:11.496Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "अपना लोगो शोकेस बनाएं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "मुफ़्त में शुरू करें। जब आप तैयार हों, तब प्रकाशित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "लोगो शोकेस। तुरंत सामाजिक प्रमाण।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ग्राहक लोगो को खूबसूरती से दिखाएँ -- भरोसा बनाएँ और रूपांतरण बढ़ाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "लाइव आज़माएँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Minibob में डेमो इंस्टेंस संपादित करें। जब आप तैयार हों, तब प्रकाशित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "लोगो को खूबसूरती से दिखाएँ। भरोसा बनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "लोगो शोकेस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "तेज़, लचीले शोकेस विजेट के साथ ग्राहक लोगो को हाइलाइट करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "लोगो शोकेस विजेट - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "अपने ग्राहक लोगो (SVG/PNG) कुछ ही सेकंड में अपलोड करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "लोगो जोड़ें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "अपनी साइट के अनुसार लेआउट + स्पेसिंग चुनें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "व्यवस्थित करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "किसी भी प्लेटफ़ॉर्म में स्निपेट पेस्ट करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "एंबेड करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "यह कैसे काम करता है"
+    }
+  ],
+  "v": 1
+}

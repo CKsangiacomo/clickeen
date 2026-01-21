@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Häufig gestellte Fragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle Fragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Gibt es einen kostenlosen Plan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Was ist Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Wie installiere ich ein Widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Warum sollte ich Clickeen verwenden?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ja, ein aktives Widget mit Kernfunktionen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Einbettbare Widgets mit integrierten Konversionen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
+    }
+  ],
+  "v": 1
+}

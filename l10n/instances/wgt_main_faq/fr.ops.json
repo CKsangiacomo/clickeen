@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Questions Fréquemment Posées"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Toutes les Questions"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Existe-t-il un plan gratuit ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Qu'est-ce que Clickeen ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Comment installer un widget ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Pourquoi devrais-je utiliser Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oui, un widget actif avec les fonctionnalités de base."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Widgets intégrables avec des conversions intégrées."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Copiez le code d'intégration et collez-le avant </body> sur votre site."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Parce que Clickeen est une nouvelle plateforme incroyable pour rendre le web beau et facile à utiliser."
+    }
+  ]
+}

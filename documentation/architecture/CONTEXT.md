@@ -236,7 +236,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
 - Instance/content translation uses Tokyo-hosted `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops).
-- Prague marketing strings use repo-local `prague-strings/**` (base + overlays + compiled outputs), not Supabase/Tokyo.
+- Prague marketing strings use repo-local base content (`prague/content/base/**`) with ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest).
 - Canonical overlay truth for instances lives in Supabase (`widget_instance_locales`) with per-field manual overrides stored in `user_ops` and merged at publish time.
 
 Canonical reference:

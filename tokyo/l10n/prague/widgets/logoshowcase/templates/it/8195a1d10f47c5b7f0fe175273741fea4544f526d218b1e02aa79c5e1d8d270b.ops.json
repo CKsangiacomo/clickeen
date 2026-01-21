@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "8195a1d10f47c5b7f0fe175273741fea4544f526d218b1e02aa79c5e1d8d270b",
+  "baseUpdatedAt": "2026-01-21T02:59:11.500Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Modelli di vetrina loghi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Parti da un layout curato, poi rendilo tuo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Parti da un layout curato e personalizza la tua vetrina di loghi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Template per vetrina di loghi - Clickeen"
+    }
+  ],
+  "v": 1
+}

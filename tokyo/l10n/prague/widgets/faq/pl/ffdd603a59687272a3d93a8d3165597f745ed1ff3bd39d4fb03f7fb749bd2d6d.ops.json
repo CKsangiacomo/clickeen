@@ -1,0 +1,77 @@
+{
+  "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Nawiąż kontakt z każdym klientem, wszędzie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ oparte na AI, które mówi ich językiem i rozumie ich potrzeby."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widżet FAQ. Piękne odpowiedzi. Stworzony, by działać szybko."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dopracowany design, bezproblemowe aktualizacje i podstawy SEO — gotowe na każdy język, napędzane przez AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Dostosuj do siebie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Zaprojektuj idealną sekcję FAQ tutaj. Zobacz zmiany natychmiast."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomóż odwiedzającym szybko znaleźć odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Stwórz szybki i piękny widget FAQ. Dostosuj, opublikuj i zlokalizuj w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Split kreatywny (lewy)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "To wariant z wizualizacją po lewej stronie, korzystający z tej samej wyselekcjonowanej instancji co hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Kreatywny podział (prawa strona)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "To wariant z grafiką po prawej stronie, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    }
+  ],
+  "v": 1
+}

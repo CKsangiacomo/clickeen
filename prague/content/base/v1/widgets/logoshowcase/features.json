@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "Logo Showcase Features",
+        "subheadline": "Fast, flexible, and designed to look great everywhere."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Fast, flexible, and designed to look great everywhere.",
+        "title": "Logo Showcase Features - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/logoshowcase/features",
+  "v": 1
+}

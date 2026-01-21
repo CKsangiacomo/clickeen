@@ -1,0 +1,48 @@
+{
+  "locales": [
+    {
+      "locale": "ar"
+    },
+    {
+      "locale": "de"
+    },
+    {
+      "locale": "en"
+    },
+    {
+      "locale": "es"
+    },
+    {
+      "locale": "fr"
+    },
+    {
+      "locale": "hi"
+    },
+    {
+      "locale": "it"
+    },
+    {
+      "locale": "ja"
+    },
+    {
+      "locale": "ko"
+    },
+    {
+      "locale": "nl"
+    },
+    {
+      "locale": "pl"
+    },
+    {
+      "locale": "pt"
+    },
+    {
+      "locale": "tr"
+    },
+    {
+      "locale": "zh-tw"
+    }
+  ],
+  "publicId": "wgt_curated_faq.lightblurs.v01",
+  "v": 1
+}

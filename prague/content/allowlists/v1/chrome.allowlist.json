@@ -1,0 +1,165 @@
+{
+  "paths": [
+    {
+      "path": "strings.nav.widgets",
+      "type": "string"
+    },
+    {
+      "path": "strings.nav.viewAllWidgets",
+      "type": "string"
+    },
+    {
+      "path": "strings.tabs.overview",
+      "type": "string"
+    },
+    {
+      "path": "strings.tabs.templates",
+      "type": "string"
+    },
+    {
+      "path": "strings.tabs.examples",
+      "type": "string"
+    },
+    {
+      "path": "strings.tabs.features",
+      "type": "string"
+    },
+    {
+      "path": "strings.tabs.pricing",
+      "type": "string"
+    },
+    {
+      "path": "strings.cta.createFree",
+      "type": "string"
+    },
+    {
+      "path": "strings.cta.seeTemplates",
+      "type": "string"
+    },
+    {
+      "path": "strings.common.comingSoon",
+      "type": "string"
+    },
+    {
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.share",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.copy",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.copied",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.more",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.sms",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.email",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.whatsapp",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.telegram",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.signal",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.messenger",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.wechat",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.line",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.slack",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.teams",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.discord",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.x",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.linkedin",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.facebook",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.reddit",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.instagram",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.tiktok",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.title",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.text",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.sectionMessageTitle",
+      "type": "string"
+    },
+    {
+      "path": "strings.share.sectionSocialTitle",
+      "type": "string"
+    },
+    {
+      "path": "strings.footer.brand",
+      "type": "string"
+    },
+    {
+      "path": "strings.footer.pricing",
+      "type": "string"
+    },
+    {
+      "path": "strings.footer.widgets",
+      "type": "string"
+    },
+    {
+      "path": "strings.footer.rights",
+      "type": "string"
+    }
+  ],
+  "v": 1
+}

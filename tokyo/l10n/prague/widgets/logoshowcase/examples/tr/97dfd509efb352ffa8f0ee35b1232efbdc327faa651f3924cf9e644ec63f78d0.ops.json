@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "97dfd509efb352ffa8f0ee35b1232efbdc327faa651f3924cf9e644ec63f78d0",
+  "baseUpdatedAt": "2026-01-21T02:59:11.497Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo Vitrini Örnekleri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Yaygın yerleşimleri ve kullanım örneklerini görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Yaygın logo vitrini yerleşimlerini ve kullanım senaryolarını görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo Vitrini Örnekleri - Clickeen"
+    }
+  ],
+  "v": 1
+}

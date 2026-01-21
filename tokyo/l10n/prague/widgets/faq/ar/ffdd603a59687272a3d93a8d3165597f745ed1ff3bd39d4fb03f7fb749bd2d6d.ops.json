@@ -1,0 +1,77 @@
+{
+  "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "تواصل مع كل عميل، في كل مكان"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "أسئلة شائعة مدعومة بالذكاء الاصطناعي تتحدث لغتهم وتفهم احتياجاتهم."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ودجت الأسئلة الشائعة. إجابات جميلة. مصمم ليكون سريعًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "تصميم مصقول، تحديثات بلا عناء، وأساسيات تحسين محركات البحث--جاهزة لأي لغة، ومدعومة بالذكاء الاصطناعي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "اجعله خاصًا بك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "صمّم صفحة الأسئلة الشائعة المثالية هنا. شاهد التغييرات فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ساعد الزوار على العثور على الإجابات بسرعة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "أنشئ أداة أسئلة شائعة سريعة وجميلة. خصّصها وانشرها وقم بتوطينها خلال دقائق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أداة الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "تقسيم إبداعي (يسار)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "هذه هي النسخة ذات العرض المرئي على اليسار، وتستخدم نفس المثال المنتقى كما في قسم البطل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "تقسيم إبداعي (يمين)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "هذه هي النسخة ذات العنصر البصري على اليمين، وتستخدم نفس النسخة المُنسَّقة كما في قسم البطل."
+    }
+  ],
+  "v": 1
+}

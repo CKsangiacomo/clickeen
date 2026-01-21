@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "FAQ Examples",
+        "subheadline": "See real-world use cases and best practices."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "See real-world FAQ widget examples and best practices.",
+        "title": "FAQ Examples - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/faq/examples",
+  "v": 1
+}

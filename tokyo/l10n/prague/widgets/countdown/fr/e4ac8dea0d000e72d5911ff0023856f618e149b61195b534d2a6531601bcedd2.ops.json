@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-21T02:59:11.487Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget de compte à rebours - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Créez un sentiment d'urgence avec des compteurs à rebours personnalisables. Lancez, vendez et annoncez en toute confiance."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget de compte à rebours"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Créez un sentiment d’urgence et incitez à l’action avec des comptes à rebours rapides et flexibles."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Compte à rebours"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ajoutez un sentiment d'urgence grâce à des minuteurs flexibles."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Essayez-le en direct"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Modifiez une instance de démonstration dans Minibob. Publiez quand vous êtes prêt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget de compte à rebours"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Créez un sentiment d’urgence et incitez à l’action grâce à des comptes à rebours personnalisables."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Modes de minuterie flexibles"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Compteurs basés sur une date, personnels ou numériques pour tous les scénarios."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Transformer l’attention en action"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Utilisez des minuteurs adaptés aux lancements, aux ventes, aux événements et aux objectifs personnels. Réglez-le une fois et laissez-le fonctionner partout."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Personnalisation facile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Ajustez l’apparence, la mise en page et les actions pour correspondre à votre marque."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Lancez plus vite avec des comptes à rebours"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "De la configuration à la publication en quelques minutes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Choisissez votre minuteur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Adaptez-vous à votre marque"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publiez et localisez"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Choisissez un compteur basé sur une date, un compte à rebours permanent ou un compteur numérique selon votre cas d’usage."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Personnalisez les couleurs, les libellés et la mise en page pour s’adapter à n’importe quel site."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Passez en ligne rapidement et touchez des audiences internationales grâce à la localisation intégrée."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Augmentez les conversions"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Encouragez une action immédiate grâce à des offres à durée limitée."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Optimisé pour le SEO et le GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Prise en charge intégrée des schémas et de la localisation."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Créez un sentiment d’urgence, augmentez les ventes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Des minuteurs de compte à rebours performants qui transforment les visiteurs en clients."
+    }
+  ],
+  "v": 1
+}

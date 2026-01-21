@@ -33,6 +33,7 @@ const pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageM
 if (!pageTitle || !pageDescription) {
   throw new Error(`[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (page-meta.copy.title/description required)`);
 }
+const createFreeLabel = await pragueT(locale, 'prague.cta.createFree');
 ---
 
 <Base title={pageTitle} description={pageDescription} locale={locale}>
@@ -42,7 +43,7 @@ if (!pageTitle || !pageDescription) {
       locale={locale}
       homeHref={`/${locale}/`}
       overlay={hasHero}
-      cta={{ label: pragueT(locale, 'prague.cta.createFree'), href: `/${locale}/create`, variant: 'primary' }}
+      cta={{ label: createFreeLabel, href: `/${locale}/create`, variant: 'primary' }}
     />
 
     <WidgetBlocks blocks={blocks} widget={widget} locale={locale} activeSubpage="overview" />

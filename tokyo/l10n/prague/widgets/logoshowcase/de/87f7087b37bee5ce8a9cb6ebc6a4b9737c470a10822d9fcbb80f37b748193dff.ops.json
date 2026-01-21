@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-21T02:59:11.496Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Erstellen Sie Ihre Logo-Präsentation"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kostenlos starten. Veröffentlichen, wenn Sie bereit sind."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo-Showcase. Sofortiger sozialer Beweis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kundenlogos ansprechend präsentieren – Vertrauen aufbauen und Conversions steigern."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Live ausprobieren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Bearbeite eine Demo-Instanz in Minibob. Veröffentliche, wenn du bereit bist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Logos schön präsentieren. Vertrauen aufbauen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Logo-Präsentation"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Heben Sie Kundenlogos mit einem schnellen, flexiblen Showcase-Widget hervor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo-Showcase-Widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Laden Sie Ihre Kundenlogos (SVG/PNG) in Sekundenschnelle hoch."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Logos hinzufügen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Wählen Sie Layout + Abstände passend zu Ihrer Website."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Anordnen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Fügen Sie das Snippet in jede Plattform ein."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Einbetten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "So funktioniert’s"
+    }
+  ],
+  "v": 1
+}

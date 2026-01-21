@@ -14,8 +14,8 @@ function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function resolveProvider(args: { allowedProviders: AiProvider[]; defaultProviders: AiProvider[]; selectedProvider?: string }): AiProvider {
-  const allowed = args.allowedProviders.length ? args.allowedProviders : args.defaultProviders;
+function resolveProvider(args: { allowedProviders: AiProvider[]; defaultProvider: AiProvider; selectedProvider?: string }): AiProvider {
+  const allowed = args.allowedProviders;
   if (!allowed.length) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'No providers available' });
   }
@@ -28,8 +28,8 @@ function resolveProvider(args: { allowedProviders: AiProvider[]; defaultProvider
     return selected as AiProvider;
   }
 
-  const preferred = args.defaultProviders.find((provider) => allowed.includes(provider));
-  return preferred ?? allowed[0]!;
+  if (allowed.includes(args.defaultProvider)) return args.defaultProvider;
+  return allowed[0]!;
 }
 
 function resolveModelForProvider(env: Env, provider: AiProvider, selectedModel?: string): string {
@@ -53,7 +53,7 @@ export function resolveModelSelection(args: { env: Env; grant: AIGrant; agentId:
 
   const provider = resolveProvider({
     allowedProviders,
-    defaultProviders: entry.defaultProviders as AiProvider[],
+    defaultProvider: entry.defaultProvider as AiProvider,
     selectedProvider,
   });
 

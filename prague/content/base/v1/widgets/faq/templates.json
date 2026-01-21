@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "FAQ Templates",
+        "subheadline": "Start from a proven layout -- then tailor it to your brand."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Explore FAQ templates and start from a proven layout.",
+        "title": "FAQ Templates - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/faq/templates",
+  "v": 1
+}

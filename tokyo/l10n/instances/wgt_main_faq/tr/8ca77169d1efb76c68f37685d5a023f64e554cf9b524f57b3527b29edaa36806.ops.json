@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Sıkça Sorulan Sorular"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Tüm Sorular"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ücretsiz bir plan var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Clickeen nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Bir widget nasıl kurulur?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Neden Clickeen kullanmalıyım?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Yerleşik dönüşümlerle gömülebilir widget'lar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Gömme kodunu kopyalayın ve sitenizde </body> etiketinden önce yapıştırın."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Çünkü Clickeen, web'i güzel ve kullanımı kolay hale getirmek için harika bir yeni platformdur."
+    }
+  ],
+  "v": 1
+}

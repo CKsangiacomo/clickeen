@@ -27,6 +27,7 @@
 - Reads `widget_instance_locales` from Supabase.
 - Merges `ops + user_ops` (user_ops applied last).
 - Writes `tokyo/l10n/instances/<publicId>/<locale>/<baseFingerprint>.ops.json`.
+- Writes `tokyo/l10n/instances/<publicId>/index.json` for locale selection + geo targeting.
 - Marks publish state clean in `l10n_publish_state`.
 - Records versions in `l10n_overlay_versions` and prunes older versions per tier.
 
@@ -37,7 +38,7 @@
 ## Rules
 - Overlay files are set-only ops with `baseFingerprint` (required).
 - `publicId` is locale-free; locale is a runtime parameter.
-- Prague website strings are not handled here; they use the repo-local `prague-strings/**` pipeline.
+- Prague website strings are not handled here; they are published by `scripts/prague-l10n/*` into `tokyo/l10n/prague/**` (repo-owned base + ops overlays).
 
 ## Links
 - Tokyo: `documentation/services/tokyo.md`

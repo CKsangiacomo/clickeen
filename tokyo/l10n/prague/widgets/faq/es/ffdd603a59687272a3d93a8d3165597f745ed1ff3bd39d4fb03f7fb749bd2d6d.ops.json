@@ -1,0 +1,77 @@
+{
+  "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
+  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Conecta con cada cliente, en todas partes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Preguntas frecuentes impulsadas por IA que hablan su idioma y entienden sus necesidades."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget de preguntas frecuentes. Respuestas impecables. Diseñado para ser rápido."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Diseño pulido, actualizaciones sin esfuerzo y bases de SEO: listo para cualquier idioma, impulsado por IA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Hazlo tuyo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Diseña aquí mismo tu FAQ perfecto. Ve los cambios al instante."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ayuda a los visitantes a encontrar respuestas rápidamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Crea un widget de FAQ rápido y atractivo. Personaliza, publica y localiza en minutos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Creativo dividido (izquierda)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Esta es la variante visual izquierda, que utiliza la misma instancia seleccionada que el héroe."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "División creativa (derecha)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Esta es la variante con el elemento visual a la derecha, que utiliza la misma instancia seleccionada que el hero."
+    }
+  ],
+  "v": 1
+}

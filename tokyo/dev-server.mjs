@@ -101,7 +101,7 @@ function normalizeCuratedPublicId(raw) {
 function normalizeLocale(raw) {
   const v = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
   if (!v) return null;
-  if (!/^[a-z]{2}(?:-[a-z]{2})?$/.test(v)) return null;
+  if (!/^[a-z]{2}(?:-[a-z0-9]+)*$/.test(v)) return null;
   return v;
 }
 
@@ -135,8 +135,78 @@ function prettyStableJson(value) {
   return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
-function sha8(value) {
-  return crypto.createHash('sha256').update(value).digest('hex').slice(0, 8);
+function loadLocaleIndex(publicId) {
+  const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
+  if (!fs.existsSync(indexPath)) return null;
+  const json = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.locales)) {
+    throw new Error('[tokyo-dev] invalid l10n index');
+  }
+  return json;
+}
+
+function writeLocaleIndex(publicId, locales) {
+  const indexDir = path.join(baseDir, 'l10n', 'instances', publicId);
+  ensureDir(indexDir);
+  const payload = { v: 1, publicId, locales };
+  fs.writeFileSync(path.join(indexDir, 'index.json'), prettyStableJson(payload), 'utf8');
+}
+
+function deleteLocaleIndex(publicId) {
+  const indexPath = path.join(baseDir, 'l10n', 'instances', publicId, 'index.json');
+  if (fs.existsSync(indexPath)) fs.unlinkSync(indexPath);
+}
+
+function assertLocaleIndexShape(payload, publicId) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('[tokyo-dev] index must be an object');
+  }
+  if (payload.v !== 1) throw new Error('[tokyo-dev] index.v must be 1');
+  if (payload.publicId && String(payload.publicId) !== publicId) {
+    throw new Error('[tokyo-dev] index.publicId mismatch');
+  }
+  if (!Array.isArray(payload.locales)) {
+    throw new Error('[tokyo-dev] index.locales must be an array');
+  }
+
+  const locales = [];
+  const seen = new Set();
+  for (const entry of payload.locales) {
+    if (!entry || typeof entry !== 'object') continue;
+    const locale = normalizeLocale(entry.locale);
+    if (!locale || seen.has(locale)) continue;
+    seen.add(locale);
+    const geoCountries = normalizeGeoCountries(entry.geoCountries);
+    locales.push(geoCountries ? { locale, geoCountries } : { locale });
+  }
+
+  locales.sort((a, b) => a.locale.localeCompare(b.locale));
+  return { v: 1, publicId, locales };
+}
+
+function updateLocaleIndexEntry(publicId, locale, geoCountries) {
+  const normalizedLocale = normalizeLocale(locale);
+  if (!normalizedLocale) return;
+  const normalizedGeo = normalizeGeoCountries(geoCountries);
+  const existing = loadLocaleIndex(publicId);
+  const nextLocales = existing?.locales?.filter((entry) => normalizeLocale(entry.locale) !== normalizedLocale) || [];
+  nextLocales.push(normalizedGeo ? { locale: normalizedLocale, geoCountries: normalizedGeo } : { locale: normalizedLocale });
+  nextLocales.sort((a, b) => a.locale.localeCompare(b.locale));
+  writeLocaleIndex(publicId, nextLocales);
+}
+
+function removeLocaleIndexEntry(publicId, locale) {
+  const normalizedLocale = normalizeLocale(locale);
+  if (!normalizedLocale) return;
+  const existing = loadLocaleIndex(publicId);
+  if (!existing) return;
+  const nextLocales = existing.locales.filter((entry) => normalizeLocale(entry.locale) !== normalizedLocale);
+  if (!nextLocales.length) {
+    deleteLocaleIndex(publicId);
+    return;
+  }
+  nextLocales.sort((a, b) => a.locale.localeCompare(b.locale));
+  writeLocaleIndex(publicId, nextLocales);
 }
 
 function assertOverlayShape(payload) {
@@ -169,31 +239,12 @@ function assertOverlayShape(payload) {
   return { v: 1, baseUpdatedAt, baseFingerprint, ops };
 }
 
-function loadL10nManifest() {
-  const manifestPath = path.join(baseDir, 'l10n', 'manifest.json');
-  if (!fs.existsSync(manifestPath)) {
-    return { v: 1, gitSha: 'runtime', instances: {} };
-  }
-  const raw = fs.readFileSync(manifestPath, 'utf8');
-  const json = JSON.parse(raw);
-  if (!json || typeof json !== 'object' || json.v !== 1 || typeof json.gitSha !== 'string' || typeof json.instances !== 'object') {
-    throw new Error('[tokyo-dev] invalid l10n manifest');
-  }
-  return json;
-}
-
-function saveL10nManifest(manifest) {
-  ensureDir(path.join(baseDir, 'l10n'));
-  const manifestPath = path.join(baseDir, 'l10n', 'manifest.json');
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-}
-
-function cleanOldL10nOutputs(outDir, locale, keepFile) {
+function cleanOldL10nOutputs(outDir, keepFile) {
   if (!fs.existsSync(outDir)) return;
   const files = fs.readdirSync(outDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
   for (const file of files) {
     if (file === keepFile) continue;
-    if (file.startsWith(`${locale}.`) && file.endsWith('.ops.json')) {
+    if (file.endsWith('.ops.json')) {
       fs.unlinkSync(path.join(outDir, file));
     }
   }
@@ -238,14 +289,21 @@ function serveStatic(req, res, prefix) {
   const cacheControlFor = () => {
     // Cache policy:
     // - Workspace uploads are content-addressed by assetId; cache aggressively to avoid "flash" on load.
-    // - i18n/l10n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
+    // - i18n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
+    // - l10n overlays are content-addressed; cache aggressively (index.json is short-TTL).
     // - Dieter/widget assets are edited frequently in dev; allow caching but require revalidation to avoid staleness.
     if (prefix === '/workspace-assets/') {
       return 'public, max-age=31536000, immutable';
     }
-    if (prefix === '/i18n/' || prefix === '/l10n/') {
+    if (prefix === '/i18n/') {
       if (relativePathPosix.endsWith('/manifest.json')) {
         return 'public, max-age=60, must-revalidate';
+      }
+      return 'public, max-age=31536000, immutable';
+    }
+    if (prefix === '/l10n/') {
+      if (relativePathPosix.endsWith('/index.json')) {
+        return 'public, max-age=300, stale-while-revalidate=600';
       }
       return 'public, max-age=31536000, immutable';
     }
@@ -366,6 +424,18 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'DELETE' && pathname.startsWith('/l10n/instances/')) {
     (async () => {
+      const indexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
+      if (indexMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(indexMatch[1]));
+        if (!publicId) {
+          sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
+          return;
+        }
+        deleteLocaleIndex(publicId);
+        sendJson(res, 200, { publicId, deleted: true });
+        return;
+      }
+
       const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
       if (!match) {
         sendJson(res, 404, { error: 'NOT_FOUND' });
@@ -378,28 +448,22 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const outDir = path.join(baseDir, 'l10n', 'instances', publicId);
+      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, locale);
       let removed = false;
-      if (fs.existsSync(outDir)) {
-        const files = fs.readdirSync(outDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
+      if (fs.existsSync(localeDir)) {
+        const files = fs.readdirSync(localeDir, { withFileTypes: true }).filter((d) => d.isFile()).map((d) => d.name);
         for (const file of files) {
-          if (file.startsWith(`${locale}.`) && file.endsWith('.ops.json')) {
-            fs.unlinkSync(path.join(outDir, file));
+          if (file.endsWith('.ops.json')) {
+            fs.unlinkSync(path.join(localeDir, file));
             removed = true;
           }
         }
+        if (fs.readdirSync(localeDir).length === 0) {
+          fs.rmdirSync(localeDir);
+        }
       }
 
-      const manifest = loadL10nManifest();
-      const locales = manifest.instances?.[publicId];
-      if (locales && typeof locales === 'object' && locales[locale]) {
-        delete locales[locale];
-        removed = true;
-        if (Object.keys(locales).length === 0) {
-          delete manifest.instances[publicId];
-        }
-        saveL10nManifest(manifest);
-      }
+      removeLocaleIndexEntry(publicId, locale);
 
       sendJson(res, 200, { publicId, locale, deleted: removed });
     })().catch((err) => {
@@ -412,6 +476,41 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST' && pathname.startsWith('/l10n/instances/')) {
     (async () => {
+      const indexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
+      if (indexMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(indexMatch[1]));
+        if (!publicId) {
+          sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
+          return;
+        }
+        let payload;
+        try {
+          const body = await readRequestBody(req);
+          payload = JSON.parse(body.toString('utf8'));
+        } catch (err) {
+          sendJson(res, 422, { error: 'INVALID_JSON' });
+          return;
+        }
+
+        let index;
+        try {
+          index = assertLocaleIndexShape(payload, publicId);
+        } catch (err) {
+          sendJson(res, 422, { error: 'INVALID_INDEX', detail: err instanceof Error ? err.message : String(err) });
+          return;
+        }
+
+        if (!index.locales.length) {
+          deleteLocaleIndex(publicId);
+          sendJson(res, 200, { publicId, locales: [] });
+          return;
+        }
+
+        writeLocaleIndex(publicId, index.locales);
+        sendJson(res, 200, { publicId, locales: index.locales });
+        return;
+      }
+
       const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)$/);
       if (!match) {
         sendJson(res, 404, { error: 'NOT_FOUND' });
@@ -441,23 +540,13 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const geoCountries = normalizeGeoCountries(payload.geoCountries);
       const stable = prettyStableJson(overlay);
-      const hash = sha8(stable);
-      const outName = `${locale}.${hash}.ops.json`;
-      const outDir = path.join(baseDir, 'l10n', 'instances', publicId);
-      ensureDir(outDir);
-      fs.writeFileSync(path.join(outDir, outName), stable, 'utf8');
-      cleanOldL10nOutputs(outDir, locale, outName);
-
-      const manifest = loadL10nManifest();
-      manifest.instances[publicId] = manifest.instances[publicId] || {};
-      manifest.instances[publicId][locale] = {
-        file: outName,
-        baseUpdatedAt: overlay.baseUpdatedAt ?? null,
-        ...(geoCountries ? { geoCountries } : {}),
-      };
-      saveL10nManifest(manifest);
+      const outName = `${overlay.baseFingerprint}.ops.json`;
+      const localeDir = path.join(baseDir, 'l10n', 'instances', publicId, locale);
+      ensureDir(localeDir);
+      fs.writeFileSync(path.join(localeDir, outName), stable, 'utf8');
+      cleanOldL10nOutputs(localeDir, outName);
+      updateLocaleIndexEntry(publicId, locale, payload.geoCountries);
 
       sendJson(res, 200, { publicId, locale, file: outName });
     })().catch((err) => {

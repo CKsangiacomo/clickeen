@@ -41,11 +41,11 @@
 - Generates set-only ops and writes to Paris (`widget_instance_locales.ops`).
 - Paris preserves `user_ops` and enqueues publish to Tokyo-worker.
 
-## Prague strings translation (local-only)
+## Prague localization translation (local-only)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT=local`).
 - Auth: `Authorization: Bearer ${PARIS_DEV_JWT}`.
-- Used by `scripts/prague-strings/translate.mjs` to translate Prague base chunks.
-- Returns translated items; the caller writes overlay files under `prague-strings/overlays/**`.
+- Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
+- Returns translated items; the caller writes overlay files under `tokyo/l10n/prague/**`.
 - Provider: OpenAI (`OPENAI_API_KEY`, `OPENAI_MODEL`).
 
 ## Rules

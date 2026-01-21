@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-21T02:59:11.487Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Countdown-Widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Schaffen Sie Dringlichkeit mit anpassbaren Countdown-Timern. Starten, verkaufen und kündigen Sie mit Vertrauen an."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Countdown-Timer-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Erzeuge Dringlichkeit und fördere Handlungen mit schnellen, flexiblen Countdowns."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Erzeugen Sie Dringlichkeit mit flexiblen Timern."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Live ausprobieren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Bearbeite eine Demo-Instanz in Minibob. Veröffentliche, wenn du bereit bist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Countdown-Timer-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Schaffen Sie Dringlichkeit und fördern Sie Handlungen mit anpassbaren Countdown-Timern."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Flexible Timer-Modi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Datumsbasiert, personalisiert oder Zahlenzähler für jedes Szenario."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Verwandle Aufmerksamkeit in Handlung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Nutze Timer, die zu Launches, Sales, Events und persönlichen Zielen passen. Einmal einstellen und überall laufen lassen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Einfache Anpassung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Passe Erscheinungsbild, Layout und Aktionen an, damit sie zu deiner Marke passen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Schneller starten mit Countdowns"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Von der Einrichtung bis zur Veröffentlichung in Minuten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Wähle deinen Timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Passend zu deiner Marke"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Veröffentlichen und lokalisieren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Wähle Datums-, Evergreen- oder Zahlen-Countdowns für deinen Anwendungsfall."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Passe Farben, Beschriftungen und Layout an, damit es zu jeder Website passt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Geh schnell live und erreiche globale Zielgruppen mit integrierter Lokalisierung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Conversions steigern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Fördern Sie sofortiges Handeln mit zeitlich begrenzten Angeboten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO- und GEO-optimiert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Integriertes Schema und Unterstützung für Lokalisierung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Dringlichkeit erzeugen, Verkäufe steigern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Leistungsstarke Countdown-Timer, die Besucher in Kunden verwandeln."
+    }
+  ],
+  "v": 1
+}

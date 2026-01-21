@@ -59,7 +59,7 @@ Core columns:
 - `base_fingerprint` (text) — required staleness guard (sha256)
 - `base_updated_at` (timestamptz, nullable) — metadata only
 - `source` (text) — `agent` | `manual` | `import`
-- `geo_countries` (text[], nullable) — optional locale geo targeting
+- `geo_countries` (text[], nullable) — optional locale geo targeting (used by Venice via Tokyo `index.json`)
 - `workspace_id` (uuid, nullable) — required for user instances, null for curated
 - `updated_at`, `created_at` (timestamptz)
 

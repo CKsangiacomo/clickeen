@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 /**
- * Prague localization pipeline (v1) - deprecated.
+ * Prague localization pipeline (legacy) - deprecated.
  *
- * Use the prague-strings pipeline instead:
- *   pnpm prague:strings:translate
- *   pnpm prague:strings:compile
+ * Use the Prague l10n pipeline instead:
+ *   pnpm prague:l10n:translate
+ *   pnpm prague:l10n:verify
  */
 
-console.error('[prague-localize] Deprecated. Use prague-strings pipeline instead.');
+console.error('[prague-localize] Deprecated. Use prague-l10n pipeline instead.');
 process.exit(1);
 
 import fs from 'node:fs/promises';

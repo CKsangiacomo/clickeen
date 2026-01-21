@@ -1,9 +1,8 @@
 import type { AIGrant, Env, ExecuteRequest, ExecuteResponse, InteractionEvent, OutcomeAttachRequest, Usage } from './types';
-import { resolveAiAgent } from '@clickeen/ck-policy';
+import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
 import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
 import { executeSdrCopilot } from './agents/sdrCopilot';
-import { executeEditorFaqAnswer } from './agents/editorFaqAnswer';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
@@ -197,9 +196,30 @@ type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Pro
 const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
   'sdr.copilot': executeSdrCopilot,
   'cs.copilot.v1': executeSdrWidgetCopilot,
-  'editor.faq.answer.v1': executeEditorFaqAnswer,
   'debug.grantProbe': executeDebugGrantProbe,
 };
+
+const EXECUTABLE_AGENT_IDS = new Set(
+  listAiAgents()
+    .filter((entry) => entry.executionSurface === 'execute')
+    .map((entry) => entry.agentId),
+);
+
+for (const agentId of EXECUTABLE_AGENT_IDS) {
+  if (!AGENT_EXECUTORS[agentId]) {
+    throw new Error(`[sanfrancisco] Missing executor for agentId: ${agentId}`);
+  }
+}
+
+for (const agentId of Object.keys(AGENT_EXECUTORS)) {
+  const resolved = resolveAiAgent(agentId);
+  if (!resolved) {
+    throw new Error(`[sanfrancisco] Executor has no registry entry: ${agentId}`);
+  }
+  if (resolved.entry.executionSurface !== 'execute') {
+    throw new Error(`[sanfrancisco] Executor registered for non-execute agent: ${agentId}`);
+  }
+}
 
 function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
   if (!isRecord(value)) return false;
@@ -479,6 +499,9 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${body.agentId}` });
     }
     const canonicalId = resolvedAgent.canonicalId;
+    if (resolvedAgent.entry.executionSurface !== 'execute') {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Agent not executable via /v1/execute: ${canonicalId}` });
+    }
     assertCap(grant, `agent:${canonicalId}`);
 
     const requestId = asString(body.trace?.requestId) ?? crypto.randomUUID();

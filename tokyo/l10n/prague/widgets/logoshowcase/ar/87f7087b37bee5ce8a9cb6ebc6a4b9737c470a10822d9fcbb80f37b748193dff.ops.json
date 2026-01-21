@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-21T02:59:11.496Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "أنشئ معرض شعاراتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ابدأ مجانًا. انشر عندما تكون جاهزًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "عرض الشعارات. إثبات اجتماعي فوري."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "اعرض شعارات العملاء بشكل جميل -- ابنِ الثقة وزِد التحويلات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "جرّبه مباشرة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "حرّر نسخة تجريبية في Minibob. انشر عندما تكون جاهزًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "اعرض الشعارات بشكل جميل. ابنِ الثقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "معرض الشعارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "سلّط الضوء على شعارات العملاء باستخدام أداة عرض سريعة ومرنة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أداة عرض الشعارات - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ارفع شعارات عملائك (SVG/PNG) خلال ثوانٍ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "أضف الشعارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "اختر التخطيط + المسافات لتناسب موقعك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "رتّب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "الصق المقتطف في أي منصة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ضمّن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "كيف يعمل"
+    }
+  ],
+  "v": 1
+}

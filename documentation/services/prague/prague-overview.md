@@ -10,7 +10,7 @@ Last updated: 2026-01-10
 
 Prague is the marketing + SEO surface, implemented as an **Astro SSG** app deployed on **Cloudflare Pages**.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` and localized via `prague-strings/` (not fetched from a remote Tokyo service).
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` and localized via repo-owned base content + Tokyo overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`).
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
@@ -75,15 +75,15 @@ Required non-visual blocks:
 - `page-meta` (all widget pages, used for `<head>` title/description)
 
 Notes:
-- Page JSON is **layout + meta only**; copy is loaded from `prague-strings` and **overwrites** any inline `copy` in the JSON.
+- Page JSON is **layout + meta only**; copy is loaded from `prague/content/base/**` + Tokyo overlays and **overwrites** any inline `copy` in the JSON.
 - Visual embeds are explicit: use `curatedRef.publicId` on blocks that should embed a curated instance.
 
-Localization is applied via compiled strings:
-- base strings (overview): `prague-strings/base/v1/widgets/{widget}/blocks/{blockId}.json`
-- base strings (subpages): `prague-strings/base/v1/widgets/{widget}/{page}/blocks/{blockId}.json`
-- compiled strings (overview): `prague-strings/compiled/v1/{locale}/widgets/{widget}.json`
-- compiled strings (subpages): `prague-strings/compiled/v1/{locale}/widgets/{widget}/{page}.json`
-- Prague merges compiled strings into `blocks[].copy` at load time
+Localization is applied via base content + ops overlays:
+- base content (overview): `prague/content/base/v1/widgets/{widget}.json`
+- base content (subpages): `prague/content/base/v1/widgets/{widget}/{page}.json`
+- overlays: `tokyo/l10n/prague/widgets/{widget}/{locale}/{baseFingerprint}.ops.json`
+- overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/{locale}/{baseFingerprint}.ops.json`
+- Prague merges localized base content into `blocks[].copy` at load time
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

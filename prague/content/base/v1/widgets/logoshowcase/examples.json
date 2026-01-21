@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "Logo Showcase Examples",
+        "subheadline": "See common placements and use cases."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "See common logo showcase placements and use cases.",
+        "title": "Logo Showcase Examples - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/logoshowcase/examples",
+  "v": 1
+}

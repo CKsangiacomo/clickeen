@@ -140,6 +140,17 @@ type L10nOverlay = {
   ops: Array<{ op: 'set'; path: string; value: string }>;
 };
 
+type L10nLocaleIndexEntry = {
+  locale: string;
+  geoCountries?: string[] | null;
+};
+
+type L10nLocaleIndex = {
+  v: 1;
+  publicId: string;
+  locales: L10nLocaleIndexEntry[];
+};
+
 type L10nPublishJob = {
   v: 1;
   publicId: string;
@@ -210,6 +221,15 @@ function normalizeWidgetType(raw: string): string | null {
 
 function normalizeLocale(raw: string): string | null {
   return normalizeLocaleToken(raw);
+}
+
+function normalizeGeoCountries(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const list = raw
+    .map((code) => String(code || '').trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
+  if (!list.length) return null;
+  return Array.from(new Set(list));
 }
 
 function hasProhibitedSegment(pathStr: string): boolean {
@@ -353,6 +373,75 @@ async function loadInstanceLocaleRow(env: Env, publicId: string, locale: string)
   return rows?.[0] ?? null;
 }
 
+async function loadInstanceLocalesForPublicId(env: Env, publicId: string): Promise<InstanceLocaleRow[]> {
+  const params = new URLSearchParams({
+    select: 'public_id,locale,geo_countries',
+    public_id: `eq.${publicId}`,
+    order: 'locale.asc',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_locales?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase locale list failed (${res.status}) ${text}`.trim());
+  }
+  return ((await res.json().catch(() => [])) as InstanceLocaleRow[]).filter(Boolean);
+}
+
+async function deleteLocaleIndex(env: Env, publicId: string): Promise<void> {
+  const httpBase = resolveL10nHttpBase(env);
+  if (httpBase) {
+    const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, { method: 'DELETE' });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`[tokyo] HTTP index delete failed (${res.status}): ${detail}`);
+    }
+    return;
+  }
+  await env.TOKYO_R2.delete(`l10n/instances/${publicId}/index.json`);
+}
+
+async function publishLocaleIndex(env: Env, publicId: string): Promise<void> {
+  const rows = await loadInstanceLocalesForPublicId(env, publicId);
+  const locales = rows
+    .map((row) => {
+      const locale = normalizeLocale(row.locale);
+      if (!locale) return null;
+      const geoCountries = normalizeGeoCountries(row.geo_countries);
+      return geoCountries ? { locale, geoCountries } : { locale };
+    })
+    .filter((entry): entry is L10nLocaleIndexEntry => Boolean(entry))
+    .sort((a, b) => a.locale.localeCompare(b.locale));
+
+  if (!locales.length) {
+    await deleteLocaleIndex(env, publicId);
+    return;
+  }
+
+  const index: L10nLocaleIndex = { v: 1, publicId, locales };
+  const payload = prettyStableJson(index);
+
+  const httpBase = resolveL10nHttpBase(env);
+  if (httpBase) {
+    const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`[tokyo] HTTP index publish failed (${res.status}): ${detail}`);
+    }
+    return;
+  }
+
+  await env.TOKYO_R2.put(`l10n/instances/${publicId}/index.json`, payload, {
+    httpMetadata: {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: 'public, max-age=300, stale-while-revalidate=600',
+    },
+  });
+}
+
 async function handlePutL10nOverlay(req: Request, env: Env, publicId: string, locale: string): Promise<Response> {
   const authErr = requireDevAuth(req, env);
   if (authErr) return authErr;
@@ -448,12 +537,14 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
     if (stateRow?.base_fingerprint) {
       await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
     }
+    await publishLocaleIndex(env, publicId);
   } else {
     const result = await publishLocaleFromSupabase(env, publicId, locale);
     if (result?.baseFingerprint) {
       await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
       await recordL10nOverlayVersion(env, result);
     }
+    await publishLocaleIndex(env, publicId);
   }
 
   return json({ publicId, locale, action: resolvedAction }, { status: 200 });
@@ -841,12 +932,14 @@ export default {
           if (stateRow?.base_fingerprint) {
             await markPublishStateClean(env, publicId, locale, stateRow.base_fingerprint);
           }
+          await publishLocaleIndex(env, publicId);
         } else {
           const result = await publishLocaleFromSupabase(env, publicId, locale);
           if (result?.baseFingerprint) {
             await markPublishStateClean(env, publicId, locale, result.baseFingerprint);
             await recordL10nOverlayVersion(env, result);
           }
+          await publishLocaleIndex(env, publicId);
         }
       } catch (err) {
         console.error('[tokyo] publish job failed', err);

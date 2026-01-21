@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "abf5fc65272b4616bd538b8bb115a49b2bbe0b82628aa805d3b178b87d647d80",
+  "baseUpdatedAt": "2026-01-21T02:59:11.488Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Esempi di countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Esempi di timer per conto alla rovescia per lanci, saldi ed eventi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Esempi di conto alla rovescia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Scopri come i team utilizzano i conti alla rovescia per lanci, saldi ed eventi."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "49667d09d06a4be88ae59aecf3cebd6b35b72837aed262767cfa9befd387bcfe",
+  "baseUpdatedAt": "2026-01-21T02:59:11.489Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "倒數計時功能 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "探索倒數計時小工具的功能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "倒數功能特色"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "打造緊迫感並促使行動所需的一切。"
+    }
+  ],
+  "v": 1
+}

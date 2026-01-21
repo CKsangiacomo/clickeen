@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+  "baseUpdatedAt": "2026-01-21T02:59:11.494Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Funzionalità FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tutto ciò che ti serve per pubblicare una FAQ veloce e curata."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tutto ciò di cui hai bisogno per pubblicare un widget FAQ rifinito."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funzionalità FAQ - Clickeen"
+    }
+  ],
+  "v": 1
+}

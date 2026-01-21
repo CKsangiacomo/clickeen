@@ -1,5 +1,8 @@
 {
-  "headline": "timer.headline",
-  "during_action_text": "actions.during.text",
-  "after_message_text": "actions.after.text"
+  "v": 1,
+  "paths": [
+    { "path": "timer.headline", "type": "string" },
+    { "path": "actions.during.text", "type": "string" },
+    { "path": "actions.after.text", "type": "string" }
+  ]
 }

@@ -146,7 +146,7 @@ Each release proceeds in 3 steps:
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
 - Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase.
-- Prague website strings are not served by Tokyo; they are repo-local under `prague-strings/**`.
+- Prague website base content lives in-repo (`prague/content/base/**`), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest).
 
 #### Tokyo Worker (Workers + Queues)
 - Reads `widget_instance_locales` from Supabase, merges `ops + user_ops`, and publishes overlays to Tokyo/R2.

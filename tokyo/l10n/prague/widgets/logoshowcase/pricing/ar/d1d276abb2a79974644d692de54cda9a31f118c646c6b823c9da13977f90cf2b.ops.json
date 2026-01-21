@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d1d276abb2a79974644d692de54cda9a31f118c646c6b823c9da13977f90cf2b",
+  "baseUpdatedAt": "2026-01-21T02:59:11.499Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أسعار عرض الشعارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ابدأ مجانًا. قم بالترقية عندما تريد المزيد من الأدوات بدون علامة تجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "أسعار بسيطة لودجت عرض الشعارات. ابدأ مجانًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أسعار عرض الشعارات - Clickeen"
+    }
+  ],
+  "v": 1
+}

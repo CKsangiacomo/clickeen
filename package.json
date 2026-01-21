@@ -21,6 +21,7 @@
     "build": "pnpm build:i18n && pnpm build:l10n && turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
+    "test:contracts": "node scripts/verify-contracts.mjs",
     "typecheck": "turbo typecheck",
     "e2e": "turbo run e2e",
     "compile:widgets": "node scripts/compile-all-widgets.mjs",
@@ -36,11 +37,14 @@
     "build:admin": "pnpm --filter @clickeen/devstudio build",
     "build:dieter": "pnpm --filter @ck/dieter build",
     "build:prague": "pnpm --filter @clickeen/prague build",
-    "prague:localize": "node scripts/prague-strings/translate.mjs",
-    "prague:strings:translate": "node scripts/prague-strings/translate.mjs",
-    "prague:strings:compile": "node scripts/prague-strings/compile.mjs",
-    "prague:strings:watch": "node scripts/prague-strings/watch.mjs",
-    "build:prague:global": "pnpm prague:strings:translate && pnpm prague:strings:compile && pnpm build:prague"
+    "prague:localize": "node scripts/prague-l10n/translate.mjs",
+    "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",
+    "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
+    "prague:l10n:watch": "node scripts/prague-l10n/watch.mjs",
+    "prague:strings:translate": "node scripts/prague-l10n/translate.mjs",
+    "prague:strings:compile": "node scripts/prague-l10n/verify.mjs",
+    "prague:strings:watch": "node scripts/prague-l10n/watch.mjs",
+    "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

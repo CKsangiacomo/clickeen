@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "Countdown Examples",
+        "subheadline": "See how teams use countdowns for launches, sales, and events."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Examples of countdown timers for launches, sales, and events.",
+        "title": "Countdown Examples - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/countdown/examples",
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "9541ddedd158583b7edae759aa31651ff1be17a42681f995d1dc412be6cc079e",
+  "baseUpdatedAt": "2026-01-21T02:59:11.498Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "로고 쇼케이스 기능"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "빠르고 유연하며 어디에서든 멋지게 보이도록 설계되었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "빠르고 유연하며, 어디서나 멋지게 보이도록 설계되었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "로고 쇼케이스 기능 - Clickeen"
+    }
+  ],
+  "v": 1
+}

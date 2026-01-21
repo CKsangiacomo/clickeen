@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "所有問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "有免費方案嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "什麼是 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "如何安裝小工具？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "為什麼我應該使用 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "是的，提供一個具有核心功能的主動小工具。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "內建轉換功能的嵌入式小工具。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "複製嵌入代碼並貼到您網站 </body> 標籤之前。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "因為 Clickeen 是一個令人驚嘆的新平台，能讓網路變得美觀且易於使用。"
+    }
+  ],
+  "v": 1
+}

@@ -108,7 +108,7 @@ prague/src/blocks/cta/cta.astro
 - Resolves mega menu content from the canonical widget registry + each widget’s localized page JSON:
   - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
   - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Source: `tokyo/widgets/{widget}/pages/overview.json` + compiled strings from `prague-strings/compiled/v1/{locale}/widgets/{widget}.json`
+  - Source: `tokyo/widgets/{widget}/pages/overview.json` + localized base content (`prague/content/base/**` + `tokyo/l10n/prague/**`)
 
 `site/footer`
 - Props: `{ locale: string }`
@@ -226,8 +226,8 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 - Canonical widget pages:
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
-  - Page JSON is layout + meta only; compiled strings override any inline `copy` in the JSON.
-  - Strings are loaded from `prague-strings/compiled/v1/{locale}/widgets/{widget}.json` (overview) and `prague-strings/compiled/v1/{locale}/widgets/{widget}/{page}.json` (subpages), then merged into `copy`.
+  - Page JSON is layout + meta only; localized base content overrides any inline `copy` in the JSON.
+  - Strings are loaded from `prague/content/base/**` and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
 
 ---

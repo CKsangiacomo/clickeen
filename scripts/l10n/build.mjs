@@ -52,6 +52,15 @@ function normalizeLocaleToken(raw) {
   return value;
 }
 
+function normalizeGeoCountries(raw) {
+  if (!Array.isArray(raw)) return null;
+  const list = raw
+    .map((code) => String(code || '').trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
+  if (!list.length) return null;
+  return Array.from(new Set(list));
+}
+
 function normalizeOpPath(raw) {
   return String(raw || '')
     .replace(/\[(\d+)\]/g, '.$1')
@@ -251,25 +260,43 @@ async function main() {
     const allowlist = loadAllowlist(widgetType);
 
     let wroteInstance = false;
+    const indexEntries = [];
     for (const localeRaw of locales) {
       const locale = normalizeLocaleToken(localeRaw);
       if (!locale) {
         throw new Error(`[l10n] ${publicId}/${localeRaw}: invalid locale token`);
       }
       const srcPath = path.join(instanceSrcDir, `${localeRaw}.ops.json`);
-      const overlay = await ensureBaseFingerprint({ publicId, data: readJson(srcPath) });
+      const source = readJson(srcPath);
+      const geoCountries = normalizeGeoCountries(source.geoCountries);
+      const overlay = await ensureBaseFingerprint({ publicId, data: source });
       assertOverlayShape({ publicId, locale, data: overlay, allowlist });
 
-      const stable = prettyStableJson(overlay);
+      const overlayOut = {
+        v: overlay.v,
+        baseUpdatedAt: overlay.baseUpdatedAt ?? null,
+        baseFingerprint: overlay.baseFingerprint,
+        ops: overlay.ops,
+      };
+      const stable = prettyStableJson(overlayOut);
       const outName = `${overlay.baseFingerprint}.ops.json`;
       const localeOutDir = path.join(instanceOutDir, locale);
       ensureDir(localeOutDir);
       cleanOldOutputs(localeOutDir, outName);
       fs.writeFileSync(path.join(localeOutDir, outName), stable, 'utf8');
       overlayCount += 1;
+      indexEntries.push(geoCountries ? { locale, geoCountries } : { locale });
       wroteInstance = true;
     }
-    if (wroteInstance) instanceCount += 1;
+    if (wroteInstance) {
+      indexEntries.sort((a, b) => a.locale.localeCompare(b.locale));
+      fs.writeFileSync(
+        path.join(instanceOutDir, 'index.json'),
+        prettyStableJson({ v: 1, publicId, locales: indexEntries }),
+        'utf8',
+      );
+      instanceCount += 1;
+    }
   }
 
   console.log(`[l10n] Built ${overlayCount} overlays across ${instanceCount} instance(s) → tokyo/l10n`);

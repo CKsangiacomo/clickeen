@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "baseFingerprint": "64727fb81787c811e5a74b8be97b40863ee32b2512d5ae2f50e50d9e28c496e7",
+  "baseUpdatedAt": "2026-01-18T17:53:12.485078+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "timer.headline",
+      "value": "Obtenha 50% de desconto antes que seja tarde 🎯"
+    },
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Compre agora"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-21T02:59:11.487Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "काउंटडाउन विजेट - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "अनुकूलन योग्य काउंटडाउन टाइमर के साथ तात्कालिकता बनाएं। आत्मविश्वास के साथ लॉन्च करें, बेचें और घोषणा करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "काउंटडाउन टाइमर विजेट"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "तेज़, लचीले काउंटडाउन के साथ तात्कालिकता पैदा करें और कार्रवाई के लिए प्रेरित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "काउंटडाउन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "लचीले टाइमर के साथ तात्कालिकता जोड़ें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "इसे लाइव आज़माएँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Minibob में एक डेमो इंस्टेंस संपादित करें। जब आप तैयार हों, प्रकाशित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "काउंटडाउन टाइमर विजेट"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "कस्टमाइज़ करने योग्य काउंटडाउन टाइमरों के साथ तात्कालिकता पैदा करें और कार्रवाई के लिए प्रेरित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "लचीले टाइमर मोड"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "किसी भी परिस्थिति के लिए तारीख-आधारित, व्यक्तिगत या संख्या काउंटर।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ध्यान को कार्रवाई में बदलें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "लॉन्च, सेल्स, इवेंट्स और व्यक्तिगत लक्ष्यों के अनुरूप टाइमर इस्तेमाल करें। इसे एक बार सेट करें और इसे हर जगह चलने दें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "आसान अनुकूलन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "अपने ब्रांड के अनुसार रूप-रंग, लेआउट और कार्रवाइयाँ समायोजित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "काउंटडाउन के साथ तेज़ी से लॉन्च करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "सेटअप से पब्लिश तक मिनटों में।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "अपना टाइमर चुनें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "अपने ब्रांड से मेल करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "पब्लिश करें और लोकलाइज़ करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "अपने उपयोग के लिए तारीख, एवरग्रीन, या नंबर काउंटर चुनें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "किसी भी साइट के अनुरूप रंग, लेबल और लेआउट को कस्टमाइज़ करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "तेज़ी से लाइव जाएँ और बिल्ट-इन लोकलाइज़ेशन के साथ वैश्विक दर्शकों तक पहुँचें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "रूपांतरण बढ़ाएँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "समय-सीमित ऑफ़र के साथ तुरंत कार्रवाई के लिए प्रेरित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO और GEO के लिए अनुकूलित"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "अंतर्निहित स्कीमा और स्थानीयकरण समर्थन।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "तात्कालिकता पैदा करें, बिक्री बढ़ाएँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "शक्तिशाली काउंटडाउन टाइमर जो आगंतुकों को ग्राहकों में बदल देते हैं।"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bc03b976b94d6fdcf00c1b1f71f90878d266ab4999fbee78657698ff52420780",
+  "baseUpdatedAt": "2026-01-21T02:59:11.495Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "الأسئلة الشائعة حول الأسعار"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "خطط بسيطة. قم بالترقية عندما تحتاج إلى المزيد من الأدوات المصغّرة وإزالة العلامة التجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "تسعير بسيط لودجت الأسئلة الشائعة. قم بالترقية عندما تحتاج إلى المزيد."
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "الأسئلة الشائعة: التسعير - Clickeen"
+    }
+  ],
+  "v": 1
+}

@@ -92,7 +92,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
 - `device=desktop|mobile` (optional, defaults to `desktop`)
-- `locale=<bcp47-ish>` (optional, defaults to `en`; when omitted, Venice uses `Accept-Language` with a simple fallback)
+- `locale=<bcp47-ish>` (optional; when omitted, Venice uses Tokyo `index.json` + `cf-ipcountry`, then falls back to `en`)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Non-goal (strict):**
@@ -116,7 +116,8 @@ Response includes (as implemented today):
 Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`.
 
 **Locale resolution (shipped):**
-- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` with a safe fallback (no l10n manifest lookup).
+- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` if present (treated as explicit).
+- If no explicit locale signal exists, Venice uses Tokyo `index.json` + `cf-ipcountry` to select a locale, then falls back to `en`.
 
 ### Tokyo Asset Proxy Routes (Shipped)
 

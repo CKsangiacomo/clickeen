@@ -1,0 +1,18 @@
+{
+  "blocks": {
+    "hero": {
+      "copy": {
+        "headline": "FAQ Pricing",
+        "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
+      }
+    },
+    "page-meta": {
+      "copy": {
+        "description": "Simple pricing for the FAQ widget. Upgrade when you need more.",
+        "title": "FAQ Pricing - Clickeen"
+      }
+    }
+  },
+  "pageId": "widgets/faq/pricing",
+  "v": 1
+}

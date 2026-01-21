@@ -1,0 +1,59 @@
+{
+  "strings": {
+    "common": {
+      "comingSoon": "Coming soon."
+    },
+    "creative": {
+      "useThisWidgetOnYourWebsite": "Use this widget on your website"
+    },
+    "cta": {
+      "createFree": "Create free",
+      "seeTemplates": "See templates"
+    },
+    "footer": {
+      "brand": "Clickeen",
+      "pricing": "Pricing",
+      "rights": "All rights reserved.",
+      "widgets": "Widgets"
+    },
+    "nav": {
+      "viewAllWidgets": "View all widgets",
+      "widgets": "Widgets"
+    },
+    "share": {
+      "copied": "Copied",
+      "copy": "Copy link",
+      "discord": "Discord",
+      "email": "Email",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "line": "LINE",
+      "linkedin": "LinkedIn",
+      "messenger": "Messenger",
+      "more": "More",
+      "reddit": "Reddit",
+      "sectionMessageTitle": "Send this widget template as message",
+      "sectionSocialTitle": "Share this widget template on social",
+      "share": "Share",
+      "signal": "Signal",
+      "slack": "Slack",
+      "sms": "SMS",
+      "teams": "Teams",
+      "telegram": "Telegram",
+      "text": "Use this widget on your website.",
+      "tiktok": "TikTok",
+      "title": "Clickeen widget",
+      "wechat": "WeChat",
+      "whatsapp": "WhatsApp",
+      "x": "X"
+    },
+    "tabs": {
+      "examples": "Examples",
+      "features": "Features",
+      "overview": "Overview",
+      "pricing": "Pricing",
+      "templates": "Templates"
+    }
+  },
+  "v": 1
+}

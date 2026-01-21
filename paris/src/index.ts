@@ -688,6 +688,34 @@ function normalizeL10nSource(raw: unknown): string | null {
   return value;
 }
 
+function normalizeGeoCountries(raw: unknown, path: string) {
+  if (raw == null) {
+    return { ok: true as const, geoCountries: null as string[] | null };
+  }
+  if (!Array.isArray(raw)) {
+    return { ok: false as const, issues: [{ path, message: 'geoCountries must be an array' }] };
+  }
+
+  const geoCountries: string[] = [];
+  const seen = new Set<string>();
+  const issues: Array<{ path: string; message: string }> = [];
+
+  raw.forEach((value, index) => {
+    const trimmed = typeof value === 'string' ? value.trim().toUpperCase() : '';
+    if (!trimmed || !/^[A-Z]{2}$/.test(trimmed)) {
+      issues.push({ path: `${path}[${index}]`, message: 'geoCountries must be ISO-3166 alpha-2 codes' });
+      return;
+    }
+    if (!seen.has(trimmed)) {
+      seen.add(trimmed);
+      geoCountries.push(trimmed);
+    }
+  });
+
+  if (issues.length) return { ok: false as const, issues };
+  return { ok: true as const, geoCountries: geoCountries.length ? geoCountries : null };
+}
+
 function hasLocaleSuffix(publicId: string, locale: string): boolean {
   const lower = publicId.toLowerCase();
   return lower.endsWith(`.${locale}`) || lower.endsWith(`-${locale}`);
@@ -1941,6 +1969,11 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError('OPS_INVALID_TYPE', 'ops or userOps required', 400);
   }
 
+  const hasGeoCountries = Object.prototype.hasOwnProperty.call(payload, 'geoCountries');
+  if (hasGeoCountries && !hasOps) {
+    return apiError('OPS_INVALID_TYPE', 'geoCountries requires ops', 400);
+  }
+
   const source = hasOps ? normalizeL10nSource((payload as any).source) : null;
   if (hasOps && !source) {
     return apiError('OPS_INVALID_TYPE', 'Invalid source', 400);
@@ -2012,6 +2045,11 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
     return apiError('LOCALE_NOT_FOUND', 'Locale overlay not found', 404, { publicId, locale });
   }
 
+  const geoResult = hasGeoCountries ? normalizeGeoCountries((payload as any).geoCountries, 'geoCountries') : null;
+  if (geoResult && !geoResult.ok) {
+    return apiError('OPS_INVALID_TYPE', 'Invalid geoCountries', 400, geoResult.issues);
+  }
+
   const opsResult = hasOps ? validateL10nOps((payload as any).ops, allowlist) : null;
   if (hasOps && opsResult && !opsResult.ok) {
     return apiError(opsResult.code, opsResult.message, 400, opsResult.detail);
@@ -2024,6 +2062,7 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
 
   let row: InstanceLocaleRow | null = null;
   if (hasOps) {
+    const geoCountries = hasGeoCountries ? geoResult?.geoCountries ?? null : existing?.geo_countries ?? null;
     const payloadRow = {
       public_id: publicIdResult.value,
       locale,
@@ -2032,6 +2071,7 @@ async function handleInstanceLocaleUpsert(req: Request, env: Env, publicId: stri
       base_fingerprint: computedFingerprint,
       base_updated_at: baseUpdatedAtRaw ?? instance.updated_at ?? null,
       source,
+      geo_countries: geoCountries,
       workspace_id: instanceWorkspaceId,
     };
 

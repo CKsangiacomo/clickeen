@@ -76,7 +76,7 @@ Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
 ### `POST /v1/l10n/translate` (local only)
-Purpose: translate Prague system-owned string chunks (prague-strings pipeline).
+Purpose: translate Prague system-owned base content (prague-l10n pipeline).
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`

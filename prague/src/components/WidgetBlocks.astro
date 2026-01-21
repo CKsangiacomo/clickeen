@@ -31,14 +31,16 @@ type Props = {
 const { blocks, widget, locale, activeSubpage = 'overview' } = Astro.props;
 const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
 const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
+const createFreeLabel = await pragueT(locale, 'prague.cta.createFree');
+const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
 const heroPrimaryCta = {
-  label: pragueT(locale, 'prague.cta.createFree'),
+  label: createFreeLabel,
   href: hasMinibob ? '#minibob' : `/${locale}/create`,
 };
 const heroSecondaryCta =
   activeSubpage === 'overview'
     ? {
-        label: pragueT(locale, 'prague.cta.seeTemplates'),
+        label: seeTemplatesLabel,
         href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
       }
     : undefined;

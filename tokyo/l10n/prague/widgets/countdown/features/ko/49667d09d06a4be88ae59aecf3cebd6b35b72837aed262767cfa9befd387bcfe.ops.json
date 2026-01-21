@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "49667d09d06a4be88ae59aecf3cebd6b35b72837aed262767cfa9befd387bcfe",
+  "baseUpdatedAt": "2026-01-21T02:59:11.489Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "카운트다운 기능 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "카운트다운 위젯의 기능을 살펴보세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "카운트다운 기능"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "긴급함을 조성하고 행동을 이끌어내는 데 필요한 모든 것."
+    }
+  ],
+  "v": 1
+}
