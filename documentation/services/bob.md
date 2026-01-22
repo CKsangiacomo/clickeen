@@ -322,11 +322,11 @@ See also:
 
 Bob supports instance-content localization (not editor chrome):
 
-- Locale preview uses Paris overlays via the locale-layer wrapper (`/api/instances/:publicId/locales/:locale`).
-- Multi-layer overlays use `/api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey`.
-- In Translate mode, edits are saved as per-field overrides (`user_ops`) and never change structure.
-- Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate overlays.
-- "Revert to auto-translate" clears overrides (DELETE locale endpoint) and re-applies agent ops.
+- Locale preview uses layered overlays via `/api/workspaces/:workspaceId/instances/:publicId/layers/locale/:locale`.
+- Manual overrides are stored in layer=user (`/layers/user/:locale` or `/layers/user/global`) and merged last at runtime.
+- In Translate mode, edits are saved as per-field overrides (layer=user) and never change structure.
+- Structural edits (add/remove items) happen only in the base locale (Edit mode), then publish to regenerate locale overlays.
+- "Revert to auto-translate" deletes the layer=user overlay for the active locale.
 
 Note: localization writes are separate from the base-config two-call pattern; overlays persist in `widget_instance_overlays` without publishing the base config.
 
@@ -349,10 +349,14 @@ Bob proxies Paris via:
 - `bob/app/api/paris/instances/route.ts`
 - `bob/app/api/paris/curated-instances/route.ts`
 - `bob/app/api/paris/widgets/route.ts`
-- `bob/app/api/paris/instances/[publicId]/locales/route.ts`
-- `bob/app/api/paris/instances/[publicId]/locales/[locale]/route.ts`
+- `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/route.ts`
+- `bob/app/api/paris/workspaces/[workspaceId]/instances/[publicId]/layers/[layer]/[layerKey]/route.ts`
 - `bob/app/api/paris/workspaces/[workspaceId]/locales/route.ts`
 - `bob/app/api/paris/website-creative/route.ts` (legacy; curated-only flow does not use this)
+
+Legacy (deprecated, not used by Bob):
+- `bob/app/api/paris/instances/[publicId]/locales/route.ts`
+- `bob/app/api/paris/instances/[publicId]/locales/[locale]/route.ts`
 
 The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)

@@ -43,12 +43,17 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
   const paris = resolveParisBaseOrResponse();
   if (!paris.ok) return paris.response;
 
-  const url = `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/locales`;
+  const url = new URL(
+    `${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/locales`
+  );
+  const requestUrl = new URL(request.url);
+  const subject = (requestUrl.searchParams.get('subject') || '').trim();
+  if (subject) url.searchParams.set('subject', subject);
   const headers: HeadersInit = {};
   if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
 
   try {
-    const res = await fetchWithTimeout(url, { method: 'GET', headers, cache: 'no-store' });
+    const res = await fetchWithTimeout(url.toString(), { method: 'GET', headers, cache: 'no-store' });
     const data = await res.text();
     return new NextResponse(data, {
       status: res.status,

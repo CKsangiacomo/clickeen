@@ -398,10 +398,17 @@ type ExistingLocale = {
   hasUserOps?: boolean | null;
 };
 
-async function fetchExistingLocale(job: L10nJob, env: Env): Promise<ExistingLocale | null> {
+async function fetchExistingLocale(job: L10nJob, locale: string, env: Env): Promise<ExistingLocale | null> {
+  const workspaceId = asString(job.workspaceId);
+  if (!workspaceId) return null;
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
-  const url = new URL(`/api/instances/${encodeURIComponent(job.publicId)}/locales`, baseUrl);
+  const url = new URL(
+    `/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+      job.publicId
+    )}/layers/locale/${encodeURIComponent(locale)}`,
+    baseUrl,
+  );
   url.searchParams.set('subject', 'devstudio');
 
   const res = await fetch(url.toString(), {
@@ -411,18 +418,15 @@ async function fetchExistingLocale(job: L10nJob, env: Env): Promise<ExistingLoca
       'cache-control': 'no-store',
     },
   });
+  if (res.status === 404) return null;
   if (!res.ok) return null;
   const body = (await res.json().catch(() => null)) as any;
-  const locales = Array.isArray(body?.locales) ? body.locales : null;
-  if (!locales) return null;
-  const entry = locales.find((item: any) => item?.locale === job.locale);
-  if (!entry) return null;
   return {
-    locale: job.locale,
-    source: typeof entry.source === 'string' ? entry.source : null,
-    baseFingerprint: typeof entry.baseFingerprint === 'string' ? entry.baseFingerprint : null,
-    baseUpdatedAt: typeof entry.baseUpdatedAt === 'string' ? entry.baseUpdatedAt : null,
-    hasUserOps: typeof entry.hasUserOps === 'boolean' ? entry.hasUserOps : null,
+    locale,
+    source: typeof body?.source === 'string' ? body.source : null,
+    baseFingerprint: typeof body?.baseFingerprint === 'string' ? body.baseFingerprint : null,
+    baseUpdatedAt: typeof body?.baseUpdatedAt === 'string' ? body.baseUpdatedAt : null,
+    hasUserOps: Array.isArray(body?.userOps) ? body.userOps.length > 0 : null,
   };
 }
 
@@ -430,13 +434,18 @@ type OverlayWriteResult = { ok: true } | { ok: false; reason: 'stale_instance' }
 
 async function writeOverlay(
   job: L10nJob,
+  locale: string,
   overlay: { v: 1; baseUpdatedAt?: string | null; baseFingerprint?: string | null; ops: Array<{ op: 'set'; path: string; value: string }> },
   env: Env,
 ): Promise<OverlayWriteResult> {
+  const workspaceId = asString(job.workspaceId);
+  if (!workspaceId) return { ok: false, reason: 'stale_instance' };
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
   const url = new URL(
-    `/api/instances/${encodeURIComponent(job.publicId)}/locales/${encodeURIComponent(job.locale)}`,
+    `/api/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+      job.publicId
+    )}/layers/locale/${encodeURIComponent(locale)}`,
     baseUrl,
   );
   url.searchParams.set('subject', 'devstudio');
@@ -480,6 +489,11 @@ export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
     await writeLog(env, job, { status: 'skipped', reason: 'invalid_locale', job, occurredAtMs: startedAt });
     return;
   }
+  const workspaceId = asString(job.workspaceId);
+  if (!workspaceId) {
+    await writeLog(env, job, { status: 'skipped', reason: 'missing_workspace', job, occurredAtMs: startedAt });
+    return;
+  }
 
   const instance = await fetchInstance(job, env);
   const updatedAt = instance.updatedAt ?? null;
@@ -489,10 +503,10 @@ export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
   }
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
-  const existing = await fetchExistingLocale({ ...job, locale }, env);
+  const existing = await fetchExistingLocale({ ...job, locale }, locale, env);
   if (existing) {
     const hasUserOps = existing.hasUserOps === true;
-    if (existing.source === 'user' && !hasUserOps) {
+    if (existing.source === 'user' || hasUserOps) {
       await writeLog(env, job, { status: 'skipped', reason: 'user_override', job, occurredAtMs: startedAt });
       return;
     }
@@ -530,7 +544,7 @@ export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
   const ops = translated.map((item) => ({ op: 'set' as const, path: item.path, value: item.value }));
   const overlay = { v: 1, baseUpdatedAt: job.baseUpdatedAt, baseFingerprint, ops };
 
-  const writeResult = await writeOverlay({ ...job, locale }, overlay, env);
+  const writeResult = await writeOverlay({ ...job, locale }, locale, overlay, env);
   if (!writeResult.ok) {
     await writeLog(env, job, { status: 'skipped', reason: writeResult.reason, job, occurredAtMs: startedAt });
     return;

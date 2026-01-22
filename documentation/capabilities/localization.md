@@ -75,9 +75,9 @@ Rule: overlays are **set-only ops** applied on top of the base instance config a
 
 **Canonical store (Supabase)**
 - `widget_instance_overlays` is the layered source of truth for instance overlays.
-- `ops` = agent/manual base overlay ops.
-- `user_ops` = per-field manual overrides (set-only ops), merged last for layer=user.
-- Tokyo overlay files contain the merged ops (`ops + user_ops`, user_ops applied last).
+- `ops` = layer overlay ops (agent/system/base).
+- `user_ops` = manual overrides for layer=user only (set-only ops), merged last for the user layer.
+- Tokyo overlay files contain merged ops for layer=user (`ops + user_ops`); other layers use `ops` only.
 - `l10n_overlay_versions` is the version ledger used for cleanup and future rollbacks.
 - Tokyo-worker prunes versions using the `l10n.versions.max` entitlement cap.
 - `geo_targets` scopes locale selection only (fr vs fr-CA); geo overrides live in the geo layer.
@@ -113,7 +113,7 @@ There is exactly **one** instance row per curated embed in Michael. Locale selec
 1. Prague embeds Venice with canonical `publicId`:
    - `/e/wgt_curated_{...}?locale=...`
 2. Venice loads the base instance config from Paris/Michael.
-3. Venice applies Tokyo layered overlays for the request locale (Phase 1: locale only).
+3. Venice applies Tokyo layered overlays for the request locale (locale layer + user overrides when present).
 4. Venice bootstraps `window.CK_WIDGET.state` with the localized config.
 
 **Strict rule:** `wgt_curated_*.<locale>` URLs are invalid and must 404 (no legacy support).
@@ -237,8 +237,8 @@ Manual override (optional, dev-only for curated overlays):
 - Ensure Tokyo serves the output (`tokyo/dev-server.mjs` serves `/l10n/**` from `tokyo/l10n/**` locally).
 
 User overrides (interactive):
-- Saved via Bob to Supabase (`user_ops`), never written directly to `tokyo/l10n/**`.
-- vNext: stored under layer=user with layerKey=<locale> (optional global fallback).
+- Saved via Bob to Supabase as layer=user overlays (layerKey=<locale> with optional `global` fallback).
+- Never written directly to `tokyo/l10n/**`; Tokyo-worker publishes the user layer like other overlays.
 
 ### 3) Consume overlays
 
@@ -247,7 +247,7 @@ User overrides (interactive):
 
 ## User-owned localization (current)
 
-Higher-tier workspaces can edit per-field translations in Bob. These edits are stored as `user_ops` (vNext: layer=user, layerKey=<locale>) and persist across agent re-translation.
+Higher-tier workspaces can edit per-field translations in Bob. These edits are stored as layer=user overlays (layerKey=<locale>, optional `global` fallback) and persist across agent re-translation.
 
 Non-goals for Phase 1:
 - Storing per-locale copies of the full instance config in Michael.

@@ -156,7 +156,7 @@ function loadLayerAllowlist(widgetType, layer) {
   if (layer === 'locale') return loadAllowlist(widgetType);
   const filePath = path.join(widgetsRoot, widgetType, 'layers', `${layer}.allowlist.json`);
   if (!fs.existsSync(filePath)) {
-    return loadAllowlist(widgetType);
+    return [];
   }
   const json = readJson(filePath);
   if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.paths)) {

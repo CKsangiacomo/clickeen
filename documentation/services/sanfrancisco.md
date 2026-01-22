@@ -38,8 +38,8 @@
 - Triggered by `instance-l10n-generate-{env}` jobs.
 - Fetches instance config from Paris.
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
-- Generates set-only ops and writes to Paris (`widget_instance_overlays.ops`, Phase 1: locale layer).
-- Paris preserves `user_ops` and enqueues publish to Tokyo-worker.
+- Generates set-only ops and writes layer=locale overlays to Paris (workspace-scoped layered endpoints).
+- Paris preserves user overrides in layer=user and enqueues publish to Tokyo-worker.
 
 ## Prague localization translation (local-only)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT=local`).
@@ -51,7 +51,7 @@
 ## Rules
 - Do not write directly to Tokyo for l10n (Paris is canonical).
 - Fail fast on invalid allowlist paths or stale base fingerprints.
-- Agent writes must preserve user overrides (`user_ops`).
+- Agent writes must not touch layer=user; overrides remain in layer=user and are merged at publish time.
 
 ## Links
 - AI overview: `documentation/ai/overview.md`

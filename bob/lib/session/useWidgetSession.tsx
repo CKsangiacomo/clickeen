@@ -60,7 +60,6 @@ type LocaleState = {
 
 type TokyoOverlay = {
   ops: LocalizationOp[];
-  userOps: LocalizationOp[];
   baseFingerprint: string | null;
   baseUpdatedAt: string | null;
   source: string | null;
@@ -176,6 +175,12 @@ function resolveSubjectModeFromUrl(): SubjectMode {
   // Backward compat: existing Minibob param.
   if (params.get('minibob') === 'true') return 'minibob';
   return 'devstudio';
+}
+
+function resolvePolicySubject(policy: Policy): 'devstudio' | 'minibob' | 'workspace' {
+  if (policy.profile === 'devstudio') return 'devstudio';
+  if (policy.profile === 'minibob') return 'minibob';
+  return 'workspace';
 }
 
 function resolveReadOnlyFromUrl(): boolean {
@@ -491,20 +496,26 @@ function useWidgetSessionInternal() {
     return allowlist;
   }, []);
 
-  const loadParisOverlay = useCallback(async (publicId: string, locale: string): Promise<TokyoOverlay> => {
-    const empty: TokyoOverlay = { ops: [], userOps: [], baseFingerprint: null, baseUpdatedAt: null, source: null };
+  const loadParisLayer = useCallback(async (
+    workspaceId: string,
+    publicId: string,
+    layer: string,
+    layerKey: string,
+    subject: 'devstudio' | 'minibob' | 'workspace'
+  ): Promise<TokyoOverlay | null> => {
     const res = await fetch(
-      `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
+      `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        publicId
+      )}/layers/${encodeURIComponent(layer)}/${encodeURIComponent(layerKey)}?subject=${encodeURIComponent(subject)}`,
       { cache: 'no-store' }
     );
-    if (res.status === 404) return empty;
+    if (res.status === 404) return null;
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
-      throw new Error(`Failed to load locale overlay (${res.status}) ${detail}`.trim());
+      throw new Error(`Failed to load layer overlay (${res.status}) ${detail}`.trim());
     }
     const overlay = (await res.json().catch(() => null)) as any;
     const ops = Array.isArray(overlay?.ops) ? overlay.ops : [];
-    const userOps = Array.isArray(overlay?.userOps) ? overlay.userOps : [];
     const baseFingerprintRaw = typeof overlay?.baseFingerprint === 'string' ? overlay.baseFingerprint.trim() : '';
     const baseFingerprint = /^[a-f0-9]{64}$/i.test(baseFingerprintRaw) ? baseFingerprintRaw : null;
     const baseUpdatedAt = typeof overlay?.baseUpdatedAt === 'string' ? overlay.baseUpdatedAt : null;
@@ -512,12 +523,8 @@ function useWidgetSessionInternal() {
     const normalizedOps = ops
       .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
       .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
-    const normalizedUserOps = userOps
-      .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
-      .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }));
     return {
       ops: normalizedOps,
-      userOps: normalizedUserOps,
       baseFingerprint,
       baseUpdatedAt,
       source,
@@ -528,13 +535,21 @@ function useWidgetSessionInternal() {
     const normalized = normalizeLocaleToken(rawLocale) ?? DEFAULT_LOCALE;
     const snapshot = stateRef.current;
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const baseLocale = snapshot.locale.baseLocale;
+    const subject = resolvePolicySubject(snapshot.policy);
 
-    if (!publicId || !widgetType) {
+    if (!publicId || !workspaceId || !widgetType) {
       setState((prev) => ({
         ...prev,
-        locale: { ...prev.locale, activeLocale: normalized, error: 'Missing instance context', loading: false, stale: false },
+        locale: {
+          ...prev.locale,
+          activeLocale: normalized,
+          error: 'Missing instance context',
+          loading: false,
+          stale: false,
+        },
       }));
       return;
     }
@@ -568,32 +583,43 @@ function useWidgetSessionInternal() {
     }));
 
     try {
-      const [allowlist, overlay] = await Promise.all([
+      const [allowlist, localeOverlay] = await Promise.all([
         loadLocaleAllowlist(widgetType),
-        loadParisOverlay(publicId, normalized),
+        loadParisLayer(workspaceId, publicId, 'locale', normalized, subject),
       ]);
 
       if (localeRequestRef.current !== requestId) return;
-      const source = overlay.source ?? null;
-      if (!overlay.ops.length && !overlay.userOps.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
+      const source = localeOverlay?.source ?? null;
+      if (!localeOverlay?.ops.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
         throw new Error('Missing locale overlay for curated instance');
       }
-      const baseFiltered = filterAllowlistedOps(overlay.ops, allowlist);
-      const userFiltered = filterAllowlistedOps(overlay.userOps, allowlist);
-      const baseOps = baseFiltered.filtered;
-      const userOps = userFiltered.filtered;
+      const baseFiltered = filterAllowlistedOps(localeOverlay?.ops ?? [], allowlist);
+      const userOverlay =
+        (await loadParisLayer(workspaceId, publicId, 'user', normalized, subject)) ??
+        (await loadParisLayer(workspaceId, publicId, 'user', 'global', subject));
+      const userFiltered = filterAllowlistedOps(userOverlay?.ops ?? [], allowlist);
+      let baseOps = baseFiltered.filtered;
+      let userOps = userFiltered.filtered;
       let stale = false;
-      if (
-        !overlay.baseFingerprint &&
-        (overlay.ops.length > 0 || overlay.userOps.length > 0) &&
-        isCuratedPublicId(publicId) &&
-        normalized !== baseLocale
-      ) {
+      if (!localeOverlay?.baseFingerprint && baseOps.length > 0 && isCuratedPublicId(publicId) && normalized !== baseLocale) {
         throw new Error('Missing baseFingerprint for curated locale overlay');
       }
-      if (overlay.baseFingerprint) {
+      if (localeOverlay?.baseFingerprint) {
         const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
-        stale = overlay.baseFingerprint !== currentFingerprint;
+        stale = localeOverlay.baseFingerprint !== currentFingerprint;
+      }
+      if (userOverlay?.baseFingerprint) {
+        const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
+        if (userOverlay.baseFingerprint !== currentFingerprint) {
+          stale = true;
+          userOps = [];
+        }
+      } else if (userOverlay?.ops?.length) {
+        throw new Error('Missing baseFingerprint for user overrides');
+      }
+      if (stale) {
+        baseOps = [];
+        userOps = [];
       }
       if (localeRequestRef.current !== requestId) return;
       const localized = applyLocalizationOps(
@@ -625,7 +651,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, activeLocale: normalized, loading: false, error: message, stale: false },
       }));
     }
-  }, [loadLocaleAllowlist, loadParisOverlay]);
+  }, [loadLocaleAllowlist, loadParisLayer]);
 
   const saveLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -633,6 +659,7 @@ function useWidgetSessionInternal() {
     const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
     const widgetType = snapshot.compiled?.widgetname ?? snapshot.meta?.widgetname;
     const locale = snapshot.locale.activeLocale;
+    const subject = resolvePolicySubject(snapshot.policy);
 
     if (snapshot.policy.role === 'viewer') {
       setState((prev) => ({
@@ -641,7 +668,7 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId || !widgetType) {
+    if (!publicId || !widgetType || !workspaceId) {
       setState((prev) => ({
         ...prev,
         locale: { ...prev.locale, error: 'Missing instance context' },
@@ -668,15 +695,17 @@ function useWidgetSessionInternal() {
         return;
       }
       const res = await fetch(
-        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}`,
+        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId
+        )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
         {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
-            userOps,
+            ops: userOps,
             baseFingerprint,
+            source: 'user',
             widgetType,
-            workspaceId,
           }),
         }
       );
@@ -717,6 +746,7 @@ function useWidgetSessionInternal() {
     const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
     const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
     const locale = snapshot.locale.activeLocale;
+    const subject = resolvePolicySubject(snapshot.policy);
     if (snapshot.policy.role === 'viewer') {
       setState((prev) => ({
         ...prev,
@@ -724,7 +754,7 @@ function useWidgetSessionInternal() {
       }));
       return;
     }
-    if (!publicId) return;
+    if (!publicId || !workspaceId) return;
     if (!isCuratedPublicId(publicId) && !workspaceId) {
       setState((prev) => ({
         ...prev,
@@ -736,11 +766,10 @@ function useWidgetSessionInternal() {
     if (snapshot.locale.userOps.length === 0) return;
 
     try {
-      const url =
-        `/api/paris/instances/${encodeURIComponent(publicId)}/locales/${encodeURIComponent(locale)}` +
-        (workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '');
       const res = await fetch(
-        url,
+        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId
+        )}/layers/user/${encodeURIComponent(locale)}?subject=${encodeURIComponent(subject)}`,
         { method: 'DELETE' }
       );
       if (!res.ok) {

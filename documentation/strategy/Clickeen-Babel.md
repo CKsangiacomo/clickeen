@@ -507,7 +507,7 @@ tokyo/
 - Only translate what changed (cost optimization)
 - Prevents stale translations (fingerprint validation)
 - Enables partial updates (ops overlay system)
-- User overrides preserved (user_ops separate from AI ops)
+- User overrides preserved in layer=user (`user_ops` separate from AI ops)
 
 **Cost comparison:**
 - Traditional: Re-translate entire document on any change → $50/language
@@ -880,7 +880,7 @@ Clickeen serves:
 - Translations reference `baseFingerprint` of source content
 - If source unchanged → reuse existing translations (zero cost)
 - If source changed → only re-translate changed fields (incremental cost)
-- User overrides preserved separately (`user_ops` vs `ops`)
+- User overrides preserved separately in layer=user (`user_ops` vs `ops`)
 
 **Why Competitors Can't Copy:**
 - Requires content-addressed storage first (see Moat #1)
@@ -1563,8 +1563,9 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
+  "layer": "user",
+  "layer_key": "fr",
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
-  "locale": "fr",
   "user_ops": [
     {
       "op": "set",
@@ -1578,8 +1579,8 @@ LOOP REPEATS (exponential growth)
 
 **When rendering:**
 1. Load base config
-2. Apply AI-generated `ops` (translations)
-3. Apply user-specific `user_ops` (overrides)
+2. Apply locale-layer `ops` (translations)
+3. Apply layer=user ops (per-locale or global fallback)
 4. Result: User's custom translation preserved even when AI re-translates
 
 ### Translation Pipeline Implementation
@@ -1744,8 +1745,10 @@ export async function renderInstance(req: RenderRequest): Promise<string> {
   // 2. Load localization overlay (if exists)
   const overlay = await loadLocalizationOverlay(instanceId, locale);
 
-  // 3. Load user overrides (if exists)
-  const userOverrides = await loadUserOverrides(instanceId, locale);
+  // 3. Load user overrides (layer=user, locale or global)
+  const userOverrides =
+    (await loadLayerOverlay(instanceId, 'user', locale)) ??
+    (await loadLayerOverlay(instanceId, 'user', 'global'));
 
   // 4. Merge: base + overlay + userOverrides
   let config = { ...baseConfig };
@@ -1755,7 +1758,7 @@ export async function renderInstance(req: RenderRequest): Promise<string> {
   }
 
   if (userOverrides) {
-    config = applyOps(config, userOverrides.user_ops);
+    config = applyOps(config, userOverrides.ops);
   }
 
   // 5. Render in target format

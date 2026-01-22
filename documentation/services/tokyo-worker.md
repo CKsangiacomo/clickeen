@@ -24,8 +24,8 @@
 - Scheduled repair publishes only dirty rows (bounded; no full-table scans).
 
 ## l10n Publish Flow (executed)
-- Reads `widget_instance_overlays` from Supabase (Phase 1: locale layer only).
-- Merges `ops + user_ops` (user_ops applied last for layer=user).
+- Reads `widget_instance_overlays` from Supabase (layered).
+- Merges `ops + user_ops` for layer=user (user_ops applied last).
 - Writes `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`.
 - Writes `tokyo/l10n/instances/<publicId>/index.json` with layer keys (hybrid index).
 - Marks publish state clean in `l10n_publish_state`.

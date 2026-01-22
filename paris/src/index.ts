@@ -852,7 +852,7 @@ async function loadWidgetLayerAllowlist(env: Env, widgetType: string, layer: str
   const url = `${base}/widgets/${encodeURIComponent(widgetType)}/layers/${encodeURIComponent(layer)}.allowlist.json`;
   const res = await fetch(url, { method: 'GET', cache: 'no-store' });
   if (res.status === 404) {
-    return loadWidgetLocalizationAllowlist(env, widgetType);
+    return [];
   }
   if (!res.ok) {
     const details = await res.text().catch(() => '');
@@ -3104,8 +3104,7 @@ async function enqueueL10nJobs(args: {
   if (locales.length === 0) return null;
 
   const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
-  const workspaceId =
-    kind === 'curated' ? null : resolveInstanceWorkspaceId(args.instance) ?? args.workspace.id ?? null;
+  const workspaceId = resolveInstanceWorkspaceId(args.instance) ?? args.workspace.id;
 
   const jobs: L10nJob[] = locales.map((locale) => ({
     v: 1,

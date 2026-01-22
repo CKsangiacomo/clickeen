@@ -84,7 +84,7 @@ Local dev:
 
 Tokyo serves **instance localization overlays** as deterministic baseFingerprint ops patches:
 
-- Build output path: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json` (Phase 1 uses locale layer; other layers use the same path)
+- Build output path: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json` (locale + user layers active; other layers use the same path)
 - Locale index: `tokyo/l10n/instances/<publicId>/index.json` (hybrid layer index)
 
 Rules:
@@ -92,7 +92,7 @@ Rules:
 - Overlays include `baseFingerprint` and are rejected if missing.
 - Instance identity is locale-free (`publicId` never contains locale).
 - Consumers should treat overlay files as cacheable (immutable baseFingerprint filenames); no global manifest is used.
-- Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_overlays` (Phase 1 uses locale layer).
+- Overlay files are materialized by `tokyo-worker` from Supabase `widget_instance_overlays` (layered; locale + user are active).
 - `index.json` is materialized by `tokyo-worker` and lists available layer keys (hybrid index).
 
 Build command (repo root):

@@ -1,515 +1,561 @@
 # How We Build Widgets
 
-> **Purpose**: AI-first implementation playbook for building a widget definition in `tokyo/widgets/{widgetname}/`.
->
-> For system architecture and data flow, see [WidgetArchitecture.md](./WidgetArchitecture.md).
+STATUS: CANONICAL (AI-executable)
+OWNER: Platform / Widget System
+
+This document is the canonical build contract for widget definitions in:
+- `tokyo/widgets/{widgetType}/`
+
+This document is optimized for AI agents: contracts, schemas, checklists, templates.
+No conversational guidance.
 
 ---
 
-## AI Build Playbook
+## 1) ONE-PAGE QUICKSTART (AI)
 
-### Globals (platform-provided, never reinvent)
+### SCOPE
+- Task: build or update ONE widget definition under `tokyo/widgets/{widgetType}/`.
+- Scope is LIMITED to the widget folder files listed below.
 
-These exist for **every** widget and should be treated as fixed infrastructure:
+### FILES
+Core (always present):
+- `spec.json`
+- `widget.html`
+- `widget.css`
+- `widget.client.js`
+- `agent.md`
 
-- **Stage/Pod** (container + placement)
-  - State: `state.stage.*` and `state.pod.*`
-  - Runtime: `window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)`
-  - Editor UI:
-    - **Stage/Pod Layout** (auto-generated in Layout when `defaults.stage` / `defaults.pod` exist)
-    - **Stage/Pod Appearance** (authored in Appearance via `tooldrawer-field-podstageappearance`)
-- **Typography** (text roles → CSS variables)
-  - Runtime: `window.CKTypography.applyTypography(state.typography, el, roleMap)`
-  - Editor UI: auto-generated Typography panel when `defaults.typography.roles` exists
-  - Role contract: `family`, `sizePreset`, `sizeCustom`, `fontStyle`, `weight`, `color`
-- **Branding** (backlink)
-  - Runtime: handled by `tokyo/widgets/shared/branding.js` (auto-injects the badge + listens to `ck:state-update`; driven by `state.behavior.showBacklink`)
-- **Preview protocol** (Bob → iframe)
-  - Message: `{ type: 'ck:state-update', widgetname, state, device, theme }`
+Contract (present unless PRD explicitly opts out):
+- `limits.json`
+- `localization.json`
 
-Widgets use these platform-provided "globals" as-is. They are the shared wheel.
+### STOP CONDITIONS (ASK HUMAN)
+Stop and ask if any are true:
+- widgetType not explicitly provided
+- no PRD or PRD conflicts with contracts below
+- change requires new Dieter primitive or token
+- change requires editing `tokyo/widgets/shared/*`
+- change requires editing Bob/Paris/Venice/Prague/Dieter
+- cannot enumerate final state paths before writing ToolDrawer controls
+- cannot provide Binding Map rows (Section 7) for all new controls
 
-### 0) Stage/Pod block (canonical, never changes)
+### BUILD ORDER (NON-NEGOTIABLE)
+1) Define state model (paths + arrays + items + subparts)
+2) Update `spec.json` defaults (Stage/Pod + Typography included)
+3) Update `widget.html` DOM skeleton with stable `data-role`
+4) Update `widget.css` using tokens + CSS vars + single breakpoint
+5) Update `widget.client.js` bindings
+   - Stage/Pod binding first
+   - Typography binding second
+   - widget-specific bindings after
+6) Update ToolDrawer panels in `spec.json` (only for already-bound paths)
+7) Update `agent.md` (AI editing contract + Binding Map)
 
-Stage/Pod is the **shared outer layout wrapper** used by every widget. It is the stable boundary between:
-- **Platform layout** (stage + pod: padding, width, alignment, radius, backgrounds)
-- **Widget content** (everything inside the widget root)
+### DEFINITION OF DONE (GATES)
+All must be true:
+- Stage/Pod state exists and is applied via shared runtime on every update
+- Desktop + mobile Stage/Pod values exist and affect preview
+- Every ToolDrawer control produces a visible change (no dead controls)
+- All visible text is covered by Typography roles (no ad-hoc font styling)
+- Runtime is deterministic and scoped to the widget root
+- `agent.md` lists editable paths and allowed ops consistent with widget state model
+- Contract files exist (`limits.json`, `localization.json`) unless PRD explicitly opts out
+- No non-persistable URLs (`data:` / `blob:`) in defaults or saved configs
 
-Because it’s shared infrastructure (and wired into Bob’s auto-generated panels + shared runtime), the Stage/Pod block is **identical across widgets**. Widgets differ only inside the widget root.
+---
 
-#### What Stage/Pod does
+## 2) STAGE/POD CONTRACT (LAYOUT ENGINE)
 
-- **Stage** is the full-width outer container. It owns:
-  - background fill
-  - alignment/positioning of the pod within the stage
-  - stage padding
-- **Pod** is the content container that “holds the widget”. It owns:
-  - widget background fill (surface)
-  - width mode (wrap/full/fixed) and content width
-  - corner radius
-  - pod padding
+### PURPOSE
+- Stage/Pod is the shared container system used by every widget.
+- Pod drives most layout feel (width, padding, radius, surface background).
+- Stage provides the outer canvas (alignment, padding around pod).
 
-These values are applied by the shared runtime module:
-- `tokyo/widgets/shared/stagePod.js` → `window.CKStagePod.applyStagePod(stage, pod, widgetRoot)`
+### MUST (STATE SHAPE IN `spec.json`)
+`defaults.stage` MUST exist and include:
+- `background`
+- `alignment`
+- `canvas.mode`
+- `padding.desktop` and `padding.mobile`
+  - each padding object MUST include: `linked, all, top, right, bottom, left`
 
-#### How to use Stage/Pod (exact recipe)
+`defaults.pod` MUST exist and include:
+- `background`
+- `padding.desktop` and `padding.mobile` (same shape as stage padding)
+- `widthMode`
+- `contentWidth`
+- radius fields:
+  - `radiusLinked`
+  - `radius`
+  - `radiusTL`, `radiusTR`, `radiusBR`, `radiusBL`
 
-**A) `spec.json` defaults must include `stage` and `pod`**
+### MUST (HTML WRAPPER IN `widget.html`)
+`widget.html` MUST include:
+- stage element: `data-role="stage"`
+- pod element: `data-role="pod"`
+- widget root element:
+  - `data-role="root"`
+  - `data-ck-widget="{widgetType}"`
 
-This is what drives Bob’s standard Stage/Pod panels and provides the state shape the runtime expects.
+Hierarchy MUST be:
+`[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget]`
 
+### MUST (RUNTIME BINDING IN `widget.client.js`)
+`widget.client.js` MUST call:
+- `window.CKStagePod.applyStagePod(state.stage, state.pod, root)`
+
+Call MUST occur on:
+- initial state load (`window.CK_WIDGET.state` when present)
+- every `ck:state-update`
+
+### MUST (EDITOR CONTROLS FOR STAGE/POD FILLS)
+ToolDrawer MUST expose Stage/Pod backgrounds in Appearance panel:
+- `stage.background` dropdown-fill
+- `pod.background` dropdown-fill
+
+Each MUST declare `fill-modes` explicitly.
+
+### DROPDOWN-FILL DEFAULTS FOR STAGE/POD
+Default allowed fill modes:
+- `stage.background`: `color,gradient,image,video`
+- `pod.background`: `color,gradient,image,video`
+
+If PRD requires restricting media fills, restrict via `fill-modes`.
+
+### MUST NOT
+- Do not re-implement container layout (stage/pod sizing/alignment/padding) in widget-specific CSS/JS beyond calling CKStagePod.
+- Do not add fallback/healing logic if stage/pod fields are missing.
+
+---
+
+## 3) TAXONOMY (NO “ITEM” CONFUSION)
+
+### PURPOSE
+- Prevent state/DOM mismatch and repeated “item vs root” mistakes.
+- Provide a single vocabulary for arrays/items/subparts.
+
+### TERMS (NON-NEGOTIABLE)
+- Stage: outer container behind widget
+- Pod: container holding widget
+- Widget Root: the single `[data-ck-widget="{widgetType}"][data-role="root"]`
+- Array: a list in state (e.g. `sections[]`)
+- Array Container: DOM element that renders an Array
+- Item: one element of an Array (e.g. `sections[i]`)
+- Item Container: DOM wrapper for one Item
+- Subpart: element inside an item (text/icon/badge/etc.)
+
+### RULES
+- “Item” MUST refer only to an array element.
+- Widget Root MUST NOT be called an item.
+- Every Array MUST have:
+  - one DOM Array Container (stable `data-role`)
+  - one DOM Item Container (stable `data-role`)
+- Every runtime-mutated element MUST have a stable `data-role`.
+
+### REQUIRED `data-role` PATTERN
+Use `data-role` for behavior hooks ONLY.
+Use classnames for styling ONLY.
+
+Minimum required roles:
+- `stage`
+- `pod`
+- `root`
+
+Additional required roles:
+- one role for each Array Container
+- one role for each Item Container
+- subpart roles for anything runtime updates (text blocks, icons, badges)
+
+---
+
+## 4) WRAPPER STYLING SYSTEM (REPETITIVE BY DESIGN)
+
+### PURPOSE
+- Wrapper styling is intentionally repetitive so AIs can implement it mechanically.
+- All wrappers share the same styling dimensions: fill, border, radius, shadow (+ optional divider).
+
+### SURFACES (WRAPPERS)
+Potential wrapper surfaces:
+- `stage` (shared)
+- `pod` (shared)
+- `root` (widget root surface)
+- `array.<key>` (array container wrapper)
+- `item.<key>` (item wrapper)
+- `part.<key>` (subpart wrapper)
+
+Only define surfaces that exist in the widget.
+
+### STANDARD APPEARANCE KEYS (REUSABLE PATTERN)
+For any surface `S`, use:
+- `appearance.S.fill`            (dropdown-fill value object)
+- `appearance.S.border`          (object)
+- `appearance.S.radius`          (object or token)
+- `appearance.S.shadow`          (enum/token)
+
+Optional:
+- `appearance.S.divider`         (object) (arrays/items only)
+
+### STANDARD LAYOUT KEYS (REUSABLE PATTERN)
+For any surface `S`, use:
+- `layout.S.padding.desktop|mobile` (same padding shape as Stage/Pod)
+- `layout.S.gap` (arrays only)
+- `layout.S.alignment` (only if meaningful)
+
+### MUST
+- Wrapper styling MUST use the standard keys above.
+- Wrapper appearance MUST bind via one of:
+  - CSS variables
+  - data-attribute variants
+  - deterministic DOM update (only when necessary)
+
+### MUST NOT
+- Do not invent widget-specific styling keys that duplicate the standard model.
+  Examples prohibited:
+  - `tileBg`, `cardBorderColor`, `rowRoundness` (use standard surface keys instead)
+
+---
+
+## 5) DROPDOWN-FILL CONTRACT (FILL MODES + MEDIA RULES)
+
+### PURPOSE
+- Prevent accidental media fill enablement everywhere.
+- Ensure AIs declare fill capabilities explicitly.
+
+### MUST
+- Every dropdown-fill control MUST declare `fill-modes`.
+- If `fill-modes` includes `image` or `video`, that surface is considered media-capable.
+
+### DEFAULT MATRIX
+Unless PRD explicitly requires otherwise:
+
+- Stage/Pod backgrounds:
+  - `stage.background`: `color,gradient,image,video`
+  - `pod.background`:   `color,gradient,image,video`
+
+- Other wrapper fills (root/array/item/part):
+  - default: `color,gradient`
+  - enable `image`/`video` ONLY IF PRD explicitly requires
+
+### PERSISTABILITY RULE (CRITICAL)
+Final configs MUST NOT contain:
+- `data:` URLs
+- `blob:` URLs
+
+If media fills are enabled, assume the system will persist assets and rewrite references.
+Do not ship defaults that require non-persistable URLs.
+
+---
+
+## 6) TYPOGRAPHY CONTRACT (MANDATORY FOR ALL TEXT)
+
+### PURPOSE
+- Typography is the scalable text system: roles -> CSS vars -> deterministic rendering.
+- All text must be driven by roles to keep design consistent across widgets, templates, and localization.
+
+### MUST
+If the widget renders any user-visible text:
+- `defaults.typography.roles` MUST define roles for all text parts.
+- `widget.client.js` MUST call:
+  - `window.CKTypography.applyTypography(state.typography, root, roleMap)`
+- `widget.css` MUST use typography CSS variables emitted by typography runtime.
+
+### MUST NOT
+- Do not set fonts ad-hoc per element (inline styles or hard-coded font stacks).
+- Do not create separate “text color” controls outside typography unless PRD requires it.
+
+### ROLE MAP RULE
+The roleMap MUST include a mapping for each text role used in DOM/CSS.
+Role names MUST be stable across:
+- `spec.json` defaults
+- runtime applyTypography roleMap
+- `agent.md` (AI editing contract)
+- localization allowlist paths (if translatable)
+
+---
+
+## 7) BINDING MAP CONTRACT (NO DEAD CONTROLS)
+
+### PURPOSE
+- Prevent “controls that compile but do nothing.”
+- Force a deterministic mapping from state path to visible effect.
+
+### MUST
+For every ToolDrawer control path, define a Binding Map row.
+
+Allowed mechanisms (exactly one per control):
+1) CSS variable binding
+2) data-attribute variant binding
+3) deterministic DOM update binding
+
+### REQUIRED TABLE FORMAT
+Binding Map table MUST exist in the PRD and MUST be summarized in `agent.md`.
+
+| Path | Target | Mechanism | Implementation |
+|---|---|---|---|
+| `layout.type` | widget root | data-attr | `root.setAttribute('data-layout', state.layout.type)` |
+| `appearance.item.fill` | item wrapper | CSS var | `root.style.setProperty('--item-fill', ...)` |
+| `content.title` | `[data-role="title"]` | DOM text | `el.textContent = state.content.title` |
+
+### MUST NOT
+- Do not add a control path if it has no Binding Map row.
+- Do not rely on implicit behavior or heuristics.
+
+---
+
+## 8) TOOLDRAWER CONTRACT (PANELS + GROUPS)
+
+### PURPOSE
+- Maintain consistent editor UX across all widgets.
+- Keep AI-generated ToolDrawer structures predictable and scalable.
+
+### PANELS (STANDARD)
+Use these panels only:
+- `content`
+- `layout`
+- `appearance`
+- `typography`
+- `settings` (only if necessary)
+
+### MUST
+- Content panel: content model + arrays/items + any “type/mode” selectors
+- Layout panel: spacing/arrangement variants; padding/gap/alignment; layout selectors
+- Appearance panel: wrapper styling (fill/border/radius/shadow); Stage/Pod fills
+- Typography panel: roles only; no ad-hoc text styling controls elsewhere
+
+### SHOW-IF DISCIPLINE
+- Use `show-if` to gate controls by variant keys (type/layout).
+- Do not duplicate entire panels per variant.
+
+---
+
+## 9) CONTRACT FILES (DEFAULT REQUIRED)
+
+### 9.1 limits.json
+### PURPOSE
+- Platform cap enforcement at product boundary.
+
+### MUST
+- `limits.json` exists unless PRD explicitly opts out.
+- It MUST be valid JSON and follow the platform limits schema used by Paris.
+- It MUST be updated only when PRD requires changes.
+
+### 9.2 localization.json
+### PURPOSE
+- Allowed translatable paths for localization overlays (set-only ops).
+
+### MUST
+- `localization.json` exists unless PRD explicitly opts out.
+- It MUST include all translatable text paths.
+- It MUST use `*` for array indices.
+- It MUST NOT include prohibited segments (`__proto__`, `constructor`, `prototype`).
+
+### REFERENCE SHAPE
 ```json
 {
-  "stage": {
-    "background": "transparent",
-    "alignment": "center",
-    "canvas": { "mode": "wrap", "width": 0, "height": 0 },
-    "padding": {
-      "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
-      "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
-    }
-  },
-  "pod": {
-    "background": "transparent",
-    "padding": {
-      "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
-      "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
-    },
-    "widthMode": "wrap",
-    "contentWidth": 960,
-    "radiusLinked": true,
-    "radius": "4xl",
-    "radiusTL": "4xl",
-    "radiusTR": "4xl",
-    "radiusBR": "4xl",
-    "radiusBL": "4xl"
-  }
+  "v": 1,
+  "paths": [
+    { "path": "title", "type": "string" },
+    { "path": "sections.*.heading", "type": "string" },
+    { "path": "sections.*.faqs.*.question", "type": "string" },
+    { "path": "sections.*.faqs.*.answer", "type": "richtext" }
+  ]
 }
-```
+10) RUNTIME DETERMINISM (widget.client.js)
+PURPOSE
+Ensure preview and embed behave identically.
 
-**B) `widget.html` wrapper must be exactly**
+Ensure state updates are pure and repeatable.
 
-```html
-<div class="stage" data-role="stage">
-  <div class="pod" data-role="pod">
-    <div class="ck-widget" data-ck-widget="mywidget" data-role="root">
-      <!-- widget content -->
+MUST
+Implement applyState(state) as a pure DOM update.
 
-      <script src="../shared/typography.js" defer></script>
-      <script src="../shared/stagePod.js" defer></script>
-      <script src="../shared/branding.js" defer></script>
-      <script src="./widget.client.js" defer></script>
-    </div>
-  </div>
-</div>
-```
+Scope all selectors and mutations to the widget root.
 
-**C) `widget.client.js` calls the shared module**
+Use stable data-role selectors only.
 
-```js
-window.CKStagePod.applyStagePod(state.stage, state.pod, root);
-```
+Apply Stage/Pod and Typography before widget-specific bindings.
 
-That’s it. Once Stage/Pod is present, the widget author focuses on everything inside the widget root.
+MUST NOT
+No fetch/network work in applyState.
 
-#### Where Stage/Pod controls live in Bob (panel placement)
+No timers/intervals.
 
-- **Stage/Pod layout controls** (padding, width, alignment) are **auto-generated by Bob** when `defaults.stage` / `defaults.pod` exist.
-  - You do **not** hand-author those controls in `spec.json`.
-  - Bob injects them into the widget’s **Layout** panel as a standardized “Stage/Pod layout” group.
+No randomness (IDs, timestamps, random ordering).
 
-- **Stage/Pod fills** (backgrounds) should always live in the widget’s **Appearance** panel as a standardized “Stage/Pod appearance” group.
-  - Use the special field tag `tooldrawer-field-podstageappearance` so Bob groups them correctly.
+No “healing” missing state fields; state shape is defined by spec.json.
 
-Copy/paste this cluster into your `<bob-panel id='appearance'>`:
+11) BUILD PROCESS (DETAILED STEPS)
+STEP 1 — STATE MODEL (WRITE FIRST)
+MUST produce:
 
-```json
-"  <tooldrawer-cluster>",
-"    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
-"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
-"    <tooldrawer-field-podstageappearance type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
-"  </tooldrawer-cluster>",
-```
+list of state paths
 
-**Fill value contract**
-- `dropdown-fill` stores a fill object (e.g. `{ "type": "color", "color": "var(--color-system-white)" }`).
-- Use `fill-modes` on `dropdown-fill` to constrain allowed modes (`color`, `gradient`, `image`, `video`).
+list of arrays and items
 
-#### Pod is the widget container (mental model + DOM map)
+list of subparts requiring roles or styling
 
-The Pod is literally the DOM parent container of the widget root:
+STEP 2 — spec.json DEFAULTS
+MUST:
 
-```text
-stage (outer page section)         ← state.stage.*
-  pod (container holding widget)   ← state.pod.*
-    [data-ck-widget="..."]         ← widget-specific DOM + styling
-```
+include Stage/Pod defaults
 
-If you remember one thing: **pod.background is the widget’s surface**; stage.background is the outer section behind it.
+include Typography roles for all text
 
-#### Pod sizing rule (default: content-driven)
+include defaults for every control path
 
-As a default rule, **Pod should expand/shrink based on widget content** (height is “auto” / content-driven). This keeps widgets responsive by default (longer text, more items, localization, mobile widths).
+STEP 3 — widget.html STRUCTURE
+MUST:
 
-Only constrain/“lock” Pod sizing when a specific **Type/Layout** or an explicit **Layout setting** requires a fixed viewport experience (e.g., carousel/ticker viewport, badge/floating chip). In those cases, expose the constraint as an intentional control in the correct panel (usually Layout) and document it in the widget PRD/`agent.md`.
+implement Stage/Pod/root wrappers and stable roles
 
-#### Desktop/Mobile contract (Pod frames it; widget CSS defines it)
+provide roles for arrays/items/subparts
 
-Pod settings strongly influence the experience across devices (width mode, content width, padding, radius), but **Pod does not replace responsive widget design**.
+STEP 4 — widget.css
+MUST:
 
-When building a widget, you must explicitly define **desktop vs mobile rendering** inside the widget root (`widget.html` + `widget.css`) using the global taxonomy:
-- how each **Array** renders on desktop vs mobile (e.g., grid columns, slider viewport, ticker row height)
-- how each **Item** sizes/reflows (logo size, card density, text wrapping, truncation rules)
-- which **subparts** hide/show on mobile if needed
+use tokens and CSS vars
 
-Rule: **Pod provides the frame; widget CSS specifies the responsive behavior of arrays/items/subparts within that frame.**
+implement variants via data attributes and CSS vars
 
-#### Stage/Pod layout is not “extra” — it’s part of the main layout
+use single breakpoint policy
 
-Agents skip Stage/Pod layout because it’s **auto-generated** (not written in the widget’s `spec.json`), so it’s “out of sight” while authoring controls.
+STEP 5 — widget.client.js
+MUST:
 
-Treat Stage/Pod layout as the **first part of layout** for every widget:
+call CKStagePod + CKTypography
 
-- **Stage padding** = whitespace around the widget section (outside the pod)
-- **Pod width** = how wide the widget container is (wrap / full / fixed)
-- **Pod padding** = whitespace inside the widget container (around widget content)
-- **Pod radius** = the widget container’s corner radius
-- **Pod alignment** = where the pod sits inside the stage
+implement Binding Map rows via allowed mechanisms
 
-If the user request is about spacing or container shape, it is almost always Stage/Pod:
+STEP 6 — ToolDrawer PANELS
+MUST:
 
-- “More breathing room around the widget” → increase **stage padding** (desktop/mobile)
-- “More space inside the widget card” → increase **pod padding** (desktop/mobile)
-- “Make it narrower / max width” → set **pod.widthMode** + **pod.contentWidth**
-- “Make corners rounder” → set **pod.radius**
+add controls only for already-bound paths
 
-For every new widget design (or new template), explicitly decide these 4 values:
+declare fill-modes for dropdown-fill controls
 
-- `stage.canvas.mode` + stage padding (desktop/mobile)
-- `pod.widthMode` + (if fixed) `pod.contentWidth`
-- pod padding (desktop/mobile)
-- `pod.radius`
+enforce grouping and show-if discipline
 
----
+STEP 7 — agent.md
+MUST:
 
-### 1) Platform contracts (standard)
+list editable paths
 
-- **Widget definition = 5 files in Tokyo**: `tokyo/widgets/{widgetname}/{spec.json, widget.html, widget.css, widget.client.js, agent.md}`
-- **Orchestrators are dumb pipes**: Bob/Paris/Venice pass data through unchanged.
-- **State shape is defined by `spec.json` + the widget runtime**: keep paths consistent across `spec.json`, `agent.md`, `widget.html`, `widget.css`, and `widget.client.js`.
-- **Security + safety**:
-  - Runtime behavior is implemented as deterministic DOM/CSS updates.
-  - Any rich text/HTML controls are applied via a small allowlist sanitizer before `innerHTML`.
-- **Deterministic runtime**: on `ck:state-update`, apply state to DOM, CSS variables, and data attributes (no network work).
+define allowed ops for arrays (insert/remove/move semantics)
 
----
+summarize Binding Map
 
-## Arrays + Items (global taxonomy, required)
+list prohibited paths
 
-Widgets scale cleanly when every author (human or AI) uses the same vocabulary and DOM wiring rules.
+12) CHECKLISTS (AI)
+12.1 Pre-flight
+ widgetType explicit
 
-### Vocabulary (do not mix terms)
+ PRD exists and is consistent
 
-- **Array**: a list in state, written as `path[]` (example: `reviews[]`, `sections[]`, `sections[].faqs[]`, `strips[].logos[]`).
-- **Item**: one element of an array, written as `path[i]` (example: `sections[i].faqs[j]`).
-- **DOM item container**: the DOM element that renders one Item (example: `li.ck-faq__item[data-role="faq-item"]`).
+ state model enumerated (paths + arrays + items)
 
-**Rule:** never call an Array an “item”. Widgets often have multiple arrays; each has its own Items.
+ Stage/Pod defaults present
 
-### Naming and wiring rules
+ Typography roles enumerated for all visible text
 
-- **`data-role` is for behavior/hooks**: anything `widget.client.js` reads/writes must have a stable `data-role="..."`.
-- **classes are for styling**: use widget-scoped classes (e.g. `.ck-faq__item`) for CSS, not `data-role`.
-- **Every Array must have**:
-  - a stable **DOM array container** (where items are rendered), and
-  - a stable **DOM item container** (the “piece” wrapper for one item).
+ Wrapper surfaces enumerated and mapped to standard schema
 
-### Examples (state → DOM)
+ Binding Map rows exist for every planned control
 
-- **FAQ**
-  - **Array**: `sections[]` → **Item**: `sections[i]`
-  - **Array**: `sections[i].faqs[]` → **Item**: `sections[i].faqs[j]`
-  - **DOM item container (FAQ row)**: `li.ck-faq__item[data-role="faq-item"]`
+12.2 spec.json
+ defaults.stage exists with per-device padding
 
-- **LogoShowcase**
-  - **Array**: `strips[]` → **Item**: `strips[i]` (one strip)
-  - **Array**: `strips[i].logos[]` → **Item**: `strips[i].logos[j]` (one logo)
+ defaults.pod exists with width/radius/padding
 
-This taxonomy is what keeps nesting, styling, and runtime updates consistent across 100s of widgets.
+ defaults.typography.roles exists when widget has text
 
-### Stage/Pod is the model for all other settings (panel distribution rule)
+ every ToolDrawer control path exists in defaults
 
-Stage/Pod already proves the core product principle: **settings belong in the panel that matches what they are**, and are grouped by the surface they affect.
+ panels used only: content/layout/appearance/typography/settings
 
-We must use the **same system** for widget-owned surfaces:
+ Stage/Pod background fills exposed in Appearance
 
-- **Surfaces** (when present):
-  - **Widget root surface** (the widget itself, inside Pod)
-  - **Array container surface** (where items are laid out: list/grid/track)
-  - **Item surface** (the repeated “piece” container)
-  - **Subpart surfaces** (optional: e.g. question text, answer text, icon, badge)
+ every dropdown-fill declares fill-modes explicitly
 
-- **Panel distribution** (always the same across all widgets):
-  - **Content panel**: chooses Type/mode and edits the content model (including Arrays/Items and per-item fields).
-  - **Layout panel**: spacing + arrangement (gap, padding, columns, density, alignment; container layout mode; any layout-type selectors).
-  - **Appearance panel**: colors/fills/borders/radius/shadow/dividers for each surface.
-  - **Typography panel**: role-based font + color settings, driven by `defaults.typography.roles`.
+ controls align to Binding Map
 
-**Why this matters:** it keeps Bob’s ToolDrawer predictable at scale. Users learn one system (Stage/Pod) and it applies everywhere; AIs can implement widgets by following the same panel and grouping template instead of inventing bespoke control layouts.
+12.3 widget.html
+ stage/pod/root wrappers exist with required attributes
 
-### 2) Core widget skeleton (common to all widgets)
+ widget root uses data-ck-widget="{widgetType}"
 
-This is the shared structure every widget must implement. Everything else is widget-specific.
+ every runtime-mutated element has stable data-role
 
-#### HTML wrapper hierarchy (required)
+ scripts included inside widget root
 
-- `.stage[data-role="stage"]` → `.pod[data-role="pod"]` → widget root `[data-ck-widget="{widgetname}"]`
-- All widget DOM is inside the widget root.
-- All scripts are inside the widget root.
+ no inline styles/scripts
 
-#### Shared runtime scripts (required)
+12.4 widget.css
+ uses Dieter tokens (no hard-coded colors)
 
-These scripts must be included (inside the widget root) in this order:
-- `../shared/typography.js`
-- `../shared/stagePod.js`
-- `../shared/branding.js`
-- `./widget.client.js`
+ uses CSS vars for wrapper styling and typography
 
-#### Runtime boot + state update listener (required)
+ layout variants controlled by data attrs/CSS vars
 
-In `widget.client.js`:
-- Resolve the widget root using `document.currentScript.closest('[data-ck-widget="{widgetname}"]')`.
-- Listen for Bob preview updates via `window.addEventListener('message', ...)` and handle `{ type: 'ck:state-update', widgetname, state }`.
-- Apply initial embed state from `window.CK_WIDGET.state` when present.
+ single breakpoint policy
 
-#### DOM hooks (required pattern)
+12.5 widget.client.js
+ deterministic applyState
 
-- Use `data-role="..."` attributes for every DOM node that runtime code needs to read/write.
-- Keep selectors stable and explicit (no “query by text”, no brittle DOM traversal).
+ calls CKStagePod + CKTypography
 
-#### Styling contract (required pattern)
+ implements all Binding Map rows
 
-- Styling is CSS-first: `widget.client.js` sets CSS variables and data attributes, `widget.css` renders variants.
-- Use widget root `data-*` attributes for major variants (layout mode, theme preset, etc.).
+ no global selectors; scoped to root
 
----
+ no fetch/timers/randomness
 
-### 2.1) Main widget variants (only two): Type and Layout
+12.6 agent.md
+ editable paths listed (matches spec.json)
 
-In Clickeen, the only **top-level** variants that matter are:
+ array ops rules explicit (insert/remove/move)
 
-- **Type (aka mode)**: what the widget *is* (different behavior + often different DOM block).
-- **Layout**: where/how the widget is placed and arranged (bars, floating, inline, grid vs carousel, etc.).
+ Binding Map summary present
 
-Everything else is just normal control wiring.
+ prohibited paths listed
 
-#### Where Type and Layout belong (panel rule)
+ localization-sensitive paths identified (if applicable)
 
-- **Type lives in the Content panel** because Type determines *what content exists* (which content blocks/fields are relevant).
-  - Example: a widget `timer.mode` changes the content model: date vs personal vs number.
-- **Layout lives in the Layout panel** because Layout determines *how the chosen type is arranged/placed*.
-  - Example: inline vs top-bar vs floating.
+12.7 limits.json
+ exists (unless PRD opts out)
 
-Keep this simple rule in mind:
+ valid JSON
 
-```text
-Pod contains the widget.
-Type selects the content model.
-Layout selects the arrangement/placement of that type.
-```
+ aligned to widget PRD caps
 
-#### Type = a miniwidget spec (why this is true)
+12.8 localization.json
+ exists (unless PRD opts out)
 
-When you add a new **Type** (mode) to a widget, you are effectively adding a second **miniwidget** inside the same widget root, because a Type must include the full stack:
+ valid JSON
 
-- **State shape**: new paths in `spec.json` → `defaults` (what exists in the state)
-- **ToolDrawer**: controls for those paths (and `show-if` so only the active Type’s controls show)
-- **Runtime**: logic that interprets those paths (what the widget does)
-- **DOM/CSS**: elements and styling that can actually change in response
+ includes all translatable text paths
 
-You can tell something is a **Type** (not “just another control”) when it changes the widget across these dimensions:
+ uses * for arrays
 
-- **Primary user experience**: what the widget feels like (e.g. grid vs masonry wall vs interactive carousel)
-- **Runtime behavior**: different event/timer/interaction logic (e.g. carousel navigation/drag/autoplay vs none)
-- **DOM/CSS structure**: different DOM block(s) must exist or different CSS layout systems apply
-- **Relevant controls**: the control set changes materially (e.g. grid columns vs carousel itemsVisible/autoplay vs masonry columns)
+ no prohibited segments
 
-That’s why “adding a Type” must always answer three questions:
-
-- **A) What is different?** (behavior + visible output)
-- **B) What controls exist for this type?** (complete set of paths)
-- **C) How is each control bound?** (CSS var / data-* / DOM update)
-
-Practically: treat each Type as a **mini-spec** with its own Binding Map rows. If you can’t write the Binding Map for the new Type, the controls will almost always do nothing.
-
-#### Why “Type” is often 50% container (Stage/Pod + Layout) — Feed vs Badge
-
-Feed vs Badge is the quintessential example:
-
-- **Feed** “type” feels like a *section/module* because its **container defaults** are large and deliberate:
-  - Stage padding creates whitespace around the module.
-  - Pod width/padding/radius creates a card-like container that holds a complex internal layout (grid/carousel/slider).
-- **Badge** “type” feels like a *chip/anchor element* because its **container defaults** are tight and positional:
-  - Pod is small and constrained.
-  - Layout is often floating/corner-pinned (or otherwise compact).
-
-Same idea, stated as the authoring rule:
-
-```text
-Defining a Type always includes:
-1) the content model + runtime behavior inside the pod, and
-2) the Stage/Pod + Layout defaults that make it feel like that type.
-```
-
-#### A) Type variant (Mode) — example: Timer widget
-
-**State**:
-- `timer.mode = 'date' | 'personal' | 'number'`
-
-**ToolDrawer**:
-- One dropdown chooses the type.
-- Type-specific controls are wrapped in `show-if` clusters.
-
-Example (from the pattern):
-
-```json
-"  <tooldrawer-field type='dropdown-actions' size='lg' path='timer.mode' label='Timer mode' value='{{timer.mode}}' options='[{\"label\":\"Target date\",\"value\":\"date\"},{\"label\":\"Personal timer\",\"value\":\"personal\"},{\"label\":\"Number counter\",\"value\":\"number\"}]' />",
-"  <tooldrawer-cluster show-if=\"timer.mode == 'date'\">",
-"    <tooldrawer-field type='textfield' size='lg' path='timer.dateTarget.targetDate' label='Target Date' />",
-"  </tooldrawer-cluster>",
-"  <tooldrawer-cluster show-if=\"timer.mode == 'number'\">",
-"    <tooldrawer-field type='textfield' size='md' path='timer.numberCounter.targetNumber' label='Target number' />",
-"  </tooldrawer-cluster>",
-```
-
-**Runtime** (`widget.client.js`):
-- Set a single attribute on the widget root:
-  - `root.setAttribute('data-mode', state.timer.mode)`
-- Show exactly one DOM block at a time (example):
-  - `[data-role="units"]` for timer units
-  - `[data-role="number"]` for number mode
-
-#### B) Layout variant — example: “where the widget lives”
-
-**State**:
-- `layout.type = 'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'floating'`
-- `layout.alignment = 'left' | 'center' | 'right'`
-
-**ToolDrawer**:
-- A “Layout” dropdown + alignment segmented control.
-- Layout-specific controls live under `show-if="layout.type == 'floating'"`, etc.
-
-**Runtime + CSS**:
-- `root.setAttribute('data-layout', state.layout.type)`
-- `root.setAttribute('data-alignment', state.layout.alignment)`
-- CSS selects variants:
-  - `.ck-widget[data-layout='top-bar'] { position: fixed; top: 0; left: 0; right: 0; }`
-  - `.ck-widget[data-layout='floating'][data-corner='bottom-right'] { ... }`
-
-If you can’t describe a widget change as either **Type** or **Layout**, it’s not a top-level variant—treat it as a normal control binding (CSS var / data attr / DOM update).
-
-#### C) “One type, multiple layouts” — example: FAQ
-
-FAQ has **one type** (it is always an FAQ), and the main variant axis is **Layout**:
-- `layout.type = 'accordion' | 'list' | 'multicolumn'`
-
-The pattern is:
-- ToolDrawer selects layout type.
-- Layout-specific controls use `show-if` (accordion behaviors only when `layout.type == 'accordion'`; columns only when `layout.type == 'multicolumn'`).
-- Runtime sets `data-layout` on the widget root, and CSS renders the layout.
-
-Concrete example (from `tokyo/widgets/faq/spec.json`):
-
-```json
-"<tooldrawer-field type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[...]' />",
-"<tooldrawer-field type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
-"<tooldrawer-cluster show-if=\"layout.type == 'multicolumn'\">",
-"  <tooldrawer-field type='textfield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
-"</tooldrawer-cluster>",
-```
-
-Concrete runtime binding (from `tokyo/widgets/faq/widget.client.js`):
-- `faqRoot.setAttribute('data-layout', layout.type)`
-
----
-
-### 3) ToolDrawer → Widget binding (the rule that prevents “dead controls”)
-
-Every ToolDrawer control must be connected to the actual widget via an explicit binding. In Clickeen, a control is “real” only when:
-
-- **A. Path exists in defaults**: the control’s `path="..."` must exist under `spec.json` → `defaults` so the state shape is real.
-- **B. Widget has a target**: there is a concrete DOM node to change (via `data-role="..."`) or a variant to toggle (via `data-*` on the widget root).
-- **C. Runtime applies it**: `widget.client.js` applies the state value to one of the supported mechanisms below, and `widget.css`/DOM reflects it.
-
-#### Supported binding mechanisms (pick one per control)
-
-- **CSS variable**: `widget.client.js` sets a CSS variable → `widget.css` uses it.
-- **Data attribute**: `widget.client.js` sets `data-*` on the widget root → `widget.css` uses selectors like `[data-layout="..."]`.
-- **DOM update**: `widget.client.js` sets text / html / visibility on a specific `[data-role="..."]` element.
-
-#### Required “Binding Map” (write this before adding controls)
-
-For every control you add to `spec.json`, add a row to this map (in your widget’s `agent.md` or at the top of `widget.client.js` as comments):
-
-| ToolDrawer path | Target | Mechanism | Implementation |
-|---|---|---|---|
-| `content.title` | `[data-role="heading"]` | DOM text | `heading.textContent = state.content.title` |
-| `appearance.headingColor` | widget root | CSS var | `root.style.setProperty('--heading-color', state.appearance.headingColor)` |
-| `layout.mode` | widget root | data attr | `root.setAttribute('data-layout', state.layout.mode)` |
-
-If a control cannot be described in this table, it will almost always “do nothing” in the widget.
-
-#### Minimal implementation checklist (per new control)
-
-- **1. `spec.json`**: add the default value at the path + add the ToolDrawer field with the same `path`.
-- **2. `widget.html`**: add/confirm the target element exists with the `data-role` used by runtime.
-- **3. `widget.client.js`**: apply the state value using exactly one mechanism above.
-- **4. `widget.css`** (only if needed): add CSS that uses the CSS var or data attribute.
-- **5. Verification**: change the control in Bob and confirm the DOM/CSS changes in the preview.
-
-### 3) Optional: reference widget
-
-If you want a concrete example that follows the core skeleton cleanly, use:
-- `tokyo/widgets/faq/`
-
-### 4) Build in this order
-
-1. **`spec.json` defaults** (state shape and defaults)
-2. **`widget.html` roles** (DOM skeleton with `data-role` hooks)
-3. **`widget.css`** (CSS variables + variants by data attributes)
-4. **`widget.client.js`** (applyState: set vars/attrs + update DOM + hook shared modules)
-5. **`spec.json` ToolDrawer controls** (every control must map to runtime behavior)
-6. **`agent.md`** (editable paths + selector map + enums)
-
----
-
-## Copy/Paste Templates (5 files)
-
-These are intentionally minimal and correct. Start here and extend.
-
-### `widget.html` template (structure + script placement)
-
-Key rule: **scripts must be inside** the `[data-ck-widget="..."]` element so `document.currentScript.closest(...)` works.
-
-```html
+13) TEMPLATES (MINIMAL CORRECT)
+13.1 widget.html (minimal)
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyWidget</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
     <div class="stage" data-role="stage">
       <div class="pod" data-role="pod">
-        <div class="ck-widget" data-ck-widget="mywidget" data-role="root">
-          <!-- content -->
-          <h2 data-role="heading">Title</h2>
-          <div data-role="content"></div>
+        <div class="ck-widget" data-ck-widget="WIDGETTYPE" data-role="root">
+          <!-- widget content -->
+          <div data-role="title"></div>
 
-          <!-- shared runtime -->
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>
           <script src="../shared/branding.js" defer></script>
@@ -519,170 +565,87 @@ Key rule: **scripts must be inside** the `[data-ck-widget="..."]` element so `do
     </div>
   </body>
 </html>
-```
-
-### `widget.client.js` template (strict + deterministic)
-
-```js
+13.2 widget.client.js (minimal deterministic skeleton)
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const scriptEl = document.currentScript;
   if (!(scriptEl instanceof HTMLElement)) return;
 
-  const root = scriptEl.closest('[data-ck-widget="mywidget"]');
+  const root = scriptEl.closest('[data-role="root"]');
   if (!(root instanceof HTMLElement)) {
-    throw new Error('[MyWidget] widget.client.js must be inside [data-ck-widget="mywidget"]');
+    throw new Error('[widget] widget.client.js must execute inside [data-role="root"]');
   }
 
   function applyState(state) {
     if (!state || typeof state !== 'object') return;
 
-    window.CKTypography.applyTypography(state.typography, root, {
-      heading: { varKey: 'heading' },
-      body: { varKey: 'body' },
-    });
-    window.CKStagePod.applyStagePod(state.stage, state.pod, root);
-    // Branding is applied by ../shared/branding.js (it listens to ck:state-update).
+    if (window.CKStagePod) window.CKStagePod.applyStagePod(state.stage, state.pod, root);
 
-    // Example: CSS variables
-    root.style.setProperty('--heading-color', state.appearance.headingColor);
+    if (window.CKTypography) {
+      window.CKTypography.applyTypography(state.typography, root, {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' }
+      });
+    }
 
-    // Example: DOM updates
-    const heading = root.querySelector('[data-role="heading"]');
-    if (heading instanceof HTMLElement) heading.textContent = state.content.title;
+    const title = root.querySelector('[data-role="title"]');
+    if (title instanceof HTMLElement && typeof state.title === 'string') {
+      title.textContent = state.title;
+    }
   }
 
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (!msg || msg.type !== 'ck:state-update') return;
-    if (msg.widgetname && msg.widgetname !== 'mywidget') return;
     applyState(msg.state);
   });
 
-  const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
-  if (initialState) applyState(initialState);
+  if (window.CK_WIDGET && window.CK_WIDGET.state) {
+    applyState(window.CK_WIDGET.state);
+  }
 })();
-```
-
-### `spec.json` template (defaults + ToolDrawer)
-
-Notes for agents:
-- `html` is a JSON array of **strings**: keep escaping correct.
-- `options='[...]'` is **JSON inside a string**: keep it minified and valid JSON.
-- Prefer double quotes in `show-if` attributes so inner single quotes are easy: `show-if="layout.mode == 'grid'"`.
-
-```json
-{
-  "widgetname": "mywidget",
-  "defaults": {
-    "content": { "title": "Hello" },
-    "layout": { "mode": "default" },
-    "appearance": { "headingColor": "var(--color-system-black)" },
-    "settings": {},
-    "stage": {
-      "background": "transparent",
-      "alignment": "center",
-      "canvas": { "mode": "wrap", "width": 0, "height": 0 },
-      "padding": {
-        "desktop": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 },
-        "mobile": { "linked": true, "all": 0, "top": 0, "right": 0, "bottom": 0, "left": 0 }
-      }
-    },
-    "pod": {
-      "background": "transparent",
-      "padding": {
-        "desktop": { "linked": true, "all": 24, "top": 24, "right": 24, "bottom": 24, "left": 24 },
-        "mobile": { "linked": true, "all": 16, "top": 16, "right": 16, "bottom": 16, "left": 16 }
-      },
-      "widthMode": "wrap",
-      "contentWidth": 960,
-      "radiusLinked": true,
-      "radius": "4xl",
-      "radiusTL": "4xl",
-      "radiusTR": "4xl",
-      "radiusBR": "4xl",
-      "radiusBL": "4xl"
-    },
-    "typography": { "globalFamily": "Inter", "roleScales": {}, "roles": {} },
-    "behavior": { "showBacklink": true }
-  },
-  "html": [
-    "<bob-panel id='content'>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field type='textfield' size='lg' path='content.title' label='Title' value='{{content.title}}' />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "",
-    "<bob-panel id='appearance'>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.headingColor' label='Heading color' />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>"
-  ]
-}
-```
-
-### `agent.md` template (AI editing contract)
-
-```md
-# MyWidget Agent Context
+13.3 agent.md (minimal contract skeleton)
+# {widgetType} — Agent Contract
 
 ## Editable Paths
-- `content.title` (string)
-- `appearance.headingColor` (color)
-- `behavior.showBacklink` (boolean)
+- (list paths; must exist in spec.json defaults)
 
-## Parts Map
-| Role | Selector | Editable |
-|------|----------|----------|
-| heading | [data-role="heading"] | content.title |
+## Arrays and Ops
+- (define arrays and allowed insert/remove/move semantics)
 
-## Enums
-- (list any enums here)
-```
+## Binding Map Summary
+| Path | Target | Mechanism |
+|---|---|---|
+| ... | ... | css-var / data-attr / dom |
 
----
+## Prohibited
+- (paths that must never be edited)
+14) DEBUGGING (REFERENCE ONLY; READ LAST)
+Symptom: control changes do nothing
 
-## Verification Checklist (use before shipping)
+Check: Binding Map exists for path
 
-Minimal checks in Bob:
-- Toggle a dropdown that switches a data attribute (`layout.type`, `timer.mode`) and confirm the widget root updates (`data-layout`, `data-mode`, etc.).
-- Change a color control and confirm the corresponding CSS variable updates on the widget root.
-- Change a text control and confirm the DOM updates immediately.
+Check: widget.client.js applies that path via css-var/data-attr/dom
 
-If a change isn’t reflected:
-- Confirm the preview iframe is loading the latest widget assets (cache-busted URL in Bob, `Cache-Control: no-store` in Tokyo dev).
-- Confirm `widget.client.js` is running (no console errors) and its listener receives `ck:state-update`.
-- Confirm `data-role` selectors in `widget.html` match the queries in `widget.client.js`.
+Check: target has correct data-role
 
-## ToolDrawer Field Types
+Symptom: layout changes do nothing
 
-| Type | Use For |
-|------|---------|
-| `textfield` | Short text input |
-| `textedit` | Long text with formatting |
-| `toggle` | Boolean on/off |
-| `slider` | Numeric range |
-| `dropdown-actions` | Select from options |
-| `dropdown-fill` | Color/fill picker |
-| `segmented` | 2-4 mutually exclusive options |
-| `repeater` | Array of items |
+Check: CKStagePod call exists and runs on every update
 
----
+Check: stage/pod defaults exist in spec.json
 
-## Shared Runtime Modules
+Symptom: fonts inconsistent
 
-Located in `tokyo/widgets/shared/`:
+Check: typography roles exist
 
-| Module | Purpose |
-|--------|---------|
-| `typography.js` | Applies font settings from `state.typography` |
-| `stagePod.js` | Applies stage/pod settings |
-| `branding.js` | Handles "Made with Clickeen" badge |
+Check: CKTypography apply call exists
 
-Usage in widget.client.js:
-```javascript
-window.CKTypography.applyTypography(state.typography, widgetRoot, roleMap);
-window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
-```
+Check: widget.css uses typography vars
+
+Symptom: localization breaks or fails
+
+Check: localization.json includes translatable paths
+
+Check: no structural changes were attempted via localization overlays

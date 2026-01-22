@@ -233,14 +233,14 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 ---
 
-## Localization (Phase 1)
+## Localization (Layered)
 
 Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
-- Instance/content translation uses Tokyo-hosted layered `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops). Phase 1 uses locale layer only.
+- Instance/content translation uses Tokyo-hosted layered `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops). Locale layer is primary; user overrides live in layer=user and apply last.
 - Prague marketing strings use repo-local base content (`prague/content/base/**`) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest).
-- Canonical overlay truth for instances lives in Supabase (`widget_instance_overlays`). Per-field manual overrides live in `user_ops` and are merged at publish time.
+- Canonical overlay truth for instances lives in Supabase (`widget_instance_overlays`). Manual overrides live in layer=user (stored in `user_ops`) and are merged at publish time.
 
 Canonical reference:
 - `documentation/capabilities/localization.md`

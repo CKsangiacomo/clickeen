@@ -8,16 +8,17 @@ type Props = {
 
 const { widget, locale, heading, subhead } = Astro.props;
 
-const BOB_URL = import.meta.env.PUBLIC_BOB_URL;
+const BOB_URL = import.meta.env.PUBLIC_BOB_URL ?? process.env.PUBLIC_BOB_URL;
 if (!BOB_URL) {
   throw new Error('[prague] PUBLIC_BOB_URL is required (e.g. http://localhost:3000)');
 }
 
 const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
 const widgetKey = widget.toUpperCase().replace(/[^A-Z0-9]/g, '_');
-const env = import.meta.env;
-const workspaceId =
-  (env[`PUBLIC_MINIBOB_WORKSPACE_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_WORKSPACE_ID ?? DEV_WORKSPACE_ID).trim();
+const env = typeof process !== 'undefined' ? process.env : {};
+const workspaceId = String(
+  env[`PUBLIC_MINIBOB_WORKSPACE_ID_${widgetKey}`] ?? env.PUBLIC_MINIBOB_WORKSPACE_ID ?? DEV_WORKSPACE_ID,
+).trim();
 const publicId = `wgt_main_${widget}`;
 const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');

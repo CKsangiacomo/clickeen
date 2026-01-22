@@ -1,0 +1,21 @@
+{
+  "paths": [
+    {
+      "path": "copy.title",
+      "type": "string"
+    },
+    {
+      "path": "copy.items.*.title",
+      "type": "string"
+    },
+    {
+      "path": "copy.items.*.body",
+      "type": "string"
+    },
+    {
+      "path": "copy.items.*.eyebrow",
+      "type": "string"
+    }
+  ],
+  "v": 1
+}

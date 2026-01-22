@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { isCuratedPublicId, normalizeLocaleToken } from '../lib/l10n/instance';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { can } from '@clickeen/ck-policy';
 
 type LocalizationControlsProps = {
   mode?: 'translate' | 'settings';
@@ -12,7 +13,7 @@ type LocalizationControlsProps = {
 
 export function LocalizationControls({ mode = 'translate', section = 'full' }: LocalizationControlsProps) {
   const session = useWidgetSession();
-  const { meta, compiled, locale, policy, setLocalePreview, saveLocaleOverrides, revertLocaleOverrides } = session;
+  const { meta, compiled, locale, policy, isPublishing, publish, setLocalePreview, saveLocaleOverrides, revertLocaleOverrides } = session;
   const publicId = meta?.publicId ? String(meta.publicId) : '';
   const workspaceId = meta?.workspaceId ? String(meta.workspaceId) : '';
   const widgetType = compiled?.widgetname ?? '';
@@ -22,6 +23,11 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
   const showFooter = section !== 'selector';
+  const subject = useMemo(() => {
+    if (policy.profile === 'devstudio') return 'devstudio';
+    if (policy.profile === 'minibob') return 'minibob';
+    return 'workspace';
+  }, [policy.profile]);
 
   const [workspaceLocales, setWorkspaceLocales] = useState<string[] | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
@@ -30,6 +36,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const [instanceLocales, setInstanceLocales] = useState<
     Array<{ locale: string; source?: string | null; hasUserOps?: boolean }> | null
   >(null);
+  const [instanceUserLocales, setInstanceUserLocales] = useState<string[] | null>(null);
   const [instanceError, setInstanceError] = useState<string | null>(null);
   const [instanceLoading, setInstanceLoading] = useState(false);
 
@@ -44,7 +51,9 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
 
     let cancelled = false;
     setWorkspaceLoading(true);
-    fetch(`/api/paris/workspaces/${encodeURIComponent(workspaceId)}/locales`, { cache: 'no-store' })
+    fetch(`/api/paris/workspaces/${encodeURIComponent(workspaceId)}/locales?subject=${encodeURIComponent(subject)}`, {
+      cache: 'no-store',
+    })
       .then(async (res) => {
         const json = (await res.json().catch(() => null)) as any;
         if (!res.ok) {
@@ -72,11 +81,12 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return () => {
       cancelled = true;
     };
-  }, [workspaceId, curated, showSelector]);
+  }, [workspaceId, curated, showSelector, subject]);
 
   useEffect(() => {
-    if (!publicId || (!showSelector && !showFooter)) {
+    if (!publicId || !workspaceId || (!showSelector && !showFooter)) {
       setInstanceLocales(null);
+      setInstanceUserLocales(null);
       setInstanceError(null);
       setInstanceLoading(false);
       return;
@@ -84,31 +94,43 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
 
     let cancelled = false;
     setInstanceLoading(true);
-    fetch(`/api/paris/instances/${encodeURIComponent(publicId)}/locales`, { cache: 'no-store' })
+    fetch(
+      `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        publicId
+      )}/layers?subject=${encodeURIComponent(subject)}`,
+      { cache: 'no-store' }
+    )
       .then(async (res) => {
         const json = (await res.json().catch(() => null)) as any;
         if (!res.ok) {
           const message = json?.error?.message || json?.error?.code || 'Failed to load locale overlays';
           throw new Error(message);
         }
-        const locales = Array.isArray(json?.locales) ? json.locales : [];
-        const normalized = locales
+        const layers = Array.isArray(json?.layers) ? json.layers : [];
+        const localeLayers = layers
+          .filter((item: any) => item?.layer === 'locale')
           .map((item: any) => ({
-            locale: typeof item?.locale === 'string' ? item.locale.trim().toLowerCase() : '',
+            locale: typeof item?.layerKey === 'string' ? item.layerKey.trim().toLowerCase() : '',
             source: typeof item?.source === 'string' ? item.source : null,
             hasUserOps: typeof item?.hasUserOps === 'boolean' ? item.hasUserOps : false,
           }))
           .filter((item: { locale: string }) => Boolean(item.locale));
-        return normalized;
+        const userLayers = layers
+          .filter((item: any) => item?.layer === 'user')
+          .map((item: any) => normalizeLocaleToken(item?.layerKey))
+          .filter((value: unknown): value is string => Boolean(value));
+        return { localeLayers, userLayers };
       })
-      .then((locales) => {
+      .then(({ localeLayers, userLayers }) => {
         if (cancelled) return;
-        setInstanceLocales(locales);
+        setInstanceLocales(localeLayers);
+        setInstanceUserLocales(userLayers);
         setInstanceError(null);
       })
       .catch((err) => {
         if (cancelled) return;
         setInstanceLocales([]);
+        setInstanceUserLocales([]);
         setInstanceError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => {
@@ -119,7 +141,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return () => {
       cancelled = true;
     };
-  }, [publicId, showSelector, showFooter]);
+  }, [publicId, workspaceId, showSelector, showFooter, subject]);
 
   const availableLocales = useMemo(() => {
     if (!showSelector) return [locale.baseLocale];
@@ -152,6 +174,16 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     (curated ? false : !l10nEnabled) ||
     (curated ? instanceLoading : workspaceLoading) ||
     availableLocales.length <= 1;
+  const publishGate = can(policy, 'instance.publish');
+  const canPublish = publishGate.allow;
+  const showEmptyState =
+    showSelector &&
+    hasInstance &&
+    !instanceLoading &&
+    !workspaceLoading &&
+    availableLocales.length <= 1 &&
+    !instanceError &&
+    !workspaceError;
 
   const selectLocales = useMemo(() => {
     if (!showSelector) return [baseLocale];
@@ -178,12 +210,9 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   })();
 
   const overrideLocales = useMemo(() => {
-    if (!instanceLocales || instanceLocales.length === 0) return [];
-    return instanceLocales
-      .filter((entry) => entry.hasUserOps)
-      .map((entry) => entry.locale)
-      .filter(Boolean);
-  }, [instanceLocales]);
+    if (!instanceUserLocales || instanceUserLocales.length === 0) return [];
+    return instanceUserLocales.filter(Boolean);
+  }, [instanceUserLocales]);
   const overrideLabel = useMemo(() => {
     if (overrideLocales.length === 0) return '';
     return Array.from(new Set(overrideLocales)).sort().join(', ');
@@ -297,6 +326,21 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
           {curated && instanceLoading ? <div className="label-s label-muted">Loading locale overlays…</div> : null}
           {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
           {curated && instanceError ? <div className="settings-panel__error">{instanceError}</div> : null}
+          {showEmptyState ? (
+            <div className="settings-panel__note">
+              No translations found yet. Publish the base locale to generate locale overlays.
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="primary"
+                type="button"
+                disabled={!canPublish || isPublishing}
+                onClick={() => publish()}
+              >
+                <span className="diet-btn-txt__label">Generate translations</span>
+              </button>
+            </div>
+          ) : null}
         </>
       ) : null}
 

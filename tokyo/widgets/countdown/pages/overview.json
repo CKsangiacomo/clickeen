@@ -10,7 +10,7 @@
       "type": "hero",
       "visual": true,
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -33,7 +33,7 @@
         "subheadline": "Create urgency and drive action with customizable countdown timers."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -44,7 +44,7 @@
         "subheadline": "Date-based, personal, or number counters for any scenario."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -59,7 +59,7 @@
         "subheadline": "Adjust appearance, layout, and actions to fit your brand."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -74,7 +74,7 @@
         "subheadline": "Encourage immediate action with time-sensitive offers."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -85,7 +85,7 @@
         "subheadline": "Built-in schema and localization support."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_countdown.overview.hero"
+        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
