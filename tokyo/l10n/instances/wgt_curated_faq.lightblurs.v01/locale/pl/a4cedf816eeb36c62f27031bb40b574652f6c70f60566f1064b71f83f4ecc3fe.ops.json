@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
+  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Najczęściej zadawane pytania"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Wszystkie pytania"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Czym jest Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Jak zainstalować widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy jest darmowy plan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Dlaczego powinienem używać Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen to coś fajnego"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Skopiuj kod embed i wklej go przed </body> na swojej stronie."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tak, jeden aktywny widget z podstawowymi funkcjami."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ponieważ Clickeen to niesamowita nowa platforma, która sprawia, że sieć jest piękna i łatwa w użyciu."
+    }
+  ],
+  "v": 1
+}

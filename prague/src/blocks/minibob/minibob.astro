@@ -1,4 +1,7 @@
 ---
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+
 type Props = {
   widget: string;
   locale: string;
@@ -7,6 +10,24 @@ type Props = {
 };
 
 const { widget, locale, heading, subhead } = Astro.props;
+
+const headerPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 2,
+      content: heading,
+      className: 'display-2 ck-minibobStage__title',
+    },
+    {
+      type: 'text',
+      variant: 'body',
+      content: subhead,
+      className: 'body-website ck-minibobStage__subhead ck-text-muted',
+    },
+  ],
+  'minibob.header',
+);
 
 const BOB_URL = import.meta.env.PUBLIC_BOB_URL ?? process.env.PUBLIC_BOB_URL;
 if (!BOB_URL) {
@@ -26,8 +47,7 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 
 <section id="minibob" class="ck-canvas">
   <div class="ck-minibobStage">
-    <div class="display-2 ck-minibobStage__title">{heading}</div>
-    <div class="body-website ck-minibobStage__subhead ck-text-muted">{subhead}</div>
+    <PrimitiveRenderer primitives={headerPrimitives} />
   </div>
 
   <div class="ck-inline">

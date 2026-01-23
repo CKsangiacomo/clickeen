@@ -38,8 +38,11 @@
 - Triggered by `instance-l10n-generate-{env}` jobs.
 - Fetches instance config from Paris.
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
-- Generates set-only ops and writes layer=locale overlays to Paris (workspace-scoped layered endpoints).
+- Translates only `changedPaths`, removes `removedPaths`, and writes set-only ops to Paris (layer=locale).
 - Paris preserves user overrides in layer=user and enqueues publish to Tokyo-worker.
+- Job schema v2 includes `baseFingerprint`, `changedPaths`, `removedPaths`, and optional `baseUpdatedAt` metadata.
+- Reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
+- Local dev: `POST /v1/l10n` accepts job batches (Authorization: `Bearer ${PARIS_DEV_JWT}`) to bypass queues.
 
 ## Prague localization translation (local-only)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT=local`).
@@ -50,7 +53,7 @@
 
 ## Rules
 - Do not write directly to Tokyo for l10n (Paris is canonical).
-- Fail fast on invalid allowlist paths or stale base fingerprints.
+- Reject invalid allowlist paths; stale fingerprints should be reported as `superseded` and retried, not hard failures.
 - Agent writes must not touch layer=user; overrides remain in layer=user and are merged at publish time.
 
 ## Links

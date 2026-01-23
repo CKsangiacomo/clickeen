@@ -45,7 +45,13 @@
     "prague:strings:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:strings:compile": "node scripts/prague-l10n/verify.mjs",
     "prague:strings:watch": "node scripts/prague-l10n/watch.mjs",
-    "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague"
+    "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
+    "migrate-prague-blocks": "node scripts/prague-blocks/migrate.mjs",
+    "validate-prague-migration": "node scripts/prague-blocks/validate.mjs",
+    "diff-prague-blocks": "node scripts/prague-blocks/diff.mjs",
+    "prague:blocks:migrate": "node scripts/prague-blocks/migrate.mjs",
+    "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
+    "prague:blocks:diff": "node scripts/prague-blocks/diff.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

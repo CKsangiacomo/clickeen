@@ -8,7 +8,7 @@ Last updated: 2026-01-10
 
 ## 0) What Prague is (in this repo)
 
-Prague is the marketing + SEO surface, implemented as an **Astro SSG** app deployed on **Cloudflare Pages**.
+Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. Widget pages render server-side to apply runtime overlays (geo/industry/experiment); other routes remain pre-rendered.
 
 In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` and localized via repo-owned base content + Tokyo overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`).
 
@@ -17,6 +17,11 @@ At build time, Prague:
 - enumerates locales via `prague/src/lib/locales.ts`
 - renders a fixed set of routes under `prague/src/pages/**`
 - fails fast if required widget page JSON files are missing
+
+At request time (widget pages only), Prague:
+- loads base content + locale overlays
+- applies geo/industry/experiment overlays using the Babel Protocol order
+- renders HTML with the merged copy (composition remains static)
 
 Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no longer parses markdown. It loads the JSON page specs described below.
 
@@ -87,6 +92,7 @@ Localization is applied via base content + ops overlays:
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
+- Curated embeds are validated against Paris; missing curated instances fail fast in dev/build.
 
 ---
 

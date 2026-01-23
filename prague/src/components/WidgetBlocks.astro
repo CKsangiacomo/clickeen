@@ -4,9 +4,7 @@ import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import Outcomes from '../blocks/outcomes/outcomes.astro';
-import SplitCreativeLeft from '../blocks/split-creative-left/split-creative-left.astro';
-import SplitCreativeRight from '../blocks/split-creative-right/split-creative-right.astro';
-import SplitCreativeStacked from '../blocks/split-creative-stacked/split-creative-stacked.astro';
+import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
@@ -80,49 +78,17 @@ const heroSecondaryCta =
         </Hero>
       );
     }
-    case 'split-creative-right': {
+    case 'split': {
       const copy = block.copy ?? {};
       const curatedPublicId = block.curatedRef?.publicId;
+      const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
       return (
-        <SplitCreativeRight
+        <Split
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={heroSecondaryCta}
-          curatedRef={
-            curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
-              : undefined
-          }
-        />
-      );
-    }
-    case 'split-creative-left': {
-      const copy = block.copy ?? {};
-      const curatedPublicId = block.curatedRef?.publicId;
-      return (
-        <SplitCreativeLeft
-          headline={String(copy.headline ?? '')}
-          subheadline={String(copy.subheadline ?? '')}
-          primaryCta={heroPrimaryCta}
-          secondaryCta={heroSecondaryCta}
-          curatedRef={
-            curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
-              : undefined
-          }
-        />
-      );
-    }
-    case 'split-creative-stacked': {
-      const copy = block.copy ?? {};
-      const curatedPublicId = block.curatedRef?.publicId;
-      return (
-        <SplitCreativeStacked
-          headline={String(copy.headline ?? '')}
-          subheadline={String(copy.subheadline ?? '')}
-          primaryCta={heroPrimaryCta}
-          secondaryCta={heroSecondaryCta}
+          layout={layout}
           curatedRef={
             curatedPublicId
               ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }

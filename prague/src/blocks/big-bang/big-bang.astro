@@ -1,26 +1,60 @@
 ---
+import {
+  actionGroupFromLegacy,
+  actionGroupToPrimitives,
+  assertPrimitives,
+  type ActionGroup,
+} from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+
 type Props = {
   headline: string;
   body: string;
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
+  actionGroup?: ActionGroup;
 };
 
-const { headline, body, primaryCta, secondaryCta } = Astro.props;
+const { headline, body, primaryCta, secondaryCta, actionGroup } = Astro.props;
+
+const contentPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 2,
+      content: headline,
+      className: 'display-2 ck-m0 ck-bigBang__title',
+    },
+    {
+      type: 'text',
+      variant: 'body',
+      content: body,
+      className: 'body-website-xlarge ck-m0 ck-bigBang__body',
+    },
+  ],
+  'big-bang.content',
+);
+
+const resolvedActionGroup =
+  actionGroup ??
+  actionGroupFromLegacy(primaryCta, secondaryCta, {
+    layout: 'row',
+    className: 'ck-bigBang__ctaRow',
+    primaryClassName: 'ck-btn--lg label-l',
+    secondaryClassName: 'ck-btn--lg label-l',
+  });
 ---
 
 <section class="ck-canvas ck-bigBang">
   <div class="ck-inline ck-bigBang__inline">
     <div class="ck-stack ck-bigBang__content">
       <div class="ck-stack ck-bigBang__copy">
-        <h2 class="display-2 ck-m0 ck-bigBang__title">{headline}</h2>
-        <p class="body-website-xlarge ck-m0 ck-bigBang__body">{body}</p>
+        <PrimitiveRenderer primitives={contentPrimitives} />
       </div>
 
-      <div class="ck-row ck-bigBang__ctaRow">
-        <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href}>{primaryCta.label}</a>
-        {secondaryCta ? <a class="ck-btn ck-btn--secondary ck-btn--lg label-l" href={secondaryCta.href}>{secondaryCta.label}</a> : null}
-      </div>
+      {resolvedActionGroup ? (
+        <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
+      ) : null}
     </div>
   </div>
 </section>
@@ -65,4 +99,3 @@ const { headline, body, primaryCta, secondaryCta } = Astro.props;
     }
   }
 </style>
-

@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
+  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "よくある質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "すべての質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeenとは何ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "ウィジェットのインストール方法は？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "無料プランはありますか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "なぜClickeenを使うべきですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeenは素晴らしいものです"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "埋め込みコードをコピーして、サイトの</body>の前に貼り付けてください。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "はい、コア機能を備えた1つのアクティブなウィジェットが利用可能です。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeenは、ウェブを美しく使いやすくするための素晴らしい新しいプラットフォームだからです。"
+    }
+  ],
+  "v": 1
+}

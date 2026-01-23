@@ -46,7 +46,6 @@ Only if the PRD explicitly requires new string keys:
 
 Do **not** edit:
 - `tokyo/l10n/prague/**` (generated overlays)
-- `scripts/prague-localize.mjs` (deprecated)
 
 ---
 
@@ -134,7 +133,7 @@ Rules:
 Required keys (current registry):
 - `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline`
-- `split-creative-left|right|stacked`: `headline`, `subheadline`
+- `split`: `headline`, `subheadline` (meta: `layout`, `curatedRef` allowed)
 - `steps`: `title`, `items[]`
 - `cta`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`

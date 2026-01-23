@@ -1,8 +1,8 @@
-import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
+import { collectAllowlistedEntries, computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 
-export type L10nJob = {
+type L10nJobV1 = {
   v: 1;
   publicId: string;
   widgetType: string;
@@ -12,6 +12,22 @@ export type L10nJob = {
   workspaceId?: string | null;
   envStage?: string;
 };
+
+type L10nJobV2 = {
+  v: 2;
+  publicId: string;
+  widgetType: string;
+  locale: string;
+  baseFingerprint: string;
+  baseUpdatedAt?: string | null;
+  changedPaths?: string[];
+  removedPaths?: string[];
+  kind: 'curated' | 'user';
+  workspaceId?: string | null;
+  envStage?: string;
+};
+
+export type L10nJob = L10nJobV1 | L10nJobV2;
 
 type InstanceResponse = {
   publicId: string;
@@ -25,6 +41,8 @@ type AllowlistEntry = { path: string; type: 'string' | 'richtext' };
 type AllowlistFile = { v: 1; paths: AllowlistEntry[] };
 
 type TranslationItem = { path: string; type: AllowlistEntry['type']; value: string };
+
+type L10nGenerateStatus = 'running' | 'succeeded' | 'failed' | 'superseded';
 
 type OpenAIChatResponse = {
   choices?: Array<{ message?: { content?: string } }>;
@@ -40,18 +58,25 @@ const MAX_INPUT_CHARS = 12000;
 const MAX_TOKENS = 900;
 const TIMEOUT_MS = 20_000;
 
-const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
-
 export function isL10nJob(value: unknown): value is L10nJob {
   if (!isRecord(value)) return false;
-  if (value.v !== 1) return false;
+  if (value.v !== 1 && value.v !== 2) return false;
   const publicId = asString(value.publicId);
   const widgetType = asString(value.widgetType);
   const locale = asString(value.locale);
-  const baseUpdatedAt = asString(value.baseUpdatedAt);
   const kind = value.kind;
-  if (!publicId || !widgetType || !locale || !baseUpdatedAt) return false;
+  if (!publicId || !widgetType || !locale) return false;
   if (kind !== 'curated' && kind !== 'user') return false;
+  if (value.v === 1) {
+    const baseUpdatedAt = asString(value.baseUpdatedAt);
+    if (!baseUpdatedAt) return false;
+  }
+  if (value.v === 2) {
+    const baseFingerprint = asString(value.baseFingerprint);
+    if (!baseFingerprint) return false;
+    if (value.changedPaths != null && !Array.isArray(value.changedPaths)) return false;
+    if (value.removedPaths != null && !Array.isArray(value.removedPaths)) return false;
+  }
   return true;
 }
 
@@ -65,97 +90,15 @@ function getTokyoReadBase(env: Env): string {
   return requireEnvVar((env as any).TOKYO_BASE_URL, 'TOKYO_BASE_URL');
 }
 
-function hasProhibitedSegment(path: string): boolean {
-  return path
-    .split('.')
-    .some((segment) => segment && PROHIBITED_SEGMENTS.has(segment));
-}
-
-function joinPath(base: string, next: string): string {
-  return base ? `${base}.${next}` : next;
-}
-
-function collectEntriesForPath(args: {
-  value: unknown;
-  segments: string[];
-  currentPath: string;
-  type: AllowlistEntry['type'];
-  out: TranslationItem[];
-}) {
-  if (args.segments.length === 0) {
-    if (typeof args.value === 'string') {
-      const trimmed = args.value.trim();
-      if (trimmed) {
-        args.out.push({ path: args.currentPath, type: args.type, value: args.value });
-      }
-    }
-    return;
-  }
-
-  const [head, ...tail] = args.segments;
-  if (!head || PROHIBITED_SEGMENTS.has(head)) return;
-
-  if (head === '*') {
-    if (!Array.isArray(args.value)) return;
-    args.value.forEach((item, index) => {
-      collectEntriesForPath({
-        value: item,
-        segments: tail,
-        currentPath: joinPath(args.currentPath, String(index)),
-        type: args.type,
-        out: args.out,
-      });
-    });
-    return;
-  }
-
-  if (Array.isArray(args.value) && /^\d+$/.test(head)) {
-    const index = Number(head);
-    collectEntriesForPath({
-      value: args.value[index],
-      segments: tail,
-      currentPath: joinPath(args.currentPath, head),
-      type: args.type,
-      out: args.out,
-    });
-    return;
-  }
-
-  if (!isRecord(args.value)) return;
-  collectEntriesForPath({
-    value: args.value[head],
-    segments: tail,
-    currentPath: joinPath(args.currentPath, head),
-    type: args.type,
-    out: args.out,
-  });
-}
-
-function collectTranslatableEntries(config: Record<string, unknown>, allowlist: AllowlistEntry[]): TranslationItem[] {
-  const out: TranslationItem[] = [];
-  for (const entry of allowlist) {
-    const path = entry.path.trim();
-    if (!path || hasProhibitedSegment(path)) continue;
-    const segments = path.split('.').map((seg) => seg.trim()).filter(Boolean);
-    if (segments.length === 0) continue;
-    collectEntriesForPath({
-      value: config,
-      segments,
-      currentPath: '',
-      type: entry.type,
-      out,
-    });
-  }
-
-  const deduped: TranslationItem[] = [];
-  const seen = new Set<string>();
-  for (const item of out) {
-    if (!seen.has(item.path)) {
-      seen.add(item.path);
-      deduped.push(item);
-    }
-  }
-  return deduped;
+function collectTranslatableEntries(
+  config: Record<string, unknown>,
+  allowlist: AllowlistEntry[],
+  includeEmpty = false,
+): TranslationItem[] {
+  const entries = collectAllowlistedEntries(config, allowlist, { includeEmpty: true });
+  return entries
+    .filter((entry) => includeEmpty || entry.value.trim())
+    .map((entry) => ({ path: entry.path, type: entry.type, value: entry.value }));
 }
 
 function buildSystemPrompt(locale: string): string {
@@ -332,7 +275,14 @@ function parseTranslationResult(raw: string, expected: TranslationItem[]): Array
 async function fetchInstance(job: L10nJob, env: Env): Promise<InstanceResponse> {
   const baseUrl = requireEnvVar((env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
   const token = requireEnvVar((env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
-  const url = new URL(`/api/instance/${encodeURIComponent(job.publicId)}?subject=devstudio`, baseUrl).toString();
+  const workspaceId = asString(job.workspaceId);
+  if (!workspaceId) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing workspaceId' });
+  }
+  const url = new URL(
+    `/api/workspaces/${encodeURIComponent(workspaceId)}/instance/${encodeURIComponent(job.publicId)}?subject=devstudio`,
+    baseUrl,
+  ).toString();
 
   const res = await fetch(url, {
     method: 'GET',
@@ -396,6 +346,7 @@ type ExistingLocale = {
   baseFingerprint?: string | null;
   baseUpdatedAt?: string | null;
   hasUserOps?: boolean | null;
+  ops?: Array<{ op: 'set'; path: string; value: string }>;
 };
 
 async function fetchExistingLocale(job: L10nJob, locale: string, env: Env): Promise<ExistingLocale | null> {
@@ -421,12 +372,18 @@ async function fetchExistingLocale(job: L10nJob, locale: string, env: Env): Prom
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const body = (await res.json().catch(() => null)) as any;
+  const ops = Array.isArray(body?.ops)
+    ? body.ops
+        .filter((op: any) => op && op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'string')
+        .map((op: any) => ({ op: 'set' as const, path: op.path, value: op.value }))
+    : [];
   return {
     locale,
     source: typeof body?.source === 'string' ? body.source : null,
     baseFingerprint: typeof body?.baseFingerprint === 'string' ? body.baseFingerprint : null,
     baseUpdatedAt: typeof body?.baseUpdatedAt === 'string' ? body.baseUpdatedAt : null,
     hasUserOps: Array.isArray(body?.userOps) ? body.userOps.length > 0 : null,
+    ops,
   };
 }
 
@@ -477,86 +434,392 @@ async function writeOverlay(
   return { ok: true };
 }
 
-async function writeLog(env: Env, job: L10nJob, payload: Record<string, unknown>) {
-  const key = `l10n/${job.publicId}/${job.locale}/${job.baseUpdatedAt}.${Date.now()}.json`;
+async function writeLog(env: Env, job: L10nJob, baseFingerprint: string | null, payload: Record<string, unknown>) {
+  const fallback = job.v === 2 ? job.baseFingerprint : job.baseUpdatedAt;
+  const fingerprint = baseFingerprint || fallback || 'unknown';
+  const key = `l10n/${job.publicId}/${job.locale}/${fingerprint}.${Date.now()}.json`;
   await env.SF_R2.put(key, JSON.stringify(payload), { httpMetadata: { contentType: 'application/json' } });
+}
+
+async function reportL10nGenerateStatus(args: {
+  env: Env;
+  job: L10nJob;
+  status: L10nGenerateStatus;
+  baseFingerprint: string;
+  baseUpdatedAt: string | null;
+  locale: string;
+  error?: string | null;
+  occurredAtMs?: number;
+  widgetType?: string | null;
+  workspaceId?: string | null;
+}) {
+  const baseUrl = requireEnvVar((args.env as any).PARIS_BASE_URL, 'PARIS_BASE_URL');
+  const token = requireEnvVar((args.env as any).PARIS_DEV_JWT, 'PARIS_DEV_JWT');
+  const url = new URL('/api/l10n/jobs/report', baseUrl).toString();
+  const payload = {
+    v: 1,
+    publicId: args.job.publicId,
+    layer: 'locale',
+    layerKey: args.locale,
+    baseFingerprint: args.baseFingerprint,
+    status: args.status,
+    widgetType: args.widgetType ?? args.job.widgetType,
+    workspaceId: args.workspaceId ?? args.job.workspaceId ?? null,
+    baseUpdatedAt: args.baseUpdatedAt ?? null,
+    error: args.error ?? null,
+    occurredAt: new Date(args.occurredAtMs ?? Date.now()).toISOString(),
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.error('[sanfrancisco] l10n report failed', res.status, text);
+    }
+  } catch (err) {
+    console.error('[sanfrancisco] l10n report error', err);
+  }
 }
 
 export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
   const startedAt = Date.now();
-  const locale = normalizeLocaleToken(job.locale);
-  if (!locale) {
-    await writeLog(env, job, { status: 'skipped', reason: 'invalid_locale', job, occurredAtMs: startedAt });
-    return;
-  }
   const workspaceId = asString(job.workspaceId);
+  const locale = normalizeLocaleToken(job.locale);
+  const jobBaseUpdatedAt = job.v === 2 ? job.baseUpdatedAt ?? null : job.baseUpdatedAt;
+  const jobBaseFingerprint = job.v === 2 ? job.baseFingerprint : null;
   if (!workspaceId) {
-    await writeLog(env, job, { status: 'skipped', reason: 'missing_workspace', job, occurredAtMs: startedAt });
+    await writeLog(env, job, jobBaseFingerprint, { status: 'skipped', reason: 'missing_workspace', job, occurredAtMs: startedAt });
+    if (jobBaseFingerprint) {
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'superseded',
+        baseFingerprint: jobBaseFingerprint,
+        baseUpdatedAt: jobBaseUpdatedAt,
+        locale: job.locale,
+        error: 'missing_workspace',
+        occurredAtMs: startedAt,
+      });
+    }
     return;
   }
 
-  const instance = await fetchInstance(job, env);
-  const updatedAt = instance.updatedAt ?? null;
-  if (!updatedAt || updatedAt !== job.baseUpdatedAt) {
-    await writeLog(env, job, { status: 'skipped', reason: 'stale_instance', job, updatedAt, occurredAtMs: startedAt });
+  let instance: InstanceResponse;
+  try {
+    instance = await fetchInstance(job, env);
+  } catch (err) {
+    const reason = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
+    await writeLog(env, job, jobBaseFingerprint, { status: 'failed', reason, job, occurredAtMs: startedAt });
+    if (jobBaseFingerprint) {
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'failed',
+        baseFingerprint: jobBaseFingerprint,
+        baseUpdatedAt: jobBaseUpdatedAt,
+        locale: job.locale,
+        error: reason,
+        occurredAtMs: startedAt,
+      });
+    }
     return;
-  }
-
-  const baseFingerprint = await computeBaseFingerprint(instance.config);
-  const existing = await fetchExistingLocale({ ...job, locale }, locale, env);
-  if (existing) {
-    const hasUserOps = existing.hasUserOps === true;
-    if (existing.source === 'user' || hasUserOps) {
-      await writeLog(env, job, { status: 'skipped', reason: 'user_override', job, occurredAtMs: startedAt });
-      return;
-    }
-    const fingerprintMatch = existing.baseFingerprint && existing.baseFingerprint === baseFingerprint;
-    const updatedAtMatch = existing.baseUpdatedAt && existing.baseUpdatedAt === job.baseUpdatedAt;
-    if (fingerprintMatch || updatedAtMatch) {
-      await writeLog(env, job, { status: 'skipped', reason: 'already_localized', job, occurredAtMs: startedAt });
-      return;
-    }
   }
 
   const resolvedWidgetType = instance.widgetType ? String(instance.widgetType) : job.widgetType;
-  const allowlist = await fetchAllowlist(resolvedWidgetType, env);
-  const entries = collectTranslatableEntries(instance.config, allowlist);
-
-  if (entries.length === 0) {
-    await writeLog(env, job, { status: 'skipped', reason: 'no_translatables', job, occurredAtMs: startedAt });
+  let allowlist: AllowlistEntry[];
+  try {
+    allowlist = await fetchAllowlist(resolvedWidgetType, env);
+  } catch (err) {
+    const reason = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
+    await writeLog(env, job, jobBaseFingerprint, { status: 'failed', reason, job, occurredAtMs: startedAt });
+    if (jobBaseFingerprint) {
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'failed',
+        baseFingerprint: jobBaseFingerprint,
+        baseUpdatedAt: jobBaseUpdatedAt,
+        locale: job.locale,
+        error: reason,
+        occurredAtMs: startedAt,
+      });
+    }
     return;
   }
 
-  if (entries.length > MAX_ITEMS) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: `Too many translatable items (${entries.length})` });
-  }
+  const entries = collectTranslatableEntries(instance.config, allowlist, true);
+  const snapshot: Record<string, string> = {};
+  entries.forEach((entry) => {
+    snapshot[entry.path] = entry.value;
+  });
+  const baseFingerprint = await computeBaseFingerprint(snapshot);
+  const baseUpdatedAt = instance.updatedAt ?? jobBaseUpdatedAt ?? null;
 
-  const totalChars = entries.reduce((sum, item) => sum + item.value.length, 0);
-  if (totalChars > MAX_INPUT_CHARS) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: `Input too large (${totalChars} chars)` });
-  }
-
-  const system = buildSystemPrompt(locale);
-  const user = buildUserPrompt(entries);
-  const { content, usage } = await deepseekTranslate({ env, system, user });
-  const translated = parseTranslationResult(content, entries);
-
-  const ops = translated.map((item) => ({ op: 'set' as const, path: item.path, value: item.value }));
-  const overlay = { v: 1, baseUpdatedAt: job.baseUpdatedAt, baseFingerprint, ops };
-
-  const writeResult = await writeOverlay({ ...job, locale }, locale, overlay, env);
-  if (!writeResult.ok) {
-    await writeLog(env, job, { status: 'skipped', reason: writeResult.reason, job, occurredAtMs: startedAt });
+  if (!locale) {
+    await writeLog(env, job, baseFingerprint, {
+      status: 'skipped',
+      reason: 'invalid_locale',
+      job,
+      baseFingerprint,
+      occurredAtMs: startedAt,
+    });
+    await reportL10nGenerateStatus({
+      env,
+      job,
+      status: 'superseded',
+      baseFingerprint,
+      baseUpdatedAt,
+      locale: job.locale,
+      error: 'invalid_locale',
+      occurredAtMs: startedAt,
+    });
     return;
   }
 
-  await writeLog(env, job, {
-    status: 'ok',
+  if (job.v === 2 && job.baseFingerprint !== baseFingerprint) {
+    await writeLog(env, job, baseFingerprint, {
+      status: 'skipped',
+      reason: 'stale_instance',
+      job,
+      baseFingerprint,
+      occurredAtMs: startedAt,
+    });
+    await reportL10nGenerateStatus({
+      env,
+      job,
+      status: 'superseded',
+      baseFingerprint,
+      baseUpdatedAt,
+      locale,
+      error: 'stale_instance',
+      occurredAtMs: startedAt,
+    });
+    return;
+  }
+
+  await reportL10nGenerateStatus({
+    env,
     job,
-    opsCount: ops.length,
-    usage,
-    promptVersion: PROMPT_VERSION,
-    policyVersion: POLICY_VERSION,
+    status: 'running',
+    baseFingerprint,
+    baseUpdatedAt,
+    locale,
     occurredAtMs: startedAt,
   });
+
+  try {
+    const entryMap = new Map(entries.map((entry) => [entry.path, entry]));
+    const jobChangedPaths =
+      job.v === 2 && Array.isArray(job.changedPaths)
+        ? job.changedPaths.filter((path) => typeof path === 'string' && path.trim())
+        : null;
+    const jobRemovedPaths =
+      job.v === 2 && Array.isArray(job.removedPaths)
+        ? job.removedPaths.filter((path) => typeof path === 'string' && path.trim())
+        : [];
+    const removedSet = new Set(jobRemovedPaths);
+    const translateAll = jobChangedPaths == null;
+    const targetPaths = translateAll ? entries.map((entry) => entry.path) : jobChangedPaths;
+
+    const existing = await fetchExistingLocale({ ...job, locale }, locale, env);
+    const fingerprintMatch = existing?.baseFingerprint && existing.baseFingerprint === baseFingerprint;
+    if (translateAll && fingerprintMatch && removedSet.size === 0) {
+      await writeLog(env, job, baseFingerprint, {
+        status: 'skipped',
+        reason: 'already_localized',
+        job,
+        baseFingerprint,
+        occurredAtMs: startedAt,
+      });
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'succeeded',
+        baseFingerprint,
+        baseUpdatedAt,
+        locale,
+        occurredAtMs: startedAt,
+      });
+      return;
+    }
+
+    if (!translateAll && targetPaths.length === 0 && removedSet.size === 0) {
+      await writeLog(env, job, baseFingerprint, {
+        status: 'skipped',
+        reason: 'no_changes',
+        job,
+        baseFingerprint,
+        occurredAtMs: startedAt,
+      });
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'succeeded',
+        baseFingerprint,
+        baseUpdatedAt,
+        locale,
+        occurredAtMs: startedAt,
+      });
+      return;
+    }
+
+    const translateEntries: TranslationItem[] = [];
+    const directOps: Array<{ op: 'set'; path: string; value: string }> = [];
+    targetPaths.forEach((path) => {
+      const entry = entryMap.get(path);
+      if (!entry) {
+        removedSet.add(path);
+        return;
+      }
+      if (!entry.value.trim()) {
+        directOps.push({ op: 'set', path: entry.path, value: '' });
+        return;
+      }
+      translateEntries.push(entry);
+    });
+
+    if (entries.length === 0) {
+      await writeLog(env, job, baseFingerprint, {
+        status: 'skipped',
+        reason: 'no_translatables',
+        job,
+        baseFingerprint,
+        occurredAtMs: startedAt,
+      });
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'succeeded',
+        baseFingerprint,
+        baseUpdatedAt,
+        locale,
+        occurredAtMs: startedAt,
+      });
+      return;
+    }
+
+    if (translateEntries.length > MAX_ITEMS) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: `Too many translatable items (${translateEntries.length})` });
+    }
+
+    const totalChars = translateEntries.reduce((sum, item) => sum + item.value.length, 0);
+    if (totalChars > MAX_INPUT_CHARS) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: `Input too large (${totalChars} chars)` });
+    }
+
+    const translatedOps: Array<{ op: 'set'; path: string; value: string }> = [];
+    let usage: Usage | undefined;
+    if (translateEntries.length > 0) {
+      const system = buildSystemPrompt(locale);
+      const user = buildUserPrompt(translateEntries);
+      const result = await deepseekTranslate({ env, system, user });
+      usage = result.usage;
+      const translated = parseTranslationResult(result.content, translateEntries);
+      translatedOps.push(...translated.map((item) => ({ op: 'set' as const, path: item.path, value: item.value })));
+    }
+
+    const baseOps = existing?.ops ?? [];
+    const merged = new Map<string, string>();
+    baseOps.forEach((op) => {
+      if (op && op.op === 'set' && entryMap.has(op.path)) {
+        merged.set(op.path, op.value);
+      }
+    });
+    removedSet.forEach((path) => merged.delete(path));
+    [...directOps, ...translatedOps].forEach((op) => {
+      merged.set(op.path, op.value);
+    });
+
+    if (!translateAll && merged.size === 0 && removedSet.size === 0) {
+      await writeLog(env, job, baseFingerprint, {
+        status: 'skipped',
+        reason: 'no_effective_changes',
+        job,
+        baseFingerprint,
+        occurredAtMs: startedAt,
+      });
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'succeeded',
+        baseFingerprint,
+        baseUpdatedAt,
+        locale,
+        occurredAtMs: startedAt,
+      });
+      return;
+    }
+
+    const ops = Array.from(merged.entries()).map(([path, value]) => ({ op: 'set' as const, path, value }));
+    const overlay = { v: 1, baseUpdatedAt, baseFingerprint, ops };
+
+    const writeResult = await writeOverlay({ ...job, locale }, locale, overlay, env);
+    if (!writeResult.ok) {
+      await writeLog(env, job, baseFingerprint, {
+        status: 'skipped',
+        reason: writeResult.reason,
+        job,
+        baseFingerprint,
+        occurredAtMs: startedAt,
+      });
+      await reportL10nGenerateStatus({
+        env,
+        job,
+        status: 'superseded',
+        baseFingerprint,
+        baseUpdatedAt,
+        locale,
+        error: writeResult.reason,
+        occurredAtMs: startedAt,
+      });
+      return;
+    }
+
+    await writeLog(env, job, baseFingerprint, {
+      status: 'ok',
+      job,
+      baseFingerprint,
+      baseUpdatedAt,
+      opsCount: ops.length,
+      usage,
+      promptVersion: PROMPT_VERSION,
+      policyVersion: POLICY_VERSION,
+      occurredAtMs: startedAt,
+    });
+    await reportL10nGenerateStatus({
+      env,
+      job,
+      status: 'succeeded',
+      baseFingerprint,
+      baseUpdatedAt,
+      locale,
+      occurredAtMs: startedAt,
+    });
+  } catch (err) {
+    const reason = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown error';
+    await writeLog(env, job, baseFingerprint, {
+      status: 'failed',
+      reason,
+      job,
+      baseFingerprint,
+      occurredAtMs: startedAt,
+    });
+    await reportL10nGenerateStatus({
+      env,
+      job,
+      status: 'failed',
+      baseFingerprint,
+      baseUpdatedAt,
+      locale,
+      error: reason,
+      occurredAtMs: startedAt,
+    });
+  }
 }

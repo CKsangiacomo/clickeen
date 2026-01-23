@@ -87,15 +87,22 @@
       const key = parts[i];
       const last = i === parts.length - 1;
       if (last) {
-        cur[key] = value;
+        cur[isIndex(key) ? Number(key) : key] = value;
       } else {
-        const next = cur[key];
-        const nextObj = next && typeof next === "object" && !Array.isArray(next) ? next : {};
-        cur[key] = nextObj;
+        const resolvedKey = isIndex(key) ? Number(key) : key;
+        const next = cur[resolvedKey];
+        const nextKey = parts[i + 1];
+        const wantsArray = Boolean(nextKey && isIndex(nextKey));
+        const nextObj = wantsArray ? (Array.isArray(next) ? next : []) : next && typeof next === "object" ? next : {};
+        cur[resolvedKey] = nextObj;
         cur = nextObj;
       }
     }
     return obj;
+  }
+
+  function isIndex(seg) {
+    return /^\d+$/.test(seg);
   }
 
   function runChildHydrators(scope) {

@@ -119,6 +119,8 @@ Examples:
   wgt_curated_faq.lightblurs.v01
 ```
 
+**Publishing semantics:** Curated/owned instances are always publishable. In Michael, `curated_widget_instances.status` defaults to `published` and is not used as a user-facing gate (publishing is only a user-instance workflow).
+
 Curated metadata lives alongside the instance (not in the publicId):
 ```
 curated_widget_instances.meta = {

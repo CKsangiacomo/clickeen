@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
-import { pathMatchesAllowlist } from '../lib/l10n/instance';
+import { pathMatchesAllowlist, type AllowlistEntry } from '../lib/l10n/instance';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { applyI18nToDom } from '../lib/i18n/dom';
 
@@ -54,6 +54,89 @@ function loadScript(src: string): Promise<void> {
   });
   loadedScripts.set(src, p);
   return p;
+}
+
+function applyReadOnlyState(container: HTMLElement, readOnly: boolean) {
+  const disabledKey = 'ckReadonlyDisabled';
+  const readonlyKey = 'ckReadonlyReadonly';
+  const contentEditableKey = 'ckReadonlyContenteditable';
+
+  container.querySelectorAll<HTMLInputElement>('input').forEach((el) => {
+    if (readOnly) {
+      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
+      if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
+      el.readOnly = true;
+      el.disabled = true;
+      return;
+    }
+    if (disabledKey in el.dataset) {
+      el.disabled = el.dataset[disabledKey] === '1';
+      delete el.dataset[disabledKey];
+    }
+    if (readonlyKey in el.dataset) {
+      el.readOnly = el.dataset[readonlyKey] === '1';
+      delete el.dataset[readonlyKey];
+    }
+  });
+
+  container.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((el) => {
+    if (readOnly) {
+      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
+      if (!(readonlyKey in el.dataset)) el.dataset[readonlyKey] = el.readOnly ? '1' : '0';
+      el.readOnly = true;
+      el.disabled = true;
+      return;
+    }
+    if (disabledKey in el.dataset) {
+      el.disabled = el.dataset[disabledKey] === '1';
+      delete el.dataset[disabledKey];
+    }
+    if (readonlyKey in el.dataset) {
+      el.readOnly = el.dataset[readonlyKey] === '1';
+      delete el.dataset[readonlyKey];
+    }
+  });
+
+  container.querySelectorAll<HTMLSelectElement>('select').forEach((el) => {
+    if (readOnly) {
+      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
+      el.disabled = true;
+      return;
+    }
+    if (disabledKey in el.dataset) {
+      el.disabled = el.dataset[disabledKey] === '1';
+      delete el.dataset[disabledKey];
+    }
+  });
+
+  container.querySelectorAll<HTMLButtonElement>('button').forEach((el) => {
+    if (readOnly) {
+      if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
+      el.disabled = true;
+      return;
+    }
+    if (disabledKey in el.dataset) {
+      el.disabled = el.dataset[disabledKey] === '1';
+      delete el.dataset[disabledKey];
+    }
+  });
+
+  container.querySelectorAll<HTMLElement>('[contenteditable]').forEach((el) => {
+    if (readOnly) {
+      if (!(contentEditableKey in el.dataset)) {
+        const original = el.getAttribute('contenteditable');
+        el.dataset[contentEditableKey] = original == null ? '__unset__' : original;
+      }
+      el.setAttribute('contenteditable', 'false');
+      return;
+    }
+    if (contentEditableKey in el.dataset) {
+      const original = el.dataset[contentEditableKey];
+      if (original === '__unset__') el.removeAttribute('contenteditable');
+      else el.setAttribute('contenteditable', original ?? '');
+      delete el.dataset[contentEditableKey];
+    }
+  });
 }
 
 function ensureAssets(dieterAssets: { styles?: string[]; scripts?: string[] } | undefined): Promise<void> {
@@ -115,7 +198,8 @@ type TdMenuContentProps = {
   header?: ReactNode;
   footer?: ReactNode;
   translateMode?: boolean;
-  translateAllowlist?: string[];
+  readOnly?: boolean;
+  translateAllowlist?: Array<string | AllowlistEntry>;
 };
 
 const GROUP_LABELS: Record<string, string> = {
@@ -511,7 +595,17 @@ function resolveTranslateRoot(field: HTMLElement): HTMLElement {
   );
 }
 
-function applyTranslateVisibility(scope: HTMLElement, allowlist: string[], enabled: boolean) {
+function normalizeTranslateAllowlist(allowlist: Array<string | AllowlistEntry>): string[] {
+  return allowlist
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      if (entry && typeof entry === 'object' && typeof entry.path === 'string') return entry.path.trim();
+      return '';
+    })
+    .filter(Boolean);
+}
+
+function applyTranslateVisibility(scope: HTMLElement, allowlist: Array<string | AllowlistEntry>, enabled: boolean) {
   const tagged = scope.querySelectorAll<HTMLElement>(
     '[data-translate-hidden], [data-translate-allow], [data-translate-empty]'
   );
@@ -521,9 +615,10 @@ function applyTranslateVisibility(scope: HTMLElement, allowlist: string[], enabl
     node.removeAttribute('data-translate-empty');
   });
 
-  if (!enabled || allowlist.length === 0) return;
+  const allowlistPaths = normalizeTranslateAllowlist(allowlist);
+  if (!enabled || allowlistPaths.length === 0) return;
 
-  const isAllowed = (path: string) => allowlist.some((allow) => pathMatchesAllowlist(path, allow));
+  const isAllowed = (path: string) => allowlistPaths.some((allow) => pathMatchesAllowlist(path, allow));
   const rootAllow = new Map<HTMLElement, boolean>();
   const fields = Array.from(scope.querySelectorAll<HTMLElement>('[data-bob-path]'));
 
@@ -629,6 +724,7 @@ export function TdMenuContent({
   header,
   footer,
   translateMode = false,
+  readOnly = false,
   translateAllowlist = [],
 }: TdMenuContentProps) {
   const session = useWidgetSession();
@@ -895,6 +991,7 @@ export function TdMenuContent({
     };
 
     const handleBobOpsEvent = (event: Event) => {
+      if (readOnly) return;
       // Dieter controls may emit an explicit ops bundle (e.g. typography family -> {family,weight,style}).
       const detail = (event as any).detail;
       const ops = detail?.ops as WidgetOp[] | undefined;
@@ -932,7 +1029,7 @@ export function TdMenuContent({
 
       const nextValue =
         target instanceof HTMLInputElement && target.dataset.bobJson != null
-          ? serializeBobJsonValue(prevValue, '[]')
+          ? serializeBobJsonFieldValue(target, prevValue)
           : prevValue == null
             ? ''
             : String(prevValue);
@@ -960,6 +1057,14 @@ export function TdMenuContent({
       if (target.closest('.diet-popaddlink')) return;
       const path = resolvePathFromTarget(target);
       if (!path) return;
+      if (readOnly) {
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
+          revertTargetValue(target, path);
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         const radiusLinkMatch = path.match(/^(pod|appearance\.itemCard)\.radiusLinked$/);
@@ -1164,7 +1269,7 @@ export function TdMenuContent({
       } else if ('value' in field) {
         const nextValue =
           field instanceof HTMLInputElement && field.dataset.bobJson != null
-            ? serializeBobJsonValue(value)
+            ? serializeBobJsonFieldValue(field, value)
             : value == null
               ? ''
               : String(value);
@@ -1203,7 +1308,7 @@ export function TdMenuContent({
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);
     };
-  }, [instanceData, applyOps, panelHtml, renderKey, session, session.requestUpsell]);
+  }, [instanceData, applyOps, panelHtml, renderKey, readOnly, session, session.requestUpsell]);
 
   // Re-apply show-if visibility when data changes
   useLayoutEffect(() => {
@@ -1212,6 +1317,7 @@ export function TdMenuContent({
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
     applyTranslateVisibility(container, translateAllowlist, translateMode);
+    applyReadOnlyState(container, readOnly);
   });
 
   if (!panelId) {
@@ -1223,7 +1329,7 @@ export function TdMenuContent({
   }
 
   return (
-    <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'}>
+    <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'} data-readonly={readOnly ? 'true' : 'false'}>
       <div className="heading-3">{panelId}</div>
       {header}
       <div className="tdmenucontent__fields" ref={containerRef} />
@@ -1245,15 +1351,40 @@ function resolvePathFromTarget(target: EventTarget | null): string | null {
   return null;
 }
 
+function expectsJsonArrayField(input: HTMLElement): boolean {
+  return (
+    input.classList.contains('diet-repeater__field') ||
+    input.classList.contains('diet-object-manager__field') ||
+    input.classList.contains('diet-bulk-edit__field')
+  );
+}
+
 function parseBobJsonValue(input: HTMLInputElement, rawValue: string): unknown | null {
   if (input.dataset.bobJson == null) return null;
   const trimmed = rawValue.trim();
   if (!trimmed) return null;
   try {
-    return JSON.parse(trimmed) as unknown;
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (expectsJsonArrayField(input) && !Array.isArray(parsed)) return null;
+    return parsed;
   } catch {
     return null;
   }
+}
+
+function serializeBobJsonArrayValue(value: unknown): string {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return '[]';
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (Array.isArray(parsed)) return trimmed;
+    } catch {
+      // Fall through to default.
+    }
+  }
+  return '[]';
 }
 
 function serializeBobJsonValue(value: unknown, fallback = ''): string {
@@ -1273,6 +1404,13 @@ function serializeBobJsonValue(value: unknown, fallback = ''): string {
   } catch {
     return fallback;
   }
+}
+
+function serializeBobJsonFieldValue(input: HTMLInputElement, value: unknown): string {
+  if (expectsJsonArrayField(input)) {
+    return serializeBobJsonArrayValue(value);
+  }
+  return serializeBobJsonValue(value);
 }
 
 function isFiniteNumber(value: unknown): value is number {

@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
+  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "جميع الأسئلة"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما هو Clickeen؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "كيف أقوم بتثبيت الودجت؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل هناك خطة مجانية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "لماذا يجب أن أستخدم Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen هو شيء رائع"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "انسخ كود التضمين والصقه قبل </body> في موقعك."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "نعم، ودجت نشط واحد مع الميزات الأساسية."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "لأن Clickeen هو منصة جديدة مذهلة لجعل الويب جميلًا وسهل الاستخدام."
+    }
+  ],
+  "v": 1
+}

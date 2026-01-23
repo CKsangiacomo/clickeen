@@ -1,4 +1,7 @@
 ---
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+
 type Props = {
   title?: string;
   items: Array<{
@@ -9,19 +12,59 @@ type Props = {
 };
 
 const { title = 'Why this widget works', items } = Astro.props;
+
+const headerPrimitives = title
+  ? assertPrimitives(
+      [
+        {
+          type: 'heading',
+          level: 3,
+          content: title,
+          className: 'heading-3 ck-outcomes__title',
+        },
+      ],
+      'outcomes.header',
+    )
+  : [];
 ---
 
 <section class="ck-canvas ck-outcomes">
   <div class="ck-inline ck-stack ck-outcomes__inner">
-    {title ? <div class="heading-3 ck-outcomes__title">{title}</div> : null}
+    {title ? <PrimitiveRenderer primitives={headerPrimitives} /> : null}
 
     <div class="ck-outcomes__grid" role="list">
       {items.map((item) => (
         <article class="ck-card ck-outcomeCard" role="listitem">
           <div class="ck-stack ck-outcomeCard__inner">
-            {item.eyebrow ? <div class="caption ck-outcomeCard__eyebrow">{item.eyebrow}</div> : null}
-            <div class="label-l ck-outcomeCard__heading">{item.title}</div>
-            <div class="body-s ck-outcomeCard__body ck-text-subtle">{item.body}</div>
+            <PrimitiveRenderer
+              primitives={assertPrimitives(
+                [
+                  ...(item.eyebrow
+                    ? [
+                        {
+                          type: 'text',
+                          variant: 'caption',
+                          content: item.eyebrow,
+                          className: 'caption ck-outcomeCard__eyebrow',
+                        },
+                      ]
+                    : []),
+                  {
+                    type: 'text',
+                    variant: 'label',
+                    content: item.title,
+                    className: 'label-l ck-outcomeCard__heading',
+                  },
+                  {
+                    type: 'text',
+                    variant: 'body',
+                    content: item.body,
+                    className: 'body-s ck-outcomeCard__body ck-text-subtle',
+                  },
+                ],
+                'outcomes.items',
+              )}
+            />
           </div>
         </article>
       ))}
@@ -69,4 +112,3 @@ const { title = 'Why this widget works', items } = Astro.props;
     }
   }
 </style>
-

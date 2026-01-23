@@ -354,10 +354,6 @@ Bob proxies Paris via:
 - `bob/app/api/paris/workspaces/[workspaceId]/locales/route.ts`
 - `bob/app/api/paris/website-creative/route.ts` (legacy; curated-only flow does not use this)
 
-Legacy (deprecated, not used by Bob):
-- `bob/app/api/paris/instances/[publicId]/locales/route.ts`
-- `bob/app/api/paris/instances/[publicId]/locales/[locale]/route.ts`
-
 The proxy currently supports:
 - `PARIS_BASE_URL` (preferred)
 - `NEXT_PUBLIC_PARIS_URL` / `http://localhost:3001` default (present in code today)

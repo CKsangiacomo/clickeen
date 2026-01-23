@@ -123,6 +123,87 @@ function pathMatchesAllowlist(pathStr, allowPath) {
   return true;
 }
 
+function joinPath(base, next) {
+  return base ? `${base}.${next}` : next;
+}
+
+function collectEntriesForPath({ value, segments, currentPath, out }) {
+  if (segments.length === 0) {
+    if (typeof value === 'string') {
+      out.push({ path: currentPath, value });
+    }
+    return;
+  }
+
+  const [head, ...tail] = segments;
+  if (!head || PROHIBITED_SEGMENTS.has(head)) return;
+
+  if (head === '*') {
+    if (!Array.isArray(value)) return;
+    value.forEach((item, index) => {
+      collectEntriesForPath({
+        value: item,
+        segments: tail,
+        currentPath: joinPath(currentPath, String(index)),
+        out,
+      });
+    });
+    return;
+  }
+
+  if (Array.isArray(value) && isNumericSegment(head)) {
+    const index = Number(head);
+    collectEntriesForPath({
+      value: value[index],
+      segments: tail,
+      currentPath: joinPath(currentPath, head),
+      out,
+    });
+    return;
+  }
+
+  if (!value || typeof value !== 'object') return;
+  collectEntriesForPath({
+    value: value[head],
+    segments: tail,
+    currentPath: joinPath(currentPath, head),
+    out,
+  });
+}
+
+function collectAllowlistedValues(config, allowlist) {
+  const out = [];
+  allowlist.forEach((entry) => {
+    const pathStr = String(entry || '').trim();
+    if (!pathStr || hasProhibitedSegment(pathStr)) return;
+    const segments = splitPathSegments(pathStr);
+    if (!segments.length) return;
+    collectEntriesForPath({ value: config, segments, currentPath: '', out });
+  });
+
+  const deduped = [];
+  const seen = new Set();
+  out.forEach((item) => {
+    if (!item.path || seen.has(item.path)) return;
+    seen.add(item.path);
+    deduped.push(item);
+  });
+  return deduped;
+}
+
+function buildL10nSnapshot(config, allowlist) {
+  const snapshot = {};
+  collectAllowlistedValues(config, allowlist).forEach((entry) => {
+    snapshot[entry.path] = entry.value;
+  });
+  return snapshot;
+}
+
+function computeL10nFingerprint(config, allowlist) {
+  const snapshot = buildL10nSnapshot(config, allowlist);
+  return sha256Hex(stableStringify(snapshot));
+}
+
 function resolveWidgetTypeFromPublicId(publicId) {
   if (publicId.startsWith('wgt_curated_')) {
     const rest = publicId.slice('wgt_curated_'.length);
@@ -207,7 +288,12 @@ async function ensureBaseFingerprint({ publicId, overlay }) {
     return overlay;
   }
   const instance = await fetchInstanceConfig(publicId);
-  const baseFingerprint = sha256Hex(stableStringify(instance.config));
+  const widgetType = resolveWidgetTypeFromPublicId(publicId);
+  if (!widgetType) {
+    throw new Error(`[l10n] Unable to resolve widget type for ${publicId}`);
+  }
+  const allowlist = loadAllowlist(widgetType);
+  const baseFingerprint = computeL10nFingerprint(instance.config, allowlist);
   return {
     ...overlay,
     baseFingerprint,

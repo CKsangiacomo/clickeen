@@ -1,11 +1,77 @@
 {
   "widgetname": "logoshowcase",
   "defaults": {
+    "cta": {
+      "href": "https://example.com/contact",
+      "label": "Contact us",
+      "style": "filled",
+      "enabled": true
+    },
+    "pod": {
+      "radius": "4xl",
+      "padding": {
+        "mobile": {
+          "all": 16,
+          "top": 16,
+          "left": 16,
+          "right": 16,
+          "bottom": 16,
+          "linked": true
+        },
+        "desktop": {
+          "all": 24,
+          "top": 24,
+          "left": 24,
+          "right": 24,
+          "bottom": 24,
+          "linked": true
+        }
+      },
+      "radiusBL": "4xl",
+      "radiusBR": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "widthMode": "fixed",
+      "background": "var(--color-system-white)",
+      "contentWidth": 960,
+      "radiusLinked": true
+    },
+    "type": "grid",
+    "stage": {
+      "canvas": {
+        "mode": "viewport",
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 24,
+          "top": 24,
+          "left": 24,
+          "right": 24,
+          "bottom": 24,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "left": 80,
+          "right": 80,
+          "bottom": 80,
+          "linked": true
+        }
+      },
+      "alignment": "center",
+      "background": "var(--color-system-gray-5)"
+    },
     "header": {
+      "title": "Some of our best clients",
       "enabled": true,
-      "title": "Some of our clients",
       "textHtml": "Trusted by teams worldwide.",
       "alignment": "center"
+    },
+    "seoGeo": {
+      "enabled": false
     },
     "strips": [
       {
@@ -13,435 +79,343 @@
         "logos": [
           {
             "id": "l1",
+            "alt": "",
+            "href": "",
             "name": "Audi",
             "asset": {
               "name": "Audi.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l2",
+            "alt": "",
+            "href": "",
             "name": "BMW",
             "asset": {
               "name": "BMW.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l3",
+            "alt": "",
+            "href": "",
             "name": "Chana",
             "asset": {
               "name": "Chana.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l4",
+            "alt": "",
+            "href": "",
             "name": "Daihatsu",
             "asset": {
               "name": "Daihatsu.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l5",
+            "alt": "",
+            "href": "",
             "name": "Ford",
             "asset": {
               "name": "Ford.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l6",
+            "alt": "",
+            "href": "",
             "name": "Honda",
             "asset": {
               "name": "Honda.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l7",
+            "alt": "",
+            "href": "",
             "name": "Isuzu",
             "asset": {
               "name": "Isuzu.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l8",
+            "alt": "",
+            "href": "",
             "name": "Lambo",
             "asset": {
               "name": "Lambo.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l9",
+            "alt": "",
+            "href": "",
             "name": "Perodua",
             "asset": {
               "name": "Perodua.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l10",
+            "alt": "",
+            "href": "",
             "name": "Peugeot",
             "asset": {
               "name": "Peugeot.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l11",
+            "alt": "",
+            "href": "",
             "name": "Proton",
             "asset": {
               "name": "Proton.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l12",
+            "alt": "",
+            "href": "",
             "name": "Suzuki",
             "asset": {
               "name": "Suzuki.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l13",
+            "alt": "",
+            "href": "",
             "name": "Tesla",
             "asset": {
               "name": "Tesla.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l14",
+            "alt": "",
+            "href": "",
             "name": "Toyota",
             "asset": {
               "name": "Toyota.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l15",
+            "alt": "",
+            "href": "",
             "name": "VW",
             "asset": {
               "name": "VW.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           },
           {
             "id": "l16",
+            "alt": "",
+            "href": "",
             "name": "Volvo",
             "asset": {
               "name": "Volvo.svg",
               "source": "curated"
             },
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
-            "href": "",
-            "targetBlank": false,
-            "nofollow": false,
-            "alt": "",
             "title": "",
-            "caption": ""
+            "caption": "",
+            "logoFill": "url(/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
+            "nofollow": false,
+            "targetBlank": false
           }
         ]
       }
     ],
-    "cta": {
-      "enabled": true,
-      "label": "Contact us",
-      "href": "https://example.com/contact",
-      "style": "filled"
-    },
-    "type": "grid",
-    "typeConfig": {
-      "grid": {},
-      "carousel": {
-        "mode": "paged",
-        "step": "page",
-        "showArrows": true,
-        "allowSwipe": true,
-        "autoplay": false,
-        "pauseOnHover": true,
-        "autoSlideDelayMs": 2500,
-        "transitionMs": 350,
-        "speed": 30,
-        "direction": "left"
-      }
-    },
-    "appearance": {
-      "logoLook": "original",
-      "logoOpacity": 0.9,
-      "itemBackground": {
-        "type": "none"
-      },
-      "itemCard": {
-        "radiusLinked": true,
-        "radius": "4xl",
-        "radiusTL": "4xl",
-        "radiusTR": "4xl",
-        "radiusBR": "4xl",
-        "radiusBL": "4xl",
-        "border": {
-          "enabled": false,
-          "width": 1,
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)"
-        },
-        "shadow": {
-          "enabled": false,
-          "inset": false,
-          "x": 0,
-          "y": 8,
-          "blur": 24,
-          "spread": 0,
-          "color": "#000000",
-          "alpha": 18
-        }
-      },
-      "titleColor": {
-        "type": "color",
-        "color": "var(--color-system-black)"
-      },
-      "textColor": {
-        "type": "color",
-        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
-      },
-      "ctaBackground": {
-        "type": "color",
-        "color": "var(--color-system-blue)"
-      },
-      "ctaTextColor": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "ctaRadius": "md"
-    },
     "spacing": {
       "gap": 20,
       "rowGap": 16,
       "stripGap": 16,
-      "logoHeight": 40,
       "mobileGap": 16,
+      "logoHeight": 40,
       "mobileStripGap": 12
     },
     "behavior": {
       "randomOrder": false,
       "showBacklink": true
     },
-    "seoGeo": {
-      "enabled": false
-    },
-    "stage": {
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-gray-5)"
-      },
-      "alignment": "center",
-      "canvas": {
-        "mode": "viewport",
-        "width": 0,
-        "height": 0
-      },
-      "padding": {
-        "desktop": {
-          "linked": true,
-          "all": 80,
-          "top": 80,
-          "right": 80,
-          "bottom": 80,
-          "left": 80
+    "appearance": {
+      "itemCard": {
+        "border": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
+          "width": 1,
+          "enabled": false
         },
-        "mobile": {
-          "linked": true,
-          "all": 24,
-          "top": 24,
-          "right": 24,
-          "bottom": 24,
-          "left": 24
-        }
+        "radius": "4xl",
+        "shadow": {
+          "x": 0,
+          "y": 8,
+          "blur": 24,
+          "alpha": 18,
+          "color": "#000000",
+          "inset": false,
+          "spread": 0,
+          "enabled": false
+        },
+        "radiusBL": "4xl",
+        "radiusBR": "4xl",
+        "radiusTL": "4xl",
+        "radiusTR": "4xl",
+        "radiusLinked": true
+      },
+      "logoLook": "original",
+      "ctaRadius": "md",
+      "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+      "titleColor": "var(--color-system-black)",
+      "logoOpacity": 0.9,
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaBackground": "var(--color-system-blue)",
+      "itemBackground": "transparent"
+    },
+    "typeConfig": {
+      "grid": {},
+      "carousel": {
+        "mode": "paged",
+        "step": "page",
+        "speed": 30,
+        "autoplay": false,
+        "direction": "left",
+        "allowSwipe": true,
+        "showArrows": true,
+        "pauseOnHover": true,
+        "transitionMs": 350,
+        "autoSlideDelayMs": 2500
       }
-    },
-    "pod": {
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "padding": {
-        "desktop": {
-          "linked": true,
-          "all": 24,
-          "top": 24,
-          "right": 24,
-          "bottom": 24,
-          "left": 24
-        },
-        "mobile": {
-          "linked": true,
-          "all": 16,
-          "top": 16,
-          "right": 16,
-          "bottom": 16,
-          "left": 16
-        }
-      },
-      "widthMode": "fixed",
-      "contentWidth": 960,
-      "radiusLinked": true,
-      "radius": "4xl",
-      "radiusTL": "4xl",
-      "radiusTR": "4xl",
-      "radiusBR": "4xl",
-      "radiusBL": "4xl"
     },
     "typography": {
-      "globalFamily": "Inter",
-      "roleScales": {
-        "title": {
-          "xs": "18px",
-          "s": "20px",
-          "m": "24px",
-          "l": "28px",
-          "xl": "32px"
-        },
+      "roles": {
         "body": {
-          "xs": "12px",
-          "s": "13px",
-          "m": "14px",
-          "l": "16px",
-          "xl": "18px"
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
+          "sizePreset": "m"
+        },
+        "title": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": "24px",
+          "sizePreset": "m"
         }
       },
-      "roles": {
-        "title": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "24px",
-          "fontStyle": "normal",
-          "weight": "700",
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-black)"
-          }
-        },
+      "roleScales": {
         "body": {
-          "family": "Inter",
-          "sizePreset": "m",
-          "sizeCustom": "14px",
-          "fontStyle": "normal",
-          "weight": "400",
-          "color": {
-            "type": "color",
-            "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
-          }
+          "l": "16px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "18px",
+          "xs": "12px"
+        },
+        "title": {
+          "l": "28px",
+          "m": "24px",
+          "s": "20px",
+          "xl": "32px",
+          "xs": "18px"
         }
-      }
+      },
+      "globalFamily": "Inter"
     }
   },
   "html": [

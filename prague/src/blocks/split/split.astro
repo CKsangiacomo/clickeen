@@ -1,0 +1,156 @@
+---
+import {
+  actionGroupFromLegacy,
+  actionGroupToPrimitives,
+  assertPrimitives,
+  assertSplitLayout,
+  type ActionGroup,
+} from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
+
+type Props = {
+  headline: string;
+  subheadline?: string;
+  primaryCta: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
+  actionGroup?: ActionGroup;
+  curatedRef?: {
+    publicId: string;
+    locale: string;
+    title?: string;
+  };
+  layout: string;
+};
+
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, curatedRef, layout } = Astro.props;
+const resolvedLayout = assertSplitLayout(layout, 'split.layout');
+const isStacked = resolvedLayout === 'stacked';
+const isReverse = resolvedLayout === 'visual-left';
+
+const resolvedActionGroup =
+  actionGroup ??
+  actionGroupFromLegacy(primaryCta, secondaryCta, {
+    layout: 'row',
+    className: 'ck-splitCreative__ctaRow',
+    primaryClassName: 'ck-btn--lg label-l',
+    secondaryClassName: 'ck-btn--lg label-l',
+  });
+
+const contentPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 3,
+      content: headline,
+      className: 'display-3 ck-splitCreative__title',
+    },
+    ...(subheadline
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subheadline,
+            className: 'body-website ck-m0 ck-splitCreative__sub',
+          },
+        ]
+      : []),
+    ...(resolvedActionGroup ? [actionGroupToPrimitives(resolvedActionGroup)] : []),
+  ],
+  'split.content',
+);
+---
+
+<section class="ck-canvas ck-splitCreative">
+  <div class="ck-inline">
+    {isStacked ? (
+      <div class="ck-stack ck-splitCreative__stack">
+        <div class="ck-stack ck-splitCreative__copy">
+          <PrimitiveRenderer primitives={contentPrimitives} />
+        </div>
+
+        <div class="ck-splitCreative__visual" aria-hidden="true">
+          {curatedRef ? (
+            <InstanceEmbed
+              publicId={curatedRef.publicId}
+              locale={curatedRef.locale}
+              title={curatedRef.title ?? 'Widget preview'}
+            />
+          ) : (
+            <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
+          )}
+        </div>
+      </div>
+    ) : (
+      <div
+        class={`ck-split ck-split--center ck-split--hero ck-splitCreative__split${isReverse ? ' ck-splitCreative__split--reverse' : ''}`}
+      >
+        <div class="ck-split__a ck-stack ck-splitCreative__copy">
+          <PrimitiveRenderer primitives={contentPrimitives} />
+        </div>
+
+        <div class="ck-split__b ck-splitCreative__visual" aria-hidden="true">
+          {curatedRef ? (
+            <InstanceEmbed
+              publicId={curatedRef.publicId}
+              locale={curatedRef.locale}
+              title={curatedRef.title ?? 'Widget preview'}
+            />
+          ) : (
+            <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .ck-splitCreative {
+    background: var(--color-system-white);
+  }
+
+  .ck-splitCreative__split {
+    gap: var(--space-10);
+    align-items: center;
+  }
+
+  .ck-splitCreative__split--reverse {
+    flex-direction: row-reverse;
+  }
+
+  .ck-splitCreative__stack {
+    gap: var(--space-9);
+  }
+
+  .ck-splitCreative__title {
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .ck-splitCreative__sub {
+    margin: 0;
+  }
+
+  .ck-splitCreative__copy {
+    gap: var(--space-5);
+  }
+
+  .ck-splitCreative__ctaRow {
+    gap: var(--space-3);
+  }
+
+  .ck-splitCreative__stub {
+    width: 100%;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
+  }
+
+  @media (max-width: 900px) {
+    .ck-splitCreative__split { gap: var(--space-6); }
+    .ck-splitCreative__split--reverse { flex-direction: column; }
+  }
+</style>

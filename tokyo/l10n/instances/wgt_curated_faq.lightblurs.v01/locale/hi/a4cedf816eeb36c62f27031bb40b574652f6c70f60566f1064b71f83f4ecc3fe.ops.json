@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
+  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "अक्सर पूछे जाने वाले प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "सभी प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeen क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "मैं विजेट कैसे इंस्टॉल करूं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या कोई मुफ्त योजना है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "मुझे Clickeen का उपयोग क्यों करना चाहिए?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen कुछ अच्छा है"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "एम्बेड कोड कॉपी करें और इसे अपनी साइट पर </body> से पहले पेस्ट करें।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "हां, एक सक्रिय विजेट मुख्य सुविधाओं के साथ।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "क्योंकि Clickeen वेब को सुंदर और उपयोग में आसान बनाने के लिए एक अद्भुत नया प्लेटफॉर्म है।"
+    }
+  ],
+  "v": 1
+}

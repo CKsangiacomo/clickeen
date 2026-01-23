@@ -44,7 +44,7 @@ Non-visual blocks:
 - They are present in `blocks[]` but are not rendered by the block renderer.
 
 Supported block types (registered):
-`big-bang`, `hero`, `split-creative-left`, `split-creative-right`, `split-creative-stacked`, `steps`, `outcomes`, `cta`, `minibob`, `navmeta`, `page-meta`.
+`big-bang`, `hero`, `split`, `steps`, `outcomes`, `cta`, `minibob`, `navmeta`, `page-meta`.
 
 ### Block registry + validation (executed)
 
@@ -59,7 +59,7 @@ Validation rules:
 Required copy keys (enforced today):
 - `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline` (meta: `visual` allowed; `curatedRef` allowed)
-- `split-creative-left|right|stacked`: `headline`, `subheadline` (meta: `curatedRef` allowed)
+- `split`: `headline`, `subheadline` (meta: `layout`, `curatedRef` allowed)
 - `steps`: `title`, `items[]`
 - `cta`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
@@ -71,15 +71,19 @@ Notes:
 
 Blocks without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
 
-Only block types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other block folders that exist on disk but are not registered are legacy and must not be referenced in page JSON.
+Only block types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other block folders that exist on disk but are not registered must not be referenced in page JSON.
+
+Shared block schema + AI contracts live in the composition package:
+- Block schemas: `tooling/composition/src/blockSchemas.ts`
+- AI contracts: `tooling/composition/src/contracts.ts` (`BLOCK_CONTRACTS`)
 
 ### Naming + taxonomy (non-negotiable)
 
 This is where we win (or die). The filesystem is the taxonomy.
 
-- **Folder names describe the block type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split-creative-left/`.
-- **File names are kebab-case** and match the block type: `hero.astro`, `split-creative-left.astro`, `steps.astro`.
-- **Variants prefer props over forks** when layout is the same; use distinct block types when layout diverges (e.g. `split-creative-left|right|stacked`).
+- **Folder names describe the block type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split/`.
+- **File names are kebab-case** and match the block type: `hero.astro`, `split.astro`, `steps.astro`.
+- **Variants prefer props over forks** when layout is the same; use a layout prop instead of new block types.
 - **Site chrome lives under `blocks/site/`** (Nav, Footer) and is not part of page JSON.
 
 Examples:
@@ -88,7 +92,7 @@ Examples:
 prague/src/blocks/site/nav/Nav.astro
 prague/src/blocks/site/footer.astro
 prague/src/blocks/hero/hero.astro
-prague/src/blocks/split-creative-left/split-creative-left.astro
+prague/src/blocks/split/split.astro
 prague/src/blocks/steps/steps.astro
 prague/src/blocks/cta/cta.astro
 ```
@@ -120,7 +124,7 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
 - Owns: H1 + subhead + primary/secondary CTA + curated embed (optional)
 
 Copy contract:
@@ -143,25 +147,23 @@ Acquisition preview hook:
 ### 2.3 Big bang
 
 `blocks/big-bang/big-bang`
-- Props: `{ headline: string, body: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string } }`
+- Props: `{ headline: string, body: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup }`
 
 Copy contract:
 - `headline`, `body`
 - CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
 
-### 2.4 Split creative (left/right/stacked)
+### 2.4 Split (consolidated)
 
-`blocks/split-creative-left/split-creative-left`
-`blocks/split-creative-right/split-creative-right`
-`blocks/split-creative-stacked/split-creative-stacked`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
+`blocks/split/split`
+- Props: `{ headline: string, subheadline?: string, primaryCta, secondaryCta?, actionGroup?, curatedRef?, layout: 'visual-left' | 'visual-right' | 'stacked' }`
+- Layouts: `visual-left`, `visual-right`, `stacked`
 
 Copy contract:
 - `headline`, `subheadline`
 
 Embed rules:
 - Curated visuals render only when `curatedRef.publicId` is present.
-- If missing, the block renders a visible stub (fail-visible in dev).
 
 ### 2.5 How-it-works (steps)
 
@@ -184,8 +186,13 @@ Acquisition preview hook:
 ### 2.7 CTA
 
 `blocks/cta/cta`
-- Props: `{ headline: string, subheadline?: string, primaryCta?: { label: string, href: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta?: { label: string, href: string }, actionGroup?: ActionGroup }`
 - CTA label/href are currently derived from Prague chrome strings; per-block CTA metadata is ignored (reserved for future use).
+
+### Action group (flexible CTA pattern)
+`ActionGroup` supports CTA layouts beyond primary/secondary:
+- Shape: `{ layout: 'row' | 'column' | 'grid', columns?: number, actions: [{ type: 'link' | 'button' | 'modal', variant: 'primary' | 'secondary' | 'ghost', label: string, href?: string, onClick?: string }] }`
+- Legacy CTA props (`primaryCta`, `secondaryCta`) are still supported and map to an `ActionGroup` internally.
 
 Acquisition preview hook:
 - CTA primary button uses `data-ck-copy="ctaText"` for personalization preview.
@@ -213,7 +220,7 @@ Acquisition preview hook:
 Page templates are just a list of blocks in a fixed order. Example (widget landing):
 - site/nav (global chrome)
 - hero
-- split-creative-left/right/stacked (optional)
+- split (optional)
 - steps
 - outcomes (optional)
 - cta
@@ -226,8 +233,10 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 - Canonical widget pages:
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
+  - Prague validates `curatedRef.publicId` during page load; missing curated instances fail fast in dev/build.
   - Page JSON is layout + meta only; localized base content overrides any inline `copy` in the JSON.
   - Strings are loaded from `prague/content/base/**` and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
+  - Runtime copy overlays (geo/industry/experiment) apply on widget pages; composition stays static.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
 
 ---

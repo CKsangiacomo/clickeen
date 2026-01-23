@@ -30,10 +30,7 @@
       "radiusTL": "4xl",
       "radiusTR": "4xl",
       "widthMode": "full",
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
+      "background": "var(--color-system-white)",
       "contentWidth": 960,
       "radiusLinked": true
     },
@@ -67,10 +64,7 @@
         }
       },
       "alignment": "center",
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-gray-5)"
-      }
+      "background": "#d1d1d6"
     },
     "title": "Frequently Asked Questions",
     "layout": {
@@ -104,7 +98,7 @@
         "faqs": [
           {
             "id": "q1",
-            "answer": "Embeddable widgets with conversions built in.",
+            "answer": "Embeddable widgets with conversions built in. And it's awesome.<br>",
             "question": "What is Clickeen?",
             "defaultOpen": false
           },
@@ -157,30 +151,15 @@
       },
       "iconStyle": "plus",
       "linkStyle": "underline",
-      "linkTextColor": {
-        "type": "color",
-        "color": "var(--color-system-blue)"
-      },
-      "itemBackground": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "linkHighlightColor": {
-        "type": "color",
-        "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
-      },
-      "linkUnderlineColor": {
-        "type": "color",
-        "color": "var(--color-system-blue)"
-      }
+      "linkTextColor": "var(--color-system-blue)",
+      "itemBackground": "var(--color-system-white)",
+      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+      "linkUnderlineColor": "var(--color-system-blue)"
     },
     "typography": {
       "roles": {
         "title": {
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-black)"
-          },
+          "color": "var(--color-system-black)",
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
@@ -188,10 +167,7 @@
           "sizePreset": "m"
         },
         "answer": {
-          "color": {
-            "type": "color",
-            "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
-          },
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
@@ -199,10 +175,7 @@
           "sizePreset": "m"
         },
         "section": {
-          "color": {
-            "type": "color",
-            "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
-          },
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
@@ -210,10 +183,7 @@
           "sizePreset": "m"
         },
         "question": {
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-black)"
-          },
+          "color": "var(--color-system-black)",
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",

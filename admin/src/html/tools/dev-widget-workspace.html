@@ -121,8 +121,66 @@
     --action-bg: var(--color-system-brown-5);
   }
 
-  .dev-widget-workspace-header #instance-dropdown {
+  #l10n-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 10px;
     margin-left: auto;
+    margin-right: var(--space-2);
+    border-radius: var(--control-radius-lg);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    background: var(--color-system-white);
+    box-shadow: var(--shadow-floating);
+    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
+    color: var(--color-text);
+  }
+
+  #l10n-status[data-state="hidden"] {
+    display: none;
+  }
+
+  .dev-widget-workspace__l10n-label {
+    color: color-mix(in oklab, var(--color-text), transparent 45%);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--fs-10);
+  }
+
+  .dev-widget-workspace__l10n-dot {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 999px;
+    background: var(--color-system-gray-6);
+  }
+
+  #l10n-status[data-tone="ready"] .dev-widget-workspace__l10n-dot {
+    background: var(--color-system-green);
+  }
+
+  #l10n-status[data-tone="pending"] .dev-widget-workspace__l10n-dot,
+  #l10n-status[data-tone="refreshing"] .dev-widget-workspace__l10n-dot {
+    background: var(--color-system-yellow);
+  }
+
+  #l10n-status[data-tone="running"] .dev-widget-workspace__l10n-dot {
+    background: var(--color-system-blue);
+  }
+
+  #l10n-status[data-tone="retrying"] .dev-widget-workspace__l10n-dot {
+    background: var(--color-system-orange);
+  }
+
+  #l10n-status[data-tone="unavailable"] .dev-widget-workspace__l10n-dot {
+    background: var(--color-system-gray-7);
+  }
+
+  .dev-widget-workspace__l10n-meta {
+    color: color-mix(in oklab, var(--color-text), transparent 35%);
+    font-size: var(--fs-11);
+  }
+
+  .dev-widget-workspace-header #instance-dropdown {
     min-inline-size: 240px;
   }
 
@@ -413,6 +471,12 @@
       </button>
     </div>
   </div>
+  <div id="l10n-status" role="status" aria-live="polite" data-state="idle" data-tone="unavailable">
+    <span class="dev-widget-workspace__l10n-label">Translations</span>
+    <span class="dev-widget-workspace__l10n-dot" aria-hidden="true"></span>
+    <span class="dev-widget-workspace__l10n-value" id="l10n-status-value">-</span>
+    <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
+  </div>
   <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
     <div
       id="instance-dropdown-control"
@@ -558,6 +622,9 @@ const superadminResetFromJson = document.getElementById('superadmin-reset-from-j
 const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
 const createCuratedVersionBtn = document.getElementById('create-curated-version');
 const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
+const l10nStatus = document.getElementById('l10n-status');
+const l10nStatusValue = document.getElementById('l10n-status-value');
+const l10nStatusMeta = document.getElementById('l10n-status-meta');
 const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
 const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
 const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
@@ -570,6 +637,7 @@ const curatedModalConfirm = document.getElementById('curated-modal-confirm');
 const curatedStyleNameField = document.getElementById('curated-style-name');
 const curatedTagGroups = document.getElementById('curated-tag-groups');
 let lastPromotePayload = null;
+let l10nStatusTimer = null;
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
@@ -641,6 +709,106 @@ function setAutoPromoteEnabled(next) {
   } catch {}
 }
 
+function setL10nStatusDisplay({ state, tone, value, meta }) {
+  if (!(l10nStatus instanceof HTMLElement)) return;
+  l10nStatus.dataset.state = state || 'idle';
+  l10nStatus.dataset.tone = tone || 'unavailable';
+  if (l10nStatusValue instanceof HTMLElement) l10nStatusValue.textContent = value || '-';
+  if (l10nStatusMeta instanceof HTMLElement) l10nStatusMeta.textContent = meta || '';
+}
+
+function summarizeL10nStatus(locales) {
+  const counts = {
+    dirty: 0,
+    queued: 0,
+    running: 0,
+    failed: 0,
+    superseded: 0,
+    succeeded: 0,
+  };
+  locales.forEach((entry) => {
+    const key = entry?.status;
+    if (key && key in counts) counts[key] += 1;
+  });
+  const total = locales.length;
+  const updated = counts.succeeded;
+  const needsUpdate = counts.superseded;
+  const updating = counts.running + counts.queued + counts.dirty;
+
+  let label = 'Updated';
+  let tone = 'ready';
+
+  if (counts.failed > 0) {
+    label = 'Retrying';
+    tone = 'retrying';
+  } else if (updating > 0) {
+    label = 'Updating';
+    tone = counts.running > 0 ? 'running' : 'pending';
+  } else if (needsUpdate > 0) {
+    label = 'Needs update';
+    tone = 'refreshing';
+  }
+
+  const metaUpdated = total ? `${updated}/${total} updated` : '';
+  const metaNeedsUpdate = needsUpdate > 0 ? `${needsUpdate} ${needsUpdate === 1 ? 'needs' : 'need'} update` : '';
+  const meta = [metaUpdated, metaNeedsUpdate].filter(Boolean).join(' · ');
+  const shouldPoll = label !== 'Updated';
+  return { label, tone, meta, shouldPoll };
+}
+
+async function refreshL10nStatus(publicId) {
+  if (!publicId) {
+    setL10nStatusDisplay({ state: 'hidden', tone: 'unavailable', value: '-', meta: '' });
+    return;
+  }
+
+  if (l10nStatusTimer) {
+    clearTimeout(l10nStatusTimer);
+    l10nStatusTimer = null;
+  }
+
+  setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
+
+  try {
+    const workspaceId = CLICKEEN_WORKSPACE_ID;
+    const res = await fetch(
+      `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+        publicId,
+      )}/l10n/status?subject=devstudio&_t=${Date.now()}`,
+      { cache: 'no-store' },
+    );
+    const payload = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const reasonKey = payload?.error?.reasonKey || payload?.error?.code || null;
+      if (res.status === 403 && String(reasonKey || '').includes('coreui.upsell')) {
+        setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
+        return;
+      }
+      setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Unavailable', meta: '' });
+      return;
+    }
+
+    const locales = Array.isArray(payload?.locales) ? payload.locales : [];
+    if (!locales.length) {
+      setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
+      return;
+    }
+
+    const summary = summarizeL10nStatus(locales);
+    setL10nStatusDisplay({ state: 'ready', tone: summary.tone, value: summary.label, meta: summary.meta });
+
+    if (summary.shouldPoll) {
+      l10nStatusTimer = setTimeout(() => {
+        refreshL10nStatus(publicId).catch(() => {});
+      }, 15000);
+    }
+  } catch (err) {
+    console.error('[DevStudio] Failed to load l10n status', err);
+    setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Unavailable', meta: '' });
+  }
+}
+
 async function maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status }) {
   if (!isLocalDevStudio) return { ok: false, skipped: true };
   if (!(autoPromoteCloudToggle instanceof HTMLInputElement) || autoPromoteCloudToggle.checked !== true) {
@@ -701,6 +869,7 @@ window.addEventListener('message', (event) => {
     const config = data.config && typeof data.config === 'object' ? data.config : null;
     if (!publicId || !workspaceId || !widgetType || !config) return;
     maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status: 'published' }).catch(() => {});
+    refreshL10nStatus(publicId).catch(() => {});
   }
 }, { signal: abortController.signal });
 
@@ -818,6 +987,7 @@ async function fetchInstances() {
   } catch (error) {
     console.error('[DevStudio] Failed to load initial instance into Bob', error);
   }
+  refreshL10nStatus(currentPublicId).catch(() => {});
 }
 
 function updateCurrentLabel() {
@@ -868,6 +1038,7 @@ function switchInstance(publicId) {
   sendInstanceToIframe(publicId).catch((error) => {
     console.error('[DevStudio] Failed to send instance to Bob', error);
   });
+  refreshL10nStatus(publicId).catch(() => {});
 }
 
 function requireSuperadminKey() {

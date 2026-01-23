@@ -27,7 +27,8 @@
     },
     {
       "id": "split-right",
-      "type": "split-creative-right",
+      "type": "split",
+      "layout": "visual-right",
       "copy": {
         "headline": "Placeholder Headline Right",
         "subheadline": "Placeholder subheadline for right-aligned creative block"
@@ -38,7 +39,8 @@
     },
     {
       "id": "split-left",
-      "type": "split-creative-left",
+      "type": "split",
+      "layout": "visual-left",
       "copy": {
         "headline": "Placeholder Headline Left",
         "subheadline": "Placeholder subheadline for left-aligned creative block"
@@ -53,7 +55,8 @@
     },
     {
       "id": "split-stacked",
-      "type": "split-creative-stacked",
+      "type": "split",
+      "layout": "stacked",
       "copy": {
         "headline": "Placeholder Headline Stacked",
         "subheadline": "Placeholder subheadline for stacked creative block"
@@ -68,7 +71,8 @@
     },
     {
       "id": "split-right-2",
-      "type": "split-creative-right",
+      "type": "split",
+      "layout": "visual-right",
       "copy": {
         "headline": "Placeholder Headline Right 2",
         "subheadline": "Placeholder subheadline for second right-aligned creative block"
@@ -79,7 +83,8 @@
     },
     {
       "id": "split-left-2",
-      "type": "split-creative-left",
+      "type": "split",
+      "layout": "visual-left",
       "copy": {
         "headline": "Placeholder Headline Left 2",
         "subheadline": "Placeholder subheadline for second left-aligned creative block"

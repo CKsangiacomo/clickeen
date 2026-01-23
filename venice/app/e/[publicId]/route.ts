@@ -3,7 +3,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { escapeHtml } from '@venice/lib/html';
-import { applyTokyoInstanceOverlay, resolveTokyoLocale } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -22,21 +22,14 @@ const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
+  const isCurated = /^wgt_curated_/i.test(publicId);
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
-  const localeResult = (() => {
-    const raw = (url.searchParams.get('locale') || '').trim();
-    const normalized = normalizeLocaleToken(raw);
-    if (!normalized) return { locale: 'en', explicit: false };
-    return { locale: normalized, explicit: true };
-  })();
+  const rawLocale = (url.searchParams.get('locale') || '').trim();
+  const locale = normalizeLocaleToken(rawLocale) ?? 'en';
   const ts = url.searchParams.get('ts');
-  let locale = localeResult.locale;
-  if (!localeResult.explicit) {
-    locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
-  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'text/html; charset=utf-8',
@@ -79,7 +72,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const instance = body as InstanceResponse;
   // Venice is the public embed runtime. It must never serve unpublished instances.
   // (Dev/auth preview belongs to Bob; Prague and third-party sites only iframe Venice.)
-  if (instance.status !== 'published') {
+  if (instance.status !== 'published' && !isCurated) {
     const tokyoBase = getTokyoBase();
     const html = renderErrorPage({
       publicId,
@@ -119,9 +112,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     }
   }
 
+  const isPublishable = instance.status === 'published' || isCurated;
   if (ts) {
     headers['Cache-Control'] = 'no-store';
-  } else if (instance.status === 'published') {
+  } else if (isPublishable) {
     headers['Cache-Control'] = CACHE_PUBLISHED;
   } else {
     headers['Cache-Control'] = CACHE_DRAFT;
@@ -206,7 +200,9 @@ async function renderInstancePage({
     locale,
     country,
     baseUpdatedAt: instance.updatedAt ?? null,
+    widgetType,
     config: instance.config,
+    explicitLocale: true,
   });
 
   const ckWidgetJson = JSON.stringify({
@@ -229,7 +225,7 @@ async function renderInstancePage({
     <title>${escapeHtml(title)}</title>
     <base href="/widgets/${escapeHtml(widgetType)}/" />
     ${stylesheetLinks}
-    <style nonce="${escapeHtml(nonce)}">html,body{margin:0;padding:0}</style>
+    <style nonce="${escapeHtml(nonce)}">html,body{margin:0;padding:0;background:transparent}</style>
     <script nonce="${escapeHtml(nonce)}">window.CK_CSP_NONCE=${JSON.stringify(nonce)};window.CK_WIDGET=${ckWidgetJson};</script>
   </head>
   <body>

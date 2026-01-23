@@ -1,6 +1,3 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   computeBaseFingerprint,
   GEO_TARGETS_SEMANTICS,
@@ -10,10 +7,20 @@ import {
   localeCandidates,
   normalizeLocaleToken,
 } from '@clickeen/l10n';
+import localesJson from '../../../config/locales.json';
 
-const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.url)));
-const BASE_ROOT = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1');
-const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
+const BASE_LOADERS = import.meta.glob('../../content/base/v1/**/*.json', { import: 'default' });
+
+const BASE_BY_PAGE_ID = new Map<string, () => Promise<unknown>>();
+for (const [filePath, loader] of Object.entries(BASE_LOADERS)) {
+  const normalized = filePath.replace(/\\/g, '/');
+  const marker = '/content/base/v1/';
+  const idx = normalized.lastIndexOf(marker);
+  if (idx === -1) continue;
+  const rel = normalized.slice(idx + marker.length).replace(/\.json$/, '');
+  if (!rel) continue;
+  BASE_BY_PAGE_ID.set(rel, loader as () => Promise<unknown>);
+}
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
@@ -42,18 +49,12 @@ type LayerIndex = {
 
 let cachedLocales: string[] | null = null;
 
-async function readJson(filePath: string): Promise<unknown> {
-  const raw = await fs.readFile(filePath, 'utf8');
-  return JSON.parse(raw) as unknown;
-}
-
 async function loadLocales(): Promise<string[]> {
   if (cachedLocales) return cachedLocales;
-  const raw = await readJson(LOCALES_PATH);
-  if (!Array.isArray(raw)) {
-    throw new Error(`[prague] Invalid locales file: ${LOCALES_PATH}`);
+  if (!Array.isArray(localesJson)) {
+    throw new Error('[prague] Invalid locales file: config/locales.json');
   }
-  const locales = raw
+  const locales = localesJson
     .map((value) => normalizeLocaleToken(value))
     .filter((value): value is string => Boolean(value));
   if (!locales.includes('en')) {
@@ -464,30 +465,47 @@ async function applyPragueLayeredOverlays(args: {
   return localized;
 }
 
-export async function loadPraguePageContent(args: { locale: string; pageId: string }) {
+export type PragueOverlayContext = {
+  country?: string | null;
+  layerContext?: LayerContext;
+};
+
+export async function loadPraguePageContent(args: { locale: string; pageId: string } & PragueOverlayContext) {
   const resolved = await resolveLocale(args.locale);
-  const basePath = path.join(BASE_ROOT, `${args.pageId}.json`);
-  const json = await readJson(basePath);
+  const loader = BASE_BY_PAGE_ID.get(args.pageId);
+  if (!loader) {
+    throw new Error(`[prague] Missing Prague base file: prague/content/base/v1/${args.pageId}.json`);
+  }
+  const json = await loader();
   if (!isPlainObject(json) || (json as any).v !== 1) {
-    throw new Error(`[prague] Invalid Prague base file: ${basePath}`);
+    throw new Error(`[prague] Invalid Prague base file: prague/content/base/v1/${args.pageId}.json`);
   }
   const pageId = typeof (json as any).pageId === 'string' ? String((json as any).pageId) : '';
   if (pageId && pageId !== args.pageId) {
-    throw new Error(`[prague] Prague base pageId mismatch: ${basePath}`);
+    throw new Error(`[prague] Prague base pageId mismatch: prague/content/base/v1/${args.pageId}.json`);
   }
   if (!isPlainObject((json as any).blocks)) {
-    throw new Error(`[prague] Prague base missing blocks: ${basePath}`);
+    throw new Error(`[prague] Prague base missing blocks: prague/content/base/v1/${args.pageId}.json`);
   }
 
-  return applyPragueLayeredOverlays({ pageId: args.pageId, locale: resolved, base: json as Record<string, unknown> });
+  return applyPragueLayeredOverlays({
+    pageId: args.pageId,
+    locale: resolved,
+    base: json as Record<string, unknown>,
+    country: args.country,
+    layerContext: args.layerContext,
+  });
 }
 
 export async function loadPragueChromeStrings(locale: string): Promise<Record<string, unknown>> {
   const resolved = await resolveLocale(locale);
-  const basePath = path.join(BASE_ROOT, 'chrome.json');
-  const json = await readJson(basePath);
+  const loader = BASE_BY_PAGE_ID.get('chrome');
+  if (!loader) {
+    throw new Error('[prague] Missing Prague chrome base file: prague/content/base/v1/chrome.json');
+  }
+  const json = await loader();
   if (!isPlainObject(json) || (json as any).v !== 1 || !isPlainObject((json as any).strings)) {
-    throw new Error(`[prague] Invalid chrome base file: ${basePath}`);
+    throw new Error('[prague] Invalid chrome base file: prague/content/base/v1/chrome.json');
   }
   const localized = await applyPragueLayeredOverlays({ pageId: 'chrome', locale: resolved, base: json as Record<string, unknown> });
   const strings = (localized as any).strings;

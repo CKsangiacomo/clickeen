@@ -36,7 +36,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const [instanceLocales, setInstanceLocales] = useState<
     Array<{ locale: string; source?: string | null; hasUserOps?: boolean }> | null
   >(null);
-  const [instanceUserLocales, setInstanceUserLocales] = useState<string[] | null>(null);
   const [instanceError, setInstanceError] = useState<string | null>(null);
   const [instanceLoading, setInstanceLoading] = useState(false);
 
@@ -86,7 +85,6 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   useEffect(() => {
     if (!publicId || !workspaceId || (!showSelector && !showFooter)) {
       setInstanceLocales(null);
-      setInstanceUserLocales(null);
       setInstanceError(null);
       setInstanceLoading(false);
       return;
@@ -115,22 +113,16 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
             hasUserOps: typeof item?.hasUserOps === 'boolean' ? item.hasUserOps : false,
           }))
           .filter((item: { locale: string }) => Boolean(item.locale));
-        const userLayers = layers
-          .filter((item: any) => item?.layer === 'user')
-          .map((item: any) => normalizeLocaleToken(item?.layerKey))
-          .filter((value: unknown): value is string => Boolean(value));
-        return { localeLayers, userLayers };
+        return { localeLayers };
       })
-      .then(({ localeLayers, userLayers }) => {
+      .then(({ localeLayers }) => {
         if (cancelled) return;
         setInstanceLocales(localeLayers);
-        setInstanceUserLocales(userLayers);
         setInstanceError(null);
       })
       .catch((err) => {
         if (cancelled) return;
         setInstanceLocales([]);
-        setInstanceUserLocales([]);
         setInstanceError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => {
@@ -166,6 +158,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const baseLocale = locale.baseLocale;
   const isLocaleMode = activeLocale !== baseLocale;
   const isStale = locale.stale;
+  const activeLocaleToken = normalizeLocaleToken(activeLocale);
   const l10nEnabled = Boolean(policy.flags?.['l10n.enabled']);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
@@ -204,19 +197,16 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const translateNote = (() => {
     if (!isTranslatePanel) return null;
     if (!isLocaleMode) {
-      return `Translation-only mode. Choose a locale to translate. To add or remove content, switch to Content (${baseLocale}).`;
+      return 'Base content is only editable in Content panel.';
     }
     return `Translation-only mode. To add or remove content, switch to Content (${baseLocale}), edit, then publish to regenerate translations.`;
   })();
 
-  const overrideLocales = useMemo(() => {
-    if (!instanceUserLocales || instanceUserLocales.length === 0) return [];
-    return instanceUserLocales.filter(Boolean);
-  }, [instanceUserLocales]);
-  const overrideLabel = useMemo(() => {
-    if (overrideLocales.length === 0) return '';
-    return Array.from(new Set(overrideLocales)).sort().join(', ');
-  }, [overrideLocales]);
+  const activeLocaleEntry = useMemo(() => {
+    if (!instanceLocales) return null;
+    return instanceLocales.find((entry) => normalizeLocaleToken(entry.locale) === activeLocaleToken) ?? null;
+  }, [instanceLocales, activeLocaleToken]);
+  const hasManualOverrides = Boolean(activeLocaleEntry?.hasUserOps);
 
   useEffect(() => {
     if (!showSelector) return;
@@ -372,16 +362,16 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               </div>
               {isStale ? (
                 <div className="settings-panel__warning">
-                  Base content changed since this translation was generated. Publish the base locale to regenerate
-                  auto-translations, or edit here and save overrides to keep a manual version.
+                  Base content changed. {activeLocale} is showing the previous translation. Click &quot;Publish&quot; to update
+                  translations.
                 </div>
               ) : null}
             </>
           ) : null}
-          {overrideLabel ? (
+          {isLocaleMode && hasManualOverrides ? (
             <div className="settings-panel__success">
-              Manual overrides detected for {overrideLabel}. Auto-translation continues for other fields, and overridden
-              fields stay manual. Click &quot;Revert to auto-translate&quot; to remove overrides.
+              Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Revert to
+              auto-translate&quot; to remove overrides.
             </div>
           ) : null}
           {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+const widgetsRoot = path.join(process.cwd(), 'tokyo', 'widgets');
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -17,6 +18,10 @@ function stableStringify(value) {
 
 function sha256Hex(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
 function getBaseUrl(envKeys, fallback) {
@@ -99,6 +104,87 @@ function isIndex(segment) {
   return /^\d+$/.test(segment);
 }
 
+function joinPath(base, next) {
+  return base ? `${base}.${next}` : next;
+}
+
+function collectEntriesForPath({ value, segments, currentPath, out }) {
+  if (segments.length === 0) {
+    if (typeof value === 'string') {
+      out.push({ path: currentPath, value });
+    }
+    return;
+  }
+
+  const [head, ...tail] = segments;
+  if (!head || PROHIBITED_SEGMENTS.has(head)) return;
+
+  if (head === '*') {
+    if (!Array.isArray(value)) return;
+    value.forEach((item, index) => {
+      collectEntriesForPath({
+        value: item,
+        segments: tail,
+        currentPath: joinPath(currentPath, String(index)),
+        out,
+      });
+    });
+    return;
+  }
+
+  if (Array.isArray(value) && isIndex(head)) {
+    const index = Number(head);
+    collectEntriesForPath({
+      value: value[index],
+      segments: tail,
+      currentPath: joinPath(currentPath, head),
+      out,
+    });
+    return;
+  }
+
+  if (!value || typeof value !== 'object') return;
+  collectEntriesForPath({
+    value: value[head],
+    segments: tail,
+    currentPath: joinPath(currentPath, head),
+    out,
+  });
+}
+
+function collectAllowlistedValues(config, allowlist) {
+  const out = [];
+  allowlist.forEach((entry) => {
+    const pathStr = String(entry || '').trim();
+    if (!pathStr || hasProhibitedSegment(pathStr)) return;
+    const segments = pathStr.split('.').map((seg) => seg.trim()).filter(Boolean);
+    if (!segments.length) return;
+    collectEntriesForPath({ value: config, segments, currentPath: '', out });
+  });
+
+  const deduped = [];
+  const seen = new Set();
+  out.forEach((item) => {
+    if (!item.path || seen.has(item.path)) return;
+    seen.add(item.path);
+    deduped.push(item);
+  });
+  return deduped;
+}
+
+function buildL10nSnapshot(config, allowlist) {
+  const snapshot = {};
+  collectAllowlistedValues(config, allowlist).forEach((entry) => {
+    snapshot[entry.path] = entry.value;
+  });
+  return snapshot;
+}
+
+function computeL10nFingerprint(config, allowlist) {
+  const snapshot = buildL10nSnapshot(config, allowlist);
+  return sha256Hex(stableStringify(snapshot));
+}
+
 function setAt(obj, pathStr, value) {
   const parts = String(pathStr || '')
     .split('.')
@@ -144,6 +230,41 @@ function deepEqual(a, b) {
 function isCuratedPublicId(publicId) {
   if (/^wgt_curated_/.test(publicId)) return true;
   return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+}
+
+function resolveWidgetTypeFromPublicId(publicId) {
+  if (publicId.startsWith('wgt_curated_')) {
+    const rest = publicId.slice('wgt_curated_'.length);
+    const widgetType = rest.split('.')[0] || '';
+    return widgetType.trim() || null;
+  }
+  if (publicId.startsWith('wgt_main_')) {
+    const widgetType = publicId.slice('wgt_main_'.length);
+    return widgetType.trim() || null;
+  }
+  const user = publicId.match(/^wgt_([a-z0-9][a-z0-9_-]*)_u_[a-z0-9][a-z0-9_-]*$/i);
+  if (user) return user[1];
+  return null;
+}
+
+function loadAllowlist(widgetType) {
+  const filePath = path.join(widgetsRoot, widgetType, 'localization.json');
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`[layer-pipeline] Missing localization allowlist: ${filePath}`);
+  }
+  const json = readJson(filePath);
+  if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.paths)) {
+    throw new Error(`[layer-pipeline] Invalid localization allowlist: ${filePath}`);
+  }
+  return json.paths
+    .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
+    .filter(Boolean);
+}
+
+function resolveWidgetType(instance) {
+  const raw = typeof instance?.widgetType === 'string' ? instance.widgetType.trim() : '';
+  if (raw) return raw;
+  return resolveWidgetTypeFromPublicId(instance?.publicId || '');
 }
 
 function pickLocale(keys, preferred) {
@@ -250,7 +371,12 @@ async function main() {
   for (const id of allIds) {
     const instance = await fetchInstanceConfig(parisBase, id, authHeaders);
     if (!instance) continue;
-    const baseFingerprint = sha256Hex(stableStringify(instance.config));
+    const widgetType = resolveWidgetType(instance);
+    if (!widgetType) {
+      throw new Error(`[layer-pipeline] Missing widgetType for ${id}`);
+    }
+    const allowlist = loadAllowlist(widgetType);
+    const baseFingerprint = computeL10nFingerprint(instance.config, allowlist);
     const index = loadLocalIndex(localRoot, id);
     const localeKeys = resolveIndexLocaleKeys(index);
     const localLocales = listLocalLocales(localRoot, id);

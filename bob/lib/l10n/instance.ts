@@ -1,4 +1,5 @@
-import { computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
+import type { AllowlistEntry } from '@clickeen/l10n';
+import { buildL10nSnapshot, computeBaseFingerprint, computeL10nFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
 import { setAt } from '../utils/paths';
 
 export type LocalizationOp = { op: 'set'; path: string; value: string };
@@ -51,7 +52,20 @@ export function pathMatchesAllowlist(pathStr: string, allowPath: string): boolea
   return true;
 }
 
-export function filterAllowlistedOps(ops: LocalizationOp[], allowlist: string[]) {
+type AllowlistPathInput = Array<string | AllowlistEntry>;
+
+function normalizeAllowlistPaths(allowlist: AllowlistPathInput): string[] {
+  return allowlist
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      if (entry && typeof entry === 'object' && typeof entry.path === 'string') return entry.path.trim();
+      return '';
+    })
+    .filter(Boolean);
+}
+
+export function filterAllowlistedOps(ops: LocalizationOp[], allowlist: AllowlistPathInput) {
+  const allowlistPaths = normalizeAllowlistPaths(allowlist);
   const filtered: LocalizationOp[] = [];
   const rejected: LocalizationOp[] = [];
 
@@ -61,7 +75,7 @@ export function filterAllowlistedOps(ops: LocalizationOp[], allowlist: string[])
       rejected.push(op);
       continue;
     }
-    const allowed = allowlist.some((allow) => pathMatchesAllowlist(path, allow));
+    const allowed = allowlistPaths.some((allow) => pathMatchesAllowlist(path, allow));
     if (!allowed) {
       rejected.push(op);
       continue;
@@ -96,4 +110,5 @@ export function applyLocalizationOps(base: Record<string, unknown>, ops: Localiz
   return working;
 }
 
-export { computeBaseFingerprint, normalizeLocaleToken };
+export { buildL10nSnapshot, computeBaseFingerprint, computeL10nFingerprint, normalizeLocaleToken };
+export type { AllowlistEntry };

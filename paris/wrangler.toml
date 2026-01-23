@@ -11,6 +11,9 @@ queue = "instance-l10n-generate-cloud-dev"
 binding = "L10N_PUBLISH_QUEUE"
 queue = "instance-l10n-publish-cloud-dev"
 
+[[triggers.crons]]
+cron = "*/5 * * * *"
+
 [env.local]
 name = "paris-local"
 

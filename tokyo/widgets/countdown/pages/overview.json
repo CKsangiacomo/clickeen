@@ -8,10 +8,7 @@
     {
       "id": "hero",
       "type": "hero",
-      "visual": true,
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
-      }
+      "visual": true
     },
     {
       "id": "navmeta",
@@ -27,24 +24,20 @@
     },
     {
       "id": "split-right",
-      "type": "split-creative-right",
+      "type": "split",
+      "layout": "visual-right",
       "copy": {
         "headline": "Countdown Timer Widget",
         "subheadline": "Create urgency and drive action with customizable countdown timers."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
       "id": "split-left",
-      "type": "split-creative-left",
+      "type": "split",
+      "layout": "visual-left",
       "copy": {
         "headline": "Flexible Timer Modes",
         "subheadline": "Date-based, personal, or number counters for any scenario."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -53,13 +46,11 @@
     },
     {
       "id": "split-stacked",
-      "type": "split-creative-stacked",
+      "type": "split",
+      "layout": "stacked",
       "copy": {
         "headline": "Easy Customization",
         "subheadline": "Adjust appearance, layout, and actions to fit your brand."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
@@ -68,24 +59,20 @@
     },
     {
       "id": "split-right-2",
-      "type": "split-creative-right",
+      "type": "split",
+      "layout": "visual-right",
       "copy": {
         "headline": "Boost Conversions",
         "subheadline": "Encourage immediate action with time-sensitive offers."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {
       "id": "split-left-2",
-      "type": "split-creative-left",
+      "type": "split",
+      "layout": "visual-left",
       "copy": {
         "headline": "SEO and GEO Optimized",
         "subheadline": "Built-in schema and localization support."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_countdown.starter.v01"
       }
     },
     {

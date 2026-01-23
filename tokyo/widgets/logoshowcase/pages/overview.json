@@ -8,10 +8,7 @@
     {
       "id": "hero",
       "type": "hero",
-      "visual": true,
-      "curatedRef": {
-        "publicId": "wgt_curated_logoshowcase.brutalist.v02"
-      }
+      "visual": true
     },
     {
       "id": "navmeta",

@@ -1,11 +1,79 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { loadPraguePageContent } from './pragueL10n';
+import { loadPraguePageContent, type PragueOverlayContext } from './pragueL10n';
 
-const REPO_ROOT = path.resolve(fileURLToPath(new URL('../../../', import.meta.url)));
-const TOKYO_WIDGETS_DIR = path.join(REPO_ROOT, 'tokyo', 'widgets');
+const CURATED_VALIDATE =
+  process.env.PRAGUE_VALIDATE_CURATED === '1' ||
+  (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_CURATED !== '0');
+const CURATED_VALIDATION_CACHE = new Map<string, Promise<void>>();
+
+function resolveParisBaseUrl(): string | null {
+  const raw = String(process.env.PUBLIC_PARIS_URL || process.env.PARIS_BASE_URL || '').trim();
+  if (raw) return raw.replace(/\/+$/, '');
+  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3001';
+  return null;
+}
+
+async function assertCuratedInstanceExists(args: { publicId: string; pagePath: string }): Promise<void> {
+  if (!CURATED_VALIDATE) return;
+  const baseUrl = resolveParisBaseUrl();
+  if (!baseUrl) {
+    throw new Error('[prague] Curated validation requires PUBLIC_PARIS_URL (or PARIS_BASE_URL).');
+  }
+
+  const publicId = args.publicId;
+  if (!publicId.startsWith('wgt_curated_')) {
+    throw new Error(`[prague] ${args.pagePath}: curatedRef.publicId must be wgt_curated_*, got "${publicId}"`);
+  }
+
+  const cached = CURATED_VALIDATION_CACHE.get(publicId);
+  if (cached) return cached;
+
+  const task = (async () => {
+    const url = `${baseUrl}/api/instance/${encodeURIComponent(publicId)}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (res.ok) return;
+    if (res.status !== 404) {
+      throw new Error(`[prague] Curated validation failed for ${publicId} (${res.status})`);
+    }
+
+    const devToken = String(process.env.PARIS_DEV_JWT || '').trim();
+    if (devToken) {
+      const devRes = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${devToken}` } });
+      if (devRes.ok) {
+        const payload = await devRes.json().catch(() => null);
+        const status = payload && typeof payload.status === 'string' ? payload.status : 'unpublished';
+        throw new Error(
+          `[prague] ${args.pagePath}: curated instance ${publicId} is ${status}; publish it before embedding.`,
+        );
+      }
+      if (devRes.status !== 404) {
+        throw new Error(`[prague] Curated validation failed for ${publicId} (${devRes.status})`);
+      }
+    }
+
+    throw new Error(
+      `[prague] ${args.pagePath}: curated instance ${publicId} not found (seed curated_widget_instances or apply migrations).`,
+    );
+  })();
+
+  CURATED_VALIDATION_CACHE.set(publicId, task);
+  return task;
+}
+
+async function validateCuratedRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
+  if (!CURATED_VALIDATE) return;
+  const curatedIds = args.blocks
+    .map((block) => {
+      if (!block || typeof block !== 'object' || Array.isArray(block)) return null;
+      const curatedRef = (block as any).curatedRef;
+      if (!curatedRef || typeof curatedRef !== 'object' || Array.isArray(curatedRef)) return null;
+      const publicId = String((curatedRef as any).publicId || '').trim();
+      return publicId ? publicId : null;
+    })
+    .filter((value): value is string => Boolean(value));
+  if (curatedIds.length === 0) return;
+  await Promise.all(curatedIds.map((publicId) => assertCuratedInstanceExists({ publicId, pagePath: args.pagePath })));
+}
 
 function isRealWidgetDir(name: string): boolean {
   if (!name) return false;
@@ -14,27 +82,53 @@ function isRealWidgetDir(name: string): boolean {
   return true;
 }
 
+const TOKYO_WIDGET_PAGE_GLOB = import.meta.glob('../../../tokyo/widgets/**/pages/*.json', { import: 'default' });
+const WIDGET_PAGE_LOADERS = new Map<string, () => Promise<unknown>>();
+const WIDGET_SET = new Set<string>();
+
+for (const [filePath, loader] of Object.entries(TOKYO_WIDGET_PAGE_GLOB)) {
+  const normalized = filePath.replace(/\\/g, '/');
+  const marker = '/tokyo/widgets/';
+  const markerIndex = normalized.lastIndexOf(marker);
+  if (markerIndex === -1) continue;
+  const rest = normalized.slice(markerIndex + marker.length);
+  const parts = rest.split('/');
+  if (parts.length < 3) continue;
+  if (parts[1] !== 'pages') continue;
+  const widget = parts[0];
+  if (!isRealWidgetDir(widget)) continue;
+  const pageFile = parts[2];
+  if (!pageFile.endsWith('.json')) continue;
+  const page = pageFile.slice(0, -'.json'.length);
+  const key = `${widget}/${page}`;
+  WIDGET_PAGE_LOADERS.set(key, loader as () => Promise<unknown>);
+  WIDGET_SET.add(widget);
+}
+
 export async function loadWidgetPageJson(opts: { widget: string; page: string }): Promise<unknown | null> {
-  const filePath = path.join(REPO_ROOT, 'tokyo', 'widgets', opts.widget, 'pages', `${opts.page}.json`);
-  try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(raw) as unknown;
-  } catch (err: any) {
-    if (err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')) return null;
-    throw err;
-  }
+  const key = `${opts.widget}/${opts.page}`;
+  const loader = WIDGET_PAGE_LOADERS.get(key);
+  if (!loader) return null;
+  return loader();
 }
 
 function buildWidgetPagePath(widget: string, page: string): string {
   return page === 'overview' ? `widgets/${widget}` : `widgets/${widget}/${page}`;
 }
 
-export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown | null> {
+export async function loadWidgetPageJsonForLocale(
+  opts: { widget: string; page: string; locale: string } & PragueOverlayContext,
+): Promise<unknown | null> {
   const base = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
   if (!base) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
-  const localized = await loadPraguePageContent({ locale: opts.locale, pageId: pagePath });
+  const localized = await loadPraguePageContent({
+    locale: opts.locale,
+    pageId: pagePath,
+    country: opts.country,
+    layerContext: opts.layerContext,
+  });
   const blocksById = (localized as any)?.blocks;
 
   if (!blocksById || typeof blocksById !== 'object' || Array.isArray(blocksById)) {
@@ -49,6 +143,7 @@ export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: 
   if (!Array.isArray(baseBlocks)) {
     throw new Error(`[prague] Missing blocks[] in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
   }
+  await validateCuratedRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
@@ -74,7 +169,9 @@ export async function loadWidgetPageJsonForLocale(opts: { widget: string; page: 
   return { ...(base as any), blocks: mergedBlocks };
 }
 
-export async function loadRequiredWidgetPageJsonForLocale(opts: { widget: string; page: string; locale: string }): Promise<unknown> {
+export async function loadRequiredWidgetPageJsonForLocale(
+  opts: { widget: string; page: string; locale: string } & PragueOverlayContext,
+): Promise<unknown> {
   const json = await loadWidgetPageJsonForLocale(opts);
   if (!json) {
     throw new Error(`[prague] Missing tokyo/widgets/${opts.widget}/pages/${opts.page}.json (required)`);
@@ -83,12 +180,7 @@ export async function loadRequiredWidgetPageJsonForLocale(opts: { widget: string
 }
 
 export async function listWidgets(): Promise<string[]> {
-  const entries = await fs.readdir(TOKYO_WIDGETS_DIR, { withFileTypes: true });
-  return entries
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name)
-    .filter(isRealWidgetDir)
-    .sort();
+  return Array.from(WIDGET_SET).sort();
 }
 
 export async function listWidgetPages(widget: string): Promise<string[]> {

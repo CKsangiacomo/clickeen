@@ -3,7 +3,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { generateSchemaJsonLd } from '@venice/lib/schema';
-import { applyTokyoInstanceOverlay, resolveTokyoLocale } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -60,19 +60,6 @@ function stripScriptTags(bodyHtml: string): string {
   return bodyHtml.replace(/<script\b[\s\S]*?<\/script>/gi, '').trim();
 }
 
-function resolveLocale(req: Request): { locale: string; explicit: boolean } {
-  const url = new URL(req.url);
-  const explicitRaw = url.searchParams.get('locale');
-  const explicit = normalizeLocaleToken(explicitRaw);
-  if (explicit) return { locale: explicit, explicit: true };
-  const header = req.headers.get('accept-language') || req.headers.get('Accept-Language') || '';
-  const first = header.split(',')[0]?.trim() || '';
-  const candidate = first.split(';')[0]?.trim() || '';
-  const normalized = normalizeLocaleToken(candidate);
-  if (normalized) return { locale: normalized, explicit: true };
-  return { locale: 'en', explicit: false };
-}
-
 function resolveWidgetAssetPath(widgetType: string, raw: string): string {
   const href = String(raw || '').trim();
   if (!href) return '';
@@ -115,11 +102,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const ts = url.searchParams.get('ts');
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
-  const localeResult = resolveLocale(req);
-  let locale = localeResult.locale;
-  if (!localeResult.explicit) {
-    locale = await resolveTokyoLocale({ publicId, locale, explicit: localeResult.explicit, country });
-  }
+  const rawLocale = (url.searchParams.get('locale') || '').trim();
+  const locale = normalizeLocaleToken(rawLocale) ?? 'en';
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -203,7 +187,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     locale,
     country,
     baseUpdatedAt: instance.updatedAt ?? null,
+    widgetType,
     config: instance.config,
+    explicitLocale: true,
   });
 
   const schemaJsonLd = generateSchemaJsonLd({

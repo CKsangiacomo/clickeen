@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
+  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "title",
+      "value": "Perguntas Frequentes"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Todas as Perguntas"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "O que é o Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Como instalo um widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Existe um plano gratuito?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Por que devo usar o Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen é algo bom"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Copie o código de incorporação e cole-o antes de </body> no seu site."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sim, um widget ativo com recursos principais."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Porque o Clickeen é uma nova plataforma incrível para tornar a web bonita e fácil de usar."
+    }
+  ],
+  "v": 1
+}

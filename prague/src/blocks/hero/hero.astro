@@ -1,5 +1,12 @@
 ---
-import CuratedInstanceEmbed from '../../components/CuratedInstanceEmbed.astro';
+import {
+  actionGroupFromLegacy,
+  actionGroupToPrimitives,
+  assertPrimitives,
+  type ActionGroup,
+} from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
 import PersonalizationPreview from '../../components/PersonalizationPreview.astro';
 
 type Props = {
@@ -7,6 +14,7 @@ type Props = {
   subheadline?: string;
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
+  actionGroup?: ActionGroup;
   curatedRef?: {
     publicId: string;
     locale: string;
@@ -15,7 +23,42 @@ type Props = {
   personalization?: { widget: string; page: string; locale: string };
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, curatedRef, personalization } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, curatedRef, personalization } = Astro.props;
+
+const resolvedActionGroup =
+  actionGroup ??
+  actionGroupFromLegacy(primaryCta, secondaryCta, {
+    layout: 'row',
+    className: 'ck-row',
+    primaryClassName: 'ck-btn--lg label-l',
+    secondaryClassName: 'ck-btn--lg label-l',
+    primaryAttrs: { 'data-ck-copy': 'ctaText' },
+  });
+
+const contentPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 1,
+      content: headline,
+      className: 'display-2 ck-hero__title',
+      attrs: { 'data-ck-copy': 'heroTitle' },
+    },
+    ...(subheadline
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subheadline,
+            className: 'body-website ck-hero__subheadline',
+            attrs: { 'data-ck-copy': 'heroSubtitle' },
+          },
+        ]
+      : []),
+    ...(resolvedActionGroup ? [actionGroupToPrimitives(resolvedActionGroup)] : []),
+  ],
+  'hero.content',
+);
 ---
 
 <section class="ck-canvas ck-heroCanvas">
@@ -25,16 +68,7 @@ const { headline, subheadline, primaryCta, secondaryCta, curatedRef, personaliza
     </div>
     <div class="ck-split ck-split--center ck-split--hero">
       <div class="ck-split__a ck-stack">
-        <h1 class="display-2 ck-hero__title" data-ck-copy="heroTitle">{headline}</h1>
-        {subheadline ? <p class="body-website ck-hero__subheadline" data-ck-copy="heroSubtitle">{subheadline}</p> : null}
-        <div class="ck-row">
-          <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href} data-ck-copy="ctaText">
-            {primaryCta.label}
-          </a>
-          {secondaryCta ? (
-            <a class="ck-btn ck-btn--secondary ck-btn--lg label-l" href={secondaryCta.href}>{secondaryCta.label}</a>
-          ) : null}
-        </div>
+        <PrimitiveRenderer primitives={contentPrimitives} />
         {personalization ? (
           <PersonalizationPreview
             locale={personalization.locale}
@@ -45,10 +79,11 @@ const { headline, subheadline, primaryCta, secondaryCta, curatedRef, personaliza
       </div>
       <div class="ck-split__b" aria-hidden="true">
         {curatedRef ? (
-          <CuratedInstanceEmbed
+          <InstanceEmbed
             publicId={curatedRef.publicId}
             locale={curatedRef.locale}
             title={curatedRef.title ?? 'Widget preview'}
+            loading="eager"
           />
         ) : (
           <div class="ck-media ck-heroPreview">Live widget preview (stub)</div>

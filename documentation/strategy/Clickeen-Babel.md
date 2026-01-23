@@ -548,7 +548,7 @@ Serves to user with Set-Cookie: preferred_lang=fr
 #### 4. Cross-Surface Block Reusability
 
 **What it means:**
-- Build UI block once (Hero, SplitCreative, Button, etc.)
+- Build UI block once (Hero, Split, Button, etc.)
 - Reuse across all surfaces (widgets, emails, ads, landing pages, websites)
 - Consistent design system (same component everywhere)
 - Learn once, create everywhere
@@ -629,7 +629,7 @@ Zero extra work for Acme Corp
 **Product:** Multi-language email campaign builder
 
 **Why 50% Less Effort:**
-- ✅ Block system already built (reuse Hero, SplitCreative, Button, etc.)
+- ✅ Block system already built (reuse Hero, Split, Button, etc.)
 - ✅ L10n infrastructure already built (same ops overlay system)
 - ✅ Tokyo renderer already built (add email output mode)
 - ✅ Content-addressed storage already built (same CDN)
@@ -649,7 +649,7 @@ Zero extra work for Acme Corp
 ```
 SaaS company announces new feature
   ↓
-Creates 1 email in English (Hero + SplitCreative + CTA)
+Creates 1 email in English (Hero + Split + CTA)
   ↓
 Clickeen renders 14 language variants
   ↓
@@ -956,7 +956,7 @@ Clickeen serves:
 - Start viral loop
 
 **Month 3: Emails**
-- Block system already done (reuse Hero, SplitCreative, Button)
+- Block system already done (reuse Hero, Split, Button)
 - Add MJML renderer (1 week)
 - SendGrid integration (1 week)
 - Launch as $20/year addon

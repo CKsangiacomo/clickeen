@@ -60,11 +60,17 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 - `tokyo/l10n/instances/<publicId>/index.json` (layer keys + optional geoTargets for locale selection)
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
+Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatable fields only), not the full config.
 
 **Generation (current)**
 - Paris enqueues localization jobs on publish/update.
-- San Francisco runs the localization agent and emits set-only ops.
+- Paris builds a translatable snapshot from the widget allowlist and stores it in `l10n_base_snapshots`.
+- Paris diffs snapshots to compute `changedPaths` + `removedPaths`, and enqueues jobs with only the deltas.
+- Paris tracks generation state in `l10n_generate_state` (keyed by `publicId + layer + layerKey + baseFingerprint`) and schedules retries; jobs never hard-fail.
+- San Francisco runs the localization agent, translating only `changedPaths`, removing `removedPaths`, and emitting set-only ops.
+- San Francisco reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
 - Paris stores overlays in Supabase (`widget_instance_overlays`, layer + layer_key).
+- Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
 - Venice applies the overlay at render time (if present and not stale).
@@ -150,7 +156,7 @@ Locale index (Tokyo/R2):
 ```
 Rules:
 - `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
-- `geoTargets` is optional; when present, Venice uses it to map a country to a locale (locale selection only).
+- `geoTargets` is optional; Venice does not use it for runtime locale selection (explicit `?locale` or default `en`).
 - Runtime applies overlays only when `overlay.baseFingerprint` matches the current base.
 
 Example:
@@ -175,7 +181,7 @@ We use one staleness guard everywhere (Prague pages, curated instances, user ins
 
 - `baseFingerprint` is the canonical staleness guard.
 - Runtime applies an overlay only when:
-  - `overlay.baseFingerprint === computeBaseFingerprint(baseDoc)`.
+  - `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`.
 
 This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
 
@@ -184,7 +190,7 @@ This keeps “locale overlays” deterministic across file-based content (Prague
 - `baseUpdatedAt` is retained as metadata only; runtime does not apply overlays without a fingerprint.
 
 **Shared implementation requirement:**
-- `computeBaseFingerprint()` must be implemented once and imported from a shared module (recommended: a workspace package `@clickeen/l10n` located at `tooling/l10n`).
+- `computeL10nFingerprint()` (and `buildL10nSnapshot()`) must be implemented once and imported from a shared module (recommended: `@clickeen/l10n` in `tooling/l10n`).
 
 ## Why overlays (vs full localized JSON per locale)
 
@@ -197,7 +203,7 @@ We use ops overlays because they scale cleanly:
 ## Default locale (Phase 1)
 
 If a request does not include a locale signal:
-- Venice uses Tokyo `index.json` and `cf-ipcountry` to pick a locale; if no geo match exists, it falls back to `en`.
+- Venice defaults to `en` (no index-based auto-selection).
 
 This is a deterministic runtime choice (for cache stability), not an identity rule.
 

@@ -7,9 +7,8 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Legacy endpoints (deprecated, not used by Bob/SF):** `GET /api/instances/:publicId/locales`, `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`.
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `workspace_business_profiles`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
@@ -118,21 +117,23 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud
   - `GET /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`
   - `PUT /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`
   - `DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`
+- L10n status + reporting:
+  - `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`
+  - `POST /api/l10n/jobs/report` (San Francisco → Paris job status updates)
 - Canonical store: `widget_instance_overlays` (layer + layer_key).
 - User overrides live in layer=user (layerKey=<locale>) with optional `global` fallback and are merged last at publish time.
 - Publish/update triggers:
   - On instance create/update, Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
+  - If enqueue/dispatch fails, the publish/update request fails (fail-fast to preserve overlay determinism).
+  - Local dev: when `ENV_STAGE=local` and `SANFRANCISCO_BASE_URL` are set, Paris POSTs l10n jobs directly to San Francisco `/v1/l10n` (queue bypass).
   - Curated instances → all supported locales.
   - User instances → `workspaces.l10n_locales` (within cap).
+  - Paris persists job state in `l10n_generate_state` and retries `dirty/failed` rows via cron.
+  - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
 - Prague website strings use repo-local base content plus Tokyo-hosted overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`) and do not go through Paris.
-
-### Localization (l10n) (Legacy locale-only endpoints, deprecated)
-- `GET /api/instances/:publicId/locales`
-- `GET/PUT/DELETE /api/instances/:publicId/locales/:locale`
-- Deprecated: Bob and San Francisco use the layered endpoints; these remain only for legacy tooling until removal.
 
 # Paris — HTTP API Service (Phase-1)
 

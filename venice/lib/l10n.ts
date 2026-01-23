@@ -1,5 +1,6 @@
+import type { AllowlistEntry } from '@clickeen/l10n';
 import {
-  computeBaseFingerprint,
+  computeL10nFingerprint,
   GEO_TARGETS_SEMANTICS,
   LAYER_MULTI_KEY_ORDER,
   LAYER_ORDER,
@@ -35,6 +36,35 @@ const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
 const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;
 const LAYER_KEY_BEHAVIOR = /^behavior_[a-z0-9][a-z0-9_-]*$/;
 const MAX_LAYER_APPLICATIONS = 8;
+const allowlistCache = new Map<string, AllowlistEntry[]>();
+
+async function loadLocalizationAllowlist(widgetType: string): Promise<AllowlistEntry[] | null> {
+  const key = String(widgetType || '').trim();
+  if (!key) return null;
+  const cached = allowlistCache.get(key);
+  if (cached) return cached;
+
+  const res = await tokyoFetch(`/widgets/${encodeURIComponent(key)}/localization.json`, { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+
+  const json = (await res.json().catch(() => null)) as {
+    v?: number;
+    paths?: Array<{ path?: string; type?: string }>;
+  } | null;
+  if (!json || json.v !== 1 || !Array.isArray(json.paths)) return null;
+
+  const allowlist = json.paths
+    .map((entry) => {
+      const path = typeof entry?.path === 'string' ? entry.path.trim() : '';
+      const type: AllowlistEntry['type'] = entry?.type === 'richtext' ? 'richtext' : 'string';
+      return { path, type };
+    })
+    .filter((entry) => entry.path);
+
+  allowlistCache.set(key, allowlist);
+  return allowlist;
+}
 
 function hasProhibitedSegment(path: string): boolean {
   return path
@@ -341,21 +371,47 @@ export async function applyTokyoInstanceOverlay(args: {
   publicId: string;
   locale: string;
   country?: string | null;
+  widgetType: string;
   baseUpdatedAt?: string | null;
   baseFingerprint?: string | null;
   config: Record<string, unknown>;
   layerContext?: LayerContext;
+  explicitLocale?: boolean;
 }): Promise<Record<string, unknown>> {
   const locale = normalizeLocaleToken(args.locale);
   if (!locale) return args.config;
 
-  const baseFingerprint = args.baseFingerprint ?? (await computeBaseFingerprint(args.config));
+  const widgetType = String(args.widgetType || '').trim();
+  if (!widgetType) {
+    return args.config;
+  }
+
+  const allowlist = await loadLocalizationAllowlist(widgetType).catch(() => null);
+  if (!allowlist) {
+    return args.config;
+  }
+
+  const baseFingerprint = args.baseFingerprint ?? (await computeL10nFingerprint(args.config, allowlist));
+  const explicitLocale = args.explicitLocale === true;
+
+  if (explicitLocale) {
+    const overlays = await Promise.all([
+      fetchOverlay(args.publicId, 'locale', locale, baseFingerprint),
+      fetchOverlay(args.publicId, 'user', locale, baseFingerprint),
+    ]);
+    let localized = args.config;
+    for (const overlay of overlays) {
+      if (!overlay) continue;
+      if (!overlay.baseFingerprint || overlay.baseFingerprint !== baseFingerprint) continue;
+      const ops = overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
+      localized = applySetOps(localized, ops);
+    }
+    return localized;
+  }
+
   const index = await fetchLayerIndex(args.publicId).catch(() => null);
 
   if (!index) {
-    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-      throw new Error(`[VeniceL10n] Missing layer index for ${args.publicId}`);
-    }
     return args.config;
   }
 
@@ -367,9 +423,6 @@ export async function applyTokyoInstanceOverlay(args: {
   });
 
   if (missingRequired.length) {
-    if (isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-      throw new Error(`[VeniceL10n] Missing required layer keys for ${args.publicId}: ${missingRequired.join(', ')}`);
-    }
     return args.config;
   }
 
@@ -397,16 +450,6 @@ export async function applyTokyoInstanceOverlay(args: {
   let localized = args.config;
   for (const result of overlayResults) {
     if (!result.overlay) {
-      if (result.stale && isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-        throw new Error(
-          `[VeniceL10n] Stale overlay for ${args.publicId} (${result.target.layer}:${result.target.key})`,
-        );
-      }
-      if (result.target.required && isDevStrict() && isCuratedPublicId(args.publicId) && locale !== 'en') {
-        throw new Error(
-          `[VeniceL10n] Missing overlay for ${args.publicId} (${result.target.layer}:${result.target.key})`,
-        );
-      }
       continue;
     }
     const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];

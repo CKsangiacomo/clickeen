@@ -1,0 +1,125 @@
+---
+import type { Primitive } from '../../src/core/schemas';
+
+type RenderWidget = (args: { curatedRef: string; className?: string; locale?: string }) => any;
+
+type Props = {
+  primitives: Primitive[];
+  locale?: string;
+  renderWidget?: RenderWidget;
+};
+
+const { primitives, locale, renderWidget } = Astro.props;
+
+const headingClassForLevel = (level: number) => {
+  switch (level) {
+    case 1:
+      return 'heading-1';
+    case 2:
+      return 'display-2';
+    case 3:
+      return 'display-3';
+    default:
+      return 'heading-3';
+  }
+};
+
+const textClassForVariant = (variant: string) => {
+  switch (variant) {
+    case 'caption':
+      return 'body-s';
+    case 'label':
+      return 'label-s';
+    default:
+      return 'body-website';
+  }
+};
+
+const joinClasses = (...values: Array<string | undefined | null | false>) => values.filter(Boolean).join(' ');
+
+const resolveHeadingClass = (level: number, className?: string) => {
+  if (className && className.trim()) return className;
+  return headingClassForLevel(level);
+};
+
+const resolveTextClass = (variant: string, className?: string) => {
+  if (className && className.trim()) return className;
+  return textClassForVariant(variant);
+};
+
+const sanitizeAttrs = (attrs?: Record<string, string>) => {
+  if (!attrs) return {};
+  const { class: _class, className: _className, ...rest } = attrs as Record<string, string>;
+  return rest;
+};
+
+---
+
+{(() => {
+  const renderPrimitive = (primitive: Primitive) => {
+    switch (primitive.type) {
+      case 'heading': {
+        const Tag = `h${primitive.level}` as keyof HTMLElementTagNameMap;
+        const className = resolveHeadingClass(primitive.level, primitive.className);
+        const attrs = sanitizeAttrs(primitive.attrs);
+        return <Tag class={className} {...attrs}>{primitive.content}</Tag>;
+      }
+      case 'text': {
+        const className = resolveTextClass(primitive.variant, primitive.className);
+        const attrs = sanitizeAttrs(primitive.attrs);
+        return <p class={className} {...attrs}>{primitive.content}</p>;
+      }
+      case 'action': {
+        const className = joinClasses('ck-btn', `ck-btn--${primitive.variant}`, primitive.className);
+        const attrs = sanitizeAttrs(primitive.attrs);
+        if (primitive.href) {
+          return (
+            <a class={className} href={primitive.href} {...attrs}>
+              {primitive.content}
+            </a>
+          );
+        }
+        return (
+          <button class={className} type="button" data-action={primitive.onClick || undefined} {...attrs}>
+            {primitive.content}
+          </button>
+        );
+      }
+      case 'media': {
+        const className = joinClasses('ck-media', primitive.className);
+        if (primitive.variant === 'image') {
+          const attrs = sanitizeAttrs(primitive.attrs);
+          return <img class={className} src={primitive.src} alt={primitive.alt || ''} loading="lazy" {...attrs} />;
+        }
+        if (primitive.variant === 'video') {
+          const attrs = sanitizeAttrs(primitive.attrs);
+          return <video class={className} src={primitive.src} controls playsinline {...attrs} />;
+        }
+        if (renderWidget) {
+          return renderWidget({ curatedRef: primitive.curatedRef || '', className: primitive.className, locale });
+        }
+        return <div class={className}>Missing widget renderer</div>;
+      }
+      case 'stack': {
+        const baseClass = primitive.direction === 'horizontal' ? 'ck-row' : 'ck-stack';
+        const className = joinClasses(baseClass, primitive.className);
+        const attrs = sanitizeAttrs(primitive.attrs);
+        return <div class={className} {...attrs}>{primitive.children.map((child) => renderPrimitive(child))}</div>;
+      }
+      case 'grid': {
+        const className = joinClasses('ck-grid', primitive.className);
+        const style = {
+          display: 'grid',
+          gap: 'var(--prague-gap)',
+          gridTemplateColumns: `repeat(${primitive.columns}, minmax(0, 1fr))`,
+        };
+        const attrs = sanitizeAttrs(primitive.attrs);
+        return <div class={className} style={style} {...attrs}>{primitive.children.map((child) => renderPrimitive(child))}</div>;
+      }
+      default:
+        return null;
+    }
+  };
+
+  return primitives.map((primitive) => renderPrimitive(primitive));
+})()}

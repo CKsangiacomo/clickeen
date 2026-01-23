@@ -13,11 +13,11 @@
           "linked": true
         },
         "desktop": {
-          "all": 52,
-          "top": 52,
-          "left": 52,
-          "right": 52,
-          "bottom": 52,
+          "all": 60,
+          "top": 60,
+          "left": 60,
+          "right": 60,
+          "bottom": 60,
           "linked": true
         }
       },
@@ -66,7 +66,7 @@
     "timer": {
       "mode": "date",
       "repeat": "never",
-      "headline": "Get 50% off before it's too late 🎯",
+      "headline": "Sales are coming soon!!!🎯",
       "timeUnit": "hours",
       "timezone": "UTC",
       "targetDate": "2026-01-20T12:00",
@@ -76,8 +76,8 @@
       "startingNumber": 0
     },
     "layout": {
-      "position": "inline",
       "width": "auto",
+      "position": "inline",
       "alignment": "center",
       "customWidth": 960
     },
@@ -104,62 +104,31 @@
     "appearance": {
       "theme": "custom",
       "animation": "fade",
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
+      "separator": ":",
       "textColor": {
         "type": "color",
         "color": "var(--color-system-black)"
       },
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
       "timerBoxColor": {
         "type": "color",
         "color": "var(--color-system-gray-5)"
-      },
-      "separator": ":"
+      }
     },
     "typography": {
-      "globalFamily": "Inter",
-      "roleScales": {
-        "heading": {
-          "xs": "24px",
-          "s": "28px",
-          "m": "32px",
-          "l": "36px",
-          "xl": "40px"
-        },
-        "timer": {
-          "xs": "32px",
-          "s": "40px",
-          "m": "48px",
-          "l": "56px",
-          "xl": "64px"
-        },
-        "label": {
-          "xs": "11px",
-          "s": "12px",
-          "m": "14px",
-          "l": "16px",
-          "xl": "18px"
-        },
-        "button": {
-          "xs": "12px",
-          "s": "14px",
-          "m": "16px",
-          "l": "18px",
-          "xl": "20px"
-        }
-      },
       "roles": {
-        "heading": {
+        "label": {
           "color": {
             "type": "color",
-            "color": "var(--color-system-black)"
+            "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
           },
           "family": "Inter",
-          "weight": "600",
+          "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "32px",
+          "sizeCustom": "14px",
           "sizePreset": "custom"
         },
         "timer": {
@@ -173,17 +142,6 @@
           "sizeCustom": "48px",
           "sizePreset": "custom"
         },
-        "label": {
-          "color": {
-            "type": "color",
-            "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
-          },
-          "family": "Inter",
-          "weight": "400",
-          "fontStyle": "normal",
-          "sizeCustom": "14px",
-          "sizePreset": "custom"
-        },
         "button": {
           "color": {
             "type": "color",
@@ -194,8 +152,50 @@
           "fontStyle": "normal",
           "sizeCustom": "16px",
           "sizePreset": "custom"
+        },
+        "heading": {
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "32px",
+          "sizePreset": "custom"
         }
-      }
+      },
+      "roleScales": {
+        "label": {
+          "l": "16px",
+          "m": "14px",
+          "s": "12px",
+          "xl": "18px",
+          "xs": "11px"
+        },
+        "timer": {
+          "l": "56px",
+          "m": "48px",
+          "s": "40px",
+          "xl": "64px",
+          "xs": "32px"
+        },
+        "button": {
+          "l": "18px",
+          "m": "16px",
+          "s": "14px",
+          "xl": "20px",
+          "xs": "12px"
+        },
+        "heading": {
+          "l": "36px",
+          "m": "32px",
+          "s": "28px",
+          "xl": "40px",
+          "xs": "24px"
+        }
+      },
+      "globalFamily": "Inter"
     }
   },
   "html": [

@@ -19,11 +19,13 @@ import { can, canConsume, consume, evaluateLimits, sanitizeConfig, resolvePolicy
 import { persistConfigAssetsToTokyo } from '../assets/persistConfigAssetsToTokyo';
 import {
   applyLocalizationOps,
-  computeBaseFingerprint,
+  buildL10nSnapshot,
+  computeL10nFingerprint,
   filterAllowlistedOps,
   isCuratedPublicId,
   mergeLocalizationOps,
   normalizeLocaleToken,
+  type AllowlistEntry,
   type LocalizationOp,
 } from '../l10n/instance';
 import { resolveTokyoBaseUrl } from '../env/tokyo';
@@ -50,7 +52,7 @@ type LocaleState = {
   activeLocale: string;
   baseOps: LocalizationOp[];
   userOps: LocalizationOp[];
-  allowlist: string[];
+  allowlist: AllowlistEntry[];
   source: string | null;
   dirty: boolean;
   stale: boolean;
@@ -278,7 +280,7 @@ function useWidgetSessionInternal() {
 
   const stateRef = useRef(state);
   stateRef.current = state;
-  const allowlistCacheRef = useRef<Map<string, string[]>>(new Map());
+  const allowlistCacheRef = useRef<Map<string, AllowlistEntry[]>>(new Map());
   const localeRequestRef = useRef(0);
 
   const applyOps = useCallback(
@@ -475,7 +477,7 @@ function useWidgetSessionInternal() {
     });
   }, []);
 
-  const loadLocaleAllowlist = useCallback(async (widgetType: string): Promise<string[]> => {
+  const loadLocaleAllowlist = useCallback(async (widgetType: string): Promise<AllowlistEntry[]> => {
     const cached = allowlistCacheRef.current.get(widgetType);
     if (cached) return cached;
 
@@ -485,13 +487,20 @@ function useWidgetSessionInternal() {
       const text = await res.text().catch(() => '');
       throw new Error(`Failed to load localization allowlist (${res.status}) ${text}`.trim());
     }
-    const json = (await res.json().catch(() => null)) as { v?: number; paths?: Array<{ path?: string }> } | null;
+    const json = (await res.json().catch(() => null)) as {
+      v?: number;
+      paths?: Array<{ path?: string; type?: string }>;
+    } | null;
     if (!json || json.v !== 1 || !Array.isArray(json.paths)) {
       throw new Error('Invalid localization allowlist');
     }
     const allowlist = json.paths
-      .map((entry) => (typeof entry?.path === 'string' ? entry.path.trim() : ''))
-      .filter(Boolean);
+      .map((entry) => {
+        const path = typeof entry?.path === 'string' ? entry.path.trim() : '';
+        const type: AllowlistEntry['type'] = entry?.type === 'richtext' ? 'richtext' : 'string';
+        return { path, type };
+      })
+      .filter((entry) => entry.path);
     allowlistCacheRef.current.set(widgetType, allowlist);
     return allowlist;
   }, []);
@@ -590,36 +599,43 @@ function useWidgetSessionInternal() {
 
       if (localeRequestRef.current !== requestId) return;
       const source = localeOverlay?.source ?? null;
-      if (!localeOverlay?.ops.length && isCuratedPublicId(publicId) && normalized !== baseLocale) {
-        throw new Error('Missing locale overlay for curated instance');
-      }
+      const l10nSnapshot = buildL10nSnapshot(snapshot.baseInstanceData, allowlist);
+      const snapshotPaths = new Set(Object.keys(l10nSnapshot));
+      const hasSnapshot = snapshotPaths.size > 0;
       const baseFiltered = filterAllowlistedOps(localeOverlay?.ops ?? [], allowlist);
       const userOverlay =
         (await loadParisLayer(workspaceId, publicId, 'user', normalized, subject)) ??
         (await loadParisLayer(workspaceId, publicId, 'user', 'global', subject));
       const userFiltered = filterAllowlistedOps(userOverlay?.ops ?? [], allowlist);
-      let baseOps = baseFiltered.filtered;
-      let userOps = userFiltered.filtered;
+      let baseOps = baseFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
+      let userOps = userFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
       let stale = false;
-      if (!localeOverlay?.baseFingerprint && baseOps.length > 0 && isCuratedPublicId(publicId) && normalized !== baseLocale) {
-        throw new Error('Missing baseFingerprint for curated locale overlay');
-      }
-      if (localeOverlay?.baseFingerprint) {
-        const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
-        stale = localeOverlay.baseFingerprint !== currentFingerprint;
-      }
-      if (userOverlay?.baseFingerprint) {
-        const currentFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
-        if (userOverlay.baseFingerprint !== currentFingerprint) {
+      const currentFingerprint = await computeL10nFingerprint(snapshot.baseInstanceData, allowlist);
+      if (hasSnapshot) {
+        if (!localeOverlay?.baseFingerprint) {
           stale = true;
-          userOps = [];
+          if (process.env.NODE_ENV === 'development' && localeOverlay?.ops?.length) {
+            console.warn('[useWidgetSession] Missing baseFingerprint for locale overlay', {
+              publicId,
+              locale: normalized,
+            });
+          }
+        } else if (localeOverlay.baseFingerprint !== currentFingerprint) {
+          stale = true;
         }
-      } else if (userOverlay?.ops?.length) {
-        throw new Error('Missing baseFingerprint for user overrides');
-      }
-      if (stale) {
-        baseOps = [];
-        userOps = [];
+        if (userOverlay?.ops?.length) {
+          if (!userOverlay.baseFingerprint) {
+            stale = true;
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('[useWidgetSession] Missing baseFingerprint for user overrides', {
+                publicId,
+                locale: normalized,
+              });
+            }
+          } else if (userOverlay.baseFingerprint !== currentFingerprint) {
+            stale = true;
+          }
+        }
       }
       if (localeRequestRef.current !== requestId) return;
       const localized = applyLocalizationOps(
@@ -685,7 +701,10 @@ function useWidgetSessionInternal() {
     }
 
     try {
-      const baseFingerprint = await computeBaseFingerprint(snapshot.baseInstanceData);
+      const allowlist = snapshot.locale.allowlist.length
+        ? snapshot.locale.allowlist
+        : await loadLocaleAllowlist(widgetType);
+      const baseFingerprint = await computeL10nFingerprint(snapshot.baseInstanceData, allowlist);
       const userOps = snapshot.locale.userOps;
       if (!userOps.length) {
         setState((prev) => ({

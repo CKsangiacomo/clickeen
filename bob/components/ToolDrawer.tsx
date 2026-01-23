@@ -54,6 +54,7 @@ export function ToolDrawer() {
   }, [compiled]);
 
   const isLocalizationPanel = activePanel === 'localization';
+  const isLocalizationReadOnly = isLocalizationPanel && session.locale.activeLocale === session.locale.baseLocale;
   const activePanelHtml =
     activePanel === 'localization' ? panelsById['content']?.html ?? null : panelsById[activePanel]?.html ?? null;
   const contentHeader = isLocalizationPanel ? (
@@ -176,6 +177,7 @@ export function ToolDrawer() {
                   header={contentHeader}
                   footer={contentFooter}
                   translateMode={isLocalizationPanel}
+                  readOnly={isLocalizationReadOnly}
                   translateAllowlist={session.locale.allowlist}
                 />
               )

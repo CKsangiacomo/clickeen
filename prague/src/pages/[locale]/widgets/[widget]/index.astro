@@ -6,8 +6,10 @@ import WidgetBlocks from '../../../../components/WidgetBlocks.astro';
 import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../../lib/markdown';
 import { listPragueLocales } from '../../../../lib/locales';
 import { pragueT } from '../../../../lib/i18n';
+import { getPragueOverlayContext } from '../../../../lib/requestContext';
 
 const { locale, widget } = Astro.params;
+export const prerender = false;
 
 export async function getStaticPaths() {
   const widgets = await listWidgets();
@@ -23,7 +25,8 @@ export async function getStaticPaths() {
   return locales.flatMap((l) => widgets.map((w) => ({ params: { locale: l, widget: w } })));
 }
 
-const overviewJson = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
+const overlayContext = getPragueOverlayContext(Astro.request);
+const overviewJson = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale, ...overlayContext });
 const blocks = Array.isArray((overviewJson as any).blocks) ? (overviewJson as any).blocks : [];
 const hasHero = blocks.some((b: any) => b && b.type === 'hero');
 const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');

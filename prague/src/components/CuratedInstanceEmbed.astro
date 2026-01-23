@@ -5,33 +5,34 @@ type Props = {
   publicId: string;
   locale: string;
   title?: string;
+  loading?: 'lazy' | 'eager';
 };
 
-const { publicId, locale, title = 'Widget preview' } = Astro.props;
+const { publicId, locale, title = 'Widget preview', loading = 'lazy' } = Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
-const okCuratedPublicId = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(
-  publicId,
-);
-if (!okCuratedPublicId) {
-  throw new Error(
-    `[Prague] Invalid curated publicId '${publicId}' (curated instances are locale-free; locale is a runtime query param)`,
-  );
-}
 
+// Extract widget type from any valid publicId format
 const widgetType = (() => {
   const raw = String(publicId || '').trim();
-  if (!raw.startsWith('wgt_curated_')) return '';
-  const rest = raw.slice('wgt_curated_'.length);
-  const dot = rest.indexOf('.');
-  return dot === -1 ? rest : rest.slice(0, dot);
+
+  // Handle curated instances: wgt_curated_widgetname
+  if (raw.startsWith('wgt_curated_')) {
+    const rest = raw.slice('wgt_curated_'.length);
+    const dot = rest.indexOf('.');
+    return dot === -1 ? rest : rest.slice(0, dot);
+  }
+
+  // Handle user instances: wgt_user_xyz or other formats
+  // For now, return empty string - Venice handles the widget type internally
+  return '';
 })();
 const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
 const iframeSrc = VENICE_URL
   ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
   : null;
 
-const anchorId = `ck-curated-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
+const anchorId = `ck-instance-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
 // Brand icons we already ship in Tokyo, inlined here to keep this component self-contained.
 // Source: tokyo/Assets/Global/share-icons/*.svg (normalized in CSS to currentColor).
@@ -49,18 +50,18 @@ const brandSvgs = {
 ---
 
 <div
-  class="ck-curatedEmbed"
+  class="ck-instanceEmbed"
   id={anchorId}
-  data-ck-curated-id={anchorId}
+  data-ck-instance-id={anchorId}
   data-ck-widget-type={widgetType}
 >
   {iframeSrc ? (
     <>
       <iframe
-        class="ck-curatedEmbed__iframe"
+        class="ck-instanceEmbed__iframe"
         title={title}
         src={iframeSrc}
-        loading="lazy"
+        loading={loading}
         referrerpolicy="no-referrer"
         sandbox="allow-scripts allow-same-origin allow-forms"
       />
@@ -69,7 +70,7 @@ const brandSvgs = {
       <div class="ck-share__toast" role="status" aria-live="polite"></div>
 
       {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
-      <div class="ck-curatedEmbed__topbar">
+      <div class="ck-instanceEmbed__topbar">
         <details class="ck-share">
           <summary class="diet-btn-is ck-share__btn">
             <span class="diet-btn-is__icon" aria-hidden="true">
@@ -169,25 +170,25 @@ const brandSvgs = {
       </div>
     </>
   ) : (
-    <div class="ck-media ck-curatedEmbed__stub">
+    <div class="ck-media ck-instanceEmbed__stub">
       Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {publicId}
     </div>
   )}
 </div>
 
 <style>
-  .ck-curatedEmbed {
+  .ck-instanceEmbed {
     width: 100%;
     position: relative;
     isolation: isolate;
     --ck-creative-chrome-inset: var(--space-4);
     border-radius: var(--control-radius-4xl);
     overflow: hidden;
-    background: var(--color-system-white);
+    background: transparent;
     border: 0;
   }
 
-  .ck-curatedEmbed__topbar {
+  .ck-instanceEmbed__topbar {
     position: absolute;
     /* Button inset must match on top + right. */
     top: var(--ck-creative-chrome-inset);
@@ -203,13 +204,13 @@ const brandSvgs = {
     transition: opacity var(--duration-base, 160ms);
   }
 
-  .ck-curatedEmbed:hover .ck-curatedEmbed__topbar,
-  .ck-curatedEmbed:focus-within .ck-curatedEmbed__topbar {
+  .ck-instanceEmbed:hover .ck-instanceEmbed__topbar,
+  .ck-instanceEmbed:focus-within .ck-instanceEmbed__topbar {
     opacity: 1;
   }
 
   @media (hover: none) {
-    .ck-curatedEmbed__topbar { opacity: 1; }
+    .ck-instanceEmbed__topbar { opacity: 1; }
   }
 
   .ck-share {
@@ -410,17 +411,17 @@ const brandSvgs = {
   }
 
 
-  .ck-curatedEmbed__iframe {
+  .ck-instanceEmbed__iframe {
     width: 100%;
     border: 0;
     display: block;
-    background: var(--color-system-white);
+    background: transparent;
     position: relative;
     z-index: 1;
     min-height: 200px; /* Minimum height while loading */
   }
 
-  .ck-curatedEmbed__stub {
+  .ck-instanceEmbed__stub {
     min-height: 240px;
     display: flex;
     align-items: center;
@@ -434,15 +435,15 @@ const brandSvgs = {
 <script is:inline>
 (() => {
   // Do not rely on 'document.currentScript' (unreliable for module scripts in Astro).
-  // This script may be emitted multiple times (one per creative), so dedupe per element.
-  const creatives = document.querySelectorAll('.ck-curatedEmbed');
-  creatives.forEach((creative) => {
-    if (!(creative instanceof HTMLElement)) return;
-    if (creative.dataset.ckShareBound === '1') return;
-    creative.dataset.ckShareBound = '1';
+  // This script may be emitted multiple times (one per instance), so dedupe per element.
+  const instances = document.querySelectorAll('.ck-instanceEmbed');
+  instances.forEach((instance) => {
+    if (!(instance instanceof HTMLElement)) return;
+    if (instance.dataset.ckShareBound === '1') return;
+    instance.dataset.ckShareBound = '1';
 
     // Handle dynamic iframe resizing
-    const iframe = creative.querySelector('.ck-curatedEmbed__iframe');
+    const iframe = instance.querySelector('.ck-instanceEmbed__iframe');
     if (iframe instanceof HTMLIFrameElement) {
       const resizeHandler = (event) => {
         if (event.source !== iframe.contentWindow) return;
@@ -456,14 +457,14 @@ const brandSvgs = {
       };
 
       window.addEventListener('message', resizeHandler);
-      creative.dataset.ckResizeBound = '1';
+      instance.dataset.ckResizeBound = '1';
     }
 
-    const anchorId = creative.getAttribute('data-ck-curated-id') || creative.id || '';
-    const widgetType = creative.getAttribute('data-ck-widget-type') || '';
-    const details = creative.querySelector('.ck-share');
-    const menu = creative.querySelector('.ck-share__menu');
-    const toast = creative.querySelector('.ck-share__toast');
+    const anchorId = instance.getAttribute('data-ck-instance-id') || instance.id || '';
+    const widgetType = instance.getAttribute('data-ck-widget-type') || '';
+    const details = instance.querySelector('.ck-share');
+    const menu = instance.querySelector('.ck-share__menu');
+    const toast = instance.querySelector('.ck-share__toast');
     if (!(details instanceof HTMLDetailsElement) || !(menu instanceof HTMLElement)) return;
 
     const close = () => { details.open = false; };
@@ -478,10 +479,10 @@ const brandSvgs = {
       if (e.key === 'Escape') close();
     });
 
-    // Avoid the “opens on hover” perception caused by the topbar being hidden:
+    // Avoid the "opens on hover" perception caused by the topbar being hidden:
     // if the user clicks Share (menu opens) and then moves mouse away, close it
-    // so it can't reappear later just by hovering the creative again.
-    creative.addEventListener('pointerleave', () => close());
+    // so it can't reappear later just by hovering the instance again.
+    instance.addEventListener('pointerleave', () => close());
 
     function titleCaseWidgetType(input) {
       const s = String(input || '').trim();

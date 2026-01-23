@@ -134,7 +134,7 @@ Each release proceeds in 3 steps:
 - Stateless API gateway to Michael (Supabase).
 - Public endpoints are under `/api/*`.
 - Shipped in this repo snapshot: `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` (editor/dev tooling), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated list), `GET/PUT /api/workspaces/:workspaceId/locales`, `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `POST /api/ai/grant`, `POST /api/ai/outcome`.
-- Layered l10n endpoints are canonical; legacy locale-only endpoints remain in runtime for now but are not used by Bob/SF.
+- Layered l10n endpoints are canonical.
   - Planned surfaces (not implemented here yet) are described in `documentation/services/paris.md`.
   - Instance routing uses `publicId` prefix: `wgt_main_*`/`wgt_curated_*` -> `curated_widget_instances`, `wgt_*_u_*` -> `widget_instances`.
   - Paris uses `TOKYO_BASE_URL` to validate widget types and load widget `limits.json`.

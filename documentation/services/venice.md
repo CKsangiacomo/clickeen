@@ -70,7 +70,8 @@ Venice must **never** serve unpublished instances.
 3. Apply Tokyo `l10n` overlay (if present) from deterministic overlay paths:
    - Overlay must be set-only ops.
    - Overlay ops are already merged (agent ops + per-field user overrides).
-   - Overlay must include `baseFingerprint` and match `computeBaseFingerprint(instance.config)` (stale guard).
+   - Overlay must include `baseFingerprint` and match `computeL10nFingerprint(instance.config, allowlist)` (stale guard).
+   - The allowlist comes from `tokyo/widgets/{widgetType}/localization.json` (translatable paths only).
 4. Return HTML that:
    - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice
    - injects a single canonical bootstrap object: `window.CK_WIDGET`
@@ -92,7 +93,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render, and then respon
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
 - `device=desktop|mobile` (optional, defaults to `desktop`)
-- `locale=<bcp47-ish>` (optional; when omitted, Venice uses Tokyo `index.json` + `cf-ipcountry`, then falls back to `en`)
+- `locale=<bcp47-ish>` (optional; when omitted, Venice defaults to `en` without any auto-selection)
 - `ts=<milliseconds>` (optional; cache bust / no-store)
 
 **Non-goal (strict):**
@@ -116,8 +117,7 @@ Response includes (as implemented today):
 Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`.
 
 **Locale resolution (shipped):**
-- Uses `?locale=<token>` when present; otherwise uses `Accept-Language` if present (treated as explicit).
-- If no explicit locale signal exists, Venice uses Tokyo `index.json` + `cf-ipcountry` to select a locale, then falls back to `en`.
+- Uses `?locale=<token>` when present; otherwise defaults to `en`.
 
 ### Tokyo Asset Proxy Routes (Shipped)
 
@@ -131,7 +131,7 @@ This keeps widget definitions portable and prevents hard-coded Tokyo origins ins
 - Path-aware caching is enforced in Venice (not pass-through):
   - `l10n` overlays, `workspace-assets`, `curated-assets`: `force-cache` with 1-year revalidate.
   - `i18n` bundles: `force-cache` with 1-year revalidate; `i18n/manifest.json`: short TTL (5 min).
-  - `l10n` `index.json`: short TTL (5 min) for locale selection.
+  - `l10n` `index.json`: short TTL (5 min) for overlay metadata freshness.
   - `widgets/` + `dieter/`: short TTL (5 min) for fast iteration.
   - Everything else: `no-store`.
 

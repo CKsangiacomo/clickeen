@@ -1,4 +1,12 @@
 ---
+import {
+  actionGroupFromLegacy,
+  actionGroupToPrimitives,
+  assertPrimitives,
+  type ActionGroup,
+} from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+
 type Props = {
   headline: string;
   subheadline?: string;
@@ -6,9 +14,41 @@ type Props = {
     label: string;
     href: string;
   };
+  actionGroup?: ActionGroup;
 };
 
-const { headline, subheadline, primaryCta } = Astro.props;
+const { headline, subheadline, primaryCta, actionGroup } = Astro.props;
+
+const contentPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 2,
+      content: headline,
+      className: 'display-2 ck-m0',
+    },
+    ...(subheadline
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subheadline,
+            className: 'body-website ck-m0 ck-text-subtle',
+          },
+        ]
+      : []),
+  ],
+  'cta.content',
+);
+
+const resolvedActionGroup =
+  actionGroup ??
+  actionGroupFromLegacy(primaryCta ?? null, null, {
+    layout: 'row',
+    className: '',
+    primaryClassName: 'ck-btn--lg label-l',
+    primaryAttrs: { 'data-ck-copy': 'ctaText' },
+  });
 ---
 
 <section class="ck-canvas">
@@ -16,14 +56,11 @@ const { headline, subheadline, primaryCta } = Astro.props;
     <div class="ck-cta__card">
       <div class="ck-split ck-split--center">
         <div class="ck-split__a ck-stack">
-          <div class="display-2 ck-m0">{headline}</div>
-          {subheadline ? <div class="body-website ck-m0 ck-text-subtle">{subheadline}</div> : null}
+          <PrimitiveRenderer primitives={contentPrimitives} />
         </div>
-        {primaryCta ? (
+        {resolvedActionGroup ? (
           <div class="ck-split__b">
-            <a class="ck-btn ck-btn--primary ck-btn--lg label-l" href={primaryCta.href} data-ck-copy="ctaText">
-              {primaryCta.label}
-            </a>
+            <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
           </div>
         ) : null}
       </div>

@@ -970,7 +970,11 @@ export default {
     for (const msg of batch.messages) {
       const body = msg.body;
       if (isL10nJob(body)) {
-        await executeL10nJob(body, env);
+        try {
+          await executeL10nJob(body, env);
+        } catch (err) {
+          console.error('[sanfrancisco] l10n job failed', err);
+        }
         continue;
       }
       const e = body as InteractionEvent;

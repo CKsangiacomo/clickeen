@@ -1,11 +1,10 @@
+import { assertSplitLayout } from '@clickeen/composition';
 import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import Outcomes from '../blocks/outcomes/outcomes.astro';
-import SplitCreativeLeft from '../blocks/split-creative-left/split-creative-left.astro';
-import SplitCreativeRight from '../blocks/split-creative-right/split-creative-right.astro';
-import SplitCreativeStacked from '../blocks/split-creative-stacked/split-creative-stacked.astro';
+import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 
 type StringType = 'string' | 'array';
@@ -14,9 +13,7 @@ type RequiredString = { key: string; type: StringType };
 export type BlockType =
   | 'big-bang'
   | 'hero'
-  | 'split-creative-left'
-  | 'split-creative-right'
-  | 'split-creative-stacked'
+  | 'split'
   | 'steps'
   | 'cta'
   | 'minibob'
@@ -51,32 +48,14 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
     ],
     meta: ['visual', 'curatedRef'],
   },
-  'split-creative-right': {
-    type: 'split-creative-right',
-    component: SplitCreativeRight,
+  split: {
+    type: 'split',
+    component: Split,
     required: [
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['curatedRef', 'copy'],
-  },
-  'split-creative-left': {
-    type: 'split-creative-left',
-    component: SplitCreativeLeft,
-    required: [
-      { key: 'headline', type: 'string' },
-      { key: 'subheadline', type: 'string' },
-    ],
-    meta: ['curatedRef', 'copy'],
-  },
-  'split-creative-stacked': {
-    type: 'split-creative-stacked',
-    component: SplitCreativeStacked,
-    required: [
-      { key: 'headline', type: 'string' },
-      { key: 'subheadline', type: 'string' },
-    ],
-    meta: ['curatedRef', 'copy'],
+    meta: ['curatedRef', 'layout', 'copy'],
   },
   steps: {
     type: 'steps',
@@ -161,6 +140,9 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
     if (publicId != null && typeof publicId !== 'string') {
       throw new Error(`[prague] ${pagePath}: block "${type}" curatedRef.publicId must be a string`);
     }
+  }
+  if (contract.meta.includes('layout') && (block as any).layout != null) {
+    assertSplitLayout((block as any).layout, `${pagePath}:${type}.layout`);
   }
 }
 

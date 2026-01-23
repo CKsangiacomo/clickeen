@@ -1,4 +1,7 @@
 ---
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+
 type Props = {
   title: string;
   subhead?: string;
@@ -6,6 +9,29 @@ type Props = {
 };
 
 const { title, subhead, steps } = Astro.props;
+
+const headerPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 3,
+      content: title,
+      className: 'display-3 ck-m0',
+      attrs: { 'data-ck-copy': 'sectionTitle' },
+    },
+    ...(subhead
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subhead,
+            className: 'body-website ck-m0 ck-steps__subhead',
+          },
+        ]
+      : []),
+  ],
+  'steps.header',
+);
 
 // Inline Dieter icons so they inherit `currentColor` (external <img src="...svg"> cannot).
 const ICON_SVGS = [
@@ -27,16 +53,32 @@ const ICON_SVGS = [
 <section class="ck-canvas ck-stepsCanvas">
   <div class="ck-inline ck-stack ck-steps__inline">
     <header class="ck-steps__header">
-      <h2 class="display-3 ck-m0" data-ck-copy="sectionTitle">{title}</h2>
-      {subhead ? <p class="body-website ck-m0 ck-steps__subhead">{subhead}</p> : null}
+      <PrimitiveRenderer primitives={headerPrimitives} />
     </header>
 
     <div class="ck-row ck-steps__row" aria-label={title}>
       {steps.map((step, i) => (
         <div class="ck-steps__tile" role="group" aria-label={`Benefit ${i + 1}`}>
           <div class="ck-steps__icon" aria-hidden="true" set:html={ICON_SVGS[i] ?? ICON_SVGS[0]} />
-          <div class="heading-2 ck-m0">{step.title}</div>
-          <p class="body-l ck-m0 ck-steps__body ck-text-subtle">{step.body}</p>
+          <PrimitiveRenderer
+            primitives={assertPrimitives(
+              [
+                {
+                  type: 'heading',
+                  level: 2,
+                  content: step.title,
+                  className: 'heading-2 ck-m0',
+                },
+                {
+                  type: 'text',
+                  variant: 'body',
+                  content: step.body,
+                  className: 'body-l ck-m0 ck-steps__body ck-text-subtle',
+                },
+              ],
+              `steps.items[${i}]`,
+            )}
+          />
         </div>
       ))}
     </div>
