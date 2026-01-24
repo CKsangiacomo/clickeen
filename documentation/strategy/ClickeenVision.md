@@ -340,7 +340,7 @@ Once businesses build AI agents on Clickeen, **they cannot migrate back** (old s
 
 **What Clickeen has:**
 - Content in JSONB (queryable, typed, structured)
-- Contracts enforced (spec.json per component)
+- Contracts enforced (spec.json + allowlists/limits per component)
 - Operations model (set-only ops, composable)
 - Workspace isolation (Postgres RLS, enforced at DB)
 - Hybrid architecture (DB truth, CDN delivery)

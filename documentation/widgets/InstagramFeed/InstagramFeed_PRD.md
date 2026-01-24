@@ -35,7 +35,7 @@ How it differs from other widgets:
 ## Entitlements + limits (v1)
 
 Notes:
-- This widget is not yet a Tokyo 5-file package in this repo; exact state paths are TBD until `tokyo/widgets/instagramfeed/spec.json` exists.
+- This widget is not yet a Tokyo widget package in this repo; exact state paths are TBD until `tokyo/widgets/instagramfeed/spec.json` exists.
 - Tier values live in the global matrix: `config/entitlements.matrix.json`.
 - Widget enforcement lives in `tokyo/widgets/instagramfeed/limits.json` (create this when the widget ships).
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
@@ -73,7 +73,7 @@ Display Instagram posts from a public profile. Follows Behold.so's simpler model
 | Tenet | Application |
 |-------|-------------|
 | **No Fallbacks** | widget.client.js throws errors on missing data |
-| **Widget Files = Truth** | 5 files in tokyo/widgets/instagramfeed/ |
+| **Widget Files = Truth** | Core runtime files + contracts in tokyo/widgets/instagramfeed/ |
 | **Dieter Tokens** | All colors use Dieter tokens by default |
 | **Venice = Dumb Pipe** | Venice fetches and combines, doesn't transform |
 
@@ -715,4 +715,3 @@ Display Instagram posts from a public profile in grid, carousel, or masonry layo
 1. **OAuth for post-MVP**: Which OAuth provider? Instagram Basic Display API is deprecated.
 2. **Video handling**: Autoplay muted? Thumbnail until click?
 3. **Carousel physics**: CSS-only or need JS library for elastic feel?
-

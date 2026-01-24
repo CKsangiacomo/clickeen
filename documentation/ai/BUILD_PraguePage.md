@@ -102,6 +102,7 @@ Required keys (current registry):
 - `hero`: `headline`, `subheadline`
 - `split`: `headline`, `subheadline` (meta: `layout`, `curatedRef` allowed)
 - `steps`: `title`, `items[]`
+- `outcomes`: no required keys enforced yet (expects `items[]` when used)
 - `cta`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
 - `navmeta`: `title`, `description`

@@ -46,26 +46,38 @@ The Babel Protocol is Clickeen's internal specification for **multi-dimensional 
 
 ### 1. Content-Addressed Base Artifacts
 
-**Storage:**
+**Storage (base content):**
 ```
-tokyo/widgets/faq/
-├── spec.json                  # Widget definition
-├── widget.html                # Template
-├── widget.css                 # Styles
-└── widget.client.js           # Client behavior
+Michael (Supabase)
+├── widget_instances.config            # user instances
+└── curated_widget_instances.config    # curated/baseline instances
+
+Tokyo (repo/CDN)
+└── tokyo/widgets/{widget}/pages/*.json # Prague marketing base copy
+```
+
+**Widget software plane (separate, still content-addressed):**
+```
+tokyo/widgets/{widget}/
+├── spec.json
+├── widget.html
+├── widget.css
+├── widget.client.js
+├── agent.md
+├── limits.json
+├── localization.json
+└── layers/*.allowlist.json
 ```
 
 **Characteristics:**
-- Immutable (content-addressed by SHA-256 hash)
-- Contains default/fallback content (typically English, generic positioning)
-- Includes `baseFingerprint` for overlay validation
+- Immutable via content-hashed overlay files
+- Base content stored once (instance config or Prague page JSON)
+- `baseFingerprint` is computed from base content + allowlist and stored on overlays
 
 **Base config example:**
 ```json
 {
   "id": "wgt_faq_default",
-  "baseFingerprint": "758d73cba...",
-  "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
   "config": {
     "title": "Frequently Asked Questions",
     "pricing": {
@@ -87,6 +99,7 @@ tokyo/widgets/faq/
 **Structure (deterministic paths):**
 ```
 tokyo/l10n/instances/<publicId>/
+├── index.json
 ├── locale/<locale>/<baseFingerprint>.ops.json
 ├── geo/<geo>/<baseFingerprint>.ops.json
 ├── industry/<industry>/<baseFingerprint>.ops.json
@@ -98,10 +111,8 @@ tokyo/l10n/instances/<publicId>/
 **Overlay format (ops-based):**
 ```json
 {
-  "dimension": "locale",
-  "dimensionValue": "fr",
   "baseFingerprint": "758d73cba...",
-  "allowedPaths": ["title", "cta", "pricing.currency"],
+  "baseUpdatedAt": null,
   "ops": [
     {
       "op": "set",
@@ -119,8 +130,8 @@ tokyo/l10n/instances/<publicId>/
 ```
 
 **Key properties:**
-- `baseFingerprint`: Must match base artifact (prevents stale overlays)
-- `allowedPaths`: Contract enforcement - overlay can only modify declared paths
+- `baseFingerprint`: Must match the current base config fingerprint (prevents stale overlays)
+- Allowlist contract lives in `tokyo/widgets/{widget}/localization.json` and `layers/*.allowlist.json` (validated at publish time)
 - `ops`: Array of JSONPatch-style operations (currently only "set" supported)
 
 ---
@@ -276,9 +287,11 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 function composeVariant(
   baseConfig: object,
   context: RequestContext,
-  overlays: OverlayRegistry
+  overlays: OverlayRegistry,
+  allowlist: Allowlist
 ): object {
   let result = JSON.parse(JSON.stringify(baseConfig)); // Deep clone
+  const baseFingerprint = computeL10nFingerprint(baseConfig, allowlist);
 
   // Apply overlays in precedence order
   const layers = [
@@ -295,16 +308,9 @@ function composeVariant(
     if (!overlay) continue;
 
     // Validate fingerprint
-    if (overlay.baseFingerprint !== baseConfig.baseFingerprint) {
-      console.warn(`Overlay ${overlay.dimension} fingerprint mismatch - skipping`);
+    if (overlay.baseFingerprint !== baseFingerprint) {
+      console.warn(`Overlay fingerprint mismatch for ${overlay.layer}:${overlay.layerKey} - skipping`);
       continue;
-    }
-
-    // Validate path ownership (contract enforcement)
-    for (const op of overlay.ops) {
-      if (!overlay.allowedPaths.includes(op.path)) {
-        throw new Error(`Overlay ${overlay.dimension} tried to set forbidden path: ${op.path}`);
-      }
     }
 
     // Apply ops
@@ -330,65 +336,30 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
 ---
 
-### 5. Path Ownership Contracts
+### 5. Path Ownership Contracts (Per-Widget Allowlists)
 
 **The problem:** Without contracts, overlays can collide and cause chaos.
 
-**Solution:** Each dimension declares allowed paths
+**Solution:** Each widget declares allowed paths per layer.
 
-**Path ownership table:**
+**Authoritative allowlists:**
+- Locale layer: `tokyo/widgets/{widget}/localization.json`
+- Non-locale layers: `tokyo/widgets/{widget}/layers/{layer}.allowlist.json`
 
-| Dimension | Allowed Paths | Example Values |
-|-----------|---------------|----------------|
-| **locale** | `title`, `subtitle`, `cta`, `*.question`, `*.answer` | Translatable strings |
-| **geo** | `pricing.currency`, `pricing.amount`, `legal.*`, `shipping.*` | Regional pricing/legal |
-| **industry** | `hero.title`, `hero.subtitle`, `testimonials` | Positioning copy |
-| **experiment** | `cta`, `hero.title`, `pricing.amount` | A/B test variants |
-| **account** | `hero.title`, `logos`, `testimonials` | ABM customization |
-| **behavior** | `hero.cta`, `hero.subtitle` | Lifecycle messaging |
-| **user** | `*` (all paths) | User manual overrides |
-
-**Enforcement:**
-```typescript
-const PATH_CONTRACTS: Record<string, string[]> = {
-  locale: ['title', 'subtitle', 'cta', '*.question', '*.answer'],
-  geo: ['pricing.currency', 'pricing.amount', 'legal.*', 'shipping.*'],
-  industry: ['hero.title', 'hero.subtitle', 'testimonials'],
-  experiment: ['cta', 'hero.title', 'pricing.amount'],
-  account: ['hero.title', 'logos', 'testimonials'],
-  behavior: ['hero.cta', 'hero.subtitle'],
-  user: ['*']  // User overrides can touch anything
-};
-
-function validateOverlay(overlay: Overlay): boolean {
-  const allowedPaths = PATH_CONTRACTS[overlay.dimension];
-
-  for (const op of overlay.ops) {
-    if (!isPathAllowed(op.path, allowedPaths)) {
-      throw new Error(
-        `Overlay '${overlay.dimension}' cannot modify path '${op.path}'. ` +
-        `Allowed paths: ${allowedPaths.join(', ')}`
-      );
-    }
-  }
-
-  return true;
-}
-
-function isPathAllowed(path: string, allowedPaths: string[]): boolean {
-  return allowedPaths.some(pattern => {
-    if (pattern === '*') return true;
-    if (pattern.endsWith('.*')) {
-      return path.startsWith(pattern.slice(0, -2));
-    }
-    if (pattern.includes('*.')) {
-      const regex = new RegExp('^' + pattern.replace('*', '[^.]+') + '$');
-      return regex.test(path);
-    }
-    return path === pattern;
-  });
+**Allowlist shape (example):**
+```json
+{
+  "v": 1,
+  "paths": [
+    { "path": "title", "type": "string" },
+    { "path": "sections.*.title", "type": "string" }
+  ]
 }
 ```
+
+**Enforcement:**
+- Paris/San Francisco validate ops against the allowlist at publish/generation time.
+- Runtime only enforces the `baseFingerprint` staleness guard and prohibited path segments.
 
 ---
 
@@ -441,15 +412,20 @@ function isPathAllowed(path: string, allowedPaths: string[]): boolean {
 
 **Agent workflow:**
 ```typescript
-async function generateLocaleOverlay(
-  baseConfig: object,
-  targetLocale: string
-): Promise<LocaleOverlay> {
-  // 1. Extract translatable fields
-  const translatableFields = extractTranslatableFields(baseConfig);
+async function generateLocaleOverlay(args: {
+  publicId: string;
+  baseConfig: object;
+  targetLocale: string;
+  allowlist: Allowlist;
+}): Promise<LocaleOverlay> {
+  const { publicId, baseConfig, targetLocale, allowlist } = args;
 
-  // 2. Translate via Deepseek
-  const translations = await translateWithDeepseek(translatableFields, targetLocale);
+  // 1. Build translatable snapshot + fingerprint (allowlist-scoped)
+  const snapshot = buildL10nSnapshot(baseConfig, allowlist);
+  const baseFingerprint = computeL10nFingerprint(snapshot, allowlist);
+
+  // 2. Translate via Deepseek (only the snapshot fields)
+  const translations = await translateWithDeepseek(snapshot, targetLocale);
 
   // 3. Generate ops
   const ops = translations.map(({ path, value }) => ({
@@ -458,21 +434,18 @@ async function generateLocaleOverlay(
     value
   }));
 
-  // 4. Validate against path contract
   const overlay: LocaleOverlay = {
-    dimension: 'locale',
-    dimensionValue: targetLocale,
-    baseFingerprint: baseConfig.baseFingerprint,
-    allowedPaths: PATH_CONTRACTS.locale,
+    baseFingerprint,
+    baseUpdatedAt: null,
     ops,
     v: 1
   };
 
-  validateOverlay(overlay);
-
-  // 5. Store in R2 (content-addressed)
-  const overlayHash = sha256(JSON.stringify(overlay));
-  await storeOverlay(`locale/${targetLocale}.${overlayHash}.ops.json`, overlay);
+  // 4. Store in R2 (content-addressed)
+  await storeOverlay(
+    `l10n/instances/${publicId}/locale/${targetLocale}/${baseFingerprint}.ops.json`,
+    overlay
+  );
 
   return overlay;
 }

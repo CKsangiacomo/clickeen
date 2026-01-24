@@ -44,6 +44,10 @@ Widget definition (the software): `tokyo/widgets/faq/`
 - `widget.html` — semantic scaffold
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
+- `agent.md` — AI editing contract
+- `limits.json` — entitlements caps/flags (Paris validation)
+- `localization.json` — locale-layer allowlist
+- `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 
 Source of truth for editor state is `tokyo/widgets/faq/spec.json` → `defaults`.
 

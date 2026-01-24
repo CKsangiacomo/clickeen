@@ -9,7 +9,7 @@ This process is designed to be **AI-legible**: each step has a clear output and 
 
 ---
 
-### Canonical Widget Definition (the 5 files)
+### Canonical Widget Definition (core runtime files + contracts)
 Every widget type is a folder in Tokyo:
 
 ```text
@@ -19,6 +19,10 @@ tokyo/widgets/{widgetType}/
   widget.css
   widget.client.js
   agent.md
+  limits.json
+  localization.json
+  layers/*.allowlist.json
+  pages/*.json
 ```
 
 ---

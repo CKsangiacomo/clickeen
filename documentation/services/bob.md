@@ -16,7 +16,7 @@ During an edit session, instance state exists in exactly two places:
 Between load and publish, Bob does not write intermediate edits to Paris.
 
 ### Spec-driven + control-driven (not UI-driven)
-The widget definition (`tokyo/widgets/{widget}/spec.json`) is the source of truth for:
+The widget definition (`tokyo/widgets/{widget}/spec.json`) is the editor source of truth for:
 - Defaults (`defaults`)
 - Editor UI structure (`html[]` using `<bob-panel>` + `<tooldrawer-*>` DSL)
 
@@ -103,7 +103,12 @@ tokyo/widgets/{widget}/
   widget.css
   widget.client.js
   (optional) agent.md
+  limits.json
+  localization.json
+  layers/*.allowlist.json
+  pages/*.json
 ```
+Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are used by Paris/Prague.
 
 ### Preview contract (Bob ↔ runtime)
 Bob loads `compiled.assets.htmlUrl` into an iframe and posts:

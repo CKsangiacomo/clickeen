@@ -240,7 +240,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Source of truth: `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
   - Prague validates `curatedRef.publicId` during page load; missing curated instances fail fast in dev/build.
-  - Page JSON is layout + meta only; localized base content overrides any inline `copy` in the JSON.
+  - Page JSON is layout + base copy; Tokyo overlays overwrite `blocks[].copy` at runtime.
   - Copy is loaded from page JSON and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
   - Runtime copy overlays (geo/industry/experiment) apply on widget pages; composition stays static.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.

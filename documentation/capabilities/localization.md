@@ -76,8 +76,9 @@ Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatabl
 - Venice applies the overlay at render time (if present and not stale).
 
 **Widget allowlist (authoritative)**
-- `tokyo/widgets/{widgetType}/localization.json` defines exactly which paths are translatable.
-- Agents must not mutate paths outside this allowlist.
+- Locale layer allowlist: `tokyo/widgets/{widgetType}/localization.json`
+- Non-locale layer allowlists: `tokyo/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
+- Agents must not mutate paths outside the relevant allowlist.
 
 **Canonical store (Supabase)**
 - `widget_instance_overlays` is the layered source of truth for instance overlays.

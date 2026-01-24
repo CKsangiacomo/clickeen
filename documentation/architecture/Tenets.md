@@ -91,20 +91,25 @@ Note: request parameters (like `locale`) may have a deterministic default (Phase
 
 ## Tenet 1: Widget Files Are Complete Truth
 
-Every widget is defined by **5 files in Tokyo**:
+Every widget is defined by **core runtime files + contract files** in Tokyo:
 
 ```
 tokyo/widgets/{widgetname}/
-├── spec.json          ← Schema + defaults + ToolDrawer panels
-├── widget.html        ← HTML structure
-├── widget.css         ← All styling
-├── widget.client.js   ← Runtime behavior
-└── agent.md           ← AI editing contract
+├── spec.json              ← Schema + defaults + ToolDrawer panels
+├── widget.html            ← HTML structure
+├── widget.css             ← All styling
+├── widget.client.js       ← Runtime behavior
+├── agent.md               ← AI editing contract
+├── limits.json            ← Entitlements caps/flags for Paris validation
+├── localization.json      ← Locale-layer allowlist (translatable paths)
+├── layers/*.allowlist.json← Per-layer allowlists (user/geo/industry/etc.)
+└── pages/*.json           ← Prague marketing pages (overview/features/etc.)
 ```
 
 ### What This Means
 
-- These 5 files contain **everything** about the widget
+- Core runtime files contain **everything** about widget behavior
+- Contract files define limits/localization; Prague pages define the marketing surface
 - No other system adds, removes, or modifies widget behavior
 - If it's not in these files, it doesn't exist
 
@@ -113,7 +118,7 @@ tokyo/widgets/{widgetname}/
 ```
 ┌─────────────────┐
 │   Tokyo         │
-│   (5 files)     │
+│ (core files)    │
 └────────┬────────┘
          │
          │ provides definition

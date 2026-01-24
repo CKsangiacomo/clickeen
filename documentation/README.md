@@ -30,7 +30,7 @@ documentation/
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
 │   └── prague/              # Marketing surface
-│       ├── overview.md
+│       ├── prague-overview.md
 │       ├── blocks.md
 │       └── layout.md
 │

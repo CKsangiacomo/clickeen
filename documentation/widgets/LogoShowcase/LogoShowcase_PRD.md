@@ -37,12 +37,15 @@ These are required patterns to keep editor UX deterministic and prevent dead con
   - Radius uses `appearance.itemCard.radiusLinked` and `appearance.itemCard.radius*` (linked/unlinked)
 
 ### What ships (authoritative widget definition)
-The widget must be implemented as the standard 5-file Tokyo package:
+The widget must be implemented as the standard Tokyo package (core runtime + contracts):
 - `tokyo/widgets/logoshowcase/spec.json`
 - `tokyo/widgets/logoshowcase/widget.html`
 - `tokyo/widgets/logoshowcase/widget.css`
 - `tokyo/widgets/logoshowcase/widget.client.js`
 - `tokyo/widgets/logoshowcase/agent.md`
+- `tokyo/widgets/logoshowcase/limits.json`
+- `tokyo/widgets/logoshowcase/localization.json`
+- `tokyo/widgets/logoshowcase/layers/*.allowlist.json`
 
 ### Non-negotiable platform constraints
 - **No fallbacks**: `widget.client.js` must not merge defaults. Missing required state must throw a clear error.
@@ -385,7 +388,7 @@ If any item below is undecided, the implementer must stop and ask; do not guess.
 We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
 ### Asset handling (scope for this PRD)
-This PRD is for **editor-time widget UX** (Tokyo 5 files + Bob preview). It is not blocked on asset persistence.
+This PRD is for **editor-time widget UX** (core widget files + Bob preview). It is not blocked on asset persistence.
 - **Editor-time (Bob)**: `dropdown-upload` stores an in-memory CSS fill string (typically a Data URL fill) so preview can render immediately.
 - **Persistence/publish**: handled in a later phase. When persistence ships, we will store stable asset references (URL/fileKey) instead of Data URLs.
 

@@ -250,9 +250,10 @@ const config = applyOps(
 - **Founder built in 4 months:**
   - Prague (marketing site + localization)
   - Bob (widget builder + session management)
-  - Tokyo (rendering engine + content-addressed storage)
+  - Tokyo (content-addressed storage + CDN)
+  - Venice (embed runtime)
   - Dieter (component system)
-  - Michael (AI support agent)
+  - Michael (Supabase database)
   - San Francisco (AI agent orchestration)
   - L10n system (fingerprint-gated translation)
   - Supabase integration
@@ -460,12 +461,19 @@ tokyo/
 │   ├── spec.json                    # Widget definition
 │   ├── widget.html                  # Template
 │   ├── widget.css                   # Styles
-│   └── widget.client.js             # Behavior
+│   ├── widget.client.js             # Behavior
+│   ├── agent.md                     # AI contract
+│   ├── limits.json                  # Entitlement caps
+│   ├── localization.json            # Locale allowlist
+│   ├── layers/*.allowlist.json      # Non-locale allowlists
+│   └── pages/*.json                 # Prague base copy
 ├── l10n/instances/
 │   └── wgt_curated_faq.lightblurs.v01/
-│       ├── fr.1226c80e.ops.json     # French translation (content-hashed)
-│       ├── es.8f7325af.ops.json     # Spanish translation
-│       └── ja.687d79e4.ops.json     # Japanese translation
+│       ├── index.json               # Layer index (locale keys + fingerprints)
+│       └── locale/
+│           ├── fr/<baseFingerprint>.ops.json
+│           ├── es/<baseFingerprint>.ops.json
+│           └── ja/<baseFingerprint>.ops.json
 ```
 
 **Why this matters:**
@@ -477,7 +485,7 @@ tokyo/
 #### 2. Fingerprint-Gated Translation Pipeline
 
 **What it means:**
-- Every base config has a `baseFingerprint` (SHA-256 of source content)
+- Every overlay references a `baseFingerprint` (SHA-256 of the base snapshot + allowlist)
 - Translations reference the fingerprint they're based on
 - If base changes → fingerprint changes → re-translation triggered
 - If base unchanged → translations reused (zero cost)
@@ -524,19 +532,19 @@ tokyo/
 
 **Request flow:**
 ```
-User visits: clickeen.com/widgets/faq?lang=fr
+User visits: /e/wgt_curated_faq.lightblurs.v01?locale=fr
     ↓
-Tokyo receives request, detects language: French
+Venice receives request, resolves locale: French
     ↓
-Loads base config: wgt_curated_faq.lightblurs.v01/config.json
+Loads base config from Paris/Michael (instance config)
     ↓
-Loads French overlay: l10n/instances/.../fr.1226c80e.ops.json
+Loads French overlay: tokyo/l10n/instances/.../locale/fr/<baseFingerprint>.ops.json
     ↓
 Applies ops to base config (set operations)
     ↓
 Renders widget in French
     ↓
-Serves to user with Set-Cookie: preferred_lang=fr
+Serves localized output
 ```
 
 **Why this matters:**
@@ -631,7 +639,7 @@ Zero extra work for Acme Corp
 **Why 50% Less Effort:**
 - ✅ Block system already built (reuse Hero, Split, Button, etc.)
 - ✅ L10n infrastructure already built (same ops overlay system)
-- ✅ Tokyo renderer already built (add email output mode)
+- ✅ Embed runtime already built (Venice + widget runtime; add email output mode)
 - ✅ Content-addressed storage already built (same CDN)
 
 **What's New:**
@@ -907,7 +915,7 @@ Clickeen serves:
 - User learns once, creates everywhere
 
 **Why Competitors Can't Copy:**
-- Requires unified rendering engine (Tokyo)
+- Requires unified rendering engine (Venice + widget runtime)
 - Requires platform-agnostic block specifications
 - Requires coordination across 6 separate product surfaces
 - Most companies have siloed products (Mailchimp emails ≠ Mailchimp landing pages)
@@ -1450,8 +1458,8 @@ LOOP REPEATS (exponential growth)
 ┌─────────────────────────────────────────────────────────────┐
 │                    CONTENT ADDRESSING                        │
 │  • Generate SHA-256 fingerprint of content                  │
-│  • Store immutable artifact at tokyo/{hash}/                │
-│  • Create version entry in content registry                 │
+│  • Store base config in Michael (Supabase)                  │
+│  • Store overlays in Tokyo (content-addressed ops)          │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -1459,13 +1467,13 @@ LOOP REPEATS (exponential growth)
 │  • Detect translatable fields (title, body, cta, etc.)      │
 │  • Check existing translations (baseFingerprint match?)     │
 │  • If fingerprint changed → translate delta only            │
-│  • Store as ops overlay (l10n/instances/{id}/{lang}.ops)    │
+│  • Store as ops overlay (tokyo/l10n/instances/{publicId}/locale/{locale}/{baseFingerprint}.ops.json) │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                   DYNAMIC RENDERING                          │
 │  • Request arrives (Accept-Language: fr-FR)                 │
-│  • Load base config (content-addressed artifact)            │
+│  • Load base config from Michael (via Paris)                │
 │  • Load French overlay (l10n ops)                           │
 │  • Apply ops to base (JSONPatch-style merge)                │
 │  • Render in target format (HTML, MJML, Meta API, etc.)     │
@@ -1486,11 +1494,9 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "id": "wgt_curated_faq.lightblurs.v01",
+  "publicId": "wgt_curated_faq.lightblurs.v01",
   "widgetType": "faq",
-  "version": 1,
-  "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
-  "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
+  "status": "published",
   "config": {
     "title": "Frequently Asked Questions",
     "sections": [
@@ -1522,7 +1528,6 @@ LOOP REPEATS (exponential growth)
 {
   "baseFingerprint": "758d73cbaa0c39f2ea6d6b7523fb1734dc231a6bd7380a05cc6aeb2d1e6aa8b5",
   "baseUpdatedAt": "2026-01-14T23:14:51.314764+00:00",
-  "locale": "fr",
   "ops": [
     {
       "op": "set",
@@ -1599,7 +1604,6 @@ interface TranslationJob {
 interface LocalizationOverlay {
   baseFingerprint: string;
   baseUpdatedAt: string;
-  locale: string;
   ops: Array<{ op: 'set'; path: string; value: string }>;
   v: number;
 }
@@ -1638,7 +1642,6 @@ export async function translateInstance(job: TranslationJob): Promise<Localizati
   return {
     baseFingerprint,
     baseUpdatedAt: new Date().toISOString(),
-    locale,
     ops,
     v: 1
   };
@@ -1728,7 +1731,7 @@ function computeDelta(
 ### Dynamic Rendering Implementation
 
 ```typescript
-// tokyo/src/renderer.ts
+// venice/lib/l10n.ts (conceptual)
 
 interface RenderRequest {
   instanceId: string;
@@ -1740,7 +1743,7 @@ export async function renderInstance(req: RenderRequest): Promise<string> {
   const { instanceId, locale, format } = req;
 
   // 1. Load base config
-  const baseConfig = await loadBaseConfig(instanceId);
+  const baseConfig = await loadBaseConfigFromParis(instanceId);
 
   // 2. Load localization overlay (if exists)
   const overlay = await loadLocalizationOverlay(instanceId, locale);
@@ -1806,11 +1809,12 @@ async function loadLocalizationOverlay(
   instanceId: string,
   locale: string
 ): Promise<LocalizationOverlay | null> {
-  const overlayPath = `l10n/instances/${instanceId}/${locale}.*.ops.json`;
+  const index = await fetchFromStorage(`l10n/instances/${instanceId}/index.json`);
+  const fingerprint = index?.layers?.locale?.lastPublishedFingerprint?.[locale];
+  if (!fingerprint) return null;
 
-  // Read from R2 or local filesystem
+  const overlayPath = `l10n/instances/${instanceId}/locale/${locale}/${fingerprint}.ops.json`;
   const overlay = await fetchFromStorage(overlayPath);
-
   return overlay ? JSON.parse(overlay) : null;
 }
 ```

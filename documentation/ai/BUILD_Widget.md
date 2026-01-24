@@ -35,6 +35,7 @@ Only read these:
 - `tokyo/widgets/shared/branding.js`
 - `tokyo/widgets/{widgetType}/limits.json` (read-only unless PRD requires edits)
 - `tokyo/widgets/{widgetType}/localization.json` (read-only unless PRD requires edits)
+- `tokyo/widgets/{widgetType}/layers/*.allowlist.json` (read-only unless PRD requires edits)
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
 
@@ -52,6 +53,7 @@ Default scope:
 Only if the PRD explicitly says so:
 - `tokyo/widgets/{widgetType}/limits.json`
 - `tokyo/widgets/{widgetType}/localization.json`
+- `tokyo/widgets/{widgetType}/layers/*.allowlist.json`
 
 Do **not** create new files outside `tokyo/widgets/{widgetType}/`.
 
@@ -172,7 +174,7 @@ If validation fails, fix the widget files only (no cross-repo edits).
 ## 5) Final Output Checklist
 
 Before you finish:
-- The 5 widget files are consistent and compile.
+- Core widget files + contract files are consistent and compile.
 - No new files were created.
 - No shared runtime or system files were touched.
 - All state paths are consistent across `spec.json`, HTML, CSS, JS, and `agent.md`.

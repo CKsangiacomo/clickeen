@@ -10,7 +10,7 @@
 
 | Tenet | Rule |
 |-------|------|
-| Widget Files = Truth | 5 files in Tokyo define everything |
+| Widget Files = Truth | Core runtime files + contract files in Tokyo define widget behavior and validation |
 | Orchestrators = Dumb Pipes | Bob, Paris, Venice pass data unchanged |
 | Visible Failure | The system fails visibly when contracts are broken |
 | No Fallbacks | Orchestrators apply zero widget defaults at runtime |
@@ -28,6 +28,10 @@ Location: `tokyo/widgets/{widgetname}/`
 | `widget.css` | Widget styling (CSS variables + variants) |
 | `widget.client.js` | Runtime that applies `state` to DOM/CSS |
 | `agent.md` | AI editing contract for this widget |
+| `limits.json` | Entitlements caps/flags for Paris validation |
+| `localization.json` | Locale-layer allowlist (translatable paths) |
+| `layers/*.allowlist.json` | Per-layer allowlists (user/geo/industry/etc.) |
+| `pages/*.json` | Prague marketing pages (overview/features/examples/pricing) |
 
 ---
 
@@ -146,7 +150,7 @@ Any new embed capability must be specified as a PRD (not embedded as “future b
 
 | System | Does | Does NOT |
 |--------|------|----------|
-| **Tokyo** | Store widget definitions (5 files) | Store instance data |
+| **Tokyo** | Store widget definitions (runtime + contract files) | Store instance data |
 | **Bob** | Compile `spec.json`, render ToolDrawer, hold working state, send preview `postMessage` | Apply widget-specific defaults/fallbacks at runtime |
 | **Paris** | CRUD instance JSON (Michael) | Transform widget state |
 | **Venice** | Compose instance JSON + widget files for embed | Modify widget state |

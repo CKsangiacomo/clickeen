@@ -6,7 +6,9 @@
 
 ## Interfaces
 - Upload APIs, signed URLs
-- Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
+- Serves widget definitions/assets (core runtime + contract files):
+  - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
+  - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
 - Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are served by Tokyo under `tokyo/l10n/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
 
@@ -78,7 +80,7 @@ Local dev:
   - `POST /l10n/instances/:publicId/index` (dev-only; writes layer index into `tokyo/l10n/**`)
   - `DELETE /l10n/instances/:publicId/index` (dev-only; removes layer index from `tokyo/l10n/**`)
 - Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set.
-- `scripts/dev-up.sh` starts the dev server and workers but does **not** build/push instance l10n overlays; run `pnpm build:l10n` or trigger the Paris/SF pipeline when you need instance overlays.
+- `scripts/dev-up.sh` starts the dev server and workers, builds Dieter + i18n, and verifies Prague l10n overlays (auto-translates missing overlays when SF is running), but does **not** build/push instance l10n overlays; run `pnpm build:l10n` or trigger the Paris/SF pipeline when you need instance overlays.
 
 ## l10n overlays (executed)
 

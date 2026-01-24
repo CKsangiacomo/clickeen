@@ -51,7 +51,8 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 **Widget Definition** (Tokyo widget folder) = THE SOFTWARE
 - Complete functional software for a widget type (e.g. FAQ)
 - Lives in `tokyo/widgets/{widgetType}/`
-- Contains: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
+- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
+- Contract/metadata in the same folder (used by Paris/Prague): `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Platform-controlled; **not stored in Michael** and **not served from Paris**
 
 **Widget Instance** = THE DATA
@@ -184,7 +185,11 @@ tokyo/widgets/{widgetType}/
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
 ├── widget.client.js   # applyState() for live DOM updates
-└── agent.md           # AI contract (required for AI editing)
+├── agent.md           # AI contract (required for AI editing)
+├── limits.json        # Entitlements caps/flags for Paris validation
+├── localization.json  # Locale-layer allowlist (translatable paths)
+├── layers/            # Per-layer allowlists (e.g. user.allowlist.json)
+└── pages/             # Prague marketing pages (overview/features/examples/pricing)
 ```
 
 ### Shared Runtime Modules
@@ -266,11 +271,13 @@ Canonical reference:
 
 | Widget | Status | Components Used |
 |--------|--------|-----------------|
-| FAQ | ✅ Complete | object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions |
+| FAQ | ✅ Active | See `tokyo/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
+| Countdown | ✅ Active | See `tokyo/widgets/countdown/spec.json` |
+| Logo Showcase | ✅ Active | See `tokyo/widgets/logoshowcase/spec.json` |
 
 ### Dieter Components
 
-`toggle`, `textfield`, `slider`, `dropdown-actions`, `dropdown-fill`, `dropdown-edit`, `choice-tiles`, `segmented`, `tabs`, `object-manager`, `repeater`, `popover`, `popaddlink`, `textedit`, `textrename`, `button`
+`bulk-edit`, `button`, `choice-tiles`, `dropdown-actions`, `dropdown-border`, `dropdown-edit`, `dropdown-fill`, `dropdown-shadow`, `dropdown-upload`, `icon`, `menuactions`, `object-manager`, `popover`, `popaddlink`, `repeater`, `segmented`, `slider`, `tabs`, `textedit`, `textfield`, `textrename`, `toggle`, `valuefield`
 
 ---
 
@@ -289,6 +296,7 @@ pnpm build                      # Build all packages
 
 # Development
 ./scripts/dev-up.sh             # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
+                               # Also builds Dieter + i18n and verifies Prague l10n overlays (auto-translates missing overlays when SF is running).
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only

@@ -111,7 +111,7 @@ This taxonomy is encoded in `public_id` across two tables:
 One per widget type. Used for:
 - dev sandbox editing in DevStudio/Bob
 - canonical “baseline” config to copy/clone from
-- local dev convenience mirror of `tokyo/widgets/<widgetType>/spec.json` defaults (Bob compilation + fallbacks use Tokyo specs)
+- local dev convenience baseline; DevStudio’s **Update default config** keeps `wgt_main_*` and `spec.json` defaults in sync when you choose to do so (no automatic mirroring)
 
 **Naming**
 - `wgt_main_{widgetType}`

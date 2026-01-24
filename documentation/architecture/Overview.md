@@ -33,7 +33,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | Principle | Rule |
 |-----------|------|
 | **No Fallbacks** | Orchestrators never apply default values. If data is missing, the system fails visibly. |
-| **Widget Files = Truth** | The 5 files in `tokyo/widgets/{name}/` define everything about a widget. |
+| **Widget Files = Truth** | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation. |
 | **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. Widget-specific rules live only in the widget package. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
 | **Locale Is Not Identity** | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out. |
@@ -52,7 +52,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Pitch** | `pitch/` | Cloudflare Workers | Investor pitch agent (internal) | ✅ Internal |
 | **Michael** | `supabase/` | Supabase Postgres | Database with RLS | ✅ Active |
 | **Dieter** | `dieter/` | (build artifact) | Design system: tokens, 16+ components | ✅ Active |
-| **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions, Dieter assets, shared runtime | ✅ Active |
+| **Tokyo** | `tokyo/` | Cloudflare R2 | Widget definitions (runtime + contracts), Dieter assets, shared runtime | ✅ Active |
 | **Tokyo Worker** | `tokyo-worker/` | Cloudflare Workers + Queues | Asset uploads + l10n publisher | ✅ Active |
 
 ---
@@ -494,10 +494,10 @@ User opens widget → Bob GET /api/workspaces/:workspaceId/instance/:publicId?su
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → Venice GET /e/:publicId (planned)
+Visitor loads embed → Venice GET /e/:publicId
 	                    → Venice calls Paris for instance (`GET /api/instance/:publicId`)
 	                    → Paris reads from Michael
-	                    → Venice renders SSR HTML (planned: from Tokyo assets)
+	                    → Venice renders SSR HTML from Tokyo widget assets
 	                    → Venice fires usage pixel
 ```
 

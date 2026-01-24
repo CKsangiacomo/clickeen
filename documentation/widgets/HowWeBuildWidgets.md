@@ -28,6 +28,7 @@ Core (always present):
 Contract (present unless PRD explicitly opts out):
 - `limits.json`
 - `localization.json`
+- `layers/*.allowlist.json` (only when non-locale layers are supported)
 
 ### STOP CONDITIONS (ASK HUMAN)
 Stop and ask if any are true:
@@ -59,7 +60,7 @@ All must be true:
 - All visible text is covered by Typography roles (no ad-hoc font styling)
 - Runtime is deterministic and scoped to the widget root
 - `agent.md` lists editable paths and allowed ops consistent with widget state model
-- Contract files exist (`limits.json`, `localization.json`) unless PRD explicitly opts out
+- Contract files exist (`limits.json`, `localization.json`, `layers/*.allowlist.json` when applicable) unless PRD explicitly opts out
 - No non-persistable URLs (`data:` / `blob:`) in defaults or saved configs
 
 ---
@@ -360,6 +361,16 @@ Use these panels only:
     { "path": "sections.*.faqs.*.answer", "type": "richtext" }
   ]
 }
+```
+
+### 9.3 layers/*.allowlist.json (non-locale layers)
+### PURPOSE
+- Allowed paths for non-locale layers (user/geo/industry/experiment/etc.).
+
+### MUST
+- Only add a layer allowlist if the layer is actually used.
+- `layers/<layer>.allowlist.json` MUST follow the same schema as `localization.json`.
+- Missing allowlist = no allowed paths for that layer.
 10) RUNTIME DETERMINISM (widget.client.js)
 PURPOSE
 Ensure preview and embed behave identically.

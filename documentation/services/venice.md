@@ -33,7 +33,8 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
 **Venice renders INSTANCES using widget definitions (the software) + instance config (the data).**
 
 **Widget Definition** (Tokyo/CDN) = THE SOFTWARE:
-- In-repo source: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- Core runtime files: `tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
+- Contract files live alongside (`limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`), but Venice only consumes runtime files + locale allowlist for overlays.
 - Platform-controlled; not stored in Michael and not served from Paris
 
 **Widget Instance** (database) = THE DATA:

@@ -60,7 +60,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 
 **Widget Definition** (a.k.a. “Widget JSON”) **= THE SOFTWARE** (Tokyo/CDN):
 - Platform-controlled widget spec + runtime assets
-- In-repo source: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- In-repo source: `tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md` plus contract files (`limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`)
 - **NOT stored in Michael**
 - **NOT served by Paris**
 
@@ -165,7 +165,7 @@ Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
 
 Paris does **not** serve widget definitions. Widget definitions (“Widget JSON”) live in **Tokyo/CDN**.
 
-- Source in-repo: `tokyo/widgets/{widgetType}/spec.json` + `widget.html`, `widget.css`, `widget.client.js`, `agent.md` (AI-only)
+- Source in-repo: `tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md` plus contract files (`limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`)
 - Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
 - Venice embed rendering should load widget runtime assets from Tokyo; Venice currently fetches the instance snapshot from Paris via `/api/instance/:publicId?subject=venice` (public, published-only unless dev auth). Editor/dev tooling uses the workspace-scoped endpoints.
 
