@@ -35,7 +35,7 @@ export function isCuratedPublicId(publicId: string): boolean {
 
 export function allowCuratedWrites(env: Env): boolean {
   const stage = (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase();
-  return stage === 'local';
+  return stage === 'local' || stage === 'cloud-dev';
 }
 
 export function isCuratedInstanceRow(instance: InstanceRow | CuratedInstanceRow): instance is CuratedInstanceRow {

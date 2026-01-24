@@ -1135,6 +1135,27 @@ async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, conf
   throw new Error(`[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
 }
 
+async function promoteInstanceToCloud({ workspaceId, widgetType, publicId, config, status }) {
+  if (!isLocalDevStudio) return { ok: false, skipped: true };
+  const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ workspaceId, widgetType, publicId, config, status }),
+  });
+  const text = await res.text().catch(() => '');
+  if (!res.ok) {
+    let detail = text || `HTTP ${res.status}`;
+    try {
+      const parsed = text ? JSON.parse(text) : null;
+      detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
+    } catch {}
+    console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
+    alert(`[DevStudio] Cloud promote failed for ${publicId}: ${detail}`);
+    return { ok: false, error: detail };
+  }
+  return { ok: true };
+}
+
 async function exportInstanceDataFromBob({
   timeoutMs = 2500,
   persistAssets = false,
@@ -1632,6 +1653,14 @@ async function submitCuratedModal() {
     meta,
   });
 
+  await promoteInstanceToCloud({
+    workspaceId: CLICKEEN_WORKSPACE_ID,
+    widgetType: curatedModalState.widgetSlug,
+    publicId,
+    config: sourceConfig,
+    status: 'unpublished',
+  });
+
   closeCuratedModal();
   await refreshInstancesAndSelect(publicId);
 }
@@ -1653,6 +1682,13 @@ superadminUpdateDefaults?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
     const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
+    await promoteInstanceToCloud({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      widgetType: widgetSlug,
+      publicId: result.publicId,
+      config: result.config,
+      status: 'unpublished',
+    });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
@@ -1663,6 +1699,13 @@ superadminResetFromJson?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
     const result = await resetMainInstanceFromJson(widgetSlug);
+    await promoteInstanceToCloud({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      widgetType: widgetSlug,
+      publicId: result.publicId,
+      config: result.config,
+      status: 'unpublished',
+    });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
@@ -1699,6 +1742,14 @@ updateCuratedInstanceBtn?.addEventListener('click', async () => {
     if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
     const instance = instances.find((inst) => inst.publicId === currentPublicId);
     const result = await updateCuratedInstanceFromEditor(instance);
+    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
+    await promoteInstanceToCloud({
+      workspaceId: CLICKEEN_WORKSPACE_ID,
+      widgetType: widgetSlug,
+      publicId: result.publicId,
+      config: result.config,
+      status: 'unpublished',
+    });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
