@@ -133,7 +133,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local**. Cloud
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
-- Prague website strings use repo-local base content plus Tokyo-hosted overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`) and do not go through Paris.
+- Prague website strings use page JSON base copy plus Tokyo-hosted overlays (`tokyo/widgets/*/pages/*.json` + `tokyo/l10n/prague/**`) and do not go through Paris. Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 # Paris — HTTP API Service (Phase-1)
 

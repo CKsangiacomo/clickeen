@@ -1,56 +1,56 @@
 {
-  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
-  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "baseFingerprint": "4c8129ae7a2df28bb35a36b360c876f92cb9c08cf580df7fc5cd2e8593eb2e6e",
+  "baseUpdatedAt": "2026-01-24T03:23:07.026086+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Perguntas Frequentes"
+      "value": "Frequently Asked Questions"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Todas as Perguntas"
+      "value": "All Questions"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "O que é o Clickeen?"
+      "value": "What is Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Como instalo um widget?"
+      "value": "How do I install a widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Existe um plano gratuito?"
+      "value": "Is there a free plan?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Por que devo usar o Clickeen?"
+      "value": "Why should I use Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen é algo bom"
+      "value": "Clickeen is something very pretty"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copie o código de incorporação e cole-o antes de </body> no seu site."
+      "value": "Copy the embed code and paste it before </body> on your site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sim, um widget ativo com recursos principais."
+      "value": "Yes, one active widget with core features."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Porque o Clickeen é uma nova plataforma incrível para tornar a web bonita e fácil de usar."
+      "value": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use."
     }
   ],
   "v": 1

@@ -47,8 +47,8 @@ const resolvedActionGroup =
 
 <section class="ck-canvas ck-bigBang">
   <div class="ck-inline ck-bigBang__inline">
-    <div class="ck-stack ck-bigBang__content">
-      <div class="ck-stack ck-bigBang__copy">
+    <div class="ck-stack ck-gap-loose ck-bigBang__content">
+      <div class="ck-stack ck-gap-tight ck-bigBang__copy">
         <PrimitiveRenderer primitives={contentPrimitives} />
       </div>
 
@@ -71,13 +71,8 @@ const resolvedActionGroup =
     overflow: hidden;
   }
 
-  .ck-bigBang__content {
-    gap: var(--space-8);
-  }
-
-  .ck-bigBang__copy {
-    gap: var(--space-4);
-  }
+  .ck-bigBang__content { }
+  .ck-bigBang__copy { }
 
   .ck-bigBang__title {
   }
@@ -90,9 +85,6 @@ const resolvedActionGroup =
   }
 
   @media (max-width: 900px) {
-    .ck-bigBang__content {
-      gap: var(--space-6);
-    }
     .ck-bigBang__title {
       /* Keep display-1 but avoid extreme wrapping jitter on narrow viewports. */
       text-wrap: balance;

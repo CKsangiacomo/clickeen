@@ -37,13 +37,13 @@ const resolvedActionGroup =
     secondaryClassName: 'ck-btn--lg label-l',
   });
 
-const contentPrimitives = assertPrimitives(
+const headerPrimitives = assertPrimitives(
   [
     {
       type: 'heading',
       level: 3,
       content: headline,
-      className: 'display-3 ck-splitCreative__title',
+      className: 'display-3 ck-m0 ck-splitCreative__title',
     },
     ...(subheadline
       ? [
@@ -55,9 +55,8 @@ const contentPrimitives = assertPrimitives(
           },
         ]
       : []),
-    ...(resolvedActionGroup ? [actionGroupToPrimitives(resolvedActionGroup)] : []),
   ],
-  'split.content',
+  'split.header',
 );
 ---
 
@@ -65,8 +64,15 @@ const contentPrimitives = assertPrimitives(
   <div class="ck-inline">
     {isStacked ? (
       <div class="ck-stack ck-splitCreative__stack">
-        <div class="ck-stack ck-splitCreative__copy">
-          <PrimitiveRenderer primitives={contentPrimitives} />
+        <div class="ck-splitCreative__content ck-stack ck-gap-loose">
+          <div class="ck-stack ck-gap-tight ck-splitCreative__copy">
+            <PrimitiveRenderer primitives={headerPrimitives} />
+          </div>
+          {resolvedActionGroup ? (
+            <div class="ck-splitCreative__cta">
+              <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
+            </div>
+          ) : null}
         </div>
 
         <div class="ck-splitCreative__visual" aria-hidden="true">
@@ -85,8 +91,17 @@ const contentPrimitives = assertPrimitives(
       <div
         class={`ck-split ck-split--center ck-split--hero ck-splitCreative__split${isReverse ? ' ck-splitCreative__split--reverse' : ''}`}
       >
-        <div class="ck-split__a ck-stack ck-splitCreative__copy">
-          <PrimitiveRenderer primitives={contentPrimitives} />
+        <div class="ck-split__a">
+          <div class="ck-splitCreative__content ck-stack ck-gap-loose">
+            <div class="ck-stack ck-gap-tight ck-splitCreative__copy">
+              <PrimitiveRenderer primitives={headerPrimitives} />
+            </div>
+            {resolvedActionGroup ? (
+              <div class="ck-splitCreative__cta">
+                <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div class="ck-split__b ck-splitCreative__visual" aria-hidden="true">
@@ -124,16 +139,12 @@ const contentPrimitives = assertPrimitives(
   }
 
   .ck-splitCreative__title {
-    margin: 0;
+    margin: 0 !important;
     letter-spacing: -0.02em;
   }
 
   .ck-splitCreative__sub {
-    margin: 0;
-  }
-
-  .ck-splitCreative__copy {
-    gap: var(--space-5);
+    margin: 0 !important;
   }
 
   .ck-splitCreative__ctaRow {

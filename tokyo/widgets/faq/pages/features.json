@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "Everything you need to ship a polished FAQ widget.",
+        "title": "FAQ Features - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "FAQ Features",
+        "subheadline": "Everything you need to ship a fast, polished FAQ."
+      }
     }
   ]
 }

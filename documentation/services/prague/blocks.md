@@ -112,7 +112,7 @@ prague/src/blocks/cta/cta.astro
 - Resolves mega menu content from the canonical widget registry + each widget’s localized page JSON:
   - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
   - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Source: `tokyo/widgets/{widget}/pages/overview.json` + localized base content (`prague/content/base/**` + `tokyo/l10n/prague/**`)
+  - Source: `tokyo/widgets/{widget}/pages/overview.json` + localized overlays (`tokyo/l10n/prague/**`)
 
 `site/footer`
 - Props: `{ locale: string }`
@@ -215,6 +215,12 @@ Acquisition preview hook:
     - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID`
   - `publicId` is always derived as `wgt_main_{widget}` (no override).
 
+**System-injected locale showcase (non-JSON):**
+- Widget pages append a locale showcase section immediately after `minibob`.
+- Purpose: show the **same curated instance** in three locales (default: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
+- Locale is forced per embed via `localeOverride` in `InstanceEmbed` (block-level locale selection).
+- This section is injected in `prague/src/components/WidgetBlocks.astro` and is not part of page JSON.
+
 ## 3) Page templates (composition)
 
 Page templates are just a list of blocks in a fixed order. Example (widget landing):
@@ -235,7 +241,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Prague renders `blocks[]` by `type` and embeds curated instances only when `curatedRef.publicId` is present.
   - Prague validates `curatedRef.publicId` during page load; missing curated instances fail fast in dev/build.
   - Page JSON is layout + meta only; localized base content overrides any inline `copy` in the JSON.
-  - Strings are loaded from `prague/content/base/**` and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
+  - Copy is loaded from page JSON and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
   - Runtime copy overlays (geo/industry/experiment) apply on widget pages; composition stays static.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
 

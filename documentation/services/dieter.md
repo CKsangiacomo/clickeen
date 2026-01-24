@@ -58,7 +58,7 @@ If you add a new component or a new dependency, you must update the manifest emi
 **Why This Matters:**
 
 **Performance:** We never load all of Dieter. Each widget only loads the CSS for components it actually uses:
-- FAQ widget loads: `expander-faq.css`, `button.css`, `textfield.css`
+- FAQ widget loads: `button.css` (icon buttons)
 - Newsletter widget loads: whatever IT needs
 
 **Scalability:** Dieter can grow to 1,000+ components without performance penalty:
@@ -69,7 +69,7 @@ If you add a new component or a new dependency, you must update the manifest emi
 **Developer Experience:**
 - One place for ALL UI components (primitives + compositions)
 - Engineers go to Dieter to find components
-- "Need an FAQ expander? Go to Dieter, grab `expander-faq`"
+- "Need a widget-specific expander? Add a Dieter component and consume it"
 - "Building a new widget? Copy similar component, rename it, customize it"
 
 **Component Organization:**

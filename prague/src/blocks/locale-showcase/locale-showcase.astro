@@ -1,0 +1,109 @@
+---
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
+
+type Props = {
+  publicId: string;
+  locales?: Array<{ code: string; label: string }>;
+  title?: string;
+  subtitle?: string;
+};
+
+const {
+  publicId,
+  locales = [
+    { code: 'en', label: 'English' },
+    { code: 'es', label: 'Español' },
+    { code: 'ja', label: '日本語' },
+  ],
+  title = 'Designed to speak every language',
+  subtitle = 'Same curated widget. Three locales. One codepath.',
+} = Astro.props;
+---
+
+<section class="ck-canvas ck-localeShowcase">
+  <div class="ck-inline">
+    <div class="ck-localeShowcase__content ck-stack ck-gap-loose">
+      <div class="ck-localeShowcase__header ck-stack ck-gap-tight">
+        <h2 class="display-2 ck-m0">{title}</h2>
+        <p class="body-website ck-m0 ck-text-subtle">{subtitle}</p>
+      </div>
+
+      <div class="ck-localeShowcase__grid" role="list">
+        {locales.map((item) => (
+          <div class="ck-localeShowcase__tile" role="listitem">
+            <form autocomplete="off" class="selector-element ck-localeShowcase__selector" aria-label="Select language">
+              <select class="selector-dropdown" aria-label="Select language">
+                {locales.map((option) => (
+                  <option value={option.code} selected={option.code === item.code}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span aria-hidden="true" class="selector-icon icon icon-chevrondown"></span>
+            </form>
+            <InstanceEmbed publicId={publicId} locale={item.code} localeOverride={item.code} title={`${item.label} preview`} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-localeShowcase {
+    background: var(--color-system-white);
+  }
+
+  .ck-localeShowcase__header {
+    max-width: 920px;
+  }
+
+  .ck-localeShowcase__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  .ck-localeShowcase__tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .ck-localeShowcase__selector {
+    align-self: flex-start;
+  }
+
+  @media (max-width: 900px) {
+    .ck-localeShowcase__grid {
+      gap: var(--space-5);
+    }
+  }
+</style>
+
+<script is:inline>
+(() => {
+  const tiles = document.querySelectorAll('.ck-localeShowcase__tile');
+  tiles.forEach((tile) => {
+    if (!(tile instanceof HTMLElement)) return;
+    const select = tile.querySelector('.selector-dropdown');
+    const iframe = tile.querySelector('.ck-instanceEmbed__iframe');
+    if (!(select instanceof HTMLSelectElement)) return;
+    if (!(iframe instanceof HTMLIFrameElement)) return;
+
+    select.addEventListener('change', () => {
+      const nextLocale = String(select.value || '').trim();
+      if (!nextLocale) return;
+      try {
+        const url = new URL(iframe.src);
+        url.searchParams.set('locale', nextLocale);
+        iframe.src = url.toString();
+      } catch {
+        // Ignore invalid URL states.
+      }
+    });
+  });
+})();
+</script>

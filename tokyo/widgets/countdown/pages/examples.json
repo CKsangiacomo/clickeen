@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "title": "Countdown Examples - Clickeen",
+        "description": "Examples of countdown timers for launches, sales, and events."
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Countdown Examples",
+        "subheadline": "See how teams use countdowns for launches, sales, and events."
+      }
     }
   ]
 }

@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "title": "Countdown Pricing - Clickeen",
+        "description": "Pricing for the Countdown widget."
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Countdown Pricing",
+        "subheadline": "Included with every Clickeen plan."
+      }
     }
   ]
 }

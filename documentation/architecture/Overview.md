@@ -147,7 +147,7 @@ Each release proceeds in 3 steps:
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
 - Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase.
-- Prague website base content lives in-repo (`prague/content/base/**`), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest).
+- Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)
 - Reads `widget_instance_overlays` from Supabase (layered), merges `ops + user_ops` for layer=user, and publishes overlays to Tokyo/R2.

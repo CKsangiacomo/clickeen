@@ -59,29 +59,6 @@
     flex-wrap: wrap;
   }
 
-  .dev-widget-workspace__autopromote {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 6px 10px;
-    border-radius: var(--control-radius-lg);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    box-shadow: var(--shadow-floating);
-  }
-
-  .dev-widget-workspace__autopromote-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .dev-widget-workspace__autopromote-label {
-    font: 600 var(--fs-11)/var(--lh-tight) var(--font-ui);
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-  }
-
   #superadmin-actions .dev-widget-workspace__action,
   .dev-widget-workspace__modal .dev-widget-workspace__action {
     --btn-border-width: 0px;
@@ -403,16 +380,6 @@
 <header class="devstudio-page__header" style="flex-shrink: 0;">
   <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
   <div id="superadmin-actions">
-    <label class="dev-widget-workspace__autopromote">
-      <input id="auto-promote-cloud" type="checkbox" />
-      <span class="dev-widget-workspace__autopromote-text">
-        <span class="dev-widget-workspace__autopromote-label">Auto-promote</span>
-        <span id="auto-promote-status" class="caption"></span>
-      </span>
-    </label>
-    <button type="button" class="diet-btn-txt" id="auto-promote-retry" data-size="md" data-variant="secondary" disabled>
-      <span class="diet-btn-txt__label">Retry promote</span>
-    </button>
     <div class="dev-widget-workspace__actions">
       <button
         type="button"
@@ -625,9 +592,6 @@ const updateCuratedInstanceBtn = document.getElementById('update-curated-instanc
 const l10nStatus = document.getElementById('l10n-status');
 const l10nStatusValue = document.getElementById('l10n-status-value');
 const l10nStatusMeta = document.getElementById('l10n-status-meta');
-const autoPromoteCloudToggle = document.getElementById('auto-promote-cloud');
-const autoPromoteCloudStatus = document.getElementById('auto-promote-status');
-const autoPromoteRetryBtn = document.getElementById('auto-promote-retry');
 const curatedModal = document.getElementById('curated-modal');
 const curatedModalTitle = document.getElementById('curated-modal-title');
 const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
@@ -636,11 +600,9 @@ const curatedModalCancel = document.getElementById('curated-modal-cancel');
 const curatedModalConfirm = document.getElementById('curated-modal-confirm');
 const curatedStyleNameField = document.getElementById('curated-style-name');
 const curatedTagGroups = document.getElementById('curated-tag-groups');
-let lastPromotePayload = null;
 let l10nStatusTimer = null;
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
-const AUTO_PROMOTE_CLOUD_STORAGE = 'ck.devstudio.devWidgetWorkspace.autoPromoteCloudDev';
 
 const CURATED_TAG_GROUPS = [
   {
@@ -686,28 +648,6 @@ const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
 bobUrl.searchParams.set('subject', 'devstudio');
 if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
 iframe.src = bobUrl.toString();
-
-function setAutoPromoteStatus(text, kind = 'idle') {
-  if (!(autoPromoteCloudStatus instanceof HTMLElement)) return;
-  autoPromoteCloudStatus.textContent = text || '';
-  if (kind === 'ok') autoPromoteCloudStatus.style.color = 'var(--color-system-green)';
-  else if (kind === 'error') autoPromoteCloudStatus.style.color = 'var(--color-system-red)';
-  else autoPromoteCloudStatus.style.color = 'color-mix(in oklab, var(--color-text), transparent 45%)';
-}
-
-function isAutoPromoteEnabled() {
-  try {
-    return localStorage.getItem(AUTO_PROMOTE_CLOUD_STORAGE) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function setAutoPromoteEnabled(next) {
-  try {
-    localStorage.setItem(AUTO_PROMOTE_CLOUD_STORAGE, next ? '1' : '0');
-  } catch {}
-}
 
 function setL10nStatusDisplay({ state, tone, value, meta }) {
   if (!(l10nStatus instanceof HTMLElement)) return;
@@ -809,44 +749,6 @@ async function refreshL10nStatus(publicId) {
   }
 }
 
-async function maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status }) {
-  if (!isLocalDevStudio) return { ok: false, skipped: true };
-  if (!(autoPromoteCloudToggle instanceof HTMLInputElement) || autoPromoteCloudToggle.checked !== true) {
-    return { ok: false, skipped: true };
-  }
-
-  setAutoPromoteStatus('Promoting…');
-  try {
-    lastPromotePayload = { workspaceId, publicId, widgetType, config, status };
-    if (autoPromoteRetryBtn instanceof HTMLButtonElement) autoPromoteRetryBtn.disabled = false;
-    const res = await fetch('/api/promote-instance?_t=' + Date.now(), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ workspaceId, publicId, widgetType, config, status }),
-    });
-    const json = await res.json().catch(() => null);
-    if (!res.ok) {
-      const err = json?.error;
-      const reasonKey = err?.reasonKey ? String(err.reasonKey) : `HTTP ${res.status}`;
-      const detail = err?.detail ? String(err.detail) : '';
-      const paths = Array.isArray(err?.paths) ? err.paths.map(String) : [];
-      const extra = paths.length ? `\n\nPaths:\n- ${paths.join('\n- ')}` : '';
-      throw new Error(`${reasonKey}${detail ? `: ${detail}` : ''}${extra}`);
-    }
-
-    const target = json?.target || 'cloud-dev';
-    const action = json?.action ? String(json.action) : 'ok';
-    setAutoPromoteStatus(`${target}: ${action}`, 'ok');
-    return { ok: true, action, target };
-  } catch (err) {
-    setAutoPromoteStatus('Promote failed', 'error');
-    const details = err instanceof Error ? err.message : String(err);
-    const hint = lastPromotePayload && lastPromotePayload.publicId ? `\n\npublicId: ${lastPromotePayload.publicId}` : '';
-    alert(`${details}${hint}`);
-    return { ok: false, error: err };
-  }
-}
-
 let isPosting = false;
 window.addEventListener('message', (event) => {
   if (event.origin !== BOB_ORIGIN) return;
@@ -868,7 +770,6 @@ window.addEventListener('message', (event) => {
     const widgetType = typeof data.widgetType === 'string' ? data.widgetType : '';
     const config = data.config && typeof data.config === 'object' ? data.config : null;
     if (!publicId || !workspaceId || !widgetType || !config) return;
-    maybeAutoPromoteToCloud({ workspaceId, publicId, widgetType, config, status: 'published' }).catch(() => {});
     refreshL10nStatus(publicId).catch(() => {});
   }
 }, { signal: abortController.signal });
@@ -1574,14 +1475,6 @@ async function updateCuratedInstanceFromEditor(instance) {
     meta: instance.meta ?? undefined,
   });
 
-  await maybeAutoPromoteToCloud({
-    workspaceId: CLICKEEN_WORKSPACE_ID,
-    publicId,
-    widgetType: widgetSlug,
-    config,
-    status: 'unpublished',
-  });
-
   return { publicId, config };
 }
 
@@ -1739,14 +1632,6 @@ async function submitCuratedModal() {
     meta,
   });
 
-  await maybeAutoPromoteToCloud({
-    workspaceId: CLICKEEN_WORKSPACE_ID,
-    publicId,
-    widgetType: curatedModalState.widgetSlug,
-    config: sourceConfig,
-    status: 'unpublished',
-  });
-
   closeCuratedModal();
   await refreshInstancesAndSelect(publicId);
 }
@@ -1764,59 +1649,10 @@ if (isLocalDevStudio && superadminActions) {
   superadminActions.style.display = 'inline-flex';
 }
 
-if (isLocalDevStudio && autoPromoteCloudToggle instanceof HTMLInputElement) {
-  autoPromoteCloudToggle.checked = isAutoPromoteEnabled();
-  const cloudLabel = 'cloud-dev';
-  setAutoPromoteStatus(isAutoPromoteEnabled() ? cloudLabel : 'local only');
-  autoPromoteCloudToggle.addEventListener('change', () => {
-    const next = autoPromoteCloudToggle.checked === true;
-    if (next) {
-      const ok = window.confirm(
-        'Enable auto-promote to cloud-dev?\n\nThis writes to the shared cloud-dev database (used by prague-dev).'
-      );
-      if (!ok) {
-        autoPromoteCloudToggle.checked = false;
-        setAutoPromoteEnabled(false);
-        return;
-      }
-      setAutoPromoteEnabled(true);
-      setAutoPromoteStatus(cloudLabel);
-      return;
-    }
-    setAutoPromoteEnabled(false);
-    setAutoPromoteStatus('local only');
-  });
-} else {
-  setAutoPromoteStatus('');
-}
-
-// Dev convenience: allow retrying the last promotion without re-running the entire superadmin action.
-try {
-  window.__ckRetryPromote = async () => {
-    if (!lastPromotePayload) throw new Error('No prior promotion payload');
-    return maybeAutoPromoteToCloud(lastPromotePayload);
-  };
-} catch {}
-
-if (isLocalDevStudio && autoPromoteRetryBtn instanceof HTMLButtonElement) {
-  autoPromoteRetryBtn.addEventListener('click', () => {
-    window.__ckRetryPromote?.().catch((err) => {
-      alert(err instanceof Error ? err.message : String(err));
-    });
-  });
-}
-
 superadminUpdateDefaults?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
     const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
-    await maybeAutoPromoteToCloud({
-      workspaceId: DEV_WORKSPACE_ID,
-      publicId: result.publicId,
-      widgetType: widgetSlug,
-      config: result.config,
-      status: 'unpublished',
-    });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
@@ -1827,13 +1663,6 @@ superadminResetFromJson?.addEventListener('click', async () => {
   try {
     const widgetSlug = requireWidgetSlugForAction();
     const result = await resetMainInstanceFromJson(widgetSlug);
-    await maybeAutoPromoteToCloud({
-      workspaceId: DEV_WORKSPACE_ID,
-      publicId: result.publicId,
-      widgetType: widgetSlug,
-      config: result.config,
-      status: 'unpublished',
-    });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));

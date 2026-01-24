@@ -2,6 +2,7 @@
 import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
+import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import Outcomes from '../blocks/outcomes/outcomes.astro';
 import Split from '../blocks/split/split.astro';
@@ -29,6 +30,9 @@ type Props = {
 const { blocks, widget, locale, activeSubpage = 'overview' } = Astro.props;
 const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
 const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
+const showcasePublicId =
+  blocks.find((b) => b && b.curatedRef && typeof b.curatedRef.publicId === 'string')?.curatedRef?.publicId ??
+  `wgt_main_${widget}`;
 const createFreeLabel = await pragueT(locale, 'prague.cta.createFree');
 const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
 const heroPrimaryCta = {
@@ -113,7 +117,12 @@ const heroSecondaryCta =
     }
     case 'minibob': {
       const copy = block.copy ?? {};
-      return <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />;
+      return (
+        <>
+          <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />
+          <LocaleShowcase publicId={showcasePublicId} />
+        </>
+      );
     }
     case 'outcomes': {
       const copy = block.copy ?? {};

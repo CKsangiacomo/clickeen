@@ -1,56 +1,56 @@
 {
-  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
-  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "baseFingerprint": "4c8129ae7a2df28bb35a36b360c876f92cb9c08cf580df7fc5cd2e8593eb2e6e",
+  "baseUpdatedAt": "2026-01-24T03:23:07.026086+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Sıkça Sorulan Sorular"
+      "value": "Domande Frequenti"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Tüm Sorular"
+      "value": "Tutte le Domande"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Clickeen nedir?"
+      "value": "Cos'è Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Bir widget nasıl kurulur?"
+      "value": "Come installo un widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Ücretsiz plan var mı?"
+      "value": "C'è un piano gratuito?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Neden Clickeen kullanmalıyım?"
+      "value": "Perché dovrei usare Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen güzel bir şeydir"
+      "value": "Clickeen è qualcosa di molto carino"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Gömme kodunu kopyalayın ve sitenizde </body> etiketinden önce yapıştırın."
+      "value": "Copia il codice di incorporamento e incollalo prima di </body> sul tuo sito."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
+      "value": "Sì, un widget attivo con funzionalità di base."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Çünkü Clickeen, web'i güzel ve kullanımı kolay hale getirmek için harika bir yeni platformdur."
+      "value": "Perché Clickeen è una nuova piattaforma fantastica per rendere il web bello e facile da usare."
     }
   ],
   "v": 1

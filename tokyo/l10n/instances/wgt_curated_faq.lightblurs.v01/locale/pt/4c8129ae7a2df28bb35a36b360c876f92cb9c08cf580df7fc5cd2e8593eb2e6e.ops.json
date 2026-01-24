@@ -1,56 +1,56 @@
 {
-  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
-  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "baseFingerprint": "4c8129ae7a2df28bb35a36b360c876f92cb9c08cf580df7fc5cd2e8593eb2e6e",
+  "baseUpdatedAt": "2026-01-24T03:23:07.026086+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Veelgestelde Vragen"
+      "value": "Perguntas Frequentes"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Alle Vragen"
+      "value": "Todas as Perguntas"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Wat is Clickeen?"
+      "value": "O que é o Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Hoe installeer ik een widget?"
+      "value": "Como instalo um widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Is er een gratis abonnement?"
+      "value": "Existe um plano gratuito?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Waarom zou ik Clickeen gebruiken"
+      "value": "Por que devo usar o Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen is iets leuks"
+      "value": "Clickeen é algo muito bonito"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Kopieer de embed-code en plak deze voor </body> op je site."
+      "value": "Copie o código de incorporação e cole-o antes de </body> no seu site."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Ja, één actieve widget met kernfuncties."
+      "value": "Sim, um widget ativo com recursos principais."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Omdat Clickeen een geweldig nieuw platform is om het web mooi en gebruiksvriendelijk te maken."
+      "value": "Porque o Clickeen é uma nova plataforma incrível para tornar a web bonita e fácil de usar."
     }
   ],
   "v": 1

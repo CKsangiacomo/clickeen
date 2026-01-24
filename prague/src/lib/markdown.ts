@@ -6,6 +6,25 @@ const CURATED_VALIDATE =
   (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_CURATED !== '0');
 const CURATED_VALIDATION_CACHE = new Map<string, Promise<void>>();
 
+function buildPageBase(args: { pageId: string; pagePath: string; blocks: unknown[] }) {
+  const baseBlocks: Record<string, { copy: Record<string, unknown> }> = {};
+  for (const block of args.blocks) {
+    if (!block || typeof block !== 'object' || Array.isArray(block)) {
+      throw new Error(`[prague] Invalid block entry in ${args.pagePath}`);
+    }
+    const blockId = String((block as any).id || '').trim();
+    if (!blockId) {
+      throw new Error(`[prague] Missing block id in ${args.pagePath}`);
+    }
+    const copy = (block as any).copy;
+    if (!copy || typeof copy !== 'object' || Array.isArray(copy)) {
+      throw new Error(`[prague] NOT TRANSLATED: ${args.pagePath} block "${blockId}" missing copy`);
+    }
+    baseBlocks[blockId] = { copy: copy as Record<string, unknown> };
+  }
+  return { v: 1, pageId: args.pageId, blocks: baseBlocks };
+}
+
 function resolveParisBaseUrl(): string | null {
   const raw = String(process.env.PUBLIC_PARIS_URL || process.env.PARIS_BASE_URL || '').trim();
   if (raw) return raw.replace(/\/+$/, '');
@@ -119,13 +138,23 @@ function buildWidgetPagePath(widget: string, page: string): string {
 export async function loadWidgetPageJsonForLocale(
   opts: { widget: string; page: string; locale: string } & PragueOverlayContext,
 ): Promise<unknown | null> {
-  const base = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
-  if (!base) return null;
+  const pageJson = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  if (!pageJson) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
+  const pageFilePath = `tokyo/widgets/${opts.widget}/pages/${opts.page}.json`;
+  if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
+    throw new Error(`[prague] Invalid base JSON for ${pageFilePath}`);
+  }
+  const baseBlocks = (pageJson as any).blocks;
+  if (!Array.isArray(baseBlocks)) {
+    throw new Error(`[prague] Missing blocks[] in ${pageFilePath}`);
+  }
+  const base = buildPageBase({ pageId: pagePath, pagePath: pageFilePath, blocks: baseBlocks });
   const localized = await loadPraguePageContent({
     locale: opts.locale,
     pageId: pagePath,
+    base,
     country: opts.country,
     layerContext: opts.layerContext,
   });
@@ -135,24 +164,16 @@ export async function loadWidgetPageJsonForLocale(
     throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
-  if (!base || typeof base !== 'object' || Array.isArray(base)) {
-    throw new Error(`[prague] Invalid base JSON for ${opts.widget}/${opts.page}`);
-  }
-
-  const baseBlocks = (base as any).blocks;
-  if (!Array.isArray(baseBlocks)) {
-    throw new Error(`[prague] Missing blocks[] in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
-  }
   await validateCuratedRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
-      throw new Error(`[prague] Invalid block entry in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+      throw new Error(`[prague] Invalid block entry in ${pageFilePath}`);
     }
     const blockId = String(block.id || '');
-    if (!blockId) throw new Error(`[prague] Missing block id in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    if (!blockId) throw new Error(`[prague] Missing block id in ${pageFilePath}`);
     const blockType = typeof block.type === 'string' ? block.type : '';
-    if (!blockType) throw new Error(`[prague] Missing block type in tokyo/widgets/${opts.widget}/pages/${opts.page}.json`);
+    if (!blockType) throw new Error(`[prague] Missing block type in ${pageFilePath}`);
     validateBlockMeta({ block: block as Record<string, unknown>, pagePath });
     const compiledBlock = blocksById[blockId];
     if (!compiledBlock || typeof compiledBlock !== 'object') {
@@ -166,7 +187,7 @@ export async function loadWidgetPageJsonForLocale(
     return { ...block, id: blockId, type: blockType, copy };
   });
 
-  return { ...(base as any), blocks: mergedBlocks };
+  return { ...(pageJson as any), blocks: mergedBlocks };
 }
 
 export async function loadRequiredWidgetPageJsonForLocale(

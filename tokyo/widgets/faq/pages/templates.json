@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "Explore FAQ templates and start from a proven layout.",
+        "title": "FAQ Templates - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "FAQ Templates",
+        "subheadline": "Start from a proven layout -- then tailor it to your brand."
+      }
     }
   ]
 }

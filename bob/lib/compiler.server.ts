@@ -7,6 +7,45 @@ import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } f
 import { buildTypographyPanel } from './compiler/modules/typography';
 import { resolveTokyoBaseUrl } from './env/tokyo';
 
+function findTagEnd(source: string, startIndex: number): number {
+  let quote: '"' | "'" | null = null;
+  for (let i = startIndex; i < source.length; i += 1) {
+    const ch = source[i];
+    if (quote) {
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch === '>') return i;
+  }
+  return -1;
+}
+
+function stripLeadingPanelEyebrow(html: string): string {
+  const clusterTag = '<tooldrawer-cluster';
+  const eyebrowTag = '<tooldrawer-eyebrow';
+  const lower = html.toLowerCase();
+  const clusterStart = lower.indexOf(clusterTag);
+  if (clusterStart === -1) return html;
+
+  const clusterOpenEnd = findTagEnd(html, clusterStart + clusterTag.length);
+  if (clusterOpenEnd === -1) return html;
+
+  let cursor = clusterOpenEnd + 1;
+  while (cursor < html.length && /\s/.test(html[cursor])) cursor += 1;
+  if (!html.slice(cursor, cursor + eyebrowTag.length).toLowerCase().startsWith(eyebrowTag)) return html;
+
+  const eyebrowEnd = findTagEnd(html, cursor + eyebrowTag.length);
+  if (eyebrowEnd === -1) return html;
+
+  let after = eyebrowEnd + 1;
+  while (after < html.length && /\s/.test(html[after])) after += 1;
+  return html.slice(0, cursor) + html.slice(after);
+}
+
 function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const rawHtml = Array.isArray(widgetJson.html) ? widgetJson.html : [];
   const htmlLines: string[] = rawHtml.filter((line): line is string => typeof line === 'string');
@@ -207,6 +246,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const renderedPanels: CompiledPanel[] = await Promise.all(
     panels.map(async (panel) => {
       let html = panel.html;
+      html = stripLeadingPanelEyebrow(html);
 
       if (/<tooldrawer-divider\b/i.test(html)) {
         throw new Error('[BobCompiler] <tooldrawer-divider /> is not supported; use <tooldrawer-cluster> only');

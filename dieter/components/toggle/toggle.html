@@ -1,5 +1,10 @@
 <div class="diet-toggle diet-toggle--block" data-size="{{size}}">
-  <span class="diet-toggle__label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}" id="{{id}}-label">{{label}}</span>
+  <span
+    class="diet-toggle__label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}"
+    id="{{id}}-label"
+    {{#if labelKey}} data-i18n-key="{{labelKey}}"{{/if}}
+    {{#if labelParams}} data-i18n-params="{{labelParams}}"{{/if}}
+  >{{label}}</span>
   <input id="{{id}}" class="diet-toggle__input sr-only" type="checkbox" role="switch" aria-labelledby="{{id}}-label"{{#if path}} data-path="{{path}}"{{/if}}{{checkedAttr}} />
   <label class="diet-toggle__switch" for="{{id}}" aria-hidden="true">
     <span class="diet-toggle__knob"></span>

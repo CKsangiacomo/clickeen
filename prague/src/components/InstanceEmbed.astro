@@ -4,11 +4,12 @@ import Icon from './Icon.astro';
 type Props = {
   publicId: string;
   locale: string;
+  localeOverride?: string;
   title?: string;
   loading?: 'lazy' | 'eager';
 };
 
-const { publicId, locale, title = 'Widget preview', loading = 'lazy' } = Astro.props;
+const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy' } = Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 
@@ -41,8 +42,9 @@ const widgetType = (() => {
   return '';
 })();
 const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
+const resolvedLocale = String(localeOverride || locale || 'en').trim();
 const iframeSrc = VENICE_URL
-  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
+  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(resolvedLocale)}${ts}`
   : null;
 
 const anchorId = `ck-instance-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;

@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "Start from a polished layout and customize your logo showcase.",
+        "title": "Logo Showcase Templates - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Logo Showcase Templates",
+        "subheadline": "Start from a polished layout -- then make it yours."
+      }
     }
   ]
 }

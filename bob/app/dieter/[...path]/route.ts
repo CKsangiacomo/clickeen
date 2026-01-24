@@ -59,6 +59,9 @@ async function proxy(request: NextRequest, prefix: string, pathSegments: string[
   if (request.nextUrl.searchParams.has('ts')) {
     headers.set('Cache-Control', 'no-store');
   }
+  if (process.env.NODE_ENV === 'development') {
+    headers.set('Cache-Control', 'no-store');
+  }
 
   if (method === 'HEAD') {
     return new NextResponse(null, { status: res.status, headers });

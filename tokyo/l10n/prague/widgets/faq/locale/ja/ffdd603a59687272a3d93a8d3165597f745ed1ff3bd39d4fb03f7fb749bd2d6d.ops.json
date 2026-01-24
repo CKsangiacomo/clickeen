@@ -1,36 +1,31 @@
 {
   "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
-  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "baseUpdatedAt": "2026-01-24T00:19:35.054Z",
   "ops": [
     {
       "op": "set",
-      "path": "blocks.cta.copy.headline",
-      "value": "すべての顧客と、どこでもつながる"
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQウィジェット - Clickeen"
     },
     {
       "op": "set",
-      "path": "blocks.cta.copy.subheadline",
-      "value": "顧客の言語で話し、ニーズを理解するAI搭載FAQ。"
+      "path": "blocks.page-meta.copy.description",
+      "value": "高速で美しいFAQウィジェットを作成。数分でカスタマイズ、公開、ローカライズが可能です。"
     },
     {
       "op": "set",
       "path": "blocks.hero.copy.headline",
-      "value": "FAQウィジェット。美しい回答。高速化のために設計。"
+      "value": "FAQウィジェット。美しい回答。高速設計。"
     },
     {
       "op": "set",
       "path": "blocks.hero.copy.subheadline",
-      "value": "洗練されたデザイン、手間いらずの更新、そしてSEOの基盤——あらゆる言語に対応し、AIが支えます。"
+      "value": "洗練されたデザイン、簡単な更新、そしてSEOの基盤——あらゆる言語に対応し、AIが支えます。"
     },
     {
       "op": "set",
-      "path": "blocks.minibob.copy.heading",
-      "value": "自分らしくカスタマイズ"
-    },
-    {
-      "op": "set",
-      "path": "blocks.minibob.copy.subhead",
-      "value": "ここで理想のFAQをデザイン。変更はすぐに反映されます。"
+      "path": "blocks.navmeta.copy.title",
+      "value": "よくある質問"
     },
     {
       "op": "set",
@@ -39,38 +34,123 @@
     },
     {
       "op": "set",
-      "path": "blocks.navmeta.copy.title",
-      "value": "FAQ"
+      "path": "blocks.minibob.copy.heading",
+      "value": "あなただけのものに"
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.description",
-      "value": "高速で美しいFAQウィジェットを作成。数分でカスタマイズ、公開、ローカライズできます。"
+      "path": "blocks.minibob.copy.subhead",
+      "value": "ここで理想のFAQをデザインしましょう。変更はすぐに反映されます。"
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.title",
-      "value": "FAQウィジェット - Clickeen"
+      "path": "blocks.split-right.copy.headline",
+      "value": "スプリット クリエイティブ（右）"
     },
     {
       "op": "set",
-      "path": "blocks.split-left-2.copy.headline",
-      "value": "スプリット クリエイティブ（左）"
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "これは右側にビジュアルを配置するバリエーションで、ヒーローと同じ厳選されたインスタンスを使用しています。"
     },
     {
       "op": "set",
-      "path": "blocks.split-left-2.copy.subheadline",
-      "value": "これは左ビジュアルのバリエーションで、ヒーローと同じキュレーション済みインスタンスを使用します。"
+      "path": "blocks.split-left.copy.headline",
+      "value": "クリエイティブの分割（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "これは左側にビジュアルを配置するバリアントで、ヒーローと同じキュレーション済みインスタンスを使用します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "質問がリアルタイムで自動的に解決されるのを見てください"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "迷いが生まれた瞬間に適切な答えを提示する、美しくデザインされたFAQを追加できます。顧客はすぐに行き詰まりを解消し、異議はチケットになる前に消え、サポートを増やさずにより多くの売上を獲得できます。一度カスタマイズしてどこにでも埋め込み、24時間365日働かせましょう。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "スプリットクリエイティブ（積み重ね）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "これは積み重ねバリアントで、ヒーローと同じキュレーション済みインスタンスを使用しています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "本当に役に立つFAQ（あなたが対応しなくて済むように）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "お客様には質問があります。答えるのは一度だけで、何百回も繰り返さないで。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "未回答の質問で売上を逃すのをやめましょう"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "時間を取り戻す"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "眠っている間にも成約を増やす"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "答えがない質問は、そのまま顧客が離れていく原因になります。必要な情報が見つからなければ、訪問者は去ってしまいます。よく設計されたFAQは、反論が生まれる前にそれを潰します——つまり、お客様は問い合わせることなく自分で納得して購入に至るのです。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "お客様が即座に答えを見つけられれば、サポート対応量を40%+削減できます。Slackの通知も不要。「ちょっと質問」メールも不要。コンテキスト切り替え地獄も不要。FAQが面倒な作業を肩代わりし、あなたは本当に重要な仕事に集中できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "適切なFAQは、不安を先回りして予測し、あなたがオフラインの午前2時でも摩擦を取り除きます。回答は24時間働き続けます。お客様はあなたを待ちません——つまずきが解消され、見た内容を信頼し、あなたの一日を中断することなく「購入」をクリックします。"
     },
     {
       "op": "set",
       "path": "blocks.split-right-2.copy.headline",
-      "value": "スプリットクリエイティブ（右）"
+      "value": "クリエイティブ分割（右）"
     },
     {
       "op": "set",
       "path": "blocks.split-right-2.copy.subheadline",
-      "value": "これは右側にビジュアルを配置したバリエーションで、ヒーローと同じキュレーション済みインスタンスを使用しています。"
+      "value": "これは右側ビジュアルのバリエーションで、ヒーローと同じ厳選されたインスタンスを使用しています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "分割クリエイティブ（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "これは左側にビジュアルを配置したバリアントで、ヒーローと同じ厳選されたインスタンスを使用しています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "あらゆる顧客と、どこでもつながる"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI搭載のFAQが相手の言語で話し、ニーズを理解します。"
     }
   ],
   "v": 1

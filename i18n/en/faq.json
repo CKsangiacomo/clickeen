@@ -1,8 +1,21 @@
 {
   "faq.item": {
-    "one": "Q&A block",
-    "other": "Q&A blocks"
+    "one": "Q&A card",
+    "other": "Q&A cards"
   },
-  "faq.actions.addItem": "Add {item}"
+  "faq.actions.addItem": "Add {item}",
+  "faq.labels.linkItemPadding": "Link {item} padding",
+  "faq.labels.itemPadding": "{item} padding (px)",
+  "faq.labels.itemPaddingTop": "{item} top padding (px)",
+  "faq.labels.itemPaddingRight": "{item} right padding (px)",
+  "faq.labels.itemPaddingBottom": "{item} bottom padding (px)",
+  "faq.labels.itemPaddingLeft": "{item} left padding (px)",
+  "faq.labels.itemBackground": "{item} background",
+  "faq.labels.linkItemCorners": "Link {item} corners",
+  "faq.labels.itemTopLeftRadius": "{item} top-left radius",
+  "faq.labels.itemTopRightRadius": "{item} top-right radius",
+  "faq.labels.itemBottomRightRadius": "{item} bottom-right radius",
+  "faq.labels.itemBottomLeftRadius": "{item} bottom-left radius",
+  "faq.labels.itemBorder": "{item} border",
+  "faq.labels.itemShadow": "{item} shadow"
 }
-

@@ -5,6 +5,9 @@
       "answerFormat": "direct-first",
       "enableDeepLinks": true
     },
+    "context": {
+      "websiteUrl": ""
+    },
     "pod": {
       "radius": "4xl",
       "padding": {
@@ -64,7 +67,7 @@
         }
       },
       "alignment": "center",
-      "background": "#d1d1d6"
+      "background": "var(--color-system-gray-6)"
     },
     "title": "Frequently Asked Questions",
     "layout": {
@@ -128,7 +131,7 @@
     "appearance": {
       "itemCard": {
         "border": {
-          "color": "#efeff2",
+          "color": "var(--color-system-gray-5)",
           "width": 1,
           "enabled": true
         },
@@ -138,7 +141,7 @@
           "y": 7,
           "blur": 16,
           "alpha": 13,
-          "color": "#007aff",
+          "color": "var(--color-system-blue)",
           "inset": false,
           "spread": 0,
           "enabled": true
@@ -246,13 +249,13 @@
     "    <tooldrawer-field type='toggle' size='md' path='behavior.expandAll' label='Expand all questions' show-if=\"layout.type == 'accordion'\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-eyebrow text='Item card layout' />",
-    "    <tooldrawer-field type='toggle' size='md' path='layout.itemPaddingLinked' label='Link item padding' value='{{layout.itemPaddingLinked}}' default='true' />",
-    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPadding' label='Item padding (px)' show-if=\"layout.itemPaddingLinked == true\" />",
-    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingTop' label='Item top padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingRight' label='Item right padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingBottom' label='Item bottom padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingLeft' label='Item left padding (px)' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-eyebrow text='Q&A card layout' />",
+    "    <tooldrawer-field type='toggle' size='md' path='layout.itemPaddingLinked' label='Link Q&A card padding' label-key='faq.labels.linkItemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{layout.itemPaddingLinked}}' default='true' />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPadding' label='Q&A card padding (px)' label-key='faq.labels.itemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == true\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingTop' label='Q&A card top padding (px)' label-key='faq.labels.itemPaddingTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingRight' label='Q&A card right padding (px)' label-key='faq.labels.itemPaddingRight' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingBottom' label='Q&A card bottom padding (px)' label-key='faq.labels.itemPaddingBottom' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
+    "    <tooldrawer-field type='valuefield' size='md' path='layout.itemPaddingLeft' label='Q&A card left padding (px)' label-key='faq.labels.itemPaddingLeft' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster show-if=\"layout.type == 'multicolumn'\">",
     "    <tooldrawer-field type='valuefield' size='md' path='layout.columns.desktop' label='Columns (desktop)' />",
@@ -262,7 +265,7 @@
     "<bob-panel id='appearance'>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Widget appearance' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color,gradient,image' path='appearance.itemBackground' label='Item background' value='{{appearance.itemBackground}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color,gradient,image' path='appearance.itemBackground' label='Q&A card background' label-key='faq.labels.itemBackground' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemBackground}}' />",
     "    <div data-bob-showif=\"contains(sections, 'href=')\">",
     "      <tooldrawer-field type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' />",
     "      <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
@@ -279,15 +282,15 @@
     "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.answer.color' label='Answer text color' value='{{typography.roles.answer.color}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-eyebrow text='Item card appearance' />",
-    "    <tooldrawer-field type='toggle' size='md' path='appearance.itemCard.radiusLinked' label='Link item corners' value='{{appearance.itemCard.radiusLinked}}' default='true' />",
+    "    <tooldrawer-eyebrow text='Q&A card appearance' />",
+    "    <tooldrawer-field type='toggle' size='md' path='appearance.itemCard.radiusLinked' label='Link Q&A card corners' label-key='faq.labels.linkItemCorners' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.radiusLinked}}' default='true' />",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.itemCard.radius}}' show-if=\"appearance.itemCard.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTL' label='Item top-left radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusTL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTR' label='Item top-right radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusTR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBR' label='Item bottom-right radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusBR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Item bottom-left radius' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field type='dropdown-border' size='md' path='appearance.itemCard.border' label='Item border' value='{{appearance.itemCard.border}}' />",
-    "    <tooldrawer-field type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Item shadow' value='{{appearance.itemCard.shadow}}' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTL' label='Q&A card top-left radius' label-key='faq.labels.itemTopLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusTR' label='Q&A card top-right radius' label-key='faq.labels.itemTopRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBR' label='Q&A card bottom-right radius' label-key='faq.labels.itemBottomRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field type='dropdown-border' size='md' path='appearance.itemCard.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.border}}' />",
+    "    <tooldrawer-field type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Q&A card shadow' label-key='faq.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.shadow}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
@@ -296,6 +299,10 @@
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='settings'>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-eyebrow text='AI context' />",
+    "    <tooldrawer-field type='textfield' size='lg' path='context.websiteUrl' label='Website URL' placeholder='https://example.com' />",
+    "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-eyebrow text='SEO/GEO optimization' />",
     "    <tooldrawer-field type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",

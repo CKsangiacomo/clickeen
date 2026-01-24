@@ -3,7 +3,11 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "Build a fast, beautiful FAQ widget. Customize, publish, and localize in minutes.",
+        "title": "FAQ Widget - Clickeen"
+      }
     },
     {
       "id": "hero",
@@ -11,18 +15,26 @@
       "visual": true,
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "FAQs Widget. Beautiful answers. Built to be fast.",
+        "subheadline": "Polished design, effortless updates, and SEO foundations--ready for any language, powered by AI."
       }
     },
     {
       "id": "navmeta",
-      "type": "navmeta"
+      "type": "navmeta",
+      "copy": {
+        "description": "Help visitors find answers fast.",
+        "title": "FAQ"
+      }
     },
     {
       "id": "minibob",
       "type": "minibob",
       "copy": {
-        "heading": "Try it live",
-        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+        "heading": "Make it yours",
+        "subhead": "Design your perfect FAQ right here. See changes instantly."
       }
     },
     {
@@ -30,8 +42,8 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Placeholder Headline Right",
-        "subheadline": "Placeholder subheadline for right-aligned creative block"
+        "headline": "Split creative (right)",
+        "subheadline": "This is the right-visual variant, using the same curated instance as the hero."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -42,8 +54,8 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Placeholder Headline Left",
-        "subheadline": "Placeholder subheadline for left-aligned creative block"
+        "headline": "Split creative (left)",
+        "subheadline": "This is the left-visual variant, using the same curated instance as the hero."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -51,15 +63,19 @@
     },
     {
       "id": "big-bang",
-      "type": "big-bang"
+      "type": "big-bang",
+      "copy": {
+        "body": "Drop in a beautifully designed FAQ that surfaces the right answer at the moment of doubt. Customers get unblocked instantly, objections dissolve before they turn into tickets, and you close more sales without adding more support. Customize once, embed anywhere, and let it work 24/7.",
+        "headline": "Watch questions answer themselves in real-time"
+      }
     },
     {
       "id": "split-stacked",
       "type": "split",
       "layout": "stacked",
       "copy": {
-        "headline": "Placeholder Headline Stacked",
-        "subheadline": "Placeholder subheadline for stacked creative block"
+        "headline": "Split creative (stacked)",
+        "subheadline": "This is the stacked variant, using the same curated instance as the hero."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -67,15 +83,33 @@
     },
     {
       "id": "steps",
-      "type": "steps"
+      "type": "steps",
+      "copy": {
+        "items": [
+          {
+            "body": "Every question left unanswered is a customer walking away. Visitors leave when they can't find what they need. A well-designed FAQ kills objections before they even form—so customers convince themselves to buy without ever reaching out.",
+            "title": "Stop losing sales to unanswered questions"
+          },
+          {
+            "body": "Cut support volume by 40%+ when customers find answers instantly. No more Slack pings. No more \"quick question\" emails. No more context-switching hell. Your FAQ does the heavy lifting while you focus on work that actually matters.",
+            "title": "Get your time back"
+          },
+          {
+            "body": "The right FAQ anticipates doubt and removes friction at 2 AM when you're offline. Your answers work around the clock. Customers don't wait for you—they get unblocked, trust what they see, and hit \"buy\" without interrupting your day.",
+            "title": "Close more deals while you sleep"
+          }
+        ],
+        "subhead": "Your customers have questions. Answer them once, not a hundred times.",
+        "title": "FAQs that actually work (so you don't have to)"
+      }
     },
     {
       "id": "split-right-2",
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Placeholder Headline Right 2",
-        "subheadline": "Placeholder subheadline for second right-aligned creative block"
+        "headline": "Split creative (right)",
+        "subheadline": "This is the right-visual variant, using the same curated instance as the hero."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -86,8 +120,8 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Placeholder Headline Left 2",
-        "subheadline": "Placeholder subheadline for second left-aligned creative block"
+        "headline": "Split creative (left)",
+        "subheadline": "This is the left-visual variant, using the same curated instance as the hero."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"

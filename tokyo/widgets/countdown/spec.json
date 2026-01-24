@@ -244,7 +244,7 @@
     "    <tooldrawer-eyebrow text='Colors' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color,gradient,image' path='appearance.background' label='Widget background' value='{{appearance.background}}' />",
     "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.textColor' label='Text color' value='{{appearance.textColor}}' />",
-    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.timerBoxColor' label='Timer box color' value='{{appearance.timerBoxColor}}' />",
+    "    <tooldrawer-field type='dropdown-fill' size='md' fill-modes='color' path='appearance.timerBoxColor' label='Number tile color' label-key='countdown.labels.itemColor' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;countdown.item&quot;,&quot;count&quot;:1}}' value='{{appearance.timerBoxColor}}' />",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.separator' label='Separator' value='{{appearance.separator}}' options='[{&quot;label&quot;:&quot;Colon&quot;,&quot;value&quot;:&quot;:&quot;},{&quot;label&quot;:&quot;Slash&quot;,&quot;value&quot;:&quot;/&quot;},{&quot;label&quot;:&quot;Dash&quot;,&quot;value&quot;:&quot;-&quot;}]' />",
     "    <tooldrawer-field type='dropdown-actions' size='md' path='appearance.animation' label='Animation' value='{{appearance.animation}}' options='[{&quot;label&quot;:&quot;Fade&quot;,&quot;value&quot;:&quot;fade&quot;}]' />",
     "  </tooldrawer-cluster>",

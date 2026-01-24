@@ -52,7 +52,7 @@ const ICON_SVGS = [
 
 <section class="ck-canvas ck-stepsCanvas">
   <div class="ck-inline ck-stack ck-steps__inline">
-    <header class="ck-steps__header">
+    <header class="ck-steps__header ck-stack ck-gap-tight">
       <PrimitiveRenderer primitives={headerPrimitives} />
     </header>
 
@@ -99,9 +99,6 @@ const ICON_SVGS = [
     max-width: 880px;
     margin-inline: auto;
     text-align: center;
-    gap: var(--space-3);
-    display: flex;
-    flex-direction: column;
   }
 
   .ck-steps__subhead {

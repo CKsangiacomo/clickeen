@@ -131,3 +131,69 @@
   box-shadow: var(--shadow-elevated);
   overflow: hidden;
 }
+
+/* Prague selector (Apple-inspired, minimal, no Dieter dependency). */
+.selector-element {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.875rem;
+}
+
+.selector-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font: 500 var(--fs-14)/1.1 var(--font-ui);
+  letter-spacing: -0.01em;
+  color: var(--color-system-black);
+  background: var(--color-system-white);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 84%);
+  border-radius: 13px;
+  padding: 11px 40px 11px 16px;
+  box-shadow: none;
+  transition: background-color var(--duration-base, 160ms), border-color var(--duration-base, 160ms),
+    transform var(--duration-base, 160ms);
+}
+
+.selector-dropdown:hover {
+  background: var(--color-system-white);
+  border-color: color-mix(in oklab, var(--color-system-black), transparent 78%);
+}
+
+.selector-dropdown:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-system-blue);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.selector-dropdown:active {
+  transform: translateY(1px);
+}
+
+.selector-icon {
+  position: absolute;
+  right: 16px;
+  pointer-events: none;
+  width: 12px;
+  height: 12px;
+  color: color-mix(in oklab, var(--color-system-black), transparent 25%);
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 7l5 5 5-5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 7l5 5 5-5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.selector-element::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 55%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .selector-dropdown {
+    font: 500 var(--fs-14)/1.1 var(--font-ui);
+    padding: 10px 38px 10px 14px;
+  }
+}

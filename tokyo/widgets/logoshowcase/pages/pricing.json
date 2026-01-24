@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "Simple pricing for the logo showcase widget. Start free.",
+        "title": "Logo Showcase Pricing - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Logo Showcase Pricing",
+        "subheadline": "Start free. Upgrade when you want more widgets and no branding."
+      }
     }
   ]
 }

@@ -4,7 +4,7 @@ import { loadPragueChromeStrings } from './pragueL10n';
 
 // Prague chrome i18n (system-owned strings).
 // - Deterministic: Tokyo overlays keyed by base fingerprint (no manifest).
-// - Scope: UI chrome only (nav/tabs/common CTAs). Widget page content lives in Prague content base + ops.
+// - Scope: UI chrome only (nav/tabs/common CTAs). Widget page content lives in tokyo/widgets page JSON + ops.
 
 export type PragueI18nKey =
   | 'prague.nav.widgets'

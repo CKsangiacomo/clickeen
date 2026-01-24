@@ -1,56 +1,56 @@
 {
-  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
-  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "baseFingerprint": "4c8129ae7a2df28bb35a36b360c876f92cb9c08cf580df7fc5cd2e8593eb2e6e",
+  "baseUpdatedAt": "2026-01-24T03:23:07.026086+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Frequently Asked Questions"
+      "value": "常見問題"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "All Questions"
+      "value": "所有問題"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "What is Clickeen?"
+      "value": "什麼是 Clickeen？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "How do I install a widget?"
+      "value": "如何安裝小工具？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "Is there a free plan?"
+      "value": "有免費方案嗎？"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Why should I use Clickeen"
+      "value": "為什麼我應該使用 Clickeen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen is something nice"
+      "value": "Clickeen 非常漂亮"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copy the embed code and paste it before </body> on your site."
+      "value": "複製嵌入代碼並將其貼上到您網站上的 </body> 之前。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Yes, one active widget with core features."
+      "value": "是的，一個具有核心功能的主動小工具。"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use."
+      "value": "因為 Clickeen 是一個令人驚嘆的新平台，讓網路變得美麗且易於使用。"
     }
   ],
   "v": 1

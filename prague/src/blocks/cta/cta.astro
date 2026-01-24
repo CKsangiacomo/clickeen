@@ -19,7 +19,7 @@ type Props = {
 
 const { headline, subheadline, primaryCta, actionGroup } = Astro.props;
 
-const contentPrimitives = assertPrimitives(
+const headerPrimitives = assertPrimitives(
   [
     {
       type: 'heading',
@@ -38,7 +38,7 @@ const contentPrimitives = assertPrimitives(
         ]
       : []),
   ],
-  'cta.content',
+  'cta.header',
 );
 
 const resolvedActionGroup =
@@ -54,12 +54,12 @@ const resolvedActionGroup =
 <section class="ck-canvas">
   <div class="ck-inline">
     <div class="ck-cta__card">
-      <div class="ck-split ck-split--center">
-        <div class="ck-split__a ck-stack">
-          <PrimitiveRenderer primitives={contentPrimitives} />
+      <div class="ck-cta__content ck-stack ck-gap-loose">
+        <div class="ck-stack ck-gap-tight">
+          <PrimitiveRenderer primitives={headerPrimitives} />
         </div>
         {resolvedActionGroup ? (
-          <div class="ck-split__b">
+          <div class="ck-cta__cta">
             <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
           </div>
         ) : null}
@@ -75,5 +75,8 @@ const resolvedActionGroup =
     border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
     box-shadow: var(--shadow-elevated);
     padding: var(--space-8);
+  }
+
+  @media (max-width: 900px) {
   }
 </style>

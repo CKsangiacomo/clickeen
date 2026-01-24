@@ -3,16 +3,28 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "title": "Countdown Widget - Clickeen",
+        "description": "Create urgency with customizable countdown timers. Launch, sell, and announce with confidence."
+      }
     },
     {
       "id": "hero",
       "type": "hero",
-      "visual": true
+      "visual": true,
+      "copy": {
+        "headline": "Countdown Timer Widget",
+        "subheadline": "Create urgency and drive action with fast, flexible countdowns."
+      }
     },
     {
       "id": "navmeta",
-      "type": "navmeta"
+      "type": "navmeta",
+      "copy": {
+        "title": "Countdown",
+        "description": "Add urgency with flexible timers."
+      }
     },
     {
       "id": "minibob",
@@ -42,7 +54,11 @@
     },
     {
       "id": "big-bang",
-      "type": "big-bang"
+      "type": "big-bang",
+      "copy": {
+        "headline": "Turn attention into action",
+        "body": "Use timers that fit launches, sales, events, and personal goals. Set it once and let it run everywhere."
+      }
     },
     {
       "id": "split-stacked",
@@ -55,7 +71,25 @@
     },
     {
       "id": "steps",
-      "type": "steps"
+      "type": "steps",
+      "copy": {
+        "title": "Launch faster with countdowns",
+        "subhead": "From setup to publish in minutes.",
+        "items": [
+          {
+            "title": "Pick your timer",
+            "body": "Choose date, evergreen, or number counters for your use case."
+          },
+          {
+            "title": "Match your brand",
+            "body": "Customize colors, labels, and layout to fit any site."
+          },
+          {
+            "title": "Publish and localize",
+            "body": "Go live fast and reach global audiences with built-in localization."
+          }
+        ]
+      }
     },
     {
       "id": "split-right-2",

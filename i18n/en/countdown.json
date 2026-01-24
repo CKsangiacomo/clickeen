@@ -1,0 +1,7 @@
+{
+  "countdown.item": {
+    "one": "Number tile",
+    "other": "Number tiles"
+  },
+  "countdown.labels.itemColor": "{item} color"
+}

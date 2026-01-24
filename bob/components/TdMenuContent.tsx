@@ -1328,9 +1328,11 @@ export function TdMenuContent({
     );
   }
 
+  const panelTitle = panelId ? `${panelId.charAt(0).toUpperCase()}${panelId.slice(1)}` : '';
+
   return (
     <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'} data-readonly={readOnly ? 'true' : 'false'}>
-      <div className="heading-3">{panelId}</div>
+      <div className="heading-3">{panelTitle}</div>
       {header}
       <div className="tdmenucontent__fields" ref={containerRef} />
       {footer}

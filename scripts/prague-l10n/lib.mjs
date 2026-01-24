@@ -106,3 +106,77 @@ export function pathMatchesAllowlist(pathStr, allowPath) {
 export function hasProhibitedSegment(pathStr) {
   return splitPathSegments(pathStr).some((seg) => PROHIBITED_SEGMENTS.has(seg));
 }
+
+function joinPath(base, next) {
+  return base ? `${base}.${next}` : next;
+}
+
+function collectEntriesForPath({ value, segments, currentPath, type, out }) {
+  if (segments.length === 0) {
+    if (typeof value === 'string') {
+      out.push({ path: currentPath, type, value });
+    }
+    return;
+  }
+
+  const [head, ...tail] = segments;
+  if (!head || hasProhibitedSegment(head)) return;
+
+  if (head === '*') {
+    if (!Array.isArray(value)) return;
+    value.forEach((item, index) => {
+      collectEntriesForPath({
+        value: item,
+        segments: tail,
+        currentPath: joinPath(currentPath, String(index)),
+        type,
+        out,
+      });
+    });
+    return;
+  }
+
+  if (Array.isArray(value) && /^\d+$/.test(head)) {
+    const index = Number(head);
+    collectEntriesForPath({
+      value: value[index],
+      segments: tail,
+      currentPath: joinPath(currentPath, head),
+      type,
+      out,
+    });
+    return;
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return;
+  collectEntriesForPath({
+    value: value[head],
+    segments: tail,
+    currentPath: joinPath(currentPath, head),
+    type,
+    out,
+  });
+}
+
+export function collectTranslatableEntries(base, allowlistEntries) {
+  const out = [];
+  for (const entry of allowlistEntries) {
+    const segments = splitPathSegments(entry.path);
+    collectEntriesForPath({
+      value: base,
+      segments,
+      currentPath: '',
+      type: entry.type,
+      out,
+    });
+  }
+  const deduped = [];
+  const seen = new Set();
+  for (const item of out) {
+    if (!seen.has(item.path)) {
+      seen.add(item.path);
+      deduped.push(item);
+    }
+  }
+  return deduped;
+}

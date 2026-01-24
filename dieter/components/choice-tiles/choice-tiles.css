@@ -14,13 +14,21 @@
 }
 
 .diet-choice-tiles__option.diet-btn-ictxt {
-  --btn-bg: var(--color-system-gray-6);
+  --btn-bg: var(--color-system-gray-step5);
   --btn-color: var(--color-system-black);
   --btn-border-width: 1px;
   --btn-border-color: transparent;
   --btn-radius: var(--control-radius-md);
-  --btn-hover-bg: color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 6%);
-  --btn-clicked-bg: color-mix(in oklab, var(--color-system-gray-6), var(--color-system-black) 12%);
+  --btn-hover-bg: color-mix(
+    in oklab,
+    var(--color-system-gray-step5),
+    var(--state-darken-target) var(--state-hover-mix)
+  );
+  --btn-clicked-bg: color-mix(
+    in oklab,
+    var(--color-system-gray-step5),
+    var(--state-darken-target) var(--state-pressed-mix)
+  );
 
   flex: 1 1 0%;
   min-inline-size: 0;

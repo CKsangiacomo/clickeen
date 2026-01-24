@@ -170,6 +170,13 @@
     }
     assertBoolean(state.geo.enableDeepLinks, 'state.geo.enableDeepLinks');
 
+    if (state.context != null) {
+      assertObject(state.context, 'state.context');
+      if ('websiteUrl' in state.context) {
+        assertString(state.context.websiteUrl, 'state.context.websiteUrl');
+      }
+    }
+
     assertArray(state.sections, 'state.sections');
     state.sections.forEach((section, idx) => {
       assertObject(section, `state.sections[${idx}]`);
@@ -337,6 +344,30 @@
     button.setAttribute('aria-expanded', String(expanded));
   }
 
+  const accordionRuntime = {
+    isAccordion: true,
+    multiOpen: false,
+    deepLinksEnabled: false,
+  };
+
+  function applyDeepLink() {
+    if (!accordionRuntime.isAccordion || !accordionRuntime.deepLinksEnabled) return;
+    const hash = typeof window.location?.hash === 'string' ? window.location.hash : '';
+    if (!hash || hash === '#') return;
+    const targetId = decodeURIComponent(hash.slice(1));
+    if (!targetId) return;
+    const items = listEl.querySelectorAll('[data-role="faq-item"]');
+    for (const item of items) {
+      if (!(item instanceof HTMLElement)) continue;
+      if (item.id !== targetId) continue;
+      const button = item.querySelector('[data-role="faq-question"]');
+      if (!(button instanceof HTMLElement)) return;
+      if (!accordionRuntime.multiOpen) collapseAll(listEl);
+      setExpanded(button, true);
+      return;
+    }
+  }
+
   function renderItems(sections, behavior, displayCategoryTitles) {
     const publicId = resolvedPublicId;
     const markup = sections
@@ -386,17 +417,17 @@
   }
 
   function resolveFillBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
+    if (!window.CKFill || typeof window.CKFill.toCssBackground !== 'function') {
+      throw new Error('[FAQ] Missing CKFill.toCssBackground');
     }
-    return String(value ?? '');
+    return window.CKFill.toCssBackground(value);
   }
 
   function resolveFillColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
+    if (!window.CKFill || typeof window.CKFill.toCssColor !== 'function') {
+      throw new Error('[FAQ] Missing CKFill.toCssColor');
     }
-    return String(value ?? '');
+    return window.CKFill.toCssColor(value);
   }
 
   function applyAppearance(appearance) {
@@ -473,11 +504,6 @@
     faqRoot.style.setProperty('--faq-icon-collapse', `url("${assetOrigin}/dieter/icons/svg/${pair.collapse}.svg")`);
   }
 
-  const accordionRuntime = {
-    isAccordion: true,
-    multiOpen: false,
-  };
-
   // Avoid DOM churn on unrelated state updates (e.g. stage sizing). The state object sent
   // via postMessage is always cloned, so we use a stable signature of the fields that
   // actually affect list markup.
@@ -494,6 +520,12 @@
     const next = !isOpen;
     if (!accordionRuntime.multiOpen) collapseAll(listEl);
     setExpanded(button, next);
+    if (accordionRuntime.deepLinksEnabled && next) {
+      const item = button.closest('[data-role="faq-item"]');
+      if (item instanceof HTMLElement && item.id) {
+        window.location.hash = item.id;
+      }
+    }
   });
 
   function applyState(state) {
@@ -521,6 +553,7 @@
 
     applyAppearance(state.appearance);
     applyLayout(state.layout);
+    accordionRuntime.deepLinksEnabled = state.geo.enableDeepLinks === true;
     const nextItemsSignature = JSON.stringify([
       state.sections,
       state.displayCategoryTitles === true,
@@ -587,6 +620,8 @@
         button.removeAttribute('tabindex');
       });
     }
+
+    applyDeepLink();
   }
 
   window.addEventListener('message', (event) => {

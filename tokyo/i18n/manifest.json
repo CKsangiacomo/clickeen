@@ -9,7 +9,9 @@
   "bundles": {
     "en": {
       "coreui": "coreui.571a8867.json",
-      "faq": "faq.4607c587.json",
+      "countdown": "countdown.c6ada7b9.json",
+      "faq": "faq.f4d8343f.json",
+      "logoshowcase": "logoshowcase.12827fb8.json",
       "prague": "prague.60ac0fe5.json"
     }
   }

@@ -90,10 +90,11 @@ Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatabl
 
 ### Prague localization (system-owned, Babel-aligned)
 
-Use Prague base content + Tokyo overlays for **Clickeen-owned website copy** (Prague pages + chrome). This mirrors instance l10n semantics with deterministic overlay keys and no manifest.
+Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website copy** (Prague pages). Chrome UI strings remain in `prague/content/base/v1/chrome.json`. This mirrors instance l10n semantics with deterministic overlay keys and no manifest.
 
 **Filesystem layout**
-- Base content: `prague/content/base/v1/**`
+- Base copy: `tokyo/widgets/*/pages/*.json`
+- Chrome base: `prague/content/base/v1/chrome.json`
 - Allowlists: `prague/content/allowlists/v1/**`
 - Overlays: `tokyo/l10n/prague/{pageId}/{layer}/{layerKey}/{baseFingerprint}.ops.json` (locale layer only in Phase 1)
 
@@ -102,7 +103,7 @@ Use Prague base content + Tokyo overlays for **Clickeen-owned website copy** (Pr
 - Provider: OpenAI for Prague strings; instance l10n agents use DeepSeek.
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
 - `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths (wired into Prague build/dev-up).
-- Prague loads base content and applies overlays at runtime via Tokyo fetch.
+- Prague loads page JSON base copy and applies overlays at runtime via Tokyo fetch.
 
 **Strict rules**
 - Overlays are set-only ops and must include `baseFingerprint`.
@@ -211,11 +212,11 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 ### 0) Prague localization (system-owned)
 
-1. Author base content under `prague/content/base/v1/**`.
+1. Author base copy in `tokyo/widgets/*/pages/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
 3. Generate overlays via `pnpm prague:l10n:translate` (requires San Francisco local).
 4. Verify overlays via `pnpm prague:l10n:verify`.
-5. Prague reads base content + Tokyo overlays (`tokyo/l10n/prague/**`), no Supabase publish.
+5. Prague reads page JSON base copy + Tokyo overlays (`tokyo/l10n/prague/**`), no Supabase publish.
 
 ### 1) Enforce locale-free curated instances in Michael
 

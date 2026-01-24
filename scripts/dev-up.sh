@@ -35,6 +35,7 @@ PARIS_INSPECTOR_PORT=9232
 SANFRANCISCO_INSPECTOR_PORT=9233
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
+DEV_UP_STATUS_INTERVAL="${DEV_UP_STATUS_INTERVAL:-15}"
 
 wait_for_url() {
   local url="$1"
@@ -50,6 +51,35 @@ wait_for_url() {
 
   echo "[dev-up] Timeout waiting for $label @ $url"
   return 1
+}
+
+run_with_status() {
+  local label="$1"
+  shift
+  local start_ts
+  start_ts=$(date +%s)
+  echo "[dev-up] ${label}"
+  (
+    while true; do
+      sleep "$DEV_UP_STATUS_INTERVAL"
+      now=$(date +%s)
+      elapsed=$((now - start_ts))
+      echo "[dev-up] ${label}... (${elapsed}s elapsed)"
+    done
+  ) &
+  local status_pid=$!
+  set +e
+  "$@"
+  local exit_code=$?
+  set -e
+  kill "$status_pid" >/dev/null 2>&1 || true
+  wait "$status_pid" >/dev/null 2>&1 || true
+  if [ "$exit_code" -ne 0 ]; then
+    return "$exit_code"
+  fi
+  local end_ts
+  end_ts=$(date +%s)
+  echo "[dev-up] ${label} done ($((end_ts - start_ts))s)"
 }
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
@@ -144,7 +174,11 @@ else
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
   echo "[dev-up] Verifying Prague l10n overlays (local, no Supabase writes)"
-  node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"
+  if ! node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"; then
+    echo "[dev-up] Prague l10n not translated; generating overlays"
+    run_with_status "Prague l10n translate (may take a while)" node "$ROOT_DIR/scripts/prague-l10n/translate.mjs"
+    node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"
+  fi
 fi
 
 echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"

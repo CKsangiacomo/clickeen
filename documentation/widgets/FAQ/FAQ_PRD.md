@@ -55,7 +55,7 @@ Source of truth for editor state is `tokyo/widgets/faq/spec.json` → `defaults`
   - ordered list of `faqs[]` (question/answer items)
 - Each FAQ item has:
   - `question` (supports a small allowed set of inline tags)
-  - `answer` (plain text with URL auto-linking + optional image/video embedding)
+  - `answer` (supports the same limited inline tags; URLs auto-link + optional image/video embedding)
 
 ### Layouts
 State: `layout.type`
@@ -88,6 +88,7 @@ Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `layout.*` — layout type, responsive columns, gap
 - `appearance.*` — item background + question/answer colors + accordion icon choice
 - `behavior.*` — accordion toggles + media toggles + backlink
+- `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
 - `context.*` — Copilot context (editor-only; runtime may ignore)
 - `typography.*` — global family + per-role selections (compiler-injected panel)
 - `stage.*` + `pod.*` — stage/pod layout and appearance
@@ -97,10 +98,10 @@ Panels defined in `tokyo/widgets/faq/spec.json`:
 - `content` — section manager + Q/A editing + show title controls
 - `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
 - `appearance` — widget appearance + stage/pod appearance
-- `settings` — website URL (AI) + media toggles + backlink
+- `settings` — AI context (website URL) + SEO/GEO toggles + media toggles + backlink
 
-## 5.1) AI behavior (Copilot, uses `websiteUrl`)
-If `websiteUrl` is present and policy allows it, Copilot may:
+## 5.1) AI behavior (Copilot, uses `context.websiteUrl`)
+If `context.websiteUrl` is present and policy allows it, Copilot may:
 - Rewrite or propose FAQ content (sections/questions/answers) based on the website URL.
 - Preserve the widget’s deterministic render: this is content generation only; runtime does not “fetch the website”.
 
@@ -110,6 +111,6 @@ Compiler-injected (because defaults include `typography.roles`):
 ## 6) Runtime requirements
 Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:
 - Render from state deterministically (no default merges; missing required state is an editor bug)
-- Sanitize any inline HTML allowed in questions
+- Sanitize any inline HTML allowed in questions/answers
 - Convert URLs in answers to links and optionally embed images/videos
 - Use Dieter tokens + Dieter icon system for visuals

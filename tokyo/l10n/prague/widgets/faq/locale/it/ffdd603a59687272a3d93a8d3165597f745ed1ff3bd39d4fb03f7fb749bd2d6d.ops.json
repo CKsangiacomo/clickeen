@@ -1,16 +1,16 @@
 {
   "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
-  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "baseUpdatedAt": "2026-01-24T00:19:35.054Z",
   "ops": [
     {
       "op": "set",
-      "path": "blocks.cta.copy.headline",
-      "value": "Connettiti con ogni cliente, ovunque"
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
     },
     {
       "op": "set",
-      "path": "blocks.cta.copy.subheadline",
-      "value": "FAQ basate sull’AI che parlano la loro lingua e comprendono le loro esigenze."
+      "path": "blocks.page-meta.copy.description",
+      "value": "Crea un widget FAQ veloce e bello. Personalizza, pubblica e localizza in pochi minuti."
     },
     {
       "op": "set",
@@ -20,7 +20,17 @@
     {
       "op": "set",
       "path": "blocks.hero.copy.subheadline",
-      "value": "Design curato, aggiornamenti senza sforzo e fondamenta SEO--pronto per qualsiasi lingua, potenziato dall'AI."
+      "value": "Design curato, aggiornamenti senza sforzo e basi SEO—pronto per qualsiasi lingua, alimentato dall’AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Aiuta i visitatori a trovare rapidamente le risposte."
     },
     {
       "op": "set",
@@ -30,37 +40,87 @@
     {
       "op": "set",
       "path": "blocks.minibob.copy.subhead",
-      "value": "Progetta qui la tua FAQ perfetta. Vedi le modifiche all’istante."
+      "value": "Progetta qui la tua FAQ perfetta. Vedi subito le modifiche."
     },
     {
       "op": "set",
-      "path": "blocks.navmeta.copy.description",
-      "value": "Aiuta i visitatori a trovare rapidamente le risposte."
+      "path": "blocks.split-right.copy.headline",
+      "value": "Split creativo (destra)"
     },
     {
       "op": "set",
-      "path": "blocks.navmeta.copy.title",
-      "value": "FAQ"
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Questa è la variante con visual a destra, che utilizza la stessa istanza curata dell’hero."
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.description",
-      "value": "Crea un widget FAQ veloce e bello. Personalizza, pubblica e localizza in pochi minuti."
+      "path": "blocks.split-left.copy.headline",
+      "value": "Creatività divisa (sinistra)"
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.title",
-      "value": "Widget FAQ - Clickeen"
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Questa è la variante con visual a sinistra, che utilizza la stessa istanza curata dell'hero."
     },
     {
       "op": "set",
-      "path": "blocks.split-left-2.copy.headline",
-      "value": "Creativo diviso (sinistra)"
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Guarda le domande trovare risposta in tempo reale"
     },
     {
       "op": "set",
-      "path": "blocks.split-left-2.copy.subheadline",
-      "value": "Questa è la variante con visual a sinistra, che utilizza la stessa istanza curata dell’hero."
+      "path": "blocks.big-bang.copy.body",
+      "value": "Inserisci una FAQ dal design curato che mette in evidenza la risposta giusta nel momento del dubbio. I clienti si sbloccano all’istante, le obiezioni si dissolvono prima di trasformarsi in ticket e chiudi più vendite senza aggiungere altro supporto. Personalizza una volta, incorpora ovunque e lasciala lavorare 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Creatività divisa (impilata)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Questa è la variante impilata, che utilizza la stessa istanza curata dell’hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ che funzionano davvero (così non devi farlo tu)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "I tuoi clienti hanno domande. Rispondi una volta sola, non cento volte."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Smetti di perdere vendite per domande senza risposta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Riprenditi il tuo tempo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Chiudi più trattative mentre dormi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Ogni domanda senza risposta è un cliente che se ne va. I visitatori abbandonano quando non trovano ciò di cui hanno bisogno. Una FAQ ben progettata elimina le obiezioni prima ancora che si formino—così i clienti si convincono ad acquistare senza nemmeno contattarti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Riduci il volume del supporto del 40%+ quando i clienti trovano le risposte all’istante. Niente più ping su Slack. Niente più email con \"domanda veloce\". Niente più inferno di continui cambi di contesto. La tua FAQ fa il grosso del lavoro mentre tu ti concentri su ciò che conta davvero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "La FAQ giusta anticipa i dubbi e rimuove gli attriti alle 2 di notte quando sei offline. Le tue risposte lavorano 24 ore su 24. I clienti non ti aspettano—si sbloccano, si fidano di ciò che vedono e cliccano \"acquista\" senza interrompere la tua giornata."
     },
     {
       "op": "set",
@@ -71,6 +131,26 @@
       "op": "set",
       "path": "blocks.split-right-2.copy.subheadline",
       "value": "Questa è la variante con visual a destra, che utilizza la stessa istanza curata dell’hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Creatività split (sinistra)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Questa è la variante con elemento visivo a sinistra, che utilizza la stessa istanza curata dell’hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Connettiti con ogni cliente, ovunque"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ basate sull’IA che parlano la loro lingua e comprendono le loro esigenze."
     }
   ],
   "v": 1

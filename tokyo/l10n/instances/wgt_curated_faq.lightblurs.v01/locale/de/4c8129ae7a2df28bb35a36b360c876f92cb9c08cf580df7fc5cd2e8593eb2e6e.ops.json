@@ -1,56 +1,56 @@
 {
-  "baseFingerprint": "a4cedf816eeb36c62f27031bb40b574652f6c70f60566f1064b71f83f4ecc3fe",
-  "baseUpdatedAt": "2026-01-23T22:26:26.640191+00:00",
+  "baseFingerprint": "4c8129ae7a2df28bb35a36b360c876f92cb9c08cf580df7fc5cd2e8593eb2e6e",
+  "baseUpdatedAt": "2026-01-24T03:23:07.026086+00:00",
   "ops": [
     {
       "op": "set",
       "path": "title",
-      "value": "Domande Frequenti"
+      "value": "Häufig gestellte Fragen"
     },
     {
       "op": "set",
       "path": "sections.0.title",
-      "value": "Tutte le Domande"
+      "value": "Alle Fragen"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Cos'è Clickeen?"
+      "value": "Was ist Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Come installo un widget?"
+      "value": "Wie installiere ich ein Widget?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.question",
-      "value": "C'è un piano gratuito?"
+      "value": "Gibt es einen kostenlosen Plan?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.question",
-      "value": "Perché dovrei usare Clickeen"
+      "value": "Warum sollte ich Clickeen nutzen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen è qualcosa di bello"
+      "value": "Clickeen ist etwas sehr Hübsches"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Copia il codice di incorporamento e incollalo prima di </body> sul tuo sito."
+      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.2.answer",
-      "value": "Sì, un widget attivo con funzionalità di base."
+      "value": "Ja, ein aktives Widget mit Kernfunktionen."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.3.answer",
-      "value": "Perché Clickeen è una nuova piattaforma fantastica per rendere il web bello e facile da usare."
+      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
     }
   ],
   "v": 1

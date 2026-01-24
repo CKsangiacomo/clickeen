@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "title": "Countdown Features - Clickeen",
+        "description": "Explore the features of the Countdown widget."
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Countdown Features",
+        "subheadline": "Everything you need to create urgency and drive action."
+      }
     }
   ]
 }

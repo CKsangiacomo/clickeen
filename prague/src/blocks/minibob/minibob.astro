@@ -17,13 +17,13 @@ const headerPrimitives = assertPrimitives(
       type: 'heading',
       level: 2,
       content: heading,
-      className: 'display-2 ck-minibobStage__title',
+      className: 'display-2 ck-m0 ck-minibobStage__title',
     },
     {
       type: 'text',
       variant: 'body',
       content: subhead,
-      className: 'body-website ck-minibobStage__subhead ck-text-muted',
+      className: 'body-website ck-m0 ck-minibobStage__subhead ck-text-muted',
     },
   ],
   'minibob.header',
@@ -46,7 +46,7 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
 ---
 
 <section id="minibob" class="ck-canvas">
-  <div class="ck-minibobStage">
+  <div class="ck-minibobStage ck-stack ck-gap-tight">
     <PrimitiveRenderer primitives={headerPrimitives} />
   </div>
 
@@ -73,14 +73,7 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
     margin-inline: auto;
     padding-inline: var(--prague-gutter);
     margin-bottom: var(--space-6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
     text-align: center;
-  }
-
-  .ck-minibobStage__subhead {
-    margin: 0;
   }
 
   .ck-minibob__iframe {

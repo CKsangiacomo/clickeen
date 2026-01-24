@@ -123,7 +123,7 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
   const type = typeof block.type === 'string' ? block.type : '';
   if (!type) throw new Error(`[prague] ${pagePath}: block.type is required`);
   const contract = getBlockContract(type);
-  const allowed = new Set(['id', 'type', ...contract.meta]);
+  const allowed = new Set(['id', 'type', 'copy', ...contract.meta]);
   for (const key of Object.keys(block)) {
     if (!allowed.has(key)) {
       throw new Error(`[prague] ${pagePath}: block "${type}" contains unsupported field "${key}"`);

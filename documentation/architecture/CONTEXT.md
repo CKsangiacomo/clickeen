@@ -241,7 +241,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`p
 
 - UI strings use Tokyo-hosted `i18n` catalogs (`tokyo/i18n/**`).
 - Instance/content translation uses Tokyo-hosted layered `l10n` overlays (`tokyo/l10n/**`) applied at runtime (set-only ops). Locale layer is primary; user overrides live in layer=user and apply last.
-- Prague marketing strings use repo-local base content (`prague/content/base/**`) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest).
+- Prague marketing copy lives in `tokyo/widgets/*/pages/*.json` (single source) with layered ops overlays stored in Tokyo (`tokyo/l10n/prague/**`) and applied at runtime (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 - Canonical overlay truth for instances lives in Supabase (`widget_instance_overlays`). Manual overrides live in layer=user (stored in `user_ops`) and are merged at publish time.
 
 Canonical reference:

@@ -10,7 +10,7 @@ Last updated: 2026-01-10
 
 Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. Widget pages render server-side to apply runtime overlays (geo/industry/experiment); other routes remain pre-rendered.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` and localized via repo-owned base content + Tokyo overlays (`prague/content/base/**` + `tokyo/l10n/prague/**`).
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (`tokyo/l10n/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
@@ -19,7 +19,7 @@ At build time, Prague:
 - fails fast if required widget page JSON files are missing
 
 At request time (widget pages only), Prague:
-- loads base content + locale overlays
+- loads page JSON + locale overlays
 - applies geo/industry/experiment overlays using the Babel Protocol order
 - renders HTML with the merged copy (composition remains static)
 
@@ -31,7 +31,7 @@ Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no l
 
 ### 1.1 Widget directory
 
-- `/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from compiled strings)
+- `/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from overlays)
 
 There is currently no dedicated `/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
 
@@ -68,9 +68,9 @@ The widget overview page uses `blocks[]` to render a deterministic layout. Examp
 {
   "v": 1,
   "blocks": [
-    { "id": "page-meta", "type": "page-meta" },
-    { "id": "hero", "type": "hero", "visual": true },
-    { "id": "minibob", "type": "minibob" }
+    { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true },
+    { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }
 ```
@@ -80,15 +80,13 @@ Required non-visual blocks:
 - `page-meta` (all widget pages, used for `<head>` title/description)
 
 Notes:
-- Page JSON is **layout + meta only**; copy is loaded from `prague/content/base/**` + Tokyo overlays and **overwrites** any inline `copy` in the JSON.
+- Page JSON is the **single source of truth** for layout + base copy; overlays overwrite `blocks[].copy` at runtime.
 - Visual embeds are explicit: use `curatedRef.publicId` on blocks that should embed a curated instance.
 
-Localization is applied via base content + ops overlays:
-- base content (overview): `prague/content/base/v1/widgets/{widget}.json`
-- base content (subpages): `prague/content/base/v1/widgets/{widget}/{page}.json`
+Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
 - overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
-- Prague merges localized base content into `blocks[].copy` at load time
+- Prague merges localized overlays into `blocks[].copy` at load time
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

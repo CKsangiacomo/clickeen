@@ -65,6 +65,9 @@ Behavior:
 - `behavior.displayVideos` (boolean)
 - `behavior.showBacklink` (boolean; controls global branding badge)
 
+Context:
+- `context.websiteUrl` (string; AI context only, runtime ignores)
+
 Stage/Pod (layout spacing lives here; no widget-level padding):
 - `stage.background` (fill object), `stage.alignment`, `stage.padding*`
 - `pod.background` (fill object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`

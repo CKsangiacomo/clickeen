@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "title": "Countdown Templates - Clickeen",
+        "description": "Browse templates for the Countdown widget."
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Countdown Templates",
+        "subheadline": "Ready-made layouts for common countdown use cases."
+      }
     }
   ]
 }

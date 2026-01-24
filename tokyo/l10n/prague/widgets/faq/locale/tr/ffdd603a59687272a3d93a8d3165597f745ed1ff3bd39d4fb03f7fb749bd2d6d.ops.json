@@ -1,41 +1,26 @@
 {
   "baseFingerprint": "ffdd603a59687272a3d93a8d3165597f745ed1ff3bd39d4fb03f7fb749bd2d6d",
-  "baseUpdatedAt": "2026-01-21T02:59:11.492Z",
+  "baseUpdatedAt": "2026-01-24T00:19:35.054Z",
   "ops": [
     {
       "op": "set",
-      "path": "blocks.cta.copy.headline",
-      "value": "Her müşteriyle, her yerde bağlantı kurun"
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS Widget’ı - Clickeen"
     },
     {
       "op": "set",
-      "path": "blocks.cta.copy.subheadline",
-      "value": "Onların dilini konuşan ve ihtiyaçlarını anlayan yapay zekâ destekli SSS."
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hızlı ve şık bir SSS widget’ı oluşturun. Dakikalar içinde özelleştirin, yayınlayın ve yerelleştirin."
     },
     {
       "op": "set",
       "path": "blocks.hero.copy.headline",
-      "value": "SSS Widget’ı. Şık yanıtlar. Hız için tasarlandı."
+      "value": "SSS Widget’ı. Şık yanıtlar. Hız için üretildi."
     },
     {
       "op": "set",
       "path": "blocks.hero.copy.subheadline",
-      "value": "Zarif tasarım, zahmetsiz güncellemeler ve SEO temelleri—her dile hazır, yapay zekâ destekli."
-    },
-    {
-      "op": "set",
-      "path": "blocks.minibob.copy.heading",
-      "value": "Kendi tarzınıza göre yapın"
-    },
-    {
-      "op": "set",
-      "path": "blocks.minibob.copy.subhead",
-      "value": "Mükemmel SSS’nizi burada tasarlayın. Değişiklikleri anında görün."
-    },
-    {
-      "op": "set",
-      "path": "blocks.navmeta.copy.description",
-      "value": "Ziyaretçilerin yanıtları hızlıca bulmasına yardımcı olun."
+      "value": "Özenli tasarım, zahmetsiz güncellemeler ve SEO temeli--her dil için hazır, yapay zekâ ile desteklenir."
     },
     {
       "op": "set",
@@ -44,13 +29,108 @@
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.description",
-      "value": "Hızlı, güzel bir SSS widget’ı oluşturun. Dakikalar içinde özelleştirin, yayınlayın ve yerelleştirin."
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ziyaretçilerin hızlıca yanıt bulmasına yardımcı olun."
     },
     {
       "op": "set",
-      "path": "blocks.page-meta.copy.title",
-      "value": "SSS Widget - Clickeen"
+      "path": "blocks.minibob.copy.heading",
+      "value": "Kendine göre yap"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Mükemmel SSS’nizi burada tasarlayın. Değişiklikleri anında görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Bölünmüş yaratıcı (sağ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Bu, kahraman bölümüyle aynı seçilmiş örneği kullanan sağ görsel varyantıdır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Split yaratıcı (sol)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sol görselli varyanttır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Soruların gerçek zamanlı olarak kendiliğinden yanıtlandığını izleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tereddüt anında doğru yanıtı öne çıkaran, şık tasarımlı bir SSS ekleyin. Müşteriler anında tıkanıklığı aşar, itirazlar destek talebine dönüşmeden erir ve daha fazla destek eklemeden daha çok satış kapatırsınız. Bir kez özelleştirin, her yere gömün ve 7/24 çalışmasına izin verin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Yaratıcı bölünmüş (üst üste) "
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Bu, hero ile aynı küratörlü örneği kullanan üst üste yerleştirilmiş varyanttır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Gerçekten işe yarayan SSS'ler (siz uğraşmak zorunda kalmayın diye)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Müşterilerinizin soruları var. Onları yüz kez değil, bir kez yanıtlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Yanıtsız sorular yüzünden satış kaybetmeyi bırakın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Zamanınızı geri kazanın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Siz uyurken daha fazla satış kapatın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Yanıtsız kalan her soru, bir müşterinin uzaklaşması demektir. Ziyaretçiler ihtiyaç duyduklarını bulamadıklarında siteyi terk eder. İyi tasarlanmış bir SSS, itirazlar daha oluşmadan onları ortadan kaldırır—böylece müşteriler size hiç ulaşmadan satın almaya kendilerini ikna eder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Müşteriler yanıtları anında bulduğunda destek hacmini %40+ azaltın. Artık Slack bildirimleri yok. Artık \"küçük bir soru\" e-postaları yok. Artık bağlam değiştirme cehennemi yok. Siz gerçekten önemli işe odaklanırken ağır işi SSS'niz yapar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Doğru SSS, çevrimdışı olduğunuz saat 02:00'de bile şüpheyi öngörür ve sürtünmeyi ortadan kaldırır. Yanıtlarınız 7/24 çalışır. Müşteriler sizi beklemez—önleri açılır, gördüklerine güvenir ve gününüzü bölmeden \"satın al\"a basar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Yaratıcı bölünmüş (sağ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sağ görsel varyantıdır."
     },
     {
       "op": "set",
@@ -60,17 +140,17 @@
     {
       "op": "set",
       "path": "blocks.split-left-2.copy.subheadline",
-      "value": "Bu, kahraman bölümüyle aynı özenle seçilmiş örneği kullanan sol görsel varyantıdır."
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sol görsel varyantıdır."
     },
     {
       "op": "set",
-      "path": "blocks.split-right-2.copy.headline",
-      "value": "Bölünmüş yaratıcı (sağ)"
+      "path": "blocks.cta.copy.headline",
+      "value": "Her müşteriyle her yerde bağlantı kurun"
     },
     {
       "op": "set",
-      "path": "blocks.split-right-2.copy.subheadline",
-      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sağ görsel varyanttır."
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Onların dilinde konuşan ve ihtiyaçlarını anlayan yapay zekâ destekli SSS."
     }
   ],
   "v": 1

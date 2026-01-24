@@ -8,7 +8,7 @@
 - Upload APIs, signed URLs
 - Serves widget definitions/assets (`tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`)
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
-- Prague website base content is repo-local (`prague/content/base/**`); localized overlays are served by Tokyo under `tokyo/l10n/prague/**`
+- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are served by Tokyo under `tokyo/l10n/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
 
 ## Dependencies
 - Used by: Venice, Bob, Prague

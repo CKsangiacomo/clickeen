@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "See common logo showcase placements and use cases.",
+        "title": "Logo Showcase Examples - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "Logo Showcase Examples",
+        "subheadline": "See common placements and use cases."
+      }
     }
   ]
 }

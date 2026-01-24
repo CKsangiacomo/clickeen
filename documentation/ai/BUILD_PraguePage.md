@@ -27,7 +27,6 @@ Only read these:
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
 - `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-- `prague/content/base/v1/**`
 - `prague/content/allowlists/v1/**`
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
@@ -38,8 +37,6 @@ Do **not** repo-grep or read other folders unless explicitly instructed.
 
 Default scope:
 - `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
-- `prague/content/base/v1/widgets/{widget}.json` (overview)
-- `prague/content/base/v1/widgets/{widget}/{page}.json` (subpages)
 
 Only if the PRD explicitly requires new string keys:
 - `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
@@ -73,14 +70,14 @@ If a required block is missing or the block type does not exist, stop and ask.
 
 ---
 
-### Step 2 — Update page JSON (layout only)
+### Step 2 — Update page JSON (layout + base copy)
 
 File:
 - `tokyo/widgets/{widget}/pages/{page}.json`
 
 Rules:
-- Layout only: `blocks[]` contains `id`, `type`, and allowed meta fields (e.g. `visual`).
-- **No copy** in page JSON. Copy lives in `prague/content/base` and localized overlays **overwrite** any inline `copy`.
+- Layout + copy: `blocks[]` contains `id`, `type`, `copy`, and allowed meta fields (e.g. `visual`).
+- Page JSON is the **single source of truth** for base copy; overlays overwrite `blocks[].copy` at runtime.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
 - `visual` is only allowed for block types that support it (see registry). For embeds, use `curatedRef.publicId`.
@@ -90,45 +87,15 @@ Example shape:
 {
   "v": 1,
   "blocks": [
-    { "id": "page-meta", "type": "page-meta" },
-    { "id": "navmeta", "type": "navmeta" },
-    { "id": "hero", "type": "hero", "visual": true, "curatedRef": { "publicId": "wgt_curated_faq.lightblurs.v01" } },
-    { "id": "minibob", "type": "minibob" }
+    { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
+    { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "curatedRef": { "publicId": "wgt_curated_faq.lightblurs.v01" } },
+    { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }
 ```
 
 ---
-
-### Step 3 — Add base copy (per page)
-
-Overview base:
-- `prague/content/base/v1/widgets/{widget}.json`
-
-Subpage base:
-- `prague/content/base/v1/widgets/{widget}/{page}.json`
-
-File shape (required):
-```json
-{
-  "v": 1,
-  "pageId": "widgets/{widget}",
-  "blocks": {
-    "hero": {
-      "copy": {
-        "headline": "...",
-        "subheadline": "..."
-      }
-    }
-  }
-}
-```
-
-Rules:
-- `pageId` must match the file path (e.g. `widgets/faq/templates`).
-- Each `blocks.{id}` must match a block `id` in page JSON.
-- `copy` must contain all required keys for the block type (see `blockRegistry`).
-- Use only ASCII unless the PRD provides non-ASCII.
 
 Required keys (current registry):
 - `big-bang`: `headline`, `body`
@@ -142,7 +109,7 @@ Required keys (current registry):
 
 ---
 
-### Step 4 — Update allowlists only when required
+### Step 3 — Update allowlists only when required
 
 If you add **new string keys** for an existing block type:
 - Update `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
@@ -151,7 +118,7 @@ If you need a **new block type**, stop and ask (requires a PRD and registry upda
 
 ---
 
-### Step 5 — Translation + verify (only when asked)
+### Step 4 — Translation + verify (only when asked)
 
 Do not call providers directly. Translation is system-owned:
 - `pnpm prague:l10n:translate`
@@ -166,8 +133,8 @@ These are run **only** with human approval.
 Before you finish:
 - Every page has `page-meta` (and overview has `navmeta`).
 - All block IDs are unique and stable.
-- Every page has a matching base copy file and includes all block IDs.
-- Base strings include required keys for the block type.
+- Every page JSON includes base copy for all block IDs.
+- Base copy includes required keys for the block type.
 - No compiled/overlay files were edited.
 
 If any requirement is unmet, stop and ask.

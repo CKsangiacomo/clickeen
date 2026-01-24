@@ -3,11 +3,19 @@
   "blocks": [
     {
       "id": "page-meta",
-      "type": "page-meta"
+      "type": "page-meta",
+      "copy": {
+        "description": "See real-world FAQ widget examples and best practices.",
+        "title": "FAQ Examples - Clickeen"
+      }
     },
     {
       "id": "hero",
-      "type": "hero"
+      "type": "hero",
+      "copy": {
+        "headline": "FAQ Examples",
+        "subheadline": "See real-world use cases and best practices."
+      }
     }
   ]
 }

@@ -35,13 +35,13 @@ const resolvedActionGroup =
     primaryAttrs: { 'data-ck-copy': 'ctaText' },
   });
 
-const contentPrimitives = assertPrimitives(
+const headerPrimitives = assertPrimitives(
   [
     {
       type: 'heading',
       level: 1,
       content: headline,
-      className: 'display-2 ck-hero__title',
+      className: 'display-2 ck-hero__title ck-m0',
       attrs: { 'data-ck-copy': 'heroTitle' },
     },
     ...(subheadline
@@ -50,14 +50,13 @@ const contentPrimitives = assertPrimitives(
             type: 'text',
             variant: 'body',
             content: subheadline,
-            className: 'body-website ck-hero__subheadline',
+            className: 'body-website ck-hero__subheadline ck-m0',
             attrs: { 'data-ck-copy': 'heroSubtitle' },
           },
         ]
       : []),
-    ...(resolvedActionGroup ? [actionGroupToPrimitives(resolvedActionGroup)] : []),
   ],
-  'hero.content',
+  'hero.header',
 );
 ---
 
@@ -67,8 +66,17 @@ const contentPrimitives = assertPrimitives(
       <slot name="subnav" />
     </div>
     <div class="ck-split ck-split--center ck-split--hero">
-      <div class="ck-split__a ck-stack">
-        <PrimitiveRenderer primitives={contentPrimitives} />
+      <div class="ck-split__a">
+        <div class="ck-hero__content ck-stack ck-gap-loose">
+          <div class="ck-hero__copy ck-stack ck-gap-tight">
+            <PrimitiveRenderer primitives={headerPrimitives} />
+          </div>
+          {resolvedActionGroup ? (
+            <div class="ck-hero__cta">
+              <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
+            </div>
+          ) : null}
+        </div>
         {personalization ? (
           <PersonalizationPreview
             locale={personalization.locale}
@@ -107,8 +115,8 @@ const contentPrimitives = assertPrimitives(
   }
   .ck-hero__subnav:empty { display: none; }
 
-  .ck-hero__title { margin: 0; }
-  .ck-hero__subheadline { margin: 0; }
+  .ck-hero__title { margin: 0 !important; }
+  .ck-hero__subheadline { margin: 0 !important; }
 
   .ck-heroPreview {
     width: 100%;

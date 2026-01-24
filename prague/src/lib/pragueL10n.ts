@@ -470,28 +470,25 @@ export type PragueOverlayContext = {
   layerContext?: LayerContext;
 };
 
-export async function loadPraguePageContent(args: { locale: string; pageId: string } & PragueOverlayContext) {
+export async function loadPraguePageContent(
+  args: { locale: string; pageId: string; base: Record<string, unknown> } & PragueOverlayContext,
+) {
   const resolved = await resolveLocale(args.locale);
-  const loader = BASE_BY_PAGE_ID.get(args.pageId);
-  if (!loader) {
-    throw new Error(`[prague] Missing Prague base file: prague/content/base/v1/${args.pageId}.json`);
+  if (!isPlainObject(args.base) || (args.base as any).v !== 1) {
+    throw new Error(`[prague] Invalid Prague base for ${args.pageId}`);
   }
-  const json = await loader();
-  if (!isPlainObject(json) || (json as any).v !== 1) {
-    throw new Error(`[prague] Invalid Prague base file: prague/content/base/v1/${args.pageId}.json`);
-  }
-  const pageId = typeof (json as any).pageId === 'string' ? String((json as any).pageId) : '';
+  const pageId = typeof (args.base as any).pageId === 'string' ? String((args.base as any).pageId) : '';
   if (pageId && pageId !== args.pageId) {
-    throw new Error(`[prague] Prague base pageId mismatch: prague/content/base/v1/${args.pageId}.json`);
+    throw new Error(`[prague] Prague base pageId mismatch for ${args.pageId}`);
   }
-  if (!isPlainObject((json as any).blocks)) {
-    throw new Error(`[prague] Prague base missing blocks: prague/content/base/v1/${args.pageId}.json`);
+  if (!isPlainObject((args.base as any).blocks)) {
+    throw new Error(`[prague] Prague base missing blocks for ${args.pageId}`);
   }
 
   return applyPragueLayeredOverlays({
     pageId: args.pageId,
     locale: resolved,
-    base: json as Record<string, unknown>,
+    base: args.base,
     country: args.country,
     layerContext: args.layerContext,
   });
