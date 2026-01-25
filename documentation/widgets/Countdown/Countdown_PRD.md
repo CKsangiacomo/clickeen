@@ -178,5 +178,5 @@ Defaults must include:
 
 ## Links
 - `documentation/architecture/CONTEXT.md`
-- `documentation/widgets/WidgetBuildProcess.md`
+- `documentation/widgets/WidgetComplianceSteps.md`
 - `documentation/widgets/Countdown/Countdown_competitoranalysis.md`

@@ -3,7 +3,6 @@
 .diet-choice-tiles {
   display: grid;
   inline-size: 100%;
-  margin-top: var(--space-2);
 }
 
 .diet-choice-tiles__row {
@@ -13,7 +12,8 @@
   inline-size: 100%;
 }
 
-.diet-choice-tiles__option.diet-btn-ictxt {
+.diet-choice-tiles__option.diet-btn-ictxt,
+.diet-choice-tiles__option.diet-btn-ictxt[data-variant] {
   --btn-bg: var(--color-system-gray-step5);
   --btn-color: var(--color-system-black);
   --btn-border-width: 1px;
@@ -52,7 +52,8 @@
   white-space: nowrap;
 }
 
-.diet-choice-tiles__option.is-selected.diet-btn-ictxt {
+.diet-choice-tiles__option.is-selected.diet-btn-ictxt,
+.diet-choice-tiles__option.is-selected.diet-btn-ictxt[data-variant] {
   --btn-bg: var(--color-system-white);
   --btn-border-color: var(--color-system-blue);
   --btn-hover-bg: color-mix(in oklab, var(--color-system-white), var(--color-system-blue) 6%);

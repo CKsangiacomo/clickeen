@@ -44,7 +44,7 @@ export function buildTypographyPanel(args: {
 
   const roleEntries: Array<{ key: string; label: string }> = [
     { key: 'title', label: 'Title' },
-    { key: 'section', label: 'Section title' },
+    { key: 'section', label: 'Section' },
     { key: 'question', label: 'Questions' },
     { key: 'answer', label: 'Answers' },
     { key: 'heading', label: 'Heading' },
@@ -56,26 +56,27 @@ export function buildTypographyPanel(args: {
   if (roleEntries.length === 0) return [];
 
   const lines: string[] = ["<bob-panel id='typography'>"];
+  const groupAttr = "group-label=''";
   roleEntries.forEach((role) => {
-    lines.push("  <tooldrawer-cluster>");
-    lines.push(`    <tooldrawer-eyebrow text='${role.label}' />`);
+    const roleLabel = role.label;
+    lines.push(`  <tooldrawer-cluster label='${roleLabel}'>`);
     lines.push(
-      `    <tooldrawer-field type='dropdown-actions' size='md' path='typography.roles.${role.key}.family' label='Font family' placeholder='Choose font' value='{{typography.roles.${role.key}.family}}' options='${fontsOptions}' />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.family' label='Font family' placeholder='Choose font' value='{{typography.roles.${role.key}.family}}' options='${fontsOptions}' />`,
     );
     lines.push(
-      `    <tooldrawer-field type='dropdown-actions' size='md' path='typography.roles.${role.key}.sizePreset' label='Size' placeholder='Choose size' value='{{typography.roles.${role.key}.sizePreset}}' options='${sizeOptions}' />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.sizePreset' label='Size' placeholder='Choose size' value='{{typography.roles.${role.key}.sizePreset}}' options='${sizeOptions}' />`,
     );
     lines.push(
-      `    <tooldrawer-field type='textfield' size='md' path='typography.roles.${role.key}.sizeCustom' label='Custom size' placeholder='e.g. 24px or var(--fs-24)' value='{{typography.roles.${role.key}.sizeCustom}}' show-if=\"typography.roles.${role.key}.sizePreset == 'custom'\" />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='textfield' size='md' path='typography.roles.${role.key}.sizeCustom' label='Custom size' placeholder='e.g. 24px or var(--fs-24)' value='{{typography.roles.${role.key}.sizeCustom}}' show-if=\"typography.roles.${role.key}.sizePreset == 'custom'\" />`,
     );
     lines.push(
-      `    <tooldrawer-field type='dropdown-actions' size='md' path='typography.roles.${role.key}.fontStyle' label='Style' placeholder='Choose style' value='{{typography.roles.${role.key}.fontStyle}}' options='${styleOptions}' />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.fontStyle' label='Style' placeholder='Choose style' value='{{typography.roles.${role.key}.fontStyle}}' options='${styleOptions}' />`,
     );
     lines.push(
-      `    <tooldrawer-field type='dropdown-actions' size='md' path='typography.roles.${role.key}.weight' label='Weight' placeholder='Choose weight' value='{{typography.roles.${role.key}.weight}}' options='${weightOptions}' />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.weight' label='Weight' placeholder='Choose weight' value='{{typography.roles.${role.key}.weight}}' options='${weightOptions}' />`,
     );
     lines.push(
-      `    <tooldrawer-field type='dropdown-fill' size='md' allow-image='false' path='typography.roles.${role.key}.color' label='Color' value='{{typography.roles.${role.key}.color}}' />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-fill' size='md' allow-image='false' path='typography.roles.${role.key}.color' label='Color' value='{{typography.roles.${role.key}.color}}' />`,
     );
     lines.push('  </tooldrawer-cluster>');
   });

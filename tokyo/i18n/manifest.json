@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "gitSha": "b9985fd432928faf344b0d8e34cb1505d57e40d4",
+  "gitSha": "201c8250c7a1074740e4364a7785e03a85301f9a",
   "locales": {
     "en": {
       "dir": "ltr"
@@ -8,7 +8,7 @@
   },
   "bundles": {
     "en": {
-      "coreui": "coreui.571a8867.json",
+      "coreui": "coreui.63bdb00f.json",
       "countdown": "countdown.c6ada7b9.json",
       "faq": "faq.f4d8343f.json",
       "logoshowcase": "logoshowcase.12827fb8.json",

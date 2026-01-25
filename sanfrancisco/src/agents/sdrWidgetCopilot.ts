@@ -44,6 +44,9 @@ type WidgetCopilotResult = {
     promptVersion?: string;
     policyVersion?: string;
     dictionaryHash?: string;
+    language?: string;
+    languageConfidence?: number;
+    allowlistSource?: 'sdr_allowlist' | 'localization_fallback';
   };
 };
 
@@ -54,6 +57,9 @@ type CopilotSession = {
   successfulEdits: number;
   turns: Array<{ role: 'user' | 'assistant'; content: string }>;
   source?: { url: string; fetchedAtMs: number; title?: string };
+  conversationLanguage?: string;
+  languageConfidence?: number;
+  pendingConsent?: { kind: 'website'; url: string; askedAtMs: number };
   pendingPolicy?:
     | {
         kind: 'scope';
@@ -85,9 +91,384 @@ function fnv1aHashHex(input: string): string {
 
 const DICTIONARY_HASH = fnv1aHashHex(JSON.stringify(globalDictionary));
 
+type SdrAllowlistEntry = { path: string; type: 'string' | 'richtext'; role?: string };
+type SdrAllowlistFile = { v: 1; paths: SdrAllowlistEntry[] };
+
+const STOPWORD_LANGS = ['en', 'es', 'fr', 'de', 'it', 'pt', 'nl'] as const;
+const STOPWORDS: Record<(typeof STOPWORD_LANGS)[number], string[]> = {
+  en: ['the', 'and', 'is', 'are', 'for', 'with', 'your', 'you', 'we', 'our'],
+  es: ['el', 'la', 'y', 'es', 'para', 'con', 'tu', 'sus', 'nuestro', 'nosotros'],
+  fr: ['le', 'la', 'et', 'est', 'pour', 'avec', 'votre', 'vos', 'notre', 'nous'],
+  de: ['der', 'die', 'und', 'ist', 'für', 'mit', 'dein', 'ihre', 'unser', 'wir'],
+  it: ['il', 'la', 'e', 'è', 'per', 'con', 'tuo', 'vostro', 'nostro', 'noi'],
+  pt: ['o', 'a', 'e', 'é', 'para', 'com', 'seu', 'sua', 'nosso', 'nós'],
+  nl: ['de', 'het', 'en', 'is', 'voor', 'met', 'jouw', 'uw', 'ons', 'wij'],
+};
+
+const LANGUAGE_NAME_MAP: Record<string, string> = {
+  english: 'en',
+  german: 'de',
+  deutsch: 'de',
+  french: 'fr',
+  français: 'fr',
+  spanish: 'es',
+  español: 'es',
+  italian: 'it',
+  italiano: 'it',
+  portuguese: 'pt',
+  português: 'pt',
+  dutch: 'nl',
+  nederlands: 'nl',
+  russian: 'ru',
+  русский: 'ru',
+  arabic: 'ar',
+  العربية: 'ar',
+  japanese: 'ja',
+  日本語: 'ja',
+  korean: 'ko',
+  한국어: 'ko',
+  chinese: 'zh',
+  中文: 'zh',
+  hindi: 'hi',
+  हिन्दी: 'hi',
+};
+
+const CONSENT_LEXICON: Record<string, { yes: string[]; no: string[] }> = {
+  en: { yes: ['yes', 'yep', 'yeah', 'ok', 'okay', 'sure'], no: ['no', 'nope', 'nah'] },
+  es: { yes: ['sí', 'si', 'claro', 'vale'], no: ['no'] },
+  fr: { yes: ['oui', 'daccord', "d'accord"], no: ['non'] },
+  de: { yes: ['ja', 'klar'], no: ['nein'] },
+  it: { yes: ['sì', 'si', 'va bene'], no: ['no'] },
+  pt: { yes: ['sim', 'claro'], no: ['não', 'nao'] },
+  nl: { yes: ['ja', 'oké', 'oke'], no: ['nee'] },
+  ru: { yes: ['да', 'ок', 'хорошо'], no: ['нет'] },
+  ar: { yes: ['نعم', 'موافق'], no: ['لا'] },
+  hi: { yes: ['हाँ', 'ठीक'], no: ['नहीं'] },
+  ja: { yes: ['はい', 'お願いします', 'ok', 'okay'], no: ['いいえ', 'だめ'] },
+  ko: { yes: ['네', '예', '좋아요'], no: ['아니요'] },
+  zh: { yes: ['是', '好', '可以'], no: ['不', '不要'] },
+};
+
+const UI_STRINGS: Record<
+  string,
+  Record<
+    string,
+    string
+  >
+> = {
+  en: {
+    askWebsiteUrl: 'Share your website URL so I can personalize the widget.',
+    askConsentWebsiteRead: 'Can I read one public page from that URL to personalize your widget? (Yes/No)',
+    askBusinessBasics: 'Tell me your business and audience (1 sentence each).',
+    askSingleUrl: 'I found multiple URLs. Which single page should I use?',
+    blockedUrl: 'I can only read public https pages. That URL is not allowed.',
+    fetchFailed: 'I tried to read that page but couldn’t. Please share a working URL or paste the text.',
+    cloudflareError:
+      'That looks like a Cloudflare error page. Please share a working URL or paste the page text.',
+    missingAllowlist: 'This widget is not SDR-enabled yet. Try another widget or continue manually.',
+    invalidOps:
+      'I tried to apply an edit, but it didn’t match the editable fields. Please ask for a specific copy change.',
+    yesNo: 'Yes or No?',
+  },
+  es: {
+    askWebsiteUrl: 'Comparte tu URL para personalizar el widget.',
+    askConsentWebsiteRead: '¿Puedo leer una página pública para personalizar tu widget? (Sí/No)',
+    askBusinessBasics: 'Cuéntame tu negocio y tu audiencia (1 frase cada uno).',
+    askSingleUrl: 'Encontré varias URLs. ¿Cuál página debo usar?',
+    blockedUrl: 'Solo puedo leer páginas públicas https. Esa URL no está permitida.',
+    fetchFailed: 'Intenté leer esa página, pero falló. Comparte una URL válida o pega el texto.',
+    cloudflareError:
+      'Eso parece una página de error de Cloudflare. Comparte una URL válida o pega el texto.',
+    missingAllowlist: 'Este widget aún no está habilitado para SDR.',
+    invalidOps:
+      'Intenté aplicar un cambio, pero no coincide con los campos editables. Pide un cambio de texto específico.',
+    yesNo: '¿Sí o No?',
+  },
+  ja: {
+    askWebsiteUrl: 'サイトURLを共有してください。内容を合わせて調整します。',
+    askConsentWebsiteRead: 'そのURLの公開ページを1ページ読んでもよろしいですか？（はい/いいえ）',
+    askBusinessBasics: '事業内容と対象顧客を1文ずつ教えてください。',
+    askSingleUrl: '複数のURLが見つかりました。どのページを使いますか？',
+    blockedUrl: '公開HTTPSページのみ読み取れます。そのURLは許可されていません。',
+    fetchFailed: '読み取りに失敗しました。別のURLか本文を貼ってください。',
+    cloudflareError: 'Cloudflareのエラーページのようです。別のURLか本文を貼ってください。',
+    missingAllowlist: 'このウィジェットはまだSDRに対応していません。',
+    invalidOps: '編集対象に一致しませんでした。具体的なコピー変更を指定してください。',
+    yesNo: 'はい / いいえ',
+  },
+  ar: {
+    askWebsiteUrl: 'شارك رابط موقعك لأقوم بتخصيص الودجت.',
+    askConsentWebsiteRead: 'هل تسمح لي بقراءة صفحة عامة واحدة للتخصيص؟ (نعم/لا)',
+    askBusinessBasics: 'عرّفني على عملك وجمهورك بجملة لكلٍ منهما.',
+    askSingleUrl: 'وجدت عدة روابط. أي صفحة يجب أن أستخدم؟',
+    blockedUrl: 'يمكنني قراءة صفحات https العامة فقط. هذا الرابط غير مسموح.',
+    fetchFailed: 'لم أتمكن من قراءة الصفحة. أرسل رابطًا صالحًا أو الصق النص.',
+    cloudflareError: 'يبدو أنها صفحة خطأ من Cloudflare. أرسل رابطًا صالحًا أو الصق النص.',
+    missingAllowlist: 'هذا الودجت غير مفعّل لـ SDR بعد.',
+    invalidOps: 'حاولت التعديل لكن الحقول غير قابلة للتطابق. اطلب تغيير نص محدد.',
+    yesNo: 'نعم أم لا؟',
+  },
+  ru: {
+    askWebsiteUrl: 'Пришлите URL сайта, чтобы я персонализировал виджет.',
+    askConsentWebsiteRead: 'Можно прочитать одну публичную страницу для персонализации? (Да/Нет)',
+    askBusinessBasics: 'Опишите бизнес и аудиторию (по одному предложению).',
+    askSingleUrl: 'Я нашёл несколько URL. Какую страницу использовать?',
+    blockedUrl: 'Я могу читать только публичные https-страницы. Этот URL не разрешён.',
+    fetchFailed: 'Не удалось прочитать страницу. Пришлите рабочий URL или вставьте текст.',
+    cloudflareError: 'Похоже на страницу ошибки Cloudflare. Пришлите рабочий URL или вставьте текст.',
+    missingAllowlist: 'Этот виджет пока не поддерживает SDR.',
+    invalidOps: 'Не удалось применить изменения. Попросите конкретное изменение текста.',
+    yesNo: 'Да или нет?',
+  },
+};
+
+function normalizeLocaleToken(raw: string): string {
+  return String(raw || '').trim().toLowerCase().replace(/_/g, '-');
+}
+
+function hasScriptRegex(input: string, re: RegExp): boolean {
+  return re.test(input);
+}
+
+function detectScriptLanguage(prompt: string): string | null {
+  if (hasScriptRegex(prompt, /[\u0600-\u06FF]/)) return 'ar';
+  if (hasScriptRegex(prompt, /[\u0400-\u04FF]/)) return 'ru';
+  if (hasScriptRegex(prompt, /[\u0590-\u05FF]/)) return 'he';
+  if (hasScriptRegex(prompt, /[\u0900-\u097F]/)) return 'hi';
+  if (hasScriptRegex(prompt, /[\uAC00-\uD7AF]/)) return 'ko';
+  if (hasScriptRegex(prompt, /[\u3040-\u30FF]/)) return 'ja';
+  if (hasScriptRegex(prompt, /[\u4E00-\u9FFF]/)) return 'zh';
+  return null;
+}
+
+function detectExplicitLanguage(prompt: string): string | null {
+  const s = (prompt || '').toLowerCase();
+  const match = s.match(/\b(reply|respond|answer)\s+in\s+([a-z\u00C0-\u017F]+)\b/);
+  if (match && match[2]) {
+    return LANGUAGE_NAME_MAP[match[2]] ?? null;
+  }
+  const override = Object.keys(LANGUAGE_NAME_MAP).find((key) => s.includes(key));
+  return override ? LANGUAGE_NAME_MAP[override] : null;
+}
+
+function scoreStopwords(prompt: string): { lang: string; score: number } | null {
+  const tokens = normalizeToken(prompt).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return null;
+  let best: { lang: string; score: number } | null = null;
+  for (const lang of STOPWORD_LANGS) {
+    const set = new Set(STOPWORDS[lang]);
+    const score = tokens.reduce((acc, t) => acc + (set.has(t) ? 1 : 0), 0);
+    if (!best || score > best.score) best = { lang, score };
+  }
+  return best;
+}
+
+function resolveConversationLanguage(session: CopilotSession, prompt: string): { language: string; confidence: number } {
+  const explicit = detectExplicitLanguage(prompt);
+  if (explicit) return { language: explicit, confidence: 0.99 };
+
+  const scriptLang = detectScriptLanguage(prompt);
+  if (scriptLang) return { language: scriptLang, confidence: 0.95 };
+
+  const scored = scoreStopwords(prompt);
+  if (scored && scored.score >= 2) {
+    return { language: scored.lang, confidence: 0.85 };
+  }
+
+  const sticky = session.conversationLanguage ? normalizeLocaleToken(session.conversationLanguage) : 'en';
+  return { language: sticky || 'en', confidence: session.languageConfidence ?? 0.5 };
+}
+
+function t(lang: string, key: keyof (typeof UI_STRINGS)['en']): string {
+  const normalized = normalizeLocaleToken(lang);
+  const table = UI_STRINGS[normalized] ?? UI_STRINGS.en;
+  return table[key] ?? UI_STRINGS.en[key];
+}
+
+function isYesNo(prompt: string, lang: string): 'yes' | 'no' | null {
+  const normalized = normalizeLocaleToken(lang);
+  const lex = CONSENT_LEXICON[normalized] ?? CONSENT_LEXICON.en;
+  const token = normalizeToken(prompt);
+  if (lex.yes.some((y) => token.includes(normalizeToken(y)))) return 'yes';
+  if (lex.no.some((n) => token.includes(normalizeToken(n)))) return 'no';
+  return null;
+}
+
+function normalizeOpPath(raw: string): string {
+  return String(raw || '')
+    .replace(/\[(\d+)\]/g, '.$1')
+    .replace(/\.+/g, '.')
+    .replace(/^\./, '')
+    .replace(/\.$/, '');
+}
+
+function splitPathSegments(pathStr: string): string[] {
+  return String(pathStr || '')
+    .split('.')
+    .map((seg) => seg.trim())
+    .filter(Boolean);
+}
+
+function isNumericSegment(seg: string): boolean {
+  return /^\d+$/.test(seg);
+}
+
+function pathMatchesAllowlist(pathStr: string, allowPath: string): boolean {
+  const pathSegs = splitPathSegments(pathStr);
+  const allowSegs = splitPathSegments(allowPath);
+  if (pathSegs.length !== allowSegs.length) return false;
+  for (let i = 0; i < allowSegs.length; i += 1) {
+    const allow = allowSegs[i];
+    const actual = pathSegs[i];
+    if (allow === '*') {
+      if (!isNumericSegment(actual)) return false;
+      continue;
+    }
+    if (allow !== actual) return false;
+  }
+  return true;
+}
+
+function collectEntriesForPath(args: {
+  value: unknown;
+  segments: string[];
+  currentPath: string;
+  out: Array<{ path: string; value: string }>;
+}) {
+  const { value, segments, currentPath, out } = args;
+  if (!segments.length) {
+    if (typeof value === 'string') {
+      out.push({ path: currentPath, value });
+    }
+    return;
+  }
+  const [head, ...tail] = segments;
+  if (!head) return;
+  if (head === '*') {
+    if (!Array.isArray(value)) return;
+    value.forEach((item, index) => {
+      collectEntriesForPath({
+        value: item,
+        segments: tail,
+        currentPath: currentPath ? `${currentPath}.${index}` : String(index),
+        out,
+      });
+    });
+    return;
+  }
+  if (Array.isArray(value) && isNumericSegment(head)) {
+    const index = Number(head);
+    collectEntriesForPath({
+      value: value[index],
+      segments: tail,
+      currentPath: currentPath ? `${currentPath}.${head}` : head,
+      out,
+    });
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  collectEntriesForPath({
+    value: (value as any)[head],
+    segments: tail,
+    currentPath: currentPath ? `${currentPath}.${head}` : head,
+    out,
+  });
+}
+
+function collectAllowlistedValues(config: Record<string, unknown>, allowlist: SdrAllowlistEntry[]) {
+  const out: Array<{ path: string; value: string; role?: string; type: SdrAllowlistEntry['type'] }> = [];
+  allowlist.forEach((entry) => {
+    const segments = splitPathSegments(entry.path);
+    if (!segments.length) return;
+    const collected: Array<{ path: string; value: string }> = [];
+    collectEntriesForPath({ value: config, segments, currentPath: '', out: collected });
+    collected.forEach((item) => out.push({ ...item, role: entry.role, type: entry.type }));
+  });
+  return out;
+}
+
+async function fetchTokyoJson(env: Env, pathname: string): Promise<{ status: number; json: unknown | null }> {
+  const base = String(env.TOKYO_BASE_URL || '').trim();
+  if (!base) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'tokyo', message: 'Missing TOKYO_BASE_URL' });
+  }
+  const url = `${base.replace(/\/+$/, '')}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) return { status: res.status, json: null };
+  const json = await res.json().catch(() => null);
+  return { status: res.status, json };
+}
+
+async function loadSdrAllowlist(env: Env, widgetType: string): Promise<{
+  entries: SdrAllowlistEntry[];
+  source: 'sdr_allowlist' | 'localization_fallback';
+} | null> {
+  const basePath = `/widgets/${encodeURIComponent(widgetType)}`;
+  const primary = await fetchTokyoJson(env, `${basePath}/sdr.allowlist.json`);
+  if (primary.status !== 404 && primary.json) {
+    const file = primary.json as SdrAllowlistFile;
+    if (file && file.v === 1 && Array.isArray(file.paths)) {
+      const entries = file.paths
+        .filter((p) => p && typeof p.path === 'string')
+        .map((p) => ({
+          path: p.path.trim(),
+          type: p.type === 'richtext' ? 'richtext' : 'string',
+          ...(p.role ? { role: p.role } : {}),
+        }))
+        .filter((p) => p.path);
+      return { entries, source: 'sdr_allowlist' };
+    }
+    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'tokyo', message: 'Invalid sdr.allowlist.json' });
+  }
+
+  const environment = String(env.ENVIRONMENT || '').trim().toLowerCase();
+  if (environment === 'production') return null;
+
+  const fallback = await fetchTokyoJson(env, `${basePath}/localization.json`);
+  if (!fallback.json) return null;
+  const file = fallback.json as { v?: number; paths?: Array<{ path?: string; type?: string }> } | null;
+  if (!file || file.v !== 1 || !Array.isArray(file.paths)) return null;
+  const entries = file.paths
+    .filter((p) => p && typeof p.path === 'string')
+    .map((p) => ({
+      path: String(p.path || '').trim(),
+      type: p?.type === 'richtext' ? 'richtext' : 'string',
+    }))
+    .filter((p) => p.path && !/branding|legal|disclaimer|powered|copyright/i.test(p.path));
+  return entries.length ? { entries, source: 'localization_fallback' } : null;
+}
+
+function validateOpsAgainstAllowlist(args: {
+  ops: WidgetOp[];
+  allowlist: SdrAllowlistEntry[];
+}): { ok: true } | { ok: false; issues: Array<{ path: string; message: string }> } {
+  const issues: Array<{ path: string; message: string }> = [];
+  for (const op of args.ops) {
+    if (op.op !== 'set') {
+      issues.push({ path: op.path, message: 'only set ops are allowed' });
+      continue;
+    }
+    const normalized = normalizeOpPath(op.path);
+    if (!normalized) {
+      issues.push({ path: op.path, message: 'invalid path' });
+      continue;
+    }
+    const allowed = args.allowlist.some((entry) => pathMatchesAllowlist(normalized, entry.path));
+    if (!allowed) {
+      issues.push({ path: normalized, message: 'path not allowlisted' });
+      continue;
+    }
+    if (typeof (op as any).value !== 'string') {
+      issues.push({ path: normalized, message: 'value must be a string' });
+    }
+  }
+  return issues.length ? { ok: false, issues } : { ok: true };
+}
+
 function baseMeta(
   intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
   outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+  extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence' | 'allowlistSource'>,
 ): NonNullable<WidgetCopilotResult['meta']> {
   return {
     intent,
@@ -95,6 +476,7 @@ function baseMeta(
     promptVersion: PROMPT_VERSION,
     policyVersion: POLICY_VERSION,
     dictionaryHash: DICTIONARY_HASH,
+    ...(extras ?? {}),
   };
 }
 
@@ -455,11 +837,6 @@ function validateOpsAgainstControls(args: { ops: WidgetOp[]; controls: ControlSu
 }
 
 function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSummary[] }): LightEditsDecision {
-  const maxOps = 6;
-  const maxUniquePathsTouched = 4;
-  const maxScopesTouched = 1;
-  const maxGroupsTouched = 1;
-
   const opsCount = args.ops.length;
   const uniquePaths = new Set(args.ops.map((o) => o.path));
   const scopes = new Set(args.ops.map((o) => inferScopeFromPath(o.path)));
@@ -470,6 +847,15 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
   }
 
   const hasSensitive = args.ops.some((o) => pathLooksSensitive(o.path));
+  const isContentOnly = scopes.size === 1 && scopes.has('content');
+
+  // Content personalization needs to update multiple copy fields at once.
+  // TEMP: 5x limits during dev; tighten before GA.
+  const devMultiplier = 5;
+  const maxOps = (isContentOnly ? 30 : 6) * devMultiplier;
+  const maxUniquePathsTouched = (isContentOnly ? 20 : 4) * devMultiplier;
+  const maxScopesTouched = 1;
+  const maxGroupsTouched = (isContentOnly ? 3 : 1) * devMultiplier;
 
   if (opsCount > maxOps) {
     return {
@@ -665,55 +1051,29 @@ async function putSession(env: Env, session: CopilotSession): Promise<void> {
   await env.SF_KV.put(key, JSON.stringify(session), { expirationTtl: 60 * 60 * 24 });
 }
 
-function systemPrompt(): string {
-  const stage = getScope(globalDictionary, 'stage');
-  const pod = getScope(globalDictionary, 'pod');
-  const content = getScope(globalDictionary, 'content');
-  const modern = globalDictionary.intents.find((i) => i.id === 'modern');
-  const classic = globalDictionary.intents.find((i) => i.id === 'classic');
-  const playful = globalDictionary.intents.find((i) => i.id === 'playful');
-
+function systemPrompt(language: string): string {
   return [
-    "You help users customize widgets in Clickeen's playground (Minibob).",
+    "You are Clickeen's Minibob SDR agent.",
     '',
-    'INPUT: user request + current widget config + available editable controls',
-    'OUTPUT: JSON with ops array + friendly message + optional conversion CTA',
+    `All user-visible strings MUST be in locale: ${language}.`,
+    'INPUT: user request + allowlisted copy fields + optional source page text.',
+    'OUTPUT: JSON with set-only ops + message + optional conversion CTA.',
     '',
-    'If SOURCE_PAGE_TEXT is present, it is extracted from exactly one public web page (no crawling). Use it only to inform content edits (e.g., FAQ questions/answers).',
+    'If SOURCE_PAGE_TEXT is present, it is extracted from exactly one public web page (no crawling). Use it only to inform copy edits.',
     '',
     'RULES:',
-    '1) Generate valid ops that target available control paths only.',
-    '2) Respect control constraints:',
-    '   - If a control kind is "enum": value MUST be one of enumValues.',
-    '   - If min/max exist: keep numeric values within range.',
-    '   - If user asks for something not possible, ask a short clarifying question instead of guessing.',
-    '3) Keep changes minimal — one thing at a time.',
-    '4) If the user asks a question or requests an explanation, return NO ops and answer briefly.',
-    '5) Message should confirm what changed (1–2 sentences).',
-    '6) If user asks for a paid feature, explain kindly and suggest signup/upgrade.',
-    '',
-    'GLOBAL VOCABULARY (applies to all widgets):',
-    `- Scopes:`,
-    `  - stage: ${stage?.description ?? 'background behind the widget'}`,
-    `  - pod: ${pod?.description ?? 'widget container'}`,
-    `  - content: ${content?.description ?? 'inside the widget'}`,
-    `- If user says "background" and both stage + pod backgrounds exist, ask which scope they mean.`,
-    `- If user says "font(s)" without specifying a target, default to changing all available typography roles (title, section titles, questions, answers).`,
-    `- If user asks to rewrite FAQ questions/answers, rewrite the existing questions/answers in currentConfig (do NOT require a URL unless user explicitly asks to base it on their website).`,
-    `- If user asks for a "modern/classic/playful font", pick from enumValues using these candidates:`,
-    `  - modern: ${(modern?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
-    `  - classic: ${(classic?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
-    `  - playful: ${(playful?.fontCandidates ?? []).slice(0, 12).join(', ')}`,
+    '1) Only output SET ops (no insert/remove/move).',
+    '2) Ops must target allowlisted copy paths only.',
+    '3) Do not change styling, structure, or layout.',
+    '4) If a request is out of scope, ask ONE short clarifying question.',
+    '5) Keep changes minimal; confirm what changed in 1–2 sentences.',
+    '6) CTA is optional; use it to drive signup/publish after a visible win.',
     '',
     'Output MUST be JSON, with this shape:',
     '{ "ops"?: WidgetOp[], "message": string, "cta"?: { "text": string, "action": "signup"|"upgrade"|"learn-more", "url"?: string } }',
     '',
-    'Examples (copy this style exactly):',
-    '{"message":"Which should I change: the stage background or the widget container background?"}',
-    '{"message":"Translated the FAQ content to French.","ops":[{"op":"set","path":"title","value":"Questions fréquentes"}]}',
-    '',
     'WidgetOp:',
-    '{ op:"set", path:string, value:any } | { op:"insert", path:string, index:number, value:any } | { op:"remove", path:string, index:number } | { op:"move", path:string, from:number, to:number }',
+    '{ op:"set", path:string, value:any }',
     '',
     'Do NOT wrap JSON in markdown fences.',
     'Do NOT include any surrounding text.',
@@ -723,15 +1083,18 @@ function systemPrompt(): string {
 export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: unknown }, env: Env): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
   const input = parseWidgetCopilotInput(params.input);
   const session = await getSession(env, input.sessionId);
+  const languageInfo = resolveConversationLanguage(session, input.prompt);
+  const conversationLanguage = languageInfo.language || 'en';
+  if (!session.conversationLanguage || (session.conversationLanguage !== conversationLanguage && languageInfo.confidence >= 0.85)) {
+    session.conversationLanguage = conversationLanguage;
+    session.languageConfidence = languageInfo.confidence;
+  }
+  session.pendingPolicy = undefined;
 
   const cfError = looksLikeCloudflareErrorPage(input.prompt);
   if (cfError) {
     session.lastActiveAtMs = Date.now();
-    const msg =
-      'That looks like a Cloudflare error page' +
-      (cfError.status ? ` (HTTP ${cfError.status})` : '') +
-      ". I can't use it to update FAQs because it doesn't contain your site's content. " +
-      'Please share a working URL (that loads the real page) or paste the page text you want me to base the FAQs on.';
+    const msg = t(conversationLanguage, 'cloudflareError') + (cfError.status ? ` (HTTP ${cfError.status})` : '');
 
     session.turns = [
       ...session.turns,
@@ -741,7 +1104,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     await putSession(env, session);
 
     return {
-      result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
       usage: { provider: 'local', model: 'cloudflare_error_detector', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
     };
   }
@@ -811,7 +1174,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     session.pendingPolicy = undefined;
   }
 
-  if (looksLikeExplainIntent(input.prompt)) {
+  if (conversationLanguage === 'en' && looksLikeExplainIntent(input.prompt)) {
     session.lastActiveAtMs = Date.now();
     const msg = explainMessage(input);
 
@@ -823,12 +1186,12 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     await putSession(env, session);
 
     return {
-      result: { message: msg, meta: baseMeta('explain', 'no_ops') },
+      result: { message: msg, meta: baseMeta('explain', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
       usage: { provider: 'local', model: 'router_v1', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
     };
   }
 
-  const clarification = maybeClarify(globalDictionary, input);
+  const clarification = conversationLanguage === 'en' ? maybeClarify(globalDictionary, input) : null;
   if (clarification) {
     session.lastActiveAtMs = Date.now();
     session.turns = [
@@ -839,7 +1202,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     await putSession(env, session);
 
     return {
-      result: { message: clarification, meta: baseMeta('clarify', 'no_ops') },
+      result: { message: clarification, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
       usage: { provider: 'local', model: 'global_dictionary', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
     };
   }
@@ -850,14 +1213,50 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   let sourcePage:
     | { url: string; title?: string; text: string; truncated: boolean; status: number; contentType: string }
     | null = null;
+  let consentedUrl: URL | null = null;
   {
+    if (session.pendingConsent?.kind === 'website') {
+      const decision = isYesNo(input.prompt, conversationLanguage);
+      if (decision === 'yes') {
+        consentedUrl = normalizeUrl(session.pendingConsent.url);
+        session.pendingConsent = undefined;
+      } else if (decision === 'no') {
+        session.pendingConsent = undefined;
+        const msg = t(conversationLanguage, 'askBusinessBasics');
+        session.lastActiveAtMs = Date.now();
+        session.turns = [
+          ...session.turns,
+          { role: 'user' as const, content: input.prompt },
+          { role: 'assistant' as const, content: msg },
+        ].slice(-10) as CopilotSession['turns'];
+        await putSession(env, session);
+        return {
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+          usage: { provider: 'local', model: 'consent_declined', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        };
+      } else {
+        const msg = t(conversationLanguage, 'yesNo');
+        session.lastActiveAtMs = Date.now();
+        session.turns = [
+          ...session.turns,
+          { role: 'user' as const, content: input.prompt },
+          { role: 'assistant' as const, content: msg },
+        ].slice(-10) as CopilotSession['turns'];
+        await putSession(env, session);
+        return {
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+          usage: { provider: 'local', model: 'consent_ambiguous', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        };
+      }
+    }
+
     const candidates = extractUrlCandidates(input.prompt)
       .map(normalizeUrl)
       .filter((u): u is URL => Boolean(u));
 
     const unique = Array.from(new Map(candidates.map((u) => [u.toString(), u])).values());
-    if (unique.length > 1) {
-      const msg = `I found multiple URLs in your message. Which single page should I use?\n\n- ${unique.map((u) => u.toString()).join('\n- ')}`;
+    if (!consentedUrl && unique.length > 1) {
+      const msg = `${t(conversationLanguage, 'askSingleUrl')}\n\n- ${unique.map((u) => u.toString()).join('\n- ')}`;
       session.lastActiveAtMs = Date.now();
       session.turns = [
         ...session.turns,
@@ -867,16 +1266,16 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
       await putSession(env, session);
 
       return {
-        result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+        result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
         usage: { provider: 'local', model: 'url_parser', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
       };
     }
 
-    const url = unique[0] ?? null;
+    const url = consentedUrl ?? unique[0] ?? null;
     if (url) {
       const blocked = isBlockedFetchUrl(url);
       if (blocked) {
-        const msg = `I can only read public web pages. That URL is not allowed (${blocked}). Please share a normal public https URL.`;
+        const msg = `${t(conversationLanguage, 'blockedUrl')} (${blocked})`;
         session.lastActiveAtMs = Date.now();
         session.turns = [
           ...session.turns,
@@ -886,17 +1285,32 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         await putSession(env, session);
 
         return {
-          result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
           usage: { provider: 'local', model: 'url_guard', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        };
+      }
+
+      if (!consentedUrl) {
+        session.pendingConsent = { kind: 'website', url: url.toString(), askedAtMs: Date.now() };
+        const msg = t(conversationLanguage, 'askConsentWebsiteRead');
+        session.lastActiveAtMs = Date.now();
+        session.turns = [
+          ...session.turns,
+          { role: 'user' as const, content: input.prompt },
+          { role: 'assistant' as const, content: msg },
+        ].slice(-10) as CopilotSession['turns'];
+        await putSession(env, session);
+        return {
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+          usage: { provider: 'local', model: 'consent_request', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
 
       const fetchRes = await fetchSinglePageText({ url, timeoutMs: Math.min(12_000, Math.max(1_500, timeoutMs - 1_000)) });
       if (!fetchRes.ok) {
         const msg =
-          `I tried to read ${url.toString()} but couldn't: ${fetchRes.message}` +
-          (fetchRes.status ? ` (HTTP ${fetchRes.status})` : '') +
-          ' Please share a working URL or paste the page text.';
+          `${t(conversationLanguage, 'fetchFailed')} ${url.toString()}` +
+          (fetchRes.status ? ` (HTTP ${fetchRes.status})` : '');
 
         session.lastActiveAtMs = Date.now();
         session.turns = [
@@ -907,7 +1321,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         await putSession(env, session);
 
         return {
-          result: { message: msg, meta: baseMeta('clarify', 'no_ops') },
+          result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
           usage: { provider: 'local', model: 'single_page_fetch', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
@@ -928,8 +1342,56 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     }
   }
 
+  const hasUrl = extractUrlCandidates(input.prompt).length > 0;
+  if (!hasUrl && /\b(website|site|url)\b/i.test(input.prompt)) {
+    const msg = t(conversationLanguage, 'askWebsiteUrl');
+    session.lastActiveAtMs = Date.now();
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: msg },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+    return {
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+      usage: { provider: 'local', model: 'ask_website_url', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
+  }
+
+  if (!hasUrl && /\b(my|our)\s+(business|company)\b/i.test(input.prompt)) {
+    const msg = t(conversationLanguage, 'askBusinessBasics');
+    session.lastActiveAtMs = Date.now();
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: msg },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+    return {
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+      usage: { provider: 'local', model: 'ask_business_basics', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
+  }
+
+  const allowlist = await loadSdrAllowlist(env, input.widgetType);
+  if (!allowlist || !allowlist.entries.length) {
+    const msg = t(conversationLanguage, 'missingAllowlist');
+    session.lastActiveAtMs = Date.now();
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: msg },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+    return {
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
+      usage: { provider: 'local', model: 'missing_allowlist', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
+  }
+
   const maxRequests = typeof params.grant.budgets?.maxRequests === 'number' ? params.grant.budgets.maxRequests : 1;
 
+  const allowlistedValues = collectAllowlistedValues(input.currentConfig, allowlist.entries).slice(0, 20);
   const user = [
     `Widget type: ${input.widgetType}`,
     '',
@@ -944,35 +1406,17 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
         ]
       : []),
     '',
-    'Editable controls (path → kind, label, constraints):',
-    input.controls
-      .slice(0, 180)
-      .map((c) => {
-        const parts: string[] = [];
-        parts.push(`- ${c.path}`);
-        if (c.kind) parts.push(`(${c.kind})`);
-        if (c.label) parts.push(`— ${c.label}`);
-        if (c.panelId) parts.push(`[panel:${c.panelId}]`);
-        if (c.groupLabel) parts.push(`[group:${c.groupLabel}]`);
-
-        if (c.kind === 'enum' && Array.isArray(c.enumValues) && c.enumValues.length) {
-          const values = c.enumValues.slice(0, 24);
-          parts.push(`[allowed:${values.join(', ')}${c.enumValues.length > values.length ? ', …' : ''}]`);
-        }
-
-        if (typeof c.min === 'number' || typeof c.max === 'number') {
-          parts.push(`[range:${typeof c.min === 'number' ? c.min : '-∞'}..${typeof c.max === 'number' ? c.max : '∞'}]`);
-        }
-        return parts.join(' ');
+    'Allowlisted copy fields (path → current value):',
+    allowlistedValues
+      .map((entry) => {
+        const role = entry.role ? ` (${entry.role})` : '';
+        return `- ${entry.path}${role}: ${entry.value}`;
       })
       .join('\n'),
-    '',
-    'Current config (JSON):',
-    JSON.stringify(input.currentConfig),
   ].join('\n');
 
   const messages = [
-    { role: 'system', content: systemPrompt() },
+    { role: 'system', content: systemPrompt(conversationLanguage) },
     ...session.turns,
     { role: 'user', content: user },
   ];
@@ -981,7 +1425,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   const first = await callChatCompletion({
     env,
     grant: params.grant,
-    agentId: 'cs.copilot.v1',
+    agentId: 'sdr.widget.copilot.v1',
     messages,
     temperature: 0.2,
     maxTokens,
@@ -1022,7 +1466,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
 
     const previous = content.length > 2200 ? `${content.slice(0, 2200)}\n\n[truncated]` : content;
     const repairSystem =
-      systemPrompt() +
+      systemPrompt(conversationLanguage) +
       '\n\nREPAIR MODE:\n- Return ONLY a JSON object (no markdown, no extra text).\n- Fix the schema/validation errors.\n- If you cannot produce valid ops, return message-only (no ops) and ask one short clarifying question.';
     const repairUser = [
       user,
@@ -1042,7 +1486,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     const repaired = await callChatCompletion({
       env,
       grant: params.grant,
-      agentId: 'cs.copilot.v1',
+      agentId: 'sdr.widget.copilot.v1',
       messages: [
         { role: 'system', content: repairSystem },
         { role: 'user', content: repairUser },

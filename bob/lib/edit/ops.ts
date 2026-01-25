@@ -1,4 +1,5 @@
 import type { CompiledControl } from '../types';
+import { buildControlMatchers, coerceValueStrict, findBestControlForPath } from './controls';
 import { getAt, setAt } from '../utils/paths';
 
 export type WidgetOp =
@@ -63,10 +64,19 @@ export function applyWidgetOps(args: {
   ops: WidgetOp[];
   controls: CompiledControl[];
 }): ApplyWidgetOpsResult {
-  const { data, ops } = args;
+  const { data, ops, controls } = args;
 
   if (!Array.isArray(ops) || ops.length === 0) {
     return { ok: false, errors: [{ opIndex: 0, message: 'Ops must be a non-empty array' }] };
+  }
+
+  if (!Array.isArray(controls) || controls.length === 0) {
+    return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are required to apply ops' }] };
+  }
+
+  const matchers = buildControlMatchers(controls);
+  if (matchers.length === 0) {
+    return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are missing valid paths' }] };
   }
 
   let working = data;
@@ -92,16 +102,28 @@ export function applyWidgetOps(args: {
       return { ok: false, errors: [{ opIndex: idx, path, message: 'Path contains a prohibited segment' }] };
     }
 
+    const control = findBestControlForPath(matchers, path);
+    if (!control) {
+      return { ok: false, errors: [{ opIndex: idx, path, message: 'Path is not allowlisted by compiled controls' }] };
+    }
+
     if (opType === 'set') {
       if (raw.value === undefined) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'Value cannot be undefined' }] };
       }
-      const next = setAt(working, path, raw.value) as Record<string, unknown>;
+      const coerced = coerceValueStrict(control, raw.value);
+      if (!coerced.ok) {
+        return { ok: false, errors: [{ opIndex: idx, path, message: coerced.message }] };
+      }
+      const next = setAt(working, path, coerced.value) as Record<string, unknown>;
       working = next;
       continue;
     }
 
     if (opType === 'insert') {
+      if (control.kind !== 'array') {
+        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target path is not an array control' }] };
+      }
       if (!isInteger(raw.index) || raw.index < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
       }
@@ -119,6 +141,9 @@ export function applyWidgetOps(args: {
     }
 
     if (opType === 'remove') {
+      if (control.kind !== 'array') {
+        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target path is not an array control' }] };
+      }
       if (!isInteger(raw.index) || raw.index < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'index must be an integer >= 0' }] };
       }
@@ -138,6 +163,9 @@ export function applyWidgetOps(args: {
     }
 
     if (opType === 'move') {
+      if (control.kind !== 'array') {
+        return { ok: false, errors: [{ opIndex: idx, path, message: 'Target path is not an array control' }] };
+      }
       if (!isInteger(raw.from) || raw.from < 0) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'from must be an integer >= 0' }] };
       }

@@ -161,6 +161,7 @@ Bob’s preview-shadow route (`/bob/preview-shadow`) loads the Venice embed load
 - `<tooldrawer-divider />` is forbidden (compile error).
 - `<tooldrawer-cluster>` is the grouping primitive; it expands into a cluster wrapper.
 - `<tooldrawer-cluster>` does not support `gap` / `space-after` attributes (compile error).
+- `<tooldrawer-cluster>` may include an optional label via `label="..."` (or `label-key` + `label-params`) to render a small section eyebrow inside the panel.
 - Controls must compile with a known `kind` (missing/unknown kind is a compile error).
 - `options="..."` must be valid JSON arrays (invalid JSON is a compile error).
 
@@ -196,7 +197,7 @@ Compiled controls expose paths through `data-bob-path`. ToolDrawer:
 ### Grouping + rhythm
 The compiler and ToolDrawer support:
 - **Groups**: `data-bob-group` + `data-bob-group-label` (used for “Widget layout”, “Stage/Pod layout”, etc).
-- **Clusters**: `<tooldrawer-cluster>` expands to a tight wrapper in compiled HTML; ToolDrawer can also auto-nest dependent clusters based on `show-if`.
+- **Clusters**: `<tooldrawer-cluster>` expands to a tight wrapper in compiled HTML; optional labels can be rendered inside clusters; ToolDrawer can also auto-nest dependent clusters based on `show-if`.
 
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
@@ -260,11 +261,13 @@ type WidgetOp =
 
 ### How ops are applied
 - Entrypoint: `bob/lib/ops.ts`
-- Ops are applied as pure state transforms (no coercion, no schema validation).
-- Minimal protocol safety:
+- Ops are applied as pure state transforms with **fail-closed control allowlisting**.
+- Validation rules:
   - reject empty/invalid ops arrays
   - reject prohibited path segments (`__proto__`, `constructor`, `prototype`)
-  - enforce array semantics for `insert/remove/move`
+  - reject paths not allowlisted by `compiled.controls`
+  - enforce control-kind semantics (arrays for `insert/remove/move`)
+  - strict value coercion based on `compiled.controls.kind`
 
 ### Control metadata (the machine contract)
 `compiled.controls[]` includes (as available):

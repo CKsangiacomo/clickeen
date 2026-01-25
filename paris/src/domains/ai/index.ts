@@ -236,6 +236,55 @@ export async function handleAiGrant(req: Request, env: Env) {
   return json({ grant: issued.grant, exp: issued.exp, agentId: issued.agentId });
 }
 
+export async function handleAiMinibobGrant(req: Request, env: Env) {
+  let body: unknown;
+  try {
+    body = await readJson(req);
+  } catch {
+    return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
+  }
+
+  if (!isRecord(body)) {
+    return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
+  }
+
+  const sessionId = asTrimmedString((body as any).sessionId);
+  const widgetType = asTrimmedString((body as any).widgetType);
+  if (!sessionId) {
+    return json([{ path: 'sessionId', message: 'sessionId is required' }], { status: 422 });
+  }
+  if (!widgetType) {
+    return json([{ path: 'widgetType', message: 'widgetType is required' }], { status: 422 });
+  }
+
+  const workspaceIdRaw = asTrimmedString((body as any).workspaceId);
+  if (workspaceIdRaw) {
+    return json([{ path: 'workspaceId', message: 'workspaceId is not allowed for minibob grants' }], { status: 403 });
+  }
+
+  const agentIdRaw = asTrimmedString((body as any).agentId);
+  if (agentIdRaw && agentIdRaw !== 'sdr.widget.copilot.v1') {
+    return json([{ path: 'agentId', message: 'agentId is not allowed for minibob grants' }], { status: 403 });
+  }
+
+  const modeRaw = asTrimmedString((body as any).mode);
+  if (modeRaw && modeRaw !== 'ops') {
+    return json([{ path: 'mode', message: 'mode is not allowed for minibob grants' }], { status: 403 });
+  }
+
+  const issued = await issueAiGrant({
+    env,
+    agentId: 'sdr.widget.copilot.v1',
+    mode: 'ops',
+    subject: 'minibob',
+    trace: { sessionId },
+    budgets: { maxTokens: 420, timeoutMs: 12_000, maxRequests: 2 },
+  });
+  if (!issued.ok) return issued.response;
+
+  return json({ grant: issued.grant, exp: issued.exp, agentId: issued.agentId });
+}
+
 function isOutcomeAttachPayload(value: unknown): value is {
   requestId: string;
   sessionId: string;

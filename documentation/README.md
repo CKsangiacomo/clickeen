@@ -50,7 +50,8 @@ documentation/
 │   │   ├── gtm.md           # GTM agent
 │
 └── widgets/                  # WIDGET SPECS
-    ├── HowWeBuildWidgets.md # Implementation playbook
+    ├── WidgetBuildContract.md # Normative build contract
+    ├── WidgetComplianceSteps.md # Execution checklist
     ├── WidgetArchitecture.md # System-level reference
     └── {widget}/            # Per-widget specs
         └── {widget}_PRD.md

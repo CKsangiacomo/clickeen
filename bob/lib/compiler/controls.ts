@@ -4,6 +4,15 @@ import { getAt } from '../utils/paths';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
+function encodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export function groupKeyToLabel(key: string): string {
   const map: Record<string, string> = {
     wgtappearance: 'Widget appearance',
@@ -55,6 +64,10 @@ export function expandTooldrawerClusters(html: string): string {
 
     const attrsRaw = html.slice(start + openTag.length, openEnd);
     const attrs = parseTooldrawerAttributes(attrsRaw);
+    const label = attrs.label || '';
+    const labelKey = attrs.labelKey || attrs['label-key'] || '';
+    const labelParams = attrs.labelParams || attrs['label-params'] || '';
+    const labelCount = attrs.labelCount || attrs['label-count'] || '';
 
     let depth = 1;
     let searchPos = openEnd + 1;
@@ -92,8 +105,17 @@ export function expandTooldrawerClusters(html: string): string {
 
         const wrapperAttrs: string[] = ['class="tdmenucontent__cluster"'];
         if (showIf) wrapperAttrs.push(`data-bob-showif="${showIf}"`);
+        let labelMarkup = '';
+        if (label || labelKey) {
+          const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
+          if (labelKey) labelAttrs.push(`data-i18n-key="${encodeHtmlEntities(labelKey)}"`);
+          if (labelParams) labelAttrs.push(`data-i18n-params="${labelParams}"`);
+          if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
+          labelMarkup = `<div ${labelAttrs.join(' ')}>${encodeHtmlEntities(label)}</div>`;
+        }
 
-        const replacement = `<div ${wrapperAttrs.join(' ')}>${inner}</div>`;
+        const bodyMarkup = `<div class="tdmenucontent__cluster-body">${inner}</div>`;
+        const replacement = `<div ${wrapperAttrs.join(' ')}>${labelMarkup}${bodyMarkup}</div>`;
         html = html.slice(0, start) + replacement + html.slice(nextClose + closeTag.length);
         cursor = start + replacement.length;
         break;

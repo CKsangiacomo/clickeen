@@ -30,8 +30,13 @@
     aria-labelledby="dropdown-shadow-sm-label"
   >
     
-      <span class="diet-dropdown-header-label label-xs" id="dropdown-shadow-sm-label">Label</span>
-    
+      <span
+        class="diet-dropdown-header-label label-xs"
+        id="dropdown-shadow-sm-label"
+        {{#if labelKey}} data-i18n-key=""
+        
+      >Label</span>
+    {{/if}}
     <span class="diet-dropdown-header-value body-xs" data-muted="true" data-placeholder="Select a shadow">
       <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-shadow__label">Select a shadow</span>
@@ -299,8 +304,13 @@
     aria-labelledby="dropdown-shadow-md-label"
   >
     
-      <span class="diet-dropdown-header-label label-s" id="dropdown-shadow-md-label">Label</span>
-    
+      <span
+        class="diet-dropdown-header-label label-s"
+        id="dropdown-shadow-md-label"
+        {{#if labelKey}} data-i18n-key=""
+        
+      >Label</span>
+    {{/if}}
     <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="Select a shadow">
       <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-shadow__label">Select a shadow</span>
@@ -568,8 +578,13 @@
     aria-labelledby="dropdown-shadow-lg-label"
   >
     
-      <span class="diet-dropdown-header-label label-m" id="dropdown-shadow-lg-label">Label</span>
-    
+      <span
+        class="diet-dropdown-header-label label-m"
+        id="dropdown-shadow-lg-label"
+        {{#if labelKey}} data-i18n-key=""
+        
+      >Label</span>
+    {{/if}}
     <span class="diet-dropdown-header-value body-m" data-muted="true" data-placeholder="Select a shadow">
       <span class="diet-dropdown-shadow__chip" aria-hidden="true"></span>
       <span class="diet-dropdown-shadow__label">Select a shadow</span>

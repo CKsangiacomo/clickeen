@@ -23,7 +23,7 @@ Stop and ask if:
 Only read these:
 - `documentation/architecture/CONTEXT.md`
 - `documentation/strategy/WhyClickeen.md`
-- `documentation/widgets/HowWeBuildWidgets.md`
+- `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`
 - `tokyo/widgets/{widgetType}/spec.json`
 - `tokyo/widgets/{widgetType}/widget.html`
@@ -89,7 +89,7 @@ If any path is ambiguous, stop and ask.
 ### Step 2 — Update `spec.json` (state + editor panels)
 
 Rules:
-- **Stage/Pod defaults are mandatory** (see `documentation/widgets/HowWeBuildWidgets.md`).
+- **Stage/Pod defaults are mandatory** (see `documentation/widgets/WidgetBuildContract.md`).
 - Keep **one breakpoint** (900px). Do not add other breakpoints.
 - Paths must be consistent across `spec.json`, `agent.md`, and runtime code.
 - Use 2‑space indentation (Prettier).
@@ -185,5 +185,5 @@ If any requirement is unmet, stop and ask.
 
 ## References (do not expand scope)
 
-- `documentation/widgets/HowWeBuildWidgets.md`
+- `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`

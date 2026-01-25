@@ -526,7 +526,7 @@ Implementation requirement:
 ---
 
 ## Appendix A: Why EACH PRD must be written like this (the rule)
-This rationale is universal across widgets. See `documentation/widgets/WidgetBuildProcess.md` (Step -1) for the canonical “why” and the required policy matrix template.
+This rationale is universal across widgets. See `documentation/widgets/WidgetComplianceSteps.md` (Step -1) for the canonical “why” and the required policy matrix template.
 
 ## Appendix B: Competitor analysis artifacts (source material)
 Captured under `documentation/widgets/LogoShowcase/CompetitorAnalysis/`:

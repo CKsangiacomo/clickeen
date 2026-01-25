@@ -341,7 +341,6 @@ if (isMobile(ua) || saveData === 'on') {
 ```html
 <bob-panel id="supernova">
   <tooldrawer-cluster>
-    <tooldrawer-eyebrow text="Supernova Effects" />
     <tooldrawer-field 
       type="toggle" 
       path="supernova.enabled" 
@@ -351,7 +350,6 @@ if (isMobile(ua) || saveData === 'on') {
   </tooldrawer-cluster>
   
   <tooldrawer-cluster show-if="supernova.enabled == true">
-    <tooldrawer-eyebrow text="Motion" />
     <tooldrawer-field 
       type="dropdown-actions" 
       path="supernova.effects.motion" 
@@ -366,7 +364,6 @@ if (isMobile(ua) || saveData === 'on') {
   </tooldrawer-cluster>
   
   <tooldrawer-cluster show-if="supernova.enabled == true">
-    <tooldrawer-eyebrow text="Hover" />
     <tooldrawer-field 
       type="dropdown-actions" 
       path="supernova.effects.hover"
@@ -490,4 +487,4 @@ Clickeen's strategic moat #3 is **Design-Led Culture**. Supernova is how we weap
 
 - `documentation/strategy/WhyClickeen.md` — Supernova as a moat
 - `documentation/widgets/WidgetArchitecture.md` — How widgets declare Supernova support
-- `documentation/widgets/HowWeBuildWidgets.md` — Implementing Supernova in a widget
+- `documentation/widgets/WidgetBuildContract.md` — Implementing Supernova in a widget

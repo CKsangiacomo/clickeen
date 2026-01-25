@@ -198,7 +198,7 @@ Request:
 
 Response:
 ```json
-{ "grant": "v1....", "exp": 1735521234, "agentId": "cs.copilot.v1" }
+{ "grant": "v1....", "exp": 1735521234, "agentId": "sdr.widget.copilot.v1" }
 ```
 
 Required env vars:

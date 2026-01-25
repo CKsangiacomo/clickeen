@@ -97,36 +97,24 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
       if (appearanceIdx >= 0) {
         const appearanceEndIdx = filtered.findIndex((line, idx) => idx > appearanceIdx && line.includes('</bob-panel>'));
         if (appearanceEndIdx >= 0) {
-          const eyebrowIdx = filtered.findIndex(
-            (line, idx) =>
-              idx > appearanceIdx && idx < appearanceEndIdx && line.includes("tooldrawer-eyebrow text='Stage/Pod appearance'"),
-          );
+          let lastAppearanceField = -1;
+          for (let idx = appearanceIdx + 1; idx < appearanceEndIdx; idx += 1) {
+            if (filtered[idx]?.includes('tooldrawer-field-podstageappearance')) {
+              lastAppearanceField = idx;
+            }
+          }
 
-          if (eyebrowIdx >= 0) {
+          if (lastAppearanceField >= 0) {
             const clusterEndIdx = filtered.findIndex(
-              (line, idx) => idx > eyebrowIdx && idx < appearanceEndIdx && line.includes('</tooldrawer-cluster>'),
+              (line, idx) => idx > lastAppearanceField && idx < appearanceEndIdx && line.includes('</tooldrawer-cluster>'),
             );
             if (clusterEndIdx >= 0) {
               filtered.splice(clusterEndIdx, 0, ...cornerFields);
             } else {
-              filtered.splice(
-                appearanceEndIdx,
-                0,
-                "  <tooldrawer-cluster>",
-                "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
-                ...cornerFields,
-                '  </tooldrawer-cluster>',
-              );
+              filtered.splice(appearanceEndIdx, 0, "  <tooldrawer-cluster>", ...cornerFields, '  </tooldrawer-cluster>');
             }
           } else {
-            filtered.splice(
-              appearanceEndIdx,
-              0,
-              "  <tooldrawer-cluster>",
-              "    <tooldrawer-eyebrow text='Stage/Pod appearance' />",
-              ...cornerFields,
-              '  </tooldrawer-cluster>',
-            );
+            filtered.splice(appearanceEndIdx, 0, "  <tooldrawer-cluster>", ...cornerFields, '  </tooldrawer-cluster>');
           }
         }
       }
@@ -233,6 +221,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   }
 
   const displayName = (typeof widgetJson.displayName === 'string' && widgetJson.displayName.trim()) || widgetname;
+  const rawItemKey = widgetJson.itemKey;
+  const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
 
   const htmlWithGenerated = buildHtmlWithGeneratedPanels(widgetJson);
   const parsed = parsePanels(htmlWithGenerated);
@@ -252,12 +242,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         throw new Error('[BobCompiler] <tooldrawer-divider /> is not supported; use <tooldrawer-cluster> only');
       }
 
-      // Expand simple eyebrow tag to overline text.
-      html = html.replace(/<tooldrawer-eyebrow([^>]*)\/>/gi, (_full, attrsRaw: string) => {
-        const attrs = parseTooldrawerAttributes(attrsRaw || '');
-        const text = attrs.text || '';
-        return `<div class="overline td-eyebrow" style="padding-inline: var(--control-padding-inline);">${text}</div>`;
-      });
+      // Strip eyebrow tags; panel headers should not use eyebrow text.
+      html = html.replace(/<tooldrawer-eyebrow[^>]*\/>/gi, '');
 
       // Expand spacing-only clusters (grouping controls for better rhythm).
       html = expandTooldrawerClusters(html);
@@ -286,7 +272,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         }
 
         const { stencil, spec } = await loadComponentStencil(type);
-        const context = await buildContext(type, attrs, spec);
+        const context = await buildContext(type, attrs, spec, { itemKey });
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
           rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
@@ -297,9 +283,10 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
 
         const showIf = attrs['show-if'];
         const wrappers: string[] = [];
-        const shouldWrapGroup = groupKey && !['podstagelayout', 'podstageappearance'].includes(groupKey);
+        const shouldWrapGroup = Boolean(groupKey);
         if (shouldWrapGroup && groupKey) {
-          const label = groupKeyToLabel(groupKey);
+          const rawGroupLabel = attrs['group-label'] ?? attrs.groupLabel;
+          const label = rawGroupLabel !== undefined ? rawGroupLabel : groupKeyToLabel(groupKey);
           wrappers.push(`data-bob-group="${groupKey}"`, `data-bob-group-label="${label}"`);
         }
         if (showIf) wrappers.push(`data-bob-showif="${showIf}"`);

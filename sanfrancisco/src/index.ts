@@ -195,7 +195,7 @@ type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Pro
 
 const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
   'sdr.copilot': executeSdrCopilot,
-  'cs.copilot.v1': executeSdrWidgetCopilot,
+  'sdr.widget.copilot.v1': executeSdrWidgetCopilot,
   'debug.grantProbe': executeDebugGrantProbe,
 };
 

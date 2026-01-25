@@ -558,11 +558,14 @@ function applyGroupHeaders(scope: HTMLElement) {
     const wrapper = document.createElement('div');
     wrapper.className = 'tdmenucontent__group';
     wrapper.setAttribute('data-bob-group', key);
-    const label = node.getAttribute('data-bob-group-label') || labelForGroup(key);
-    const header = document.createElement('div');
-    header.className = 'overline-small tdmenucontent__group-label';
-    header.textContent = label;
-    wrapper.appendChild(header);
+    const rawLabel = node.getAttribute('data-bob-group-label');
+    const label = rawLabel !== null ? rawLabel : labelForGroup(key);
+    if (label.trim()) {
+      const header = document.createElement('div');
+      header.className = 'overline-small tdmenucontent__group-label';
+      header.textContent = label;
+      wrapper.appendChild(header);
+    }
 
     while (idx < children.length) {
       const current = children[idx];
@@ -798,6 +801,10 @@ export function TdMenuContent({
     container.innerHTML = panelHtml || '';
     autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
+    container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
+      const body = cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
+      applyGroupHeaders(body ?? cluster);
+    });
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
 
@@ -1332,8 +1339,10 @@ export function TdMenuContent({
 
   return (
     <div className="tdmenucontent" data-translate-mode={translateMode ? 'true' : 'false'} data-readonly={readOnly ? 'true' : 'false'}>
-      <div className="heading-3">{panelTitle}</div>
-      {header}
+      <div className="tdmenucontent__header">
+        <div className="heading-3">{panelTitle}</div>
+        {header}
+      </div>
       <div className="tdmenucontent__fields" ref={containerRef} />
       {footer}
     </div>

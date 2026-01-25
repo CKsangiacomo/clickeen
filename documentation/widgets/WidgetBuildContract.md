@@ -1,0 +1,214 @@
+# Widget Build Contract
+
+STATUS: CANONICAL (AI-executable)
+OWNER: Platform / Widget System
+
+SCOPE
+- This contract applies to widget definitions in `tokyo/widgets/{widgetType}/`.
+
+INPUTS
+- `widgetType` (explicit)
+- PRD (required)
+- Entitlements matrix keys from `config/entitlements.matrix.json`
+
+OUTPUTS
+- `spec.json`
+- `widget.html`
+- `widget.css`
+- `widget.client.js`
+- `agent.md`
+- `limits.json` (unless PRD opts out)
+- `localization.json` (unless PRD opts out)
+- `layers/*.allowlist.json` (only when non-locale layers are used)
+
+STOP CONDITIONS
+- `widgetType` not explicit
+- PRD missing or conflicts with this contract
+- change requires new Dieter primitive/token
+- change requires `tokyo/widgets/shared/*`
+- change requires Bob/Paris/Venice/Prague/Dieter edits
+- cannot enumerate final state paths before ToolDrawer
+- cannot provide Binding Map rows for all new controls
+
+---
+
+## CONTRACTS (MUST / MUST NOT)
+
+### 1) State model
+MUST
+- Define arrays as `path[]` and items as `path[i]`.
+- Provide a stable DOM Array Container role and DOM Item Container role for each array.
+- Provide stable `data-role` for every runtime-mutated element.
+
+MUST NOT
+- Use widget root as an item.
+- Update DOM elements without stable `data-role`.
+
+### 2) Stage/Pod (required)
+MUST
+- `defaults.stage` includes: `background`, `alignment`, `canvas.mode`, `padding.desktop`, `padding.mobile`.
+- Each padding object includes: `linked, all, top, right, bottom, left`.
+- `defaults.pod` includes: `background`, `padding.desktop`, `padding.mobile`, `widthMode`, `contentWidth`, radius fields (`radiusLinked`, `radius`, `radiusTL/TR/BR/BL`).
+- `widget.html` hierarchy:
+  - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`.
+- `widget.client.js` calls `window.CKStagePod.applyStagePod(state.stage, state.pod, root)` on load and every update.
+- Appearance panel exposes `stage.background` and `pod.background` via dropdown-fill with explicit `fill-modes`.
+
+MUST NOT
+- Reimplement Stage/Pod layout logic in widget CSS or JS.
+- Add fallback/healing logic for missing Stage/Pod fields.
+
+### 3) Typography (required if any text renders)
+MUST
+- Define `defaults.typography.roles` for all visible text parts.
+- Call `window.CKTypography.applyTypography(state.typography, root, roleMap)`.
+- Use typography CSS vars in `widget.css` (no ad-hoc fonts).
+
+MUST NOT
+- Create separate text color controls outside typography unless PRD requires it.
+
+### 4) Determinism
+MUST
+- Implement `applyState(state)` as a pure DOM update.
+- Scope all selectors to the widget root.
+- Apply Stage/Pod, then Typography, then widget-specific bindings.
+
+MUST NOT
+- Use timers, randomness, or network fetches in `applyState`.
+- Heal or coerce missing state (fix the source instead).
+
+### 5) ToolDrawer
+MUST
+- Use only these panels: `content`, `layout`, `appearance`, `typography`, `settings`.
+- Add controls only for paths already defined in `defaults`.
+- Gate variant-specific controls via `show-if`.
+- Remove `<tooldrawer-eyebrow>`; no eyebrow under panel headers. Use optional cluster labels (`<tooldrawer-cluster label="...">`) when you need section eyebrows inside a panel.
+- Define the user-facing item noun: set `itemKey` in `spec.json` (e.g., `faq.item`) and ensure the i18n bundle defines it (plural forms required).
+
+MUST NOT
+- Duplicate entire panels per variant.
+
+### 6) Dropdown-fill
+MUST
+- Declare `fill-modes` for every dropdown-fill control.
+- Default matrix:
+  - Stage/Pod backgrounds: `color,gradient,image,video`
+  - Other surfaces: `color,gradient` unless PRD requires media
+
+### 7) Localization and layers
+MUST
+- `localization.json` includes all translatable paths.
+- Use `*` for array indices (`sections.*.faqs.*.question`).
+- Reject prohibited segments: `__proto__`, `constructor`, `prototype`.
+- `layers/*.allowlist.json` only when that layer is used.
+
+### 8) Binding Map (anti-dead-controls)
+MUST
+- Every ToolDrawer control path has exactly one Binding Map row.
+- Mechanism is one of:
+  - CSS var
+  - data-attr variant
+  - deterministic DOM update
+
+Binding Map template:
+| Path | Target | Mechanism | Implementation |
+| --- | --- | --- | --- |
+| `layout.type` | root | data-attr | `root.setAttribute('data-layout', state.layout.type)` |
+| `appearance.item.fill` | item wrapper | css-var | `root.style.setProperty('--item-fill', ...)` |
+| `content.title` | `[data-role="title"]` | dom | `el.textContent = state.content.title` |
+
+### 9) Assets
+MUST NOT
+- Ship defaults containing `data:` or `blob:` URLs.
+
+---
+
+## Minimal templates
+
+### widget.html
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div class="ck-widget" data-ck-widget="WIDGETTYPE" data-role="root">
+          <div data-role="title"></div>
+
+          <script src="../shared/typography.js" defer></script>
+          <script src="../shared/stagePod.js" defer></script>
+          <script src="../shared/branding.js" defer></script>
+          <script src="./widget.client.js" defer></script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+```
+
+### widget.client.js
+```js
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  const scriptEl = document.currentScript;
+  if (!(scriptEl instanceof HTMLElement)) return;
+
+  const root = scriptEl.closest('[data-role="root"]');
+  if (!(root instanceof HTMLElement)) {
+    throw new Error('[widget] widget.client.js must execute inside [data-role="root"]');
+  }
+
+  function applyState(state) {
+    if (!state || typeof state !== 'object') return;
+
+    if (window.CKStagePod) window.CKStagePod.applyStagePod(state.stage, state.pod, root);
+    if (window.CKTypography) {
+      window.CKTypography.applyTypography(state.typography, root, {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' }
+      });
+    }
+
+    const title = root.querySelector('[data-role="title"]');
+    if (title instanceof HTMLElement && typeof state.title === 'string') {
+      title.textContent = state.title;
+    }
+  }
+
+  window.addEventListener('message', (event) => {
+    const msg = event.data;
+    if (!msg || msg.type !== 'ck:state-update') return;
+    applyState(msg.state);
+  });
+
+  if (window.CK_WIDGET && window.CK_WIDGET.state) {
+    applyState(window.CK_WIDGET.state);
+  }
+})();
+```
+
+### agent.md
+```md
+# {widgetType} - Agent Contract
+
+## Editable Paths
+- (list paths from defaults)
+
+## Arrays and Ops
+- (arrays + insert/remove/move rules)
+
+## Binding Map Summary
+| Path | Target | Mechanism |
+| --- | --- | --- |
+| ... | ... | css-var / data-attr / dom |
+
+## Prohibited
+- (paths that must never be edited)
+```
