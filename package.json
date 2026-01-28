@@ -51,7 +51,8 @@
     "diff-prague-blocks": "node scripts/prague-blocks/diff.mjs",
     "prague:blocks:migrate": "node scripts/prague-blocks/migrate.mjs",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
-    "prague:blocks:diff": "node scripts/prague-blocks/diff.mjs"
+    "prague:blocks:diff": "node scripts/prague-blocks/diff.mjs",
+    "prague:sync": "node scripts/prague-sync.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

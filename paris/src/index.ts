@@ -2,7 +2,7 @@ import type { Env } from './shared/types';
 import { json } from './shared/http';
 import { assertWorkspaceId } from './shared/validation';
 import { handleHealthz, handleNotImplemented } from './shared/handlers';
-import { handleAiGrant, handleAiMinibobGrant, handleAiOutcome } from './domains/ai';
+import { handleAiGrant, handleAiMinibobGrant, handleAiMinibobSession, handleAiOutcome } from './domains/ai';
 import {
   handlePersonalizationOnboardingCreate,
   handlePersonalizationOnboardingStatus,
@@ -70,6 +70,11 @@ export default {
       if (pathname === '/api/ai/minibob/grant') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
         return handleAiMinibobGrant(req, env);
+      }
+
+      if (pathname === '/api/ai/minibob/session') {
+        if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+        return handleAiMinibobSession(req, env);
       }
 
       if (pathname === '/api/ai/outcome') {

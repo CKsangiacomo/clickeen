@@ -60,7 +60,17 @@ export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
         requestInit.next = cachePolicy.next;
       }
     }
-    return await fetch(url, requestInit);
+    try {
+      return await fetch(url, requestInit);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('Unsupported cache mode')) {
+        const fallbackInit: RequestInit = { ...requestInit, cache: 'no-store' };
+        delete (fallbackInit as RequestInit & { next?: NextRevalidate }).next;
+        return await fetch(url, fallbackInit);
+      }
+      throw err;
+    }
   } finally {
     clearTimeout(timer);
   }

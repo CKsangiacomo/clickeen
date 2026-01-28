@@ -1,9 +1,12 @@
 import { collectAllowlistedEntries, computeBaseFingerprint, normalizeLocaleToken } from '@clickeen/l10n';
-import type { Env, Usage } from '../types';
+import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
+import { callChatCompletion } from '../ai/chat';
 
 type L10nJobV1 = {
   v: 1;
+  agentId: string;
+  grant: string;
   publicId: string;
   widgetType: string;
   locale: string;
@@ -15,6 +18,8 @@ type L10nJobV1 = {
 
 type L10nJobV2 = {
   v: 2;
+  agentId: string;
+  grant: string;
   publicId: string;
   widgetType: string;
   locale: string;
@@ -44,12 +49,6 @@ type TranslationItem = { path: string; type: AllowlistEntry['type']; value: stri
 
 type L10nGenerateStatus = 'running' | 'succeeded' | 'failed' | 'superseded';
 
-type OpenAIChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
-  model?: string;
-};
-
 const PROMPT_VERSION = 'l10n.instance.v1@2025-01-12';
 const POLICY_VERSION = 'l10n.ops.v1';
 
@@ -61,11 +60,13 @@ const TIMEOUT_MS = 20_000;
 export function isL10nJob(value: unknown): value is L10nJob {
   if (!isRecord(value)) return false;
   if (value.v !== 1 && value.v !== 2) return false;
+  const agentId = asString(value.agentId);
+  const grant = asString(value.grant);
   const publicId = asString(value.publicId);
   const widgetType = asString(value.widgetType);
   const locale = asString(value.locale);
   const kind = value.kind;
-  if (!publicId || !widgetType || !locale) return false;
+  if (!agentId || !grant || !publicId || !widgetType || !locale) return false;
   if (kind !== 'curated' && kind !== 'user') return false;
   if (value.v === 1) {
     const baseUpdatedAt = asString(value.baseUpdatedAt);
@@ -130,77 +131,23 @@ function buildUserPrompt(items: TranslationItem[]): string {
 
 async function deepseekTranslate(args: {
   env: Env;
+  grant: AIGrant;
+  agentId: string;
   system: string;
   user: string;
 }): Promise<{ content: string; usage: Usage }> {
-  if (!args.env.DEEPSEEK_API_KEY) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Missing DEEPSEEK_API_KEY' });
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  const baseUrl = args.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com';
-  const model = args.env.DEEPSEEK_MODEL ?? 'deepseek-chat';
-
-  const startedAt = Date.now();
-  let responseJson: OpenAIChatResponse;
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${args.env.DEEPSEEK_API_KEY}`,
-          'content-type': 'application/json',
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model,
-          temperature: 0.2,
-          max_tokens: MAX_TOKENS,
-          messages: [
-            { role: 'system', content: args.system },
-            { role: 'user', content: args.user },
-          ],
-        }),
-      });
-    } catch (err: unknown) {
-      const name = isRecord(err) ? asString((err as any).name) : null;
-      if (name === 'AbortError') {
-        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
-      }
-      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Upstream request failed' });
-    }
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider: 'deepseek',
-        message: `Upstream error (${res.status}) ${text}`.trim(),
-      });
-    }
-    responseJson = (await res.json()) as OpenAIChatResponse;
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  const latencyMs = Date.now() - startedAt;
-  const content = responseJson.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'deepseek', message: 'Empty model response' });
-  }
-
-  const usage: Usage = {
-    provider: 'deepseek',
-    model: responseJson.model ?? model,
-    promptTokens: responseJson.usage?.prompt_tokens ?? 0,
-    completionTokens: responseJson.usage?.completion_tokens ?? 0,
-    latencyMs,
-  };
-
-  return { content, usage };
+  return callChatCompletion({
+    env: args.env,
+    grant: args.grant,
+    agentId: args.agentId,
+    messages: [
+      { role: 'system', content: args.system },
+      { role: 'user', content: args.user },
+    ],
+    temperature: 0.2,
+    maxTokens: MAX_TOKENS,
+    timeoutMs: TIMEOUT_MS,
+  });
 }
 
 function extractJsonPayload(raw: string): string {
@@ -488,7 +435,7 @@ async function reportL10nGenerateStatus(args: {
   }
 }
 
-export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
+export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Promise<void> {
   const startedAt = Date.now();
   const workspaceId = asString(job.workspaceId);
   const locale = normalizeLocaleToken(job.locale);
@@ -719,7 +666,7 @@ export async function executeL10nJob(job: L10nJob, env: Env): Promise<void> {
     if (translateEntries.length > 0) {
       const system = buildSystemPrompt(locale);
       const user = buildUserPrompt(translateEntries);
-      const result = await deepseekTranslate({ env, system, user });
+      const result = await deepseekTranslate({ env, grant, agentId: job.agentId, system, user });
       usage = result.usage;
       const translated = parseTranslationResult(result.content, translateEntries);
       translatedOps.push(...translated.map((item) => ({ op: 'set' as const, path: item.path, value: item.value })));

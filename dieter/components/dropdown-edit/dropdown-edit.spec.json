@@ -41,6 +41,12 @@
       "default": "The quick brown fox jumps over the lazy dog",
       "required": false,
       "description": "Default text content shown in preview and editor"
+    },
+    "allowLinks": {
+      "type": "boolean",
+      "default": true,
+      "required": false,
+      "description": "Whether to allow hyperlinks in the editor content. Use false for non-interactive text."
     }
   },
   "features": {

@@ -124,6 +124,10 @@ Default behavior:
 - When `seoGeo.enabled === false`: default to **iframe** (safe embed).
 - When `seoGeo.enabled === true`: default to **indexable embed (Shadow DOM UI)**.
 
+Editor preview (Bob):
+- **Standard preview is always Tokyo-runtime**; config flags like `seoGeo.enabled` do **not** switch the preview engine.
+- `/bob/preview-shadow` is a **diagnostic** embed-parity surface only and is never triggered implicitly by settings.
+
 This keeps the editor clean for the majority while enabling a “turn it on and go deep” moat path.
 
 State shape (explicit):

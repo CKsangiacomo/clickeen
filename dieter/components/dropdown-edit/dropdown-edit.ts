@@ -41,6 +41,7 @@ interface DropdownEditState {
   hiddenInput: HTMLInputElement;
   isActive: boolean;
   pendingExternal?: string;
+  allowLinks: boolean;
 
   palette: HTMLElement;
   paletteButtons: Map<Command, HTMLButtonElement>;
@@ -92,6 +93,11 @@ function createState(root: HTMLElement): DropdownEditState {
   const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette');
   const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet');
   const linkPopover = linkSheet?.querySelector<HTMLElement>('.diet-popaddlink') ?? null;
+  const allowLinksAttr = root.getAttribute('data-allow-links');
+  const allowLinks =
+    allowLinksAttr == null
+      ? true
+      : !['false', '0', 'no'].includes(allowLinksAttr.trim().toLowerCase());
 
   if (!control || !popover || !editor || !headerValue || !hiddenInput || !palette) {
     throw new Error('[textedit] missing DOM nodes');
@@ -115,8 +121,14 @@ function createState(root: HTMLElement): DropdownEditState {
     throw new Error('[textedit] missing clear buttons or divider');
   }
 
-  if (linkPopover) {
+  if (linkPopover && allowLinks) {
     hydratePopAddLink(linkPopover);
+  }
+
+  if (!allowLinks) {
+    if (paletteLinkButton) paletteLinkButton.style.display = 'none';
+    clearLinksButton.classList.add('is-hidden');
+    if (linkSheet) linkSheet.style.display = 'none';
   }
 
   return {
@@ -126,6 +138,7 @@ function createState(root: HTMLElement): DropdownEditState {
     editor,
     headerValue,
     hiddenInput,
+    allowLinks,
     palette,
     paletteButtons,
     paletteLinkButton,
@@ -191,7 +204,7 @@ function installHandlers(state: DropdownEditState): void {
     }
   });
 
-  if (linkPopover) {
+  if (linkPopover && state.allowLinks) {
     linkPopover.addEventListener('popaddlink:submit', (ev) => {
       const href = (ev as CustomEvent<{ href: string }>).detail?.href;
       if (!href) return;
@@ -238,6 +251,9 @@ function preselectInitialText(state: DropdownEditState) {
 }
 
 function handleCommand(state: DropdownEditState, command: Command) {
+  if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
+    return;
+  }
   switch (command) {
     case Command.Bold:
     case Command.Italic:
@@ -332,6 +348,7 @@ function surroundSelection(state: DropdownEditState, tag: 'strong' | 'em' | 'u' 
 }
 
 function openInternalLinkSheet(state: DropdownEditState) {
+  if (!state.allowLinks) return;
   const { linkSheet, linkPopover, root } = state;
   if (!linkSheet || !linkPopover) return;
   if (!state.selection) return;
@@ -471,7 +488,7 @@ function updateSelectionFromEditor(state: DropdownEditState): void {
 
 function updateClearButtons(state: DropdownEditState): void {
   const hasFormatting = Boolean(state.editor.querySelector('strong, b, em, i, u, s'));
-  const hasLinks = Boolean(state.editor.querySelector('a'));
+  const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector('a')) : false;
   state.clearFormatButton?.classList.toggle('is-hidden', !hasFormatting);
   state.clearLinksButton?.classList.toggle('is-hidden', !hasLinks);
   const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
@@ -535,7 +552,7 @@ function syncFromInstanceData(state: DropdownEditState) {
 
 function applyExternalValue(state: DropdownEditState, raw: string) {
   const value = raw || '';
-  const sanitized = sanitizeInline(value);
+  const sanitized = sanitizeInline(value, state.allowLinks);
   state.editor.innerHTML = sanitized;
   const target = state.headerValue;
   if (sanitized) {
@@ -551,7 +568,7 @@ function applyExternalValue(state: DropdownEditState, raw: string) {
 
 function syncPreview(state: DropdownEditState) {
   const raw = state.editor.innerHTML.trim();
-  const sanitized = sanitizeInline(raw);
+  const sanitized = sanitizeInline(raw, state.allowLinks);
   const target = state.headerValue;
   if (sanitized) {
     target.textContent = toPreviewText(sanitized);
@@ -580,10 +597,11 @@ type SanitizedNode =
   | { type: 'br' }
   | { type: 'tag'; tag: 'strong' | 'b' | 'em' | 'i' | 'u' | 's' | 'a'; attrs: Record<string, string>; children: SanitizedNode[] };
 
-function sanitizeInline(html: string): string {
+function sanitizeInline(html: string, allowLinks = true): string {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = html;
-  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
+  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR']);
+  if (allowLinks) allowed.add('A');
 
   const sanitizeNode = (node: Node): SanitizedNode | SanitizedNode[] | null => {
     if (node.nodeType === Node.TEXT_NODE) {

@@ -11,6 +11,8 @@ export type Env = {
   SANFRANCISCO_BASE_URL?: string;
   ENVIRONMENT?: string;
   ENV_STAGE?: string;
+  MINIBOB_RATELIMIT_KV?: KVNamespace;
+  MINIBOB_RATELIMIT_MODE?: 'off' | 'log' | 'enforce';
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
 };
@@ -101,6 +103,7 @@ export type GrantSubject =
 export type AIGrant = {
   v: 1;
   iss: 'paris';
+  jti?: string;
   sub: GrantSubject;
   exp: number;
   caps: string[];
@@ -121,6 +124,8 @@ export type AIGrant = {
 
 export type L10nJob = {
   v: 2;
+  agentId: string;
+  grant: string;
   publicId: string;
   widgetType: string;
   locale: string;

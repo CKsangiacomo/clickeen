@@ -130,7 +130,7 @@ Bob serves widget and Dieter assets through same-origin routes so the preview if
 
 ### Preview shadow (Venice)
 
-Bob’s preview-shadow route (`/bob/preview-shadow`) loads the Venice embed loader with `data-force-shadow="true"` for shadow DOM rendering. It requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
+Bob’s preview-shadow route (`/bob/preview-shadow`) loads the Venice embed loader with `data-force-shadow="true"` for shadow DOM rendering. It is a diagnostic/internal surface and is not triggered by standard preview. It requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
 
 ---
 
@@ -194,10 +194,12 @@ Compiled controls expose paths through `data-bob-path`. ToolDrawer:
   - `applyOps([{ op: 'set', path, value }])`
 - Evaluates `data-bob-showif` expressions against `instanceData` and hides/shows elements.
 
-### Grouping + rhythm
-The compiler and ToolDrawer support:
-- **Groups**: `data-bob-group` + `data-bob-group-label` (used for “Widget layout”, “Stage/Pod layout”, etc).
-- **Clusters**: `<tooldrawer-cluster>` expands to a tight wrapper in compiled HTML; optional labels can be rendered inside clusters; ToolDrawer can also auto-nest dependent clusters based on `show-if`.
+### Grouping + rhythm (vertical spacing model)
+ToolDrawer has a single, global vertical rhythm. **Only clusters and groups define spacing.**
+- **Vertical spacing**: owned by ToolDrawer containers (`.tdmenucontent__fields` and `.tdmenucontent__cluster-body` gaps). Controls do not add external margins. Only eyebrow labels (cluster/group labels) add a bottom margin.
+- **Clusters**: `<tooldrawer-cluster>` expands to `.tdmenucontent__cluster` + `.tdmenucontent__cluster-body` and can wrap any markup/controls. `gap`/`space-after` are forbidden; use clusters to segment sections.
+- **Groups**: `data-bob-group` + `data-bob-group-label` are per-field wrappers created from `<tooldrawer-field-{groupKey}>` or `group-label`. ToolDrawer merges **adjacent** fields with the same group into `.tdmenucontent__group`. Groups appear inside a cluster only if those fields are inside that cluster.
+- ToolDrawer may auto-nest dependent clusters based on `show-if` for cleaner layout, without changing the spacing model.
 
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
@@ -225,6 +227,11 @@ Behavior:
 - Applies returned `ops[]` locally as pure state transforms (no orchestrator-owned schema validation/coercion).
 - Requires an explicit **Keep** or **Undo** decision for any applied ops (blocks new prompts while pending; no auto-commit).
 - Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
+
+Minibob keep gate (public UX):
+- In Minibob (`subject=minibob`), edits are preview-only until signup.
+- After a change, the UI shows a **signup CTA** (“Create a free account to keep this change”) instead of “Keep”.
+- Undo remains available locally; “Keep” is gated behind signup/publish.
 
 ### AI routes (current)
 - `/api/ai/sdr-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
@@ -285,7 +292,8 @@ This is the foundation for both strict manual editing and future Copilot editing
 ## Preview (Workspace)
 
 `bob/components/Workspace.tsx`:
-- Loads the widget runtime iframe at `compiled.assets.htmlUrl` (default) or `/bob/preview-shadow?publicId=...` when `instanceData.seoGeo.enabled === true` (Shadow DOM preview path).
+- Loads the widget runtime iframe at `compiled.assets.htmlUrl` (canonical preview path).
+- Standard preview is Tokyo-runtime only; config flags like `seoGeo.enabled` do not change the preview engine.
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
 - Supports **workspace modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
@@ -347,8 +355,8 @@ Reference:
 
 ### Required
 - `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local dev defaults to `http://localhost:4000`)
-- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (preview-shadow embed loader; local dev defaults to `http://localhost:3003`)
 ### Optional
+- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (used by the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
 - `TOKYO_DEV_JWT` (server-only; used by `/api/assets/upload` when targeting Tokyo dev worker)
 
 ### Paris proxy (current code)

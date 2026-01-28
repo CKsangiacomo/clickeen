@@ -4,7 +4,7 @@ This plan turns the FAQ widget into a moat:
 - **SEO**: Search Engine Optimization (Google/Bing rich results + entity understanding)
 - **GEO**: Generative Engine Optimization (AI answer extraction + citation)
 
-This doc is the committed version of the working plan (the `CurrentlyExecuting/` folder is gitignored). Any future files or routes are explicitly labeled as planned.
+This doc is the committed version of the working plan (the `Execution_Pipeline_Docs/` folder is gitignored). Any future files or routes are explicitly labeled as planned.
 
 See also:
 - Cross-cutting architecture: `documentation/capabilities/seo-geo.md`

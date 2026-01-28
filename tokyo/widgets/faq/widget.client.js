@@ -21,6 +21,10 @@
   if (!(titleEl instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq-title"]');
   }
+  const headerEl = titleEl.closest('.ck-faq__header');
+  if (!(headerEl instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing .ck-faq__header');
+  }
 
   const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
   if (!(emptyEl instanceof HTMLElement)) {
@@ -202,10 +206,11 @@
       .replace(/'/g, '&#39;');
   }
 
-  function sanitizeInlineHtml(html) {
+  function sanitizeInlineHtml(html, allowLinks) {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = String(html);
-    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
+    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'BR']);
+    if (allowLinks) allowed.add('A');
     wrapper.querySelectorAll('*').forEach((node) => {
       const el = node;
       const tag = el.tagName;
@@ -256,7 +261,7 @@
   function renderAnswerHtml(html, behavior) {
     if (html == null) throw new Error('[FAQ] answer must be a string');
 
-    const sanitized = sanitizeInlineHtml(html);
+    const sanitized = sanitizeInlineHtml(html, true);
 
     const wrapper = document.createElement('div');
     wrapper.innerHTML = sanitized;
@@ -368,7 +373,7 @@
     }
   }
 
-  function renderItems(sections, behavior, displayCategoryTitles) {
+  function renderItems(sections, behavior, displayCategoryTitles, isAccordion) {
     const publicId = resolvedPublicId;
     const markup = sections
       .map((section) => {
@@ -380,20 +385,27 @@
 
         const items = section.faqs
           .map((item) => {
-            const qText = sanitizeInlineHtml(item.question);
+            const qText = sanitizeInlineHtml(item.question, false);
             const answerHtml = renderAnswerHtml(item.answer, behavior);
             const anchorId = publicId ? `faq-q-${publicId}-${item.id}` : `faq-q-${item.id}`;
             const answerId = publicId ? `faq-a-${publicId}-${item.id}` : `faq-a-${item.id}`;
-            return `
-              <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
-                <button class="ck-faq__q" data-role="faq-question" type="button" aria-expanded="false" aria-controls="${escapeHtml(
-                  answerId,
-                )}">
-                  <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
+            const questionTag = isAccordion ? 'button' : 'div';
+            const questionAttrs = isAccordion
+              ? `type="button" aria-expanded="false" aria-controls="${escapeHtml(answerId)}"`
+              : 'role="heading" aria-level="3"';
+            const iconMarkup = isAccordion
+              ? `
                   <span class="ck-faq__q-icon diet-btn-ic" data-size="md" data-variant="neutral" aria-hidden="true">
                     <span class="diet-btn-ic__icon"></span>
                   </span>
-                </button>
+                `
+              : '';
+            return `
+              <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
+                <${questionTag} class="ck-faq__q" data-role="faq-question" ${questionAttrs}>
+                  <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
+                  ${iconMarkup}
+                </${questionTag}>
                 <div class="ck-faq__a" data-role="faq-answer" role="region" id="${escapeHtml(
                   answerId,
                 )}">${answerHtml}</div>
@@ -515,7 +527,7 @@
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     const button = target.closest('[data-role="faq-question"]');
-    if (!(button instanceof HTMLElement)) return;
+    if (!(button instanceof HTMLButtonElement)) return;
     const isOpen = button.getAttribute('aria-expanded') === 'true';
     const next = !isOpen;
     if (!accordionRuntime.multiOpen) collapseAll(listEl);
@@ -548,6 +560,7 @@
 
     titleEl.textContent = state.title;
     titleEl.hidden = state.showTitle !== true;
+    headerEl.hidden = state.showTitle !== true;
 
     applyAccordionIcons(state.appearance.iconStyle);
 
@@ -559,10 +572,16 @@
       state.displayCategoryTitles === true,
       state.behavior.displayVideos === true,
       state.behavior.displayImages === true,
+      state.layout.type,
     ]);
     if (nextItemsSignature !== lastItemsSignature) {
       lastItemsSignature = nextItemsSignature;
-      renderItems(state.sections, state.behavior, state.displayCategoryTitles === true);
+      renderItems(
+        state.sections,
+        state.behavior,
+        state.displayCategoryTitles === true,
+        state.layout.type === 'accordion',
+      );
     }
 
     const hasAny = state.sections.some((section) => section.faqs.length > 0);
@@ -571,16 +590,7 @@
 
     if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
       accordionRuntime.isAccordion = false;
-      const sig = JSON.stringify([state.layout.type]);
-      if (sig !== lastAccordionSignature) {
-        lastAccordionSignature = sig;
-        listEl.querySelectorAll('[data-role="faq-question"]').forEach((node) => {
-          if (!(node instanceof HTMLButtonElement)) return;
-          node.disabled = true;
-          node.removeAttribute('aria-expanded');
-          node.removeAttribute('tabindex');
-        });
-      }
+      lastAccordionSignature = JSON.stringify([state.layout.type]);
       return;
     }
 

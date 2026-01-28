@@ -607,8 +607,8 @@ function useWidgetSessionInternal() {
         (await loadParisLayer(workspaceId, publicId, 'user', normalized, subject)) ??
         (await loadParisLayer(workspaceId, publicId, 'user', 'global', subject));
       const userFiltered = filterAllowlistedOps(userOverlay?.ops ?? [], allowlist);
-      let baseOps = baseFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
-      let userOps = userFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
+      const baseOps = baseFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
+      const userOps = userFiltered.filtered.filter((op) => snapshotPaths.has(op.path));
       let stale = false;
       const currentFingerprint = await computeL10nFingerprint(snapshot.baseInstanceData, allowlist);
       if (hasSnapshot) {
@@ -758,7 +758,7 @@ function useWidgetSessionInternal() {
         locale: { ...prev.locale, error: message },
       }));
     }
-  }, []);
+  }, [loadLocaleAllowlist]);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;

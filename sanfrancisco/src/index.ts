@@ -529,11 +529,13 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       usage: executed.usage,
     };
 
-    ctx.waitUntil(
-      env.SF_EVENTS.send(event).catch((err: unknown) => {
-        console.error('[sanfrancisco] SF_EVENTS.send failed', err);
-      }),
-    );
+    if (env.SF_EVENTS) {
+      ctx.waitUntil(
+        env.SF_EVENTS.send(event).catch((err: unknown) => {
+          console.error('[sanfrancisco] SF_EVENTS.send failed', err);
+        }),
+      );
+    }
 
     const response: ExecuteResponse = { requestId, agentId: canonicalId, result: executed.result, usage: executed.usage };
     return noStore(json(response));
@@ -637,9 +639,16 @@ async function handleL10nDispatch(request: Request, env: Env, ctx: ExecutionCont
     throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n jobs', issues: invalid });
   }
 
+  const verified: Array<{ job: L10nJob; grant: AIGrant }> = [];
   for (const job of jobs as L10nJob[]) {
+    const grant = await verifyGrant(job.grant, env.AI_GRANT_HMAC_SECRET);
+    assertCap(grant, `agent:${job.agentId}`);
+    verified.push({ job, grant });
+  }
+
+  for (const { job, grant } of verified) {
     ctx.waitUntil(
-      executeL10nJob(job, env).catch((err: unknown) => {
+      executeL10nJob(job, env, grant).catch((err: unknown) => {
         console.error('[sanfrancisco] l10n dispatch failed', err);
       }),
     );
@@ -971,7 +980,9 @@ export default {
       const body = msg.body;
       if (isL10nJob(body)) {
         try {
-          await executeL10nJob(body, env);
+          const grant = await verifyGrant(body.grant, env.AI_GRANT_HMAC_SECRET);
+          assertCap(grant, `agent:${body.agentId}`);
+          await executeL10nJob(body, env, grant);
         } catch (err) {
           console.error('[sanfrancisco] l10n job failed', err);
         }

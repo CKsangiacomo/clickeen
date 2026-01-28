@@ -44,6 +44,7 @@ import {
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { requireWorkspace } from '../../shared/workspaces';
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
+import { issueAiGrant } from '../ai';
 
 function resolveLocalTokyoWorkerBase(env: Env): string | null {
   const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
@@ -652,12 +653,12 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
   const queuedRows: L10nGenerateStateRow[] = [];
   const failedRows: L10nGenerateStateRow[] = [];
 
-  rows.forEach((row) => {
+  for (const row of rows) {
     const locale = row.layer_key;
     const widgetType = row.widget_type ?? null;
     const workspaceId = row.workspace_id ?? null;
+    const attempts = (row.attempts ?? 0) + 1;
     if (!locale || !widgetType || !workspaceId) {
-      const attempts = (row.attempts ?? 0) + 1;
       const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
       failedRows.push({
         ...row,
@@ -667,12 +668,38 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
         last_attempt_at: nowIso,
         last_error: 'missing_job_metadata',
       });
-      return;
+      continue;
     }
 
-    const attempts = (row.attempts ?? 0) + 1;
+    const kind = inferInstanceKindFromPublicId(row.public_id);
+    const grantSubject = kind === 'curated' ? 'devstudio' : 'workspace';
+    const grantWorkspaceId = grantSubject === 'workspace' ? workspaceId : undefined;
+    const issued = await issueAiGrant({
+      env,
+      agentId: 'l10n.instance.v1',
+      subject: grantSubject,
+      workspaceId: grantWorkspaceId,
+      mode: 'ops',
+      trace: { sessionId: crypto.randomUUID(), instancePublicId: row.public_id },
+    });
+    if (!issued.ok) {
+      const details = await readJson(issued.response).catch(() => null);
+      const detail = details ? JSON.stringify(details) : `status ${issued.response.status}`;
+      const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      failedRows.push({
+        ...row,
+        status: 'failed',
+        attempts,
+        next_attempt_at: nextAttemptAt,
+        last_attempt_at: nowIso,
+        last_error: `ai_grant_failed:${detail}`,
+      });
+      continue;
+    }
     jobs.push({
       v: 2,
+      agentId: issued.agentId,
+      grant: issued.grant,
       publicId: row.public_id,
       widgetType,
       locale,
@@ -680,7 +707,7 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
       baseUpdatedAt: row.base_updated_at ?? null,
       changedPaths: row.changed_paths ?? undefined,
       removedPaths: row.removed_paths ?? undefined,
-      kind: inferInstanceKindFromPublicId(row.public_id),
+      kind,
       workspaceId,
       envStage,
     });
@@ -692,7 +719,7 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
       last_attempt_at: nowIso,
       last_error: null,
     });
-  });
+  }
 
   if (failedRows.length) {
     await upsertL10nGenerateStates(env, failedRows);
@@ -1639,16 +1666,17 @@ export async function enqueueL10nJobs(args: {
   const pendingLocales: string[] = [];
   const dirtyRows: L10nGenerateStateRow[] = [];
   const nowMs = Date.now();
-  const requeueStaleMs = 60_000;
+  // In non-local environments queued/running states can get stuck if the queue
+  // consumer was unavailable. Treat long-stale attempts as requeueable.
+  const requeueStaleMs = 10 * 60_000;
 
   locales.forEach((locale) => {
     const current = existingStates.get(locale);
     if (current?.status === 'succeeded') return;
     if (current && (current.status === 'queued' || current.status === 'running')) {
-      if (!useDirectDispatch) return;
       const lastAttemptAt = current.last_attempt_at ? Date.parse(current.last_attempt_at) : NaN;
       const staleAttempt = !Number.isFinite(lastAttemptAt) || nowMs - lastAttemptAt >= requeueStaleMs;
-      if (!staleAttempt) return;
+      if (!staleAttempt && !useDirectDispatch) return;
     }
     pendingLocales.push(locale);
     dirtyRows.push({
@@ -1673,19 +1701,42 @@ export async function enqueueL10nJobs(args: {
 
   await upsertL10nGenerateStates(args.env, dirtyRows);
 
-  const jobs: L10nJob[] = pendingLocales.map((locale) => ({
-    v: 2,
-    publicId,
-    widgetType: args.widgetType!,
-    locale,
-    baseFingerprint,
-    baseUpdatedAt,
-    changedPaths,
-    removedPaths,
-    kind,
-    workspaceId,
-    envStage,
-  }));
+  const grantSubject = kind === 'curated' ? 'devstudio' : 'workspace';
+  const grantWorkspaceId = grantSubject === 'workspace' ? workspaceId : undefined;
+  if (grantSubject === 'workspace' && !grantWorkspaceId) {
+    return { ok: false as const, queued: 0, skipped: 0, error: 'Missing workspaceId for user l10n grant' };
+  }
+  const jobs: L10nJob[] = [];
+  for (const locale of pendingLocales) {
+    const issued = await issueAiGrant({
+      env: args.env,
+      agentId: 'l10n.instance.v1',
+      subject: grantSubject,
+      workspaceId: grantWorkspaceId,
+      mode: 'ops',
+      trace: { sessionId: crypto.randomUUID(), instancePublicId: publicId },
+    });
+    if (!issued.ok) {
+      const details = await readJson(issued.response).catch(() => null);
+      const detail = details ? JSON.stringify(details) : `status ${issued.response.status}`;
+      return { ok: false as const, queued: 0, skipped: 0, error: `AI grant failed for l10n: ${detail}` };
+    }
+    jobs.push({
+      v: 2,
+      agentId: issued.agentId,
+      grant: issued.grant,
+      publicId,
+      widgetType: args.widgetType!,
+      locale,
+      baseFingerprint,
+      baseUpdatedAt,
+      changedPaths,
+      removedPaths,
+      kind,
+      workspaceId,
+      envStage,
+    });
+  }
 
   if (useDirectDispatch) {
     const token = asTrimmedString(args.env.PARIS_DEV_JWT);

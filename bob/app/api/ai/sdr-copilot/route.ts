@@ -147,6 +147,7 @@ function checkRateLimit(req: Request) {
 async function getAiGrant(args: {
   agentId: string;
   mode: 'editor' | 'ops';
+  widgetType: string;
   sessionId: string;
   instancePublicId?: string;
   workspaceId?: string;
@@ -163,10 +164,80 @@ async function getAiGrant(args: {
     return { ok: false as const, error: 'AI_NOT_CONFIGURED', message };
   }
 
-  const url = `${parisBaseUrl.replace(/\/$/, '')}/api/ai/grant`;
+  const baseUrl = parisBaseUrl.replace(/\/$/, '');
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
   if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
 
+  const subjectNormalized = (args.subject || '').trim().toLowerCase();
+  const useMinibobGrant = subjectNormalized === 'minibob';
+
+  if (useMinibobGrant) {
+    // Minibob uses a server-issued session token to prevent infinite client-generated sessionIds.
+    let sessionRes: Response;
+    try {
+      sessionRes = await fetch(`${baseUrl}/api/ai/minibob/session`, { method: 'POST', headers });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `Minibob session request failed: ${message}` };
+    }
+
+    const sessionText = await sessionRes.text().catch(() => '');
+    const sessionPayload = safeJsonParse(sessionText) as any;
+    if (!sessionRes.ok) {
+      let message =
+        typeof sessionPayload?.message === 'string'
+          ? sessionPayload.message
+          : looksLikeHtml(sessionText)
+            ? `Paris returned an HTML error page (HTTP ${sessionRes.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
+            : sessionText || `Session request failed (${sessionRes.status})`;
+      if (looksLikeHtml(message)) {
+        message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: sessionRes.status, bodyText: message });
+      }
+      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
+    }
+
+    const sessionToken = asTrimmedString(sessionPayload?.sessionToken);
+    if (!sessionToken) {
+      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Session service returned an invalid response' };
+    }
+
+    let grantRes: Response;
+    try {
+      grantRes = await fetch(`${baseUrl}/api/ai/minibob/grant`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          sessionToken,
+          sessionId: args.sessionId,
+          widgetType: args.widgetType,
+        }),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `Minibob grant request failed: ${message}` };
+    }
+
+    const grantText = await grantRes.text().catch(() => '');
+    const grantPayload = safeJsonParse(grantText) as any;
+    if (!grantRes.ok) {
+      let message =
+        typeof grantPayload?.message === 'string'
+          ? grantPayload.message
+          : looksLikeHtml(grantText)
+            ? `Paris returned an HTML error page (HTTP ${grantRes.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
+            : grantText || `Grant request failed (${grantRes.status})`;
+      if (looksLikeHtml(message)) {
+        message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: grantRes.status, bodyText: message });
+      }
+      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
+    }
+
+    const grant = asTrimmedString(grantPayload?.grant);
+    if (!grant) return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Grant service returned an invalid response' };
+    return { ok: true as const, value: grant };
+  }
+
+  const url = `${baseUrl}/api/ai/grant`;
   let res: Response;
   try {
     res = await fetch(url, {
@@ -195,7 +266,7 @@ async function getAiGrant(args: {
       typeof payload?.message === 'string'
         ? payload.message
         : looksLikeHtml(text)
-          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${parisBaseUrl.replace(/\/$/, '')}).`
+          ? `Paris returned an HTML error page (HTTP ${res.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
           : text || `Grant request failed (${res.status})`;
     if (looksLikeHtml(message)) {
       message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: res.status, bodyText: message });
@@ -287,6 +358,7 @@ export async function POST(req: Request) {
     const grantRes = await getAiGrant({
       agentId,
       mode: 'ops',
+      widgetType,
       sessionId,
       instancePublicId,
       workspaceId,

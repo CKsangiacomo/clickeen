@@ -40,6 +40,207 @@ async function hmacSha256Base64Url(secret: string, message: string): Promise<str
   return base64UrlEncodeBytes(await hmacSha256(secret, message));
 }
 
+const MINIBOB_SESSION_TTL_SEC = 60 * 60;
+const MINIBOB_SESSION_FUTURE_SKEW_SEC = 5 * 60;
+const MINIBOB_FP_LIMIT_PER_MINUTE = 6;
+const MINIBOB_SESSION_LIMIT_PER_HOUR = 12;
+const MINIBOB_MINUTE_TTL_SEC = 2 * 60;
+const MINIBOB_HOUR_TTL_SEC = 2 * 60 * 60;
+
+type MinibobRateLimitMode = 'off' | 'log' | 'enforce';
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function getEnvStage(env: Env): string {
+  return (asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev').toLowerCase();
+}
+
+function resolveMinibobRateLimitMode(env: Env): { stage: string; mode: MinibobRateLimitMode } {
+  const stage = getEnvStage(env);
+  const override = asTrimmedString(env.MINIBOB_RATELIMIT_MODE)?.toLowerCase();
+  if (override === 'off' || override === 'log' || override === 'enforce') {
+    return { stage, mode: override };
+  }
+  if (stage === 'local') return { stage, mode: 'off' };
+  if (stage === 'cloud-dev') return { stage, mode: 'log' };
+  return { stage, mode: 'enforce' };
+}
+
+function headerValue(headers: Headers, name: string, fallback = ''): string {
+  const raw = headers.get(name);
+  return raw && raw.trim() ? raw.trim() : fallback;
+}
+
+function getClientIp(req: Request): string {
+  const cfIp = headerValue(req.headers, 'cf-connecting-ip');
+  if (cfIp) return cfIp;
+  const forwarded = headerValue(req.headers, 'x-forwarded-for');
+  if (!forwarded) return 'local';
+  return forwarded.split(',')[0]?.trim() || 'local';
+}
+
+function utcDayKey(now: Date): string {
+  return now.toISOString().slice(0, 10);
+}
+
+function utcMinuteKey(now: Date): string {
+  return now.toISOString().slice(0, 16);
+}
+
+function utcHourKey(now: Date): string {
+  return now.toISOString().slice(0, 13);
+}
+
+async function incrementKvCounter(kv: KVNamespace, key: string, ttlSec: number): Promise<number> {
+  const raw = await kv.get(key);
+  const current = raw ? Number.parseInt(raw, 10) : 0;
+  const next = Number.isFinite(current) && current > 0 ? current + 1 : 1;
+  await kv.put(key, String(next), { expirationTtl: ttlSec });
+  return next;
+}
+
+async function deriveSessionKey(secret: string, nonce: string): Promise<string> {
+  return hmacSha256Base64Url(secret, `minibob|session|${nonce}`);
+}
+
+async function verifyMinibobSessionToken(
+  token: string,
+  secret: string,
+): Promise<{ ok: true; sessionKey: string; nonce: string; issuedAtSec: number } | { ok: false; response: Response }> {
+  const parts = token.split('.');
+  if (parts.length !== 5 || parts[0] !== 'minibob' || parts[1] !== 'v1') {
+    return { ok: false, response: json([{ path: 'sessionToken', message: 'invalid session token format' }], { status: 403 }) };
+  }
+  const issuedAtSec = Number.parseInt(parts[2] || '', 10);
+  const nonce = parts[3] || '';
+  const signature = parts[4] || '';
+  if (!Number.isFinite(issuedAtSec) || issuedAtSec <= 0 || !nonce || !signature) {
+    return { ok: false, response: json([{ path: 'sessionToken', message: 'invalid session token parts' }], { status: 403 }) };
+  }
+
+  const expected = await hmacSha256Base64Url(secret, `minibob|v1|${issuedAtSec}|${nonce}`);
+  if (!timingSafeEqual(signature, expected)) {
+    return { ok: false, response: json([{ path: 'sessionToken', message: 'invalid session token signature' }], { status: 403 }) };
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (issuedAtSec > nowSec + MINIBOB_SESSION_FUTURE_SKEW_SEC) {
+    return { ok: false, response: json([{ path: 'sessionToken', message: 'session token issued in the future' }], { status: 403 }) };
+  }
+  if (nowSec - issuedAtSec > MINIBOB_SESSION_TTL_SEC) {
+    return { ok: false, response: json([{ path: 'sessionToken', message: 'session token expired' }], { status: 403 }) };
+  }
+
+  const sessionKey = await deriveSessionKey(secret, nonce);
+  return { ok: true, sessionKey, nonce, issuedAtSec };
+}
+
+function logMinibobMintDecision(args: {
+  stage: string;
+  mode: MinibobRateLimitMode;
+  decision: 'allow' | 'throttle' | 'deny';
+  reason: string;
+  sessionId: string;
+  widgetType: string;
+  sessionKey?: string | null;
+}) {
+  const sessionKeyShort = args.sessionKey ? args.sessionKey.slice(0, 16) : null;
+  console.log(
+    JSON.stringify({
+      event: 'minibob.mint',
+      stage: args.stage,
+      mode: args.mode,
+      decision: args.decision,
+      reason: args.reason,
+      sessionId: args.sessionId,
+      widgetType: args.widgetType,
+      sessionKey: sessionKeyShort,
+      budgets: { maxTokens: 420, timeoutMs: 12_000, maxRequests: 2 },
+      ts: Date.now(),
+    }),
+  );
+}
+
+async function applyMinibobRateLimit(args: {
+  req: Request;
+  env: Env;
+  secret: string;
+  sessionKey: string;
+}): Promise<
+  | { ok: true; stage: string; mode: MinibobRateLimitMode; fpHash: string; rateLimited: boolean; reason: string }
+  | { ok: false; response: Response; stage: string; mode: MinibobRateLimitMode; reason: string }
+> {
+  const { stage, mode } = resolveMinibobRateLimitMode(args.env);
+  if (mode === 'off') {
+    return { ok: true, stage, mode, fpHash: 'off', rateLimited: false, reason: 'off' };
+  }
+
+  const kv = args.env.MINIBOB_RATELIMIT_KV;
+  if (!kv) {
+    if (stage === 'local') {
+      return { ok: true, stage, mode: 'off', fpHash: 'local-no-kv', rateLimited: false, reason: 'no_kv_local' };
+    }
+    if (stage === 'cloud-dev') {
+      return { ok: true, stage, mode: 'log', fpHash: 'cloud-dev-no-kv', rateLimited: false, reason: 'no_kv_cloud_dev' };
+    }
+    return {
+      ok: false,
+      stage,
+      mode,
+      reason: 'ratelimit_unavailable',
+      response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.ai.minibob.ratelimitUnavailable' } }, { status: 503 }),
+    };
+  }
+
+  const now = new Date();
+  const dayKey = utcDayKey(now);
+  const minuteKey = utcMinuteKey(now);
+  const hourKey = utcHourKey(now);
+
+  const ip = getClientIp(args.req);
+  const userAgent = headerValue(args.req.headers, 'user-agent', 'unknown');
+  const acceptLanguage = headerValue(args.req.headers, 'accept-language', 'unknown');
+  const fpHash = await hmacSha256Base64Url(args.secret, `${dayKey}|${ip}|${userAgent}|${acceptLanguage}`);
+
+  const fpCounterKey = `minibob:fp:${fpHash}:minute:${minuteKey}`;
+  const sessionCounterKey = `minibob:session:${args.sessionKey}:hour:${hourKey}`;
+
+  const [fpCount, sessionCount] = await Promise.all([
+    incrementKvCounter(kv, fpCounterKey, MINIBOB_MINUTE_TTL_SEC),
+    incrementKvCounter(kv, sessionCounterKey, MINIBOB_HOUR_TTL_SEC),
+  ]);
+
+  const fpExceeded = fpCount > MINIBOB_FP_LIMIT_PER_MINUTE;
+  const sessionExceeded = sessionCount > MINIBOB_SESSION_LIMIT_PER_HOUR;
+  if (!fpExceeded && !sessionExceeded) {
+    return { ok: true, stage, mode, fpHash, rateLimited: false, reason: 'ok' };
+  }
+
+  const reason = fpExceeded ? 'fp_limit_exceeded' : 'session_limit_exceeded';
+  const retryAfterSec = fpExceeded ? 60 : 60 * 60;
+  if (mode === 'log') {
+    return { ok: true, stage, mode, fpHash, rateLimited: true, reason };
+  }
+
+  return {
+    ok: false,
+    stage,
+    mode,
+    reason,
+    response: json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.errors.ai.minibob.rateLimited' } },
+      { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+    ),
+  };
+}
+
 async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
   const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(grant)));
   const sigBytes = await hmacSha256(secret, `v1.${payloadB64}`);
@@ -158,11 +359,14 @@ export async function issueAiGrant(args: {
   const maxRequests = clampBudget(requestedMaxRequests, baseBudgets.maxRequests ?? 1, MAX_REQUESTS_CAP);
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const exp = nowSec + 60;
+  // Queue delivery + multi-locale runs can exceed 60s; use a longer grant TTL.
+  const exp = nowSec + 10 * 60;
+  const jti = crypto.randomUUID();
 
   const grantPayload: AIGrant = {
     v: 1,
     iss: 'paris',
+    jti,
     sub: { kind: 'anon', sessionId: trace.sessionId || crypto.randomUUID() },
     exp,
     caps: [`agent:${resolvedAgent.canonicalId}`],
@@ -236,7 +440,21 @@ export async function handleAiGrant(req: Request, env: Env) {
   return json({ grant: issued.grant, exp: issued.exp, agentId: issued.agentId });
 }
 
+export async function handleAiMinibobSession(_req: Request, env: Env) {
+  const secret = env.AI_GRANT_HMAC_SECRET?.trim();
+  if (!secret) {
+    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
+  }
+
+  const issuedAtSec = Math.floor(Date.now() / 1000);
+  const nonce = crypto.randomUUID();
+  const signature = await hmacSha256Base64Url(secret, `minibob|v1|${issuedAtSec}|${nonce}`);
+  const sessionToken = `minibob.v1.${issuedAtSec}.${nonce}.${signature}`;
+  return json({ sessionToken, exp: issuedAtSec + MINIBOB_SESSION_TTL_SEC });
+}
+
 export async function handleAiMinibobGrant(req: Request, env: Env) {
+  const { stage, mode } = resolveMinibobRateLimitMode(env);
   let body: unknown;
   try {
     body = await readJson(req);
@@ -249,36 +467,86 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
   }
 
   const sessionId = asTrimmedString((body as any).sessionId);
+  const sessionToken = asTrimmedString((body as any).sessionToken);
   const widgetType = asTrimmedString((body as any).widgetType);
   if (!sessionId) {
     return json([{ path: 'sessionId', message: 'sessionId is required' }], { status: 422 });
   }
+  if (!sessionToken) {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'missing_session_token', sessionId, widgetType: widgetType ?? '' });
+    return json([{ path: 'sessionToken', message: 'sessionToken is required' }], { status: 422 });
+  }
   if (!widgetType) {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'missing_widget_type', sessionId, widgetType: '' });
     return json([{ path: 'widgetType', message: 'widgetType is required' }], { status: 422 });
+  }
+
+  const secret = env.AI_GRANT_HMAC_SECRET?.trim();
+  if (!secret) {
+    return json({ error: 'AI_NOT_CONFIGURED', message: 'Missing AI_GRANT_HMAC_SECRET' }, { status: 503 });
   }
 
   const workspaceIdRaw = asTrimmedString((body as any).workspaceId);
   if (workspaceIdRaw) {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'workspace_not_allowed', sessionId, widgetType });
     return json([{ path: 'workspaceId', message: 'workspaceId is not allowed for minibob grants' }], { status: 403 });
   }
 
   const agentIdRaw = asTrimmedString((body as any).agentId);
   if (agentIdRaw && agentIdRaw !== 'sdr.widget.copilot.v1') {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'agent_not_allowed', sessionId, widgetType });
     return json([{ path: 'agentId', message: 'agentId is not allowed for minibob grants' }], { status: 403 });
   }
 
   const modeRaw = asTrimmedString((body as any).mode);
   if (modeRaw && modeRaw !== 'ops') {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'mode_not_allowed', sessionId, widgetType });
     return json([{ path: 'mode', message: 'mode is not allowed for minibob grants' }], { status: 403 });
   }
 
+  const verified = await verifyMinibobSessionToken(sessionToken, secret);
+  if (!verified.ok) {
+    logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'invalid_session_token', sessionId, widgetType });
+    return verified.response;
+  }
+
+  const rateLimit = await applyMinibobRateLimit({ req, env, secret, sessionKey: verified.sessionKey });
+  if (!rateLimit.ok) {
+    logMinibobMintDecision({
+      stage: rateLimit.stage,
+      mode: rateLimit.mode,
+      decision: 'throttle',
+      reason: rateLimit.reason,
+      sessionId,
+      widgetType,
+      sessionKey: verified.sessionKey,
+    });
+    return rateLimit.response;
+  }
+
+  const decision: 'allow' | 'throttle' = rateLimit.rateLimited ? 'throttle' : 'allow';
+  const reason = rateLimit.rateLimited ? rateLimit.reason : 'ok';
+  logMinibobMintDecision({
+    stage: rateLimit.stage,
+    mode: rateLimit.mode,
+    decision,
+    reason,
+    sessionId,
+    widgetType,
+    sessionKey: verified.sessionKey,
+  });
+
+  const minibobBudgets =
+    stage === 'local'
+      ? { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 }
+      : { maxTokens: 420, timeoutMs: 12_000, maxRequests: 2 };
   const issued = await issueAiGrant({
     env,
     agentId: 'sdr.widget.copilot.v1',
     mode: 'ops',
     subject: 'minibob',
     trace: { sessionId },
-    budgets: { maxTokens: 420, timeoutMs: 12_000, maxRequests: 2 },
+    budgets: minibobBudgets,
   });
   if (!issued.ok) return issued.response;
 

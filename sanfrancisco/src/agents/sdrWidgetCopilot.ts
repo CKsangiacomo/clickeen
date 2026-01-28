@@ -133,6 +133,8 @@ const LANGUAGE_NAME_MAP: Record<string, string> = {
   हिन्दी: 'hi',
 };
 
+const LANGUAGE_CODE_SET = new Set(['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'ru', 'ar', 'ja', 'ko', 'zh', 'he', 'hi']);
+
 const CONSENT_LEXICON: Record<string, { yes: string[]; no: string[] }> = {
   en: { yes: ['yes', 'yep', 'yeah', 'ok', 'okay', 'sure'], no: ['no', 'nope', 'nah'] },
   es: { yes: ['sí', 'si', 'claro', 'vale'], no: ['no'] },
@@ -243,12 +245,32 @@ function detectScriptLanguage(prompt: string): string | null {
 
 function detectExplicitLanguage(prompt: string): string | null {
   const s = (prompt || '').toLowerCase();
-  const match = s.match(/\b(reply|respond|answer)\s+in\s+([a-z\u00C0-\u017F]+)\b/);
+  const directiveMatch = s.match(/(?:^|\s)\/?(?:lang|language)\s*[:=]\s*([a-z\u00C0-\u017F-]+)/);
+  if (directiveMatch?.[1]) {
+    const mapped = mapLanguageToken(directiveMatch[1]);
+    if (mapped) return mapped;
+  }
+  const switchMatch = s.match(/\b(?:switch|change)\s+to\s+([a-z\u00C0-\u017F-]+)\b/);
+  if (switchMatch?.[1]) {
+    const mapped = mapLanguageToken(switchMatch[1]);
+    if (mapped) return mapped;
+  }
+  const match = s.match(/\b(reply|respond|answer)\s+in\s+([a-z\u00C0-\u017F-]+)\b/);
   if (match && match[2]) {
-    return LANGUAGE_NAME_MAP[match[2]] ?? null;
+    const mapped = mapLanguageToken(match[2]);
+    if (mapped) return mapped;
   }
   const override = Object.keys(LANGUAGE_NAME_MAP).find((key) => s.includes(key));
   return override ? LANGUAGE_NAME_MAP[override] : null;
+}
+
+function mapLanguageToken(raw: string): string | null {
+  const normalized = normalizeLocaleToken(raw);
+  const mapped = LANGUAGE_NAME_MAP[normalized];
+  if (mapped) return mapped;
+  if (LANGUAGE_CODE_SET.has(normalized)) return normalized;
+  const base = normalized.split('-')[0];
+  return LANGUAGE_CODE_SET.has(base) ? base : null;
 }
 
 function scoreStopwords(prompt: string): { lang: string; score: number } | null {
@@ -421,8 +443,10 @@ async function loadSdrAllowlist(env: Env, widgetType: string): Promise<{
     throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'tokyo', message: 'Invalid sdr.allowlist.json' });
   }
 
-  const environment = String(env.ENVIRONMENT || '').trim().toLowerCase();
-  if (environment === 'production') return null;
+  const environment = String(env.ENVIRONMENT || 'local').trim().toLowerCase();
+  const allowFallback =
+    environment === 'local' || environment === 'cloud-dev' || environment === 'dev' || environment === 'development';
+  if (!allowFallback) return null;
 
   const fallback = await fetchTokyoJson(env, `${basePath}/localization.json`);
   if (!fallback.json) return null;
@@ -622,6 +646,65 @@ function looksLikeExplainIntent(prompt: string): boolean {
   if (/\b(help|explain|meaning|what does)\b/i.test(s)) return true;
 
   return false;
+}
+
+function languageClarifyMessage(lang: string): string {
+  const normalized = normalizeLocaleToken(lang);
+  if (normalized.startsWith('it')) {
+    return 'Certo, posso parlare in italiano. Condividi il sito web così posso personalizzare il widget, oppure dimmi in 1–2 frasi che attività hai e a chi ti rivolgi.';
+  }
+  if (normalized.startsWith('fr')) {
+    return "D’accord, je peux répondre en français. Partagez votre site pour que je personnalise le widget, ou décrivez votre activité et votre audience en 1–2 phrases.";
+  }
+  if (normalized.startsWith('de')) {
+    return 'Alles klar, ich kann auf Deutsch antworten. Teile deine Website, damit ich das Widget personalisieren kann, oder beschreibe dein Angebot und deine Zielgruppe in 1–2 Sätzen.';
+  }
+  if (normalized.startsWith('es')) {
+    return 'Perfecto, puedo responder en español. Comparte tu web para personalizar el widget o cuéntame tu negocio y tu audiencia en 1–2 frases.';
+  }
+  if (normalized.startsWith('pt')) {
+    return 'Claro, posso responder em português. Compartilhe seu site para eu personalizar o widget ou descreva seu negócio e público em 1–2 frases.';
+  }
+  if (normalized.startsWith('nl')) {
+    return 'Prima, ik kan in het Nederlands antwoorden. Deel je website zodat ik de widget kan personaliseren, of beschrijf je bedrijf en doelgroep in 1–2 zinnen.';
+  }
+  if (normalized.startsWith('ru')) {
+    return 'Хорошо, могу отвечать по‑русски. Пришлите сайт, чтобы я персонализировал виджет, или опишите бизнес и аудиторию в 1–2 предложениях.';
+  }
+  if (normalized.startsWith('ar')) {
+    return 'حسنًا، يمكنني الرد بالعربية. شارك موقعك لأخصص الودجت، أو صف عملك وجمهورك بجملة أو جملتين.';
+  }
+  if (normalized.startsWith('ja')) {
+    return '日本語でお答えできます。サイトURLを共有してください。難しければ、事業内容と対象顧客を1〜2文で教えてください。';
+  }
+  if (normalized.startsWith('ko')) {
+    return '네, 한국어로 답할 수 있어요. 웹사이트를 공유해 주시면 위젯을 개인화할게요. 어렵다면 사업과 대상 고객을 1–2문장으로 알려주세요.';
+  }
+  if (normalized.startsWith('zh')) {
+    return '好的，我可以用中文回复。请分享你的网站以便我个性化小组件，或用1–2句话介绍你的业务和受众。';
+  }
+  if (normalized.startsWith('hi')) {
+    return 'ठीक है, मैं हिंदी में जवाब दे सकता हूँ। कृपया अपनी वेबसाइट साझा करें ताकि मैं विजेट को पर्सनलाइज़ कर सकूँ, या अपने व्यवसाय और दर्शकों के बारे में 1–2 वाक्य बताएं।';
+  }
+  return 'Got it — I can reply in that language. Share your website so I can personalize the widget, or describe your business and audience in 1–2 sentences.';
+}
+
+function looksLikeLanguageOnlyIntent(prompt: string): { language: string } | null {
+  const explicit = detectExplicitLanguage(prompt);
+  if (!explicit) return null;
+
+  const s = (prompt || '').trim().toLowerCase();
+  if (!s) return null;
+
+  // If the user is explicitly asking to translate/rewrite content, let the model handle it.
+  if (/\b(translate|traduci|tradurre|rewrite|rephrase|localize|translation)\b/i.test(s)) return null;
+
+  const wordCount = s.split(/\s+/).filter(Boolean).length;
+  if (wordCount <= 6) return { language: explicit };
+
+  // Otherwise, treat explicit language mentions as language-only unless other edit verbs appear.
+  if (/\b(edit|change|update|modify|adjust|add|remove|delete)\b/i.test(s)) return null;
+  return { language: explicit };
 }
 
 function normalizeToken(input: string): string {
@@ -1020,7 +1103,7 @@ function maybeClarify(dict: GlobalDictionary, input: WidgetCopilotInput): string
   if (languageConcept && containsAny(prompt, languageConcept.synonyms)) {
     return (
       dict.clarifications.find((c) => c.conceptId === 'language')?.question ??
-      'When you ask for a language change, should I translate just the widget content (text), or also adjust styling for that audience?'
+      'I can personalize the widget, not translate it. Share your website so I can tailor the copy, or describe your business and audience in 1–2 sentences.'
     );
   }
 
@@ -1061,13 +1144,15 @@ function systemPrompt(language: string): string {
     '',
     'If SOURCE_PAGE_TEXT is present, it is extracted from exactly one public web page (no crawling). Use it only to inform copy edits.',
     '',
-    'RULES:',
-    '1) Only output SET ops (no insert/remove/move).',
-    '2) Ops must target allowlisted copy paths only.',
-    '3) Do not change styling, structure, or layout.',
-    '4) If a request is out of scope, ask ONE short clarifying question.',
-    '5) Keep changes minimal; confirm what changed in 1–2 sentences.',
-    '6) CTA is optional; use it to drive signup/publish after a visible win.',
+    'WHAT YOU MAY DO (ONLY):',
+    '1) Edit text by returning SET ops on allowlisted copy paths.',
+    '2) Ask for a website URL (then consent) or ask 1 short clarifying question needed to personalize copy.',
+    '3) After a visible win, return a conversion CTA (signup/publish/upgrade).',
+    '',
+    'GUARDRAILS:',
+    '- Never translate the widget as a goal. Personalize copy using the website or business context.',
+    '- Keep edits minimal and conversion-focused.',
+    '- Confirm what changed in 1–2 sentences.',
     '',
     'Output MUST be JSON, with this shape:',
     '{ "ops"?: WidgetOp[], "message": string, "cta"?: { "text": string, "action": "signup"|"upgrade"|"learn-more", "url"?: string } }',
@@ -1172,6 +1257,24 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
 
     // If the user didn't answer with an accepted token, drop the pending policy and treat this as a new request.
     session.pendingPolicy = undefined;
+  }
+
+  const languageOnly = looksLikeLanguageOnlyIntent(input.prompt);
+  if (languageOnly) {
+    session.conversationLanguage = languageOnly.language;
+    session.languageConfidence = Math.max(session.languageConfidence ?? 0.5, 0.95);
+    session.lastActiveAtMs = Date.now();
+    const msg = languageClarifyMessage(languageOnly.language);
+    session.turns = [
+      ...session.turns,
+      { role: 'user' as const, content: input.prompt },
+      { role: 'assistant' as const, content: msg },
+    ].slice(-10) as CopilotSession['turns'];
+    await putSession(env, session);
+    return {
+      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: languageOnly.language, languageConfidence: session.languageConfidence }) },
+      usage: { provider: 'local', model: 'language_intent', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+    };
   }
 
   if (conversationLanguage === 'en' && looksLikeExplainIntent(input.prompt)) {

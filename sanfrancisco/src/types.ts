@@ -8,6 +8,7 @@ export type GrantSubject =
 export type AIGrant = {
   v: 1;
   iss: 'paris';
+  jti?: string;
   sub: GrantSubject;
   exp: number; // epoch seconds
   caps: string[];
@@ -99,6 +100,7 @@ export type InteractionEvent = {
 export type Env = {
   ENVIRONMENT?: string;
   AI_GRANT_HMAC_SECRET: string;
+  AI_PRICE_TABLE_JSON?: string;
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
@@ -114,7 +116,7 @@ export type Env = {
   PITCH_SERVICE_KEY?: string;
   PITCH_MODEL?: string;
   SF_KV: KVNamespace;
-  SF_EVENTS: Queue<InteractionEvent>;
+  SF_EVENTS?: Queue<InteractionEvent>;
   SF_D1: D1Database;
   SF_R2: R2Bucket;
   // Cloudflare Vectorize binding (typed loosely to avoid depending on Vectorize TS types).

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Simple dev up script: stop stale listeners, then start Tokyo CDN + Workers + UIs.
-# Logs go to CurrentlyExecuting/ and URLs are printed at the end.
+# Logs go to Logs/ and URLs are printed at the end.
 
 DEV_UP_FULL_REBUILD=0
 for arg in "$@"; do
@@ -27,7 +27,9 @@ done
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
-mkdir -p CurrentlyExecuting
+mkdir -p Execution_Pipeline_Docs
+LOG_DIR="$ROOT_DIR/Logs"
+mkdir -p "$LOG_DIR"
 WRANGLER_PERSIST_DIR="$ROOT_DIR/.wrangler/state"
 mkdir -p "$WRANGLER_PERSIST_DIR"
 TOKYO_WORKER_INSPECTOR_PORT=9231
@@ -126,7 +128,7 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
 fi
 
 # Dev auth token shared by Bob -> Paris requests.
-PARIS_DEV_JWT_FILE="$ROOT_DIR/CurrentlyExecuting/paris.dev.jwt"
+PARIS_DEV_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/paris.dev.jwt"
 if [ -z "${PARIS_DEV_JWT:-}" ]; then
   if [ -f "$PARIS_DEV_JWT_FILE" ]; then
     PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
@@ -144,7 +146,7 @@ if [ -z "${TOKYO_DEV_JWT:-}" ]; then
 fi
 
 # Shared HMAC used for Paris grants -> SanFrancisco verification.
-AI_GRANT_HMAC_SECRET_FILE="$ROOT_DIR/CurrentlyExecuting/ai.grant.hmac.secret"
+AI_GRANT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/ai.grant.hmac.secret"
 if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
   if [ -f "$AI_GRANT_HMAC_SECRET_FILE" ]; then
     AI_GRANT_HMAC_SECRET="$(cat "$AI_GRANT_HMAC_SECRET_FILE")"
@@ -214,7 +216,7 @@ TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 echo "[dev-up] Starting Tokyo CDN stub on 4000"
 (
   cd "$ROOT_DIR/tokyo"
-  PORT=4000 nohup node dev-server.mjs > "$ROOT_DIR/CurrentlyExecuting/tokyo.dev.log" 2>&1 &
+  PORT=4000 nohup node dev-server.mjs > "$LOG_DIR/tokyo.dev.log" 2>&1 &
   TOKYO_PID=$!
   echo "[dev-up] Tokyo PID: $TOKYO_PID"
 )
@@ -232,7 +234,7 @@ echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
   fi
   nohup pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
     "${VARS[@]}" \
-    > "$ROOT_DIR/CurrentlyExecuting/tokyo-worker.dev.log" 2>&1 &
+    > "$LOG_DIR/tokyo-worker.dev.log" 2>&1 &
   TOKYO_WORKER_PID=$!
   echo "[dev-up] Tokyo Worker PID: $TOKYO_WORKER_PID"
 )
@@ -257,7 +259,7 @@ echo "[dev-up] Starting Paris Worker (3001)"
 
   nohup pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
     "${VARS[@]}" \
-    > "$ROOT_DIR/CurrentlyExecuting/paris.dev.log" 2>&1 &
+    > "$LOG_DIR/paris.dev.log" 2>&1 &
   PARIS_PID=$!
   echo "[dev-up] Paris PID: $PARIS_PID"
 )
@@ -270,7 +272,7 @@ echo "[dev-up] Note: instances are created/edited from DevStudio Local (human-dr
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
   cd "$ROOT_DIR/venice"
-  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/venice.dev.log" 2>&1 &
+  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/venice.dev.log" 2>&1 &
   VENICE_PID=$!
   echo "[dev-up] Venice PID: $VENICE_PID"
 )
@@ -301,7 +303,7 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     fi
 
     nohup pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" "${VARS[@]}" \
-      > "$ROOT_DIR/CurrentlyExecuting/sanfrancisco.dev.log" 2>&1 &
+      > "$LOG_DIR/sanfrancisco.dev.log" 2>&1 &
     SF_PID=$!
     echo "[dev-up] SanFrancisco PID: $SF_PID"
   )
@@ -314,9 +316,9 @@ fi
   cd "$ROOT_DIR/bob"
   if [ -n "$SF_BASE_URL" ]; then
     # Always prefer local Workers in local dev (avoid accidentally pointing at Cloudflare URLs from .env.local).
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/bob.dev.log" 2>&1 &
   else
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/bob.dev.log" 2>&1 &
+    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/bob.dev.log" 2>&1 &
   fi
   BOB_PID=$!
   echo "[dev-up] Bob PID: $BOB_PID"
@@ -327,7 +329,7 @@ fi
 
 (
   cd "$ROOT_DIR/admin"
-  PORT=5173 TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/devstudio.dev.log" 2>&1 &
+  PORT=5173 TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/devstudio.dev.log" 2>&1 &
   DEVSTUDIO_PID=$!
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
 )
@@ -338,7 +340,7 @@ fi
 echo "[dev-up] Starting Pitch Agent worker (8790)"
 (
   cd "$ROOT_DIR/pitch"
-  nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/pitch.dev.log" 2>&1 &
+  nohup pnpm dev > "$LOG_DIR/pitch.dev.log" 2>&1 &
   PITCH_PID=$!
   echo "[dev-up] Pitch PID: $PITCH_PID"
 )
@@ -359,7 +361,7 @@ fi
 echo "[dev-up] Starting Prague marketing site (4321)"
 (
   cd "$ROOT_DIR/prague"
-  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" nohup pnpm dev > "$ROOT_DIR/CurrentlyExecuting/prague.dev.log" 2>&1 &
+  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" nohup pnpm dev > "$LOG_DIR/prague.dev.log" 2>&1 &
   PRAGUE_PID=$!
   echo "[dev-up] Prague PID: $PRAGUE_PID"
 )

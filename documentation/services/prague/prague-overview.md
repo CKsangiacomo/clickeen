@@ -87,6 +87,8 @@ Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
 - overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized overlays into `blocks[].copy` at load time
+- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `/l10n/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
+- Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

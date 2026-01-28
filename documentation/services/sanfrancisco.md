@@ -22,6 +22,8 @@
 - Endpoint: `POST /v1/execute`.
 - Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
 - Agent routing uses the registry canonical IDs (aliases accepted).
+- Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
+- Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
 
 ## Personalization Preview (acquisition)
 - Endpoint: `POST /v1/personalization/preview` (internal, requires `PARIS_DEV_JWT`).
@@ -40,9 +42,12 @@
 - Loads widget allowlist from Tokyo (`/widgets/{widgetType}/localization.json`).
 - Translates only `changedPaths`, removes `removedPaths`, and writes set-only ops to Paris (layer=locale).
 - Paris preserves user overrides in layer=user and enqueues publish to Tokyo-worker.
-- Job schema v2 includes `baseFingerprint`, `changedPaths`, `removedPaths`, and optional `baseUpdatedAt` metadata.
+- Job schema v2 includes `agentId`, `grant`, `baseFingerprint`, `changedPaths`, `removedPaths`, and optional `baseUpdatedAt` metadata.
+- SF verifies the Paris-minted grant and `agent:*` cap before executing l10n jobs.
+- l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider allowlist).
 - Reports job status back to Paris via `POST /api/l10n/jobs/report` (`running | succeeded | failed | superseded`).
-- Local dev: `POST /v1/l10n` accepts job batches (Authorization: `Bearer ${PARIS_DEV_JWT}`) to bypass queues.
+- Local dev: `POST /v1/l10n` accepts job batches (Authorization: `Bearer ${PARIS_DEV_JWT}`) to bypass queues; jobs must still include a valid grant.
+- Cost budgets (`maxCostUsd`) use the `AI_PRICE_TABLE_JSON` env var; a default deepseek price table is provided when unset.
 
 ## Prague localization translation (local-only)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT=local`).

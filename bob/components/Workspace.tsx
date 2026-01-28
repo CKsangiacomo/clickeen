@@ -9,11 +9,9 @@ export function Workspace() {
   const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
-  const seoGeoEnabled = Boolean((instanceData as any)?.seoGeo?.enabled);
   const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
   const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
   const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
-  const publicId = meta?.publicId ? String(meta.publicId) : '';
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
@@ -25,13 +23,8 @@ export function Workspace() {
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
-    if (seoGeoEnabled && publicId) {
-      return `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=${encodeURIComponent(
-        theme,
-      )}&device=${encodeURIComponent(device)}`;
-    }
     return compiled.assets.htmlUrl;
-  }, [hasWidget, compiled, seoGeoEnabled, publicId, theme, device]);
+  }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {
     const raw = (instanceData as any)?.stage?.background;

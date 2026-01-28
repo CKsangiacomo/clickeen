@@ -104,6 +104,10 @@ Panels defined in `tokyo/widgets/faq/spec.json`:
 - `appearance` — widget appearance + stage/pod appearance
 - `settings` — AI context (website URL) + SEO/GEO toggles + media toggles + backlink
 
+ToolDrawer spacing rule (authoring):
+- Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
+- No custom spacing wrappers or per-control margins; only cluster/group labels add bottom margin.
+
 ## 5.1) AI behavior (Copilot, uses `context.websiteUrl`)
 If `context.websiteUrl` is present and policy allows it, Copilot may:
 - Rewrite or propose FAQ content (sections/questions/answers) based on the website URL.

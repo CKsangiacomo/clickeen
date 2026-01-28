@@ -35,6 +35,7 @@ interface TexteditState {
   preview: HTMLElement;
   previewText: HTMLElement;
   hiddenInput: HTMLInputElement;
+  allowLinks: boolean;
 
   palette: HTMLElement;
   paletteButtons: Map<Command, HTMLButtonElement>;
@@ -97,6 +98,11 @@ export function hydrateTextedit(scope: Element | DocumentFragment): void {
 }
 
 function createState(root: HTMLElement): TexteditState {
+  const allowLinksAttr = root.getAttribute('data-allow-links');
+  const allowLinks =
+    allowLinksAttr == null
+      ? true
+      : !['false', '0', 'no'].includes(allowLinksAttr.trim().toLowerCase());
   const control = root.querySelector<HTMLElement>('.diet-textedit__control');
   const popover = root.querySelector<HTMLElement>('.diet-popover');
   const editor = root.querySelector<HTMLElement>('.diet-textedit__editor');
@@ -181,6 +187,13 @@ function createState(root: HTMLElement): TexteditState {
   linkApply.disabled = true;
   linkRemove.style.display = 'none';
 
+  if (!allowLinks) {
+    const linkButton = paletteButtons.get(Command.Link);
+    if (linkButton) linkButton.style.display = 'none';
+    clearLinksButton.classList.add('is-hidden');
+    linkForm.classList.add('is-hidden');
+  }
+
   return {
     root,
     control,
@@ -189,6 +202,7 @@ function createState(root: HTMLElement): TexteditState {
     preview,
     previewText,
     hiddenInput,
+    allowLinks,
     palette,
     paletteButtons,
     paletteLinkButton,
@@ -356,6 +370,9 @@ function closeAll() {
 }
 
 function handleCommand(state: TexteditState, command: Command) {
+  if (!state.allowLinks && (command === Command.Link || command === Command.ClearLinks)) {
+    return;
+  }
   if (!restoreSelection(state)) {
     closePalette(state);
     return;
@@ -758,7 +775,7 @@ function updateLinkActionState(state: TexteditState): void {
 
 function updateClearButtons(state: TexteditState): void {
   const hasFormatting = Boolean(state.editor.querySelector('strong, b, em, i, u, s'));
-  const hasLinks = Boolean(state.editor.querySelector('a'));
+  const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector('a')) : false;
   state.clearFormatButton?.classList.toggle('is-hidden', !hasFormatting);
   state.clearLinksButton?.classList.toggle('is-hidden', !hasLinks);
   const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
@@ -818,15 +835,17 @@ function clearTempMarker(state: TexteditState): void {
 
 function syncFromInstanceData(state: TexteditState) {
   const value = state.hiddenInput.value || state.hiddenInput.getAttribute('value') || '';
-  state.editor.innerHTML = value || state.previewText.textContent || '';
+  const normalized = normalizeEditorValue(value, state.allowLinks);
+  state.editor.innerHTML = normalized || state.previewText.textContent || '';
   syncPreview(state);
   updateClearButtons(state);
 }
 
 function applyExternalValue(state: TexteditState, raw: string) {
   const value = raw || '';
-  state.editor.innerHTML = value;
-  const sanitized = sanitizeInline(value);
+  const normalized = normalizeEditorValue(value, state.allowLinks);
+  state.editor.innerHTML = normalized;
+  const sanitized = sanitizeInline(normalized, state.allowLinks);
   const span = document.createElement('span');
   span.className = 'diet-textedit__previewin';
   if (sanitized) span.innerHTML = sanitized;
@@ -834,13 +853,14 @@ function applyExternalValue(state: TexteditState, raw: string) {
   state.previewText.replaceWith(span);
   state.previewText = span;
   highlightPreviewLinks(span);
-  state.hiddenInput.value = value;
+  state.hiddenInput.value = normalized;
   updateClearButtons(state);
 }
 
 function syncPreview(state: TexteditState) {
   const raw = state.editor.innerHTML.trim();
-  const sanitized = sanitizeInline(raw);
+  const normalized = normalizeEditorValue(raw, state.allowLinks);
+  const sanitized = sanitizeInline(normalized, state.allowLinks);
   const span = document.createElement('span');
   span.className = 'diet-textedit__previewin';
   if (sanitized) span.innerHTML = sanitized;
@@ -849,7 +869,7 @@ function syncPreview(state: TexteditState) {
   state.previewText = span;
   highlightPreviewLinks(span);
 
-  state.hiddenInput.value = raw;
+  state.hiddenInput.value = normalized;
   state.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
@@ -859,10 +879,29 @@ function highlightPreviewLinks(span: HTMLElement) {
   });
 }
 
-function sanitizeInline(html: string): string {
+function normalizeEditorValue(html: string, allowLinks: boolean): string {
+  if (allowLinks) return html;
+  return stripLinks(html);
+}
+
+function stripLinks(html: string): string {
+  if (!html) return '';
   const wrapper = document.createElement('div');
   wrapper.innerHTML = html;
-  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A']);
+  wrapper.querySelectorAll('a').forEach((anchor) => {
+    const parent = anchor.parentNode;
+    if (!parent) return;
+    while (anchor.firstChild) parent.insertBefore(anchor.firstChild, anchor);
+    parent.removeChild(anchor);
+  });
+  return wrapper.innerHTML;
+}
+
+function sanitizeInline(html: string, allowLinks = true): string {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S']);
+  if (allowLinks) allowed.add('A');
   wrapper.querySelectorAll('*').forEach((node) => {
     const el = node as HTMLElement;
     const tag = el.tagName;

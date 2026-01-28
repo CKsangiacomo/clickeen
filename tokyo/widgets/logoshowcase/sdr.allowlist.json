@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "paths": [
+    { "path": "header.title", "type": "string", "role": "headline" },
+    { "path": "header.textHtml", "type": "richtext", "role": "subhead" },
+    { "path": "cta.label", "type": "string", "role": "cta" }
+  ]
+}

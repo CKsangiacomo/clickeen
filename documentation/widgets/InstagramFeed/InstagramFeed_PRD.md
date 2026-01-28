@@ -192,6 +192,10 @@ interface InstagramFeed {
 
 ## 2. ToolDrawer Panels
 
+ToolDrawer spacing rule (authoring):
+- Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
+- No custom spacing wrappers or per-control margins; only cluster/group labels add bottom margin.
+
 ### 2.1 Content Panel
 
 ```

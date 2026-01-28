@@ -94,6 +94,9 @@ OUTPUT
 - `show-if` gates for variants.
 - No `<tooldrawer-eyebrow>`.
 - Use `<tooldrawer-cluster label="...">` for long or repetitive control groups instead of repeating the role in every label.
+- Vertical rhythm is **clusters + groups only**. Controls must not add external margins or spacing wrappers.
+- Clusters can wrap any markup; `gap`/`space-after` attributes are forbidden.
+- Groups are formed from adjacent grouped fields; they appear inside a cluster only when those fields are inside that cluster.
 
 GATE
 - Zero dead controls.

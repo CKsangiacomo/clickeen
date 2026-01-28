@@ -445,6 +445,20 @@ function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
   return evalAst(node, data);
 }
 
+function hasLinksInValue(value: unknown, seen: Set<unknown> = new Set()): boolean {
+  if (value == null) return false;
+  if (typeof value === 'string') {
+    return /<a\b[^>]*href=/i.test(value);
+  }
+  if (typeof value !== 'object') return false;
+  if (seen.has(value)) return false;
+  seen.add(value);
+  if (Array.isArray(value)) {
+    return value.some((item) => hasLinksInValue(item, seen));
+  }
+  return Object.values(value as Record<string, unknown>).some((item) => hasLinksInValue(item, seen));
+}
+
 function evalCall(node: Extract<ShowIfAst, { type: 'call' }>, data: Record<string, unknown>): unknown {
   const name = node.name;
   if (name === 'contains') {
@@ -462,6 +476,10 @@ function evalCall(node: Extract<ShowIfAst, { type: 'call' }>, data: Record<strin
           })();
     const needleText = typeof needle === 'string' ? needle : String(needle ?? '');
     return hayText.includes(needleText);
+  }
+  if (name === 'hasLinks') {
+    const values = node.args.map((arg) => resolveValue(arg, data));
+    return values.some((value) => hasLinksInValue(value));
   }
 
   throw new Error(`Unknown show-if function "${name}"`);

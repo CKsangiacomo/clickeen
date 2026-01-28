@@ -118,6 +118,9 @@ See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details
 
 Dieter ships CSS plus optional JS hydrators (for components listed in `componentsWithJs`). Host applications load the required scripts and manage component state (e.g., `data-state` attributes, focus management, persistence).
 
+**External spacing rule (ToolDrawer + UI consistency):**
+- Dieter components must not add **external** vertical margins. ToolDrawer owns vertical rhythm via clusters/groups; components only define internal layout (label <-> control gaps, padding, etc.).
+
 ### 1.3 Token System
 
 All Dieter primitives use the custom properties defined in `tokens/tokens.css`. Prefer overriding tokens to hand-editing component CSS.

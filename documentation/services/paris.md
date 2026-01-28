@@ -7,13 +7,14 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
 
 Paris in this repo is a **dev-focused Worker** with a deliberately small surface:
+- **Modular monolith:** Paris is organized by domain modules under `paris/src/domains/*` with shared utilities in `paris/src/shared/*`. It is a single Worker (no worker-to-worker microservices).
 - All non-public endpoints are gated by `PARIS_DEV_JWT` (dev-only auth; not the final production model). `GET /api/instance/:publicId` is public but published-only unless a valid dev token is supplied.
 - Instance creation is implemented (`POST /api/instance`) for **internal DevStudio Local** workflows (superadmin), not as a user-facing product API.
 - Instance reads/writes use Supabase REST with the service role.
@@ -124,11 +125,13 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
 - User overrides live in layer=user (layerKey=<locale>) with optional `global` fallback and are merged last at publish time.
 - Publish/update triggers:
   - On instance create/update, Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
+  - Paris mints a short-lived AI grant for `l10n.instance.v1` (10-minute TTL) and attaches `{ agentId, grant }` to each l10n job.
   - If enqueue/dispatch fails, the publish/update request fails (fail-fast to preserve overlay determinism).
   - Local dev: when `ENV_STAGE=local` and `SANFRANCISCO_BASE_URL` are set, Paris POSTs l10n jobs directly to San Francisco `/v1/l10n` (queue bypass).
   - Curated instances → all supported locales.
   - User instances → `workspaces.l10n_locales` (within cap).
   - Paris persists job state in `l10n_generate_state` and retries `dirty/failed` rows via cron.
+  - Queued/running l10n states that are stale for 10+ minutes are re-queued on the next instance update/promote.
   - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
@@ -201,9 +204,39 @@ Response:
 { "grant": "v1....", "exp": 1735521234, "agentId": "sdr.widget.copilot.v1" }
 ```
 
+#### `POST /api/ai/minibob/session`
+Public Minibob session mint. Returns a short-lived, server-signed `sessionToken` so the grant mint cannot be driven by infinite client-generated `sessionId`s.
+
+Current repo behavior:
+- **Auth:** public (no `PARIS_DEV_JWT` required).
+- **Signing secret:** requires `AI_GRANT_HMAC_SECRET`.
+- **TTL:** ~1 hour.
+
+Response:
+```json
+{ "sessionToken": "minibob.v1.<issuedAt>.<nonce>.<sig>", "exp": 1735524834 }
+```
+
+#### `POST /api/ai/minibob/grant`
+Public Minibob grant mint with strict, server-owned policy gates.
+
+Current repo behavior:
+- **Auth:** public (no `PARIS_DEV_JWT` required).
+- **Required inputs:** `sessionToken`, `sessionId`, `widgetType`.
+- **Server enforcement:** `subject=minibob`, `agentId=sdr.widget.copilot.v1`, `mode=ops`.
+- **Session verification:** `sessionToken` signature + TTL are verified before minting.
+- **Budgets:** fixed clamps for Minibob (`maxTokens=420`, `timeoutMs=12000`, `maxRequests=2`).  
+  Local dev exception: `timeoutMs=45000`, `maxTokens=650` to avoid local LLM timeouts.
+- **Rate limiting:** two KV counters (fingerprint/minute + session/hour).
+- **Throttle errors:**  
+  - `coreui.errors.ai.minibob.rateLimited` (HTTP 429)  
+  - `coreui.errors.ai.minibob.ratelimitUnavailable` (HTTP 503)
+
 Required env vars:
 - `AI_GRANT_HMAC_SECRET` (secret): used to sign grants
 - `ENV_STAGE` (string): `local|cloud-dev|uat|limited-ga|ga` (used for learning attribution)
+- `MINIBOB_RATELIMIT_KV` (KV binding): required for enforced Minibob throttling outside `local`/`cloud-dev`
+- `MINIBOB_RATELIMIT_MODE` (optional): `off|log|enforce` (stage defaults: `local=off`, `cloud-dev=log`, others=`enforce`)
 
 ### Personalization Preview (acquisition, async)
 - `POST /api/personalization/preview` — issues a preview grant and creates a SF job; returns `jobId`.

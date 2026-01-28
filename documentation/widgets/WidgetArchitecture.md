@@ -43,6 +43,15 @@ Rule: Type and Layout are the only top-level variant axes.
 
 ---
 
+## ToolDrawer layout model (vertical rhythm)
+- **Only clusters + groups define vertical spacing.** ToolDrawer container gaps set the rhythm; controls do not add external margins.
+- **Eyebrow labels only.** Cluster/group labels are the only elements that add a bottom margin.
+- **Clusters**: `<tooldrawer-cluster>` expands into `.tdmenucontent__cluster` + `.tdmenucontent__cluster-body` and can wrap any markup/controls.
+- **Groups**: created from `<tooldrawer-field-{groupKey}>` or `group-label`; ToolDrawer merges **adjacent** grouped fields into a `.tdmenucontent__group`. Groups appear inside a cluster only if those fields are inside the cluster.
+- **Components**: Dieter controls must not add external vertical spacing; they only manage internal layout.
+
+---
+
 ## Global breakpoint
 - Single breakpoint: `900px` (desktop vs mobile).
 - Stage/Pod and widget CSS must switch at the same breakpoint.

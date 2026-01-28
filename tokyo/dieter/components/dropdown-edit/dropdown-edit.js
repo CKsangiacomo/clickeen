@@ -229,6 +229,8 @@ var Dieter = (() => {
     const palette = root.querySelector(".diet-dropdown-edit__palette");
     const linkSheet = root.querySelector(".diet-dropdown-edit__linksheet");
     const linkPopover = linkSheet?.querySelector(".diet-popaddlink") ?? null;
+    const allowLinksAttr = root.getAttribute("data-allow-links");
+    const allowLinks = allowLinksAttr == null ? true : !["false", "0", "no"].includes(allowLinksAttr.trim().toLowerCase());
     if (!control || !popover || !editor || !headerValue || !hiddenInput || !palette) {
       throw new Error("[textedit] missing DOM nodes");
     }
@@ -248,8 +250,13 @@ var Dieter = (() => {
     if (!clearFormatButton || !clearLinksButton || !toolbarDivider) {
       throw new Error("[textedit] missing clear buttons or divider");
     }
-    if (linkPopover) {
+    if (linkPopover && allowLinks) {
       hydratePopAddLink(linkPopover);
+    }
+    if (!allowLinks) {
+      if (paletteLinkButton) paletteLinkButton.style.display = "none";
+      clearLinksButton.classList.add("is-hidden");
+      if (linkSheet) linkSheet.style.display = "none";
     }
     return {
       root,
@@ -258,6 +265,7 @@ var Dieter = (() => {
       editor,
       headerValue,
       hiddenInput,
+      allowLinks,
       palette,
       paletteButtons,
       paletteLinkButton,
@@ -317,7 +325,7 @@ var Dieter = (() => {
         updatePaletteActiveStates(state);
       }
     });
-    if (linkPopover) {
+    if (linkPopover && state.allowLinks) {
       linkPopover.addEventListener("popaddlink:submit", (ev) => {
         const href = ev.detail?.href;
         if (!href) return;
@@ -360,6 +368,9 @@ var Dieter = (() => {
     updatePaletteActiveStates(state);
   }
   function handleCommand(state, command) {
+    if (!state.allowLinks && (command === "link" /* Link */ || command === "clear-links" /* ClearLinks */)) {
+      return;
+    }
     switch (command) {
       case "bold" /* Bold */:
       case "italic" /* Italic */:
@@ -446,6 +457,7 @@ var Dieter = (() => {
     state.selection = nextRange.cloneRange();
   }
   function openInternalLinkSheet(state) {
+    if (!state.allowLinks) return;
     const { linkSheet, linkPopover, root } = state;
     if (!linkSheet || !linkPopover) return;
     if (!state.selection) return;
@@ -550,7 +562,7 @@ var Dieter = (() => {
   }
   function updateClearButtons(state) {
     const hasFormatting = Boolean(state.editor.querySelector("strong, b, em, i, u, s"));
-    const hasLinks = Boolean(state.editor.querySelector("a"));
+    const hasLinks = state.allowLinks ? Boolean(state.editor.querySelector("a")) : false;
     state.clearFormatButton?.classList.toggle("is-hidden", !hasFormatting);
     state.clearLinksButton?.classList.toggle("is-hidden", !hasLinks);
     const showDivider = (hasFormatting || hasLinks) && state.toolbarDivider;
@@ -606,7 +618,7 @@ var Dieter = (() => {
   }
   function applyExternalValue(state, raw) {
     const value = raw || "";
-    const sanitized = sanitizeInline(value);
+    const sanitized = sanitizeInline(value, state.allowLinks);
     state.editor.innerHTML = sanitized;
     const target = state.headerValue;
     if (sanitized) {
@@ -621,7 +633,7 @@ var Dieter = (() => {
   }
   function syncPreview(state) {
     const raw = state.editor.innerHTML.trim();
-    const sanitized = sanitizeInline(raw);
+    const sanitized = sanitizeInline(raw, state.allowLinks);
     const target = state.headerValue;
     if (sanitized) {
       target.textContent = toPreviewText(sanitized);
@@ -642,10 +654,11 @@ var Dieter = (() => {
     const text = tmp.textContent ?? "";
     return text.replace(/\s+/g, " ").trim();
   }
-  function sanitizeInline(html) {
+  function sanitizeInline(html, allowLinks = true) {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html;
-    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S", "A", "BR"]);
+    const allowed = /* @__PURE__ */ new Set(["STRONG", "B", "EM", "I", "U", "S", "BR"]);
+    if (allowLinks) allowed.add("A");
     const sanitizeNode = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         return { type: "text", value: node.textContent || "" };

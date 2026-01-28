@@ -45,6 +45,8 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   const v = asNumber(payload.v);
   const iss = asString(payload.iss);
   const exp = asNumber(payload.exp);
+  const jtiRaw = (payload as any).jti;
+  const jti = asString(jtiRaw);
   const caps = Array.isArray(payload.caps) && payload.caps.every((c) => typeof c === 'string') ? payload.caps : null;
   const budgets = isRecord(payload.budgets) ? payload.budgets : null;
   const mode = asString(payload.mode);
@@ -53,6 +55,10 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   if (v !== 1 || iss !== 'paris' || exp === null || !caps || !budgets || !sub || (mode !== 'editor' && mode !== 'ops')) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant missing required fields' });
   }
+  if (jtiRaw !== undefined && !jti) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant jti is invalid' });
+  }
+  if (jti) (payload as any).jti = jti;
 
   const subKind = asString(sub.kind);
   if (subKind === 'anon') {
@@ -152,4 +158,22 @@ export function getGrantTimeoutMs(grant: AIGrant): number {
     throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.timeoutMs must be a positive number' });
   }
   return timeoutMs;
+}
+
+export function getGrantMaxRequests(grant: AIGrant): number {
+  const maxRequests = (grant.budgets as any).maxRequests;
+  if (maxRequests === undefined) return 1;
+  if (typeof maxRequests !== 'number' || !Number.isFinite(maxRequests) || maxRequests <= 0) {
+    throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.maxRequests must be a positive number' });
+  }
+  return Math.max(1, Math.floor(maxRequests));
+}
+
+export function getGrantMaxCostUsd(grant: AIGrant): number | null {
+  const maxCostUsd = (grant.budgets as any).maxCostUsd;
+  if (maxCostUsd === undefined) return null;
+  if (typeof maxCostUsd !== 'number' || !Number.isFinite(maxCostUsd) || maxCostUsd <= 0) {
+    throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.maxCostUsd must be a positive number' });
+  }
+  return maxCostUsd;
 }

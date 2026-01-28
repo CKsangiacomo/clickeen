@@ -89,6 +89,7 @@ export function CopilotPane() {
   const policyProfile = session.policy?.profile ?? 'minibob';
   const subject = policyProfile === 'devstudio' || policyProfile === 'minibob' ? policyProfile : 'workspace';
   const aiSubject = subject === 'workspace' && !workspaceId ? 'minibob' : subject;
+  const isMinibob = aiSubject === 'minibob';
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -217,6 +218,15 @@ export function CopilotPane() {
       const timeToDecisionMs = typeof pendingTs === 'number' ? Math.max(0, Date.now() - pendingTs) : undefined;
 
       const normalized = prompt.toLowerCase();
+      if (isMinibob && normalized === 'keep') {
+        setDraft('');
+        pushMessage({ role: 'user', text: prompt });
+        pushMessage({
+          role: 'assistant',
+          text: 'Create a free account to keep this change.',
+        });
+        return;
+      }
       if (normalized === 'keep') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
@@ -235,7 +245,9 @@ export function CopilotPane() {
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
         return;
       }
-      const nudge = 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)';
+      const nudge = isMinibob
+        ? 'Create a free account to keep this change, or type “undo” to revert.'
+        : 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)';
       const last = messages[messages.length - 1];
       if (!(last?.role === 'assistant' && last.text === nudge)) {
         pushMessage({ role: 'assistant', text: nudge });
@@ -326,10 +338,16 @@ export function CopilotPane() {
         }
 
         pendingDecisionRef.current = true;
+        const pendingText = isMinibob
+          ? `${message}\n\nCreate a free account to keep this change.`
+          : `${message}\n\nWant to keep this change?`;
+        const pendingCta = isMinibob && (!cta || cta.action !== 'signup')
+          ? { text: 'Create a free account to keep this change', action: 'signup' as const }
+          : cta;
         pushMessage({
           role: 'assistant',
-          text: `${message}\n\nWant to keep this change?`,
-          cta,
+          text: pendingText,
+          cta: pendingCta,
           hasPendingDecision: true,
           ...(requestId ? { requestId } : {}),
         });
@@ -384,49 +402,87 @@ export function CopilotPane() {
                   {m.text}
                 </div>
 
-	            {m.cta?.text ? (
-	              <div style={{ marginTop: 'var(--space-1)' }}>
-	                <a
-	                  className="diet-btn-txt"
-	                  data-size="md"
-	                  data-variant="primary"
-	                  href={m.cta.url || '#'}
-	                  target={m.cta.url ? '_blank' : undefined}
-	                  rel={m.cta.url ? 'noreferrer' : undefined}
-	                  onClick={() => {
-	                    void reportOutcome({
-	                      event: 'cta_clicked',
-	                      requestId: m.requestId || '',
-	                      sessionId: copilotSessionId,
-	                    });
-	                  }}
-	                >
-	                  <span className="diet-btn-txt__label">{m.cta.text}</span>
-	                </a>
-	              </div>
-	            ) : null}
+                {m.cta?.text ? (
+                  <div style={{ marginTop: 'var(--space-1)' }}>
+                    {m.cta.action === 'signup' || m.cta.action === 'upgrade' ? (
+                      <button
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="primary"
+                        type="button"
+                        onClick={() => {
+                          void reportOutcome({
+                            event: 'cta_clicked',
+                            requestId: m.requestId || '',
+                            sessionId: copilotSessionId,
+                          });
+                          session.requestUpsell(m.cta.text);
+                        }}
+                      >
+                        <span className="diet-btn-txt__label">{m.cta.text}</span>
+                      </button>
+                    ) : (
+                      <a
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="primary"
+                        href={m.cta.url || '#'}
+                        target={m.cta.url ? '_blank' : undefined}
+                        rel={m.cta.url ? 'noreferrer' : undefined}
+                        onClick={() => {
+                          void reportOutcome({
+                            event: 'cta_clicked',
+                            requestId: m.requestId || '',
+                            sessionId: copilotSessionId,
+                          });
+                        }}
+                      >
+                        <span className="diet-btn-txt__label">{m.cta.text}</span>
+                      </a>
+                    )}
+                  </div>
+                ) : null}
 
             {m.hasPendingDecision ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
-                <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="primary"
-                  type="button"
-                  onClick={() => {
-                    session.commitLastOps();
-                    void reportOutcome({
-                      event: 'ux_keep',
-                      requestId: m.requestId || '',
-                      sessionId: copilotSessionId,
-                      timeToDecisionMs: Math.max(0, Date.now() - m.ts),
-                    });
-                    clearPendingDecision();
-                    pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
-                  }}
-                >
-                  <span className="diet-btn-txt__label">Keep</span>
-                </button>
+                {!isMinibob ? (
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant="primary"
+                    type="button"
+                    onClick={() => {
+                      session.commitLastOps();
+                      void reportOutcome({
+                        event: 'ux_keep',
+                        requestId: m.requestId || '',
+                        sessionId: copilotSessionId,
+                        timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                      });
+                      clearPendingDecision();
+                      pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
+                    }}
+                  >
+                    <span className="diet-btn-txt__label">Keep</span>
+                  </button>
+                ) : (
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant="primary"
+                    type="button"
+                    onClick={() => {
+                      void reportOutcome({
+                        event: 'cta_clicked',
+                        requestId: m.requestId || '',
+                        sessionId: copilotSessionId,
+                      });
+                      session.requestUpsell('Create a free account to keep this change');
+                    }}
+                  >
+                    <span className="diet-btn-txt__label">Create a free account to keep this change</span>
+                  </button>
+                )}
                 <button
                   className="diet-btn-txt"
                   data-size="md"

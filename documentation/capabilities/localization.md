@@ -202,6 +202,10 @@ We use ops overlays because they scale cleanly:
 - **Diff-friendly:** small changes don’t require re-storing the entire JSON blob.
 - **Safe by construction:** set-only prevents structural drift and merge conflicts.
 
+**Base language note (current architecture):**
+- The base config may be authored in **any** language (ConversationLanguage in Minibob).
+- Overlays are generated from whatever base language is stored; no English‑only assumption.
+
 ## Default locale (Phase 1)
 
 If a request does not include a locale signal:

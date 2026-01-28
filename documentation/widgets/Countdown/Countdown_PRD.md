@@ -138,6 +138,10 @@ Panels:
 - **Settings**: workspace website URL setting (policy-gated; not widget instance state)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
+ToolDrawer spacing rule (authoring):
+- Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
+- No custom spacing wrappers or per-control margins; only cluster/group labels add bottom margin.
+
 ### Detailed Panels from Competitor Analysis
 - **Content Panel**:
   - Mode selector: Visual cards with icons (calendar for date, user for personal, numbers for number).

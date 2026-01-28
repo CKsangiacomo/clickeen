@@ -132,6 +132,7 @@ Shape (conceptual):
 type AIGrant = {
   v: 1;
   iss: 'paris';
+  jti?: string; // unique grant id (used for per-grant budget tracking)
   sub:
     | { kind: 'anon'; sessionId: string } // Minibob / public experiences
     | { kind: 'user'; userId: string; workspaceId: string } // Clickeen app
@@ -350,6 +351,11 @@ Definition of done:
     - anon sessions (Minibob)
     - user/workspace sessions (Clickeen app)
   - San Francisco verifies signature + expiry + capabilities
+
+**Minibob public mint (shipped):**
+- `POST /api/ai/minibob/session` → returns a server-signed `sessionToken` (prevents infinite client-generated sessionIds).
+- `POST /api/ai/minibob/grant` → returns a restricted grant for `sdr.widget.copilot.v1` (subject=minibob, mode=ops, strict budgets).
+- Cloudflare edge rate limits + bot controls are required in non-local stages (manual ops).
 
 ### Milestone 4 — Bob uses San Francisco for AI
 Status: shipped

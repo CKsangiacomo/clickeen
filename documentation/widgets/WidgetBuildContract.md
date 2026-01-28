@@ -83,10 +83,14 @@ MUST
 - Add controls only for paths already defined in `defaults`.
 - Gate variant-specific controls via `show-if`.
 - Remove `<tooldrawer-eyebrow>`; no eyebrow under panel headers. Use optional cluster labels (`<tooldrawer-cluster label="...">`) when you need section eyebrows inside a panel.
+- Use `<tooldrawer-cluster>` as the only vertical spacing primitive (clusters can wrap any markup/controls).
+- Use group keys (`<tooldrawer-field-{groupKey}>`) or `group-label` for section labels; groups are formed from adjacent fields and live inside a cluster only when the fields are inside that cluster.
+- Only eyebrow labels (cluster/group labels) may add margin-bottom; controls must not add external margins or spacing wrappers.
 - Define the user-facing item noun: set `itemKey` in `spec.json` (e.g., `faq.item`) and ensure the i18n bundle defines it (plural forms required).
 
 MUST NOT
 - Duplicate entire panels per variant.
+- Add custom vertical spacing via margins/spacer elements or `gap`/`space-after` attributes.
 
 ### 6) Dropdown-fill
 MUST

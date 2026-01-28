@@ -229,9 +229,9 @@ export async function buildContext(
   const optionsRaw = attrs.options ? decodeHtmlEntities(attrs.options) : '';
   let headerLabel = attrs.headerLabel || '';
   const headerIcon = attrs.headerIcon || '';
-  let reorderLabel =
+  const reorderLabel =
     attrs.reorderLabel || attrs['reorder-label'] || (merged.reorderLabel as string) || 'Reorder items';
-  let reorderTitle =
+  const reorderTitle =
     attrs.reorderTitle || attrs['reorder-title'] || (merged.reorderTitle as string) || 'Reorder items';
   const reorderLabelPath =
     attrs.reorderLabelPath || attrs['reorder-label-path'] || (merged.reorderLabelPath as string) || '';
@@ -242,7 +242,7 @@ export async function buildContext(
   let labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
   const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
   let labelParams = normalizeJsonDataAttr(labelParamsRaw);
-  let addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
+  const addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
   let addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
   const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
   let addLabelParams = normalizeJsonDataAttr(addLabelParamsRaw);
@@ -302,6 +302,8 @@ export async function buildContext(
     component === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
+  const allowLinks =
+    attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
 
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
@@ -383,6 +385,7 @@ export async function buildContext(
     headerLabel,
     headerIcon,
     allowImage,
+    allowLinks,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,

@@ -47,7 +47,7 @@ const localeHrefFor = (targetLocale: string) => {
             <select
               class="ck-siteNav__localeSelect label-s"
               aria-label="Switch locale"
-              onChange="if (this.value) window.location.href = this.value"
+              onchange="if (this.value) window.location.href = this.value"
             >
               {locales.map((loc) => (
                 <option value={localeHrefFor(loc)} selected={loc === locale}>
