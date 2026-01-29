@@ -1,31 +1,27 @@
-name: cloud-dev prague content release
+name: cloud-dev prague app deploy
 
 on:
   push:
     branches: [main]
     paths:
-      - "tokyo/widgets/**/pages/*.json"
-      - "prague/content/**"
-      - "config/locales.json"
-      - "scripts/prague-sync.mjs"
-      - "scripts/prague-l10n/**"
-      - "scripts/prague-blocks/**"
-      - ".github/workflows/cloud-dev-prague-content.yml"
+      - "prague/src/**"
+      - "prague/public/**"
+      - "prague/astro.config.mjs"
+      - "prague/package.json"
+      - "prague/tsconfig.json"
+      - ".github/workflows/cloud-dev-prague-app.yml"
   workflow_dispatch: {}
 
 concurrency:
   group: cloud-dev-prague
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  release:
+  deploy:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      SANFRANCISCO_BASE_URL: ${{ secrets.SANFRANCISCO_BASE_URL }}
-      PARIS_DEV_JWT: ${{ secrets.PARIS_DEV_JWT }}
-      TOKYO_R2_BUCKET: tokyo-assets-dev
 
       PUBLIC_BOB_URL: https://bob-dev.pages.dev
       PUBLIC_PARIS_URL: https://paris.dev.clickeen.com
@@ -49,12 +45,6 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Validate Prague blocks
-        run: node scripts/prague-blocks/validate.mjs
-
-      - name: Translate + verify + publish Prague overlays to R2 (cloud-dev)
-        run: node scripts/prague-sync.mjs --publish --remote
-
       - name: Build Prague (includes overlay verify)
         run: pnpm -C prague build
 
@@ -67,9 +57,3 @@ jobs:
           curl -fsSIL "$PRAGUE_BASE_URL/en/widgets/faq/" | tee /tmp/headers_en.txt
           grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt
 
-      - name: Smoke test (fr overlay applied)
-        run: |
-          set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/fr/widgets/faq/" | tee /tmp/headers_fr.txt
-          grep -qi "^x-prague-overlay-status: applied" /tmp/headers_fr.txt
-          grep -qi "^x-prague-overlay-locale: fr" /tmp/headers_fr.txt
