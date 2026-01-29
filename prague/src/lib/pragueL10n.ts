@@ -47,6 +47,36 @@ type LayerIndex = {
   layers: Record<string, LayerIndexEntry>;
 };
 
+export type PragueOverlayStatus = 'applied' | 'missing' | 'stale' | 'skipped';
+
+export type PragueOverlayMeta = {
+  overlayStatus: PragueOverlayStatus;
+  overlayLocale: string;
+};
+
+export class PragueOverlayFailureError extends Error {
+  statusCode: number;
+  overlayStatus: Exclude<PragueOverlayStatus, 'applied' | 'skipped'>;
+  overlayLocale: string;
+
+  constructor(args: {
+    message: string;
+    statusCode?: number;
+    overlayStatus: Exclude<PragueOverlayStatus, 'applied' | 'skipped'>;
+    overlayLocale: string;
+  }) {
+    super(args.message);
+    this.name = 'PragueOverlayFailureError';
+    this.statusCode = args.statusCode ?? 424;
+    this.overlayStatus = args.overlayStatus;
+    this.overlayLocale = args.overlayLocale;
+  }
+}
+
+export function isPragueOverlayFailureError(err: unknown): err is PragueOverlayFailureError {
+  return Boolean(err) && typeof err === 'object' && (err as any).name === 'PragueOverlayFailureError';
+}
+
 let cachedLocales: string[] | null = null;
 
 async function loadLocales(): Promise<string[]> {
@@ -73,9 +103,36 @@ async function resolveLocale(rawLocale: string): Promise<string> {
   return candidates[0];
 }
 
+function readEnv(name: string): string | undefined {
+  // NOTE: Vite dev (module runner) does not support dynamic access of `import.meta.env[name]`.
+  // Only keep dynamic access for `process.env` and handle the few `import.meta.env.*` values explicitly below.
+  const proc = typeof process !== 'undefined' ? process : undefined;
+  const procValue = proc?.env ? proc.env[name] : undefined;
+  if (typeof procValue === 'string' && procValue.trim()) return procValue.trim();
+  return undefined;
+}
+
+function readEnvTokyoUrl(): string | undefined {
+  const metaValue = String(import.meta.env.PUBLIC_TOKYO_URL || '').trim();
+  if (metaValue) return metaValue;
+  return readEnv('PUBLIC_TOKYO_URL');
+}
+
+function readEnvStrictFlag(): string | undefined {
+  const metaAny = import.meta.env as any;
+  const metaValue = String(metaAny.PRAGUE_L10N_STRICT || metaAny.PUBLIC_PRAGUE_L10N_STRICT || '').trim();
+  if (metaValue) return metaValue;
+  return readEnv('PRAGUE_L10N_STRICT') || readEnv('PUBLIC_PRAGUE_L10N_STRICT');
+}
+
+function isDevOrTest(): boolean {
+  if (import.meta.env.DEV) return true;
+  const nodeEnv = String(readEnv('NODE_ENV') || '').trim();
+  return nodeEnv === 'development' || nodeEnv === 'test';
+}
+
 function getTokyoBaseUrl(): string {
-  const envUrl = typeof process !== 'undefined' ? process.env.PUBLIC_TOKYO_URL : undefined;
-  const raw = String(envUrl || '').trim();
+  const raw = String(readEnvTokyoUrl() || '').trim();
   if (!raw) {
     throw new Error('[prague] PUBLIC_TOKYO_URL is required (e.g. https://tokyo.dev.clickeen.com)');
   }
@@ -83,7 +140,9 @@ function getTokyoBaseUrl(): string {
 }
 
 function isDevStrict(): boolean {
-  return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+  const strict = readEnvStrictFlag();
+  if (strict === '1') return true;
+  return isDevOrTest();
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -380,44 +439,74 @@ async function fetchOverlay(args: {
   return json;
 }
 
-async function applyPragueLayeredOverlays(args: {
+async function applyPragueLayeredOverlaysWithMeta(args: {
   pageId: string;
   locale: string;
   base: Record<string, unknown>;
   country?: string | null;
   layerContext?: LayerContext;
-}): Promise<Record<string, unknown>> {
+}): Promise<{ content: Record<string, unknown>; meta: PragueOverlayMeta }> {
   const normalized = normalizeLocaleToken(args.locale);
-  if (!normalized) return args.base;
+  if (!normalized) {
+    return { content: args.base, meta: { overlayStatus: 'skipped', overlayLocale: 'en' } };
+  }
+  if (normalized === 'en') {
+    return { content: args.base, meta: { overlayStatus: 'skipped', overlayLocale: 'en' } };
+  }
 
   const baseFingerprint = await computeBaseFingerprint(args.base);
   const index = await fetchLayerIndex(args.pageId).catch(() => null);
 
   if (!index) {
-    if (isDevStrict() && normalized !== 'en') {
-      throw new Error(`[prague] Missing layer index for ${args.pageId}`);
+    const meta = { overlayStatus: 'missing' as const, overlayLocale: normalized };
+    if (isDevStrict()) {
+      throw new PragueOverlayFailureError({
+        overlayStatus: meta.overlayStatus,
+        overlayLocale: meta.overlayLocale,
+        message: `[prague] Missing layer index for ${args.pageId}`,
+      });
     }
-    return args.base;
+    return { content: args.base, meta };
   }
   if (index.publicId && index.publicId !== args.pageId) {
     throw new Error(`[prague] Layer index publicId mismatch for ${args.pageId}`);
   }
 
-  const { targets, missingRequired } = resolveLayerTargets({
+  const { targets, missingRequired, localeKey } = resolveLayerTargets({
     index,
     locale: normalized,
     country: args.country,
     layerContext: args.layerContext,
   });
 
-  if (missingRequired.length) {
-    if (isDevStrict() && normalized !== 'en') {
-      throw new Error(`[prague] Missing required layer keys for ${args.pageId}: ${missingRequired.join(', ')}`);
+  const effectiveLocale = localeKey ?? normalized;
+  if (effectiveLocale === 'en') {
+    const meta = { overlayStatus: 'missing' as const, overlayLocale: normalized };
+    if (isDevStrict()) {
+      throw new PragueOverlayFailureError({
+        overlayStatus: meta.overlayStatus,
+        overlayLocale: meta.overlayLocale,
+        message: `[prague] Missing locale overlay for ${args.pageId} (${normalized})`,
+      });
     }
-    return args.base;
+    return { content: args.base, meta };
   }
 
-  if (!targets.length) return args.base;
+  if (missingRequired.length) {
+    const meta = { overlayStatus: 'missing' as const, overlayLocale: effectiveLocale };
+    if (isDevStrict()) {
+      throw new PragueOverlayFailureError({
+        overlayStatus: meta.overlayStatus,
+        overlayLocale: meta.overlayLocale,
+        message: `[prague] Missing required layer keys for ${args.pageId}: ${missingRequired.join(', ')}`,
+      });
+    }
+    return { content: args.base, meta };
+  }
+
+  if (!targets.length) {
+    return { content: args.base, meta: { overlayStatus: 'missing', overlayLocale: effectiveLocale } };
+  }
   const cappedTargets = targets.slice(0, MAX_LAYER_APPLICATIONS);
   const overlayResults = await Promise.all(
     cappedTargets.map(async (target) => {
@@ -444,31 +533,81 @@ async function applyPragueLayeredOverlays(args: {
   );
 
   let localized = args.base;
+  let applied = false;
+  let anyMissing = false;
+  let anyStale = false;
   for (const result of overlayResults) {
     if (!result.overlay) {
-      if (result.stale && isDevStrict() && normalized !== 'en') {
-        throw new Error(
-          `[prague] Stale overlay for ${args.pageId} (${result.target.layer}:${result.target.key})`,
-        );
+      if (result.stale) {
+        anyStale = true;
+        if (isDevStrict()) {
+          throw new PragueOverlayFailureError({
+            overlayStatus: 'stale',
+            overlayLocale: effectiveLocale,
+            message: `[prague] Stale overlay for ${args.pageId} (${result.target.layer}:${result.target.key})`,
+          });
+        }
       }
-      if (result.target.required && isDevStrict() && normalized !== 'en') {
-        throw new Error(
-          `[prague] Missing overlay for ${args.pageId} (${result.target.layer}:${result.target.key})`,
-        );
+      if (result.target.required) {
+        anyMissing = true;
+        if (isDevStrict()) {
+          throw new PragueOverlayFailureError({
+            overlayStatus: 'missing',
+            overlayLocale: effectiveLocale,
+            message: `[prague] Missing overlay for ${args.pageId} (${result.target.layer}:${result.target.key})`,
+          });
+        }
       }
       continue;
     }
     const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as PragueOverlay['ops'];
     localized = applySetOps(localized, ops);
+    applied = true;
   }
 
-  return localized;
+  const overlayStatus: PragueOverlayStatus = anyStale ? 'stale' : anyMissing ? 'missing' : applied ? 'applied' : 'missing';
+  return { content: localized, meta: { overlayStatus, overlayLocale: effectiveLocale } };
+}
+
+async function applyPragueLayeredOverlays(args: {
+  pageId: string;
+  locale: string;
+  base: Record<string, unknown>;
+  country?: string | null;
+  layerContext?: LayerContext;
+}): Promise<Record<string, unknown>> {
+  const result = await applyPragueLayeredOverlaysWithMeta(args);
+  return result.content;
 }
 
 export type PragueOverlayContext = {
   country?: string | null;
   layerContext?: LayerContext;
 };
+
+export async function loadPraguePageContentWithMeta(
+  args: { locale: string; pageId: string; base: Record<string, unknown> } & PragueOverlayContext,
+): Promise<{ content: Record<string, unknown>; meta: PragueOverlayMeta }> {
+  const resolved = await resolveLocale(args.locale);
+  if (!isPlainObject(args.base) || (args.base as any).v !== 1) {
+    throw new Error(`[prague] Invalid Prague base for ${args.pageId}`);
+  }
+  const pageId = typeof (args.base as any).pageId === 'string' ? String((args.base as any).pageId) : '';
+  if (pageId && pageId !== args.pageId) {
+    throw new Error(`[prague] Prague base pageId mismatch for ${args.pageId}`);
+  }
+  if (!isPlainObject((args.base as any).blocks)) {
+    throw new Error(`[prague] Prague base missing blocks for ${args.pageId}`);
+  }
+
+  return applyPragueLayeredOverlaysWithMeta({
+    pageId: args.pageId,
+    locale: resolved,
+    base: args.base,
+    country: args.country,
+    layerContext: args.layerContext,
+  });
+}
 
 export async function loadPraguePageContent(
   args: { locale: string; pageId: string; base: Record<string, unknown> } & PragueOverlayContext,

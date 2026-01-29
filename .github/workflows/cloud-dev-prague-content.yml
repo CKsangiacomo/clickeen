@@ -1,0 +1,75 @@
+name: cloud-dev prague content release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tokyo/widgets/**/pages/*.json"
+      - "prague/content/**"
+      - "config/locales.json"
+      - "scripts/prague-sync.mjs"
+      - "scripts/prague-l10n/**"
+      - "scripts/prague-blocks/**"
+      - ".github/workflows/cloud-dev-prague-content.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: cloud-dev-prague-content
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SANFRANCISCO_BASE_URL: ${{ secrets.SANFRANCISCO_BASE_URL }}
+      PARIS_DEV_JWT: ${{ secrets.PARIS_DEV_JWT }}
+      TOKYO_R2_BUCKET: tokyo-assets-dev
+
+      PUBLIC_BOB_URL: https://bob-dev.pages.dev
+      PUBLIC_PARIS_URL: https://paris.dev.clickeen.com
+      PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
+      PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
+
+      PRAGUE_PAGES_PROJECT: prague-dev
+      PRAGUE_BASE_URL: https://prague-dev.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prague blocks
+        run: node scripts/prague-blocks/validate.mjs
+
+      - name: Translate + verify + publish Prague overlays to R2 (cloud-dev)
+        run: node scripts/prague-sync.mjs --publish --remote
+
+      - name: Build Prague (includes overlay verify)
+        run: pnpm -C prague build
+
+      - name: Deploy Prague Pages (cloud-dev)
+        run: pnpm -C tokyo-worker exec wrangler pages deploy prague/dist --project-name "$PRAGUE_PAGES_PROJECT" --branch main
+
+      - name: Smoke test (en)
+        run: |
+          set -euo pipefail
+          curl -fsSIL "$PRAGUE_BASE_URL/en/widgets/faq/" | tee /tmp/headers_en.txt
+          grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt
+
+      - name: Smoke test (fr overlay applied)
+        run: |
+          set -euo pipefail
+          curl -fsSIL "$PRAGUE_BASE_URL/fr/widgets/faq/" | tee /tmp/headers_fr.txt
+          grep -qi "^x-prague-overlay-status: applied" /tmp/headers_fr.txt
+          grep -qi "^x-prague-overlay-locale: fr" /tmp/headers_fr.txt

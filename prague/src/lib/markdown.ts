@@ -1,5 +1,5 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { loadPraguePageContent, type PragueOverlayContext } from './pragueL10n';
+import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverlayContext, type PragueOverlayMeta } from './pragueL10n';
 
 const CURATED_VALIDATE =
   process.env.PRAGUE_VALIDATE_CURATED === '1' ||
@@ -188,6 +188,71 @@ export async function loadWidgetPageJsonForLocale(
   });
 
   return { ...(pageJson as any), blocks: mergedBlocks };
+}
+
+export async function loadWidgetPageJsonForLocaleWithOverlayMeta(
+  opts: { widget: string; page: string; locale: string } & PragueOverlayContext,
+): Promise<{ json: unknown; overlay: PragueOverlayMeta } | null> {
+  const pageJson = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  if (!pageJson) return null;
+
+  const pagePath = buildWidgetPagePath(opts.widget, opts.page);
+  const pageFilePath = `tokyo/widgets/${opts.widget}/pages/${opts.page}.json`;
+  if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
+    throw new Error(`[prague] Invalid base JSON for ${pageFilePath}`);
+  }
+  const baseBlocks = (pageJson as any).blocks;
+  if (!Array.isArray(baseBlocks)) {
+    throw new Error(`[prague] Missing blocks[] in ${pageFilePath}`);
+  }
+  const base = buildPageBase({ pageId: pagePath, pagePath: pageFilePath, blocks: baseBlocks });
+  const { content: localized, meta } = await loadPraguePageContentWithMeta({
+    locale: opts.locale,
+    pageId: pagePath,
+    base,
+    country: opts.country,
+    layerContext: opts.layerContext,
+  });
+  const blocksById = (localized as any)?.blocks;
+
+  if (!blocksById || typeof blocksById !== 'object' || Array.isArray(blocksById)) {
+    throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
+  }
+
+  await validateCuratedRefs({ pagePath, blocks: baseBlocks });
+
+  const mergedBlocks = baseBlocks.map((block: any) => {
+    if (!block || typeof block !== 'object' || Array.isArray(block)) {
+      throw new Error(`[prague] Invalid block entry in ${pageFilePath}`);
+    }
+    const blockId = String(block.id || '');
+    if (!blockId) throw new Error(`[prague] Missing block id in ${pageFilePath}`);
+    const blockType = typeof block.type === 'string' ? block.type : '';
+    if (!blockType) throw new Error(`[prague] Missing block type in ${pageFilePath}`);
+    validateBlockMeta({ block: block as Record<string, unknown>, pagePath });
+    const compiledBlock = blocksById[blockId];
+    if (!compiledBlock || typeof compiledBlock !== 'object') {
+      throw new Error(`[prague] Missing localized copy for ${pagePath} block ${blockId}`);
+    }
+    const copy = (compiledBlock as any).copy;
+    if (!copy || typeof copy !== 'object' || Array.isArray(copy)) {
+      throw new Error(`[prague] Invalid localized copy for ${pagePath} block ${blockId}`);
+    }
+    validateBlockStrings({ blockType, strings: copy as Record<string, unknown>, pagePath, blockId });
+    return { ...block, id: blockId, type: blockType, copy };
+  });
+
+  return { json: { ...(pageJson as any), blocks: mergedBlocks }, overlay: meta };
+}
+
+export async function loadRequiredWidgetPageJsonForLocaleWithOverlayMeta(
+  opts: { widget: string; page: string; locale: string } & PragueOverlayContext,
+): Promise<{ json: unknown; overlay: PragueOverlayMeta }> {
+  const result = await loadWidgetPageJsonForLocaleWithOverlayMeta(opts);
+  if (!result) {
+    throw new Error(`[prague] Missing tokyo/widgets/${opts.widget}/pages/${opts.page}.json (required)`);
+  }
+  return result;
 }
 
 export async function loadRequiredWidgetPageJsonForLocale(

@@ -241,10 +241,34 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
   const items = collectTranslatableEntries(base, allowlist.entries);
   if (!items.length) return;
 
+  const expectedPaths = new Set(items.map((item) => item.path));
   for (const locale of locales) {
     const outDir = path.join(TOKYO_PRAGUE_ROOT, 'chrome', 'locale', locale);
     const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
-    if (await fileExists(outPath)) continue;
+    let needsRegeneration = false;
+    if (!(await fileExists(outPath))) {
+      needsRegeneration = true;
+    } else {
+      const overlay = await readJson(outPath);
+      if (!overlay || typeof overlay !== 'object' || overlay.v !== 1) {
+        needsRegeneration = true;
+      } else if (overlay.baseFingerprint !== baseFingerprint) {
+        needsRegeneration = true;
+      } else {
+        const overlayPaths = new Set(
+          Array.isArray(overlay.ops)
+            ? overlay.ops.filter((op) => op && typeof op === 'object' && op.op === 'set').map((op) => op.path)
+            : [],
+        );
+        for (const expected of expectedPaths) {
+          if (!overlayPaths.has(expected)) {
+            needsRegeneration = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!needsRegeneration) continue;
     const job = {
       v: 1,
       surface: 'prague',
