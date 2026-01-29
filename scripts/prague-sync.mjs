@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 
 const __filename = fileURLToPath(new URL('.', import.meta.url));
+const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(__filename, '..');
 
 const TOKYO_ROOT = path.join(repoRoot, 'tokyo');
@@ -13,10 +15,16 @@ const PRAGUE_L10N_ROOT = path.join(TOKYO_ROOT, 'l10n', 'prague');
 const VERIFY_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'verify.mjs');
 const TRANSLATE_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'translate.mjs');
 
-const WRANGLER_BIN = process.env.WRANGLER_BIN || 'pnpm';
+const LOG_DIR = path.join(repoRoot, 'Logs');
+const LOG_FILE = path.join(LOG_DIR, 'prague-sync.log');
+const defaultWranglerPath = path.join(repoRoot, 'tokyo-worker', 'node_modules', '.bin', 'wrangler');
+const WRANGLER_BIN =
+  process.env.WRANGLER_BIN || (fsSync.existsSync(defaultWranglerPath) ? defaultWranglerPath : 'pnpm');
 const R2_BUCKET = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
 
 const args = new Set(process.argv.slice(2));
+const runBackground = args.has('--background');
+const isBackgroundChild = args.has('--background-child');
 const runTranslate = !args.has('--skip-translate');
 const runVerify = !args.has('--skip-verify');
 const runPublish = !args.has('--skip-publish');
@@ -87,11 +95,31 @@ async function publishOverlays() {
   for (const filePath of files) {
     const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
     const key = relFromTokyo; // e.g. l10n/prague/...
-    runWrangler(['r2', 'object', 'put', key, '--file', filePath, '--bucket', R2_BUCKET]);
+    const objectPath = `${R2_BUCKET}/${key}`;
+    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath]);
   }
 }
 
 async function main() {
+  if (runBackground && !isBackgroundChild) {
+    fsSync.mkdirSync(LOG_DIR, { recursive: true });
+    fsSync.appendFileSync(
+      LOG_FILE,
+      `\n--- Prague sync started ${new Date().toISOString()} ---\n`,
+      'utf8',
+    );
+    const childArgs = process.argv.slice(2).filter((arg) => arg !== '--background');
+    childArgs.push('--background-child');
+    const logFd = fsSync.openSync(LOG_FILE, 'a');
+    const child = spawn(process.execPath, [scriptPath, ...childArgs], {
+      detached: true,
+      stdio: ['ignore', logFd, logFd],
+    });
+    if (child.pid) child.unref();
+    console.log(`[prague-sync] Running in background. Log: ${LOG_FILE}`);
+    process.exit(0);
+  }
+
   if (runTranslate) {
     run(process.execPath, [TRANSLATE_SCRIPT]);
   }
@@ -102,6 +130,13 @@ async function main() {
     await publishOverlays();
   }
   console.log('[prague-sync] Done.');
+  if (isBackgroundChild) {
+    fsSync.appendFileSync(
+      LOG_FILE,
+      `--- Prague sync finished ${new Date().toISOString()} ---\n`,
+      'utf8',
+    );
+  }
 }
 
 main().catch((err) => {
