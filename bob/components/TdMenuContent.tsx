@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { getAt } from '../lib/utils/paths';
+import { buildControlMatchers, findBestControlForPath } from '../lib/edit/controls';
+import { getCkTypographyAllowedStyles, getCkTypographyAllowedWeights } from '../lib/edit/typography-fonts';
 import { pathMatchesAllowlist, type AllowlistEntry } from '../lib/l10n/instance';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { applyI18nToDom } from '../lib/i18n/dom';
@@ -18,6 +20,69 @@ declare global {
 const loadedStyles = new Set<string>();
 const loadedScripts = new Map<string, Promise<void>>();
 const stylePromises = new Map<string, Promise<void>>();
+
+type PresetSpec = {
+  customValue?: string;
+  values?: Record<string, Record<string, unknown>>;
+};
+
+type PresetEntry = {
+  sourcePath: string;
+  customValue: string;
+  values: Record<string, Record<string, unknown>>;
+  targetPaths: string[];
+};
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function buildPresetEntries(raw: unknown): PresetEntry[] {
+  if (!isPlainRecord(raw)) return [];
+  const entries: PresetEntry[] = [];
+
+  for (const [sourcePath, specRaw] of Object.entries(raw)) {
+    if (!sourcePath || !isPlainRecord(specRaw)) continue;
+    const valuesRaw = (specRaw as PresetSpec).values;
+    if (!isPlainRecord(valuesRaw)) continue;
+
+    const values: Record<string, Record<string, unknown>> = {};
+    const targetSet = new Set<string>();
+    for (const [presetKey, mappingRaw] of Object.entries(valuesRaw)) {
+      if (!presetKey || !isPlainRecord(mappingRaw)) continue;
+      values[presetKey] = mappingRaw;
+      Object.keys(mappingRaw).forEach((path) => {
+        if (path) targetSet.add(path);
+      });
+    }
+
+    if (Object.keys(values).length === 0 || targetSet.size === 0) continue;
+    const customValue =
+      typeof (specRaw as PresetSpec).customValue === 'string' && (specRaw as PresetSpec).customValue?.trim()
+        ? (specRaw as PresetSpec).customValue!.trim()
+        : 'custom';
+
+    entries.push({
+      sourcePath,
+      customValue,
+      values,
+      targetPaths: Array.from(targetSet),
+    });
+  }
+
+  return entries;
+}
+
+function pathMatchesTarget(path: string, target: string): boolean {
+  return path === target || path.startsWith(`${target}.`);
+}
+
+function pickAllowedValue(current: unknown, allowed: string[], preferred: string): string {
+  const trimmed = typeof current === 'string' ? current.trim() : '';
+  if (trimmed && allowed.includes(trimmed)) return trimmed;
+  if (allowed.includes(preferred)) return preferred;
+  return allowed[0] ?? '';
+}
 
 function loadStyle(href: string): Promise<void> {
   if (!href) return Promise.resolve();
@@ -852,6 +917,16 @@ export function TdMenuContent({
     if (!container) return;
 
     const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
+    const presetEntries = buildPresetEntries(session.compiled?.presets);
+    const controlMatchers = buildControlMatchers(session.compiled?.controls ?? []);
+    const typographyFamilyPaths = Array.from(
+      new Set(
+        (session.compiled?.controls ?? [])
+          .map((control) => control.path)
+          .filter((path) => /^typography\.roles\.[^.]+\.family$/.test(path)),
+      ),
+    );
+    const isAllowedPath = (path: string) => Boolean(findBestControlForPath(controlMatchers, path));
 
     const coerceFiniteNumber = (value: unknown): number | null => {
       if (isFiniteNumber(value)) return value;
@@ -864,10 +939,84 @@ export function TdMenuContent({
 
     const expandLinkedOps = (ops: WidgetOp[]): WidgetOp[] => {
       const expanded: WidgetOp[] = [];
+      const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
+      const presetOps = new Map<string, WidgetOp>();
+      const themeScopePrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
+
+      for (const op of ops) {
+        if (op.op === 'set' && typeof op.path === 'string' && presetByPath.has(op.path)) {
+          presetOps.set(op.path, op);
+        }
+      }
+
+      for (const entry of presetEntries) {
+        const targetPaths = entry.targetPaths.includes('typography.globalFamily')
+          ? Array.from(new Set([...entry.targetPaths, ...typographyFamilyPaths]))
+          : entry.targetPaths;
+        const currentValue = getAt<unknown>(instanceData, entry.sourcePath);
+        const shouldResetPreset =
+          !presetOps.has(entry.sourcePath) &&
+          typeof currentValue === 'string' &&
+          currentValue !== entry.customValue &&
+          ops.some((op) => {
+            if (typeof op.path !== 'string') return false;
+            if (op.path === entry.sourcePath) return false;
+            if (entry.sourcePath === 'appearance.theme') {
+              return themeScopePrefixes.some((prefix) => op.path.startsWith(prefix));
+            }
+            return targetPaths.some((target) => pathMatchesTarget(op.path, target));
+          });
+
+        if (shouldResetPreset) {
+          expanded.push(setOp(entry.sourcePath, entry.customValue));
+        }
+      }
 
       for (const op of ops) {
         if (op.op !== 'set' || typeof op.path !== 'string') {
           expanded.push(op);
+          continue;
+        }
+
+        const presetEntry = presetByPath.get(op.path);
+        if (presetEntry && typeof op.value === 'string') {
+          expanded.push(op);
+          const presetValues = op.value !== presetEntry.customValue ? presetEntry.values[op.value] : null;
+          if (presetValues) {
+            for (const [presetPath, presetValue] of Object.entries(presetValues)) {
+              if (presetPath === 'typography.globalFamily') {
+                const familyValue = typeof presetValue === 'string' ? presetValue : '';
+                if (familyValue) {
+                  const allowedWeights = getCkTypographyAllowedWeights(familyValue);
+                  const allowedStyles = getCkTypographyAllowedStyles(familyValue);
+                  typographyFamilyPaths.forEach((familyPath) => {
+                    if (isAllowedPath(familyPath)) {
+                      expanded.push(setOp(familyPath, familyValue));
+                    }
+
+                    const roleBase = familyPath.replace(/\.family$/, '');
+                    const weightPath = `${roleBase}.weight`;
+                    const stylePath = `${roleBase}.fontStyle`;
+
+                    if (allowedWeights.length > 0 && isAllowedPath(weightPath)) {
+                      const currentWeight = getAt<unknown>(instanceData, weightPath);
+                      const nextWeight = pickAllowedValue(currentWeight, allowedWeights, '400');
+                      if (nextWeight) expanded.push(setOp(weightPath, nextWeight));
+                    }
+
+                    if (allowedStyles.length > 0 && isAllowedPath(stylePath)) {
+                      const currentStyle = getAt<unknown>(instanceData, stylePath);
+                      const nextStyle = pickAllowedValue(currentStyle, allowedStyles, 'normal');
+                      if (nextStyle) expanded.push(setOp(stylePath, nextStyle));
+                    }
+                  });
+                }
+              }
+              if (isAllowedPath(presetPath)) {
+                expanded.push(setOp(presetPath, presetValue));
+              }
+            }
+          }
           continue;
         }
 
@@ -1026,6 +1175,20 @@ export function TdMenuContent({
       if (!applied.ok && process.env.NODE_ENV === 'development') {
         console.warn('[TdMenuContent] Failed to apply ops event', applied.errors);
       }
+    };
+
+    const handleBobPreviewEvent = (event: Event) => {
+      if (readOnly) return;
+      const detail = (event as any).detail;
+      if (detail?.clear) {
+        event.stopPropagation();
+        session.clearPreviewOps();
+        return;
+      }
+      const ops = detail?.ops as WidgetOp[] | undefined;
+      if (!Array.isArray(ops) || ops.length === 0) return;
+      event.stopPropagation();
+      session.setPreviewOps(expandLinkedOps(ops));
     };
 
     const handleUpsellEvent = (event: Event) => {
@@ -1243,6 +1406,7 @@ export function TdMenuContent({
     };
 
     container.addEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+    container.addEventListener('bob-preview', handleBobPreviewEvent as EventListener, true);
     container.addEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
     container.addEventListener('input', handleContainerEvent, true);
     container.addEventListener('change', handleContainerEvent, true);
@@ -1329,6 +1493,7 @@ export function TdMenuContent({
 
     return () => {
       container.removeEventListener('bob-ops', handleBobOpsEvent as EventListener, true);
+      container.removeEventListener('bob-preview', handleBobPreviewEvent as EventListener, true);
       container.removeEventListener('bob-upsell', handleUpsellEvent as EventListener, true);
       container.removeEventListener('input', handleContainerEvent, true);
       container.removeEventListener('change', handleContainerEvent, true);

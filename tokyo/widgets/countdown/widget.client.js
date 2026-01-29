@@ -17,11 +17,6 @@
     throw new Error('[Countdown] Missing [data-role="countdown"] root');
   }
 
-  const innerEl = countdownRoot.querySelector('[data-role="inner"]');
-  if (!(innerEl instanceof HTMLElement)) {
-    throw new Error('[Countdown] Missing [data-role="inner"]');
-  }
-
   const headingEl = countdownRoot.querySelector('[data-role="heading"]');
   if (!(headingEl instanceof HTMLElement)) {
     throw new Error('[Countdown] Missing [data-role="heading"]');
@@ -93,75 +88,22 @@
   })();
   if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
 
-  const THEME_PRESETS = {
-    light: {
-      background: 'var(--color-system-white)',
-      textColor: 'var(--color-system-black)',
-      timerBoxColor: 'var(--color-system-gray-5)',
-    },
-    dark: {
-      background: 'var(--color-system-black)',
-      textColor: 'var(--color-system-white)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-gray), transparent 70%)',
-    },
-    gradient: {
-      background: 'linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))',
-      textColor: 'var(--color-system-white)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 75%)',
-    },
-    pastel: {
-      background: 'linear-gradient(135deg, var(--color-system-blue-5), var(--color-system-purple-4))',
-      textColor: 'var(--color-system-indigo-contrast)',
-      timerBoxColor: 'var(--color-system-white)',
-    },
-    halloween: {
-      background: 'color-mix(in oklab, var(--color-system-black), var(--color-system-orange) 35%)',
-      textColor: 'var(--color-system-orange)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-orange), black 80%)',
-    },
-    thanksgiving: {
-      background: 'linear-gradient(135deg, var(--color-system-brown-3), var(--color-system-orange-4))',
-      textColor: 'var(--color-system-brown-contrast)',
-      timerBoxColor: 'var(--color-system-brown-5)',
-    },
-    'black-friday': {
-      background: 'var(--color-system-black)',
-      textColor: 'var(--color-system-yellow)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-yellow), black 80%)',
-    },
-    'cyber-monday': {
-      background: 'linear-gradient(135deg, var(--color-system-indigo), var(--color-system-purple))',
-      textColor: 'var(--color-system-white)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 75%)',
-    },
-    christmas: {
-      background: 'linear-gradient(135deg, var(--color-system-red), var(--color-system-green))',
-      textColor: 'var(--color-system-white)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 70%)',
-    },
-    'new-year': {
-      background: 'linear-gradient(135deg, var(--color-system-indigo), var(--color-system-blue))',
-      textColor: 'var(--color-system-white)',
-      timerBoxColor: 'color-mix(in oklab, var(--color-system-white), transparent 80%)',
-    },
-    valentines: {
-      background: 'linear-gradient(135deg, var(--color-system-pink-3), var(--color-system-red-4))',
-      textColor: 'var(--color-system-red-contrast)',
-      timerBoxColor: 'var(--color-system-white)',
-    },
-    easter: {
-      background: 'linear-gradient(135deg, var(--color-system-mint-4), var(--color-system-purple-4))',
-      textColor: 'var(--color-system-purple-contrast)',
-      timerBoxColor: 'var(--color-system-white)',
-    },
-    summer: {
-      background: 'linear-gradient(135deg, var(--color-system-yellow), var(--color-system-orange))',
-      textColor: 'var(--color-system-black)',
-      timerBoxColor: 'var(--color-system-white)',
-    },
-  };
-
-  const THEME_KEYS = new Set(['custom', ...Object.keys(THEME_PRESETS)]);
+  const THEME_KEYS = new Set([
+    'custom',
+    'light',
+    'dark',
+    'gradient',
+    'pastel',
+    'halloween',
+    'thanksgiving',
+    'black-friday',
+    'cyber-monday',
+    'christmas',
+    'new-year',
+    'valentines',
+    'easter',
+    'summer',
+  ]);
   const ANIMATION_KEYS = new Set(['fade']);
 
   function assertBoolean(value, path) {
@@ -195,6 +137,31 @@
     }
     if (typeof value.type !== 'string' || !value.type.trim()) {
       throw new Error(`[Countdown] ${path}.type must be a string`);
+    }
+  }
+
+  function assertBorderConfig(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertNumber(value.width, `${path}.width`);
+    assertString(value.color, `${path}.color`);
+    if (value.width < 0 || value.width > 12) {
+      throw new Error(`[Countdown] ${path}.width must be 0..12`);
+    }
+  }
+
+  function assertShadowConfig(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertBoolean(value.inset, `${path}.inset`);
+    assertNumber(value.x, `${path}.x`);
+    assertNumber(value.y, `${path}.y`);
+    assertNumber(value.blur, `${path}.blur`);
+    assertNumber(value.spread, `${path}.spread`);
+    assertNumber(value.alpha, `${path}.alpha`);
+    assertString(value.color, `${path}.color`);
+    if (value.alpha < 0 || value.alpha > 100) {
+      throw new Error(`[Countdown] ${path}.alpha must be 0..100`);
     }
   }
 
@@ -265,18 +232,6 @@
     if (!['inline', 'full-width', 'top-bar', 'bottom-bar', 'static-top'].includes(state.layout.position)) {
       throw new Error('[Countdown] state.layout.position must be inline|full-width|top-bar|bottom-bar|static-top');
     }
-    if (!['auto', 'full', 'custom'].includes(state.layout.width)) {
-      throw new Error('[Countdown] state.layout.width must be auto|full|custom');
-    }
-    if (!['left', 'center', 'right'].includes(state.layout.alignment)) {
-      throw new Error('[Countdown] state.layout.alignment must be left|center|right');
-    }
-    if (state.layout.width === 'custom') {
-      assertNumber(state.layout.customWidth, 'state.layout.customWidth');
-      if (state.layout.customWidth <= 0) {
-        throw new Error('[Countdown] state.layout.customWidth must be > 0');
-      }
-    }
     assertObject(state.appearance, 'state.appearance');
     assertString(state.appearance.theme, 'state.appearance.theme');
     if (!THEME_KEYS.has(state.appearance.theme)) {
@@ -286,10 +241,19 @@
     if (!ANIMATION_KEYS.has(state.appearance.animation)) {
       throw new Error(`[Countdown] state.appearance.animation must be one of: ${Array.from(ANIMATION_KEYS).join(', ')}`);
     }
-    assertFill(state.appearance.background, 'state.appearance.background');
     assertFill(state.appearance.textColor, 'state.appearance.textColor');
-    assertFill(state.appearance.timerBoxColor, 'state.appearance.timerBoxColor');
+    assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
     assertString(state.appearance.separator, 'state.appearance.separator');
+    assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
+    assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
+    assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
+    assertString(state.appearance.itemCard.radiusTL, 'state.appearance.itemCard.radiusTL');
+    assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
+    assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
+    assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
+    assertBorderConfig(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
+    assertShadowConfig(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
+    assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
     assertObject(state.actions, 'state.actions');
@@ -498,18 +462,52 @@
     return String(value ?? '');
   }
 
-  function applyAppearanceVars(state) {
-    const theme = state.appearance.theme;
-    const preset = theme !== 'custom' ? THEME_PRESETS[theme] : null;
-    const background = resolveFillBackground(preset ? preset.background : state.appearance.background);
-    const textColor = resolveFillColor(preset ? preset.textColor : state.appearance.textColor);
-    const timerBoxColor = resolveFillBackground(preset ? preset.timerBoxColor : state.appearance.timerBoxColor);
+  function computeShadowBoxShadow(shadow) {
+    if (shadow.enabled !== true || shadow.alpha <= 0) return 'none';
+    const alphaMix = 100 - shadow.alpha;
+    const color = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
+    return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
+  }
 
-    countdownRoot.setAttribute('data-theme', theme);
+  function applyAppearanceVars(state) {
+    const textColor = resolveFillColor(state.appearance.textColor);
+    const itemBackground = resolveFillBackground(state.appearance.itemBackground);
+
     countdownRoot.setAttribute('data-animation', state.appearance.animation);
-    countdownRoot.style.setProperty('--countdown-bg', background);
     countdownRoot.style.setProperty('--countdown-text-color', textColor);
-    countdownRoot.style.setProperty('--countdown-timer-bg', timerBoxColor);
+    countdownRoot.style.setProperty('--countdown-item-bg', itemBackground);
+
+    if (podEl instanceof HTMLElement) {
+      const podBorder = state.appearance.podBorder;
+      const podEnabled = podBorder.enabled === true && podBorder.width > 0;
+      podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
+      podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
+    }
+
+    const border = state.appearance.itemCard.border;
+    const borderEnabled = border.enabled === true && border.width > 0;
+    countdownRoot.style.setProperty('--countdown-item-border-width', borderEnabled ? `${border.width}px` : '0px');
+    countdownRoot.style.setProperty('--countdown-item-border-color', borderEnabled ? border.color : 'transparent');
+    countdownRoot.style.setProperty('--countdown-item-shadow', computeShadowBoxShadow(state.appearance.itemCard.shadow));
+
+    const tokenize = (value) => {
+      const normalized = String(value || '').trim();
+      return normalized === 'none' ? '0' : `var(--control-radius-${normalized})`;
+    };
+    const radiusCfg = state.appearance.itemCard;
+    const r =
+      radiusCfg.radiusLinked === false
+        ? {
+            tl: tokenize(radiusCfg.radiusTL),
+            tr: tokenize(radiusCfg.radiusTR),
+            br: tokenize(radiusCfg.radiusBR),
+            bl: tokenize(radiusCfg.radiusBL),
+          }
+        : (() => {
+            const all = tokenize(radiusCfg.radius);
+            return { tl: all, tr: all, br: all, bl: all };
+          })();
+    countdownRoot.style.setProperty('--countdown-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
 
     const separatorText = String(state.appearance.separator || ':');
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {
@@ -519,20 +517,17 @@
 
   function applyLayoutVars(state) {
     const position = state.layout.position;
-    const alignment = state.layout.alignment;
-    const widthMode = state.layout.width;
+    const stageAlignment = state.stage?.alignment;
+    const derivedAlignment = stageAlignment === 'left' || stageAlignment === 'right' ? stageAlignment : 'center';
+    const alignment = derivedAlignment;
 
     countdownRoot.setAttribute('data-layout-position', position);
     countdownRoot.setAttribute('data-layout-align', alignment);
-    countdownRoot.setAttribute('data-layout-width', widthMode);
 
     stageEl.setAttribute('data-layout-position', position);
     podEl.setAttribute('data-layout-position', position);
-
-    let widthValue = 'max-content';
-    if (widthMode === 'full') widthValue = '100%';
-    if (widthMode === 'custom') widthValue = `${state.layout.customWidth}px`;
-    countdownRoot.style.setProperty('--countdown-content-width', widthValue);
+    countdownRoot.style.removeProperty('--countdown-content-width');
+    countdownRoot.removeAttribute('data-layout-width');
   }
 
   function applyHeading(state) {

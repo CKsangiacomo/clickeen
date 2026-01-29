@@ -11,6 +11,7 @@
   if (!(widgetRoot instanceof HTMLElement)) {
     throw new Error('[FAQ] widget.client.js must be rendered inside [data-ck-widget="faq"]');
   }
+  const podEl = widgetRoot.closest('.pod');
 
   const faqRoot = widgetRoot.querySelector('[data-role="faq"]');
   if (!(faqRoot instanceof HTMLElement)) {
@@ -97,6 +98,16 @@
     }
   }
 
+  function assertBorderConfig(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertNumber(value.width, `${path}.width`);
+    assertString(value.color, `${path}.color`);
+    if (value.width < 0 || value.width > 12) {
+      throw new Error(`[FAQ] ${path}.width must be 0..12`);
+    }
+  }
+
   function assertFaqState(state) {
     assertObject(state, 'state');
     assertString(state.title, 'state.title');
@@ -129,6 +140,7 @@
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
+    assertFill(state.appearance.iconColor, 'state.appearance.iconColor');
     assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
     assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
     assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
@@ -136,13 +148,7 @@
     assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
     assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
     assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
-    assertObject(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
-    assertBoolean(state.appearance.itemCard.border.enabled, 'state.appearance.itemCard.border.enabled');
-    assertNumber(state.appearance.itemCard.border.width, 'state.appearance.itemCard.border.width');
-    assertString(state.appearance.itemCard.border.color, 'state.appearance.itemCard.border.color');
-    if (state.appearance.itemCard.border.width < 0 || state.appearance.itemCard.border.width > 12) {
-      throw new Error('[FAQ] state.appearance.itemCard.border.width must be 0..12');
-    }
+    assertBorderConfig(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
     assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
     assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
     assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
@@ -155,6 +161,7 @@
     if (state.appearance.itemCard.shadow.alpha < 0 || state.appearance.itemCard.shadow.alpha > 100) {
       throw new Error('[FAQ] state.appearance.itemCard.shadow.alpha must be 0..100');
     }
+    assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
 
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.expandFirst, 'state.behavior.expandFirst');
@@ -453,6 +460,15 @@
     faqRoot.style.setProperty('--faq-link-underline-color', resolveFillColor(appearance.linkUnderlineColor));
     faqRoot.style.setProperty('--faq-link-highlight-color', resolveFillBackground(appearance.linkHighlightColor));
     faqRoot.style.setProperty('--faq-link-text-color', resolveFillColor(appearance.linkTextColor));
+    faqRoot.style.setProperty('--faq-icon-color', resolveFillColor(appearance.iconColor));
+
+
+    if (podEl instanceof HTMLElement) {
+      const podBorder = appearance.podBorder;
+      const podEnabled = podBorder.enabled === true && podBorder.width > 0;
+      podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
+      podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
+    }
 
     const tokenize = (value) => {
       const normalized = String(value || '').trim();

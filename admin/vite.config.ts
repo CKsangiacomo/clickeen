@@ -144,6 +144,146 @@ export default defineConfig({
       },
     },
     {
+      name: 'tokyo-update-theme',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+          if (pathname !== '/api/themes/update' || req.method !== 'POST') return next();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk.toString();
+          });
+          req.on('end', () => {
+            let payload: any;
+            try {
+              payload = body ? JSON.parse(body) : null;
+            } catch (err) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
+              return;
+            }
+
+            const themeId = String(payload?.themeId || '').trim().toLowerCase();
+            if (!themeId || !/^[a-z0-9][a-z0-9_-]*$/.test(themeId) || themeId === 'custom') {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.theme.invalid' } }));
+              return;
+            }
+
+            const values = payload?.values;
+            if (!values || typeof values !== 'object' || Array.isArray(values)) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } }));
+              return;
+            }
+
+            const allowedPrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
+            const invalidKeys = Object.keys(values).filter(
+              (key) => !allowedPrefixes.some((prefix) => key.startsWith(prefix))
+            );
+            if (invalidKeys.length) {
+              res.statusCode = 422;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'coreui.errors.payload.invalid',
+                    detail: `Invalid theme path(s): ${invalidKeys.join(', ')}`,
+                  },
+                })
+              );
+              return;
+            }
+
+            const containsNonPersistableUrl = (value: string): boolean => {
+              return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
+            };
+
+            const issues: Array<{ path: string; message: string }> = [];
+            const visit = (node: any, nodePath: string) => {
+              if (typeof node === 'string') {
+                if (containsNonPersistableUrl(node)) {
+                  issues.push({
+                    path: nodePath,
+                    message: 'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
+                  });
+                }
+                return;
+              }
+              if (!node || typeof node !== 'object') return;
+              if (Array.isArray(node)) {
+                for (let i = 0; i < node.length; i += 1) visit(node[i], `${nodePath}[${i}]`);
+                return;
+              }
+              for (const [key, value] of Object.entries(node)) {
+                const nextPath = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
+                  ? `${nodePath}.${key}`
+                  : `${nodePath}[${JSON.stringify(key)}]`;
+                visit(value, nextPath);
+              }
+            };
+            visit(values, 'values');
+
+            if (issues.length) {
+              res.statusCode = 422;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'coreui.errors.publish.nonPersistableUrl',
+                    detail: issues[0]?.message,
+                    paths: issues.map((i) => i.path),
+                  },
+                })
+              );
+              return;
+            }
+
+            const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
+            try {
+              if (!fs.existsSync(themesPath)) {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
+                return;
+              }
+              const raw = fs.readFileSync(themesPath, 'utf8');
+              const json = JSON.parse(raw);
+              const themes = Array.isArray(json?.themes) ? json.themes : [];
+              const index = themes.findIndex((theme) => String(theme?.id || '').toLowerCase() === themeId);
+              if (index < 0) {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
+                return;
+              }
+              const current = themes[index] || {};
+              const mergedValues = { ...(current.values || {}), ...values };
+              themes[index] = { ...current, values: mergedValues };
+              json.themes = themes;
+              fs.writeFileSync(themesPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, themeId, themesPath }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.db.writeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                })
+              );
+            }
+          });
+        });
+      },
+    },
+    {
       name: 'devstudio-promote-instance',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {

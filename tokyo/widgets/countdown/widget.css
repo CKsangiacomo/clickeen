@@ -13,9 +13,8 @@ body {
 }
 
 .ck-countdown-widget {
-  --countdown-bg: var(--color-system-white);
   --countdown-text-color: var(--color-system-black);
-  --countdown-timer-bg: var(--color-system-gray-10);
+  --countdown-item-bg: var(--color-system-gray-10);
   --countdown-cta-bg: var(--color-system-blue);
   --countdown-cta-bg-hover: color-mix(
     in oklab,
@@ -89,6 +88,8 @@ body {
   background: var(--pod-bg, transparent);
   padding: var(--pod-pad-desktop-top, 0) var(--pod-pad-desktop-right, 0)
     var(--pod-pad-desktop-bottom, 0) var(--pod-pad-desktop-left, 0);
+  border: var(--pod-border-width, 0px) solid var(--pod-border-color, transparent);
+  box-shadow: var(--pod-shadow, none);
   border-radius: var(--pod-radius, var(--control-radius-lg));
   box-sizing: border-box;
   margin: 0;
@@ -140,8 +141,11 @@ body {
 
 .ck-countdown {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   background: transparent;
-  display: block;
+  box-sizing: border-box;
 }
 
 .ck-countdown[data-layout-align='left'] {
@@ -159,32 +163,6 @@ body {
   --countdown-text-align: right;
 }
 
-.ck-countdown__inner {
-  width: var(--countdown-content-width, auto);
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--countdown-bg, transparent);
-  border-radius: var(--control-radius-lg);
-  box-sizing: border-box;
-}
-
-.ck-countdown[data-layout-align='left'] .ck-countdown__inner {
-  margin-inline-start: 0;
-  margin-inline-end: auto;
-}
-
-.ck-countdown[data-layout-align='center'] .ck-countdown__inner {
-  margin-inline: auto;
-}
-
-.ck-countdown[data-layout-align='right'] .ck-countdown__inner {
-  margin-inline-start: auto;
-  margin-inline-end: 0;
-}
-
 @keyframes ck-countdown-fade {
   from {
     opacity: 0;
@@ -196,7 +174,7 @@ body {
   }
 }
 
-.ck-countdown[data-animation='fade'] .ck-countdown__inner {
+.ck-countdown[data-animation='fade'] {
   animation: ck-countdown-fade 0.4s ease-out both;
 }
 
@@ -228,8 +206,10 @@ body {
   align-items: center;
   justify-content: center;
   padding: var(--space-4) var(--space-5);
-  background: var(--countdown-timer-bg);
-  border-radius: var(--control-radius-md);
+  background: var(--countdown-item-bg, var(--color-system-gray-5));
+  border: var(--countdown-item-border-width, 0px) solid var(--countdown-item-border-color, transparent);
+  box-shadow: var(--countdown-item-shadow, none);
+  border-radius: var(--countdown-item-radius, var(--control-radius-md));
   min-width: 120px;
 }
 
@@ -248,8 +228,10 @@ body {
   justify-content: center;
   min-width: 72px;
   padding: var(--space-3) var(--space-4);
-  background: var(--countdown-timer-bg);
-  border-radius: var(--control-radius-md);
+  background: var(--countdown-item-bg, var(--color-system-gray-5));
+  border: var(--countdown-item-border-width, 0px) solid var(--countdown-item-border-color, transparent);
+  box-shadow: var(--countdown-item-shadow, none);
+  border-radius: var(--countdown-item-radius, var(--control-radius-md));
 }
 
 .ck-countdown__separator {

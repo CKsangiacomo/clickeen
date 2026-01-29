@@ -16,16 +16,22 @@ Editable paths for the countdown widget configuration.
 
 ## Layout
 - `layout.position`: inline | full-width | top-bar | bottom-bar | static-top
-- `layout.width`: auto | full | custom
-- `layout.customWidth`: number (px; when width == custom)
-- `layout.alignment`: left | center | right
+Note: content alignment follows `stage.alignment` (left/center/right). Pod sizing is driven by stage/pod layout controls.
+Legacy layout fields are ignored by runtime (use Stage/Pod layout controls instead).
 
 ## Appearance
 - `appearance.theme`: custom | light | dark | gradient | pastel | halloween | thanksgiving | black-friday | cyber-monday | christmas | new-year | valentines | easter | summer
+  - Global theme preset (editor-only): selection is staged until "Apply theme" is clicked. Cancel restores the prior theme.
+  - Applying a theme sets Stage/Pod/Item appearance values plus typography family. Editing any theme-controlled field resets theme to `custom`.
 - `appearance.animation`: fade
-- `appearance.background`: fill object (type: color | gradient | image)
 - `appearance.textColor`: fill object (type: color)
-- `appearance.timerBoxColor`: fill object (type: color)
+- `appearance.itemBackground`: fill object (type: color | gradient)
+- `appearance.itemCard.border`: object (enabled, width, color)
+- `appearance.itemCard.shadow`: object (enabled, inset, x, y, blur, spread, color, alpha)
+- `appearance.itemCard.radiusLinked`: boolean
+- `appearance.itemCard.radius`: none | 2xl | 4xl | 6xl | 10xl
+- `appearance.itemCard.radiusTL|TR|BR|BL`: none | 2xl | 4xl | 6xl | 10xl
+- `appearance.podBorder`: object (enabled, width, color)
 - `appearance.separator`: string (: | / | -)
 
 ## Behavior

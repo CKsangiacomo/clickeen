@@ -34,7 +34,20 @@
       "radiusTL": "4xl",
       "radiusTR": "4xl",
       "widthMode": "full",
-      "background": "var(--color-system-white)",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 8,
+        "blur": 24,
+        "alpha": 18,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
       "contentWidth": 960,
       "radiusLinked": true
     },
@@ -68,7 +81,10 @@
         }
       },
       "alignment": "center",
-      "background": "#d1d1d6"
+      "background": {
+        "type": "color",
+        "color": "#d1d1d6"
+      }
     },
     "title": "Frequently Asked Questions",
     "layout": {
@@ -130,6 +146,7 @@
     ],
     "showTitle": true,
     "appearance": {
+      "theme": "custom",
       "itemCard": {
         "border": {
           "color": "#efeff2",
@@ -154,11 +171,20 @@
         "radiusLinked": true
       },
       "iconStyle": "plus",
+      "iconColor": "var(--typo-question-color)",
       "linkStyle": "underline",
       "linkTextColor": "var(--color-system-blue)",
-      "itemBackground": "var(--color-system-white)",
+      "itemBackground": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
       "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkUnderlineColor": "var(--color-system-blue)"
+      "linkUnderlineColor": "var(--color-system-blue)",
+      "podBorder": {
+        "color": "var(--color-system-gray-5)",
+        "width": 1,
+        "enabled": false
+      }
     },
     "typography": {
       "roles": {
@@ -261,14 +287,17 @@
     "</bob-panel>",
     "<bob-panel id='appearance'>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image' path='appearance.itemBackground' label='Q&A card background' label-key='faq.labels.itemBackground' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemBackground}}' />",
-    "    <div data-bob-showif=\"hasLinks(sections)\">",
-    "      <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' />",
-    "      <tooldrawer-field-appearance-item group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
-    "      <tooldrawer-field-appearance-item group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkHighlightColor' label='Highlight color' value='{{appearance.linkHighlightColor}}' show-if=\"appearance.linkStyle == 'highlight'\" />",
-    "      <tooldrawer-field-appearance-item group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkTextColor' label='Link text color' value='{{appearance.linkTextColor}}' show-if=\"appearance.linkStyle == 'color'\" />",
-    "    </div>",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
+    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.theme' label='Theme' value='{{appearance.theme}}' />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' show-if=\"hasLinks(sections)\" />",
+    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"hasLinks(sections) && appearance.linkStyle == 'underline'\" />",
+    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkHighlightColor' label='Highlight color' value='{{appearance.linkHighlightColor}}' show-if=\"hasLinks(sections) && appearance.linkStyle == 'highlight'\" />",
+    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkTextColor' label='Link text color' value='{{appearance.linkTextColor}}' show-if=\"hasLinks(sections) && appearance.linkStyle == 'color'\" />",
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster>",
+    "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
+    "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.iconColor' label='Accordion icon color' value='{{appearance.iconColor}}' show-if=\"layout.type == 'accordion'\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.title.color' label='Title text color' value='{{typography.roles.title.color}}' />",
@@ -277,18 +306,20 @@
     "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.answer.color' label='Answer text color' value='{{typography.roles.answer.color}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-card group-label='' type='toggle' size='md' path='appearance.itemCard.radiusLinked' label='Link Q&A card corners' label-key='faq.labels.linkItemCorners' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.radiusLinked}}' default='true' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.itemCard.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.itemCard.radius}}' show-if=\"appearance.itemCard.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.itemCard.radiusTL' label='Q&A card top-left radius' label-key='faq.labels.itemTopLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.itemCard.radiusTR' label='Q&A card top-right radius' label-key='faq.labels.itemTopRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.itemCard.radiusBR' label='Q&A card bottom-right radius' label-key='faq.labels.itemBottomRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-border' size='md' path='appearance.itemCard.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.border}}' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Q&A card shadow' label-key='faq.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.shadow}}' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-fill' size='md' fill-modes='color,gradient' path='appearance.itemBackground' label='Q&A card background' label-key='faq.labels.itemBackground' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemBackground}}' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='toggle' size='md' path='appearance.itemCard.radiusLinked' label='Link Q&A card corners' label-key='faq.labels.linkItemCorners' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.radiusLinked}}' default='true' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-actions' size='md' path='appearance.itemCard.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.itemCard.radius}}' show-if=\"appearance.itemCard.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-actions' size='md' path='appearance.itemCard.radiusTL' label='Q&A card top-left radius' label-key='faq.labels.itemTopLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-actions' size='md' path='appearance.itemCard.radiusTR' label='Q&A card top-right radius' label-key='faq.labels.itemTopRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusTR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-actions' size='md' path='appearance.itemCard.radiusBR' label='Q&A card bottom-right radius' label-key='faq.labels.itemBottomRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBR}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-border' size='md' path='appearance.itemCard.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.border}}' />",
+    "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Q&A card shadow' label-key='faq.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.shadow}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Background' value='{{stage.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='settings'>",

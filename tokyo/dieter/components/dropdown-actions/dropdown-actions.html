@@ -1,4 +1,4 @@
-<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="closed">
+<div class="diet-dropdown-actions diet-popover-host" data-size="{{size}}" data-state="closed" {{#if applyActions}}data-apply-actions="true"{{/if}}>
   <input
     id="{{id}}"
     type="hidden"
@@ -65,5 +65,25 @@
       </button>
       {{/each}}
     </div>
+    {{#if applyActions}}
+    <div class="diet-dropdown-actions__footer">
+      <button
+        type="button"
+        class="diet-btn-txt diet-dropdown-actions__apply"
+        data-size="md"
+        data-variant="primary"
+      >
+        <span class="diet-btn-txt__label">{{applyLabel}}</span>
+      </button>
+      <button
+        type="button"
+        class="diet-btn-txt diet-dropdown-actions__cancel"
+        data-size="md"
+        data-variant="neutral"
+      >
+        <span class="diet-btn-txt__label">{{cancelLabel}}</span>
+      </button>
+    </div>
+    {{/if}}
   </div>
 </div>

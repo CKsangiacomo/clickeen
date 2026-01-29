@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "themes": [
+    {
+      "id": "light",
+      "label": "Light",
+      "values": {
+        "stage.background": { "type": "color", "color": "var(--color-system-white)" },
+        "pod.background": { "type": "color", "color": "var(--color-system-white)" },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-gray-5)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-black)" },
+        "typography.globalFamily": "Inter"
+      }
+    },
+    {
+      "id": "dark",
+      "label": "Dark",
+      "values": {
+        "stage.background": { "type": "color", "color": "var(--color-system-black)" },
+        "pod.background": { "type": "color", "color": "var(--color-system-black)" },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-gray)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-white)" },
+        "typography.globalFamily": "Inter"
+      }
+    },
+    {
+      "id": "gradient",
+      "label": "Gradient",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-blue), var(--color-system-purple))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-indigo)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-white)" },
+        "typography.globalFamily": "Montserrat"
+      }
+    },
+    {
+      "id": "pastel",
+      "label": "Pastel",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-blue-5), var(--color-system-purple-4))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-blue-5), var(--color-system-purple-4))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-white)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-indigo-contrast)" },
+        "typography.globalFamily": "Lora"
+      }
+    },
+    {
+      "id": "halloween",
+      "label": "Halloween",
+      "values": {
+        "stage.background": { "type": "color", "color": "var(--color-system-black)" },
+        "pod.background": { "type": "color", "color": "var(--color-system-orange)" },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-brown)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-black)" },
+        "typography.globalFamily": "Permanent Marker"
+      }
+    },
+    {
+      "id": "thanksgiving",
+      "label": "Thanksgiving",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-brown-3), var(--color-system-orange-4))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-brown-3), var(--color-system-orange-4))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-brown)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-brown-contrast)" },
+        "typography.globalFamily": "Libre Baskerville"
+      }
+    },
+    {
+      "id": "black-friday",
+      "label": "Black Friday",
+      "values": {
+        "stage.background": { "type": "color", "color": "var(--color-system-black)" },
+        "pod.background": { "type": "color", "color": "var(--color-system-black)" },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-gray)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-yellow)" },
+        "typography.globalFamily": "Montserrat"
+      }
+    },
+    {
+      "id": "cyber-monday",
+      "label": "Cyber Monday",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-indigo), var(--color-system-purple))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-indigo), var(--color-system-purple))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-purple)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-white)" },
+        "typography.globalFamily": "Michroma"
+      }
+    },
+    {
+      "id": "christmas",
+      "label": "Christmas",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-red), var(--color-system-green))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-red), var(--color-system-green))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-green-contrast)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-white)" },
+        "typography.globalFamily": "Playfair Display"
+      }
+    },
+    {
+      "id": "new-year",
+      "label": "New Year",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-indigo), var(--color-system-blue))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-indigo), var(--color-system-blue))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-indigo)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-white)" },
+        "typography.globalFamily": "Raleway"
+      }
+    },
+    {
+      "id": "valentines",
+      "label": "Valentines Day",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-pink-3), var(--color-system-red-4))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-pink-3), var(--color-system-red-4))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-white)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-red-contrast)" },
+        "typography.globalFamily": "Cormorant Garamond"
+      }
+    },
+    {
+      "id": "easter",
+      "label": "Easter",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-mint-4), var(--color-system-purple-4))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-mint-4), var(--color-system-purple-4))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-white)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-purple-contrast)" },
+        "typography.globalFamily": "Gabriela"
+      }
+    },
+    {
+      "id": "summer",
+      "label": "Summer",
+      "values": {
+        "stage.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-yellow), var(--color-system-orange))" }
+        },
+        "pod.background": {
+          "type": "gradient",
+          "gradient": { "css": "linear-gradient(135deg, var(--color-system-yellow), var(--color-system-orange))" }
+        },
+        "appearance.itemBackground": { "type": "color", "color": "var(--color-system-white)" },
+        "appearance.textColor": { "type": "color", "color": "var(--color-system-black)" },
+        "typography.globalFamily": "Lato"
+      }
+    }
+  ]
+}

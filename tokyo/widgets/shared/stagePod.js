@@ -58,6 +58,26 @@
     return { tl: all, tr: all, br: all, bl: all };
   }
 
+  function clampNumber(value, min, max) {
+    const n = typeof value === 'number' && Number.isFinite(value) ? value : min;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function computeShadowBoxShadow(shadow) {
+    if (!shadow || typeof shadow !== 'object') return 'none';
+    if (shadow.enabled !== true) return 'none';
+    const alpha = clampNumber(shadow.alpha, 0, 100);
+    if (alpha <= 0) return 'none';
+    const x = clampNumber(shadow.x, -200, 200);
+    const y = clampNumber(shadow.y, -200, 200);
+    const blur = clampNumber(shadow.blur, 0, 400);
+    const spread = clampNumber(shadow.spread, -200, 200);
+    const color = typeof shadow.color === 'string' && shadow.color.trim() ? shadow.color.trim() : '#000000';
+    const alphaMix = 100 - alpha;
+    const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
+    return `${shadow.inset === true ? 'inset ' : ''}${x}px ${y}px ${blur}px ${spread}px ${mix}`;
+  }
+
   function applyPaddingVars(el, key, pad) {
     el.style.setProperty(`--${key}-top`, `${pad.top}px`);
     el.style.setProperty(`--${key}-right`, `${pad.right}px`);
@@ -166,6 +186,7 @@
 
     const radii = resolveRadius(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
+    podEl.style.setProperty('--pod-shadow', computeShadowBoxShadow(podCfg.shadow));
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);

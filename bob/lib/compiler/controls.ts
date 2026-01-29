@@ -306,12 +306,14 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
 export function compileControlsFromPanels(args: {
   panels: CompiledPanel[];
   defaults: Record<string, unknown>;
+  optionsByPath?: Record<string, CompiledControlOption[]>;
 }): CompiledControl[] {
   const rawControls = args.panels.flatMap((panel) => {
     const panelControls: CompiledControl[] = [];
     collectControlsFromMarkup(panel.html, panel.id, panelControls);
     return panelControls;
   });
+  const optionsByPath = args.optionsByPath || {};
 
   const score = (control: CompiledControl) =>
     (control.options && control.options.length ? 100 : 0) +
@@ -328,8 +330,10 @@ export function compileControlsFromPanels(args: {
   });
 
   const controls = Array.from(deduped.values()).map((control) => {
-    const meta = inferControlMetadata(control, args.defaults);
-    return { ...control, ...meta };
+    const overrideOptions = optionsByPath[control.path];
+    const controlWithOptions = overrideOptions ? { ...control, options: overrideOptions } : control;
+    const meta = inferControlMetadata(controlWithOptions, args.defaults);
+    return { ...controlWithOptions, ...meta };
   });
 
   const unknownControl = controls.find((control) => !control.kind || control.kind === 'unknown');

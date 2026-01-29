@@ -82,6 +82,17 @@
   gap: var(--space-2, 0.5rem);
 }
 
+.diet-dropdown-actions__footer {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-2, 0.5rem);
+  border-top: 1px solid var(--color-system-gray-5);
+}
+
+.diet-dropdown-actions__footer .diet-btn-txt {
+  flex: 1 1 0;
+}
+
 .diet-dropdown-actions__menuaction {
   border-radius: var(--control-radius-sm, 0.3125rem);
 }

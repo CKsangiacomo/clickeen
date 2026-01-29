@@ -59,6 +59,12 @@
       return css ? { css: css } : null;
     }
     if (!isRecord(raw)) return null;
+    if (typeof raw.css === 'string') {
+      var rawCss = raw.css.trim();
+      if (rawCss) {
+        return { css: rawCss };
+      }
+    }
     var kind = typeof raw.kind === 'string' && GRADIENT_KINDS[raw.kind] ? raw.kind : 'linear';
     var angle = clampNumber(raw.angle, 0, 360);
     var rawStops = Array.isArray(raw.stops) ? raw.stops : [];

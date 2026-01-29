@@ -68,6 +68,69 @@ documentation/
 
 ---
 
+## Documentation vs Execution_Pipeline_Docs (non‑equivalent)
+
+There are **two doc roots** in the repo and they are intentionally different:
+
+- `documentation/` = **current system truth**. It must match runtime code + schema + deployed config. If it drifts, fix it immediately.
+- `Execution_Pipeline_Docs/` = **process artifacts** (planning → executing → executed). It records intent and history and can be stale by design.
+
+Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` for context on how/why decisions were made.
+
+---
+
+## AI-Native Operating Model (agent contract)
+
+This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
+
+- **Modular surfaces:** widgets in `tokyo/widgets/`; services isolated under `bob/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
+- **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
+- **Automation intent:** local changes are designed to propagate through the local stack automatically. Cloud-dev propagation is explicit (promote/deploy).
+- **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
+
+---
+
+## End-to-End Journey (widget folder → DevStudio/Bob/Prague → cloud-dev)
+
+### A) Widget definition path (local)
+Source of truth: `tokyo/widgets/{widget}/` (spec + runtime + marketing JSON).
+
+1) **Local Tokyo CDN stub** serves the widget folder:
+   - `tokyo/dev-server.mjs` -> `http://localhost:4000`
+   - Serves `/widgets/**` and `/dieter/**` directly from the repo.
+2) **Local Bob** reads widget definitions from Tokyo:
+   - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `http://localhost:4000` in dev.
+3) **Local DevStudio** embeds Bob and reads the same Tokyo base:
+   - `admin/src/html/tools/dev-widget-workspace.html` resolves Tokyo to `http://localhost:4000` on localhost.
+4) **Local Prague** loads widget marketing JSON from the repo:
+   - `prague/src/lib/markdown.ts` bundles `tokyo/widgets/**/pages/*.json`.
+   - `PUBLIC_TOKYO_URL=http://localhost:4000` provides tokens + overlay fetch base.
+
+Result: editing `tokyo/widgets/**` immediately changes **local** Bob + DevStudio + Prague.
+
+### B) Instance + asset path (local)
+Instances are data (not code) and live in Paris/Michael. Assets live in Tokyo.
+
+1) **DevStudio creates/edits instances** via Paris (local worker).
+2) **Assets** referenced in configs point at local Tokyo (localhost:4000).
+3) **Venice embeds** render curated/user instances using Paris + Tokyo (local URLs).
+
+### C) Cloud-dev propagation (explicit)
+Local changes do not auto-appear in cloud-dev. You must promote or deploy.
+
+1) **Curated instances + assets**:
+   - Use DevStudio promote flow (local DevStudio -> cloud Paris/Tokyo).
+   - Promotion rewrites local Tokyo URLs to cloud Tokyo URLs.
+2) **Prague/Bob/DevStudio**:
+   - Code changes require Cloudflare deploys (Pages/Workers).
+   - Cloud Prague/Bob read `https://tokyo.dev.clickeen.com`, not your local filesystem.
+3) **Marketing JSON updates**:
+   - `tokyo/widgets/**/pages/*.json` updates require a Prague deployment to be visible in cloud-dev.
+
+Invariant: **Local propagation is automatic; cloud-dev propagation is explicit.** Treat any assumption otherwise as a bug.
+
+---
+
 ## Update Rules (what must be kept in sync)
 
 If you change runtime behavior, update docs in the same PR/commit:
@@ -89,19 +152,6 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/{capability}.md`
 - **Prague strings localization pipeline**
   - Update `documentation/capabilities/localization.md` + `documentation/services/prague/*.md`
-
----
-
-## "Shipped vs Planned" (prevent drift)
-
-In system docs, keep these separate:
-
-- **Runtime Reality (shipped)**
-  - what exists in code and deployed config today
-- **Roadmap / Milestones (planned)**
-  - what we intend to build next
-
-Avoid mixing planned APIs with shipped ones in the "Quick Scan" sections.
 
 ---
 

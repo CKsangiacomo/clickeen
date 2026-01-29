@@ -49,6 +49,7 @@ OUTPUT
 - Stage/Pod defaults.
 - Typography roles for all text.
 - `itemKey` declared in `spec.json` (`{widgetType}.item`).
+- Themes are always enabled: `appearance.theme` default set to `custom`.
 
 GATE
 - Every control path exists in defaults.
@@ -97,6 +98,8 @@ OUTPUT
 - Vertical rhythm is **clusters + groups only**. Controls must not add external margins or spacing wrappers.
 - Clusters can wrap any markup; `gap`/`space-after` attributes are forbidden.
 - Groups are formed from adjacent grouped fields; they appear inside a cluster only when those fields are inside that cluster.
+- Themes are always enabled: Appearance panel includes a global Theme dropdown (dropdown-actions on `appearance.theme`).
+- Any manual edit to `stage.*`, `pod.*`, `appearance.*`, or `typography.*` must reset `appearance.theme` to `custom`.
 
 GATE
 - Zero dead controls.

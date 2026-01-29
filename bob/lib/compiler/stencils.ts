@@ -13,6 +13,10 @@ type ComponentSpec = {
 
 type WidgetI18nContext = {
   itemKey?: string | null;
+  themeOptions?: Array<{ label: string; value: string }>;
+  themeSourcePath?: string;
+  themeApplyLabel?: string;
+  themeCancelLabel?: string;
 };
 
 function decodeHtmlEntities(value: string): string {
@@ -275,6 +279,13 @@ export async function buildContext(
       options = parsed;
     }
   }
+  const themeSourcePath = widgetContext?.themeSourcePath || '';
+  const themeOptions = widgetContext?.themeOptions;
+  const isThemeControl =
+    Boolean(themeOptions && themeOptions.length > 0) && Boolean(themeSourcePath) && pathAttr === themeSourcePath;
+  if (isThemeControl) {
+    options = themeOptions;
+  }
   if (Array.isArray(options)) {
     options = options.map((opt) => ({ bodyClass: merged.bodyClass, size, ...opt }));
   }
@@ -304,6 +315,10 @@ export async function buildContext(
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
   const allowLinks =
     attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
+
+  const applyActions = isThemeControl ? 'true' : '';
+  const applyLabel = isThemeControl ? (widgetContext?.themeApplyLabel || 'Apply theme') : '';
+  const cancelLabel = isThemeControl ? (widgetContext?.themeCancelLabel || 'Cancel') : '';
 
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
@@ -386,6 +401,9 @@ export async function buildContext(
     headerIcon,
     allowImage,
     allowLinks,
+    applyActions,
+    applyLabel,
+    cancelLabel,
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,

@@ -85,23 +85,24 @@ State: `appearance.iconStyle`
 - `arrowshape` → expand `arrowshape.down`, collapse `arrowshape.up`
 
 Icons are Dieter icons and should be rendered as `diet-btn-ic` (neutral).
+Icon color is controlled via `appearance.iconColor` (color fill).
 
 ## 4) Canonical state (current)
 Grouped state (source of truth: `tokyo/widgets/faq/spec.json`):
 - `sections[]` — content tree (section title + list of Q/A items)
 - `layout.*` — layout type, responsive columns, gap
-- `appearance.*` — item background + question/answer colors + accordion icon choice
+- `appearance.*` — item background + question/answer colors + accordion icon choice/color + pod border + `appearance.theme` (global theme selector; editor-only shortcut)
 - `behavior.*` — accordion toggles + media toggles + backlink
 - `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
 - `context.*` — Copilot context (editor-only; runtime may ignore)
 - `typography.*` — global family + per-role selections (compiler-injected panel)
-- `stage.*` + `pod.*` — stage/pod layout and appearance
+- `stage.*` + `pod.*` — stage/pod layout and appearance (including pod shadow)
 
 ## 5) ToolDrawer panels (current)
 Panels defined in `tokyo/widgets/faq/spec.json`:
 - `content` — section manager + Q/A editing + show title controls
 - `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
-- `appearance` — widget appearance + stage/pod appearance
+- `appearance` — theme dropdown (global) + widget appearance + stage/pod appearance
 - `settings` — AI context (website URL) + SEO/GEO toggles + media toggles + backlink
 
 ToolDrawer spacing rule (authoring):
@@ -115,6 +116,11 @@ If `context.websiteUrl` is present and policy allows it, Copilot may:
 
 Compiler-injected (because defaults include `typography.roles`):
 - `typography` — standardized typography controls (compiler strips any author-defined typography panel)
+
+## 5.2) Themes (global, editor-only)
+- Theme is a **global** dropdown in Appearance (`appearance.theme`).
+- Selection previews in-editor; only **Apply theme** commits changes to state.
+- Themes apply only: `stage.background`, `pod.background`, `appearance.itemBackground`, and `typography.globalFamily`.
 
 ## 6) Runtime requirements
 Widget runtime (`tokyo/widgets/faq/widget.client.js`) must:

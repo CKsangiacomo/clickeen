@@ -216,28 +216,43 @@
 
 .diet-dropdown-fill__gradient-stopbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: var(--space-1, 0.25rem);
+  gap: var(--space-3, 0.75rem);
+}
+
+.diet-dropdown-fill__gradient-stop-track {
+  position: relative;
+  block-size: var(--control-size-md, 1.5rem);
+  touch-action: none;
 }
 
 .diet-dropdown-fill__gradient-stop-line {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
   block-size: 1px;
-  inline-size: 100%;
   background: color-mix(in oklab, var(--color-system-black), transparent 85%);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .diet-dropdown-fill__gradient-stop-btn {
+  position: absolute;
+  inset-block-start: 50%;
+  transform: translate(-50%, -50%);
   inline-size: var(--control-size-md, 1.5rem);
   block-size: var(--control-size-md, 1.5rem);
   border-radius: 999px;
   border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 80%);
-  background: var(--color-system-white);
+  background: var(--stop-color, var(--color-system-white));
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-system-white), transparent 40%),
     0 0 0 0 transparent;
   transition: box-shadow var(--duration-base, 160ms) var(--easing-standard, ease);
   cursor: pointer;
+  z-index: 1;
+  touch-action: none;
 }
 
 .diet-dropdown-fill__gradient-stop-btn:hover {
@@ -251,6 +266,39 @@
 }
 
 .diet-dropdown-fill__gradient-stop-btn:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-system-blue), transparent 20%);
+  outline-offset: 2px;
+}
+
+.diet-dropdown-fill__gradient-stop-add {
+  inline-size: calc(var(--control-size-md, 1.5rem) * 0.9);
+  block-size: calc(var(--control-size-md, 1.5rem) * 0.9);
+  border-radius: 999px;
+  border: 1px dashed color-mix(in oklab, var(--color-system-black), transparent 70%);
+  background: var(--color-system-white);
+  color: var(--color-system-gray-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 var(--fs-12, 12px) / 1 var(--font-ui);
+  cursor: pointer;
+  transition: border-color var(--duration-base, 160ms) var(--easing-standard, ease);
+}
+
+.diet-dropdown-fill__gradient-stop-add.is-remove {
+  color: var(--color-system-pink);
+  border-color: color-mix(in oklab, var(--color-system-pink), transparent 35%);
+}
+
+.diet-dropdown-fill__gradient-stop-add:hover {
+  border-color: color-mix(in oklab, var(--color-system-black), transparent 55%);
+}
+
+.diet-dropdown-fill__gradient-stop-add.is-remove:hover {
+  border-color: color-mix(in oklab, var(--color-system-pink), transparent 15%);
+}
+
+.diet-dropdown-fill__gradient-stop-add:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--color-system-blue), transparent 20%);
   outline-offset: 2px;
 }

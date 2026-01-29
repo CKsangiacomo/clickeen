@@ -51,6 +51,7 @@ body {
   background: var(--pod-bg, transparent);
   padding: var(--pod-pad-desktop-top, 0) var(--pod-pad-desktop-right, 0) var(--pod-pad-desktop-bottom, 0)
     var(--pod-pad-desktop-left, 0);
+  box-shadow: var(--pod-shadow, none);
   border-radius: var(--pod-radius, var(--control-radius-lg));
   box-sizing: border-box;
   margin: 0;

@@ -52,6 +52,8 @@ body {
   background: var(--pod-bg, transparent);
   padding: var(--pod-pad-desktop-top, 0) var(--pod-pad-desktop-right, 0) var(--pod-pad-desktop-bottom, 0)
     var(--pod-pad-desktop-left, 0);
+  border: var(--pod-border-width, 0px) solid var(--pod-border-color, transparent);
+  box-shadow: var(--pod-shadow, none);
   border-radius: var(--pod-radius, var(--control-radius-lg));
   box-sizing: border-box;
   margin: 0;
@@ -95,7 +97,7 @@ body {
   grid-template-columns: 1fr;
   padding: 0;
   background: transparent;
-  border-radius: var(--faq-card-radius, var(--control-radius-lg));
+  box-sizing: border-box;
   --faq-card-border-width: 1px;
   --faq-card-border-color: var(--color-system-gray-5);
 }

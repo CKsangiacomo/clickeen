@@ -60,7 +60,7 @@ Defaults are the state contract. No runtime merges.
 
 Top-level groups:
 - `timer.*` — type + mode settings + headline
-- `layout.*` — arrangement and spacing
+- `layout.*` — placement (banner positioning)
 - `appearance.*` — paint (fills, borders, colors)
 - `behavior.*` — backlink + small toggles
 - `actions.*` — "during" CTA + "after end" behavior
@@ -82,13 +82,16 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `timer.countDuration`: Numeric seconds (default 5) for number mode.
 - `timer.headline`: Rich text (bold, italic, link, lists; max 500 chars; default: "Get 50% off before it's too late 🎯").
 - `layout.position`: 'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top' (visual cards).
-- `layout.width`: 'auto' | 'full' | 'custom' (px).
-- `layout.customWidth`: Numeric px value when width is `custom`.
-- `layout.alignment`: 'left' | 'center' | 'right'.
-- `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets.
-- `appearance.background`: Fill picker (color/gradient/image), stored as a fill object.
+- Note: content alignment follows `stage.alignment` (left/center/right). Pod sizing is driven by stage/pod layout controls.
+- Legacy layout fields are ignored by runtime (use Stage/Pod layout controls instead).
+- `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets (global themes; selection is staged until "Apply theme" is clicked; Cancel restores prior values. Applying a theme sets Stage/Pod/Item appearance values + typography font family; editing any theme-controlled path resets theme to `custom`).
+- `pod.background`: Fill picker (color/gradient/image/video) for the widget surface.
 - `appearance.textColor`: Color picker (fill object, type `color`).
-- `appearance.timerBoxColor`: Color picker (fill object, type `color`).
+- `appearance.itemBackground`: Fill picker (color/gradient) for timer tiles.
+- `appearance.itemCard.border`: Border (enabled/width/color).
+- `appearance.itemCard.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
+- `appearance.itemCard.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
+- `appearance.podBorder`: Pod border (enabled/width/color).
 - `appearance.separator`: Color/style picker.
 - `appearance.animation`: 'fade' (only; skip advanced).
 - `actions.during.type`: 'link' | 'form' (skip 'form' for V1).
@@ -151,13 +154,11 @@ ToolDrawer spacing rule (authoring):
   - Headline: Rich text editor (bold, italic, link, lists, code view; max 500 chars).
 - **Layout Panel**:
   - Position: Visual cards for 5 options (inline, full-width, top-bar, bottom-bar, static-top).
-  - Width: Auto/full/custom.
-  - Alignment: Left/center/right.
-  - Stage/Pod: Padding controls (desktop/mobile).
+  - Stage/Pod: Shared layout controls (pod width/content width, stage alignment, stage canvas sizing, stage/pod padding).
 - **Appearance Panel**:
   - Theme: Dropdown with custom/light/dark/gradient + holiday presets.
-  - Colors: Background, text, timer box, separators.
-  - Borders/shadows: Radius, width, color; shadow toggles.
+  - Colors: Pod background, text, timer tiles, separators.
+  - Borders/shadows: Timer tile radius/border/shadow + pod border.
   - Animations: Fade only.
 - **Actions Panel**:
   - During: Type selector (link/form—skip form), URL/text/style/new-tab toggles.
@@ -170,8 +171,8 @@ Defaults must include:
 - `behavior: { showBacklink: true }`
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 - `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
-- `layout: { position: 'inline', width: 'auto', alignment: 'center', customWidth: 960 }`
-- `appearance: { theme: 'custom', animation: 'fade', background: { type: 'color', color: '#fff' }, textColor: { type: 'color', color: '#000' }, timerBoxColor: { type: 'color', color: '#f0f0f0' }, separator: ':' }`
+- `layout: { position: 'inline' }`
+- `appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, itemCard: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, podBorder: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, separator: ':' }`
 - `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
 
 ## 8) Additional Notes from Competitor Analysis

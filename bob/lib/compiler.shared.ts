@@ -6,6 +6,7 @@ export type RawWidget = {
   itemKey?: unknown;
   defaults?: Record<string, unknown>;
   html?: unknown;
+  presets?: unknown;
 };
 
 export type TooldrawerAttrs = Record<string, string>;

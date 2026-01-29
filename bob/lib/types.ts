@@ -46,12 +46,20 @@ export interface CompiledControl {
   max?: number;
 }
 
+export type WidgetPresetSpec = {
+  customValue?: string;
+  values: Record<string, Record<string, unknown>>;
+};
+
+export type WidgetPresets = Record<string, WidgetPresetSpec>;
+
 export interface CompiledWidget {
   widgetname: string;
   displayName: string;
   defaults: Record<string, unknown>;
   panels: CompiledPanel[];
   controls: CompiledControl[];
+  presets?: WidgetPresets;
   limits?: LimitsSpec | null;
   assets: {
     htmlUrl: string;

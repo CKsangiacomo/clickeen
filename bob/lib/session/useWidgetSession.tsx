@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import type { CompiledWidget } from '../types';
+import type { CompiledWidget, WidgetPresets } from '../types';
 import type { ApplyWidgetOpsResult, WidgetOp, WidgetOpError } from '../ops';
 import { applyWidgetOps } from '../ops';
 import type { CopilotThread } from '../copilot/types';
@@ -73,6 +73,8 @@ type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   baseInstanceData: Record<string, unknown>;
+  previewData: Record<string, unknown> | null;
+  previewOps: WidgetOp[] | null;
   isDirty: boolean;
   policy: Policy;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
@@ -103,6 +105,82 @@ type WidgetBootstrapMessage = {
   label?: string;
   subjectMode?: SubjectMode;
 };
+
+type ThemeRegistry = {
+  themes: Array<{
+    id: string;
+    label: string;
+    values: Record<string, unknown>;
+  }>;
+};
+
+const themePresetCache = new Map<string, Promise<WidgetPresets | null>>();
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeThemeRegistry(raw: unknown): ThemeRegistry | null {
+  if (!isPlainRecord(raw)) return null;
+  const themesRaw = (raw as ThemeRegistry).themes;
+  if (!Array.isArray(themesRaw)) return null;
+
+  const themes: ThemeRegistry['themes'] = [];
+  const seen = new Set<string>();
+  themesRaw.forEach((theme) => {
+    if (!theme || typeof theme !== 'object') return;
+    const id = typeof (theme as any).id === 'string' ? (theme as any).id.trim() : '';
+    const label = typeof (theme as any).label === 'string' ? (theme as any).label.trim() : '';
+    const values = (theme as any).values;
+    if (!id || !label || !isPlainRecord(values) || seen.has(id)) return;
+    seen.add(id);
+    themes.push({ id, label, values });
+  });
+
+  return themes.length ? { themes } : null;
+}
+
+function filterThemeValues(values: Record<string, unknown>): Record<string, unknown> {
+  const allowed = ['stage.', 'pod.', 'appearance.', 'typography.'];
+  const filtered: Record<string, unknown> = {};
+  Object.entries(values).forEach(([key, value]) => {
+    if (!key || typeof key !== 'string') return;
+    if (!allowed.some((prefix) => key.startsWith(prefix))) return;
+    filtered[key] = value;
+  });
+  return filtered;
+}
+
+function buildThemePresets(registry: ThemeRegistry): WidgetPresets {
+  const values: Record<string, Record<string, unknown>> = {};
+  registry.themes.forEach((theme) => {
+    values[theme.id] = filterThemeValues(theme.values);
+  });
+  return {
+    'appearance.theme': {
+      customValue: 'custom',
+      values,
+    },
+  };
+}
+
+async function loadThemePresets(tokyoBase: string): Promise<WidgetPresets | null> {
+  const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
+  if (!base) return null;
+  const cached = themePresetCache.get(base);
+  if (cached) return cached;
+
+  const promise = (async () => {
+    const res = await fetch(`${base}/themes/themes.json`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const raw = await res.json().catch(() => null);
+    const registry = normalizeThemeRegistry(raw);
+    return registry ? buildThemePresets(registry) : null;
+  })().catch(() => null);
+
+  themePresetCache.set(base, promise);
+  return promise;
+}
 
 type DevstudioExportInstanceDataMessage = {
   type: 'devstudio:export-instance-data';
@@ -264,6 +342,8 @@ function useWidgetSessionInternal() {
     compiled: null,
     instanceData: {},
     baseInstanceData: {},
+    previewData: null,
+    previewOps: null,
     isDirty: false,
     policy: initialPolicy,
     upsell: null,
@@ -280,8 +360,13 @@ function useWidgetSessionInternal() {
 
   const stateRef = useRef(state);
   stateRef.current = state;
+  const previewOpsRef = useRef<WidgetOp[] | null>(null);
   const allowlistCacheRef = useRef<Map<string, AllowlistEntry[]>>(new Map());
   const localeRequestRef = useRef(0);
+
+  useEffect(() => {
+    previewOpsRef.current = state.previewOps;
+  }, [state.previewOps]);
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -451,6 +536,82 @@ function useWidgetSessionInternal() {
     [state.compiled, state.instanceData, state.baseInstanceData, state.policy, state.locale]
   );
 
+  const clearPreviewOps = useCallback(() => {
+    previewOpsRef.current = null;
+    setState((prev) => {
+      if (!prev.previewOps && !prev.previewData) return prev;
+      return { ...prev, previewOps: null, previewData: null };
+    });
+  }, []);
+
+  const setPreviewOps = useCallback((ops: WidgetOp[]): ApplyWidgetOpsResult => {
+    const snapshot = stateRef.current;
+    if (!Array.isArray(ops) || ops.length === 0) {
+      return { ok: false, errors: [{ opIndex: 0, message: 'Ops must be a non-empty array' }] };
+    }
+
+    const compiled = snapshot.compiled;
+    if (!compiled || compiled.controls.length === 0) {
+      return { ok: false, errors: [{ opIndex: 0, message: 'This widget did not compile with controls[]' }] };
+    }
+
+    if (snapshot.policy.role === 'viewer') {
+      return { ok: false, errors: [{ opIndex: 0, message: 'Read-only mode: editing is disabled.' }] };
+    }
+
+    let opsToApply = ops;
+    const localeState = snapshot.locale;
+    const isLocaleMode = localeState.activeLocale !== localeState.baseLocale;
+
+    if (isLocaleMode) {
+      if (!localeState.allowlist.length) {
+        return { ok: false, errors: [{ opIndex: 0, message: 'Localization allowlist not loaded' }] };
+      }
+
+      const candidateOps = ops.filter(
+        (op) => op && op.op === 'set' && typeof (op as any).value === 'string',
+      ) as LocalizationOp[];
+      if (candidateOps.length === 0) {
+        return { ok: false, errors: [{ opIndex: 0, message: 'Localized edits only support text fields' }] };
+      }
+
+      const { filtered } = filterAllowlistedOps(candidateOps, localeState.allowlist);
+      if (filtered.length === 0) {
+        return { ok: false, errors: [{ opIndex: 0, message: 'This field is not localizable' }] };
+      }
+      opsToApply = filtered;
+    }
+
+    const applied = applyWidgetOps({
+      data: snapshot.instanceData,
+      ops: opsToApply,
+      controls: compiled.controls,
+    });
+
+    if (!applied.ok) {
+      return applied;
+    }
+
+    const violations = evaluateLimits({
+      config: applied.data,
+      limits: compiled.limits ?? null,
+      policy: snapshot.policy,
+      context: 'ops',
+    });
+    if (violations.length > 0) {
+      const first = violations[0];
+      return { ok: false, errors: [{ opIndex: 0, path: first.path, message: first.reasonKey }] };
+    }
+
+    setState((prev) => ({
+      ...prev,
+      previewData: applied.data,
+      previewOps: opsToApply,
+    }));
+
+    return applied;
+  }, []);
+
   const undoLastOps = useCallback(() => {
     setState((prev) => {
       if (!prev.undoSnapshot) return prev;
@@ -476,6 +637,15 @@ function useWidgetSessionInternal() {
       return { ...prev, undoSnapshot: null };
     });
   }, []);
+
+  useEffect(() => {
+    if (!previewOpsRef.current) return;
+    previewOpsRef.current = null;
+    setState((prev) => {
+      if (!prev.previewOps && !prev.previewData) return prev;
+      return { ...prev, previewOps: null, previewData: null };
+    });
+  }, [state.instanceData]);
 
   const loadLocaleAllowlist = useCallback(async (widgetType: string): Promise<AllowlistEntry[]> => {
     const cached = allowlistCacheRef.current.get(widgetType);
@@ -1103,6 +1273,12 @@ function useWidgetSessionInternal() {
     }
     const compiled = (await compiledRes.json().catch(() => null)) as CompiledWidget | null;
     if (!compiled) throw new Error('[useWidgetSession] Invalid compiled widget payload');
+    if (!compiled.presets || !compiled.presets['appearance.theme']) {
+      const themePresets = await loadThemePresets(resolveTokyoBaseUrl());
+      if (themePresets) {
+        compiled.presets = { ...(compiled.presets ?? {}), ...themePresets };
+      }
+    }
     await loadInstance({
       type: 'devstudio:load-instance',
       widgetname: widgetType,
@@ -1277,6 +1453,8 @@ function useWidgetSessionInternal() {
       compiled: state.compiled,
       instanceData: state.instanceData,
       baseInstanceData: state.baseInstanceData,
+      previewData: state.previewData,
+      previewOps: state.previewOps,
       isDirty: state.isDirty,
       isMinibob: state.policy.profile === 'minibob',
       policy: state.policy,
@@ -1291,6 +1469,8 @@ function useWidgetSessionInternal() {
       canUndo: Boolean(state.undoSnapshot) && state.locale.activeLocale === state.locale.baseLocale,
       copilotThreads: state.copilotThreads,
       applyOps,
+      setPreviewOps,
+      clearPreviewOps,
       undoLastOps,
       commitLastOps,
       publish,
@@ -1309,6 +1489,8 @@ function useWidgetSessionInternal() {
     [
       state,
       applyOps,
+      setPreviewOps,
+      clearPreviewOps,
       undoLastOps,
       commitLastOps,
       publish,

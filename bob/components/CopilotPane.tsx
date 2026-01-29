@@ -95,6 +95,7 @@ export function CopilotPane() {
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
 
   const pendingDecisionRef = useRef(false);
+  const pendingOpsRef = useRef<WidgetOp[] | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const convoKeyRef = useRef<string | null>(null);
 
@@ -195,6 +196,7 @@ export function CopilotPane() {
 
   const clearPendingDecision = () => {
     pendingDecisionRef.current = false;
+    pendingOpsRef.current = null;
     if (!threadKey) return;
     session.updateCopilotThread(threadKey, (current) => {
       const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
@@ -218,19 +220,31 @@ export function CopilotPane() {
       const timeToDecisionMs = typeof pendingTs === 'number' ? Math.max(0, Date.now() - pendingTs) : undefined;
 
       const normalized = prompt.toLowerCase();
-      if (isMinibob && normalized === 'keep') {
-        setDraft('');
-        pushMessage({ role: 'user', text: prompt });
-        pushMessage({
-          role: 'assistant',
-          text: 'Create a free account to keep this change.',
-        });
-        return;
-      }
       if (normalized === 'keep') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        session.commitLastOps();
+        if (isMinibob) {
+          pushMessage({
+            role: 'assistant',
+            text: 'Create a free account to keep this change.',
+          });
+          return;
+        }
+        const pendingOps = pendingOpsRef.current ?? session.previewOps ?? null;
+        if (pendingOps && pendingOps.length > 0) {
+          const applied = session.applyOps(pendingOps);
+          if (!applied.ok) {
+            const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
+            pushMessage({
+              role: 'assistant',
+              text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
+            });
+            session.clearPreviewOps();
+            clearPendingDecision();
+            return;
+          }
+        }
+        session.clearPreviewOps();
         void reportOutcome({ event: 'ux_keep', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
@@ -239,7 +253,7 @@ export function CopilotPane() {
       if (normalized === 'undo') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        session.undoLastOps();
+        session.clearPreviewOps();
         void reportOutcome({ event: 'ux_undo', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
@@ -326,7 +340,7 @@ export function CopilotPane() {
       const requestId = asTrimmedString(parsed?.meta?.requestId) || asTrimmedString(parsed?.requestId);
 
       if (ops && ops.length > 0) {
-        const applied = session.applyOps(ops);
+        const applied = session.setPreviewOps(ops);
         if (!applied.ok) {
           const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
           pushMessage({
@@ -337,6 +351,7 @@ export function CopilotPane() {
           return;
         }
 
+        pendingOpsRef.current = ops;
         pendingDecisionRef.current = true;
         const pendingText = isMinibob
           ? `${message}\n\nCreate a free account to keep this change.`
@@ -387,8 +402,10 @@ export function CopilotPane() {
         }}
         aria-label="Copilot conversation"
       >
-            {messages.map((m) => (
-              <div key={m.id} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '92%' }}>
+        {messages.map((m) => {
+          const cta = m.cta;
+          return (
+            <div key={m.id} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '92%' }}>
                 <div
                   className="body-m"
                   style={{
@@ -402,9 +419,9 @@ export function CopilotPane() {
                   {m.text}
                 </div>
 
-                {m.cta?.text ? (
+                {cta?.text ? (
                   <div style={{ marginTop: 'var(--space-1)' }}>
-                    {m.cta.action === 'signup' || m.cta.action === 'upgrade' ? (
+                    {cta.action === 'signup' || cta.action === 'upgrade' ? (
                       <button
                         className="diet-btn-txt"
                         data-size="md"
@@ -416,19 +433,19 @@ export function CopilotPane() {
                             requestId: m.requestId || '',
                             sessionId: copilotSessionId,
                           });
-                          session.requestUpsell(m.cta.text);
+                          session.requestUpsell(cta.text);
                         }}
                       >
-                        <span className="diet-btn-txt__label">{m.cta.text}</span>
+                        <span className="diet-btn-txt__label">{cta.text}</span>
                       </button>
                     ) : (
                       <a
                         className="diet-btn-txt"
                         data-size="md"
                         data-variant="primary"
-                        href={m.cta.url || '#'}
-                        target={m.cta.url ? '_blank' : undefined}
-                        rel={m.cta.url ? 'noreferrer' : undefined}
+                        href={cta.url || '#'}
+                        target={cta.url ? '_blank' : undefined}
+                        rel={cta.url ? 'noreferrer' : undefined}
                         onClick={() => {
                           void reportOutcome({
                             event: 'cta_clicked',
@@ -437,7 +454,7 @@ export function CopilotPane() {
                           });
                         }}
                       >
-                        <span className="diet-btn-txt__label">{m.cta.text}</span>
+                        <span className="diet-btn-txt__label">{cta.text}</span>
                       </a>
                     )}
                   </div>
@@ -451,8 +468,22 @@ export function CopilotPane() {
                     data-size="md"
                     data-variant="primary"
                     type="button"
-                    onClick={() => {
-                      session.commitLastOps();
+                  onClick={() => {
+                      const pendingOps = pendingOpsRef.current ?? session.previewOps ?? null;
+                      if (pendingOps && pendingOps.length > 0) {
+                        const applied = session.applyOps(pendingOps);
+                        if (!applied.ok) {
+                          const details = applied.errors.map((e) => `${e.path ? `${e.path}: ` : ''}${e.message}`).join('\n');
+                          pushMessage({
+                            role: 'assistant',
+                            text: `I couldn’t keep that change because it’s no longer valid:\n${details}`,
+                          });
+                          session.clearPreviewOps();
+                          clearPendingDecision();
+                          return;
+                        }
+                      }
+                      session.clearPreviewOps();
                       void reportOutcome({
                         event: 'ux_keep',
                         requestId: m.requestId || '',
@@ -489,7 +520,7 @@ export function CopilotPane() {
                   data-variant="neutral"
                   type="button"
                   onClick={() => {
-                    session.undoLastOps();
+                    session.clearPreviewOps();
                     void reportOutcome({
                       event: 'ux_undo',
                       requestId: m.requestId || '',
@@ -499,14 +530,15 @@ export function CopilotPane() {
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
                   }}
-                  disabled={!session.canUndo}
+                  disabled={!pendingOpsRef.current && !session.previewOps}
                 >
                   <span className="diet-btn-txt__label">Undo</span>
                 </button>
               </div>
             ) : null}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div

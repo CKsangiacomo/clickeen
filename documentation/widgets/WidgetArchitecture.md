@@ -66,6 +66,14 @@ Tokyo spec.json -> Bob compiles controls -> Bob loads instance (Paris)
 -> Bob holds working state -> Bob postMessage -> widget.client.js applyState
 ```
 
+Theme flow (global, editor-only; always enabled):
+```
+tokyo/themes/themes.json -> Bob injects theme dropdown
+-> selection previews (no state change)
+-> Apply theme writes ops to instance state
+-> runtime reads final state only
+```
+
 Embed flow (Venice):
 ```
 Browser -> Venice /e/{publicId} -> Venice loads instance (Paris) + widget files (Tokyo)
@@ -93,6 +101,7 @@ Location: `tokyo/widgets/shared/`
 | `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap)` | Apply typography roles |
 | `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply Stage/Pod layout |
 | `branding.js` | (self-managed) | Toggle backlink via `state.behavior.showBacklink` |
+| `fill.js` | `window.CKFill.*` | Fill normalization + color/gradient/image/video helpers |
 
 ---
 

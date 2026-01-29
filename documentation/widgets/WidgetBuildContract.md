@@ -58,6 +58,21 @@ MUST NOT
 - Reimplement Stage/Pod layout logic in widget CSS or JS.
 - Add fallback/healing logic for missing Stage/Pod fields.
 
+### 2.1) Global appearance surface rule (required)
+**Stage (canvas wrapper)**
+- ✅ Background fill (all fill types)
+- ❌ Border, ❌ Shadow, ❌ Radius
+
+**Pod (container surface)**
+- ✅ Background fill (all fill types)
+- ✅ Border, ✅ Shadow, ✅ Radius
+
+**Item (array item/card)**
+- ✅ Background fill (**color + gradient only**)
+- ✅ Border, ✅ Shadow, ✅ Radius
+
+If a widget needs anything outside this rule, it must be explicitly required by the PRD.
+
 ### 3) Typography (required if any text renders)
 MUST
 - Define `defaults.typography.roles` for all visible text parts.
@@ -91,6 +106,19 @@ MUST
 MUST NOT
 - Duplicate entire panels per variant.
 - Add custom vertical spacing via margins/spacer elements or `gap`/`space-after` attributes.
+
+### 5.1) Themes (global, editor-only)
+MUST
+- Define global themes in `tokyo/themes/themes.json` (single source of truth).
+- Theme values may only touch: `stage.*`, `pod.*`, `appearance.*`, and `typography.*` (font family only).
+- Themes are always enabled: every widget must include `appearance.theme` in `defaults` and render a dropdown-actions control for it in the Appearance panel.
+- Theme selection is staged; selection previews in-editor and only "Apply theme" commits ops to instance state.
+- Themes must apply Stage/Pod/Item appearance + typography font family.
+- Any manual edit to `stage.*`, `pod.*`, `appearance.*`, or `typography.*` after applying a theme must reset `appearance.theme` to `custom`.
+
+MUST NOT
+- Interpret themes at runtime; runtime reads only the final state values.
+- Add widget-specific theme lists in `spec.json`.
 
 ### 6) Dropdown-fill
 MUST

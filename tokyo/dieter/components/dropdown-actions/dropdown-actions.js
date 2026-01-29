@@ -97,7 +97,13 @@ var Dieter = (() => {
   var states = /* @__PURE__ */ new Map();
   var hydrateHost = createDropdownHydrator({
     rootSelector: ".diet-dropdown-actions",
-    triggerSelector: ".diet-dropdown-actions__control"
+    triggerSelector: ".diet-dropdown-actions__control",
+    onClose: (root) => {
+      const state = states.get(root);
+      if (state && state.applyActions) {
+        cancelPending(state, { close: false });
+      }
+    }
   });
   function hydrateDropdownActions(scope) {
     const roots = Array.from(scope.querySelectorAll(".diet-dropdown-actions"));
@@ -121,11 +127,27 @@ var Dieter = (() => {
     const menuActions = Array.from(
       root.querySelectorAll(".diet-dropdown-actions__menuaction")
     );
+    const applyButton = root.querySelector(".diet-dropdown-actions__apply");
+    const cancelButton = root.querySelector(".diet-dropdown-actions__cancel");
+    const applyActions = root.dataset.applyActions === "true";
     if (!input || !display || !trigger || menuActions.length === 0) {
       return null;
     }
     const nativeValue = captureNativeValue(input);
-    return { scope, root, input, display, trigger, menuActions, nativeValue };
+    return {
+      scope,
+      root,
+      input,
+      display,
+      trigger,
+      menuActions,
+      applyActions,
+      applyButton,
+      cancelButton,
+      committedValue: input.value,
+      pendingValue: null,
+      nativeValue
+    };
   }
   function installHandlers(state) {
     const { input, trigger, menuActions } = state;
@@ -139,14 +161,23 @@ var Dieter = (() => {
         }
       });
     }
-    input.addEventListener("external-sync", () => syncFromValue(state, input.value));
-    input.addEventListener("input", () => syncFromValue(state, input.value));
+    const syncCommitted = () => {
+      state.committedValue = input.value;
+      state.pendingValue = null;
+      syncFromValue(state, input.value);
+    };
+    input.addEventListener("external-sync", syncCommitted);
+    input.addEventListener("input", syncCommitted);
     menuActions.forEach((action) => {
       action.addEventListener("click", (event) => {
         event.stopPropagation();
         event.preventDefault();
         const value = action.dataset.value ?? "";
         const label = action.dataset.label ?? value;
+        if (state.applyActions) {
+          setPendingSelection(state, value, label);
+          return;
+        }
         const path = input.dataset.bobPath;
         if (path && /^typography\.roles\.[^.]+\.family$/.test(path)) {
           const roleRoot = path.slice(0, -".family".length);
@@ -194,6 +225,18 @@ var Dieter = (() => {
         trigger.click();
       });
     });
+    if (state.applyActions && state.applyButton && state.cancelButton) {
+      state.applyButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        commitPending(state);
+      });
+      state.cancelButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        cancelPending(state, { close: true });
+      });
+    }
   }
   function initialize(state) {
     syncFromValue(state, state.input.value);
@@ -207,6 +250,77 @@ var Dieter = (() => {
     state.input.value = value;
     if (!state.nativeValue) syncFromValue(state, value, label);
     state.input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function dispatchPreview(state, value) {
+    if (!state.applyActions) return;
+    const path = state.input.dataset.bobPath;
+    if (!path) return;
+    if (value == null) {
+      state.input.dispatchEvent(
+        new CustomEvent("bob-preview", {
+          bubbles: true,
+          detail: { clear: true }
+        })
+      );
+      return;
+    }
+    state.input.dispatchEvent(
+      new CustomEvent("bob-preview", {
+        bubbles: true,
+        detail: {
+          ops: [{ op: "set", path, value }]
+        }
+      })
+    );
+  }
+  function setPendingSelection(state, value, label) {
+    state.pendingValue = value;
+    syncFromValue(state, value, label);
+    dispatchPreview(state, value);
+  }
+  function commitPending(state) {
+    if (!state.pendingValue) {
+      state.trigger.focus();
+      state.trigger.click();
+      return;
+    }
+    dispatchPreview(state, null);
+    const next = state.pendingValue;
+    state.pendingValue = null;
+    state.committedValue = next;
+    state.input.value = next;
+    if (!state.nativeValue) syncFromValue(state, next);
+    const path = state.input.dataset.bobPath;
+    if (path) {
+      state.input.dispatchEvent(
+        new CustomEvent("bob-ops", {
+          bubbles: true,
+          detail: {
+            ops: [{ op: "set", path, value: next }]
+          }
+        })
+      );
+    } else {
+      state.input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    state.trigger.focus();
+    state.trigger.click();
+  }
+  function cancelPending(state, opts) {
+    if (!state.pendingValue) {
+      if (opts.close) {
+        state.trigger.focus();
+        state.trigger.click();
+      }
+      return;
+    }
+    state.pendingValue = null;
+    syncFromValue(state, state.committedValue);
+    dispatchPreview(state, null);
+    if (opts.close) {
+      state.trigger.focus();
+      state.trigger.click();
+    }
   }
   function captureNativeValue(input) {
     const proto = Object.getPrototypeOf(input);

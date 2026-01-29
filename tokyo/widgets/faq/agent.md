@@ -43,6 +43,12 @@ Layout:
 
 Appearance:
 - `appearance.iconStyle` (`plus` | `chevron` | `arrow` | `arrowshape`; accordion only)
+- `appearance.iconColor` (fill; color only; accordion only)
+- `appearance.itemBackground` (fill; color/gradient/image; Q&A card background)
+- `appearance.itemCard.border` (object; Q&A card border)
+  - `enabled` (boolean)
+  - `width` (number; px)
+  - `color` (string; CSS color)
 - `appearance.itemCard.shadow` (object; item card shadow)
   - `enabled` (boolean)
   - `inset` (boolean)
@@ -56,6 +62,13 @@ Appearance:
   - `appearance.itemCard.radiusLinked` (boolean)
   - `appearance.itemCard.radius` (`none` | `2xl` | `4xl` | `6xl` | `10xl`; when linked)
   - `appearance.itemCard.radiusTL|TR|BR|BL` (same enum; when unlinked)
+  - `enabled` (boolean)
+  - `width` (number; px)
+  - `color` (string; CSS color)
+- `appearance.podBorder` (object; pod border)
+  - `enabled` (boolean)
+  - `width` (number; px)
+  - `color` (string; CSS color)
 
 Behavior:
 - `behavior.expandFirst` (boolean; accordion only)
@@ -70,7 +83,7 @@ Context:
 
 Stage/Pod (layout spacing lives here; no widget-level padding):
 - `stage.background` (fill object), `stage.alignment`, `stage.padding*`
-- `pod.background` (fill object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
+- `pod.background` (fill object), `pod.shadow` (shadow object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
 
 ## Rendering Notes
 - Inline HTML is sanitized; allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).

@@ -4,22 +4,23 @@ import { useWidgetSession } from '../lib/session/useWidgetSession';
 
 export function Workspace() {
   const session = useWidgetSession();
-  const { compiled, instanceData, preview, setPreview, meta } = session;
+  const { compiled, instanceData, previewData, preview, setPreview, meta } = session;
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
-  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
-  const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
-  const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
+  const runtimeData = previewData ?? instanceData;
+  const stageMode = String((runtimeData as any)?.stage?.canvas?.mode || 'viewport');
+  const stageFixedWidth = Number((runtimeData as any)?.stage?.canvas?.width || 0);
+  const stageFixedHeight = Number((runtimeData as any)?.stage?.canvas?.height || 0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-  const latestRef = useRef({ compiled, instanceData, device, theme });
+  const latestRef = useRef({ compiled, instanceData: runtimeData, device, theme });
   useEffect(() => {
-    latestRef.current = { compiled, instanceData, device, theme };
-  }, [compiled, instanceData, device, theme]);
+    latestRef.current = { compiled, instanceData: runtimeData, device, theme };
+  }, [compiled, runtimeData, device, theme]);
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
@@ -27,7 +28,7 @@ export function Workspace() {
   }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {
-    const raw = (instanceData as any)?.stage?.background;
+    const raw = (runtimeData as any)?.stage?.background;
     if (typeof raw !== 'string') return undefined;
     const value = raw.trim();
     if (!value) return undefined;
@@ -102,13 +103,13 @@ export function Workspace() {
     const message = {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
-      state: instanceData,
+      state: runtimeData,
       device,
       theme,
     };
 
     iframeWindow.postMessage(message, '*');
-  }, [hasWidget, compiled, instanceData, device, theme, iframeLoaded]);
+  }, [hasWidget, compiled, runtimeData, device, theme, iframeLoaded]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

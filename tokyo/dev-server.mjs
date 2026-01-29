@@ -7,6 +7,7 @@
  *   - GET /healthz        → 200 ok
  *   - GET /dieter/**      → static files from tokyo/dieter/**
  *   - GET /i18n/**        → static files from tokyo/i18n/**
+ *   - GET /themes/**      → static files from tokyo/themes/**
  *   - GET /widgets/**     → static files from tokyo/widgets/**
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
@@ -726,6 +727,7 @@ const server = http.createServer((req, res) => {
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
     serveStatic(req, res, '/l10n/') ||
+    serveStatic(req, res, '/themes/') ||
     serveStatic(req, res, '/widgets/') ||
     serveStatic(req, res, '/workspace-assets/') ||
     serveStatic(req, res, '/curated-assets/')

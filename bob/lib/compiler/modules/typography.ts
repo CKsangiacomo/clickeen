@@ -57,6 +57,9 @@ export function buildTypographyPanel(args: {
 
   const lines: string[] = ["<bob-panel id='typography'>"];
   const groupAttr = "group-label=''";
+  lines.push(
+    `  <tooldrawer-field-typofields ${groupAttr} type='textfield' size='md' path='typography.globalFamily' label='Global font family' value='{{typography.globalFamily}}' show-if="false" />`,
+  );
   roleEntries.forEach((role) => {
     const roleLabel = role.label;
     lines.push(`  <tooldrawer-cluster label='${roleLabel}'>`);
