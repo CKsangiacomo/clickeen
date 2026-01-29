@@ -36,10 +36,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy paris-dev
-        run: pnpm -C paris deploy
+        run: pnpm -C paris run deploy
 
       - name: Deploy sanfrancisco-dev
-        run: pnpm -C sanfrancisco deploy
+        run: pnpm -C sanfrancisco run deploy
 
       - name: Deploy tokyo-assets-dev (tokyo-worker)
-        run: pnpm -C tokyo-worker deploy
+        run: pnpm -C tokyo-worker run deploy
