@@ -140,9 +140,6 @@
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
-    if (state.appearance.iconColor == null) {
-      state.appearance.iconColor = state.appearance.linkTextColor;
-    }
     assertFill(state.appearance.iconColor, 'state.appearance.iconColor');
     assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
     assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
