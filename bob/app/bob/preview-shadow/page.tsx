@@ -10,6 +10,8 @@ export default async function PreviewShadowPage(props: { searchParams?: Promise<
   const publicId = typeof searchParams.publicId === 'string' ? searchParams.publicId : '';
   const theme = searchParams.theme === 'dark' ? 'dark' : 'light';
   const device = searchParams.device === 'mobile' ? 'mobile' : 'desktop';
+  const mode = typeof searchParams.mode === 'string' ? searchParams.mode : '';
+  const discoverability = mode === 'discoverability';
   const veniceBase = resolveVeniceBaseUrl().replace(/\/+$/, '');
   const loaderSrc = `${veniceBase}/embed/latest/loader.js`;
 
@@ -21,7 +23,8 @@ export default async function PreviewShadowPage(props: { searchParams?: Promise<
         strategy="afterInteractive"
         data-public-id={publicId}
         data-trigger="immediate"
-        data-force-shadow="true"
+        data-force-shadow={discoverability ? 'false' : 'true'}
+        data-discoverability={discoverability ? 'true' : undefined}
         data-theme={theme}
         data-device={device}
       />

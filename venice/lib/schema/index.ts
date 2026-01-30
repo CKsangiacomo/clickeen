@@ -1,4 +1,4 @@
-import { faqSchemaJsonLd } from './faq';
+import { faqExcerptHtml, faqSchemaJsonLd } from './faq';
 
 export function generateSchemaJsonLd(args: {
   widgetType: string;
@@ -12,3 +12,14 @@ export function generateSchemaJsonLd(args: {
   return '';
 }
 
+export function generateExcerptHtml(args: {
+  widgetType: string;
+  state: Record<string, unknown>;
+  locale: string;
+}): string {
+  const widgetType = args.widgetType.trim().toLowerCase();
+  if (widgetType === 'faq') {
+    return faqExcerptHtml({ state: args.state, locale: args.locale });
+  }
+  return '';
+}

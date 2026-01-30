@@ -11,6 +11,7 @@ const script = `(() => {
 	    theme = 'light',
 	    device = 'desktop',
 	    forceShadow = 'false',
+	    discoverability = 'false',
 	    cacheBust = 'false',
 	    maxWidth: maxWidthAttr,
 	    minHeight: minHeightAttr,
@@ -190,6 +191,8 @@ const script = `(() => {
 	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { locale });
 	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
 	    iframe.setAttribute('title', 'Clickeen widget');
+	    iframe.setAttribute('referrerpolicy', 'no-referrer');
+	    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
 	    iframe.style.width = '100%';
 	    iframe.style.border = '0';
 	    iframe.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
@@ -210,6 +213,46 @@ const script = `(() => {
       document.head.appendChild(script);
     }
     script.textContent = schemaJsonLd;
+  }
+
+  function ensureExcerptShell() {
+    const id = 'ck-excerpt-' + publicId;
+    let details = document.getElementById(id);
+    if (details instanceof HTMLDetailsElement) return details;
+
+    details = document.createElement('details');
+    details.id = id;
+    details.setAttribute('data-ck-excerpt', '1');
+    details.style.width = '100%';
+    details.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
+    details.style.marginTop = '12px';
+
+    const summary = document.createElement('summary');
+    summary.textContent = 'About this widget';
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.setAttribute('data-ck-excerpt-body', '1');
+    body.style.marginTop = '8px';
+    details.appendChild(body);
+
+    const parent = container.parentNode;
+    if (parent) {
+      if (container.nextSibling) parent.insertBefore(details, container.nextSibling);
+      else parent.appendChild(details);
+    } else {
+      document.body.appendChild(details);
+    }
+
+    return details;
+  }
+
+  function upsertExcerpt(excerptHtml) {
+    if (!excerptHtml) return;
+    const shell = ensureExcerptShell();
+    const body = shell.querySelector('[data-ck-excerpt-body=\"1\"]');
+    if (!body) return;
+    body.innerHTML = excerptHtml;
   }
 
   function ensureWidgetGlobals(payload) {
@@ -294,6 +337,9 @@ const script = `(() => {
     });
 
     upsertSchema(renderPayload.schemaJsonLd);
+    if (discoverability === 'true') {
+      upsertExcerpt(renderPayload.excerptHtml);
+    }
 
     // Widgets expect their runtime scripts to be rendered inside the widget root
     // so document.currentScript.closest('[data-ck-widget]') resolves deterministically.
@@ -327,6 +373,23 @@ const script = `(() => {
 	    // Default path (fast): iframe embed only.
 	    if (forceShadow !== 'true') {
 	      mountIframe();
+	      if (discoverability === 'true') {
+	        try {
+	          const metaRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, meta: '1' }), {
+	            mode: 'cors',
+	            credentials: 'omit',
+	          });
+	          const metaPayload = await metaRes.json().catch(() => null);
+	          if (!metaRes.ok || !metaPayload) {
+	            console.warn('[Clickeen] Discoverability meta failed', metaRes.status, metaPayload);
+	          } else {
+	            upsertSchema(metaPayload.schemaJsonLd);
+	            upsertExcerpt(metaPayload.excerptHtml);
+	          }
+	        } catch (err) {
+	          console.warn('[Clickeen] Discoverability meta failed', err);
+	        }
+	      }
 	      return;
 	    }
 
