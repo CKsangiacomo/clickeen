@@ -1037,6 +1037,7 @@ function useWidgetSessionInternal() {
       }
 
       nextPolicy = enforceReadOnlyPolicy(nextPolicy);
+      resolved = applyDefaultsIntoConfig(defaults, resolved);
       resolved = sanitizeConfig({
         config: resolved,
         limits: compiled.limits ?? null,
@@ -1086,6 +1087,27 @@ function useWidgetSessionInternal() {
       }));
     }
   }, []);
+
+  function applyDefaultsIntoConfig(defaults: Record<string, unknown>, config: Record<string, unknown>) {
+    const merge = (defaultsValue: unknown, targetValue: unknown): void => {
+      if (!defaultsValue || typeof defaultsValue !== 'object' || Array.isArray(defaultsValue)) return;
+      if (!targetValue || typeof targetValue !== 'object' || Array.isArray(targetValue)) return;
+
+      const defaultsObj = defaultsValue as Record<string, unknown>;
+      const targetObj = targetValue as Record<string, unknown>;
+
+      Object.entries(defaultsObj).forEach(([key, dv]) => {
+        if (key in targetObj) {
+          merge(dv, targetObj[key]);
+          return;
+        }
+        targetObj[key] = structuredClone(dv);
+      });
+    };
+
+    merge(defaults, config);
+    return config;
+  }
 
   const dismissUpsell = useCallback(() => {
     setState((prev) => ({ ...prev, upsell: null }));

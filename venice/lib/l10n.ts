@@ -406,7 +406,7 @@ export async function applyTokyoInstanceOverlay(args: {
       const ops = overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
       localized = applySetOps(localized, ops);
     }
-    return applyWidgetStateMigrations(widgetType, localized);
+    return localized;
   }
 
   const index = await fetchLayerIndex(args.publicId).catch(() => null);
@@ -456,25 +456,5 @@ export async function applyTokyoInstanceOverlay(args: {
     localized = applySetOps(localized, ops);
   }
 
-  return applyWidgetStateMigrations(widgetType, localized);
-}
-
-function applyWidgetStateMigrations(widgetType: string, state: Record<string, unknown>): Record<string, unknown> {
-  if (!state || typeof state !== 'object') return state;
-
-  // Keep migrations centralized at the platform boundary (Venice), not in widget renderers.
-  // This is for schema evolution of stored instance configs / curated templates.
-  switch (widgetType) {
-    case 'faq': {
-      const s: any = state;
-      const appearance = s?.appearance;
-      if (!appearance || typeof appearance !== 'object') return state;
-      if (appearance.iconColor == null && appearance.linkTextColor != null) {
-        appearance.iconColor = appearance.linkTextColor;
-      }
-      return state;
-    }
-    default:
-      return state;
-  }
+  return localized;
 }
