@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T18:14:23.393Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Erstellen Sie ein schnelles, schönes FAQ-Widget. Passen Sie es an, veröffentlichen und lokalisieren Sie es in wenigen Minuten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQs-Widget. Schöne Antworten. Für Geschwindigkeit gemacht."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Poliertes Design, mühelose Aktualisierungen und SEO-Grundlagen – bereit für jede Sprache, KI-gestützt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Helfen Sie Besuchern, schnell Antworten zu finden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Mach es zu deinem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Gestalte hier dein perfektes FAQ. Sieh Änderungen sofort."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Split kreativ (rechts)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Dies ist die Variante mit dem rechten Bildmotiv und verwendet dieselbe kuratierte Instanz wie der Hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Geteilte Kreation (links)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Dies ist die Variante mit Visual links, die dieselbe kuratierte Instanz wie der Hero verwendet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Sieh zu, wie sich Fragen in Echtzeit selbst beantworten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Füge eine wunderschön gestaltete FAQ ein, die im Moment des Zweifels die richtige Antwort liefert. Kund:innen kommen sofort weiter, Einwände lösen sich auf, bevor sie zu Tickets werden, und du schließt mehr Verkäufe ab – ohne mehr Support aufzubauen. Einmal anpassen, überall einbetten und 24/7 für dich arbeiten lassen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split Creative (gestapelt)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Dies ist die gestapelte Variante, die dieselbe kuratierte Instanz wie der Hero verwendet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQs, die wirklich funktionieren (damit du es nicht musst)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Deine Kund:innen haben Fragen. Beantworte sie einmal – nicht hundertmal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Hör auf, Verkäufe durch unbeantwortete Fragen zu verlieren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Hol dir deine Zeit zurück"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Schließe mehr Deals ab, während du schläfst"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Jede unbeantwortete Frage ist ein:e Kund:in, die:der abspringt. Besucher:innen gehen, wenn sie nicht finden, was sie brauchen. Eine gut gestaltete FAQ räumt Einwände aus dem Weg, bevor sie überhaupt entstehen – so überzeugen sich Kund:innen selbst zum Kauf, ohne jemals Kontakt aufzunehmen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Reduziere das Support-Volumen um 40%+ – wenn Kund:innen sofort Antworten finden. Keine Slack-Pings mehr. Keine „kurze Frage“-E-Mails mehr. Kein Kontextwechsel-Chaos mehr. Deine FAQ übernimmt die harte Arbeit, während du dich auf das konzentrierst, was wirklich zählt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Die richtige FAQ nimmt Zweifel vorweg und beseitigt Reibung um 2 Uhr morgens, wenn du offline bist. Deine Antworten arbeiten rund um die Uhr. Kund:innen warten nicht auf dich – sie kommen weiter, vertrauen dem, was sie sehen, und klicken auf „kaufen“, ohne deinen Tag zu unterbrechen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Kreativ geteilt (rechts)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Dies ist die Variante mit Visual rechts, die dieselbe kuratierte Instanz wie der Hero verwendet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Kreativ geteilt (links)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dies ist die Variante mit Visual links und verwendet dieselbe kuratierte Instanz wie der Hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Verbinden Sie sich mit jedem Kunden, überall"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "KI-gestützte FAQ, die ihre Sprache spricht und ihre Bedürfnisse versteht."
+    }
+  ],
+  "v": 1
+}
