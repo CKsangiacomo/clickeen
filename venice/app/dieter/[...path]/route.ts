@@ -18,6 +18,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ path: string[]
 
   const cacheControl = res.headers.get('cache-control');
   headers.set('Cache-Control', cacheControl || 'public, max-age=3600, s-maxage=86400');
+  headers.set('Access-Control-Allow-Origin', '*');
   headers.set('X-Content-Type-Options', 'nosniff');
 
   // Stream through (avoid buffering) so Edge runtime can proxy large assets safely.

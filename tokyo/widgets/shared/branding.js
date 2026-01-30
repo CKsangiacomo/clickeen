@@ -96,7 +96,7 @@
   }
 
   function resolveContext() {
-    const scriptEl = document.currentScript;
+    const scriptEl = document.currentScript || window.CK_CURRENT_SCRIPT;
     if (scriptEl instanceof HTMLElement) {
       const widgetRoot = scriptEl.closest('[data-ck-widget]');
       const rootNode = scriptEl.getRootNode();

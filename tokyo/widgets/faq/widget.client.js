@@ -4,7 +4,7 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const scriptEl = document.currentScript;
+  const scriptEl = document.currentScript || window.CK_CURRENT_SCRIPT;
   if (!(scriptEl instanceof HTMLElement)) return;
 
   const widgetRoot = scriptEl.closest('[data-ck-widget="faq"]');

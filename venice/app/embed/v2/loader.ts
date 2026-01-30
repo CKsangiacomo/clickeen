@@ -218,25 +218,33 @@ const script = `(() => {
     window.CK_WIDGET = payload; // legacy single-widget accessor
   }
 
-  function loadShadowScript(shadowRoot, src) {
+  function loadShadowScript(target, src) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = src;
       script.async = false;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load script ' + src));
-      shadowRoot.appendChild(script);
+      const prev = window.CK_CURRENT_SCRIPT;
+      window.CK_CURRENT_SCRIPT = script;
+      script.onload = () => {
+        window.CK_CURRENT_SCRIPT = prev;
+        resolve();
+      };
+      script.onerror = () => {
+        window.CK_CURRENT_SCRIPT = prev;
+        reject(new Error('Failed to load script ' + src));
+      };
+      target.appendChild(script);
     });
   }
 
-  function loadShadowStyle(shadowRoot, href) {
+  function loadShadowStyle(target, href) {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = href;
       link.onload = () => resolve();
       link.onerror = () => reject(new Error('Failed to load style ' + href));
-      shadowRoot.appendChild(link);
+      target.appendChild(link);
     });
   }
 
@@ -287,10 +295,21 @@ const script = `(() => {
 
     upsertSchema(renderPayload.schemaJsonLd);
 
-    // Load scripts sequentially, preserving dependency order
-    for (const src of scripts) {
-      await loadShadowScript(shadow, assetUrl(src));
-    }
+    // Widgets expect their runtime scripts to be rendered inside the widget root
+    // so document.currentScript.closest('[data-ck-widget]') resolves deterministically.
+    const scriptTarget = shadow.querySelector && shadow.querySelector('[data-ck-widget]') || shadow;
+
+    // Load scripts sequentially, preserving dependency order.
+    // Shadow-root scripts cannot use document.currentScript, so we expose a deterministic fallback
+    // via window.CK_CURRENT_SCRIPT. To avoid multi-embed races, serialize shadow script execution.
+    const runScripts = async () => {
+      for (const src of scripts) {
+        await loadShadowScript(scriptTarget, assetUrl(src));
+      }
+    };
+    window.CK_SHADOW_SCRIPT_QUEUE = window.CK_SHADOW_SCRIPT_QUEUE || Promise.resolve();
+    window.CK_SHADOW_SCRIPT_QUEUE = window.CK_SHADOW_SCRIPT_QUEUE.then(runScripts, runScripts);
+    await window.CK_SHADOW_SCRIPT_QUEUE;
 
     // Deep link activation (initial + hash changes)
     const onHash = () => activateDeepLink(shadow, renderPayload.state);
