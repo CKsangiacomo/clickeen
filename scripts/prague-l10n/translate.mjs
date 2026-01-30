@@ -26,6 +26,8 @@ const CHROME_BASE_PATH = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1',
 const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
 const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
 
+let cachedSfBaseUrl = null;
+
 async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   const keys = [...locales].sort((a, b) => a.localeCompare(b));
   if (!keys.length) return;
@@ -49,7 +51,22 @@ async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
 }
 
 function getSfBaseUrl() {
-  return String(process.env.SANFRANCISCO_BASE_URL || 'http://localhost:3002').replace(/\/+$/, '');
+  if (cachedSfBaseUrl) return cachedSfBaseUrl;
+  const raw = String(process.env.SANFRANCISCO_BASE_URL || 'http://localhost:3002').trim();
+  const trimmed = raw.replace(/\/+$/, '');
+  try {
+    const url = new URL(trimmed);
+    if (url.pathname && url.pathname !== '/') {
+      console.warn(
+        `[prague-l10n] SANFRANCISCO_BASE_URL should be an origin (no path). Using "${url.origin}" instead of "${url.href}".`,
+      );
+    }
+    cachedSfBaseUrl = url.origin;
+    return cachedSfBaseUrl;
+  } catch (err) {
+    cachedSfBaseUrl = trimmed;
+    return cachedSfBaseUrl;
+  }
 }
 
 function getSfAuth() {
@@ -205,7 +222,8 @@ async function translateWithSanFrancisco({ job, items }) {
     throw new Error('[prague-l10n] Missing PARIS_DEV_JWT for San Francisco auth');
   }
   const baseUrl = getSfBaseUrl();
-  const res = await fetch(`${baseUrl}/v1/l10n/translate`, {
+  const url = `${baseUrl}/v1/l10n/translate`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${auth}`,
@@ -215,7 +233,7 @@ async function translateWithSanFrancisco({ job, items }) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`[prague-l10n] San Francisco error ${res.status}: ${body}`);
+    throw new Error(`[prague-l10n] San Francisco error ${res.status} (${url}): ${body}`);
   }
   const json = await res.json();
   if (!json || json.v !== 1 || !Array.isArray(json.items)) {
