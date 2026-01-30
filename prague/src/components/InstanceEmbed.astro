@@ -12,6 +12,7 @@ type Props = {
 const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy' } = Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
+const BUILD_ID = import.meta.env.PUBLIC_PRAGUE_BUILD_ID;
 
 // Extract widget type from any valid publicId format
 const widgetType = (() => {
@@ -41,7 +42,7 @@ const widgetType = (() => {
   // Fallback: Venice handles widget type internally
   return '';
 })();
-const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
+const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : BUILD_ID ? `&ts=${encodeURIComponent(BUILD_ID)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
 const iframeSrc = VENICE_URL
   ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(resolvedLocale)}${ts}`

@@ -85,7 +85,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(html, { status: 404, headers });
   }
   const nonce = crypto.randomUUID();
-  const responseHtml = await renderInstancePage({ instance, theme, device, locale, country, nonce });
+  const responseHtml = await renderInstancePage({ instance, theme, device, locale, country, nonce, ts });
 
   // Conditional request handling
   let etag: string | undefined;
@@ -169,6 +169,7 @@ async function renderInstancePage({
   locale,
   country,
   nonce,
+  ts,
 }: {
   instance: InstanceResponse;
   theme: string;
@@ -176,6 +177,7 @@ async function renderInstancePage({
   locale: string;
   country?: string | null;
   nonce: string;
+  ts: string | null;
 }) {
   const tokyoBase = getTokyoBase();
   const widgetType = instance.widgetType ? String(instance.widgetType) : '';
@@ -189,6 +191,10 @@ async function renderInstancePage({
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return renderErrorPage({ publicId: instance.publicId, status: 502, message, tokyoBase });
+  }
+
+  if (ts) {
+    widgetHtml = appendCacheBustParam(widgetHtml, ts);
   }
 
   const bodyHtml = extractBodyHtml(widgetHtml);
@@ -232,6 +238,15 @@ async function renderInstancePage({
     ${bodyHtml}
   </body>
 </html>`;
+}
+
+function appendCacheBustParam(widgetHtml: string, ts: string): string {
+  const encodedTs = encodeURIComponent(ts);
+  const re = /\b(href|src)=(["'])(\.\.?\/[^"']+)\2/g;
+  return widgetHtml.replace(re, (_match, attr: string, quote: string, url: string) => {
+    const joiner = url.includes('?') ? '&' : '?';
+    return `${attr}=${quote}${url}${joiner}ts=${encodedTs}${quote}`;
+  });
 }
 
 function renderErrorPage({
