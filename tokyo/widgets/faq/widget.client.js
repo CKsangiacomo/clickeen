@@ -50,8 +50,20 @@
   widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
 
   const resolvedPublicId = (() => {
-    const attr = widgetRoot.getAttribute('data-ck-public-id');
-    if (typeof attr === 'string' && attr.trim()) return attr.trim();
+    const direct = widgetRoot.getAttribute('data-ck-public-id');
+    if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+    const rootNode = widgetRoot.getRootNode();
+    if (rootNode instanceof ShadowRoot) {
+      const host = rootNode.host;
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    }
+
+    const ancestor = widgetRoot.closest('[data-ck-public-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
+
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
     const candidate = global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
     return candidate || '';
@@ -657,6 +669,14 @@
     applyState(data.state);
   });
 
-  const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
+  const keyedPayload =
+    resolvedPublicId &&
+    window.CK_WIDGETS &&
+    typeof window.CK_WIDGETS === 'object' &&
+    window.CK_WIDGETS[resolvedPublicId] &&
+    typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
+      ? window.CK_WIDGETS[resolvedPublicId]
+      : null;
+  const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
   if (initialState) applyState(initialState);
 })();

@@ -17,7 +17,7 @@ type Block = {
   copy: Record<string, any>;
   visual?: boolean;
   align?: string;
-  curatedRef?: { publicId?: string };
+  curatedRef?: { publicId?: string; embedMode?: string };
 };
 
 type Props = {
@@ -65,6 +65,9 @@ const heroSecondaryCta =
     case 'hero': {
       const copy = block.copy ?? {};
       const curatedPublicId = block.curatedRef?.publicId;
+      const curatedEmbedModeRaw =
+        block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
+      const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       return (
         <Hero
           headline={String(copy.headline ?? '')}
@@ -73,7 +76,7 @@ const heroSecondaryCta =
           secondaryCta={heroSecondaryCta}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: curatedEmbedMode }
               : undefined
           }
           personalization={personalization ?? undefined}
@@ -85,6 +88,9 @@ const heroSecondaryCta =
     case 'split': {
       const copy = block.copy ?? {};
       const curatedPublicId = block.curatedRef?.publicId;
+      const curatedEmbedModeRaw =
+        block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
+      const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
       return (
         <Split
@@ -95,7 +101,7 @@ const heroSecondaryCta =
           layout={layout}
           curatedRef={
             curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split` }
+              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split`, embedMode: curatedEmbedMode }
               : undefined
           }
         />

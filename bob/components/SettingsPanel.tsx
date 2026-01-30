@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { resolveVeniceBaseUrl } from '../lib/env/venice';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { TdMenuContent } from './TdMenuContent';
 
 type JobStatus = 'idle' | 'queued' | 'running' | 'completed' | 'failed';
 
@@ -29,10 +31,37 @@ function readProfile(value: unknown): BusinessProfile | null {
   return value as BusinessProfile;
 }
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (!text) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+
+  try {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', 'true');
+    el.style.position = 'fixed';
+    el.style.top = '-1000px';
+    el.style.left = '-1000px';
+    document.body.appendChild(el);
+    el.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(el);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function SettingsPanel() {
   const session = useWidgetSession();
+  const compiled = session.compiled;
   const workspaceId = session.meta?.workspaceId ? String(session.meta.workspaceId) : '';
+  const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
   const policy = session.policy;
+  const settingsHtml = compiled?.panels?.find((panel) => panel.id === 'settings')?.html ?? '';
 
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [jobId, setJobId] = useState<string | null>(null);
@@ -40,6 +69,7 @@ export function SettingsPanel() {
   const [jobError, setJobError] = useState<string | null>(null);
   const [jobResult, setJobResult] = useState<Record<string, unknown> | null>(null);
   const [persistError, setPersistError] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [profileUpdatedAt, setProfileUpdatedAt] = useState<string | null>(null);
@@ -136,6 +166,52 @@ export function SettingsPanel() {
     return { name, category, description, phone, location, services };
   }, [profile]);
 
+  const seoGeoEnabled = Boolean((session.instanceData as any)?.seoGeo?.enabled === true);
+
+  const embed = useMemo(() => {
+    let veniceBase = '';
+    try {
+      veniceBase = resolveVeniceBaseUrl().replace(/\/+$/, '');
+    } catch {
+      veniceBase = '';
+    }
+    const loaderSrc = veniceBase ? `${veniceBase}/embed/latest/loader.js` : '';
+    const canRender = Boolean(publicId && loaderSrc);
+
+    const safeSnippet = canRender
+      ? `<script
+  src="${loaderSrc}"
+  data-public-id="${publicId}"
+  data-trigger="immediate"
+></script>`
+      : '';
+
+    const indexableSnippet = canRender
+      ? `<script
+  src="${loaderSrc}"
+  data-public-id="${publicId}"
+  data-trigger="immediate"
+  data-force-shadow="true"
+  data-max-width="0"
+  data-min-height="420"
+  data-width="100%"
+></script>`
+      : '';
+
+    const previewShadowHref = publicId
+      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=light&device=desktop`
+      : '/bob/preview-shadow';
+
+    return { veniceBase, loaderSrc, canRender, safeSnippet, indexableSnippet, previewShadowHref };
+  }, [publicId]);
+
+  const copySnippet = useCallback(async (label: string, snippet: string) => {
+    setCopyStatus(null);
+    const ok = await copyToClipboard(snippet);
+    setCopyStatus(ok ? `Copied: ${label}` : `Copy failed: ${label}`);
+    window.setTimeout(() => setCopyStatus(null), 1800);
+  }, []);
+
   const runOnboarding = async () => {
     setJobError(null);
     setPersistError(null);
@@ -182,101 +258,192 @@ export function SettingsPanel() {
     }
   };
 
-  return (
-    <div className="tdmenucontent">
-      <div className="heading-3">Settings</div>
-      <div className="label-s label-muted">Localization controls are now in Content → Translate.</div>
-
-      <div>
-        <div className="heading-4">Onboarding personalization</div>
-        <div className="label-s label-muted">
-          Generate a business profile from a website to prefill onboarding and recommendations.
-        </div>
-
-        <div className="tdmenucontent__fields">
-          <div className="diet-textfield" data-size="md">
-            <label className="diet-textfield__control">
-              <span className="diet-textfield__display-label label-s">Business website</span>
-              <input
-                className="diet-textfield__field body-s"
-                type="url"
-                placeholder="https://example.com"
-                value={websiteUrl}
-                onChange={(event) => setWebsiteUrl(event.target.value)}
-              />
-            </label>
-          </div>
-        </div>
-
-        <div className="settings-panel__actions">
-          <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="primary"
-            type="button"
-            onClick={runOnboarding}
-            disabled={jobStatus === 'running' || jobStatus === 'queued'}
-          >
-            <span className="diet-btn-txt__label">
-              {jobStatus === 'running' || jobStatus === 'queued' ? 'Running...' : 'Generate profile'}
-            </span>
-          </button>
-          <button
-            className="diet-btn-txt"
-            data-size="lg"
-            data-variant="neutral"
-            type="button"
-            onClick={loadProfile}
-            disabled={!workspaceId || profileLoading}
-          >
-            <span className="diet-btn-txt__label">{profileLoading ? 'Refreshing...' : 'Refresh profile'}</span>
-          </button>
-        </div>
-
-        {jobId ? (
-          <div className="settings-panel__status">
-            <div className="label-s">
-              Status: <strong>{jobStatus}</strong>
-            </div>
-            <div className="caption">Job {jobId.slice(0, 8)}</div>
-          </div>
-        ) : null}
-        {jobError ? <div className="settings-panel__error">{jobError}</div> : null}
-        {persistError ? <div className="settings-panel__warning">{persistError}</div> : null}
+  if (!compiled) {
+    return (
+      <div className="tdmenucontent">
+        <div className="heading-3">Settings</div>
+        <div className="label-s label-muted">Load an instance to configure settings.</div>
       </div>
+    );
+  }
 
-      <div>
-        <div className="heading-4">Stored business profile</div>
-        {profileError ? <div className="settings-panel__error">{profileError}</div> : null}
-        {!profileError && !profileSummary ? (
-          <div className="label-s label-muted">
-            {profileLoading ? 'Loading profile...' : 'No profile stored yet.'}
+  return (
+    <TdMenuContent
+      panelId="settings"
+      panelHtml={settingsHtml}
+      widgetKey={compiled.widgetname}
+      instanceData={session.instanceData}
+      applyOps={session.applyOps}
+      undoLastOps={session.undoLastOps}
+      canUndo={session.canUndo}
+      lastUpdate={session.lastUpdate}
+      dieterAssets={compiled.assets.dieter}
+      translateMode={false}
+      readOnly={false}
+      translateAllowlist={session.locale.allowlist}
+      header={<div className="label-s label-muted">Localization controls are now in Content → Translate.</div>}
+      footer={
+        <div className="tdmenucontent__footer">
+          <div>
+            <div className="heading-4">Embed</div>
+            <div className="label-s label-muted">Use these snippets to embed this instance on your site.</div>
+
+            {!publicId ? <div className="settings-panel__error">Instance publicId missing.</div> : null}
+            {publicId && !embed.veniceBase ? (
+              <div className="settings-panel__error">Missing NEXT_PUBLIC_VENICE_URL (cannot build embed snippet).</div>
+            ) : null}
+
+            {embed.canRender ? (
+              <>
+                <div className="settings-panel__row">
+                  <div className="label-s">Safe embed (iframe)</div>
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant="neutral"
+                    type="button"
+                    onClick={() => void copySnippet('safe embed', embed.safeSnippet)}
+                  >
+                    <span className="diet-btn-txt__label">Copy</span>
+                  </button>
+                </div>
+                <pre className="settings-panel__code">
+                  <code>{embed.safeSnippet}</code>
+                </pre>
+
+                {seoGeoEnabled ? (
+                  <>
+                    <div className="settings-panel__row">
+                      <div className="label-s">SEO/GEO embed (indexable)</div>
+                      <div className="settings-panel__actions-inline">
+                        <button
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="primary"
+                          type="button"
+                          onClick={() => void copySnippet('SEO/GEO embed', embed.indexableSnippet)}
+                        >
+                          <span className="diet-btn-txt__label">Copy</span>
+                        </button>
+                        <a
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="neutral"
+                          href={embed.previewShadowHref}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <span className="diet-btn-txt__label">Preview</span>
+                        </a>
+                      </div>
+                    </div>
+                    <pre className="settings-panel__code">
+                      <code>{embed.indexableSnippet}</code>
+                    </pre>
+                  </>
+                ) : (
+                  <div className="label-s label-muted">
+                    Enable “SEO/GEO optimization” above to unlock the indexable snippet.
+                  </div>
+                )}
+
+                {copyStatus ? (
+                  <div className={copyStatus.startsWith('Copied') ? 'settings-panel__success' : 'settings-panel__error'}>
+                    {copyStatus}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </div>
-        ) : null}
-        {profileSummary ? (
-          <div className="settings-panel__note">
-            <div className="label-s">
-              {profileSummary.name || 'Unnamed business'}
-              {profileSummary.category ? ` - ${profileSummary.category}` : ''}
+
+          <div>
+            <div className="heading-4">Onboarding personalization</div>
+            <div className="label-s label-muted">
+              Generate a business profile from a website to prefill onboarding and recommendations.
             </div>
-            {profileSummary.description ? <div className="body-s">{profileSummary.description}</div> : null}
-            {profileSummary.phone || profileSummary.location ? (
-              <div className="caption">
-                {[profileSummary.phone, profileSummary.location].filter(Boolean).join(' - ')}
+
+            <div className="tdmenucontent__fields">
+              <div className="diet-textfield" data-size="md">
+                <label className="diet-textfield__control">
+                  <span className="diet-textfield__display-label label-s">Business website</span>
+                  <input
+                    className="diet-textfield__field body-s"
+                    type="url"
+                    placeholder="https://example.com"
+                    value={websiteUrl}
+                    onChange={(event) => setWebsiteUrl(event.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="settings-panel__actions">
+              <button
+                className="diet-btn-txt"
+                data-size="lg"
+                data-variant="primary"
+                type="button"
+                onClick={runOnboarding}
+                disabled={jobStatus === 'running' || jobStatus === 'queued'}
+              >
+                <span className="diet-btn-txt__label">
+                  {jobStatus === 'running' || jobStatus === 'queued' ? 'Running...' : 'Generate profile'}
+                </span>
+              </button>
+              <button
+                className="diet-btn-txt"
+                data-size="lg"
+                data-variant="neutral"
+                type="button"
+                onClick={loadProfile}
+                disabled={!workspaceId || profileLoading}
+              >
+                <span className="diet-btn-txt__label">{profileLoading ? 'Refreshing...' : 'Refresh profile'}</span>
+              </button>
+            </div>
+
+            {jobId ? (
+              <div className="settings-panel__status">
+                <div className="label-s">
+                  Status: <strong>{jobStatus}</strong>
+                </div>
+                <div className="caption">Job {jobId.slice(0, 8)}</div>
               </div>
             ) : null}
-            {profileSummary.services && profileSummary.services.length > 0 ? (
-              <div className="caption">Services: {profileSummary.services.slice(0, 6).join(', ')}</div>
+            {jobError ? <div className="settings-panel__error">{jobError}</div> : null}
+            {persistError ? <div className="settings-panel__warning">{persistError}</div> : null}
+          </div>
+
+          <div>
+            <div className="heading-4">Stored business profile</div>
+            {profileError ? <div className="settings-panel__error">{profileError}</div> : null}
+            {!profileError && !profileSummary ? (
+              <div className="label-s label-muted">{profileLoading ? 'Loading profile...' : 'No profile stored yet.'}</div>
             ) : null}
-            {profileUpdatedAt ? <div className="caption">Updated {profileUpdatedAt}</div> : null}
+            {profileSummary ? (
+              <div className="settings-panel__note">
+                <div className="label-s">
+                  {profileSummary.name || 'Unnamed business'}
+                  {profileSummary.category ? ` - ${profileSummary.category}` : ''}
+                </div>
+                {profileSummary.description ? <div className="body-s">{profileSummary.description}</div> : null}
+                {profileSummary.phone || profileSummary.location ? (
+                  <div className="caption">{[profileSummary.phone, profileSummary.location].filter(Boolean).join(' - ')}</div>
+                ) : null}
+                {profileSummary.services && profileSummary.services.length > 0 ? (
+                  <div className="caption">Services: {profileSummary.services.slice(0, 6).join(', ')}</div>
+                ) : null}
+                {profileUpdatedAt ? <div className="caption">Updated {profileUpdatedAt}</div> : null}
+              </div>
+            ) : null}
+            {jobResult?.recommendations ? (
+              <div className="settings-panel__success">
+                Recommendations ready. Review templates and copy packs during onboarding.
+              </div>
+            ) : null}
           </div>
-        ) : null}
-        {jobResult?.recommendations ? (
-          <div className="settings-panel__success">
-            Recommendations ready. Review templates and copy packs during onboarding.
-          </div>
-        ) : null}
-      </div>
-    </div>
+        </div>
+      }
+    />
   );
 }

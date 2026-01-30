@@ -7,9 +7,11 @@ type Props = {
   localeOverride?: string;
   title?: string;
   loading?: 'lazy' | 'eager';
+  embedMode?: 'iframe' | 'indexable';
 };
 
-const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy' } = Astro.props;
+const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
+  Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 const BUILD_ID = import.meta.env.PUBLIC_PRAGUE_BUILD_ID;
@@ -42,8 +44,10 @@ const widgetType = (() => {
   // Fallback: Venice handles widget type internally
   return '';
 })();
-const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : BUILD_ID ? `&ts=${encodeURIComponent(BUILD_ID)}` : '';
+const tsToken = import.meta.env.DEV ? String(Date.now()) : BUILD_ID ? String(BUILD_ID) : '';
+const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
+const loaderSrc = VENICE_URL ? `${VENICE_URL.replace(/\/+$/, '')}/embed/latest/loader.js` : null;
 const iframeSrc = VENICE_URL
   ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(resolvedLocale)}${ts}`
   : null;
@@ -73,14 +77,31 @@ const brandSvgs = {
 >
   {iframeSrc ? (
     <>
-      <iframe
-        class="ck-instanceEmbed__iframe"
-        title={title}
-        src={iframeSrc}
-        loading={loading}
-        referrerpolicy="no-referrer"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-      />
+      {embedMode === 'indexable' && loaderSrc ? (
+        <script
+          src={loaderSrc}
+          defer
+          data-public-id={publicId}
+          data-trigger="immediate"
+          data-force-shadow="true"
+          data-theme="light"
+          data-device="desktop"
+          data-locale={resolvedLocale}
+          data-max-width="0"
+          data-min-height="420"
+          data-width="100%"
+          data-ts={tsToken}
+        />
+      ) : (
+        <iframe
+          class="ck-instanceEmbed__iframe"
+          title={title}
+          src={iframeSrc}
+          loading={loading}
+          referrerpolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        />
+      )}
 
       {/* Toast is anchored to the creative (not the fading topbar). */}
       <div class="ck-share__toast" role="status" aria-live="polite"></div>

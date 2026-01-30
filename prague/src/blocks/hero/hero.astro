@@ -19,6 +19,7 @@ type Props = {
     publicId: string;
     locale: string;
     title?: string;
+    embedMode?: 'iframe' | 'indexable';
   };
   personalization?: { widget: string; page: string; locale: string };
 };
@@ -91,6 +92,7 @@ const headerPrimitives = assertPrimitives(
             publicId={curatedRef.publicId}
             locale={curatedRef.locale}
             title={curatedRef.title ?? 'Widget preview'}
+            embedMode={curatedRef.embedMode}
             loading="eager"
           />
         ) : (

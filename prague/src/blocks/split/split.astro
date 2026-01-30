@@ -19,6 +19,7 @@ type Props = {
     publicId: string;
     locale: string;
     title?: string;
+    embedMode?: 'iframe' | 'indexable';
   };
   layout: string;
 };
@@ -81,6 +82,7 @@ const headerPrimitives = assertPrimitives(
               publicId={curatedRef.publicId}
               locale={curatedRef.locale}
               title={curatedRef.title ?? 'Widget preview'}
+              embedMode={curatedRef.embedMode}
             />
           ) : (
             <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
@@ -110,6 +112,7 @@ const headerPrimitives = assertPrimitives(
               publicId={curatedRef.publicId}
               locale={curatedRef.locale}
               title={curatedRef.title ?? 'Widget preview'}
+              embedMode={curatedRef.embedMode}
             />
           ) : (
             <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>

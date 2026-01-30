@@ -14,7 +14,8 @@
       "type": "hero",
       "visual": true,
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq.lightblurs.v01",
+        "embedMode": "indexable"
       },
       "copy": {
         "headline": "FAQs Widget. Beautiful answers. Built to be fast.",

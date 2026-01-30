@@ -35,7 +35,14 @@ Thumbs.db
 *.zip
 *.tar
 *.tar.gz
-Execution_Pipeline_Docs/
+# Execution pipeline docs are local artifacts by default, but planning PRDs are peer-reviewable.
+Execution_Pipeline_Docs/*
+!Execution_Pipeline_Docs/01-Planning/
+!Execution_Pipeline_Docs/02-Executing/
+Execution_Pipeline_Docs/01-Planning/*
+Execution_Pipeline_Docs/02-Executing/*
+!Execution_Pipeline_Docs/01-Planning/*PRD*.md
+!Execution_Pipeline_Docs/02-Executing/*PRD*.md
 BACKUP/
 
 # Font files
@@ -58,6 +65,7 @@ tooling/sf-symbols/pnpm-lock.yaml
 # Misc
 .cache/
 artifacts/
+Logs/
 prague-strings/compiled/
 
 # User-uploaded assets (local dev only; served by Tokyo dev server)

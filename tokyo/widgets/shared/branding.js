@@ -105,6 +105,37 @@
     return { widgetRoot: null, rootNode: document };
   }
 
+  function resolvePublicId(widgetRoot) {
+    const direct = widgetRoot.getAttribute('data-ck-public-id');
+    if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+    const rootNode = widgetRoot.getRootNode();
+    if (rootNode instanceof ShadowRoot) {
+      const host = rootNode.host;
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    }
+
+    const ancestor = widgetRoot.closest('[data-ck-public-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
+
+    return '';
+  }
+
+  function resolveInitialState(publicId) {
+    if (
+      publicId &&
+      window.CK_WIDGETS &&
+      typeof window.CK_WIDGETS === 'object' &&
+      window.CK_WIDGETS[publicId] &&
+      typeof window.CK_WIDGETS[publicId] === 'object'
+    ) {
+      return window.CK_WIDGETS[publicId].state;
+    }
+    return window.CK_WIDGET && window.CK_WIDGET.state;
+  }
+
   function ensureBranding(widgetRoot) {
     if (!(widgetRoot instanceof HTMLElement)) return null;
     const pod = widgetRoot.closest('.pod');
@@ -152,7 +183,8 @@
 
     if (widgetRoot) {
       ensureBranding(widgetRoot);
-      const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
+      const publicId = resolvePublicId(widgetRoot);
+      const initialState = resolveInitialState(publicId);
       if (initialState) applyVisibility(widgetRoot, initialState);
       return;
     }
@@ -160,8 +192,11 @@
     // Fallback for legacy/light-DOM documents.
     const roots = Array.from(document.querySelectorAll('[data-ck-widget]'));
     roots.forEach((root) => ensureBranding(root));
-    const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
-    if (initialState) roots.forEach((root) => applyVisibility(root, initialState));
+    roots.forEach((root) => {
+      const publicId = resolvePublicId(root);
+      const initialState = resolveInitialState(publicId);
+      if (initialState) applyVisibility(root, initialState);
+    });
   }
 
   window.addEventListener('message', (event) => {

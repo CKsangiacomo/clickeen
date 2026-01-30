@@ -206,6 +206,36 @@ body {
   margin-top: var(--space-1);
 }
 
+.settings-panel__actions-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.settings-panel__code {
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--control-radius-md);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-gray-6), transparent 75%);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.settings-panel__code code {
+  font: 500 var(--fs-12, 12px) / var(--lh-tight, 1.35) ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  color: var(--color-system-black);
+}
+
 .settings-panel__status {
   display: flex;
   align-items: center;

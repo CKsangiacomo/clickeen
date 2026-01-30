@@ -12,6 +12,10 @@ const script = `(() => {
 	    device = 'desktop',
 	    forceShadow = 'false',
 	    cacheBust = 'false',
+	    maxWidth: maxWidthAttr,
+	    minHeight: minHeightAttr,
+	    width: widthAttr,
+	    ts: tsAttr,
 	    locale: localeAttr,
 	  } = scriptEl.dataset;
 
@@ -20,10 +24,44 @@ const script = `(() => {
     return;
   }
 
-	  const origin = new URL(scriptEl.src, window.location.href).origin;
-	  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
-	  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
-	  window.CK_ASSET_ORIGIN = origin;
+		  const origin = new URL(scriptEl.src, window.location.href).origin;
+		  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
+		  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
+		  window.CK_ASSET_ORIGIN = origin;
+
+	  const explicitTs = typeof tsAttr === 'string' ? tsAttr.trim() : '';
+	  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
+	  const tsParam = tsToken ? { ts: tsToken } : {};
+
+	  const DEFAULT_MAX_WIDTH = 640;
+	  const DEFAULT_MIN_HEIGHT = 420;
+
+	  const maxWidthValue = (() => {
+	    const raw = typeof maxWidthAttr === 'string' ? maxWidthAttr.trim() : '';
+	    if (!raw) return DEFAULT_MAX_WIDTH;
+	    const n = Number(raw);
+	    if (!Number.isFinite(n) || n < 0) {
+	      console.warn('[Clickeen] Invalid data-max-width; using default');
+	      return DEFAULT_MAX_WIDTH;
+	    }
+	    return Math.round(n);
+	  })();
+
+	  const minHeightValue = (() => {
+	    const raw = typeof minHeightAttr === 'string' ? minHeightAttr.trim() : '';
+	    if (!raw) return DEFAULT_MIN_HEIGHT;
+	    const n = Number(raw);
+	    if (!Number.isFinite(n) || n <= 0) {
+	      console.warn('[Clickeen] Invalid data-min-height; using default');
+	      return DEFAULT_MIN_HEIGHT;
+	    }
+	    return Math.round(n);
+	  })();
+
+	  const widthValue = typeof widthAttr === 'string' ? widthAttr.trim() : '';
+	  if (widthValue && widthValue !== '100%') {
+	    console.warn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', widthValue);
+	  }
 
   // Minimal event bus with buffering
   const bus = { listeners: {}, queue: [], ready: false };
@@ -48,8 +86,8 @@ const script = `(() => {
     return url.toString();
   };
 
-  const embedUrl = (path, params = {}) => makeUrl(path, { theme, device, ...params });
-  const assetUrl = (path) => makeUrl(path);
+  const embedUrl = (path, params = {}) => makeUrl(path, { theme, device, ...tsParam, ...params });
+  const assetUrl = (path, params = {}) => makeUrl(path, { ...tsParam, ...params });
 
   function setReadyOnce() {
     if (bus.ready) return;
@@ -63,7 +101,8 @@ const script = `(() => {
   const container = document.createElement('div');
   container.style.position = 'relative';
   container.style.width = '100%';
-  container.style.maxWidth = '640px';
+  container.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
+  container.style.minHeight = minHeightValue + 'px';
   let overlayEl = null;
 
   function injectInline() {
@@ -147,15 +186,14 @@ const script = `(() => {
   }
 
 	  function mountIframe() {
-	    const tsParam = cacheBust === 'true' ? { ts: Date.now() } : {};
 	    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { locale, ...tsParam });
+	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), { locale });
 	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
 	    iframe.setAttribute('title', 'Clickeen widget');
 	    iframe.style.width = '100%';
 	    iframe.style.border = '0';
-	    iframe.style.maxWidth = '640px';
-	    iframe.style.minHeight = '420px';
+	    iframe.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
+	    iframe.style.minHeight = minHeightValue + 'px';
 
     container.replaceChildren(iframe);
     iframe.addEventListener('load', () => setReadyOnce());
@@ -273,12 +311,11 @@ const script = `(() => {
 	      return;
 	    }
 
-	    // Shadow mode: fetch structured render payload (used by Bob preview-shadow / SEO flows).
-	    const tsParam = cacheBust === 'true' ? { ts: Date.now() } : {};
-	    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, ...tsParam }), {
-	      mode: 'cors',
-	      credentials: 'omit',
-	    });
+		    // Shadow mode: fetch structured render payload (used by Bob preview-shadow / SEO flows).
+		    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale }), {
+		      mode: 'cors',
+		      credentials: 'omit',
+		    });
 	    const payload = await renderRes.json().catch(() => null);
 
 	    if (!renderRes.ok || !payload) {

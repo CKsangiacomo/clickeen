@@ -22,7 +22,7 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
 - Loader script routes:
   - `GET /embed/latest/loader.js` (alias of v2)
   - `GET /embed/v1/loader.js` (legacy iframe loader)
-  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-cache-bust`.)
+  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-ts` (preferred), `data-cache-bust` (legacy), `data-max-width`, `data-min-height`, `data-width` (v0.2: `100%` only).)
 - `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 **Planned / not fully wired yet:**
@@ -89,7 +89,7 @@ window.CK_WIDGET = {
 };
 ```
 
-Widgets consume `window.CK_WIDGET.state` for the initial render, and then respond to Bob preview updates via `ck:state-update` postMessage.
+Widgets consume `window.CK_WIDGET.state` for the initial render (legacy). For multi-embed host pages, widgets SHOULD prefer `window.CK_WIDGETS[publicId].state` when available, and fall back to `window.CK_WIDGET.state`. Widgets then respond to Bob preview updates via `ck:state-update` postMessage.
 
 **Query parameters (shipped):**
 - `theme=light|dark` (optional, defaults to `light`)
