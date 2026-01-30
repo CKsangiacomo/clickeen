@@ -14,8 +14,7 @@
       "type": "hero",
       "visual": true,
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01",
-        "embedMode": "indexable"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       },
       "copy": {
         "headline": "FAQs Widget. Beautiful answers. Built to be fast.",
@@ -121,11 +120,12 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Split creative (left)",
-        "subheadline": "This is the left-visual variant, using the same curated instance as the hero."
+        "headline": "SEO/GEO embed (indexable)",
+        "subheadline": "This embed runs in shadow mode to inject JSON-LD (FAQPage) into the host page for indexing."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq.lightblurs.v01",
+        "embedMode": "indexable"
       }
     },
     {
