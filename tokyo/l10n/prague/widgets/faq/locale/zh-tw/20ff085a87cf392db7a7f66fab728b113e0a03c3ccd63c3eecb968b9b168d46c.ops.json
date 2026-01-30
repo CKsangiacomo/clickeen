@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T18:14:23.393Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "常見問題小工具 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "打造快速、美觀的常見問題小工具。幾分鐘內即可自訂、發佈並進行本地化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQs 小工具。漂亮的解答。為速度而生。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "精緻設計、輕鬆更新，以及 SEO 基礎——支援任何語言，由 AI 驅動。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "協助訪客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "打造專屬於你的風格"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "在這裡設計你的完美常見問題。立即查看變更。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "分割創意（右側）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "這是右側視覺的版本，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "分割創意（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "這是左側視覺版本，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "看問題即時自動找到答案"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "加入一個設計精美的 FAQ，在客戶猶豫的瞬間浮現正確答案。客戶能立刻排除障礙，疑慮在變成支援工單前就被化解，你也能在不增加客服人力的情況下促成更多成交。只需設定一次，隨處嵌入，讓它 24/7 持續運作。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "創意分割（堆疊）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "這是堆疊版本，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "真正有效的常見問題（所以你不用親自上陣）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "你的客戶有問題。回答一次就好，不用回一百次。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "別再因為問題沒回答而流失訂單"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "把時間拿回來"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "睡覺也能成交更多單"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "每一個沒被回答的問題，都可能讓客戶轉身離開。訪客找不到需要的資訊就會走。一份設計良好的 FAQ 會在反對理由成形之前就先消除——讓客戶不必聯絡你，也能說服自己下單。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "當客戶能立刻找到答案時，支援量可減少 40% 以上。不再有 Slack 訊息提醒。不再有「想快速問個問題」的 Email。不再陷入切換情境的地獄。你的 FAQ 會扛下重活，讓你專注在真正重要的工作上。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "正確的 FAQ 能預先看見疑慮，並在你離線的凌晨 2 點降低摩擦。你的答案全天候運作。客戶不會等你——他們能立即排除阻礙、信任眼前所見，直接按下「購買」，不打斷你的日常。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "拆分創意（右側）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "這是右側視覺變體，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "分割式創意（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "這是左側視覺版本，使用與主視覺相同的精選實例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "與每位顧客隨時隨地建立連結"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "由 AI 驅動的 FAQ，能用他們的語言溝通並理解他們的需求。"
+    }
+  ],
+  "v": 1
+}

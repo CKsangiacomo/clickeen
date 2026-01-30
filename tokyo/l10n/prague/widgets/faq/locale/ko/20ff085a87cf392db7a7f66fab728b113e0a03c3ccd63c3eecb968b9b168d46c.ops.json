@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T18:14:23.393Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 위젯 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "빠르고 아름다운 FAQ 위젯을 만들어 보세요. 몇 분 만에 맞춤 설정하고, 게시하고, 현지화할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 위젯. 아름다운 답변. 빠르게 제작되었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "세련된 디자인, 손쉬운 업데이트, 그리고 SEO 기반--어떤 언어에도 준비되어 있으며 AI로 구동됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "방문자가 빠르게 답변을 찾을 수 있도록 도와주세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "나만의 것으로 만들기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "여기에서 완벽한 FAQ를 디자인하세요. 변경 사항을 즉시 확인할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "크리에이티브 분할(오른쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "이는 오른쪽 비주얼 변형으로, 히어로와 동일한 큐레이션된 인스턴스를 사용합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "분할 크리에이티브(왼쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "이것은 왼쪽 비주얼 변형으로, 히어로와 동일한 큐레이션된 인스턴스를 사용합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "질문이 실시간으로 스스로 답을 찾아가는 모습을 확인하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "의심이 드는 순간, 필요한 답을 바로 보여주는 아름답게 디자인된 FAQ를 추가하세요. 고객은 즉시 막힘 없이 진행하고, 이의 제기는 문의 티켓으로 번지기 전에 사라지며, 지원 인력을 더 늘리지 않아도 더 많은 판매를 성사시킬 수 있습니다. 한 번만 맞춤 설정하고 어디에나 임베드한 뒤, 24/7 자동으로 작동하게 두세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "크리에이티브 분할(스택형)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "이것은 히어로와 동일한 큐레이션된 인스턴스를 사용하는 스택형 변형입니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "정말 효과 있는 FAQ(당신이 굳이 안 해도 되게)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "고객은 질문합니다. 한 번만 답하세요. 백 번 말고요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "답 없는 질문 때문에 매출을 놓치지 마세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "시간을 되찾으세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "자는 동안에도 더 많은 딜을 성사시키세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "답이 없는 질문 하나하나는 고객이 떠난다는 뜻입니다. 방문자는 필요한 정보를 찾지 못하면 나가버립니다. 잘 설계된 FAQ는 이의 제기가 생기기도 전에 없애줍니다—그래서 고객은 문의조차 하지 않고 스스로 구매를 확신하게 됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "고객이 즉시 답을 찾으면 지원 문의량을 40%+ 줄일 수 있습니다. 더 이상 Slack 알림도, 더 이상 \"간단히 질문\" 이메일도, 더 이상 끔찍한 컨텍스트 스위칭도 없습니다. 중요한 일에 집중하는 동안 FAQ가 힘든 일을 대신 해줍니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "좋은 FAQ는 당신이 오프라인인 새벽 2시에도 의심을 예측하고 마찰을 제거합니다. 답변은 24시간 내내 작동합니다. 고객은 당신을 기다리지 않습니다—막힘이 풀리고, 보이는 것을 신뢰하며, 하루를 방해하지 않고 \"구매\"를 누릅니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "크리에이티브 분할(오른쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "이는 오른쪽 비주얼 변형으로, 히어로와 동일한 엄선된 인스턴스를 사용합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "크리에이티브 분할(왼쪽)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "히어로와 동일한 엄선된 인스턴스를 사용하는 왼쪽 비주얼 변형입니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "모든 고객과 어디서든 연결하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "고객의 언어로 말하고 고객의 니즈를 이해하는 AI 기반 FAQ."
+    }
+  ],
+  "v": 1
+}

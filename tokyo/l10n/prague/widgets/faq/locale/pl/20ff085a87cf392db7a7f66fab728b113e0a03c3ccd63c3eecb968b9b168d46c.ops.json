@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T18:14:23.393Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Stwórz szybki, piękny widget FAQ. Dostosuj, opublikuj i zlokalizuj w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ. Piękne odpowiedzi. Stworzony, by działać szybko."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dopracowany design, bezproblemowe aktualizacje i solidne podstawy SEO — gotowe na każdy język, napędzane przez AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomóż odwiedzającym szybko znaleźć odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Spraw, by było Twoje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Zaprojektuj swoje idealne FAQ tutaj. Zobacz zmiany natychmiast."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Kreatywny podział (prawa strona)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "To wariant z grafiką po prawej stronie, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Split kreatywny (lewy)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "To wariant z wizualizacją po lewej stronie, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Zobacz, jak pytania same znajdują odpowiedzi w czasie rzeczywistym"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Dodaj pięknie zaprojektowane FAQ, które pokazuje właściwą odpowiedź w chwili zawahania. Klienci od razu ruszają dalej, obiekcje znikają, zanim zamienią się w zgłoszenia, a Ty domykasz więcej sprzedaży bez dokładania pracy supportu. Skonfiguruj raz, osadź gdziekolwiek i pozwól mu działać 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Kreacja dzielona (w układzie pionowym)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "To wariant w układzie pionowym, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ, które naprawdę działają (żebyś nie musiał/a)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Twoi klienci mają pytania. Odpowiedz na nie raz, a nie sto razy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Przestań tracić sprzedaż przez brak odpowiedzi na pytania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Odzyskaj swój czas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Zamykaj więcej transakcji, gdy śpisz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Każde pytanie bez odpowiedzi to klient, który odchodzi. Odwiedzający wychodzą, gdy nie mogą znaleźć tego, czego potrzebują. Dobrze zaprojektowane FAQ zbija obiekcje, zanim w ogóle się pojawią — dzięki czemu klienci sami przekonują się do zakupu, nawet nie kontaktując się z Tobą."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Zmniejsz liczbę zgłoszeń do wsparcia o 40%+ dzięki temu, że klienci od razu znajdują odpowiedzi. Koniec z pingami na Slacku. Koniec z mailami „szybkie pytanie”. Koniec z piekłem ciągłego przełączania kontekstu. Twoje FAQ odwala ciężką robotę, a Ty skupiasz się na pracy, która naprawdę ma znaczenie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Dobre FAQ przewiduje wątpliwości i usuwa tarcie o 2 w nocy, gdy jesteś offline. Twoje odpowiedzi działają całą dobę. Klienci nie czekają na Ciebie — odblokowują się, ufają temu, co widzą, i klikają „kup” bez przerywania Twojego dnia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Kreacja dzielona (po prawej)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "To wariant z wizualizacją po prawej stronie, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Kreatywny podział (lewa)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "To wariant z wizualizacją po lewej stronie, wykorzystujący tę samą wyselekcjonowaną instancję co sekcja hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Nawiąż kontakt z każdym klientem, wszędzie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ wspierane przez AI, które mówi ich językiem i rozumie ich potrzeby."
+    }
+  ],
+  "v": 1
+}
