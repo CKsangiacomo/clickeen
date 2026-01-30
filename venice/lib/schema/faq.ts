@@ -1,4 +1,5 @@
 import { stripHtmlToText } from './text';
+import { escapeHtml } from '@venice/lib/html';
 
 type FaqState = {
   title?: string;
@@ -25,6 +26,47 @@ function asString(value: unknown): string {
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
+}
+
+export function faqExcerptHtml(args: { state: Record<string, unknown>; locale: string }): string {
+  const state = (asRecord(args.state) as unknown) as FaqState;
+  const enabled = state?.seoGeo?.enabled === true;
+  if (!enabled) return '';
+
+  const locale = args.locale.trim() || 'en';
+  const title = stripHtmlToText(asString(state?.title)) || 'Frequently Asked Questions';
+
+  const items: Array<{ q: string; a: string }> = [];
+  (state?.sections || []).forEach((section) => {
+    (section?.faqs || []).forEach((faq) => {
+      if (items.length >= 12) return;
+      const q = stripHtmlToText(asString(faq?.question));
+      const a = stripHtmlToText(asString(faq?.answer));
+      if (!q || !a) return;
+      items.push({ q, a });
+    });
+  });
+
+  if (!items.length) return '';
+
+  const rows = items
+    .map(
+      ({ q, a }) => `
+      <div class="ck-excerpt__item">
+        <dt class="ck-excerpt__q">${escapeHtml(q)}</dt>
+        <dd class="ck-excerpt__a">${escapeHtml(a)}</dd>
+      </div>`,
+    )
+    .join('');
+
+  return `
+  <section class="ck-excerpt ck-excerpt--faq" data-ck-excerpt="faq" data-ck-locale="${escapeHtml(locale)}">
+    <h2 class="ck-excerpt__title">${escapeHtml(title)}</h2>
+    <dl class="ck-excerpt__list">
+      ${rows}
+    </dl>
+  </section>
+  `.trim();
 }
 
 export function faqSchemaJsonLd(args: { state: Record<string, unknown>; locale: string }): string {
@@ -76,4 +118,3 @@ export function faqSchemaJsonLd(args: { state: Record<string, unknown>; locale: 
     0,
   );
 }
-

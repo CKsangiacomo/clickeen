@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
-import { generateSchemaJsonLd } from '@venice/lib/schema';
+import { generateExcerptHtml, generateSchemaJsonLd } from '@venice/lib/schema';
 import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
@@ -101,6 +101,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';
   const ts = url.searchParams.get('ts');
+  const metaOnly = url.searchParams.get('meta') === '1' || url.searchParams.get('meta') === 'true';
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
@@ -168,20 +169,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(JSON.stringify({ error: 'MISSING_WIDGET_TYPE' }), { status: 500, headers });
   }
 
-  let widgetHtml: string;
-  try {
-    widgetHtml = await loadWidgetHtml(widgetType);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    headers['Cache-Control'] = 'no-store';
-    return new NextResponse(JSON.stringify({ error: 'WIDGET_LOAD_FAILED', message }), { status: 502, headers });
-  }
-
-  const bodyHtml = extractBodyHtml(widgetHtml);
-  const styles = extractStylesheetHrefs(widgetHtml, widgetType).filter(Boolean);
-  const scripts = extractScriptSrcs(bodyHtml, widgetType).filter(Boolean);
-  const renderHtml = injectPublicId(stripScriptTags(bodyHtml), widgetType, instance.publicId);
-
   const localizedState = await applyTokyoInstanceOverlay({
     publicId: instance.publicId,
     locale,
@@ -198,6 +185,48 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     locale,
   });
 
+  const excerptHtml = generateExcerptHtml({
+    widgetType,
+    state: localizedState,
+    locale,
+  });
+
+  if (metaOnly) {
+    const payload = {
+      publicId: instance.publicId,
+      status: instance.status,
+      widgetType,
+      locale,
+      schemaJsonLd,
+      excerptHtml,
+    };
+
+    if (ts) {
+      headers['Cache-Control'] = 'no-store';
+    } else if (instance.status === 'published') {
+      headers['Cache-Control'] = CACHE_PUBLISHED;
+    } else {
+      headers['Cache-Control'] = CACHE_DRAFT;
+    }
+
+    headers['Vary'] = 'Authorization, X-Embed-Token';
+    return new NextResponse(JSON.stringify(payload), { status: 200, headers });
+  }
+
+  let widgetHtml: string;
+  try {
+    widgetHtml = await loadWidgetHtml(widgetType);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    headers['Cache-Control'] = 'no-store';
+    return new NextResponse(JSON.stringify({ error: 'WIDGET_LOAD_FAILED', message }), { status: 502, headers });
+  }
+
+  const bodyHtml = extractBodyHtml(widgetHtml);
+  const styles = extractStylesheetHrefs(widgetHtml, widgetType).filter(Boolean);
+  const scripts = extractScriptSrcs(bodyHtml, widgetType).filter(Boolean);
+  const renderHtml = injectPublicId(stripScriptTags(bodyHtml), widgetType, instance.publicId);
+
   const payload = {
     publicId: instance.publicId,
     status: instance.status,
@@ -207,6 +236,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     locale,
     state: localizedState,
     schemaJsonLd,
+    excerptHtml,
     renderHtml,
     assets: { styles, scripts },
   };
