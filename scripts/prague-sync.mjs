@@ -29,6 +29,13 @@ const isBackgroundChild = args.has('--background-child');
 const runTranslate = !args.has('--skip-translate');
 const runVerify = !args.has('--skip-verify');
 const runPublish = !args.has('--skip-publish');
+const publishRemote = args.has('--remote');
+const publishLocal = args.has('--local');
+
+if (publishRemote && publishLocal) {
+  console.error('[prague-sync] Use only one of --remote or --local.');
+  process.exit(1);
+}
 
 async function listFiles(dir) {
   const out = [];
@@ -100,7 +107,8 @@ async function publishOverlays() {
     const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
     const key = relFromTokyo; // e.g. l10n/prague/...
     const objectPath = `${R2_BUCKET}/${key}`;
-    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath]);
+    const modeFlag = publishRemote ? '--remote' : publishLocal ? '--local' : null;
+    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath, ...(modeFlag ? [modeFlag] : [])]);
   }
 }
 
