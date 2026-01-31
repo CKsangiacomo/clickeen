@@ -215,7 +215,10 @@ function encodePathSegments(pathStr: string): string {
 async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
   const baseUrl = getTokyoBaseUrl();
   const path = `/l10n/prague/${encodePathSegments(pageId)}/index.json`;
-  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  const metaAny = import.meta.env as any;
+  const tsToken = import.meta.env.DEV ? String(Date.now()) : String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
+  const url = tsToken ? `${baseUrl}${path}?ts=${encodeURIComponent(tsToken)}` : `${baseUrl}${path}`;
+  const res = await fetch(url, { method: 'GET' });
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const json = (await res.json().catch(() => null)) as LayerIndex | null;

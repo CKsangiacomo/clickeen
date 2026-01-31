@@ -898,7 +898,12 @@ async function handleGetL10nAsset(env: Env, key: string): Promise<Response> {
   if (!obj) return new Response('Not found', { status: 404 });
   const headers = new Headers();
   headers.set('content-type', obj.httpMetadata?.contentType || 'application/json; charset=utf-8');
-  headers.set('cache-control', 'public, max-age=31536000, immutable');
+  // Fingerprinted overlay files are immutable; layer indices are mutable and must not be cached long.
+  if (key.endsWith('/index.json')) {
+    headers.set('cache-control', 'public, max-age=60');
+  } else {
+    headers.set('cache-control', 'public, max-age=31536000, immutable');
+  }
   return new Response(obj.body, { status: 200, headers });
 }
 
