@@ -1,7 +1,7 @@
 // Bob module: builds shared Header controls for widgets that declare defaults.header + defaults.cta.
 // Content owns: enable + copy (title/subtitle/CTA label+href)
 // Layout owns: positioning (header placement/alignment/CTA placement)
-// Appearance owns: CTA styling (fill/colors/radius/variant)
+// Appearance owns: CTA styling (fill/colors/border/radius + sizing presets)
 
 const headerPlacementOptions =
   '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]'.replace(
