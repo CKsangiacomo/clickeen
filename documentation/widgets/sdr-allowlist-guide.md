@@ -10,7 +10,7 @@ Schema:
 {
   "v": 1,
   "paths": [
-    { "path": "title", "type": "string", "role": "headline" }
+    { "path": "header.title", "type": "richtext", "role": "headline" }
   ]
 }
 ```
@@ -24,7 +24,7 @@ Rules:
 
 Examples:
 - FAQ:
-  - `title`
+  - `header.title`
   - `sections.*.faqs.*.question`
   - `sections.*.faqs.*.answer`
 - Countdown:
@@ -33,5 +33,5 @@ Examples:
   - `actions.after.text`
 - LogoShowcase:
   - `header.title`
-  - `header.textHtml`
+  - `header.subtitleHtml`
   - `cta.label`

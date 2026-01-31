@@ -9,7 +9,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "전 세계 팀들의 신뢰를 받고 있습니다."
     },
     {

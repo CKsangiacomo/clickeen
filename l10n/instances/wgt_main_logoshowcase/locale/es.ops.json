@@ -10,7 +10,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "Con la confianza de equipos en todo el mundo."
     },
     {

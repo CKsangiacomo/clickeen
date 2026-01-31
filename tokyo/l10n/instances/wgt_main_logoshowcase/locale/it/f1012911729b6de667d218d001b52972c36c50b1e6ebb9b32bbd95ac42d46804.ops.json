@@ -9,7 +9,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "Fidati da team in tutto il mondo."
     },
     {

@@ -49,8 +49,8 @@
 - Local dev: `POST /v1/l10n` accepts job batches (Authorization: `Bearer ${PARIS_DEV_JWT}`) to bypass queues; jobs must still include a valid grant.
 - Cost budgets (`maxCostUsd`) use the `AI_PRICE_TABLE_JSON` env var; a default deepseek price table is provided when unset.
 
-## Prague localization translation (local-only)
-- Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT=local`).
+## Prague localization translation (local + cloud-dev)
+- Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
 - Auth: `Authorization: Bearer ${PARIS_DEV_JWT}`.
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
 - Returns translated items; the caller writes overlay files under `tokyo/l10n/prague/**`.

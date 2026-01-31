@@ -8,6 +8,8 @@ Purpose: quick reference for repo scripts (what they do + how to run).
 - `prague-sync.mjs` — Prague local alignment + l10n publish to R2.
   - Run (foreground): `node scripts/prague-sync.mjs`
   - Run (background + log): `node scripts/prague-sync.mjs --background`
+  - Behavior: runs `scripts/prague-l10n/verify.mjs` first and only runs `scripts/prague-l10n/translate.mjs` when verification fails (then re-verifies), then publishes to R2.
+  - Flags: `--skip-translate`, `--skip-verify`, `--skip-publish` (CI uses `--publish --remote` for clarity, but publish is the default).
   - Env: `WRANGLER_BIN` (defaults to `tokyo-worker/node_modules/.bin/wrangler`), `TOKYO_R2_BUCKET`
   - Log: `Logs/prague-sync.log`
 

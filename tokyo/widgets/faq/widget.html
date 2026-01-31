@@ -6,6 +6,7 @@
     <title>FAQ Widget</title>
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
@@ -13,18 +14,37 @@
       <div class="pod" data-role="pod">
         <div class="ck-widget ck-faq-widget" data-ck-widget="faq" data-role="root">
           <section
-            class="ck-faq"
+            class="ck-faq ck-headerLayout"
             data-role="faq"
             data-layout="accordion"
             data-state="ready"
           >
-            <header class="ck-faq__header">
-              <h2 class="ck-faq__title heading-4" data-role="faq-title">Frequently Asked Questions</h2>
+            <header class="ck-faq__header ck-header">
+              <div class="ck-header__text">
+                <h2 class="ck-faq__title ck-header__title heading-4" data-role="header-title">
+                  Frequently Asked Questions
+                </h2>
+                <div class="ck-header__subtitle" data-role="header-subtitle" hidden></div>
+              </div>
+              <a
+                class="ck-header__cta"
+                data-role="header-cta"
+                data-variant="filled"
+                href="https://example.com"
+                hidden
+              >
+                Contact us
+              </a>
             </header>
-            <div class="ck-faq__empty body-s" data-role="faq-empty" hidden>No questions yet. Add your first FAQ.</div>
-            <ul class="ck-faq__list" data-role="faq-list"></ul>
+            <div class="ck-faq__body ck-headerLayout__body">
+              <div class="ck-faq__empty body-s" data-role="faq-empty" hidden>
+                No questions yet. Add your first FAQ.
+              </div>
+              <ul class="ck-faq__list" data-role="faq-list"></ul>
+            </div>
           </section>
           <script src="../shared/fill.js" defer></script>
+          <script src="../shared/header.js" defer></script>
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>
           <script src="../shared/branding.js" defer></script>

@@ -17,26 +17,6 @@
     throw new Error('[LogoShowcase] Missing [data-role="logoshowcase"] root');
   }
 
-  const headerEl = lsRoot.querySelector('[data-role="header"]');
-  if (!(headerEl instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="header"]');
-  }
-
-  const titleEl = headerEl.querySelector('[data-role="title"]');
-  if (!(titleEl instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="title"]');
-  }
-
-  const subtitleEl = headerEl.querySelector('[data-role="subtitle"]');
-  if (!(subtitleEl instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="subtitle"]');
-  }
-
-  const ctaEl = headerEl.querySelector('[data-role="cta"]');
-  if (!(ctaEl instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="cta"]');
-  }
-
   const stripsEl = lsRoot.querySelector('[data-role="strips"]');
   if (!(stripsEl instanceof HTMLElement)) {
     throw new Error('[LogoShowcase] Missing [data-role="strips"]');
@@ -57,8 +37,20 @@
   widgetRoot.style.setProperty('--ls-icon-next', `url("${assetOrigin}/dieter/icons/svg/chevron.right.svg")`);
 
   const resolvedPublicId = (() => {
-    const attr = widgetRoot.getAttribute('data-ck-public-id');
-    if (typeof attr === 'string' && attr.trim()) return attr.trim();
+    const direct = widgetRoot.getAttribute('data-ck-public-id');
+    if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+    const rootNode = widgetRoot.getRootNode();
+    if (rootNode instanceof ShadowRoot) {
+      const host = rootNode.host;
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    }
+
+    const ancestor = widgetRoot.closest('[data-ck-public-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
+
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
     const candidate = global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
     return candidate || '';
@@ -109,9 +101,19 @@
     assertObject(state.header, 'state.header');
     assertBoolean(state.header.enabled, 'state.header.enabled');
     assertString(state.header.title, 'state.header.title');
-    assertString(state.header.textHtml, 'state.header.textHtml');
+    assertBoolean(state.header.showSubtitle, 'state.header.showSubtitle');
+    assertString(state.header.subtitleHtml, 'state.header.subtitleHtml');
+    assertString(state.header.alignment, 'state.header.alignment');
     if (!['left', 'center', 'right'].includes(state.header.alignment)) {
       throw new Error('[LogoShowcase] state.header.alignment must be left|center|right');
+    }
+    assertString(state.header.placement, 'state.header.placement');
+    if (!['top', 'bottom', 'left', 'right'].includes(state.header.placement)) {
+      throw new Error('[LogoShowcase] state.header.placement must be top|bottom|left|right');
+    }
+    assertString(state.header.ctaPlacement, 'state.header.ctaPlacement');
+    if (!['right', 'below'].includes(state.header.ctaPlacement)) {
+      throw new Error('[LogoShowcase] state.header.ctaPlacement must be right|below');
     }
 
     assertArray(state.strips, 'state.strips');
@@ -203,9 +205,6 @@
       throw new Error('[LogoShowcase] state.appearance.itemCard.shadow.alpha must be 0..100');
     }
 
-    assertFill(state.appearance.titleColor, 'state.appearance.titleColor');
-    assertFill(state.appearance.textColor, 'state.appearance.textColor');
-
     assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
     assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
     assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
@@ -225,57 +224,6 @@
     assertObject(state.stage, 'state.stage');
     assertObject(state.pod, 'state.pod');
     assertObject(state.typography, 'state.typography');
-  }
-
-  function sanitizeInlineHtml(html) {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = String(html);
-    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
-    wrapper.querySelectorAll('*').forEach((node) => {
-      const el = node;
-      const tag = el.tagName;
-      if (!allowed.has(tag)) {
-        const parent = el.parentNode;
-        if (!parent) return;
-        const before = el.previousSibling;
-        const after = el.nextSibling;
-        const needsSpaceBefore =
-          before &&
-          before.nodeType === Node.TEXT_NODE &&
-          before.textContent &&
-          !/\s$/.test(before.textContent);
-        const needsSpaceAfter =
-          after &&
-          after.nodeType === Node.TEXT_NODE &&
-          after.textContent &&
-          !/^\s/.test(after.textContent);
-        if (needsSpaceBefore) parent.insertBefore(document.createTextNode(' '), el);
-        while (el.firstChild) parent.insertBefore(el.firstChild, el);
-        if (needsSpaceAfter) parent.insertBefore(document.createTextNode(' '), el.nextSibling);
-        parent.removeChild(el);
-        return;
-      }
-
-      if (tag === 'A') {
-        const href = el.getAttribute('href') || '';
-        if (!/^https?:\/\//i.test(href)) {
-          el.removeAttribute('href');
-          el.removeAttribute('target');
-          el.removeAttribute('rel');
-        } else {
-          if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener');
-          else el.removeAttribute('rel');
-        }
-        Array.from(el.attributes).forEach((attr) => {
-          if (['href', 'target', 'rel'].includes(attr.name)) return;
-          if (attr.name === 'class' && /\bdiet-dropdown-edit-link\b/.test(attr.value)) return;
-          el.removeAttribute(attr.name);
-        });
-      } else {
-        Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
-      }
-    });
-    return wrapper.innerHTML;
   }
 
   function normalizeHttpUrl(raw) {
@@ -360,13 +308,6 @@
     return String(value ?? '');
   }
 
-  function resolveFillColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
-    }
-    return String(value ?? '');
-  }
-
   function applyLayoutVars(state) {
     lsRoot.style.setProperty('--ls-gap', `${state.spacing.gap}px`);
     lsRoot.style.setProperty('--ls-gap-mobile', `${state.spacing.mobileGap}px`);
@@ -404,45 +345,6 @@
           })();
     lsRoot.style.setProperty('--ls-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
 
-    lsRoot.style.setProperty('--ls-title-color', resolveFillColor(state.appearance.titleColor));
-    lsRoot.style.setProperty('--ls-text-color', resolveFillColor(state.appearance.textColor));
-
-    lsRoot.style.setProperty('--ls-cta-bg', resolveFillBackground(state.appearance.ctaBackground));
-    lsRoot.style.setProperty('--ls-cta-fg', resolveFillColor(state.appearance.ctaTextColor));
-    lsRoot.style.setProperty('--ls-cta-radius', tokenizeRadius(state.appearance.ctaRadius));
-  }
-
-  function applyHeader(state) {
-    headerEl.hidden = state.header.enabled !== true;
-    headerEl.setAttribute('data-align', state.header.alignment);
-
-    const titleHtml = String(state.header.title || '');
-    const titleSanitized = titleHtml ? sanitizeInlineHtml(titleHtml) : '';
-    titleEl.innerHTML = titleSanitized;
-    titleEl.hidden = !titleSanitized;
-
-    const subtitleHtml = String(state.header.textHtml || '');
-    const sanitized = subtitleHtml ? sanitizeInlineHtml(subtitleHtml) : '';
-    subtitleEl.innerHTML = sanitized;
-    subtitleEl.hidden = !sanitized;
-  }
-
-  function applyCta(state) {
-    ctaEl.hidden = state.cta.enabled !== true;
-    headerEl.dataset.cta = state.cta.enabled === true ? 'true' : 'false';
-    ctaEl.setAttribute('data-variant', state.cta.style);
-    ctaEl.textContent = state.cta.label;
-
-    const href = normalizeHttpUrl(state.cta.href);
-    if (href) {
-      ctaEl.setAttribute('href', href);
-      ctaEl.removeAttribute('aria-disabled');
-      ctaEl.tabIndex = 0;
-    } else {
-      ctaEl.removeAttribute('href');
-      ctaEl.setAttribute('aria-disabled', 'true');
-      ctaEl.tabIndex = -1;
-    }
   }
 
   function renderLogoTile(logo) {
@@ -871,6 +773,7 @@
     window.CKTypography.applyTypography(state.typography, lsRoot, {
       title: { varKey: 'title' },
       body: { varKey: 'body' },
+      button: { varKey: 'button' },
     });
 
     lsRoot.setAttribute('data-type', state.type);
@@ -882,8 +785,11 @@
 
     applyLayoutVars(state);
     applyAppearanceVars(state);
-    applyHeader(state);
-    applyCta(state);
+
+    if (!window.CKHeader?.applyHeader) {
+      throw new Error('[LogoShowcase] Missing CKHeader.applyHeader');
+    }
+    window.CKHeader.applyHeader(state, widgetRoot);
 
     const nextSignature = JSON.stringify([
       state.type,
@@ -903,9 +809,18 @@
     const msg = event.data;
     if (!msg || msg.type !== 'ck:state-update') return;
     if (msg.widgetname && msg.widgetname !== 'logoshowcase') return;
+    if (resolvedPublicId && msg.publicId && msg.publicId !== resolvedPublicId) return;
     applyState(msg.state);
   });
 
-  const initial = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET.state : null;
-  if (initial) applyState(initial);
+  const keyedPayload =
+    resolvedPublicId &&
+    window.CK_WIDGETS &&
+    typeof window.CK_WIDGETS === 'object' &&
+    window.CK_WIDGETS[resolvedPublicId] &&
+    typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
+      ? window.CK_WIDGETS[resolvedPublicId]
+      : null;
+  const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
+  if (initialState) applyState(initialState);
 })();

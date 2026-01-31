@@ -76,10 +76,13 @@
       "background": "var(--color-system-gray-5)"
     },
     "header": {
-      "title": "Some of our best clients",
       "enabled": true,
-      "textHtml": "Trusted by teams worldwide.",
-      "alignment": "center"
+      "title": "Some of our best clients",
+      "showSubtitle": true,
+      "subtitleHtml": "Trusted by teams worldwide.",
+      "alignment": "center",
+      "placement": "top",
+      "ctaPlacement": "right"
     },
     "seoGeo": {
       "enabled": false
@@ -369,8 +372,6 @@
       },
       "logoLook": "original",
       "ctaRadius": "md",
-      "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
-      "titleColor": "var(--color-system-black)",
       "logoOpacity": 0.9,
       "ctaTextColor": "var(--color-system-white)",
       "ctaBackground": "var(--color-system-blue)",
@@ -408,6 +409,14 @@
           "fontStyle": "normal",
           "sizeCustom": "24px",
           "sizePreset": "m"
+        },
+        "button": {
+          "color": "var(--color-system-white)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
+          "sizePreset": "m"
         }
       },
       "roleScales": {
@@ -424,6 +433,13 @@
           "s": "20px",
           "xl": "32px",
           "xs": "18px"
+        },
+        "button": {
+          "l": "15px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "16px",
+          "xs": "12px"
         }
       },
       "globalFamily": "Inter"
@@ -433,17 +449,6 @@
     "<bob-panel id='content'>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-content-layout group-label='Type' type='choice-tiles' size='md' path='type' label='Layout' value='{{type}}' options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Carousel&quot;,&quot;value&quot;:&quot;carousel&quot;,&quot;icon&quot;:&quot;ellipsis&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-header-settings group-label='Header' type='toggle' size='md' path='header.enabled' label='Show header' />",
-    "    <tooldrawer-field-header-settings group-label='Header' type='dropdown-edit' size='lg' path='header.title' label='Title' placeholder='Add title text' show-if=\"header.enabled == true\" />",
-    "    <tooldrawer-field-header-settings group-label='Header' type='dropdown-edit' size='md' path='header.textHtml' label='Subtitle' placeholder='Add subtitle text' show-if=\"header.enabled == true\" />",
-    "    <tooldrawer-field-header-settings group-label='Header' type='dropdown-actions' size='md' path='header.alignment' label='Alignment' value='{{header.alignment}}' options='[{&quot;label&quot;:&quot;Left&quot;,&quot;value&quot;:&quot;left&quot;},{&quot;label&quot;:&quot;Center&quot;,&quot;value&quot;:&quot;center&quot;},{&quot;label&quot;:&quot;Right&quot;,&quot;value&quot;:&quot;right&quot;}]' show-if=\"header.enabled == true\" />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-cta-settings group-label='CTA' type='toggle' size='md' path='cta.enabled' label='Show CTA button' />",
-    "    <tooldrawer-field-cta-settings group-label='CTA' type='textfield' size='md' path='cta.label' label='CTA label' show-if=\"cta.enabled == true\" />",
-    "    <tooldrawer-field-cta-settings group-label='CTA' type='textfield' size='lg' path='cta.href' label='CTA link' placeholder='https://example.com' show-if=\"cta.enabled == true\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-content-logos group-label='Logos' class='diet-object-manager' type='object-manager' path='strips' add-label='Add strip' reorder-label='Manage strips' reorder-title='Manage strips' label-path='logos.0.name' index-token='__STRIP__' default-item='{&quot;logos&quot;:[{&quot;name&quot;:&quot;New logo&quot;,&quot;asset&quot;:{&quot;name&quot;:&quot;&quot;,&quot;source&quot;:&quot;user&quot;},&quot;logoFill&quot;:&quot;transparent&quot;,&quot;href&quot;:&quot;&quot;,&quot;targetBlank&quot;:false,&quot;nofollow&quot;:false,&quot;alt&quot;:&quot;&quot;,&quot;title&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; size=&quot;md&quot; path=&quot;strips.__STRIP__.logos&quot; label=&quot;Logos&quot; add-label=&quot;Add logo&quot; reorder-label=&quot;Manage logos&quot; reorder-title=&quot;Manage logos&quot; add-open=&quot;bulk-edit&quot; default-item=&quot;{&amp;quot;name&amp;quot;:&amp;quot;New logo&amp;quot;,&amp;quot;asset&amp;quot;:{&amp;quot;name&amp;quot;:&amp;quot;&amp;quot;,&amp;quot;source&amp;quot;:&amp;quot;user&amp;quot;},&amp;quot;logoFill&amp;quot;:&amp;quot;transparent&amp;quot;,&amp;quot;href&amp;quot;:&amp;quot;&amp;quot;,&amp;quot;targetBlank&amp;quot;:false,&amp;quot;nofollow&amp;quot;:false,&amp;quot;alt&amp;quot;:&amp;quot;&amp;quot;,&amp;quot;title&amp;quot;:&amp;quot;&amp;quot;,&amp;quot;caption&amp;quot;:&amp;quot;&amp;quot;}&quot; template=&quot;&amp;lt;tooldrawer-field type=&amp;quot;dropdown-upload&amp;quot; size=&amp;quot;md&amp;quot; path=&amp;quot;strips.__STRIP__.logos.__INDEX__.logoFill&amp;quot; meta-path=&amp;quot;strips.__STRIP__.logos.__INDEX__.asset&amp;quot; label=&amp;quot;Logo&amp;quot; placeholder=&amp;quot;Upload logo&amp;quot; accept=&amp;quot;image/*,.svg&amp;quot; template=&amp;quot;&amp;amp;lt;tooldrawer-field type=&amp;amp;quot;textfield&amp;amp;quot; size=&amp;amp;quot;sm&amp;amp;quot; path=&amp;amp;quot;strips.__STRIP__.logos.__INDEX__.name&amp;amp;quot; label=&amp;amp;quot;Name&amp;amp;quot; placeholder=&amp;amp;quot;Logo name&amp;amp;quot; /&amp;amp;gt;&amp;amp;lt;tooldrawer-field type=&amp;amp;quot;textfield&amp;amp;quot; size=&amp;amp;quot;sm&amp;amp;quot; path=&amp;amp;quot;strips.__STRIP__.logos.__INDEX__.caption&amp;amp;quot; label=&amp;amp;quot;Caption&amp;amp;quot; placeholder=&amp;amp;quot;Optional caption&amp;amp;quot; /&amp;amp;gt;&amp;quot; /&amp;gt;&quot; /&gt;' />",
@@ -492,16 +497,6 @@
     "    <tooldrawer-field-appearance-item-card group-label='Logo tiles' type='dropdown-actions' size='md' path='appearance.itemCard.radiusBL' label='Logo tile bottom-left radius' label-key='logoshowcase.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.itemCard.radiusBL}}' show-if=\"appearance.itemCard.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-item-card group-label='Logo tiles' type='dropdown-border' size='md' path='appearance.itemCard.border' label='Logo tile border' label-key='logoshowcase.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.border}}' />",
     "    <tooldrawer-field-appearance-item-card group-label='Logo tiles' type='dropdown-shadow' size='md' path='appearance.itemCard.shadow' label='Logo tile shadow' label-key='logoshowcase.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemCard.shadow}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-text group-label='Typography' type='dropdown-fill' size='md' fill-modes='color' path='appearance.titleColor' label='Title color' value='{{appearance.titleColor}}' />",
-    "    <tooldrawer-field-appearance-text group-label='Typography' type='dropdown-fill' size='md' fill-modes='color' path='appearance.textColor' label='Text color' value='{{appearance.textColor}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-cta group-label='CTA' type='dropdown-actions' size='md' path='cta.style' label='CTA style' value='{{cta.style}}' options='[{&quot;label&quot;:&quot;Filled&quot;,&quot;value&quot;:&quot;filled&quot;},{&quot;label&quot;:&quot;Outline&quot;,&quot;value&quot;:&quot;outline&quot;}]' />",
-    "    <tooldrawer-field-appearance-cta group-label='CTA' type='dropdown-fill' size='md' fill-modes='color' path='appearance.ctaBackground' label='CTA background' value='{{appearance.ctaBackground}}' />",
-    "    <tooldrawer-field-appearance-cta group-label='CTA' type='dropdown-fill' size='md' fill-modes='color' path='appearance.ctaTextColor' label='CTA text color' value='{{appearance.ctaTextColor}}' />",
-    "    <tooldrawer-field-appearance-cta group-label='CTA' type='dropdown-actions' size='md' path='appearance.ctaRadius' label='CTA radius' placeholder='Choose radius' value='{{appearance.ctaRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2XL&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Background' value='{{stage.background}}' />",

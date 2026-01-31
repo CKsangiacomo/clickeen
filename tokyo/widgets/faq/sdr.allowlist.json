@@ -1,7 +1,8 @@
 {
   "v": 1,
   "paths": [
-    { "path": "title", "type": "string", "role": "headline" },
+    { "path": "header.title", "type": "richtext", "role": "headline" },
+    { "path": "header.subtitleHtml", "type": "richtext", "role": "subhead" },
     { "path": "sections.*.title", "type": "string", "role": "subhead" },
     { "path": "sections.*.faqs.*.question", "type": "string", "role": "question" },
     { "path": "sections.*.faqs.*.answer", "type": "richtext", "role": "answer" }

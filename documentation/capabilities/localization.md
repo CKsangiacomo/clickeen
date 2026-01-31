@@ -62,6 +62,18 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatable fields only), not the full config.
 
+#### Why you see many locale files changing locally (expected)
+Two things happen when you run builds locally (`pnpm build` / `pnpm build:l10n`) or when CI publishes:
+
+- `l10n/instances/**` is the **repo-tracked overlay source** for curated/main instances (human/agent-curated outputs).
+- `tokyo/l10n/**` is the **deterministic build output** (what Venice/Prague consume locally and what gets uploaded to Tokyo/R2).
+
+When the instance allowlist snapshot changes (new copy path, removed path, etc.), the `baseFingerprint` changes. That causes:
+- New `*.ops.json` files to appear under a new fingerprint directory.
+- Old fingerprint files to be deleted as stale.
+
+This is not “manual editing of locales” — it’s the expected artifact regeneration. Commit these changes together with the source widget/content changes.
+
 **Generation (current)**
 - Paris enqueues localization jobs on publish/update.
 - Paris builds a translatable snapshot from the widget allowlist and stores it in `l10n_base_snapshots`.
@@ -219,7 +231,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 1. Author base copy in `tokyo/widgets/*/pages/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
-3. Generate overlays via `pnpm prague:l10n:translate` (requires San Francisco local).
+3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `PARIS_DEV_JWT`).
 4. Verify overlays via `pnpm prague:l10n:verify`.
 5. Prague reads page JSON base copy + Tokyo overlays (`tokyo/l10n/prague/**`), no Supabase publish.
 

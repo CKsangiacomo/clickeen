@@ -130,7 +130,13 @@ Bob serves widget and Dieter assets through same-origin routes so the preview if
 
 ### Preview shadow (Venice)
 
-Bob’s preview-shadow route (`/bob/preview-shadow`) loads the Venice embed loader with `data-force-shadow="true"` for shadow DOM rendering. It is a diagnostic/internal surface and is not triggered by standard preview. It requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
+Bob’s preview-shadow route (`/bob/preview-shadow`) is a diagnostic/internal embed-parity surface (not triggered by standard preview).
+
+Modes (shipped):
+- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice `/r/:publicId` (diagnostics only).
+- `?mode=seo-geo`: previews the **iframe++ SEO/GEO optimized embed** by passing `data-ck-optimization="seo-geo"` (UI stays iframe; loader injects host metadata).
+
+Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
 
 ---
 

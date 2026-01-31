@@ -10,7 +10,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "Vertrouwd door teams wereldwijd."
     },
     {

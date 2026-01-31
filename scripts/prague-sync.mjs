@@ -44,12 +44,14 @@ async function listFiles(dir) {
 }
 
 function run(cmd, argsList, options = {}) {
-  const result = spawnSync(cmd, argsList, { stdio: 'inherit', ...options });
+  const { allowFail = false, ...spawnOptions } = options;
+  const result = spawnSync(cmd, argsList, { stdio: 'inherit', ...spawnOptions });
   if (result.error?.code === 'ENOENT' || result.status === 127) {
-    return { ok: false, notFound: true };
+    return { ok: false, notFound: true, status: result.status ?? 1 };
   }
-  if (result.status !== 0) process.exit(result.status ?? 1);
-  return { ok: true };
+  const ok = result.status === 0;
+  if (!ok && !allowFail) process.exit(result.status ?? 1);
+  return { ok, status: result.status ?? 1 };
 }
 
 function runWrangler(argsList) {
@@ -120,12 +122,22 @@ async function main() {
     process.exit(0);
   }
 
-  if (runTranslate) {
+  // Verify first and only translate when required.
+  // Translation uses SanFrancisco and may be slow/costly, so we keep it demand-driven.
+  if (runVerify) {
+    const initialVerify = run(process.execPath, [VERIFY_SCRIPT], { allowFail: true });
+    if (!initialVerify.ok) {
+      if (!runTranslate) {
+        console.error('[prague-sync] Prague l10n overlays missing or invalid. Re-run without --skip-translate to generate them.');
+        process.exit(1);
+      }
+      run(process.execPath, [TRANSLATE_SCRIPT]);
+      run(process.execPath, [VERIFY_SCRIPT]);
+    }
+  } else if (runTranslate) {
     run(process.execPath, [TRANSLATE_SCRIPT]);
   }
-  if (runVerify) {
-    run(process.execPath, [VERIFY_SCRIPT]);
-  }
+
   if (runPublish) {
     await publishOverlays();
   }

@@ -4,6 +4,11 @@ import { buildWidgetAssets } from './compiler/assets';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
 import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } from './compiler/modules/stagePod';
+import {
+  buildHeaderAppearancePanelFields,
+  buildHeaderContentPanelFields,
+  buildHeaderLayoutPanelFields,
+} from './compiler/modules/header';
 import { buildTypographyPanel } from './compiler/modules/typography';
 import { resolveTokyoBaseUrl } from './env/tokyo';
 
@@ -54,6 +59,9 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const typographyRoles = typography?.roles;
   const hasStage = (widgetJson.defaults as any)?.stage != null;
   const hasPod = (widgetJson.defaults as any)?.pod != null;
+  const hasHeader = (widgetJson.defaults as any)?.header != null;
+  const hasCta = (widgetJson.defaults as any)?.cta != null;
+  const hasHeaderAppearance = (widgetJson.defaults as any)?.appearance != null;
 
   const filtered: string[] = [];
   let skippingTypography = false;
@@ -75,6 +83,66 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
     }
     filtered.push(line);
   });
+
+  const includesPath = (path: string): boolean => {
+    return filtered.some((line) => line.includes(`path='${path}'`) || line.includes(`path=\"${path}\"`));
+  };
+
+  // Inject shared Header controls if defaults declare header + cta.
+  if (hasHeader && hasCta) {
+    const hasHeaderControls = includesPath('header.enabled') || includesPath('header.title');
+    const hasHeaderLayoutControls = includesPath('header.placement') || includesPath('header.ctaPlacement');
+    const hasHeaderAppearanceControls = includesPath('appearance.ctaBackground') || includesPath('appearance.ctaTextColor');
+
+    if (!hasHeaderControls) {
+      const headerFields = buildHeaderContentPanelFields();
+      const contentIdx = filtered.findIndex((line) => line.includes("<bob-panel id='content'>"));
+      if (contentIdx >= 0) {
+        const contentEndIdx = filtered.findIndex((line, idx) => idx > contentIdx && line.includes('</bob-panel>'));
+        if (contentEndIdx >= 0) {
+          const firstObjectManager = filtered.findIndex(
+            (line, idx) => idx > contentIdx && idx < contentEndIdx && line.includes("type='object-manager'"),
+          );
+          if (firstObjectManager >= 0) {
+            let insertAt = firstObjectManager;
+            for (let idx = firstObjectManager; idx > contentIdx; idx -= 1) {
+              if (filtered[idx]?.includes('<tooldrawer-cluster')) {
+                insertAt = idx;
+                break;
+              }
+            }
+            filtered.splice(insertAt, 0, ...headerFields);
+          } else {
+            filtered.splice(contentEndIdx, 0, ...headerFields);
+          }
+        }
+      } else {
+        filtered.push("<bob-panel id='content'>", ...headerFields, '</bob-panel>');
+      }
+    }
+
+    if (!hasHeaderLayoutControls) {
+      const headerLayoutFields = buildHeaderLayoutPanelFields();
+      const layoutIdx = filtered.findIndex((line) => line.includes("<bob-panel id='layout'>"));
+      if (layoutIdx >= 0) {
+        filtered.splice(layoutIdx + 1, 0, ...headerLayoutFields);
+      } else {
+        filtered.push("<bob-panel id='layout'>", ...headerLayoutFields, '</bob-panel>');
+      }
+    }
+
+    if (hasHeaderAppearance && !hasHeaderAppearanceControls) {
+      const headerAppearanceFields = buildHeaderAppearancePanelFields();
+      const appearanceIdx = filtered.findIndex((line) => line.includes("<bob-panel id='appearance'>"));
+      if (appearanceIdx >= 0) {
+        const appearanceEndIdx = filtered.findIndex((line, idx) => idx > appearanceIdx && line.includes('</bob-panel>'));
+        if (appearanceEndIdx >= 0) filtered.splice(appearanceEndIdx, 0, ...headerAppearanceFields);
+        else filtered.push(...headerAppearanceFields);
+      } else {
+        filtered.push("<bob-panel id='appearance'>", ...headerAppearanceFields, '</bob-panel>');
+      }
+    }
+  }
 
   // Inject shared Stage/Pod layout panel if defaults declare stage/pod.
   if (hasStage || hasPod) {

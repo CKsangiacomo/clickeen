@@ -191,7 +191,7 @@ export function SettingsPanel() {
   src="${loaderSrc}"
   data-public-id="${publicId}"
   data-trigger="immediate"
-  data-discoverability="true"
+  data-ck-optimization="seo-geo"
   data-max-width="0"
   data-min-height="420"
   data-width="100%"
@@ -199,8 +199,8 @@ export function SettingsPanel() {
       : '';
 
     const previewShadowHref = publicId
-      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=light&device=desktop&mode=discoverability`
-      : '/bob/preview-shadow?mode=discoverability';
+      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=light&device=desktop&mode=seo-geo`
+      : '/bob/preview-shadow?mode=seo-geo';
 
     return { veniceBase, loaderSrc, canRender, safeSnippet, indexableSnippet, previewShadowHref };
   }, [publicId]);
@@ -314,14 +314,14 @@ export function SettingsPanel() {
                 {seoGeoEnabled ? (
                   <>
                     <div className="settings-panel__row">
-                      <div className="label-s">Discoverability embed (AI/SEO)</div>
+                      <div className="label-s">SEO/GEO optimized embed (iframe++)</div>
                       <div className="settings-panel__actions-inline">
                         <button
                           className="diet-btn-txt"
                           data-size="md"
                           data-variant="primary"
                           type="button"
-                          onClick={() => void copySnippet('discoverability embed', embed.indexableSnippet)}
+                          onClick={() => void copySnippet('SEO/GEO embed', embed.indexableSnippet)}
                         >
                           <span className="diet-btn-txt__label">Copy</span>
                         </button>
@@ -343,7 +343,7 @@ export function SettingsPanel() {
                   </>
                 ) : (
                   <div className="label-s label-muted">
-                    Enable “SEO/GEO optimization” above to unlock the discoverability snippet.
+                    Enable “SEO/GEO optimization” above to unlock the SEO/GEO embed snippet.
                   </div>
                 )}
 

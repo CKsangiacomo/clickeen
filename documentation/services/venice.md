@@ -17,16 +17,17 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
 **Dependencies:** Paris (instance API), Tokyo (widget assets), Dieter (tokens/components).
 **Shipped in this repo snapshot:**
 - `GET /e/:publicId` (renders Tokyo `widget.html` and injects `window.CK_WIDGET`)
-- `GET /r/:publicId` (returns a JSON render payload for loader/SEO flows)
+- `GET /r/:publicId` (returns a JSON render payload; also supports `?meta=1` for meta-only SEO/GEO injection)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy so widget packages stay portable)
 - Loader script routes:
   - `GET /embed/latest/loader.js` (alias of v2)
   - `GET /embed/v1/loader.js` (legacy iframe loader)
-  - `GET /embed/v2/loader.js` (iframe by default; shadow mode when `data-force-shadow="true"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-ts` (preferred), `data-cache-bust` (legacy), `data-max-width`, `data-min-height`, `data-width` (v0.2: `100%` only).)
+  - `GET /embed/v2/loader.js` (iframe by default; optional shadow render via `data-force-shadow="true"`. Optional SEO/GEO via `data-ck-optimization="seo-geo"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-ts` (preferred), `data-cache-bust` (legacy), `data-max-width`, `data-min-height`, `data-width` (v0.2: `100%` only).)
 - `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
-**Planned / not fully wired yet:**
-- Indexable embed mode (inline, host-DOM) for SEO + GEO — see `documentation/capabilities/seo-geo.md`.
+
+**Shipped SEO/GEO (Iframe++):**
+- When `data-ck-optimization="seo-geo"` is present on the loader script, the loader injects host-page JSON‑LD + a readable excerpt (see `documentation/capabilities/seo-geo.md`).
 
 ## Critical Concept: Widget Definition vs Instance
 
@@ -113,9 +114,14 @@ Response includes (as implemented today):
 - `renderHtml` (HTML body content with script tags stripped)
 - `assets.styles[]` and `assets.scripts[]` (resolved widget asset paths)
 - `schemaJsonLd` (derived from `widgetType + state + locale`)
+- `excerptHtml` (derived from `widgetType + state + locale`)
 - `state` (localized instance config; overlays applied the same as `/e`)
 
 Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`.
+
+**Meta-only mode (shipped):**
+- `GET /r/:publicId?meta=1` returns a minimal payload used by iframe++ SEO/GEO injection:
+  - `{ publicId, status, widgetType, locale, schemaJsonLd, excerptHtml }`
 
 **Locale resolution (shipped):**
 - Uses `?locale=<token>` when present; otherwise defaults to `en`.
@@ -154,10 +160,15 @@ The v2 loader reads `data-*` attributes from the script tag:
 - `data-scroll-pct` (0-100, used when `data-trigger="scroll"`)
 - `data-click-selector` (CSS selector, used when `data-trigger="click"`)
 - `data-force-shadow` (`true` to use `/r/:publicId` shadow render instead of iframe)
+- `data-ck-optimization` (`seo-geo` to enable iframe++ SEO/GEO injection: host JSON‑LD + excerpt; does not change UI mode)
 - `data-locale` (preferred locale override; otherwise uses `navigator.language`)
-- `data-cache-bust` (`true` to add `?ts=` cache busting)
+- `data-ts` (preferred cache-bust token; appended to `/e` and `/r` requests)
+- `data-cache-bust` (`true` to add `?ts=` cache busting; legacy)
 - `data-theme` (`light` | `dark`)
 - `data-device` (`desktop` | `mobile`)
+- `data-max-width` (px; `0` means no max width)
+- `data-min-height` (px)
+- `data-width` (v0.2: only `100%` supported)
 
 ### Usage Pixel + Submissions (Present but Not Implemented End-to-End)
 
@@ -166,8 +177,8 @@ The v2 loader reads `data-*` attributes from the script tag:
 
 ## SEO + GEO (Cross-Cutting)
 
-SEO and GEO require an embed mode where schema and deep links live in the host DOM.
-This is not compatible with iframe-only embedding as a moat strategy.
+SEO and GEO require host-page metadata (schema + extractable excerpt).
+Venice ships this as **Iframe++**: iframe UI + host-page injections via the loader when `data-ck-optimization="seo-geo"` is present.
 
 See: `documentation/capabilities/seo-geo.md`
 

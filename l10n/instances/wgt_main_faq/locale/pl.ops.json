@@ -5,7 +5,7 @@
   "ops": [
     {
       "op": "set",
-      "path": "title",
+      "path": "header.title",
       "value": "Często zadawane pytania"
     },
     {
