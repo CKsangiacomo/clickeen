@@ -12,6 +12,7 @@ const repoRoot = path.resolve(__filename, '..');
 
 const TOKYO_ROOT = path.join(repoRoot, 'tokyo');
 const PRAGUE_L10N_ROOT = path.join(TOKYO_ROOT, 'l10n', 'prague');
+const TOKYO_WORKER_ROOT = path.join(repoRoot, 'tokyo-worker');
 const VERIFY_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'verify.mjs');
 const TRANSLATE_SCRIPT = path.join(repoRoot, 'scripts', 'prague-l10n', 'translate.mjs');
 
@@ -54,25 +55,26 @@ function run(cmd, argsList, options = {}) {
   return { ok, status: result.status ?? 1 };
 }
 
-function runWrangler(argsList) {
+function runWrangler(argsList, options = {}) {
+  const spawnOptions = { cwd: TOKYO_WORKER_ROOT, ...options };
   if (WRANGLER_BIN === 'pnpm') {
-    const viaPnpm = run('pnpm', ['exec', 'wrangler', ...argsList]);
+    const viaPnpm = run('pnpm', ['exec', 'wrangler', ...argsList], spawnOptions);
     if (viaPnpm.ok) return;
     console.error('[prague-sync] wrangler not available via pnpm exec. Install it in a workspace (paris/sanfrancisco/tokyo-worker) or add to root devDependencies.');
     process.exit(1);
   }
 
   if (WRANGLER_BIN === 'npx') {
-    const viaNpx = run('npx', ['wrangler', ...argsList]);
+    const viaNpx = run('npx', ['wrangler', ...argsList], spawnOptions);
     if (viaNpx.ok) return;
     console.error('[prague-sync] Missing wrangler. Install with: pnpm add -D wrangler');
     process.exit(1);
   }
 
-  const direct = run(WRANGLER_BIN, argsList);
+  const direct = run(WRANGLER_BIN, argsList, spawnOptions);
   if (direct.ok) return;
   if (direct.notFound && WRANGLER_BIN === 'wrangler') {
-    const viaNpx = run('npx', ['wrangler', ...argsList]);
+    const viaNpx = run('npx', ['wrangler', ...argsList], spawnOptions);
     if (viaNpx.ok) return;
   }
   console.error('[prague-sync] Missing wrangler. Install with: pnpm add -D wrangler');
