@@ -10,7 +10,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "موثوق به من قبل فرق في جميع أنحاء العالم."
     },
     {

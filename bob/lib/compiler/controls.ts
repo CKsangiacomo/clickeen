@@ -1,5 +1,6 @@
 import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
 import { parseTooldrawerAttributes } from '../compiler.shared';
+import { getIcon } from '../icons';
 import { getAt } from '../utils/paths';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
@@ -53,6 +54,7 @@ export function expandTooldrawerClusters(html: string): string {
   const openTag = '<tooldrawer-cluster';
   const closeTag = '</tooldrawer-cluster>';
 
+  let clusterId = 0;
   let cursor = 0;
   while (cursor < html.length) {
     const lower = html.toLowerCase();
@@ -105,17 +107,32 @@ export function expandTooldrawerClusters(html: string): string {
 
         const wrapperAttrs: string[] = ['class="tdmenucontent__cluster"'];
         if (showIf) wrapperAttrs.push(`data-bob-showif="${showIf}"`);
-        let labelMarkup = '';
+        const nextClusterId = clusterId;
+        clusterId += 1;
+
+        const bodyId = `td-cluster-body-${nextClusterId}`;
+        let headerMarkup = '';
         if (label || labelKey) {
           const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
           if (labelKey) labelAttrs.push(`data-i18n-key="${encodeHtmlEntities(labelKey)}"`);
           if (labelParams) labelAttrs.push(`data-i18n-params="${labelParams}"`);
           if (labelCount) labelAttrs.push(`data-i18n-count="${encodeHtmlEntities(labelCount)}"`);
-          labelMarkup = `<div ${labelAttrs.join(' ')}>${encodeHtmlEntities(label)}</div>`;
+
+          const toggleIcon = getIcon('chevron.up');
+          const toggleMarkup = [
+            `<button type="button" class="diet-btn-ic tdmenucontent__cluster-toggle" data-size="xs" data-variant="neutral" aria-label="Toggle section" aria-expanded="true" aria-controls="${bodyId}">`,
+            `  <span class="diet-btn-ic__icon" aria-hidden="true">${toggleIcon}</span>`,
+            `</button>`,
+          ].join('');
+
+          const labelMarkup = `<div ${labelAttrs.join(' ')}>${encodeHtmlEntities(label)}</div>`;
+          headerMarkup = `<div class="tdmenucontent__cluster-header">${labelMarkup}${toggleMarkup}</div>`;
         }
 
-        const bodyMarkup = `<div class="tdmenucontent__cluster-body">${inner}</div>`;
-        const replacement = `<div ${wrapperAttrs.join(' ')}>${labelMarkup}${bodyMarkup}</div>`;
+        const bodyAttrs: string[] = ['class="tdmenucontent__cluster-body"'];
+        if (headerMarkup) bodyAttrs.push(`id="${bodyId}"`);
+        const bodyMarkup = `<div ${bodyAttrs.join(' ')}>${inner}</div>`;
+        const replacement = `<div ${wrapperAttrs.join(' ')}>${headerMarkup}${bodyMarkup}</div>`;
         html = html.slice(0, start) + replacement + html.slice(nextClose + closeTag.length);
         cursor = start + replacement.length;
         break;

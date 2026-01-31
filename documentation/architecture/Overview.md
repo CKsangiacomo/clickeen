@@ -569,6 +569,6 @@ Paris returns effective entitlements; Venice enforces branding flags exactly.
 
 ### What's Planned
 
-- Venice inline embed mode (SEO/GEO) + submission/pixel wiring
+- Venice iframe++ SEO/GEO optimized embed (host JSON‑LD + excerpt injection) + submission/pixel wiring
 - Prague long-tail SEO surfaces (hubs/spokes/comparisons)
 - Additional widget types

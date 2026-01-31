@@ -124,7 +124,7 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, curatedRef?: { publicId: string, locale: string, height?: string, title?: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, curatedRef?: { publicId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
 - Owns: H1 + subhead + primary/secondary CTA + curated embed (optional)
 
 Copy contract:
@@ -139,6 +139,10 @@ Copy contract:
 **Embed rule (strict):**
 - Prague embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
 - `wgt_curated_*.<locale>` is invalid and must 404 (no legacy support).
+
+**Embed mode (curatedRef.embedMode):**
+- default (omitted): iframe embed
+- `indexable`: iframe++ SEO/GEO optimized embed (uses Venice loader + host metadata injection; UI stays iframe)
 
 Acquisition preview hook:
 - Hero headline and subheadline expose `data-ck-copy="heroTitle|heroSubtitle"` for personalization preview.

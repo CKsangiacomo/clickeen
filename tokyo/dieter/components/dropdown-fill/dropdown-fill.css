@@ -321,8 +321,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, var(--color-system-white) 0%, hsl(var(--picker-hue, 280) 100% 50%) 100%),
-    linear-gradient(0deg, var(--color-system-black) 0%, transparent 100%);
+    linear-gradient(0deg, var(--color-system-black) 0%, transparent 100%),
+    linear-gradient(90deg, var(--color-system-white) 0%, hsl(var(--picker-hue, 280) 100% 50%) 100%);
   cursor: crosshair;
 }
 
@@ -490,8 +490,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, var(--color-system-white) 0%, hsl(var(--picker-hue, 280) 100% 50%) 100%),
-    linear-gradient(0deg, var(--color-system-black) 0%, transparent 100%);
+    linear-gradient(0deg, var(--color-system-black) 0%, transparent 100%),
+    linear-gradient(90deg, var(--color-system-white) 0%, hsl(var(--picker-hue, 280) 100% 50%) 100%);
   cursor: crosshair;
 }
 

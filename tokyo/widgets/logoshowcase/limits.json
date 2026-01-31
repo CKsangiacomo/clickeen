@@ -49,6 +49,6 @@
     { "kind": "cap", "key": "list.primary.max", "path": "strips[]", "metric": "count" },
     { "kind": "cap", "key": "list.secondary.dense.max", "path": "strips[].logos[]", "metric": "count" },
     { "kind": "cap", "key": "text.caption.max", "path": "strips[].logos[].caption", "metric": "chars" },
-    { "kind": "cap", "key": "text.headerHtml.max", "path": "header.textHtml", "metric": "chars" }
+    { "kind": "cap", "key": "text.headerHtml.max", "path": "header.subtitleHtml", "metric": "chars" }
   ]
 }

@@ -3,7 +3,6 @@
   "itemKey": "faq.item",
   "defaults": {
     "geo": {
-      "answerFormat": "direct-first",
       "enableDeepLinks": true
     },
     "context": {
@@ -52,7 +51,6 @@
       "radiusLinked": true
     },
     "seo": {
-      "businessType": "online-service",
       "canonicalUrl": "",
       "enableSchema": true
     },
@@ -86,7 +84,21 @@
         "color": "#d1d1d6"
       }
     },
-    "title": "Frequently Asked Questions",
+    "header": {
+      "enabled": true,
+      "title": "Frequently Asked Questions",
+      "showSubtitle": false,
+      "subtitleHtml": "",
+      "alignment": "left",
+      "placement": "top",
+      "ctaPlacement": "right"
+    },
+    "cta": {
+      "enabled": false,
+      "label": "Contact us",
+      "href": "https://example.com",
+      "style": "filled"
+    },
     "layout": {
       "gap": 16,
       "type": "accordion",
@@ -144,7 +156,6 @@
         "title": "All Questions"
       }
     ],
-    "showTitle": true,
     "appearance": {
       "theme": "custom",
       "itemCard": {
@@ -180,6 +191,9 @@
       },
       "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
       "linkUnderlineColor": "var(--color-system-blue)",
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaRadius": "md",
       "podBorder": {
         "color": "var(--color-system-gray-5)",
         "width": 1,
@@ -194,6 +208,14 @@
           "weight": "600",
           "fontStyle": "normal",
           "sizeCustom": "24px",
+          "sizePreset": "m"
+        },
+        "body": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
           "sizePreset": "m"
         },
         "answer": {
@@ -219,6 +241,14 @@
           "fontStyle": "normal",
           "sizeCustom": "16px",
           "sizePreset": "m"
+        },
+        "button": {
+          "color": "var(--color-system-white)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
+          "sizePreset": "m"
         }
       },
       "roleScales": {
@@ -228,6 +258,13 @@
           "s": "20px",
           "xl": "32px",
           "xs": "18px"
+        },
+        "body": {
+          "l": "16px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "18px",
+          "xs": "12px"
         },
         "answer": {
           "l": "17px",
@@ -249,6 +286,13 @@
           "s": "15px",
           "xl": "20px",
           "xs": "14px"
+        },
+        "button": {
+          "l": "15px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "16px",
+          "xs": "12px"
         }
       },
       "globalFamily": "Inter"
@@ -261,14 +305,12 @@
     "  <tooldrawer-field-content-sections group-label='' class='diet-object-manager' type='object-manager' path='sections' add-label='Add section' reorder-label='Manage sections' reorder-title='Manage sections' label-path='title' index-token='__SECTION__' default-item='{&quot;title&quot;:&quot;All Questions&quot;,&quot;faqs&quot;:[{&quot;question&quot;:&quot;New question&quot;,&quot;answer&quot;:&quot;New answer&quot;,&quot;defaultOpen&quot;:false}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; path=&quot;sections.__SECTION__.faqs&quot; label=&quot;Questions&quot; label-key=&quot;faq.item&quot; label-params=&quot;{&amp;quot;count&amp;quot;:2}&quot; add-label=&quot;Add question&quot; add-label-key=&quot;faq.actions.addItem&quot; add-label-params=&quot;{&amp;quot;item&amp;quot;:{&amp;quot;$t&amp;quot;:&amp;quot;faq.item&amp;quot;,&amp;quot;count&amp;quot;:1}}&quot; labelPath=&quot;sections.__SECTION__.title&quot; labelInputLabel=&quot;Section&quot; labelPlaceholder=&quot;All Questions&quot; labelSize=&quot;lg&quot; default-item=&quot;{&amp;quot;question&amp;quot;:&amp;quot;New question&amp;quot;,&amp;quot;answer&amp;quot;:&amp;quot;New answer&amp;quot;,&amp;quot;defaultOpen&amp;quot;:false}&quot; template=&apos;&lt;div class=&quot;diet-repeater__item-body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-allow-links=&quot;false&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your question&quot;&gt;Type your question&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Question&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your question&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger diet-popaddlink__close&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt diet-popaddlink__apply&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your question&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.question&quot; /&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your answer&quot;&gt;Type your answer&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Answer&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your answer&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger diet-popaddlink__close&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt diet-popaddlink__apply&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your answer&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.answer&quot; /&gt;&lt;/div&gt;&lt;/div&gt;&apos; /&gt;' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-title-settings group-label='' type='toggle' size='md' path='showTitle' label='Show title' />",
-    "    <tooldrawer-field-title-settings group-label='' type='textfield' size='lg' databinding='title' path='title' label='FAQ title' hint='Frequently Asked Questions' value='{{title}}' show-if=\"showTitle == true\" />",
     "    <tooldrawer-field-title-settings group-label='' type='toggle' size='md' path='displayCategoryTitles' label='Show section title' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='layout'>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-layout-choice group-label='' type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
+    "    <tooldrawer-field-layout-choice group-label='' type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;chevron.down.2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;square.stack.3d.up&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
     "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.gap' label='Gap (px)' />",
     "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
     "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.multiOpen' label='Allow multiple open' show-if=\"layout.type == 'accordion'\" />",
@@ -298,12 +340,6 @@
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
     "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.iconColor' label='Accordion icon color' value='{{appearance.iconColor}}' show-if=\"layout.type == 'accordion'\" />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.title.color' label='Title text color' value='{{typography.roles.title.color}}' />",
-    "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.section.color' label='Section title color' value='{{typography.roles.section.color}}' />",
-    "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.question.color' label='Question text color' value='{{typography.roles.question.color}}' />",
-    "    <tooldrawer-field-appearance-typography group-label='' type='dropdown-fill' size='md' fill-modes='color' path='typography.roles.answer.color' label='Answer text color' value='{{typography.roles.answer.color}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-appearance-card group-label='Q&A card' type='dropdown-fill' size='md' fill-modes='color,gradient' path='appearance.itemBackground' label='Q&A card background' label-key='faq.labels.itemBackground' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemBackground}}' />",

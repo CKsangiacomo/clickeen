@@ -1,8 +1,8 @@
 {
   "v": 1,
   "paths": [
-    { "path": "header.title", "type": "string", "role": "headline" },
-    { "path": "header.textHtml", "type": "richtext", "role": "subhead" },
+    { "path": "header.title", "type": "richtext", "role": "headline" },
+    { "path": "header.subtitleHtml", "type": "richtext", "role": "subhead" },
     { "path": "cta.label", "type": "string", "role": "cta" }
   ]
 }

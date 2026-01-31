@@ -6,6 +6,7 @@
     <title>Logo Showcase Widget</title>
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
@@ -16,15 +17,21 @@
           data-ck-widget="logoshowcase"
           data-role="root"
         >
-          <section class="ck-logoshowcase" data-role="logoshowcase" data-type="grid">
-            <header class="ck-logoshowcase__header" data-role="header">
-              <div class="ck-logoshowcase__header-text">
-                <h2 class="ck-logoshowcase__title" data-role="title">Some of our clients</h2>
-                <div class="ck-logoshowcase__subtitle" data-role="subtitle"></div>
+          <section
+            class="ck-logoshowcase ck-headerLayout"
+            data-role="logoshowcase"
+            data-type="grid"
+          >
+            <header class="ck-logoshowcase__header ck-header" data-role="header">
+              <div class="ck-logoshowcase__header-text ck-header__text">
+                <h2 class="ck-logoshowcase__title ck-header__title" data-role="header-title">
+                  Some of our clients
+                </h2>
+                <div class="ck-logoshowcase__subtitle ck-header__subtitle" data-role="header-subtitle"></div>
               </div>
               <a
-                class="ck-logoshowcase__cta"
-                data-role="cta"
+                class="ck-logoshowcase__cta ck-header__cta"
+                data-role="header-cta"
                 data-variant="filled"
                 href="https://example.com/contact"
                 hidden
@@ -32,9 +39,10 @@
                 Contact us
               </a>
             </header>
-            <div class="ck-logoshowcase__strips" data-role="strips"></div>
+            <div class="ck-logoshowcase__strips ck-headerLayout__body" data-role="strips"></div>
           </section>
           <script src="../shared/fill.js" defer></script>
+          <script src="../shared/header.js" defer></script>
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>
           <script src="../shared/branding.js" defer></script>

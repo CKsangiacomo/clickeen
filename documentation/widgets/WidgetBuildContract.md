@@ -82,6 +82,40 @@ MUST
 MUST NOT
 - Create separate text color controls outside typography unless PRD requires it.
 
+### 3.1) Header (optional global primitive)
+If a widget needs a reusable title/subtitle/CTA “header block”, it MUST use the shared Header primitive:
+- Runtime: `tokyo/widgets/shared/header.js` (`window.CKHeader.applyHeader(state, widgetRoot)`)
+- Styles: `tokyo/widgets/shared/header.css` (loaded in `widget.html`)
+
+MUST
+- Declare these state paths in `defaults` (strict; no fallbacks):
+  - `header.enabled` (boolean)
+  - `header.title` (richtext string)
+  - `header.showSubtitle` (boolean)
+  - `header.subtitleHtml` (richtext string)
+  - `header.alignment` (`left|center|right`)
+  - `header.placement` (`top|bottom|left|right`)
+  - `header.ctaPlacement` (`right|below`)
+  - `cta.enabled` (boolean)
+  - `cta.label` (string)
+  - `cta.href` (string)
+  - `cta.style` (`filled|outline`)
+  - `appearance.ctaBackground` (fill **or** CSS color string; color only)
+  - `appearance.ctaTextColor` (fill **or** CSS color string; color only)
+  - `appearance.ctaRadius` (`none|sm|md|lg|xl|2xl`)
+- Use this DOM structure (inside the widget root):
+  - `.ck-headerLayout` contains:
+    - `.ck-header` (direct child)
+      - `[data-role="header-title"]`
+      - `[data-role="header-subtitle"]`
+      - `[data-role="header-cta"]`
+    - `.ck-headerLayout__body` (direct child; holds widget-specific content)
+- Localize `header.title`, `header.subtitleHtml`, and `cta.label` in `localization.json`.
+- Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
+
+MUST NOT
+- Reimplement header layout/CTA styling per widget (use the shared primitive).
+
 ### 4) Determinism
 MUST
 - Implement `applyState(state)` as a pure DOM update.
@@ -98,14 +132,21 @@ MUST
 - Add controls only for paths already defined in `defaults`.
 - Gate variant-specific controls via `show-if`.
 - Remove `<tooldrawer-eyebrow>`; no eyebrow under panel headers. Use optional cluster labels (`<tooldrawer-cluster label="...">`) when you need section eyebrows inside a panel.
-- Use `<tooldrawer-cluster>` as the only vertical spacing primitive (clusters can wrap any markup/controls).
-- Use group keys (`<tooldrawer-field-{groupKey}>`) or `group-label` for section labels; groups are formed from adjacent fields and live inside a cluster only when the fields are inside that cluster.
-- Only eyebrow labels (cluster/group labels) may add margin-bottom; controls must not add external margins or spacing wrappers.
+- Use `<tooldrawer-cluster>` as the primary grouping container. Panels MUST be composed of one or more clusters (clusters can wrap any markup/controls).
+- Cluster header (optional): a cluster has a header only when `label`/`labelKey` is set. Bob renders it as:
+  - left: Label (overline)
+  - right: XS Dieter icon button (chevron) that collapses/expands the cluster body
+- Cluster spacing is owned globally by Bob (widgets MUST NOT invent spacing):
+  - top-level cluster spacing: `space-4` after each cluster (except last)
+  - header → body spacing: `space-2` (only when header exists)
+  - inside cluster body: `space-2` vertical gap between controls/groups
+- Group is optional and secondary. Declare a group key via the tag name `<tooldrawer-field-{groupKey} ...>`; adjacent fields with the same group key become one group. Use `group-label` only when you need a group header inside a cluster.
+- Groups MUST NOT be used as a spacing/layout primitive; they exist only to add optional sub-section labels inside a cluster.
 - Define the user-facing item noun: set `itemKey` in `spec.json` (e.g., `faq.item`) and ensure the i18n bundle defines it (plural forms required).
 
 MUST NOT
 - Duplicate entire panels per variant.
-- Add custom vertical spacing via margins/spacer elements or `gap`/`space-after` attributes.
+- Add custom vertical spacing via margins/spacer elements or `gap`/`space-after` attributes. Clusters own spacing and collapsibility.
 
 ### 5.1) Themes (global, editor-only)
 MUST

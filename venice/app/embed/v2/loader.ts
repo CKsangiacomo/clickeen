@@ -2,23 +2,23 @@ const script = `(() => {
   const scriptEl = document.currentScript;
   if (!scriptEl) return;
 
-	  const {
-	    publicId,
-	    trigger = 'immediate',
-	    delay = '0',
-	    scrollPct,
-	    clickSelector,
-	    theme = 'light',
-	    device = 'desktop',
-	    forceShadow = 'false',
-	    discoverability = 'false',
-	    cacheBust = 'false',
-	    maxWidth: maxWidthAttr,
-	    minHeight: minHeightAttr,
-	    width: widthAttr,
-	    ts: tsAttr,
-	    locale: localeAttr,
-	  } = scriptEl.dataset;
+		  const {
+		    publicId,
+		    trigger = 'immediate',
+		    delay = '0',
+		    scrollPct,
+		    clickSelector,
+		    theme = 'light',
+		    device = 'desktop',
+		    forceShadow = 'false',
+		    ckOptimization = 'none',
+		    cacheBust = 'false',
+		    maxWidth: maxWidthAttr,
+		    minHeight: minHeightAttr,
+		    width: widthAttr,
+		    ts: tsAttr,
+		    locale: localeAttr,
+		  } = scriptEl.dataset;
 
   if (!publicId) {
     console.warn('[Clickeen] Missing data-public-id');
@@ -26,13 +26,16 @@ const script = `(() => {
   }
 
 		  const origin = new URL(scriptEl.src, window.location.href).origin;
-		  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
-		  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
-		  window.CK_ASSET_ORIGIN = origin;
+			  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
+			  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
+			  window.CK_ASSET_ORIGIN = origin;
 
-	  const explicitTs = typeof tsAttr === 'string' ? tsAttr.trim() : '';
-	  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
-	  const tsParam = tsToken ? { ts: tsToken } : {};
+		  const optimization = typeof ckOptimization === 'string' ? ckOptimization.trim().toLowerCase() : '';
+		  const seoGeoOptimization = optimization === 'seo-geo';
+
+		  const explicitTs = typeof tsAttr === 'string' ? tsAttr.trim() : '';
+		  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
+		  const tsParam = tsToken ? { ts: tsToken } : {};
 
 	  const DEFAULT_MAX_WIDTH = 640;
 	  const DEFAULT_MIN_HEIGHT = 420;
@@ -334,12 +337,12 @@ const script = `(() => {
       theme: renderPayload.theme,
       device: renderPayload.device,
       state: renderPayload.state,
-    });
+	    });
 
-    upsertSchema(renderPayload.schemaJsonLd);
-    if (discoverability === 'true') {
-      upsertExcerpt(renderPayload.excerptHtml);
-    }
+	    upsertSchema(renderPayload.schemaJsonLd);
+	    if (seoGeoOptimization) {
+	      upsertExcerpt(renderPayload.excerptHtml);
+	    }
 
     // Widgets expect their runtime scripts to be rendered inside the widget root
     // so document.currentScript.closest('[data-ck-widget]') resolves deterministically.
@@ -370,28 +373,28 @@ const script = `(() => {
 	    if (mountStarted) return;
 	    mountStarted = true;
 
-	    // Default path (fast): iframe embed only.
-	    if (forceShadow !== 'true') {
-	      mountIframe();
-	      if (discoverability === 'true') {
-	        try {
-	          const metaRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, meta: '1' }), {
-	            mode: 'cors',
-	            credentials: 'omit',
-	          });
-	          const metaPayload = await metaRes.json().catch(() => null);
-	          if (!metaRes.ok || !metaPayload) {
-	            console.warn('[Clickeen] Discoverability meta failed', metaRes.status, metaPayload);
-	          } else {
-	            upsertSchema(metaPayload.schemaJsonLd);
-	            upsertExcerpt(metaPayload.excerptHtml);
-	          }
-	        } catch (err) {
-	          console.warn('[Clickeen] Discoverability meta failed', err);
-	        }
-	      }
-	      return;
-	    }
+		    // Default path (fast): iframe embed only.
+		    if (forceShadow !== 'true') {
+		      mountIframe();
+		      if (seoGeoOptimization) {
+		        try {
+		          const metaRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale, meta: '1' }), {
+		            mode: 'cors',
+		            credentials: 'omit',
+		          });
+		          const metaPayload = await metaRes.json().catch(() => null);
+		          if (!metaRes.ok || !metaPayload) {
+		            console.warn('[Clickeen] SEO/GEO meta failed', metaRes.status, metaPayload);
+		          } else {
+		            upsertSchema(metaPayload.schemaJsonLd);
+		            upsertExcerpt(metaPayload.excerptHtml);
+		          }
+		        } catch (err) {
+		          console.warn('[Clickeen] SEO/GEO meta failed', err);
+		        }
+		      }
+		      return;
+		    }
 
 		    // Shadow mode: fetch structured render payload (used by Bob preview-shadow / SEO flows).
 		    const renderRes = await fetch(embedUrl('/r/' + encodeURIComponent(publicId), { locale }), {

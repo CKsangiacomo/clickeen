@@ -10,15 +10,21 @@ Set on the main element `[data-role="logoshowcase"]`:
 - `data-type`: `grid` | `carousel`
 - `data-motion`: `paged` | `continuous` (only when `data-type="carousel"`)
 
-Set on the header element `[data-role="header"]`:
-- `data-align`: `left` | `center` | `right`
+Set by the global Header primitive (`tokyo/widgets/shared/header.js`):
+- On `.ck-headerLayout`:
+  - `data-has-header`: `true` | `false`
+  - `data-header-placement`: `top` | `bottom` | `left` | `right`
+- On `.ck-header`:
+  - `data-align`: `left` | `center` | `right`
+  - `data-cta-placement`: `right` | `below`
 
 ## Parts (query within root)
 - Root: `[data-role="logoshowcase"]`
-- Header: `[data-role="header"]`
-  - Title: `[data-role="title"]`
-  - Subtitle: `[data-role="subtitle"]` (renders sanitized inline HTML)
-  - CTA: `[data-role="cta"]`
+- Header layout container: `.ck-headerLayout` (same element as `[data-role="logoshowcase"]`)
+- Header: `[data-role="header"]` + `.ck-header`
+  - Title: `[data-role="header-title"]`
+  - Subtitle: `[data-role="header-subtitle"]` (renders sanitized inline HTML)
+  - CTA: `[data-role="header-cta"]`
 - Strips container: `[data-role="strips"]`
 - Strip (generated): `[data-role="strip"]`
   - Viewport: `[data-role="strip-viewport"]`
@@ -33,9 +39,12 @@ Set on the header element `[data-role="header"]`:
 Content:
 - Header:
   - `header.enabled` (boolean)
-  - `header.title` (string)
-  - `header.textHtml` (string; supports limited inline HTML)
+  - `header.title` (richtext string; supports limited inline HTML)
+  - `header.showSubtitle` (boolean)
+  - `header.subtitleHtml` (richtext string; supports limited inline HTML)
   - `header.alignment` (`left` | `center` | `right`)
+  - `header.placement` (`top` | `bottom` | `left` | `right`)
+  - `header.ctaPlacement` (`right` | `below`)
 - Strips / Logos:
   - `strips[]` (array)
   - `strips[].logos[]` (array)
@@ -78,9 +87,6 @@ Appearance:
   - `appearance.itemCard.radius|radiusTL|radiusTR|radiusBR|radiusBL` (radius token, e.g. `none|2xl|4xl|6xl|10xl`)
   - `appearance.itemCard.border` (object; Dieter `dropdown-border` schema)
   - `appearance.itemCard.shadow` (object; Dieter `dropdown-shadow` schema)
-- Header colors:
-  - `appearance.titleColor` (fill object; type: color)
-  - `appearance.textColor` (fill object; type: color)
 - CTA appearance:
   - `appearance.ctaBackground` (fill object; type: color)
   - `appearance.ctaTextColor` (fill object; type: color)
@@ -97,7 +103,9 @@ Stage/Pod (layout spacing lives here; no widget-level width/padding):
 
 ## Rendering Notes
 - Breakpoint: widgets use a single breakpoint at `900px`.
-- Inline HTML (`header.textHtml`) is sanitized; allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).
+- Header richtext is sanitized by `tokyo/widgets/shared/header.js`:
+  - `header.title`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `br` (no links).
+  - `header.subtitleHtml`: allowed tags: `strong`, `b`, `em`, `i`, `u`, `s`, `a`, `br` (links require `http(s)://`).
 - `logoFill` accepts `blob:`, `data:`, or `http(s)` URLs. Runtime extracts the primary URL and applies it as `background-image` on `[data-role="logo-visual"]`.
 - Links: `href` is normalized; only valid `http(s)://` makes a logo/CTA clickable (else it renders inert).
 

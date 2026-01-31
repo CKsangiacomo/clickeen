@@ -1,173 +1,103 @@
-# FAQ Widget — SEO + GEO Execution Plan (Repo-Accurate)
+# FAQ — SEO/GEO (Iframe++ host metadata) — Repo-Accurate
 
-This plan turns the FAQ widget into a moat:
-- **SEO**: Search Engine Optimization (Google/Bing rich results + entity understanding)
-- **GEO**: Generative Engine Optimization (AI answer extraction + citation)
+STATUS: REFERENCE — MUST MATCH RUNTIME  
+Last updated: 2026-01-30
 
-This doc is the committed version of the working plan (the `Execution_Pipeline_Docs/` folder is gitignored). Any future files or routes are explicitly labeled as planned.
+This document describes the **shipped** SEO/GEO behavior for the FAQ widget and how it scales to other widgets.
 
-See also:
-- Cross-cutting architecture: `documentation/capabilities/seo-geo.md`
-- Widget architecture: `documentation/widgets/WidgetArchitecture.md`
-
----
-
-## Hard requirement (the foundation)
-
-**SEO and GEO must apply to the host page.**
-
-Current embed is iframe-first (`venice/app/e/[publicId]/route.ts`). That is correct for safety, but it is not a reliable SEO channel.
-
-**Therefore we must add an indexable inline embed mode** (no iframe) so:
-- Schema.org JSON-LD is in the host DOM (`<head>`).
-- Question deep links are host-page anchors.
+Primary references:
+- Cross-cutting capability (authoritative): `documentation/capabilities/seo-geo.md`
+- Execution PRD (process artifact): `Execution_Pipeline_Docs/02-Executing/019__Prague_SEO_GEO_Indexable_Curated_Embeds_PRD_v0.2.md`
 
 ---
 
-## Phase 0 — Indexable embed mode (Venice + widget scoping)
+## Shipped model (v0.2): Iframe++ SEO/GEO
 
-### Goal
-Ship a second embed mode that mounts into the host DOM (SEO/GEO-capable) while keeping iframe mode intact.
+Goal: keep iframe UI (reliable embeds) while making the host page machine-readable.
 
-### Venice deliverables
-- Add loader routes (currently only `loader.ts` modules exist):
-  - `GET /embed/v2/loader.js` (indexable inline embed)
-  - `GET /embed/latest/loader.js` (points at the latest stable loader)
-- Add an inline render endpoint:
-  - `GET /r/:publicId` (returns `{ widgetType, state, schemaJsonLd, renderHtml, assets: { styles[], scripts[] } }` for Shadow DOM mount + schema injection; `assets.styles[]` must include `tokens.shadow.css`)
+### 1) UI render path (unchanged)
+- FAQ UI renders via Venice iframe route: `GET /e/:publicId`
 
-### Embed strategy: Shadow DOM for UI (default)
-Inline embed must survive real host pages (resets, Tailwind/Bootstrap, `!important`, font overrides).
-For the FAQ widget, indexable embed should:
-- Inject Schema.org JSON-LD into the host `<head>` (SEO).
-- Render the interactive UI into a Shadow Root (CSS isolation).
-- Expose per-question deep links (`geo.enableDeepLinks`) so engines can cite:
-  - URL hash uses `#faq-q-<publicId>-<stableId>` (prevents collisions when multiple widgets exist on a page)
-  - Loader scrolls into the Shadow DOM target and opens it
+### 2) Host-page SEO/GEO injections (opt-in)
+If the host uses the loader script with:
+```html
+data-ck-optimization="seo-geo"
+```
+…then the loader:
+1) mounts the iframe UI (same as safe embed)
+2) fetches Venice meta payload:
+   - `GET /r/:publicId?meta=1`
+3) injects into the host page:
+   - JSON‑LD into `<head>` (id: `ck-schema-<publicId>`)
+   - a readable excerpt into the DOM (id: `ck-excerpt-<publicId>`)
 
-Default vs fallback:
-- Default: Shadow DOM indexable embed.
-- Fallback: iframe embed for customers who explicitly require origin-level isolation.
-
-### Widget deliverables (FAQ first)
-- Scope CSS under the widget root (no global `html/body/:root` styling).
-- Ensure shared runtime modules can target stage/pod wrappers via `data-role` (not generic class selectors).
+If meta fetch fails, UI still renders (SEO/GEO absent, not blocked).
 
 ---
 
-## Phase 1 — Add SEO/GEO controls (Tokyo + Bob compiler passthrough)
+## FAQ schema + excerpt contracts (shipped)
 
-### Goal
-Users can opt into SEO/GEO optimization and then configure settings manually (no AI yet).
+## Editor controls (FAQ Settings panel)
+These are instance-owned settings (edited in Bob):
+- `seoGeo.enabled` (master enable; required for Venice to emit schema/excerpt)
+- `seo.enableSchema` (schema-only gate; when `false` schema is suppressed even if `seoGeo.enabled` is `true`)
+- `seo.canonicalUrl` (optional; used as `@id` + `url` in `FAQPage` when present)
+- `geo.enableDeepLinks` (enables `#` deep links for FAQ questions in accordion mode)
 
-### Product toggle (Settings)
+Entitlements:
+- Enforcement is defined in `tokyo/widgets/faq/limits.json` (Paris sanitizes/rejects based on tier).
 
-Add a single toggle in Settings:
-- Label: “Enable SEO/GEO Optimization”
-- State: `seoGeo.enabled: boolean`
-- Default: `false`
+### Schema (`schemaJsonLd`)
+- Type: `FAQPage` JSON‑LD string (may be empty)
+- Owner: Venice
+- Inputs: localized instance state + locale
+- Gating:
+  - `state.seoGeo.enabled !== true` → emit `""`
+  - `state.seo.enableSchema === false` → emit `""` (even if `seoGeo.enabled === true`)
 
-Behavior:
-- When `seoGeo.enabled === false`:
-  - SEO/GEO advanced controls are hidden.
-  - Embed mode remains safe iframe (current behavior).
-- When `seoGeo.enabled === true`:
-  - Expose SEO and GEO settings (and later scoring/AI actions).
-  - Default embed mode becomes indexable (Shadow DOM UI) via the new loader.
+Source of truth:
+- `venice/lib/schema/faq.ts`
 
-Entitlements (product rule):
-- In **Minibob**, the toggle cannot be turned on.
-- In **Bob**, the toggle is only available for users on a plan (free or paid).
-- Server must enforce this on publish (UI gating is not sufficient).
+### Excerpt (`excerptHtml`)
+- Type: safe HTML string (may be empty)
+- Owner: Venice
+- Inputs: localized instance state + locale
+- Gating:
+  - `state.seoGeo.enabled !== true` → emit `""`
 
-### Tokyo (FAQ spec)
-Update `tokyo/widgets/faq/spec.json` defaults + add a new `<bob-panel id='seo'>`:
-- `state.seoGeo.enabled` (optimization toggle; drives show-if for the rest)
-- `state.seo.*` (schema enablement, business type, product metadata when applicable)
-- `state.geo.*` (answer format, max answer length, deep links)
-- `state.analytics.*` (click/expand tracking toggles)
+Source of truth:
+- `venice/lib/schema/faq.ts`
 
-All SEO/GEO control clusters in the new panel must use `show-if="seoGeo.enabled == true"`.
-
-### Bob compiler
-No special validation/coercion. Bob compiles and passes these fields through as normal instance config.
-
-Relevant entrypoint:
-- `bob/lib/compiler.server.ts`
+## Locale behavior (important)
+- The loader passes `locale` to both the iframe UI (`/e/:publicId`) and the meta payload (`/r/:publicId?meta=1`).
+- Schema/excerpt are generated from the **localized** state for that locale.
+- Host pages should set `data-locale="…"`, matching the page language.
 
 ---
 
-## Phase 2 — SEO output (Schema.org) + GEO output (deep links)
+## Validation checklist (AI-friendly)
 
-### SEO: Schema.org JSON-LD generation
-For indexable embed mode only:
-- Always emit `FAQPage`
-- Additionally emit (based on `seo.businessType`):
-  - `product-seller`: `Product` (+ `Offer` / merchant URLs when present)
-  - `online-service`: `Organization` (or service entity)
-  - `local`: `LocalBusiness`/`Place` (only when explicitly enabled + fields present)
-
-Ownership (deterministic):
-- Venice generates schema at render time from the canonical instance snapshot.
-- Loader injects the returned JSON-LD string into the host `<head>`.
-
-Implementation location (Venice):
-- New helper: `venice/lib/schema/faq.ts`
-- Used by: new `venice/app/r/[publicId]/route.ts` (inline render endpoint)
-
-### GEO: deep links + deep-link activation
-When `geo.enableDeepLinks === true`:
-- Render stable IDs per question (e.g. `id="faq-q-<stableId>"`)
-- Support opening a question when URL hash matches (initial load + `hashchange`)
-
-Implementation location (FAQ runtime):
-- `tokyo/widgets/faq/widget.client.js`
+On any host page using the loader:
+1) Confirm iframe UI renders (network calls to `/e/:publicId` succeed).
+2) Confirm meta-only call happens when SEO/GEO opt-in is used:
+   - request to `/r/:publicId?meta=1`
+3) Confirm host DOM injections exist:
+   - `<head>` contains `script#ck-schema-<publicId>[type="application/ld+json"]` (may be empty if schema is gated off)
+   - DOM contains `details#ck-excerpt-<publicId>` (may be empty if excerpt gated off)
 
 ---
 
-## Phase 3 — SanFrancisco scoring + “Fix All” optimization
+## What is NOT shipped (do not assume)
 
-### Goal
-Show SEO/GEO scores and generate deterministic `ops[]` to fix issues.
-
-### SanFrancisco
-New agent (planned, not in repo yet):
-- `sanfrancisco/src/agents/faqOptimizer.ts`
-
-Prompt modules (kept small and typed, no prose returns):
-- SEO scorer (returns JSON score + issues)
-- GEO scorer (returns JSON score + issues)
-- Answer reformatter (direct-first) (returns JSON + rewritten answer)
-
-### Paris (gateway)
-Paris is a Cloudflare Worker router in `paris/src/index.ts` (not Next.js route files).
-
-Add endpoints:
-- `POST /api/ai/faq/analyze`
-- `POST /api/ai/faq/optimize`
-- `POST /api/ai/faq/generate`
-
-Auth model stays consistent with current repo architecture (dev gating via `PARIS_DEV_JWT` today; production will evolve).
-
-### Bob UI
-Add a sidebar panel for FAQ scoring + actions:
-- “SEO score / GEO score”
-- “Fix all” (applies returned ops via `bob/lib/ops.ts`)
-
-### GEO rewrite UX (explicit)
-GEO rewrites must never happen silently.
-Flow:
-- User triggers “Rewrite to direct-first” (or “Fix all GEO issues”).
-- SanFrancisco returns deterministic `ops[]` (set paths for answers).
-- Bob applies ops locally and uses the standard Keep/Undo decision.
+- Host-page deep links for iframe++ (cross-frame citation/scroll) are not shipped.
+- Rich schema variants (Organization/LocalBusiness/etc.) are not shipped.
+- Any “SEO suite” controls (keywords, robots.txt editor, SERP tooling) are out of scope.
 
 ---
 
-## Notes (contracts)
+## How this scales to new widgets
 
-- SEO is not only local/NAP. Entity schema differs by business type (`Product` vs `Organization` vs `LocalBusiness`).
-- GEO is only: answer structure + answer length + deep-link citation.
-- Keep outputs deterministic:
-  - Strict JSON schemas
-  - Fail-visible missing keys/fields
-  - No silent fallbacks that mask gaps
+For any widget `X`:
+1) Implement `XSchemaJsonLd(state, locale)` and `XExcerptHtml(state, locale)` in Venice.
+2) Register in `venice/lib/schema/index.ts`.
+3) Keep gating consistent (`seoGeo.enabled`, `seo.enableSchema`).

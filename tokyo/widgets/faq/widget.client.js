@@ -18,15 +18,6 @@
     throw new Error('[FAQ] Missing [data-role="faq"] root');
   }
 
-  const titleEl = faqRoot.querySelector('[data-role="faq-title"]');
-  if (!(titleEl instanceof HTMLElement)) {
-    throw new Error('[FAQ] Missing [data-role="faq-title"]');
-  }
-  const headerEl = titleEl.closest('.ck-faq__header');
-  if (!(headerEl instanceof HTMLElement)) {
-    throw new Error('[FAQ] Missing .ck-faq__header');
-  }
-
   const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
   if (!(emptyEl instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq-empty"]');
@@ -122,9 +113,34 @@
 
   function assertFaqState(state) {
     assertObject(state, 'state');
-    assertString(state.title, 'state.title');
-    assertBoolean(state.showTitle, 'state.showTitle');
     assertBoolean(state.displayCategoryTitles, 'state.displayCategoryTitles');
+
+    assertObject(state.header, 'state.header');
+    assertBoolean(state.header.enabled, 'state.header.enabled');
+    assertString(state.header.title, 'state.header.title');
+    assertBoolean(state.header.showSubtitle, 'state.header.showSubtitle');
+    assertString(state.header.subtitleHtml, 'state.header.subtitleHtml');
+    assertString(state.header.alignment, 'state.header.alignment');
+    if (!['left', 'center', 'right'].includes(state.header.alignment)) {
+      throw new Error('[FAQ] state.header.alignment must be left|center|right');
+    }
+    assertString(state.header.placement, 'state.header.placement');
+    if (!['top', 'bottom', 'left', 'right'].includes(state.header.placement)) {
+      throw new Error('[FAQ] state.header.placement must be top|bottom|left|right');
+    }
+    assertString(state.header.ctaPlacement, 'state.header.ctaPlacement');
+    if (!['right', 'below'].includes(state.header.ctaPlacement)) {
+      throw new Error('[FAQ] state.header.ctaPlacement must be right|below');
+    }
+
+    assertObject(state.cta, 'state.cta');
+    assertBoolean(state.cta.enabled, 'state.cta.enabled');
+    assertString(state.cta.label, 'state.cta.label');
+    assertString(state.cta.href, 'state.cta.href');
+    assertString(state.cta.style, 'state.cta.style');
+    if (!['filled', 'outline'].includes(state.cta.style)) {
+      throw new Error('[FAQ] state.cta.style must be filled|outline');
+    }
 
     assertObject(state.layout, 'state.layout');
     if (!['accordion', 'list', 'multicolumn'].includes(state.layout.type)) {
@@ -149,6 +165,9 @@
     assertFill(state.appearance.linkUnderlineColor, 'state.appearance.linkUnderlineColor');
     assertFill(state.appearance.linkHighlightColor, 'state.appearance.linkHighlightColor');
     assertFill(state.appearance.linkTextColor, 'state.appearance.linkTextColor');
+    assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
+    assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
+    assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
@@ -188,9 +207,6 @@
     assertObject(state.typography, 'state.typography');
 
     assertObject(state.geo, 'state.geo');
-    if (!['direct-first', 'detailed'].includes(state.geo.answerFormat)) {
-      throw new Error('[FAQ] state.geo.answerFormat must be direct-first|detailed');
-    }
     assertBoolean(state.geo.enableDeepLinks, 'state.geo.enableDeepLinks');
 
     if (state.context != null) {
@@ -581,14 +597,17 @@
     }
     window.CKTypography.applyTypography(state.typography, faqRoot, {
       title: { varKey: 'title' },
+      body: { varKey: 'body' },
       section: { varKey: 'section' },
       question: { varKey: 'question' },
       answer: { varKey: 'answer' },
+      button: { varKey: 'button' },
     });
 
-    titleEl.textContent = state.title;
-    titleEl.hidden = state.showTitle !== true;
-    headerEl.hidden = state.showTitle !== true;
+    if (!window.CKHeader?.applyHeader) {
+      throw new Error('[FAQ] Missing CKHeader.applyHeader');
+    }
+    window.CKHeader.applyHeader(state, widgetRoot);
 
     applyAccordionIcons(state.appearance.iconStyle);
 

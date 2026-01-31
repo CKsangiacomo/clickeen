@@ -92,31 +92,13 @@ body {
 }
 
 .ck-faq {
-  display: grid;
-  gap: var(--layout-gap, var(--space-4));
-  grid-template-columns: 1fr;
+  --ck-header-gap: var(--layout-gap, var(--space-4));
+  --ck-header-inner-gap: var(--space-3);
   padding: 0;
   background: transparent;
   box-sizing: border-box;
   --faq-card-border-width: 1px;
   --faq-card-border-color: var(--color-system-gray-5);
-}
-
-.ck-faq__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.ck-faq__title {
-  margin: 0;
-  font-family: var(--typo-title-family, var(--font-ui));
-  font-style: var(--typo-title-style, normal);
-  font-weight: var(--typo-title-weight, 600);
-  font-size: var(--typo-title-size, var(--fs-18));
-  line-height: var(--lh-tight);
-  color: var(--typo-title-color);
 }
 
 .ck-faq__list {
@@ -320,10 +302,6 @@ body {
 }
 
 @media (max-width: 900px) {
-  .ck-faq__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
   .ck-faq[data-layout='multicolumn'] .ck-faq__list {
     grid-template-columns: repeat(var(--faq-columns-mobile, 1), minmax(0, 1fr));
   }

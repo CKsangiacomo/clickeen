@@ -10,7 +10,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "世界中のチームから信頼されています。"
     },
     {

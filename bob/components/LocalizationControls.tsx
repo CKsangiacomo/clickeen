@@ -243,8 +243,9 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
 
   return (
     <div className="tdmenucontent__cluster">
-      {showSelector ? (
-        <>
+      <div className="tdmenucontent__cluster-body">
+        {showSelector ? (
+          <>
           <div
             key={localeOptionsKey}
             ref={dropdownRef}
@@ -331,13 +332,13 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               </button>
             </div>
           ) : null}
-        </>
-      ) : null}
+          </>
+        ) : null}
 
-      {showFooter ? (
-        <>
-          {isLocaleMode ? (
-            <>
+        {showFooter ? (
+          <>
+            {isLocaleMode ? (
+              <>
               <div className="settings-panel__actions">
                 <button
                   className="diet-btn-txt"
@@ -366,18 +367,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
                   translations.
                 </div>
               ) : null}
-            </>
-          ) : null}
-          {isLocaleMode && hasManualOverrides ? (
-            <div className="settings-panel__success">
-              Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Revert to
-              auto-translate&quot; to remove overrides.
-            </div>
-          ) : null}
-          {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}
-          {translateNote ? <div className="settings-panel__note">{translateNote}</div> : null}
-        </>
-      ) : null}
+              </>
+            ) : null}
+            {isLocaleMode && hasManualOverrides ? (
+              <div className="settings-panel__success">
+                Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Revert to
+                auto-translate&quot; to remove overrides.
+              </div>
+            ) : null}
+            {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}
+            {translateNote ? <div className="settings-panel__note">{translateNote}</div> : null}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

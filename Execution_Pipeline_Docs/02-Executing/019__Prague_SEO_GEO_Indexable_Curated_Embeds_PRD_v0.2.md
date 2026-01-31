@@ -1,7 +1,7 @@
-# Prague SEO/GEO Discoverability (Iframe++) for Curated Embeds — (FAQ → Countdown → Logo Showcase)
+# Prague SEO/GEO Optimization (Iframe++) for Curated Embeds — (FAQ → Countdown → Logo Showcase)
 
 **Status:** EXECUTING  
-**Priority:** P0 (unblocks Prague + customer embed discoverability)  
+**Priority:** P0 (unblocks Prague + customer embeds SEO/GEO)  
 **Owner:** Product Dev Team (Bob/Widgets/Venice) + GTM Dev Team (Prague)  
 **Date:** 2026-01-30  
 
@@ -18,7 +18,7 @@ Iframe is correct for:
 - predictable styling
 - safety for 3P pages
 
-But it’s weak for **discoverability**:
+But it’s weak for **SEO/GEO**:
 - **SEO:** JSON‑LD + semantic “answer text” live inside the iframe document, not the host page.
 - **GEO / AI answers:** extractable, attributable answers are harder to read/cite when they only exist inside an iframe.
 
@@ -28,7 +28,7 @@ We want a scalable baseline that works for **100s of widgets**, **all locales**,
 
 ## 2) Core Decision (v0.2)
 
-**We ship “Iframe++ Discoverability”:**
+**We ship “Iframe++ SEO/GEO optimization”:**
 - **UI stays in iframe** (always)
 - The embed additionally injects into the **host page**:
   - **JSON‑LD** (when enabled)
@@ -58,16 +58,16 @@ FAQ schema is emitted only when:
 ## 4) Goals
 
 ### 4.1 Functional goals
-1) Prague can render curated creatives with **discoverability** enabled (FAQ first).
+1) Prague can render curated creatives with **SEO/GEO optimization** enabled (FAQ first).
 2) Bob exposes **two deterministic snippets**:
    - Safe embed (iframe)
-   - Discoverability embed (iframe++: JSON‑LD + excerpt)
+   - SEO/GEO embed (iframe++: JSON‑LD + excerpt)
 3) We establish the pattern that extends to Countdown + Logo Showcase without re-architecture.
 
 ### 4.2 Platform goals
 4) No Prague-only hacks: Prague uses the **same primitive** customers embed.
-5) Discoverability must be deterministic per instance + locale.
-6) Discoverability must never break UI rendering (UI is always iframe).
+5) SEO/GEO must be deterministic per instance + locale.
+6) SEO/GEO must never break UI rendering (UI is always iframe).
 
 ---
 
@@ -82,9 +82,9 @@ FAQ schema is emitted only when:
 
 ## 6) Proposed Solution (v0.2)
 
-### 6.1 Define “Discoverability” (Iframe++)
+### 6.1 Define “SEO/GEO optimization” (Iframe++)
 
-**Discoverability = iframe UI + host-page metadata:**
+**SEO/GEO optimization = iframe UI + host-page metadata:**
 - Inject JSON‑LD into host `<head>` (when schema is enabled).
 - Inject a readable excerpt into the host DOM (below the embed), so bots/AI can parse text even if they don’t execute iframe content.
 
@@ -94,7 +94,7 @@ FAQ schema is emitted only when:
   src=".../embed/latest/loader.js"
   data-public-id="..."
   data-trigger="immediate"
-  data-discoverability="true"
+  data-ck-optimization="seo-geo"
 ></script>
 ```
 
@@ -109,32 +109,32 @@ Excerpt contract:
 - Widget-type specific (FAQ: list of Q/A)
 - Size bounded (avoid unbounded DOM/HTML)
 
-### 6.3 Venice loader v2: inject discoverability without changing UI mode
+### 6.3 Venice loader v2: inject SEO/GEO metadata without changing UI mode
 
-Add `data-discoverability="true"` behavior:
+Add `data-ck-optimization="seo-geo"` behavior:
 - Always mount iframe UI (existing behavior)
 - Additionally fetch `/r/:publicId?meta=1` and inject:
   - `schemaJsonLd` → `<script type="application/ld+json" id="ck-schema-${publicId}">…</script>` in `<head>`
   - `excerptHtml` → `<details id="ck-excerpt-${publicId}">…</details>` below the embed
 
 Failure behavior (must be true):
-- If meta fetch fails, **UI still renders** (discoverability silently absent).
+- If meta fetch fails, **UI still renders** (SEO/GEO silently absent).
 
-### 6.4 Bob: expose discoverability snippet (not shadow UI)
+### 6.4 Bob: expose SEO/GEO snippet (not shadow UI)
 
 In the Settings → Embed section:
 - Always show safe embed snippet (iframe)
-- When `seoGeo.enabled === true`, also show discoverability snippet:
-  - Uses `data-discoverability="true"`
-  - Preview uses `bob/app/bob/preview-shadow/page.tsx?mode=discoverability` (reuses existing page)
+- When `seoGeo.enabled === true`, also show SEO/GEO snippet:
+  - Uses `data-ck-optimization="seo-geo"`
+  - Preview uses `bob/app/bob/preview-shadow/page.tsx?mode=seo-geo` (reuses existing page)
 
-### 6.5 Prague: enable discoverability for curated embeds (FAQ first)
+### 6.5 Prague: enable SEO/GEO optimization for curated embeds (FAQ first)
 
-Prague keeps using iframe UI, but when a block opts into discoverability:
-- Use loader v2 with `data-discoverability="true"`
+Prague keeps using iframe UI, but when a block opts into SEO/GEO optimization:
+- Use loader v2 with `data-ck-optimization="seo-geo"`
 - Pass explicit `data-locale` from the route locale
 
-Note: Prague’s `embedMode: "indexable"` is kept as the switch for v0.2 (to avoid content schema churn). In v0.3 we rename to `discoverability` for clarity.
+Note: Prague’s `embedMode: "indexable"` is kept as the switch for v0.2 (to avoid content schema churn). In v0.3 we rename to `seo-geo` for clarity.
 
 ---
 
@@ -151,8 +151,8 @@ MUST NOT:
 ### 7.2 Venice (service + loader)
 MUST:
 - Keep schema + excerpt deterministic and sanitized.
-- Provide `meta=1` payload to minimize work for discoverability injection.
-- Never block iframe UI rendering if discoverability fails.
+- Provide `meta=1` payload to minimize work for SEO/GEO injection.
+- Never block iframe UI rendering if SEO/GEO fails.
 
 MUST NOT:
 - Add Prague-only branches.
@@ -164,7 +164,7 @@ MUST:
 
 ### 7.4 Bob (editor)
 MUST:
-- Provide deterministic embed output for safe vs discoverability.
+- Provide deterministic embed output for safe vs SEO/GEO.
 - Reflect entitlements faithfully (no “looks enabled but isn’t”).
 
 ### 7.5 Paris / Policy
@@ -189,13 +189,13 @@ seoGeo.enabled | flag | seoGeo.enabled | load+ops+publish | deny ops/publish whe
 1) Add `excerptHtml` generation for FAQ from localized state.
 2) Add `/r/:publicId?meta=1` response shape for loader use.
 
-### Phase B — Loader discoverability injection
-3) Add `data-discoverability="true"` support (meta fetch + inject schema + excerpt).
+### Phase B — Loader SEO/GEO injection
+3) Add `data-ck-optimization="seo-geo"` support (meta fetch + inject schema + excerpt).
 4) Keep iframe as the only UI mode for public embeds (shadow stays internal/legacy).
 
 ### Phase C — Bob + Prague integration (FAQ first)
-5) Bob: show discoverability snippet + preview.
-6) Prague: enable discoverability on the FAQ page block that opts into `embedMode: "indexable"`.
+5) Bob: show SEO/GEO snippet + preview.
+6) Prague: enable SEO/GEO on the FAQ page block that opts into `embedMode: "indexable"`.
 
 ### Phase D — Extend to Countdown + Logo Showcase
 7) Add widget-specific `excerptHtml` + schema generators:
@@ -208,13 +208,13 @@ seoGeo.enabled | flag | seoGeo.enabled | load+ops+publish | deny ops/publish whe
 
 Prague (FAQ):
 - UI renders in iframe (unchanged).
-- When discoverability is enabled and `seoGeo.enabled=true`:
+- When SEO/GEO is enabled and `seoGeo.enabled=true`:
   - Host `<head>` contains `application/ld+json` for the instance.
   - Host DOM contains a readable excerpt for the instance (localized).
 
 Bob:
 - Safe snippet always available.
-- Discoverability snippet appears only when `seoGeo.enabled=true`.
+- SEO/GEO snippet appears only when `seoGeo.enabled=true`.
 
 Platform:
 - One embed primitive scales to Prague + customers (no Prague-only schema logic).
@@ -234,8 +234,8 @@ Platform:
 
 ## 12) Decisions (Locked for v0.2)
 
-1) UI remains iframe-first. Discoverability is an add-on layer.
-2) No Shadow DOM UI requirement for discoverability.
+1) UI remains iframe-first. SEO/GEO is an add-on layer.
+2) No Shadow DOM UI requirement for SEO/GEO.
 3) FAQ is the template; Countdown/Logo adopt the same pattern.
 
 ---

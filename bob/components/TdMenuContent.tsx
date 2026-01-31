@@ -665,6 +665,10 @@ function applyGroupHeaders(scope: HTMLElement) {
   scope.appendChild(rebuilt);
 }
 
+function getClusterBody(cluster: HTMLElement): HTMLElement | null {
+  return cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
+}
+
 function normalizeBobPath(raw: string): string {
   return String(raw || '')
     .replace(/\[(\d+)\]/g, '.$1')
@@ -791,12 +795,36 @@ function autoNestShowIfDependentClusters(scope: HTMLElement) {
   topLevelClusters.forEach((cluster, idx) => {
     const controller = findControllingCluster(cluster);
     if (controller && controller !== cluster && !controller.contains(cluster)) {
-      controller.appendChild(cluster);
+      const body = getClusterBody(controller);
+      (body ?? controller).appendChild(cluster);
     }
 
     clusterOrder.set(cluster, idx);
     registerClusterPaths(cluster);
   });
+}
+
+function installClusterCollapseBehavior(container: HTMLElement): () => void {
+  const onClick = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest<HTMLButtonElement>('.tdmenucontent__cluster-toggle');
+    if (!button) return;
+    const cluster = button.closest<HTMLElement>('.tdmenucontent__cluster');
+    if (!cluster) return;
+    const body = getClusterBody(cluster);
+    if (!body) return;
+
+    const collapsed = cluster.dataset.collapsed === 'true';
+    const nextCollapsed = !collapsed;
+    cluster.dataset.collapsed = nextCollapsed ? 'true' : 'false';
+    body.toggleAttribute('hidden', nextCollapsed);
+    button.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true');
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  container.addEventListener('click', onClick);
+  return () => container.removeEventListener('click', onClick);
 }
 
 export function TdMenuContent({
@@ -885,9 +913,10 @@ export function TdMenuContent({
     autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
-      const body = cluster.querySelector<HTMLElement>(':scope > .tdmenucontent__cluster-body');
+      const body = getClusterBody(cluster);
       applyGroupHeaders(body ?? cluster);
     });
+    const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
 
@@ -909,6 +938,10 @@ export function TdMenuContent({
           console.error('[TdMenuContent] Failed to load Dieter assets', err);
         }
       });
+
+    return () => {
+      cleanupCollapse();
+    };
   }, [panelHtml, dieterAssets, session.compiled?.widgetname]);
 
   // Bind controls: render values from instanceData, emit strict ops, honor showIf

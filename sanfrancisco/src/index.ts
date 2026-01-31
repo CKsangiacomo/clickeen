@@ -665,7 +665,8 @@ async function handlePragueStringsTranslate(request: Request, env: Env): Promise
   inflight++;
   try {
     const environment = asTrimmedString(env.ENVIRONMENT);
-    if (environment !== 'local') {
+    // Allow in local dev and cloud-dev (sanfrancisco-dev). Keep disabled in other environments.
+    if (environment !== 'local' && environment !== 'dev') {
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     }
 

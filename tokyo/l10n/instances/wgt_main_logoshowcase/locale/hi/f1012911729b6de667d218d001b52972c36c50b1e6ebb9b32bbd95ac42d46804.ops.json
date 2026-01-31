@@ -9,7 +9,7 @@
     },
     {
       "op": "set",
-      "path": "header.textHtml",
+      "path": "header.subtitleHtml",
       "value": "दुनिया भर की टीमों द्वारा विश्वसनीय।"
     },
     {
