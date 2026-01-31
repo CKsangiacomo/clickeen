@@ -360,7 +360,10 @@ function serveStatic(req, res, prefix) {
     return false;
   }
 
-  const relativePathPosix = pathname.slice(1); // drop leading "/"
+  let relativePathPosix = pathname.slice(1); // drop leading "/"
+  if (prefix === '/l10n/' && relativePathPosix.startsWith('l10n/v/')) {
+    relativePathPosix = relativePathPosix.replace(/^l10n\/v\/[^/]+\//, 'l10n/');
+  }
   const relativePath = relativePathPosix; // keep naming for existing logic
   const cacheControlFor = () => {
     // Cache policy:

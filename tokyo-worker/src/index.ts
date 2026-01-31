@@ -1053,6 +1053,14 @@ export default {
         return withCors(await handlePutL10nOverlay(req, env, publicId, layer, layerKey));
       }
 
+      const l10nVersionedMatch = pathname.match(/^\/l10n\/v\/[^/]+\/(.+)$/);
+      if (l10nVersionedMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const rest = l10nVersionedMatch[1];
+        const key = `l10n/${rest}`;
+        return withCors(await handleGetL10nAsset(env, key));
+      }
+
       if (pathname.startsWith('/l10n/')) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const key = pathname.replace(/^\//, '');
