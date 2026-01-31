@@ -11,7 +11,8 @@
 - `GET /curated-assets/**` (public, cacheable)
 - `POST /l10n/publish` (internal; publish or delete a layer overlay; body: `{ publicId, layer, layerKey, action? }`)
 - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)
-- `GET /l10n/**` (public; deterministic overlay paths, immutable)
+- `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
+- `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague; token is ignored for storage keys)
 
 ## Dependencies
 - Supabase (service role) for `widget_instance_overlays` + `l10n_publish_state`
@@ -39,6 +40,9 @@
 - Overlay files are set-only ops with `baseFingerprint` (required).
 - `publicId` is locale-free; locale is a runtime parameter.
 - Prague website strings are not handled here; they are published by `scripts/prague-l10n/*` into `tokyo/l10n/prague/**` (repo-owned base + ops overlays).
+- Cache semantics:
+  - `.../index.json` is mutable and served with a short TTL (`cache-control: public, max-age=60`).
+  - Fingerprinted overlay files are immutable (`cache-control: public, max-age=31536000, immutable`).
 
 ## Links
 - Tokyo: `documentation/services/tokyo.md`

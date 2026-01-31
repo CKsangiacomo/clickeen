@@ -10,7 +10,7 @@
   - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
   - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
-- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are served by Tokyo under `tokyo/l10n/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
+- Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
 
 ## Dependencies
 - Used by: Venice, Bob, Prague
@@ -71,6 +71,7 @@ Local dev:
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/curated-assets/*` from `tokyo/curated-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
+- `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
   - `POST /curated-assets/upload` (curated instance assets; required headers: `x-public-id`, `x-widget-type`)
@@ -107,7 +108,8 @@ Cloud-dev:
   - `POST /curated-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required headers: `x-public-id`, `x-widget-type`)
   - `GET /curated-assets/**` (public, cacheable; content-addressed by `assetId`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
-  - `GET /l10n/**` (public; deterministic overlay paths, immutable)
+  - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
+  - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague)
   - `/l10n/publish` (internal) materializes Supabase overlays into R2
 
 Security rule (executed):
