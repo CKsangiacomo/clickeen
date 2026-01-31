@@ -137,9 +137,11 @@
     assertBoolean(state.cta.enabled, 'state.cta.enabled');
     assertString(state.cta.label, 'state.cta.label');
     assertString(state.cta.href, 'state.cta.href');
-    assertString(state.cta.style, 'state.cta.style');
-    if (!['filled', 'outline'].includes(state.cta.style)) {
-      throw new Error('[FAQ] state.cta.style must be filled|outline');
+    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
+    assertString(state.cta.iconName, 'state.cta.iconName');
+    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
+    if (!['left', 'right'].includes(state.cta.iconPlacement)) {
+      throw new Error('[FAQ] state.cta.iconPlacement must be left|right');
     }
 
     assertObject(state.layout, 'state.layout');
@@ -167,7 +169,20 @@
     assertFill(state.appearance.linkTextColor, 'state.appearance.linkTextColor');
     assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
     assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
+    assertBorderConfig(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
     assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
+    assertString(state.appearance.ctaSizePreset, 'state.appearance.ctaSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaSizePreset)) {
+      throw new Error('[FAQ] state.appearance.ctaSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
+    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
+    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
+    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaIconSizePreset)) {
+      throw new Error('[FAQ] state.appearance.ctaIconSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
     if (!['plus', 'chevron', 'arrow', 'arrowshape'].includes(state.appearance.iconStyle)) {
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }

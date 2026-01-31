@@ -50,7 +50,7 @@ export function buildTypographyPanel(args: {
     { key: 'heading', label: 'Heading' },
     { key: 'timer', label: 'Timer' },
     { key: 'label', label: 'Labels' },
-    { key: 'button', label: 'Buttons' },
+    { key: 'button', label: 'CTA' },
   ].filter((entry) => args.roles && Object.prototype.hasOwnProperty.call(args.roles, entry.key));
 
   if (roleEntries.length === 0) return [];

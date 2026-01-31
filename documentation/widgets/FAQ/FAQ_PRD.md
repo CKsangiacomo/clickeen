@@ -161,6 +161,9 @@ Controls:
   - `cta.enabled`
   - `cta.label`
   - `cta.href`
+  - `cta.iconEnabled`
+  - `cta.iconName` (allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
+  - `cta.iconPlacement` (`left|right`)
 - `displayCategoryTitles` (toggle)
 
 Localization:
@@ -224,8 +227,14 @@ Widget appearance controls (spec-defined):
 - Header CTA (compiler-injected when `defaults.header` + `defaults.cta` exist):
   - `appearance.ctaBackground`
   - `appearance.ctaTextColor`
+  - `appearance.ctaBorder`
   - `appearance.ctaRadius`
-  - `cta.style`
+  - `appearance.ctaSizePreset` (editor preset selector; expands to button typography size + CTA padding)
+  - `appearance.ctaPaddingLinked`
+  - `appearance.ctaPaddingInline`
+  - `appearance.ctaPaddingBlock`
+  - `appearance.ctaIconSizePreset` (editor preset selector; expands to `appearance.ctaIconSize`)
+  - `appearance.ctaIconSize`
 - Stage/Pod (background + pod border):
   - `stage.background`
   - `pod.background`

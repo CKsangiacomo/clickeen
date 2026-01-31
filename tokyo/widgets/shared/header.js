@@ -19,6 +19,12 @@
     }
   }
 
+  function assertNumber(value, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error(`[CKHeader] ${path} must be a finite number`);
+    }
+  }
+
   function sanitizeInlineHtml(html, allowLinks) {
     var wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
@@ -105,6 +111,32 @@
     return 'var(--control-radius-' + normalized + ')';
   }
 
+  function resolveAssetOrigin(widgetRoot) {
+    try {
+      var raw = window.getComputedStyle(widgetRoot).getPropertyValue('--ck-asset-origin');
+      var trimmed = String(raw || '').trim();
+      return trimmed.replace(/\/$/, '');
+    } catch {
+      return '';
+    }
+  }
+
+  function normalizeIconName(raw) {
+    var v = String(raw || '').trim();
+    if (!v) return '';
+    if (v.includes('/') || v.includes('\\') || v.includes('..')) return '';
+    if (!/^[a-z0-9.-]+$/i.test(v)) return '';
+    return v;
+  }
+
+  var ALLOWED_CTA_ICONS = [
+    'checkmark',
+    'arrow.right',
+    'chevron.right',
+    'arrowshape.forward',
+    'arrowshape.turn.up.right',
+  ];
+
   function applyHeader(state, widgetRoot) {
     if (!(widgetRoot instanceof HTMLElement)) {
       throw new Error('[CKHeader] applyHeader expects widgetRoot HTMLElement');
@@ -142,9 +174,11 @@
     assertBoolean(state.cta.enabled, 'state.cta.enabled');
     assertString(state.cta.label, 'state.cta.label');
     assertString(state.cta.href, 'state.cta.href');
-    assertString(state.cta.style, 'state.cta.style');
-    if (state.cta.style !== 'filled' && state.cta.style !== 'outline') {
-      throw new Error('[CKHeader] state.cta.style must be filled|outline');
+    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
+    assertString(state.cta.iconName, 'state.cta.iconName');
+    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
+    if (state.cta.iconPlacement !== 'left' && state.cta.iconPlacement !== 'right') {
+      throw new Error('[CKHeader] state.cta.iconPlacement must be left|right');
     }
 
     var layoutEl = widgetRoot.querySelector('.ck-headerLayout');
@@ -172,6 +206,29 @@
       throw new Error('[CKHeader] Missing [data-role="header-cta"]');
     }
 
+    var ctaLabelEl = ctaEl.querySelector('.ck-header__ctaLabel');
+    if (!(ctaLabelEl instanceof HTMLElement)) {
+      var legacy = ctaEl.textContent || '';
+      while (ctaEl.firstChild) ctaEl.removeChild(ctaEl.firstChild);
+      var iconEl = document.createElement('span');
+      iconEl.className = 'ck-header__ctaIcon';
+      iconEl.setAttribute('aria-hidden', 'true');
+      var labelEl = document.createElement('span');
+      labelEl.className = 'ck-header__ctaLabel';
+      labelEl.textContent = legacy;
+      ctaEl.appendChild(iconEl);
+      ctaEl.appendChild(labelEl);
+      ctaLabelEl = labelEl;
+    }
+
+    var ctaIconEl = ctaEl.querySelector('.ck-header__ctaIcon');
+    if (!(ctaIconEl instanceof HTMLElement)) {
+      ctaIconEl = document.createElement('span');
+      ctaIconEl.className = 'ck-header__ctaIcon';
+      ctaIconEl.setAttribute('aria-hidden', 'true');
+      ctaEl.insertBefore(ctaIconEl, ctaLabelEl);
+    }
+
     var hasHeader = state.header.enabled === true;
     layoutEl.dataset.hasHeader = hasHeader ? 'true' : 'false';
     layoutEl.dataset.headerPlacement = hasHeader ? state.header.placement : 'top';
@@ -192,8 +249,7 @@
     var hasCta = hasHeader && state.cta.enabled === true;
     headerEl.dataset.cta = hasCta ? 'true' : 'false';
     ctaEl.hidden = !hasCta;
-    ctaEl.textContent = state.cta.label;
-    ctaEl.setAttribute('data-variant', state.cta.style);
+    ctaLabelEl.textContent = state.cta.label;
 
     var href = normalizeHttpUrl(state.cta.href);
     if (hasCta && href) {
@@ -206,9 +262,53 @@
       ctaEl.tabIndex = -1;
     }
 
+    var iconEnabled = hasCta && state.cta.iconEnabled === true;
+    var iconName = iconEnabled ? normalizeIconName(state.cta.iconName) : '';
+    if (iconEnabled && !iconName) {
+      throw new Error('[CKHeader] state.cta.iconName must be a non-empty icon id');
+    }
+    if (iconEnabled && ALLOWED_CTA_ICONS.indexOf(iconName) === -1) {
+      throw new Error(
+        '[CKHeader] state.cta.iconName must be one of: ' + ALLOWED_CTA_ICONS.join(', '),
+      );
+    }
+    ctaIconEl.hidden = !iconEnabled;
+    ctaEl.dataset.iconPlacement = state.cta.iconPlacement;
+    if (iconEnabled) {
+      var assetOrigin = resolveAssetOrigin(widgetRoot) || window.location.origin;
+      layoutEl.style.setProperty('--ck-header-cta-icon', 'url("' + assetOrigin + '/dieter/icons/svg/' + iconName + '.svg")');
+    } else {
+      layoutEl.style.setProperty('--ck-header-cta-icon', 'none');
+    }
+
     layoutEl.style.setProperty('--ck-header-cta-bg', resolveFillBackground(state.appearance.ctaBackground));
     layoutEl.style.setProperty('--ck-header-cta-fg', resolveFillColor(state.appearance.ctaTextColor));
     layoutEl.style.setProperty('--ck-header-cta-radius', tokenizeRadius(state.appearance.ctaRadius));
+    assertObject(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
+    assertBoolean(state.appearance.ctaBorder.enabled, 'state.appearance.ctaBorder.enabled');
+    assertNumber(state.appearance.ctaBorder.width, 'state.appearance.ctaBorder.width');
+    assertString(state.appearance.ctaBorder.color, 'state.appearance.ctaBorder.color');
+    if (state.appearance.ctaBorder.width < 0 || state.appearance.ctaBorder.width > 12) {
+      throw new Error('[CKHeader] state.appearance.ctaBorder.width must be 0..12');
+    }
+    layoutEl.style.setProperty(
+      '--ck-header-cta-border-width',
+      state.appearance.ctaBorder.enabled === true ? String(state.appearance.ctaBorder.width) + 'px' : '0px',
+    );
+    layoutEl.style.setProperty(
+      '--ck-header-cta-border-color',
+      state.appearance.ctaBorder.enabled === true ? String(state.appearance.ctaBorder.color) : 'transparent',
+    );
+
+    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
+    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
+    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
+    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
+    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
+
+    layoutEl.style.setProperty('--ck-header-cta-padding-inline', String(state.appearance.ctaPaddingInline) + 'px');
+    layoutEl.style.setProperty('--ck-header-cta-padding-block', String(state.appearance.ctaPaddingBlock) + 'px');
+    layoutEl.style.setProperty('--ck-header-cta-icon-size', String(state.appearance.ctaIconSize) + 'px');
   }
 
   window.CKHeader = window.CKHeader || {};

@@ -5,8 +5,10 @@
     "cta": {
       "href": "https://example.com/contact",
       "label": "Contact us",
-      "style": "filled",
-      "enabled": true
+      "enabled": true,
+      "iconEnabled": false,
+      "iconName": "arrow.right",
+      "iconPlacement": "right"
     },
     "pod": {
       "radius": "4xl",
@@ -375,6 +377,17 @@
       "logoOpacity": 0.9,
       "ctaTextColor": "var(--color-system-white)",
       "ctaBackground": "var(--color-system-blue)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-blue)"
+      },
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 16,
+      "ctaPaddingBlock": 12,
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
       "itemBackground": "transparent"
     },
     "typeConfig": {

@@ -184,9 +184,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
   - **how**:
     - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
-    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`
+    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
     - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`
-    - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaRadius`, `cta.style`
+    - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
 
 ### Panel: Layout (common)
 - **Logo size**: `spacing.logoHeight` (used for both desktop + mobile)
@@ -241,9 +241,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: header title/subtitle font + text color
   - **how**: `CKTypography.applyTypography(...)` (no Appearance-level header text color controls)
 
-- **CTA styling**: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaRadius`, `cta.style`
-  - **changes**: CTA colors + radius + filled/outline
-  - **how**: `CKHeader.applyHeader(...)` writes `--ck-header-cta-bg`, `--ck-header-cta-fg`, `--ck-header-cta-radius` on `.ck-headerLayout`
+- **CTA styling**: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
+  - **changes**: CTA colors + border + radius + padding/icon sizing presets
+  - **how**: `CKHeader.applyHeader(...)` writes `--ck-header-cta-bg`, `--ck-header-cta-fg`, `--ck-header-cta-border-*`, `--ck-header-cta-radius`, `--ck-header-cta-padding-*`, `--ck-header-cta-icon-size` on `.ck-headerLayout`
 
 - **Stage/Pod appearance (platform)**: `stage.background`, `pod.background`
   - **changes**: container fills

@@ -97,7 +97,9 @@
       "enabled": false,
       "label": "Contact us",
       "href": "https://example.com",
-      "style": "filled"
+      "iconEnabled": false,
+      "iconName": "arrow.right",
+      "iconPlacement": "right"
     },
     "layout": {
       "gap": 16,
@@ -193,7 +195,18 @@
       "linkUnderlineColor": "var(--color-system-blue)",
       "ctaBackground": "var(--color-system-blue)",
       "ctaTextColor": "var(--color-system-white)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-blue)"
+      },
       "ctaRadius": "md",
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 16,
+      "ctaPaddingBlock": 12,
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
       "podBorder": {
         "color": "var(--color-system-gray-5)",
         "width": 1,

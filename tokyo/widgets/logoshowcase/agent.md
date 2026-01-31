@@ -61,7 +61,9 @@ Content:
   - `cta.enabled` (boolean)
   - `cta.label` (string)
   - `cta.href` (string; only valid `http(s)://` is clickable)
-  - `cta.style` (`filled` | `outline`)
+  - `cta.iconEnabled` (boolean; when true, CTA renders a Dieter icon)
+  - `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
+  - `cta.iconPlacement` (`left` | `right`)
 
 Type:
 - `type` (`grid` | `carousel`)
@@ -90,7 +92,14 @@ Appearance:
 - CTA appearance:
   - `appearance.ctaBackground` (fill object; type: color)
   - `appearance.ctaTextColor` (fill object; type: color)
+  - `appearance.ctaBorder` (object; Dieter `dropdown-border` schema)
   - `appearance.ctaRadius` (radius token, e.g. `none|sm|md|lg|xl|2xl`)
+  - `appearance.ctaSizePreset` (`xs` | `s` | `m` | `l` | `xl` | `custom`; editor preset selector)
+  - `appearance.ctaPaddingLinked` (boolean; editor-only link/unlink for CTA padding)
+  - `appearance.ctaPaddingInline` (number; px)
+  - `appearance.ctaPaddingBlock` (number; px)
+  - `appearance.ctaIconSizePreset` (`xs` | `s` | `m` | `l` | `xl` | `custom`; editor preset selector)
+  - `appearance.ctaIconSize` (number; px)
 
 Behavior / Settings:
 - `behavior.randomOrder` (boolean; deterministic shuffle per strip using ids)

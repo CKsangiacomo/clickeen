@@ -99,10 +99,19 @@ MUST
   - `cta.enabled` (boolean)
   - `cta.label` (string)
   - `cta.href` (string)
-  - `cta.style` (`filled|outline`)
+  - `cta.iconEnabled` (boolean)
+  - `cta.iconName` (string; Dieter icon id without `.svg`, e.g. `arrow.right`)
+  - `cta.iconPlacement` (`left|right`)
   - `appearance.ctaBackground` (fill **or** CSS color string; color only)
   - `appearance.ctaTextColor` (fill **or** CSS color string; color only)
+  - `appearance.ctaBorder` (object; Dieter `dropdown-border` schema)
   - `appearance.ctaRadius` (`none|sm|md|lg|xl|2xl`)
+  - `appearance.ctaSizePreset` (`xs|s|m|l|xl|custom`; editor preset selector for CTA sizing)
+  - `appearance.ctaPaddingLinked` (boolean; editor-only link/unlink for CTA padding)
+  - `appearance.ctaPaddingInline` (number; px)
+  - `appearance.ctaPaddingBlock` (number; px)
+  - `appearance.ctaIconSizePreset` (`xs|s|m|l|xl|custom`; editor preset selector for CTA icon sizing)
+  - `appearance.ctaIconSize` (number; px)
 - Use this DOM structure (inside the widget root):
   - `.ck-headerLayout` contains:
     - `.ck-header` (direct child)
@@ -112,6 +121,8 @@ MUST
     - `.ck-headerLayout__body` (direct child; holds widget-specific content)
 - Localize `header.title`, `header.subtitleHtml`, and `cta.label` in `localization.json`.
 - Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
+- Note on CTA sizing presets:
+  - In Bob, `appearance.ctaSizePreset` and `appearance.ctaIconSizePreset` are **preset selectors** (editor convenience). Selecting a preset expands into concrete state writes (typography button size + CTA padding/icon size). If any of the target values are edited manually, Bob resets the preset selector to `custom`.
 
 MUST NOT
 - Reimplement header layout/CTA styling per widget (use the shared primitive).

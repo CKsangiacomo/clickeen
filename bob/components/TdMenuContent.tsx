@@ -1136,6 +1136,20 @@ export function TdMenuContent({
             );
             continue;
           }
+
+          if (op.path === 'appearance.ctaPaddingLinked') {
+            const nextLinked = op.value;
+            if (nextLinked === true) {
+              const inlineValue = getAt<unknown>(instanceData, 'appearance.ctaPaddingInline');
+              const n = coerceFiniteNumber(inlineValue);
+              if (n == null) {
+                expanded.push(op);
+                continue;
+              }
+              expanded.push(setOp(op.path, true), setOp('appearance.ctaPaddingBlock', n));
+              continue;
+            }
+          }
         }
 
         const v2PaddingAllMatch = op.path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.all$/);
@@ -1187,6 +1201,16 @@ export function TdMenuContent({
               setOp('layout.itemPaddingBottom', n),
               setOp('layout.itemPaddingLeft', n),
             );
+            continue;
+          }
+        }
+
+        if (op.path === 'appearance.ctaPaddingInline') {
+          const linkedValue = getAt<unknown>(instanceData, 'appearance.ctaPaddingLinked');
+          const linked = linkedValue === true;
+          const n = coerceFiniteNumber(op.value);
+          if (linked && n != null) {
+            expanded.push(setOp(op.path, n), setOp('appearance.ctaPaddingBlock', n));
             continue;
           }
         }
