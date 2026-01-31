@@ -100,7 +100,7 @@ MUST
   - `cta.label` (string)
   - `cta.href` (string)
   - `cta.iconEnabled` (boolean)
-  - `cta.iconName` (string; Dieter icon id without `.svg`, e.g. `arrow.right`)
+  - `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
   - `cta.iconPlacement` (`left|right`)
   - `appearance.ctaBackground` (fill **or** CSS color string; color only)
   - `appearance.ctaTextColor` (fill **or** CSS color string; color only)
