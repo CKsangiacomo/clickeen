@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-01-10
+Last updated: 2026-01-31
 
 ---
 
@@ -10,7 +10,7 @@ Last updated: 2026-01-10
 
 Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. Widget pages render server-side to apply runtime overlays (geo/industry/experiment); other routes remain pre-rendered.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (`tokyo/l10n/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/widgets/*` (excluding `_*/` and `shared/`)
@@ -87,7 +87,7 @@ Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/l10n/prague/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
 - overlays (subpages): `tokyo/l10n/prague/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized overlays into `blocks[].copy` at load time
-- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `/l10n/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
+- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
 - Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
 
 Validation:

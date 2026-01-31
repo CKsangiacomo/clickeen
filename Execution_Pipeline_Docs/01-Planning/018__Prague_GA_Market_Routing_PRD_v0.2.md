@@ -62,7 +62,7 @@ Prague then applies layered overlays (locale, geo, industry, experiment, account
 ### 2.3 Base Prague content vs overlays (where content actually comes from)
 For marketed widget pages:
 - **Base** content is loaded from the repo-local widget package JSON (`tokyo/widgets/**/pages/*.json`) bundled into the Prague build.
-- **Overlays** are fetched from Tokyo CDN paths under `/l10n/prague/...` (controlled by `PUBLIC_TOKYO_URL`).
+- **Overlays** are fetched from Tokyo CDN paths under `/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/...` (controlled by `PUBLIC_TOKYO_URL`; the versioned prefix is a cache-bust wrapper for the underlying `l10n/prague/...` keys).
 
 This means Prague already behaves like “stable base + publishable overlay artifacts,” which is aligned with an SEO agent that publishes overlays.
 

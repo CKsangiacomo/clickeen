@@ -112,11 +112,18 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 - Overlays: `tokyo/l10n/prague/{pageId}/{layer}/{layerKey}/{baseFingerprint}.ops.json` (locale layer only in Phase 1)
 
 **Pipeline**
-- Translation is done by San Francisco via `POST /v1/l10n/translate` (local-only; requires `PARIS_DEV_JWT`).
+- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `PARIS_DEV_JWT`).
 - Provider: OpenAI for Prague strings; instance l10n agents use DeepSeek.
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
 - `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths (wired into Prague build/dev-up).
+- `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.
+  - Publish target MUST be explicit:
+    - `--remote` in cloud-dev/prod (writes to Cloudflare R2)
+    - `--local` in local dev (writes to Wrangler local R2)
 - Prague loads page JSON base copy and applies overlays at runtime via Tokyo fetch.
+  - Runtime fetches are versioned for cache determinism:
+    - cloud-dev/prod: `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/...`
+    - local dev: `${PUBLIC_TOKYO_URL}/l10n/prague/...` (and the Tokyo dev server also rewrites `/l10n/v/<token>/...` → `/l10n/...` when needed)
 
 **Strict rules**
 - Overlays are set-only ops and must include `baseFingerprint`.
@@ -233,7 +240,10 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
 3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `PARIS_DEV_JWT`).
 4. Verify overlays via `pnpm prague:l10n:verify`.
-5. Prague reads page JSON base copy + Tokyo overlays (`tokyo/l10n/prague/**`), no Supabase publish.
+5. Publish overlays to Tokyo/R2:
+   - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`
+   - Local dev (wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
+6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/l10n/prague/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/...` (cache-busted; token optional in local dev).
 
 ### 1) Enforce locale-free curated instances in Michael
 
