@@ -212,13 +212,17 @@ function encodePathSegments(pathStr: string): string {
     .join('/');
 }
 
+function getTokyoL10nPrefix(): string {
+  const metaAny = import.meta.env as any;
+  const token = String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
+  return token ? `/l10n/v/${encodeURIComponent(token)}` : '/l10n';
+}
+
 async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
   const baseUrl = getTokyoBaseUrl();
-  const path = `/l10n/prague/${encodePathSegments(pageId)}/index.json`;
-  const metaAny = import.meta.env as any;
-  const tsToken = import.meta.env.DEV ? String(Date.now()) : String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
-  const url = tsToken ? `${baseUrl}${path}?ts=${encodeURIComponent(tsToken)}` : `${baseUrl}${path}`;
-  const res = await fetch(url, { method: 'GET' });
+  const prefix = getTokyoL10nPrefix();
+  const path = `${prefix}/prague/${encodePathSegments(pageId)}/index.json`;
+  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const json = (await res.json().catch(() => null)) as LayerIndex | null;
@@ -431,7 +435,8 @@ async function fetchOverlay(args: {
 }): Promise<PragueOverlay | null> {
   if (!args.baseFingerprint) return null;
   const baseUrl = getTokyoBaseUrl();
-  const path = `/l10n/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
+  const prefix = getTokyoL10nPrefix();
+  const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
     args.layerKey
   )}/${encodeURIComponent(args.baseFingerprint)}.ops.json`;
   const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
