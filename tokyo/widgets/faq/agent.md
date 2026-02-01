@@ -67,11 +67,11 @@ Appearance:
 - `appearance.iconStyle` (`plus` | `chevron` | `arrow` | `arrowshape`; accordion only)
 - `appearance.iconColor` (fill; color only; accordion only)
 - `appearance.itemBackground` (fill; color/gradient/image; Q&A card background)
-- `appearance.itemCard.border` (object; Q&A card border)
+- `appearance.cardwrapper.border` (object; Q&A card border)
   - `enabled` (boolean)
   - `width` (number; px)
   - `color` (string; CSS color)
-- `appearance.itemCard.shadow` (object; item card shadow)
+- `appearance.cardwrapper.shadow` (object; Q&A card shadow)
   - `enabled` (boolean)
   - `inset` (boolean)
   - `x` (number; px)
@@ -80,10 +80,10 @@ Appearance:
   - `spread` (number; px)
   - `color` (string; hex)
   - `alpha` (number; 0..100)
-- Item card radius (appearance):
-  - `appearance.itemCard.radiusLinked` (boolean)
-  - `appearance.itemCard.radius` (`none` | `2xl` | `4xl` | `6xl` | `10xl`; when linked)
-  - `appearance.itemCard.radiusTL|TR|BR|BL` (same enum; when unlinked)
+- Card wrapper radius (appearance):
+  - `appearance.cardwrapper.radiusLinked` (boolean)
+  - `appearance.cardwrapper.radius` (`none` | `2xl` | `4xl` | `6xl` | `10xl`; when linked)
+  - `appearance.cardwrapper.radiusTL|TR|BR|BL` (same enum; when unlinked)
 - `appearance.podBorder` (object; pod border)
   - `enabled` (boolean)
   - `width` (number; px)
@@ -164,14 +164,14 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `layout.itemPaddingBottom` | `[data-role="faq"]` | css-var | `--faq-item-pad-bottom` |
 | `layout.itemPaddingLeft` | `[data-role="faq"]` | css-var | `--faq-item-pad-left` |
 | `appearance.itemBackground` | `[data-role="faq"]` | css-var | `--faq-item-bg` |
-| `appearance.itemCard.border` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-border-width/--ck-item-card-border-color` |
-| `appearance.itemCard.shadow` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-shadow` |
-| `appearance.itemCard.radiusLinked` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` chooses linked vs per-corner radius |
-| `appearance.itemCard.radius` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (linked) |
-| `appearance.itemCard.radiusTL` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (TL) |
-| `appearance.itemCard.radiusTR` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (TR) |
-| `appearance.itemCard.radiusBR` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (BR) |
-| `appearance.itemCard.radiusBL` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (BL) |
+| `appearance.cardwrapper.border` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-border-width/--ck-cardwrapper-border-color` |
+| `appearance.cardwrapper.shadow` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-shadow` |
+| `appearance.cardwrapper.radiusLinked` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` chooses linked vs per-corner radius |
+| `appearance.cardwrapper.radius` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-radius` (linked) |
+| `appearance.cardwrapper.radiusTL` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-radius` (TL) |
+| `appearance.cardwrapper.radiusTR` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-radius` (TR) |
+| `appearance.cardwrapper.radiusBR` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-radius` (BR) |
+| `appearance.cardwrapper.radiusBL` | `[data-role="faq"]` | css-var | `CKSurface.applyCardWrapper(state.appearance.cardwrapper, faqRoot)` sets `--ck-cardwrapper-radius` (BL) |
 | `appearance.linkStyle` | `[data-role="faq"]` | data-attr | `faqRoot.setAttribute('data-link-style', state.appearance.linkStyle)` |
 | `appearance.linkUnderlineColor` | `[data-role="faq"]` | css-var | `--faq-link-underline-color` |
 | `appearance.linkHighlightColor` | `[data-role="faq"]` | css-var | `--faq-link-highlight-color` |

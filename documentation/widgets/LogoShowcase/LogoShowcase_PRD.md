@@ -32,9 +32,9 @@ These are required patterns to keep editor UX deterministic and prevent dead con
 - **Editor arrays pattern**:
   - Use `object-manager` + nested `repeater` templates for `strips[] → strips[i].logos[]` so editing/reorder is standard and stable.
 - **Appearance schemas (must match Dieter controls)**:
-  - Border uses `appearance.itemCard.border` object (wired to `dropdown-border`)
-  - Shadow uses `appearance.itemCard.shadow` object (wired to `dropdown-shadow`)
-  - Radius uses `appearance.itemCard.radiusLinked` and `appearance.itemCard.radius*` (linked/unlinked)
+  - Border uses `appearance.cardwrapper.border` object (wired to `dropdown-border`)
+  - Shadow uses `appearance.cardwrapper.shadow` object (wired to `dropdown-shadow`)
+  - Radius uses `appearance.cardwrapper.radiusLinked` and `appearance.cardwrapper.radius*` (linked/unlinked)
 
 ### What ships (authoritative widget definition)
 The widget must be implemented as the standard Tokyo package (core runtime + contracts):
@@ -232,10 +232,10 @@ This section lists **only controls that apply to every Type**. Type-specific con
 
 - **Per-logo tile styling (platform schemas; Dieter-backed)**:
   - **Fill**: `appearance.itemBackground` (`dropdown-fill`)
-  - **Border**: `appearance.itemCard.border` (object schema; `dropdown-border`)
-  - **Shadow**: `appearance.itemCard.shadow` (object schema; `dropdown-shadow`)
-  - **Radius**: `appearance.itemCard.radiusLinked` + `appearance.itemCard.radius*` (linked/unlinked)
-  - **how**: runtime calls `CKSurface.applyItemCard(state.appearance.itemCard, root)` which sets `--ck-item-card-*` vars on the widget root; the logo tile CSS consumes them
+  - **Border**: `appearance.cardwrapper.border` (object schema; `dropdown-border`)
+  - **Shadow**: `appearance.cardwrapper.shadow` (object schema; `dropdown-shadow`)
+  - **Radius**: `appearance.cardwrapper.radiusLinked` + `appearance.cardwrapper.radius*` (linked/unlinked)
+  - **how**: runtime calls `CKSurface.applyCardWrapper(state.appearance.cardwrapper, root)` which sets `--ck-cardwrapper-*` vars on the widget root; the logo tile CSS consumes them
 
 - **Header text styling**: Typography roles `title` + `body`
   - **changes**: header title/subtitle font + text color
@@ -434,7 +434,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
     "logoLook": "original",
     "logoOpacity": 0.9,
     "itemBackground": "transparent",
-    "itemCard": {
+    "cardwrapper": {
       "radiusLinked": true,
       "radius": "4xl",
       "radiusTL": "4xl",

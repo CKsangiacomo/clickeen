@@ -73,19 +73,19 @@ MUST NOT
 
 If a widget needs anything outside this rule, it must be explicitly required by the PRD.
 
-### 2.2) Item card surface (optional global primitive)
-If a widget exposes `appearance.itemCard.*` controls (border/shadow/radius for items), it MUST use the shared Surface primitive:
-- Runtime: `tokyo/widgets/shared/surface.js` (`window.CKSurface.applyItemCard(state.appearance.itemCard, scopeEl)`)
+### 2.2) Card wrapper (optional global primitive)
+If a widget exposes `appearance.cardwrapper.*` controls (border/shadow/radius for cards), it MUST use the shared Surface primitive:
+- Runtime: `tokyo/widgets/shared/surface.js` (`window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, scopeEl)`)
 - CSS vars set on `scopeEl`:
-  - `--ck-item-card-border-width`
-  - `--ck-item-card-border-color`
-  - `--ck-item-card-shadow`
-  - `--ck-item-card-radius`
+  - `--ck-cardwrapper-border-width`
+  - `--ck-cardwrapper-border-color`
+  - `--ck-cardwrapper-shadow`
+  - `--ck-cardwrapper-radius`
 
 MUST
 - Load `../shared/surface.js` in `widget.html` (before `widget.client.js`).
-- Apply item card vars via `CKSurface.applyItemCard(...)` on every state update.
-- Reference only `--ck-item-card-*` vars in `widget.css` for item card styling.
+- Apply card wrapper vars via `CKSurface.applyCardWrapper(...)` on every state update.
+- Reference only `--ck-cardwrapper-*` vars in `widget.css` for card wrapper styling.
 
 MUST NOT
 - Reimplement border/shadow/radius math per widget (use `CKSurface`).

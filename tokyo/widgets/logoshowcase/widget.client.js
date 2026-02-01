@@ -191,31 +191,31 @@
     }
 
     assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
-    assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
+    assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
 
-    assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
-    assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
-    assertString(state.appearance.itemCard.radiusTL, 'state.appearance.itemCard.radiusTL');
-    assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
-    assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
-    assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
+    assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
+    assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
+    assertString(state.appearance.cardwrapper.radiusTL, 'state.appearance.cardwrapper.radiusTL');
+    assertString(state.appearance.cardwrapper.radiusTR, 'state.appearance.cardwrapper.radiusTR');
+    assertString(state.appearance.cardwrapper.radiusBR, 'state.appearance.cardwrapper.radiusBR');
+    assertString(state.appearance.cardwrapper.radiusBL, 'state.appearance.cardwrapper.radiusBL');
 
-    assertObject(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
-    assertBoolean(state.appearance.itemCard.border.enabled, 'state.appearance.itemCard.border.enabled');
-    assertNumber(state.appearance.itemCard.border.width, 'state.appearance.itemCard.border.width');
-    assertString(state.appearance.itemCard.border.color, 'state.appearance.itemCard.border.color');
+    assertObject(state.appearance.cardwrapper.border, 'state.appearance.cardwrapper.border');
+    assertBoolean(state.appearance.cardwrapper.border.enabled, 'state.appearance.cardwrapper.border.enabled');
+    assertNumber(state.appearance.cardwrapper.border.width, 'state.appearance.cardwrapper.border.width');
+    assertString(state.appearance.cardwrapper.border.color, 'state.appearance.cardwrapper.border.color');
 
-    assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
-    assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
-    assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
-    assertNumber(state.appearance.itemCard.shadow.x, 'state.appearance.itemCard.shadow.x');
-    assertNumber(state.appearance.itemCard.shadow.y, 'state.appearance.itemCard.shadow.y');
-    assertNumber(state.appearance.itemCard.shadow.blur, 'state.appearance.itemCard.shadow.blur');
-    assertNumber(state.appearance.itemCard.shadow.spread, 'state.appearance.itemCard.shadow.spread');
-    assertString(state.appearance.itemCard.shadow.color, 'state.appearance.itemCard.shadow.color');
-    assertNumber(state.appearance.itemCard.shadow.alpha, 'state.appearance.itemCard.shadow.alpha');
-    if (state.appearance.itemCard.shadow.alpha < 0 || state.appearance.itemCard.shadow.alpha > 100) {
-      throw new Error('[LogoShowcase] state.appearance.itemCard.shadow.alpha must be 0..100');
+    assertObject(state.appearance.cardwrapper.shadow, 'state.appearance.cardwrapper.shadow');
+    assertBoolean(state.appearance.cardwrapper.shadow.enabled, 'state.appearance.cardwrapper.shadow.enabled');
+    assertBoolean(state.appearance.cardwrapper.shadow.inset, 'state.appearance.cardwrapper.shadow.inset');
+    assertNumber(state.appearance.cardwrapper.shadow.x, 'state.appearance.cardwrapper.shadow.x');
+    assertNumber(state.appearance.cardwrapper.shadow.y, 'state.appearance.cardwrapper.shadow.y');
+    assertNumber(state.appearance.cardwrapper.shadow.blur, 'state.appearance.cardwrapper.shadow.blur');
+    assertNumber(state.appearance.cardwrapper.shadow.spread, 'state.appearance.cardwrapper.shadow.spread');
+    assertString(state.appearance.cardwrapper.shadow.color, 'state.appearance.cardwrapper.shadow.color');
+    assertNumber(state.appearance.cardwrapper.shadow.alpha, 'state.appearance.cardwrapper.shadow.alpha');
+    if (state.appearance.cardwrapper.shadow.alpha < 0 || state.appearance.cardwrapper.shadow.alpha > 100) {
+      throw new Error('[LogoShowcase] state.appearance.cardwrapper.shadow.alpha must be 0..100');
     }
 
     assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
@@ -336,10 +336,10 @@
     lsRoot.style.setProperty('--ls-logo-filter', state.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
     lsRoot.style.setProperty('--ls-item-bg', resolveFillBackground(state.appearance.itemBackground));
-    if (!window.CKSurface?.applyItemCard) {
-      throw new Error('[LogoShowcase] Missing CKSurface.applyItemCard');
+    if (!window.CKSurface?.applyCardWrapper) {
+      throw new Error('[LogoShowcase] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyItemCard(state.appearance.itemCard, lsRoot);
+    window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, lsRoot);
   }
 
   function renderLogoTile(logo) {

@@ -88,9 +88,9 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `pod.background`: Fill picker (color/gradient/image/video) for the widget surface.
 - `appearance.textColor`: Color picker (fill object, type `color`).
 - `appearance.itemBackground`: Fill picker (color/gradient) for timer tiles.
-- `appearance.itemCard.border`: Border (enabled/width/color).
-- `appearance.itemCard.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
-- `appearance.itemCard.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
+- `appearance.cardwrapper.border`: Border (enabled/width/color).
+- `appearance.cardwrapper.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
+- `appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
 - `appearance.podBorder`: Pod border (enabled/width/color).
 - `appearance.separator`: Color/style picker.
 - `appearance.animation`: 'fade' (only; skip advanced).
@@ -125,7 +125,7 @@ Required roles (minimum):
 - Apply platform globals:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
-  - `CKSurface.applyItemCard(state.appearance.itemCard, root)` (sets `--ck-item-card-*` for timer tiles)
+  - `CKSurface.applyCardWrapper(state.appearance.cardwrapper, root)` (sets `--ck-cardwrapper-*` for timer tiles)
 
 Personal countdown persistence rule (deterministic):
 - Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` once we have it, otherwise `publicId` injected by embed; do not invent random ids).
@@ -173,7 +173,7 @@ Defaults must include:
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 - `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
 - `layout: { position: 'inline' }`
-- `appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, itemCard: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, podBorder: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, separator: ':' }`
+- `appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, cardwrapper: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, podBorder: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, separator: ':' }`
 - `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
 
 ## 8) Additional Notes from Competitor Analysis

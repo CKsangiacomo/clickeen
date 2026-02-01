@@ -1065,7 +1065,7 @@ export function TdMenuContent({
         }
 
         if (typeof op.value === 'boolean') {
-          const radiusLinkMatch = op.path.match(/^(pod|appearance\.itemCard)\.radiusLinked$/);
+          const radiusLinkMatch = op.path.match(/^(pod|appearance\.cardwrapper)\.radiusLinked$/);
           if (radiusLinkMatch) {
             const nextLinked = op.value;
             const base = radiusLinkMatch[1];
@@ -1183,7 +1183,7 @@ export function TdMenuContent({
           }
         }
 
-        const radiusValueMatch = op.path.match(/^(pod|appearance\.itemCard)\.radius$/);
+        const radiusValueMatch = op.path.match(/^(pod|appearance\.cardwrapper)\.radius$/);
         if (radiusValueMatch) {
           const base = radiusValueMatch[1];
           const linkedValue = getAt<unknown>(instanceData, `${base}.radiusLinked`);
@@ -1323,7 +1323,7 @@ export function TdMenuContent({
       }
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        const radiusLinkMatch = path.match(/^(pod|appearance\.itemCard)\.radiusLinked$/);
+        const radiusLinkMatch = path.match(/^(pod|appearance\.cardwrapper)\.radiusLinked$/);
         if (radiusLinkMatch) {
           const nextLinked = target.checked;
           const base = radiusLinkMatch[1];

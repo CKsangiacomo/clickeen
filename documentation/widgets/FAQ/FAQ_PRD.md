@@ -221,9 +221,9 @@ Widget appearance controls (spec-defined):
   - `appearance.iconColor`
 - Q&A card:
   - `appearance.itemBackground`
-  - `appearance.itemCard.radiusLinked` + radius fields
-  - `appearance.itemCard.border`
-  - `appearance.itemCard.shadow`
+  - `appearance.cardwrapper.radiusLinked` + radius fields
+  - `appearance.cardwrapper.border`
+  - `appearance.cardwrapper.shadow`
 - Header CTA (compiler-injected when `defaults.header` + `defaults.cta` exist):
   - `appearance.ctaBackground`
   - `appearance.ctaTextColor`

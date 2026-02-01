@@ -123,7 +123,7 @@ Checklist:
   - Always: `../shared/stagePod.js`, `../shared/typography.js`, `../shared/branding.js`
   - If any fill controls exist: `../shared/fill.js`
   - If using the shared header primitive: `../shared/header.css` + `../shared/header.js`
-  - If exposing `appearance.itemCard.*`: `../shared/surface.js`
+  - If exposing `appearance.cardwrapper.*`: `../shared/surface.js`
 
 ---
 
@@ -151,7 +151,7 @@ Rules:
 - Use `data-role` selectors only.
  - If used by the widget:
    - Shared header: `window.CKHeader.applyHeader(state, root)`
-   - Item card surface: `window.CKSurface.applyItemCard(state.appearance.itemCard, scopeEl)`
+   - Card wrapper: `window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, scopeEl)`
    - Fill resolution: `window.CKFill.toCssBackground(...)` / `toCssColor(...)`
 
 Checklist:

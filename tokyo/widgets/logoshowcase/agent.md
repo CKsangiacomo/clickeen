@@ -85,10 +85,10 @@ Appearance:
 - `appearance.logoOpacity` (number; 0..1)
 - `appearance.itemBackground` (fill object; type: color | gradient | image)
 - Tile card:
-  - `appearance.itemCard.radiusLinked` (boolean)
-  - `appearance.itemCard.radius|radiusTL|radiusTR|radiusBR|radiusBL` (radius token, e.g. `none|2xl|4xl|6xl|10xl`)
-  - `appearance.itemCard.border` (object; Dieter `dropdown-border` schema)
-  - `appearance.itemCard.shadow` (object; Dieter `dropdown-shadow` schema)
+  - `appearance.cardwrapper.radiusLinked` (boolean)
+  - `appearance.cardwrapper.radius|radiusTL|radiusTR|radiusBR|radiusBL` (radius token, e.g. `none|2xl|4xl|6xl|10xl`)
+  - `appearance.cardwrapper.border` (object; Dieter `dropdown-border` schema)
+  - `appearance.cardwrapper.shadow` (object; Dieter `dropdown-shadow` schema)
 - CTA appearance:
   - `appearance.ctaBackground` (fill object; type: color)
   - `appearance.ctaTextColor` (fill object; type: color)

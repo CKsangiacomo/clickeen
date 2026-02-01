@@ -103,7 +103,7 @@ Location: `tokyo/widgets/shared/`
 | `fill.js` | `window.CKFill.*` | Fill normalization + color/gradient/image/video helpers |
 | `header.js` | `window.CKHeader.applyHeader(state, widgetRoot)` | Shared header block (title/subtitle/CTA) |
 | `header.css` | *(stylesheet)* | Shared header layout styles |
-| `surface.js` | `window.CKSurface.applyItemCard(itemCard, scopeEl)` | Shared item card vars (border/shadow/radius) |
+| `surface.js` | `window.CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius) |
 | `branding.js` | *(self-managed)* | Injects/toggles backlink via `state.behavior.showBacklink` |
 
 ---

@@ -111,12 +111,11 @@
     return { border: border, radius: radius, shadow: shadow };
   }
 
-  function applyItemCard(card, scopeEl) {
-    return applyCard(card, scopeEl, 'item-card');
+  function applyCardWrapper(card, scopeEl) {
+    return applyCard(card, scopeEl, 'cardwrapper');
   }
 
   window.CKSurface = window.CKSurface || {};
   window.CKSurface.applyCard = applyCard;
-  window.CKSurface.applyItemCard = applyItemCard;
+  window.CKSurface.applyCardWrapper = applyCardWrapper;
 })();
-

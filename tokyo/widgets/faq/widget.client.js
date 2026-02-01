@@ -187,25 +187,25 @@
       throw new Error('[FAQ] state.appearance.iconStyle must be plus|chevron|arrow|arrowshape');
     }
     assertFill(state.appearance.iconColor, 'state.appearance.iconColor');
-    assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
-    assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
-    assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
-    assertString(state.appearance.itemCard.radiusTL, 'state.appearance.itemCard.radiusTL');
-    assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
-    assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
-    assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
-    assertBorderConfig(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
-    assertObject(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
-    assertBoolean(state.appearance.itemCard.shadow.enabled, 'state.appearance.itemCard.shadow.enabled');
-    assertBoolean(state.appearance.itemCard.shadow.inset, 'state.appearance.itemCard.shadow.inset');
-    assertNumber(state.appearance.itemCard.shadow.x, 'state.appearance.itemCard.shadow.x');
-    assertNumber(state.appearance.itemCard.shadow.y, 'state.appearance.itemCard.shadow.y');
-    assertNumber(state.appearance.itemCard.shadow.blur, 'state.appearance.itemCard.shadow.blur');
-    assertNumber(state.appearance.itemCard.shadow.spread, 'state.appearance.itemCard.shadow.spread');
-    assertString(state.appearance.itemCard.shadow.color, 'state.appearance.itemCard.shadow.color');
-    assertNumber(state.appearance.itemCard.shadow.alpha, 'state.appearance.itemCard.shadow.alpha');
-    if (state.appearance.itemCard.shadow.alpha < 0 || state.appearance.itemCard.shadow.alpha > 100) {
-      throw new Error('[FAQ] state.appearance.itemCard.shadow.alpha must be 0..100');
+    assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
+    assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
+    assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
+    assertString(state.appearance.cardwrapper.radiusTL, 'state.appearance.cardwrapper.radiusTL');
+    assertString(state.appearance.cardwrapper.radiusTR, 'state.appearance.cardwrapper.radiusTR');
+    assertString(state.appearance.cardwrapper.radiusBR, 'state.appearance.cardwrapper.radiusBR');
+    assertString(state.appearance.cardwrapper.radiusBL, 'state.appearance.cardwrapper.radiusBL');
+    assertBorderConfig(state.appearance.cardwrapper.border, 'state.appearance.cardwrapper.border');
+    assertObject(state.appearance.cardwrapper.shadow, 'state.appearance.cardwrapper.shadow');
+    assertBoolean(state.appearance.cardwrapper.shadow.enabled, 'state.appearance.cardwrapper.shadow.enabled');
+    assertBoolean(state.appearance.cardwrapper.shadow.inset, 'state.appearance.cardwrapper.shadow.inset');
+    assertNumber(state.appearance.cardwrapper.shadow.x, 'state.appearance.cardwrapper.shadow.x');
+    assertNumber(state.appearance.cardwrapper.shadow.y, 'state.appearance.cardwrapper.shadow.y');
+    assertNumber(state.appearance.cardwrapper.shadow.blur, 'state.appearance.cardwrapper.shadow.blur');
+    assertNumber(state.appearance.cardwrapper.shadow.spread, 'state.appearance.cardwrapper.shadow.spread');
+    assertString(state.appearance.cardwrapper.shadow.color, 'state.appearance.cardwrapper.shadow.color');
+    assertNumber(state.appearance.cardwrapper.shadow.alpha, 'state.appearance.cardwrapper.shadow.alpha');
+    if (state.appearance.cardwrapper.shadow.alpha < 0 || state.appearance.cardwrapper.shadow.alpha > 100) {
+      throw new Error('[FAQ] state.appearance.cardwrapper.shadow.alpha must be 0..100');
     }
     assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
 
@@ -487,10 +487,10 @@
 
   function applyAppearance(appearance) {
     faqRoot.style.setProperty('--faq-item-bg', resolveFillBackground(appearance.itemBackground));
-    if (!window.CKSurface?.applyItemCard) {
-      throw new Error('[FAQ] Missing CKSurface.applyItemCard');
+    if (!window.CKSurface?.applyCardWrapper) {
+      throw new Error('[FAQ] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyItemCard(appearance.itemCard, faqRoot);
+    window.CKSurface.applyCardWrapper(appearance.cardwrapper, faqRoot);
     faqRoot.setAttribute('data-link-style', appearance.linkStyle);
     faqRoot.style.setProperty('--faq-link-underline-color', resolveFillColor(appearance.linkUnderlineColor));
     faqRoot.style.setProperty('--faq-link-highlight-color', resolveFillBackground(appearance.linkHighlightColor));

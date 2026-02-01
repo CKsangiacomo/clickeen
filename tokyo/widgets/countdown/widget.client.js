@@ -244,15 +244,15 @@
     assertFill(state.appearance.textColor, 'state.appearance.textColor');
     assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
     assertString(state.appearance.separator, 'state.appearance.separator');
-    assertObject(state.appearance.itemCard, 'state.appearance.itemCard');
-    assertBoolean(state.appearance.itemCard.radiusLinked, 'state.appearance.itemCard.radiusLinked');
-    assertString(state.appearance.itemCard.radius, 'state.appearance.itemCard.radius');
-    assertString(state.appearance.itemCard.radiusTL, 'state.appearance.itemCard.radiusTL');
-    assertString(state.appearance.itemCard.radiusTR, 'state.appearance.itemCard.radiusTR');
-    assertString(state.appearance.itemCard.radiusBR, 'state.appearance.itemCard.radiusBR');
-    assertString(state.appearance.itemCard.radiusBL, 'state.appearance.itemCard.radiusBL');
-    assertBorderConfig(state.appearance.itemCard.border, 'state.appearance.itemCard.border');
-    assertShadowConfig(state.appearance.itemCard.shadow, 'state.appearance.itemCard.shadow');
+    assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
+    assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
+    assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
+    assertString(state.appearance.cardwrapper.radiusTL, 'state.appearance.cardwrapper.radiusTL');
+    assertString(state.appearance.cardwrapper.radiusTR, 'state.appearance.cardwrapper.radiusTR');
+    assertString(state.appearance.cardwrapper.radiusBR, 'state.appearance.cardwrapper.radiusBR');
+    assertString(state.appearance.cardwrapper.radiusBL, 'state.appearance.cardwrapper.radiusBL');
+    assertBorderConfig(state.appearance.cardwrapper.border, 'state.appearance.cardwrapper.border');
+    assertShadowConfig(state.appearance.cardwrapper.shadow, 'state.appearance.cardwrapper.shadow');
     assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
@@ -476,10 +476,10 @@
       podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
       podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
     }
-    if (!window.CKSurface?.applyItemCard) {
-      throw new Error('[Countdown] Missing CKSurface.applyItemCard');
+    if (!window.CKSurface?.applyCardWrapper) {
+      throw new Error('[Countdown] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyItemCard(state.appearance.itemCard, countdownRoot);
+    window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, countdownRoot);
 
     const separatorText = String(state.appearance.separator || ':');
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {

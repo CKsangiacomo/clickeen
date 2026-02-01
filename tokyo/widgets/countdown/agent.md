@@ -26,11 +26,11 @@ Legacy layout fields are ignored by runtime (use Stage/Pod layout controls inste
 - `appearance.animation`: fade
 - `appearance.textColor`: fill object (type: color)
 - `appearance.itemBackground`: fill object (type: color | gradient)
-- `appearance.itemCard.border`: object (enabled, width, color)
-- `appearance.itemCard.shadow`: object (enabled, inset, x, y, blur, spread, color, alpha)
-- `appearance.itemCard.radiusLinked`: boolean
-- `appearance.itemCard.radius`: none | 2xl | 4xl | 6xl | 10xl
-- `appearance.itemCard.radiusTL|TR|BR|BL`: none | 2xl | 4xl | 6xl | 10xl
+- `appearance.cardwrapper.border`: object (enabled, width, color)
+- `appearance.cardwrapper.shadow`: object (enabled, inset, x, y, blur, spread, color, alpha)
+- `appearance.cardwrapper.radiusLinked`: boolean
+- `appearance.cardwrapper.radius`: none | 2xl | 4xl | 6xl | 10xl
+- `appearance.cardwrapper.radiusTL|TR|BR|BL`: none | 2xl | 4xl | 6xl | 10xl
 - `appearance.podBorder`: object (enabled, width, color)
 - `appearance.separator`: string (: | / | -)
 
