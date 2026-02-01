@@ -970,6 +970,17 @@ export function TdMenuContent({
       return null;
     };
 
+    const coercePxNumber = (value: unknown): number | null => {
+      if (isFiniteNumber(value)) return value;
+      if (typeof value !== 'string') return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const match = trimmed.match(/^(-?\d+(?:\.\d+)?)(?:px)?$/);
+      if (!match) return null;
+      const n = Number(match[1]);
+      return Number.isFinite(n) ? n : null;
+    };
+
     const expandLinkedOps = (ops: WidgetOp[]): WidgetOp[] => {
       const expanded: WidgetOp[] = [];
       const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
@@ -1419,6 +1430,21 @@ export function TdMenuContent({
           return;
         }
 
+        const sizeCustomMatch = path.match(/^typography\.roles\.([^.]+)\.sizeCustom$/);
+        if (sizeCustomMatch) {
+          const trimmed = rawValue.trim();
+          if (!trimmed) return;
+          const parsed = Number(trimmed);
+          if (!Number.isFinite(parsed)) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('[TdMenuContent] Ignoring invalid typography sizeCustom input for path', path);
+            }
+            return;
+          }
+          applySet(path, parsed);
+          return;
+        }
+
         if (isFiniteNumber(currentValue)) {
           const trimmed = rawValue.trim();
           if (!trimmed) {
@@ -1445,9 +1471,10 @@ export function TdMenuContent({
           const currentPreset = getAt<unknown>(instanceData, path);
           if (typeof currentPreset === 'string' && currentPreset.trim() && currentPreset !== 'custom') {
             const scaleValue = getAt<unknown>(instanceData, `typography.roleScales.${roleKey}.${currentPreset}`);
-            if (typeof scaleValue === 'string' && scaleValue.trim()) {
+            const scalePx = coercePxNumber(scaleValue);
+            if (scalePx != null) {
               const applied = applyOps([
-                { op: 'set', path: `typography.roles.${roleKey}.sizeCustom`, value: scaleValue },
+                { op: 'set', path: `typography.roles.${roleKey}.sizeCustom`, value: scalePx },
                 { op: 'set', path, value: rawValue },
               ]);
               if (!applied.ok && process.env.NODE_ENV === 'development') {
@@ -1513,12 +1540,18 @@ export function TdMenuContent({
         field.style.setProperty('--min', field.min || '0');
         field.style.setProperty('--max', field.max || '100');
       } else if ('value' in field) {
-        const nextValue =
+        let nextValue =
           field instanceof HTMLInputElement && field.dataset.bobJson != null
             ? serializeBobJsonFieldValue(field, value)
             : value == null
               ? ''
               : String(value);
+
+        const sizeCustomMatch = path.match(/^typography\.roles\.([^.]+)\.sizeCustom$/);
+        if (sizeCustomMatch && field instanceof HTMLInputElement && field.type === 'number') {
+          const n = coercePxNumber(value);
+          nextValue = n == null ? '' : String(n);
+        }
 
         const currentValue = (field as HTMLInputElement).value;
         const unchanged = currentValue === nextValue;

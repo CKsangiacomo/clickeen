@@ -488,7 +488,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "title": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "24px",
+        "sizeCustom": 24,
         "fontStyle": "normal",
         "weight": "700",
         "color": "var(--color-system-black)"
@@ -496,7 +496,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "body": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "14px",
+        "sizeCustom": 14,
         "fontStyle": "normal",
         "weight": "400",
         "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
@@ -504,7 +504,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "button": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "14px",
+        "sizeCustom": 14,
         "fontStyle": "normal",
         "weight": "600",
         "color": "var(--color-system-white)"

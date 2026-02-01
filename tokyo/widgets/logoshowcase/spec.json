@@ -412,7 +412,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "m"
         },
         "title": {
@@ -420,7 +420,7 @@
           "family": "Inter",
           "weight": "700",
           "fontStyle": "normal",
-          "sizeCustom": "24px",
+          "sizeCustom": 24,
           "sizePreset": "m"
         },
         "button": {
@@ -428,7 +428,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "m"
         }
       },

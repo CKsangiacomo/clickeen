@@ -70,7 +70,7 @@ export function buildTypographyPanel(args: {
       `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.sizePreset' label='Size' placeholder='Choose size' value='{{typography.roles.${role.key}.sizePreset}}' options='${sizeOptions}' />`,
     );
     lines.push(
-      `    <tooldrawer-field-typofields ${groupAttr} type='textfield' size='md' path='typography.roles.${role.key}.sizeCustom' label='Custom size' placeholder='e.g. 24px or var(--fs-24)' value='{{typography.roles.${role.key}.sizeCustom}}' show-if=\"typography.roles.${role.key}.sizePreset == 'custom'\" />`,
+      `    <tooldrawer-field-typofields ${groupAttr} type='valuefield' size='md' path='typography.roles.${role.key}.sizeCustom' label='Custom size (px)' min='0' max='200' step='1' value='{{typography.roles.${role.key}.sizeCustom}}' show-if=\"typography.roles.${role.key}.sizePreset == 'custom'\" />`,
     );
     lines.push(
       `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.fontStyle' label='Style' placeholder='Choose style' value='{{typography.roles.${role.key}.fontStyle}}' options='${styleOptions}' />`,
