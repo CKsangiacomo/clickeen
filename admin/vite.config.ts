@@ -144,21 +144,62 @@ export default defineConfig({
       },
     },
     {
-      name: 'tokyo-update-theme',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          const url = req.url || '';
-          const pathname = url.split('?')[0] || '';
-          if (pathname !== '/api/themes/update' || req.method !== 'POST') return next();
+	      name: 'tokyo-update-theme',
+	      configureServer(server) {
+	        server.middlewares.use((req, res, next) => {
+	          const url = req.url || '';
+	          const pathname = url.split('?')[0] || '';
+	          const wantsList = pathname === '/api/themes/list' && req.method === 'GET';
+	          const wantsUpdate = pathname === '/api/themes/update' && req.method === 'POST';
+	          if (!wantsList && !wantsUpdate) return next();
 
-          res.setHeader('Content-Type', 'application/json');
-          res.setHeader('Cache-Control', 'no-store');
+	          res.setHeader('Content-Type', 'application/json');
+	          res.setHeader('Cache-Control', 'no-store');
 
-          let body = '';
-          req.on('data', (chunk) => {
-            body += chunk.toString();
-          });
-          req.on('end', () => {
+	          const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
+
+	          if (wantsList) {
+	            try {
+	              if (!fs.existsSync(themesPath)) {
+	                res.statusCode = 404;
+	                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
+	                return;
+	              }
+
+	              const raw = fs.readFileSync(themesPath, 'utf8');
+	              const json = JSON.parse(raw);
+	              const themes = Array.isArray(json?.themes) ? json.themes : [];
+	              res.statusCode = 200;
+	              res.end(
+	                JSON.stringify({
+	                  themes: themes
+	                    .map((theme) => ({
+	                      id: String(theme?.id || '').trim(),
+	                      label: String(theme?.label || '').trim(),
+	                    }))
+	                    .filter((theme) => Boolean(theme.id)),
+	                })
+	              );
+	            } catch (error) {
+	              res.statusCode = 500;
+	              res.end(
+	                JSON.stringify({
+	                  error: {
+	                    kind: 'INTERNAL',
+	                    reasonKey: 'coreui.errors.db.readFailed',
+	                    detail: error instanceof Error ? error.message : String(error),
+	                  },
+	                })
+	              );
+	            }
+	            return;
+	          }
+
+	          let body = '';
+	          req.on('data', (chunk) => {
+	            body += chunk.toString();
+	          });
+	          req.on('end', () => {
             let payload: any;
             try {
               payload = body ? JSON.parse(body) : null;
@@ -241,15 +282,14 @@ export default defineConfig({
                   },
                 })
               );
-              return;
-            }
+	              return;
+	            }
 
-            const themesPath = path.resolve(__dirname, '..', 'tokyo', 'themes', 'themes.json');
-            try {
-              if (!fs.existsSync(themesPath)) {
-                res.statusCode = 404;
-                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
-                return;
+	            try {
+	              if (!fs.existsSync(themesPath)) {
+	                res.statusCode = 404;
+	                res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.theme.notFound' } }));
+	                return;
               }
               const raw = fs.readFileSync(themesPath, 'utf8');
               const json = JSON.parse(raw);

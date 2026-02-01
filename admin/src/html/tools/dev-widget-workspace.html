@@ -539,6 +539,46 @@
   </div>
 </div>
 
+<div class="dev-widget-workspace__modal" id="theme-modal" hidden>
+  <div class="dev-widget-workspace__modal-body" role="dialog" aria-modal="true" aria-labelledby="theme-modal-title">
+    <div class="dev-widget-workspace__modal-header">
+      <div>
+        <div class="dev-widget-workspace__modal-title" id="theme-modal-title">Update theme</div>
+        <div class="dev-widget-workspace__modal-subtitle" id="theme-modal-subtitle">
+          Overwrite a Tokyo theme with the current editor state.
+        </div>
+      </div>
+      <button class="diet-btn-txt" type="button" data-size="sm" data-variant="neutral" id="theme-modal-close">
+        <span class="diet-btn-txt__label">Close</span>
+      </button>
+    </div>
+    <div class="dev-widget-workspace__modal-content">
+      <div class="diet-textfield" data-size="md">
+        <label class="diet-textfield__control">
+          <span class="diet-textfield__display-label">Theme</span>
+          <select id="theme-modal-select" class="diet-textfield__field"></select>
+        </label>
+      </div>
+    </div>
+    <div class="dev-widget-workspace__modal-actions">
+      <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" id="theme-modal-cancel">
+        <span class="diet-btn-txt__label">Cancel</span>
+      </button>
+      <button
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        type="button"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="orange4"
+        id="theme-modal-confirm"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="paintbrush.pointed"></span>
+        <span class="diet-btn-ictxt__label body-s">Update theme</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
 // DevStudio swaps DOM but does not automatically remove global event listeners.
@@ -612,6 +652,11 @@ const curatedModalCancel = document.getElementById('curated-modal-cancel');
 const curatedModalConfirm = document.getElementById('curated-modal-confirm');
 const curatedStyleNameField = document.getElementById('curated-style-name');
 const curatedTagGroups = document.getElementById('curated-tag-groups');
+const themeModal = document.getElementById('theme-modal');
+const themeModalClose = document.getElementById('theme-modal-close');
+const themeModalCancel = document.getElementById('theme-modal-cancel');
+const themeModalConfirm = document.getElementById('theme-modal-confirm');
+const themeModalSelect = document.getElementById('theme-modal-select');
 let l10nStatusTimer = null;
 
 const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
@@ -655,6 +700,7 @@ const CURATED_TAG_GROUPS = [
 ];
 const CURATED_VERSION_PAD = 2;
 let curatedModalState = null;
+let themeModalState = null;
 
 const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
 bobUrl.searchParams.set('subject', 'devstudio');
@@ -1448,27 +1494,82 @@ function getValueAtPath(obj, path) {
   }, obj);
 }
 
-function buildThemeValuesFromConfig(config) {
-  const paths = [
-    'stage.background',
-    'pod.background',
-    'appearance.itemBackground',
-    'appearance.textColor',
-    'typography.globalFamily',
-  ];
-  const values = {};
-  paths.forEach((path) => {
-    const value = getValueAtPath(config, path);
-    if (value !== undefined) values[path] = value;
-  });
-  return values;
-}
+	function buildThemeValuesFromConfig(config) {
+	  const paths = [
+	    'stage.background',
+	    'pod.background',
+	    'appearance.itemBackground',
+	    'appearance.textColor',
+	    'typography.globalFamily',
+	  ];
+	  const values = {};
+	  paths.forEach((path) => {
+	    const value = getValueAtPath(config, path);
+	    if (value !== undefined) values[path] = value;
+	  });
+	  return values;
+	}
 
-async function updateTokyoTheme({ themeId, values }) {
-  const res = await fetch(`/api/themes/update?_t=${Date.now()}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ themeId, values }),
+async function listTokyoThemes() {
+	  const res = await fetch(`/api/themes/list?_t=${Date.now()}`, { cache: 'no-store' });
+	  const text = await res.text().catch(() => '');
+	  if (!res.ok) {
+	    throw new Error(
+	      `[DevStudio] List themes failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
+	    );
+	  }
+	  const json = text ? JSON.parse(text) : null;
+	  const themes = Array.isArray(json?.themes) ? json.themes : [];
+	  return themes
+	    .map((theme) => ({
+	      id: String(theme?.id || '').trim().toLowerCase(),
+	      label: String(theme?.label || '').trim(),
+	    }))
+	    .filter((theme) => Boolean(theme.id) && theme.id !== 'custom');
+	}
+
+	function openThemeModal({ themes, defaultThemeId }) {
+	  if (!themeModal || !(themeModalSelect instanceof HTMLSelectElement)) {
+	    return Promise.resolve(null);
+	  }
+
+	  const normalizedThemes = Array.isArray(themes) ? themes : [];
+	  if (!normalizedThemes.length) return Promise.resolve(null);
+
+	  themeModalSelect.replaceChildren();
+	  normalizedThemes.forEach((theme) => {
+	    const opt = document.createElement('option');
+	    opt.value = theme.id;
+	    opt.textContent = theme.label ? `${theme.label} (${theme.id})` : theme.id;
+	    themeModalSelect.appendChild(opt);
+	  });
+
+	  const initial = normalizedThemes.some((t) => t.id === defaultThemeId)
+	    ? defaultThemeId
+	    : normalizedThemes[0]?.id || '';
+	  themeModalSelect.value = initial;
+
+	  themeModal.hidden = false;
+	  themeModalSelect.focus();
+
+	  return new Promise((resolve) => {
+	    themeModalState = { resolve };
+	  });
+	}
+
+	function closeThemeModal(result) {
+	  if (themeModal) themeModal.hidden = true;
+	  if (themeModalState && typeof themeModalState.resolve === 'function') {
+	    themeModalState.resolve(result ?? null);
+	  }
+	  themeModalState = null;
+	}
+
+	async function updateTokyoTheme({ themeId, values }) {
+	  const res = await fetch(`/api/themes/update?_t=${Date.now()}`, {
+	    method: 'POST',
+	    headers: { 'content-type': 'application/json' },
+	    body: JSON.stringify({ themeId, values }),
   });
   const text = await res.text().catch(() => '');
   if (!res.ok) {
@@ -1479,33 +1580,33 @@ async function updateTokyoTheme({ themeId, values }) {
   return text ? JSON.parse(text) : null;
 }
 
-async function updateThemeFromEditor(widgetSlug) {
-  const exported = await exportInstanceDataFromBob({
-    persistAssets: false,
-    exportMode: 'current',
-  });
-  const config = exported?.instanceData;
-  if (!config || typeof config !== 'object') {
-    throw new Error('[DevStudio] Bob export did not include instanceData');
-  }
+	async function updateThemeFromEditor(widgetSlug) {
+	  const exported = await exportInstanceDataFromBob({
+	    persistAssets: false,
+	    exportMode: 'current',
+	  });
+	  const config = exported?.instanceData;
+	  if (!config || typeof config !== 'object') {
+	    throw new Error('[DevStudio] Bob export did not include instanceData');
+	  }
 
-  const themeId = String(config?.appearance?.theme || '').trim().toLowerCase();
-  if (!themeId || themeId === 'custom') {
-    throw new Error('[DevStudio] Select a theme (not Custom) before updating.');
-  }
+	  const editorThemeId = String(config?.appearance?.theme || '').trim().toLowerCase();
+	  const themes = await listTokyoThemes().catch(() => null);
+	  const defaultThemeId =
+	    editorThemeId && editorThemeId !== 'custom' ? editorThemeId : themes?.[0]?.id || '';
+	  if (!themes?.length) throw new Error('[DevStudio] Theme list not found.');
+	  const themeId = await openThemeModal({ themes, defaultThemeId });
+	  if (!themeId) throw new Error('[DevStudio] Canceled');
 
-  const values = buildThemeValuesFromConfig(config);
-  if (!Object.keys(values).length) {
-    throw new Error('[DevStudio] Theme values not found in current config.');
-  }
+	  const values = buildThemeValuesFromConfig(config);
+	  if (!Object.keys(values).length) {
+	    throw new Error('[DevStudio] Theme values not found in current config.');
+	  }
 
-  const ok = window.confirm(`Update theme "${themeId}" with the current editor state?`);
-  if (!ok) throw new Error('[DevStudio] Canceled');
-
-  const cleanedValues = stripTokyoBaseFromConfig(cloneJson(values), TOKYO_BASE);
-  await updateTokyoTheme({ themeId, values: cleanedValues });
-  compiledCache.delete(widgetSlug);
-  if (currentPublicId) {
+	  const cleanedValues = stripTokyoBaseFromConfig(cloneJson(values), TOKYO_BASE);
+	  await updateTokyoTheme({ themeId, values: cleanedValues });
+	  compiledCache.delete(widgetSlug);
+	  if (currentPublicId) {
     await sendInstanceToIframe(currentPublicId);
   }
   return { themeId, values: cleanedValues };
@@ -1863,6 +1964,38 @@ curatedModalClose?.addEventListener('click', () => {
 curatedModalCancel?.addEventListener('click', () => {
   closeCuratedModal();
 });
+
+themeModalConfirm?.addEventListener('click', () => {
+  try {
+    if (!(themeModalSelect instanceof HTMLSelectElement)) throw new Error('[DevStudio] Theme selector missing');
+    const themeId = String(themeModalSelect.value || '').trim().toLowerCase();
+    if (!themeId) throw new Error('[DevStudio] Select a theme first.');
+    closeThemeModal(themeId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+themeModalClose?.addEventListener('click', () => {
+  closeThemeModal(null);
+});
+
+themeModalCancel?.addEventListener('click', () => {
+  closeThemeModal(null);
+});
+
+themeModal?.addEventListener('click', (event) => {
+  if (event.target === themeModal) closeThemeModal(null);
+});
+
+document.addEventListener(
+  'keydown',
+  (event) => {
+    if (event.key !== 'Escape') return;
+    if (themeModal && !themeModal.hidden) closeThemeModal(null);
+  },
+  { signal: abortController.signal }
+);
 
 if (curatedStyleNameField instanceof HTMLInputElement) {
   curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);

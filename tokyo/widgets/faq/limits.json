@@ -19,24 +19,6 @@
       "sanitizeTo": true,
       "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
     },
-    {
-      "kind": "flag",
-      "key": "media.images.enabled",
-      "path": "behavior.displayImages",
-      "mode": "boolean",
-      "deny": true,
-      "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    {
-      "kind": "flag",
-      "key": "media.videos.enabled",
-      "path": "behavior.displayVideos",
-      "mode": "boolean",
-      "deny": true,
-      "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
     { "kind": "cap", "key": "list.primary.max", "path": "sections[]", "metric": "count" },
     { "kind": "cap", "key": "list.secondary.rich.max", "path": "sections[].faqs[]", "metric": "count" },
     { "kind": "cap", "key": "list.secondary.rich.total.max", "path": "sections[].faqs[]", "metric": "count-total" },

@@ -1,4 +1,4 @@
-# 18 — Prague GA Market Routing & SEO Architecture PRD (Draft v0.2)
+# 36 — Prague GA Market Routing & SEO Architecture PRD (Draft v0.2)
 
 Status: Planning. This is not active execution.
 Source of truth: `documentation/` for current Prague behavior.

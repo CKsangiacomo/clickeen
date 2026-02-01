@@ -15,6 +15,13 @@ During an edit session, instance state exists in exactly two places:
 
 Between load and publish, Bob does not write intermediate edits to Paris.
 
+### Publish UX (copy code lives under Publish)
+Bob intentionally separates:
+- **Saving config** (writes to Paris): appears as **Save / Discard** buttons only when the base config is dirty.
+- **Embedding** (copy code): always lives under the **Publish** button, which opens a modal containing embed snippets (safe iframe + gated iframe++ SEO/GEO).
+
+The Settings panel is widget-defined behavior controls; it must not contain embed code.
+
 ### Spec-driven + control-driven (not UI-driven)
 The widget definition (`tokyo/widgets/{widget}/spec.json`) is the editor source of truth for:
 - Defaults (`defaults`)

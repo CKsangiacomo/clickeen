@@ -170,7 +170,7 @@ body {
 }
 
 .tdmenucontent__fields > .tdmenucontent__cluster {
-  margin-block-end: var(--space-4);
+  margin-block-end: var(--space-2);
 }
 
 .tdmenucontent__fields > .tdmenucontent__cluster:last-child {
@@ -258,6 +258,16 @@ body {
   gap: var(--space-2);
 }
 
+.settings-panel__fullwidth {
+  padding-inline-start: var(--control-padding-inline);
+  padding-inline-end: var(--control-padding-inline);
+}
+
+.settings-panel__fullwidth .diet-btn-txt {
+  width: 100%;
+  justify-content: center;
+}
+
 .settings-panel__code {
   margin-top: var(--space-1);
   padding: var(--space-1) var(--space-2);
@@ -323,6 +333,19 @@ body {
 .tdmenucontent [data-translate-hidden='true'],
 .tdmenucontent [data-translate-empty='true'] {
   display: none !important;
+}
+
+.tdmenucontent[data-translate-mode='true'] .tdmenucontent__cluster-header {
+  display: none !important;
+}
+
+.tdmenucontent[data-readonly='true'] .tdmenucontent__fields {
+  opacity: 0.78;
+}
+
+.tdmenucontent[data-readonly='true'] .tdmenucontent__fields .diet-dropdown-header {
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .tdmenucontent[data-translate-mode='true'] .diet-repeater__actions,
@@ -486,5 +509,86 @@ body {
 .ck-upsellModal__actions {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ck-publishOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
+}
+
+.ck-publishModal {
+  width: min(720px, 100%);
+  max-height: min(780px, 100%);
+  overflow: auto;
+  border-radius: var(--control-radius-lg);
+  background: var(--color-system-white);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ck-publishModal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ck-publishModal__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ck-publishModal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.ck-websiteOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: color-mix(in oklab, var(--color-system-black), transparent 70%);
+}
+
+.ck-websiteModal {
+  width: min(520px, 100%);
+  max-height: min(640px, 100%);
+  overflow: auto;
+  border-radius: var(--control-radius-lg);
+  background: var(--color-system-white);
+  border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+  box-shadow: 0 24px 72px color-mix(in oklab, var(--color-system-black), transparent 82%);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ck-websiteModal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ck-websiteModal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-2);
 }

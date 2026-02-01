@@ -175,6 +175,7 @@ function applyReadOnlyState(container: HTMLElement, readOnly: boolean) {
   });
 
   container.querySelectorAll<HTMLButtonElement>('button').forEach((el) => {
+    if (el.classList.contains('tdmenucontent__cluster-toggle')) return;
     if (readOnly) {
       if (!(disabledKey in el.dataset)) el.dataset[disabledKey] = el.disabled ? '1' : '0';
       el.disabled = true;
@@ -680,7 +681,7 @@ function normalizeBobPath(raw: string): string {
 function resolveTranslateRoot(field: HTMLElement): HTMLElement {
   return (
     field.closest<HTMLElement>(
-      '.diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-valuefield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
+      '.diet-dropdown-actions, .diet-dropdown-edit, .diet-textedit, .diet-textfield, .diet-valuefield, .diet-toggle, .diet-select, .diet-dropdown, .diet-range, .diet-slider, .diet-color, .diet-input'
     ) || field
   );
 }

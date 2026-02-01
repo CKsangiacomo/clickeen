@@ -21,8 +21,6 @@ export const CAPABILITY_KEYS = [
   'personalization.sources.facebook.enabled',
   'branding.remove',
   'context.websiteUrl.enabled',
-  'media.images.enabled',
-  'media.videos.enabled',
   'links.enabled',
   'media.meta.enabled',
   'list.primary.max',
@@ -54,8 +52,6 @@ export const FLAG_KEYS = [
   'personalization.sources.facebook.enabled',
   'branding.remove',
   'context.websiteUrl.enabled',
-  'media.images.enabled',
-  'media.videos.enabled',
   'links.enabled',
   'media.meta.enabled',
 ] as const satisfies readonly CapabilityKey[];

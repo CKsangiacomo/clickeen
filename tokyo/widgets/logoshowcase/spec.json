@@ -515,7 +515,7 @@
     "    <tooldrawer-field-appearance-item-card group-label='Logo tiles' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Logo tile shadow' label-key='logoshowcase.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;logoshowcase.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
     "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
@@ -524,7 +524,7 @@
     "    <tooldrawer-field-settings-seo group-label='' type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-settings-behavior group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show backlink' />",
+    "    <tooldrawer-field-settings-behavior group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>"
   ]

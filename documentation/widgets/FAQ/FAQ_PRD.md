@@ -46,8 +46,6 @@ Key                      | Kind | Path(s)                    | Metric/Mode      
 ------------------------ | ---- | -------------------------- | ---------------------- | ------------------ | ----------------------------
 seoGeo.enabled           | flag | seoGeo.enabled             | boolean (deny true)    | load+ops+publish   | sanitize to false on load
 branding.remove          | flag | behavior.showBacklink      | boolean (deny false)   | load+ops+publish   | sanitize to true on load
-media.images.enabled     | flag | behavior.displayImages     | boolean (deny true)    | load+ops+publish   | sanitize to false on load
-media.videos.enabled     | flag | behavior.displayVideos     | boolean (deny true)    | load+ops+publish   | sanitize to false on load
 list.primary.max         | cap  | sections[]                 | count                  | ops+publish        | section count cap
 list.secondary.rich.max  | cap  | sections[].faqs[]          | count                  | ops+publish        | per-section Q/A count cap
 list.secondary.rich.total.max | cap | sections[].faqs[]       | count-total            | ops+publish        | total Q/A count cap
@@ -118,7 +116,7 @@ State: `behavior.*`
 - `expandAll`
 
 ### Media behavior in answers
-State: `behavior.displayImages`, `behavior.displayVideos`
+State: (no media toggles; answers never embed images/videos)
 - If enabled, image/video URLs in answers render as media; otherwise they render as links.
 
 ## 3) Accordion icon system (single choice, deterministic pairs)
@@ -274,8 +272,6 @@ Controls:
   - `seo.canonicalUrl` (shown when `seoGeo.enabled == true`)
   - `geo.enableDeepLinks` (shown when `seoGeo.enabled == true`)
 - Behavior:
-  - `behavior.displayVideos`
-  - `behavior.displayImages`
   - `behavior.showBacklink`
 
 Entitlements enforcement:

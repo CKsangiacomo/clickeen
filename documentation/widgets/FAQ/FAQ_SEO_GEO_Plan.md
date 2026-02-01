@@ -7,7 +7,7 @@ This document describes the **shipped** SEO/GEO behavior for the FAQ widget and 
 
 Primary references:
 - Cross-cutting capability (authoritative): `documentation/capabilities/seo-geo.md`
-- Execution PRD (process artifact): `Execution_Pipeline_Docs/02-Executing/019__Prague_SEO_GEO_Indexable_Curated_Embeds_PRD_v0.2.md`
+- Execution PRD (process artifact): `Execution_Pipeline_Docs/03-Executed/035__Prague_SEO_GEO_IframePlusPlus_Curated_Embeds_PRD_v0.2.md`
 
 ---
 

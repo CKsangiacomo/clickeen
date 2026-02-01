@@ -7,7 +7,7 @@ This document defines the **shipped** SEO/GEO model and contracts across:
 - **Tokyo** widget definitions (state shape + limits + l10n allowlists)
 - **Paris** enforcement (entitlements and publish validation)
 - **Venice** schema/excerpt generation + embed delivery
-- **Bob** embed snippet UX
+- **Bob** embed snippet UX (Publish modal)
 - **Prague** curated embed usage (same primitive as customers)
 
 If anything here disagrees with runtime code, treat it as a P0 doc bug and update immediately.
@@ -25,6 +25,7 @@ If anything here disagrees with runtime code, treat it as a P0 doc bug and updat
   - `seoGeo.enabled === true` → allows SEO/GEO artifacts to be generated
   - `seo.enableSchema !== false` → allows schema emission (excerpt may still emit)
 - **Locale should be explicit.** Pass `data-locale` for deterministic behavior (otherwise the loader falls back to `navigator.language` and Venice normalizes/applies overlays when available).
+- **Bob UX:** embed snippets are surfaced under the **Publish** button (modal). Settings must not render embed code.
 
 ---
 

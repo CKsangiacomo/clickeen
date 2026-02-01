@@ -73,6 +73,7 @@ type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   baseInstanceData: Record<string, unknown>;
+  publishedBaseInstanceData: Record<string, unknown>;
   previewData: Record<string, unknown> | null;
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
@@ -342,6 +343,7 @@ function useWidgetSessionInternal() {
     compiled: null,
     instanceData: {},
     baseInstanceData: {},
+    publishedBaseInstanceData: {},
     previewData: null,
     previewOps: null,
     isDirty: false,
@@ -674,6 +676,31 @@ function useWidgetSessionInternal() {
     allowlistCacheRef.current.set(widgetType, allowlist);
     return allowlist;
   }, []);
+
+  useEffect(() => {
+    const widgetType = state.compiled?.widgetname ?? state.meta?.widgetname;
+    if (!widgetType) return;
+    if (state.locale.allowlist.length) return;
+
+    let cancelled = false;
+    loadLocaleAllowlist(widgetType)
+      .then((allowlist) => {
+        if (cancelled) return;
+        setState((prev) => {
+          if (prev.locale.allowlist.length) return prev;
+          return { ...prev, locale: { ...prev.locale, allowlist } };
+        });
+      })
+      .catch((err) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[useWidgetSession] Failed to load localization allowlist', err);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadLocaleAllowlist, state.compiled?.widgetname, state.locale.allowlist.length, state.meta?.widgetname]);
 
   const loadParisLayer = useCallback(async (
     workspaceId: string,
@@ -1050,6 +1077,7 @@ function useWidgetSessionInternal() {
         compiled,
         instanceData: resolved,
         baseInstanceData: resolved,
+        publishedBaseInstanceData: structuredClone(resolved),
         isDirty: false,
         policy: nextPolicy,
         selectedPath: null,
@@ -1079,6 +1107,7 @@ function useWidgetSessionInternal() {
         compiled: null,
         instanceData: {},
         baseInstanceData: {},
+        publishedBaseInstanceData: {},
         isDirty: false,
         error: { source: 'load', message: messageText },
         upsell: null,
@@ -1225,8 +1254,14 @@ function useWidgetSessionInternal() {
         isDirty: false,
         error: null,
         upsell: null,
+        publishedBaseInstanceData:
+          json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
+            ? structuredClone(json.config)
+            : prev.publishedBaseInstanceData,
         baseInstanceData:
-          json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.baseInstanceData,
+          json?.config && typeof json.config === 'object' && !Array.isArray(json.config)
+            ? structuredClone(json.config)
+            : prev.baseInstanceData,
         instanceData: (() => {
           const nextBase =
             json?.config && typeof json.config === 'object' && !Array.isArray(json.config) ? json.config : prev.baseInstanceData;
@@ -1260,6 +1295,26 @@ function useWidgetSessionInternal() {
     state.meta?.widgetname,
     state.policy,
   ]);
+
+  const discardChanges = useCallback(() => {
+    setState((prev) => {
+      const nextBase = structuredClone(prev.publishedBaseInstanceData);
+      const nextInstance =
+        prev.locale.activeLocale !== prev.locale.baseLocale
+          ? applyLocalizationOps(applyLocalizationOps(nextBase, prev.locale.baseOps), prev.locale.userOps)
+          : nextBase;
+      return {
+        ...prev,
+        baseInstanceData: nextBase,
+        instanceData: nextInstance,
+        isDirty: false,
+        undoSnapshot: null,
+        error: null,
+        upsell: null,
+        lastUpdate: { source: 'load', path: '', ts: Date.now() },
+      };
+    });
+  }, []);
 
   const loadFromUrlParams = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -1496,6 +1551,7 @@ function useWidgetSessionInternal() {
       undoLastOps,
       commitLastOps,
       publish,
+      discardChanges,
       dismissUpsell,
       requestUpsell,
       setSelectedPath,
@@ -1516,6 +1572,7 @@ function useWidgetSessionInternal() {
       undoLastOps,
       commitLastOps,
       publish,
+      discardChanges,
       dismissUpsell,
       requestUpsell,
       loadInstance,

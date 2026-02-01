@@ -219,8 +219,6 @@
     assertBoolean(state.behavior.expandFirst, 'state.behavior.expandFirst');
     assertBoolean(state.behavior.expandAll, 'state.behavior.expandAll');
     assertBoolean(state.behavior.multiOpen, 'state.behavior.multiOpen');
-    assertBoolean(state.behavior.displayVideos, 'state.behavior.displayVideos');
-    assertBoolean(state.behavior.displayImages, 'state.behavior.displayImages');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
 
     assertObject(state.stage, 'state.stage');
@@ -314,7 +312,7 @@
     return wrapper.innerHTML;
   }
 
-  function renderAnswerHtml(html, behavior) {
+  function renderAnswerHtml(html) {
     if (html == null) throw new Error('[FAQ] answer must be a string');
 
     const sanitized = sanitizeInlineHtml(html, true);
@@ -336,37 +334,9 @@
       node = walker.nextNode();
     }
 
-    function buildUrlNode(url, allowBlockEmbeds) {
+    function buildUrlNode(url) {
       const trimmed = url.trim();
       if (!/^https?:\/\/\S+$/i.test(trimmed)) return document.createTextNode(url);
-
-      const lower = trimmed.toLowerCase();
-      const isImage = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(lower);
-      const isYouTube =
-        /youtube\.com\/watch\?v=|youtu\.be\//i.test(lower) || /youtube\.com\/embed\//i.test(lower);
-      const isVimeo = /vimeo\.com\//i.test(lower);
-
-      if (isImage && behavior.displayImages === true) {
-        const img = document.createElement('img');
-        img.className = 'ck-faq__a-img';
-        img.alt = '';
-        img.src = trimmed;
-        return img;
-      }
-
-      if (allowBlockEmbeds === true && behavior.displayVideos === true && (isYouTube || isVimeo)) {
-        const src = isYouTube
-          ? trimmed.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
-          : trimmed;
-        const container = document.createElement('div');
-        container.className = 'ck-faq__a-video';
-        const iframe = document.createElement('iframe');
-        iframe.src = src;
-        iframe.loading = 'lazy';
-        iframe.setAttribute('allowfullscreen', '');
-        container.appendChild(iframe);
-        return container;
-      }
 
       const a = document.createElement('a');
       a.href = trimmed;
@@ -382,11 +352,9 @@
       if (parts.length <= 1) return;
 
       const frag = document.createDocumentFragment();
-      const parent = textNode.parentNode;
-      const allowBlockEmbeds = parent === wrapper;
       parts.forEach((part) => {
         const url = part.trim();
-        if (/^https?:\/\/\S+$/i.test(url)) frag.appendChild(buildUrlNode(url, allowBlockEmbeds));
+        if (/^https?:\/\/\S+$/i.test(url)) frag.appendChild(buildUrlNode(url));
         else frag.appendChild(document.createTextNode(part));
       });
       textNode.parentNode?.replaceChild(frag, textNode);
@@ -444,7 +412,7 @@
         const items = section.faqs
           .map((item) => {
             const qText = sanitizeInlineHtml(item.question, false);
-            const answerHtml = renderAnswerHtml(item.answer, behavior);
+            const answerHtml = renderAnswerHtml(item.answer);
             const anchorId = publicId ? `faq-q-${publicId}-${item.id}` : `faq-q-${item.id}`;
             const answerId = publicId ? `faq-a-${publicId}-${item.id}` : `faq-a-${item.id}`;
             const questionTag = isAccordion ? 'button' : 'div';
@@ -620,21 +588,42 @@
     applyAppearance(state.appearance);
     applyLayout(state.layout);
     accordionRuntime.deepLinksEnabled = state.geo.enableDeepLinks === true;
+
+    // If we rebuild list markup (e.g. while typing in Bob), preserve the current expanded state.
+    // Otherwise, "expandFirst/defaultOpen" would only apply on the initial mount and get lost on re-render.
+    let desiredExpandedAnchorIds = null;
+    const captureExpandedAnchors = () => {
+      const expanded = [];
+      listEl.querySelectorAll('[data-role="faq-question"]').forEach((button) => {
+        if (!(button instanceof HTMLElement)) return;
+        if (button.getAttribute('aria-expanded') !== 'true') return;
+        const item = button.closest('[data-role="faq-item"]');
+        if (item instanceof HTMLElement && item.id) expanded.push(item.id);
+      });
+      return expanded;
+    };
+
     const nextItemsSignature = JSON.stringify([
       state.sections,
       state.displayCategoryTitles === true,
-      state.behavior.displayVideos === true,
-      state.behavior.displayImages === true,
       state.layout.type,
     ]);
     if (nextItemsSignature !== lastItemsSignature) {
       lastItemsSignature = nextItemsSignature;
+      if (accordionRuntime.isAccordion === true && state.layout.type === 'accordion') {
+        const expanded = captureExpandedAnchors();
+        desiredExpandedAnchorIds = expanded.length ? expanded : null;
+      }
       renderItems(
         state.sections,
         state.behavior,
         state.displayCategoryTitles === true,
         state.layout.type === 'accordion',
       );
+      if (accordionRuntime.isAccordion === true && state.layout.type === 'accordion' && !desiredExpandedAnchorIds) {
+        // No items were open before the re-render: re-run initial expand logic (expandFirst/defaultOpen/expandAll).
+        lastAccordionSignature = '';
+      }
     }
 
     const hasAny = state.sections.some((section) => section.faqs.length > 0);
@@ -657,7 +646,27 @@
       state.behavior.expandFirst === true,
       state.sections.map((section) => section.faqs.map((faq) => faq.defaultOpen === true)),
     ]);
-    if (sig !== lastAccordionSignature) {
+    if (desiredExpandedAnchorIds && desiredExpandedAnchorIds.length) {
+      lastAccordionSignature = sig;
+      buttons.forEach((button) => {
+        if (button instanceof HTMLButtonElement) button.disabled = false;
+        button.removeAttribute('tabindex');
+      });
+      collapseAll(listEl);
+
+      const escapeId = (id) => {
+        if (typeof window.CSS?.escape === 'function') return window.CSS.escape(id);
+        return String(id).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+      };
+      const want = accordionRuntime.multiOpen ? desiredExpandedAnchorIds : [desiredExpandedAnchorIds[0]];
+      want.forEach((anchorId) => {
+        const item = listEl.querySelector(`#${escapeId(anchorId)}`);
+        if (!(item instanceof HTMLElement)) return;
+        const button = item.querySelector('[data-role="faq-question"]');
+        if (!(button instanceof HTMLElement)) return;
+        setExpanded(button, true);
+      });
+    } else if (sig !== lastAccordionSignature) {
       lastAccordionSignature = sig;
       buttons.forEach((button) => {
         if (button instanceof HTMLButtonElement) button.disabled = false;

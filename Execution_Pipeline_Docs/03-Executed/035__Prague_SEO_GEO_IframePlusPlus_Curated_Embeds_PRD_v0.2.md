@@ -1,9 +1,10 @@
 # Prague SEO/GEO Optimization (Iframe++) for Curated Embeds — (FAQ → Countdown → Logo Showcase)
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Priority:** P0 (unblocks Prague + customer embeds SEO/GEO)  
 **Owner:** Product Dev Team (Bob/Widgets/Venice) + GTM Dev Team (Prague)  
 **Date:** 2026-01-30  
+**Executed:** 2026-02-01  
 
 Source of truth for current behavior: `documentation/` + runtime code.
 

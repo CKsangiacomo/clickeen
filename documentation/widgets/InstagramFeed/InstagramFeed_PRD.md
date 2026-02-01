@@ -47,8 +47,6 @@ key                  | kind | path(s)                           | metric/mode   
 -------------------- | ---- | --------------------------------- | -------------------- | -------------------------- | ------------------------------
 seoGeo.enabled       | flag | seoGeo.enabled (TBD)              | boolean (deny true)  | load sanitize; ops+publish | SEO/GEO toggle
 branding.remove      | flag | behavior.showBacklink (TBD)       | boolean (deny false) | load sanitize; ops+publish | Remove branding
-media.images.enabled | flag | posts[].imageUrl (TBD)            | nonempty-string      | ops+publish                | Images require image access
-media.videos.enabled | flag | posts[].videoUrl (TBD)            | nonempty-string      | ops+publish                | Videos require video access
 links.enabled        | flag | posts[].linkUrl (TBD)             | nonempty-string      | ops+publish                | Post links require link access
 media.meta.enabled   | flag | posts[].alt/posts[].title (TBD)   | nonempty-string      | ops+publish                | Meta requires meta access
 ```

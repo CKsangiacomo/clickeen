@@ -189,28 +189,6 @@
         "tier3": true
       }
     },
-    "media.images.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": true,
-        "free": true,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "media.videos.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": true,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
     "links.enabled": {
       "kind": "flag",
       "values": {

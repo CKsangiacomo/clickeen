@@ -113,8 +113,6 @@ Behavior:
 - `behavior.expandFirst` (boolean; accordion only)
 - `behavior.multiOpen` (boolean; accordion only)
 - `behavior.expandAll` (boolean; accordion only)
-- `behavior.displayImages` (boolean)
-- `behavior.displayVideos` (boolean)
 - `behavior.showBacklink` (boolean; controls global branding badge)
 
 Context:
@@ -213,8 +211,6 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `behavior.multiOpen` | runtime | dom | accordion click handler collapse rules |
 | `behavior.expandAll` | runtime | dom | initial expand behavior in `applyState` |
 | `behavior.expandFirst` | runtime | dom | initial expand behavior in `applyState` |
-| `behavior.displayImages` | answer rendering | dom | `renderAnswerHtml` embeds images when enabled |
-| `behavior.displayVideos` | answer rendering | dom | `renderAnswerHtml` embeds videos when enabled |
 | `behavior.showBacklink` | `.ck-branding` | dom | `tokyo/widgets/shared/branding.js` |
 | `geo.enableDeepLinks` | runtime | dom | `accordionRuntime.deepLinksEnabled` + writes `window.location.hash` |
 | `seoGeo.enabled` | Venice schema | schema | `venice/lib/schema/faq.ts` gates schema emission |
