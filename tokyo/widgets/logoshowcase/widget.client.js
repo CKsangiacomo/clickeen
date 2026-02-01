@@ -91,6 +91,16 @@
     if (!Array.isArray(value)) throw new Error(`[LogoShowcase] ${path} must be an array`);
   }
 
+  function assertBorderConfig(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertNumber(value.width, `${path}.width`);
+    assertString(value.color, `${path}.color`);
+    if (value.width < 0 || value.width > 12) {
+      throw new Error(`[LogoShowcase] ${path}.width must be 0..12`);
+    }
+  }
+
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
   }
@@ -139,8 +149,11 @@
     assertBoolean(state.cta.enabled, 'state.cta.enabled');
     assertString(state.cta.label, 'state.cta.label');
     assertString(state.cta.href, 'state.cta.href');
-    if (!['filled', 'outline'].includes(state.cta.style)) {
-      throw new Error('[LogoShowcase] state.cta.style must be filled|outline');
+    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
+    assertString(state.cta.iconName, 'state.cta.iconName');
+    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
+    if (!['left', 'right'].includes(state.cta.iconPlacement)) {
+      throw new Error('[LogoShowcase] state.cta.iconPlacement must be left|right');
     }
 
     if (!['grid', 'carousel'].includes(state.type)) {
@@ -207,7 +220,20 @@
 
     assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
     assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
+    assertBorderConfig(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
     assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
+    assertString(state.appearance.ctaSizePreset, 'state.appearance.ctaSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaSizePreset)) {
+      throw new Error('[LogoShowcase] state.appearance.ctaSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
+    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
+    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
+    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaIconSizePreset)) {
+      throw new Error('[LogoShowcase] state.appearance.ctaIconSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
 
     assertObject(state.spacing, 'state.spacing');
     assertNumber(state.spacing.gap, 'state.spacing.gap');
@@ -288,19 +314,6 @@
     return out;
   }
 
-  function tokenizeRadius(value) {
-    const normalized = String(value || '').trim();
-    if (!normalized || normalized === 'none') return '0';
-    return `var(--control-radius-${normalized})`;
-  }
-
-  function computeShadowBoxShadow(shadow) {
-    if (shadow.enabled !== true || shadow.alpha <= 0) return 'none';
-    const alphaMix = 100 - shadow.alpha;
-    const color = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
-    return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
-  }
-
   function resolveFillBackground(value) {
     if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
       return window.CKFill.toCssBackground(value);
@@ -323,28 +336,10 @@
     lsRoot.style.setProperty('--ls-logo-filter', state.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
     lsRoot.style.setProperty('--ls-item-bg', resolveFillBackground(state.appearance.itemBackground));
-    const border = state.appearance.itemCard.border;
-    const borderEnabled = border.enabled === true && border.width > 0;
-    lsRoot.style.setProperty('--ls-item-border-width', borderEnabled ? `${border.width}px` : '0px');
-    lsRoot.style.setProperty('--ls-item-border-color', borderEnabled ? border.color : 'transparent');
-
-    lsRoot.style.setProperty('--ls-item-shadow', computeShadowBoxShadow(state.appearance.itemCard.shadow));
-
-    const radiusCfg = state.appearance.itemCard;
-    const r =
-      radiusCfg.radiusLinked === false
-        ? {
-            tl: tokenizeRadius(radiusCfg.radiusTL),
-            tr: tokenizeRadius(radiusCfg.radiusTR),
-            br: tokenizeRadius(radiusCfg.radiusBR),
-            bl: tokenizeRadius(radiusCfg.radiusBL),
-          }
-        : (() => {
-            const all = tokenizeRadius(radiusCfg.radius);
-            return { tl: all, tr: all, br: all, bl: all };
-          })();
-    lsRoot.style.setProperty('--ls-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
-
+    if (!window.CKSurface?.applyItemCard) {
+      throw new Error('[LogoShowcase] Missing CKSurface.applyItemCard');
+    }
+    window.CKSurface.applyItemCard(state.appearance.itemCard, lsRoot);
   }
 
   function renderLogoTile(logo) {

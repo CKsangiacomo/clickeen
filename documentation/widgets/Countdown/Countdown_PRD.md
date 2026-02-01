@@ -125,6 +125,7 @@ Required roles (minimum):
 - Apply platform globals:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
+  - `CKSurface.applyItemCard(state.appearance.itemCard, root)` (sets `--ck-item-card-*` for timer tiles)
 
 Personal countdown persistence rule (deterministic):
 - Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` once we have it, otherwise `publicId` injected by embed; do not invent random ids).

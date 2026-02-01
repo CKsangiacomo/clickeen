@@ -73,6 +73,24 @@ MUST NOT
 
 If a widget needs anything outside this rule, it must be explicitly required by the PRD.
 
+### 2.2) Item card surface (optional global primitive)
+If a widget exposes `appearance.itemCard.*` controls (border/shadow/radius for items), it MUST use the shared Surface primitive:
+- Runtime: `tokyo/widgets/shared/surface.js` (`window.CKSurface.applyItemCard(state.appearance.itemCard, scopeEl)`)
+- CSS vars set on `scopeEl`:
+  - `--ck-item-card-border-width`
+  - `--ck-item-card-border-color`
+  - `--ck-item-card-shadow`
+  - `--ck-item-card-radius`
+
+MUST
+- Load `../shared/surface.js` in `widget.html` (before `widget.client.js`).
+- Apply item card vars via `CKSurface.applyItemCard(...)` on every state update.
+- Reference only `--ck-item-card-*` vars in `widget.css` for item card styling.
+
+MUST NOT
+- Reimplement border/shadow/radius math per widget (use `CKSurface`).
+- Put any layout logic (grid/list/accordion/masonry) inside `CKSurface`.
+
 ### 3) Typography (required if any text renders)
 MUST
 - Define `defaults.typography.roles` for all visible text parts.
@@ -99,10 +117,19 @@ MUST
   - `cta.enabled` (boolean)
   - `cta.label` (string)
   - `cta.href` (string)
-  - `cta.style` (`filled|outline`)
+  - `cta.iconEnabled` (boolean)
+  - `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
+  - `cta.iconPlacement` (`left|right`)
   - `appearance.ctaBackground` (fill **or** CSS color string; color only)
   - `appearance.ctaTextColor` (fill **or** CSS color string; color only)
+  - `appearance.ctaBorder` (object; Dieter `dropdown-border` schema)
   - `appearance.ctaRadius` (`none|sm|md|lg|xl|2xl`)
+  - `appearance.ctaSizePreset` (`xs|s|m|l|xl|custom`; editor preset selector for CTA sizing)
+  - `appearance.ctaPaddingLinked` (boolean; editor-only link/unlink for CTA padding)
+  - `appearance.ctaPaddingInline` (number; px)
+  - `appearance.ctaPaddingBlock` (number; px)
+  - `appearance.ctaIconSizePreset` (`xs|s|m|l|xl|custom`; editor preset selector for CTA icon sizing)
+  - `appearance.ctaIconSize` (number; px)
 - Use this DOM structure (inside the widget root):
   - `.ck-headerLayout` contains:
     - `.ck-header` (direct child)
@@ -112,6 +139,8 @@ MUST
     - `.ck-headerLayout__body` (direct child; holds widget-specific content)
 - Localize `header.title`, `header.subtitleHtml`, and `cta.label` in `localization.json`.
 - Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
+- Note on CTA sizing presets:
+  - In Bob, `appearance.ctaSizePreset` and `appearance.ctaIconSizePreset` are **preset selectors** (editor convenience). Selecting a preset expands into concrete state writes (typography button size + CTA padding/icon size). If any of the target values are edited manually, Bob resets the preset selector to `custom`.
 
 MUST NOT
 - Reimplement header layout/CTA styling per widget (use the shared primitive).

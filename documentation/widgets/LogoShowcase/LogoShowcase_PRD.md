@@ -184,9 +184,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
   - **how**:
     - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
-    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`
+    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
     - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`
-    - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaRadius`, `cta.style`
+    - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
 
 ### Panel: Layout (common)
 - **Logo size**: `spacing.logoHeight` (used for both desktop + mobile)
@@ -235,15 +235,15 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **Border**: `appearance.itemCard.border` (object schema; `dropdown-border`)
   - **Shadow**: `appearance.itemCard.shadow` (object schema; `dropdown-shadow`)
   - **Radius**: `appearance.itemCard.radiusLinked` + `appearance.itemCard.radius*` (linked/unlinked)
-  - **how**: runtime applies these via CSS variables on the logo tile wrapper
+  - **how**: runtime calls `CKSurface.applyItemCard(state.appearance.itemCard, root)` which sets `--ck-item-card-*` vars on the widget root; the logo tile CSS consumes them
 
 - **Header text styling**: Typography roles `title` + `body`
   - **changes**: header title/subtitle font + text color
   - **how**: `CKTypography.applyTypography(...)` (no Appearance-level header text color controls)
 
-- **CTA styling**: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaRadius`, `cta.style`
-  - **changes**: CTA colors + radius + filled/outline
-  - **how**: `CKHeader.applyHeader(...)` writes `--ck-header-cta-bg`, `--ck-header-cta-fg`, `--ck-header-cta-radius` on `.ck-headerLayout`
+- **CTA styling**: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
+  - **changes**: CTA colors + border + radius + padding/icon sizing presets
+  - **how**: `CKHeader.applyHeader(...)` writes `--ck-header-cta-bg`, `--ck-header-cta-fg`, `--ck-header-cta-border-*`, `--ck-header-cta-radius`, `--ck-header-cta-padding-*`, `--ck-header-cta-icon-size` on `.ck-headerLayout`
 
 - **Stage/Pod appearance (platform)**: `stage.background`, `pod.background`
   - **changes**: container fills
@@ -488,7 +488,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "title": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "24px",
+        "sizeCustom": 24,
         "fontStyle": "normal",
         "weight": "700",
         "color": "var(--color-system-black)"
@@ -496,7 +496,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "body": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "14px",
+        "sizeCustom": 14,
         "fontStyle": "normal",
         "weight": "400",
         "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)"
@@ -504,7 +504,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "button": {
         "family": "Inter",
         "sizePreset": "m",
-        "sizeCustom": "14px",
+        "sizeCustom": 14,
         "fontStyle": "normal",
         "weight": "600",
         "color": "var(--color-system-white)"

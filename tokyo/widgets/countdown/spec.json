@@ -160,7 +160,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "custom"
         },
         "timer": {
@@ -171,7 +171,7 @@
           "family": "Inter",
           "weight": "700",
           "fontStyle": "normal",
-          "sizeCustom": "48px",
+          "sizeCustom": 48,
           "sizePreset": "custom"
         },
         "button": {
@@ -182,7 +182,7 @@
           "family": "Inter",
           "weight": "500",
           "fontStyle": "normal",
-          "sizeCustom": "16px",
+          "sizeCustom": 16,
           "sizePreset": "custom"
         },
         "heading": {
@@ -193,7 +193,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "32px",
+          "sizeCustom": 32,
           "sizePreset": "custom"
         }
       },

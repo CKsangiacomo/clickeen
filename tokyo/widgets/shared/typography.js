@@ -226,16 +226,33 @@
       let sizeValue = null;
       if (sizePreset === 'custom') {
         const sizeCustom = role.sizeCustom;
-        if (typeof sizeCustom !== 'string' || !sizeCustom.trim()) {
-          throw new Error(`[CKTypography] Role "${roleKey}" is missing sizeCustom`);
+        if (typeof sizeCustom === 'number' && Number.isFinite(sizeCustom)) {
+          if (sizeCustom < 0) {
+            throw new Error(`[CKTypography] Role "${roleKey}" sizeCustom must be >= 0`);
+          }
+          // For editor ergonomics, allow sizeCustom as a plain number (interpreted as px).
+          sizeValue = scaleKind === 'number' ? String(sizeCustom) : `${String(sizeCustom)}px`;
+        } else {
+          if (typeof sizeCustom !== 'string' || !sizeCustom.trim()) {
+            throw new Error(`[CKTypography] Role "${roleKey}" is missing sizeCustom`);
+          }
+          const trimmed = sizeCustom.trim();
+          if (scaleKind === 'number') {
+            if (!isNumericString(trimmed)) {
+              throw new Error(`[CKTypography] Role "${roleKey}" sizeCustom must be a number (no units)`);
+            }
+            sizeValue = trimmed;
+          } else {
+            if (isNumericString(trimmed)) {
+              sizeValue = `${trimmed}px`;
+            } else {
+              if (!isCssLengthString(trimmed)) {
+                throw new Error(`[CKTypography] Role "${roleKey}" sizeCustom must be a CSS length`);
+              }
+              sizeValue = trimmed;
+            }
+          }
         }
-        if (scaleKind === 'number' && !isNumericString(sizeCustom)) {
-          throw new Error(`[CKTypography] Role "${roleKey}" sizeCustom must be a number (no units)`);
-        }
-        if (scaleKind === 'css-length' && !isCssLengthString(sizeCustom)) {
-          throw new Error(`[CKTypography] Role "${roleKey}" sizeCustom must be a CSS length`);
-        }
-        sizeValue = sizeCustom;
       } else {
         sizeValue = scale[sizePreset];
         if (typeof sizeValue !== 'string' || !sizeValue.trim()) {

@@ -100,8 +100,11 @@ Location: `tokyo/widgets/shared/`
 | --- | --- | --- |
 | `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap)` | Apply typography roles |
 | `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply Stage/Pod layout |
-| `branding.js` | (self-managed) | Toggle backlink via `state.behavior.showBacklink` |
 | `fill.js` | `window.CKFill.*` | Fill normalization + color/gradient/image/video helpers |
+| `header.js` | `window.CKHeader.applyHeader(state, widgetRoot)` | Shared header block (title/subtitle/CTA) |
+| `header.css` | *(stylesheet)* | Shared header layout styles |
+| `surface.js` | `window.CKSurface.applyItemCard(itemCard, scopeEl)` | Shared item card vars (border/shadow/radius) |
+| `branding.js` | *(self-managed)* | Injects/toggles backlink via `state.behavior.showBacklink` |
 
 ---
 

@@ -97,7 +97,9 @@
       "enabled": false,
       "label": "Contact us",
       "href": "https://example.com",
-      "style": "filled"
+      "iconEnabled": false,
+      "iconName": "arrow.right",
+      "iconPlacement": "right"
     },
     "layout": {
       "gap": 16,
@@ -193,7 +195,18 @@
       "linkUnderlineColor": "var(--color-system-blue)",
       "ctaBackground": "var(--color-system-blue)",
       "ctaTextColor": "var(--color-system-white)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-blue)"
+      },
       "ctaRadius": "md",
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 16,
+      "ctaPaddingBlock": 12,
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
       "podBorder": {
         "color": "var(--color-system-gray-5)",
         "width": 1,
@@ -207,7 +220,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "24px",
+          "sizeCustom": 24,
           "sizePreset": "m"
         },
         "body": {
@@ -215,7 +228,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "m"
         },
         "answer": {
@@ -223,7 +236,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "15px",
+          "sizeCustom": 15,
           "sizePreset": "m"
         },
         "section": {
@@ -231,7 +244,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "m"
         },
         "question": {
@@ -239,7 +252,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "16px",
+          "sizeCustom": 16,
           "sizePreset": "m"
         },
         "button": {
@@ -247,7 +260,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "m"
         }
       },

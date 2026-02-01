@@ -8,6 +8,7 @@ import {
   buildHeaderAppearancePanelFields,
   buildHeaderContentPanelFields,
   buildHeaderLayoutPanelFields,
+  buildHeaderPresets,
 } from './compiler/modules/header';
 import { buildTypographyPanel } from './compiler/modules/typography';
 import { resolveTokyoBaseUrl } from './env/tokyo';
@@ -402,12 +403,19 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const themeOptions = themeRegistry ? buildThemeOptions(themeRegistry.themes) : undefined;
   const themePresets = themeRegistry ? buildThemePresets(themeRegistry.themes) : undefined;
 
+  const hasHeader = (widgetJson.defaults as any)?.header != null;
+  const hasCta = (widgetJson.defaults as any)?.cta != null;
+  const headerPresets = hasHeader && hasCta ? buildHeaderPresets() : undefined;
+
   const presetsRaw = normalizePresets(widgetJson.presets);
-  const presetsMerged = themePresets
-    ? { ...(presetsRaw ?? {}), ...themePresets }
-    : presetsRaw ?? undefined;
-  const presets = presetsMerged
-    ? (rewriteAssetUrlsInDefaults(presetsMerged as Record<string, unknown>, tokyoBase) as WidgetPresets)
+  const presetsBase = {
+    ...(headerPresets ?? {}),
+    ...(presetsRaw ?? {}),
+  };
+  const presetsMerged = themePresets ? { ...presetsBase, ...themePresets } : presetsBase;
+  const presetsFinal = Object.keys(presetsMerged).length > 0 ? presetsMerged : undefined;
+  const presets = presetsFinal
+    ? (rewriteAssetUrlsInDefaults(presetsFinal as Record<string, unknown>, tokyoBase) as WidgetPresets)
     : undefined;
 
   const controls = compileControlsFromPanels({

@@ -50,7 +50,9 @@ CTA (global primitive):
 - `cta.enabled` (boolean)
 - `cta.label` (string)
 - `cta.href` (string; must be `http(s)://` to be clickable)
-- `cta.style` (`filled` | `outline`)
+- `cta.iconEnabled` (boolean; when true, CTA renders a Dieter icon)
+- `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
+- `cta.iconPlacement` (`left` | `right`)
 
 Layout:
 - `layout.type` (`accordion` | `list` | `multicolumn`)
@@ -89,7 +91,14 @@ Appearance:
 - Header CTA (appearance):
   - `appearance.ctaBackground` (fill; color only)
   - `appearance.ctaTextColor` (fill; color only)
+  - `appearance.ctaBorder` (object; Dieter `dropdown-border` schema)
   - `appearance.ctaRadius` (`none` | `sm` | `md` | `lg` | `xl` | `2xl`)
+  - `appearance.ctaSizePreset` (`xs` | `s` | `m` | `l` | `xl` | `custom`; editor preset selector; see Binding Map)
+  - `appearance.ctaPaddingLinked` (boolean; editor-only link/unlink for CTA padding)
+  - `appearance.ctaPaddingInline` (number; px)
+  - `appearance.ctaPaddingBlock` (number; px)
+  - `appearance.ctaIconSizePreset` (`xs` | `s` | `m` | `l` | `xl` | `custom`; editor preset selector; see Binding Map)
+  - `appearance.ctaIconSize` (number; px)
 
 Behavior:
 - `behavior.expandFirst` (boolean; accordion only)
@@ -137,9 +146,11 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `header.placement` | `.ck-headerLayout` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-header-placement` |
 | `header.ctaPlacement` | `.ck-header` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-cta-placement` |
 | `cta.enabled` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` toggles visibility |
-| `cta.label` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets text content |
+| `cta.label` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets `.ck-header__ctaLabel.textContent` |
 | `cta.href` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets clickable `href` only for `http(s)://` |
-| `cta.style` | `[data-role="header-cta"]` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-variant` |
+| `cta.iconEnabled` | `.ck-header__ctaIcon` | dom | `CKHeader.applyHeader(state, widgetRoot)` toggles icon visibility |
+| `cta.iconName` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-icon` to Dieter `mask-image` url |
+| `cta.iconPlacement` | `[data-role="header-cta"]` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-icon-placement` |
 | `displayCategoryTitles` | `[data-role="faq-list"]` | dom | `renderItems(..., displayCategoryTitles, ...)` |
 | `sections` | `[data-role="faq-list"]` | dom | `renderItems(state.sections, ...)` |
 | `layout.type` | `[data-role="faq"]` | data-attr | `faqRoot.setAttribute('data-layout', state.layout.type)` |
@@ -153,14 +164,14 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `layout.itemPaddingBottom` | `[data-role="faq"]` | css-var | `--faq-item-pad-bottom` |
 | `layout.itemPaddingLeft` | `[data-role="faq"]` | css-var | `--faq-item-pad-left` |
 | `appearance.itemBackground` | `[data-role="faq"]` | css-var | `--faq-item-bg` |
-| `appearance.itemCard.border` | `[data-role="faq"]` | css-var | `--faq-card-border-width/--faq-card-border-color` |
-| `appearance.itemCard.shadow` | `[data-role="faq"]` | css-var | `--faq-item-shadow` |
-| `appearance.itemCard.radiusLinked` | `[data-role="faq"]` | css-var | chooses linked vs per-corner radius |
-| `appearance.itemCard.radius` | `[data-role="faq"]` | css-var | `--faq-item-radius` (linked) |
-| `appearance.itemCard.radiusTL` | `[data-role="faq"]` | css-var | `--faq-item-radius` (TL) |
-| `appearance.itemCard.radiusTR` | `[data-role="faq"]` | css-var | `--faq-item-radius` (TR) |
-| `appearance.itemCard.radiusBR` | `[data-role="faq"]` | css-var | `--faq-item-radius` (BR) |
-| `appearance.itemCard.radiusBL` | `[data-role="faq"]` | css-var | `--faq-item-radius` (BL) |
+| `appearance.itemCard.border` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-border-width/--ck-item-card-border-color` |
+| `appearance.itemCard.shadow` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-shadow` |
+| `appearance.itemCard.radiusLinked` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` chooses linked vs per-corner radius |
+| `appearance.itemCard.radius` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (linked) |
+| `appearance.itemCard.radiusTL` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (TL) |
+| `appearance.itemCard.radiusTR` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (TR) |
+| `appearance.itemCard.radiusBR` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (BR) |
+| `appearance.itemCard.radiusBL` | `[data-role="faq"]` | css-var | `CKSurface.applyItemCard(state.appearance.itemCard, faqRoot)` sets `--ck-item-card-radius` (BL) |
 | `appearance.linkStyle` | `[data-role="faq"]` | data-attr | `faqRoot.setAttribute('data-link-style', state.appearance.linkStyle)` |
 | `appearance.linkUnderlineColor` | `[data-role="faq"]` | css-var | `--faq-link-underline-color` |
 | `appearance.linkHighlightColor` | `[data-role="faq"]` | css-var | `--faq-link-highlight-color` |
@@ -168,9 +179,16 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `appearance.iconStyle` | `[data-role="faq"]` | css-var | `--faq-icon-expand/--faq-icon-collapse` |
 | `appearance.iconColor` | `[data-role="faq"]` | css-var | `--faq-icon-color` |
 | `appearance.podBorder` | `.pod` | css-var | `--pod-border-width/--pod-border-color` |
+| `appearance.ctaSizePreset` | Bob editor | editor | Selecting a preset expands to: `typography.roles.button.sizePreset` + CTA padding values; editing any target resets it to `custom` |
+| `appearance.ctaPaddingLinked` | Bob editor | editor | When linking, Bob sets `appearance.ctaPaddingBlock` to match `appearance.ctaPaddingInline` |
+| `appearance.ctaPaddingInline` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-padding-inline` |
+| `appearance.ctaPaddingBlock` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-padding-block` |
 | `appearance.ctaBackground` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-bg` |
 | `appearance.ctaTextColor` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-fg` |
+| `appearance.ctaBorder` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-border-width/--ck-header-cta-border-color` |
 | `appearance.ctaRadius` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-radius` |
+| `appearance.ctaIconSizePreset` | Bob editor | editor | Selecting a preset expands to `appearance.ctaIconSize`; editing it resets to `custom` |
+| `appearance.ctaIconSize` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-icon-size` |
 | `stage.background` | `.stage` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
 | `pod.background` | `.pod` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
 | `typography.roles.title.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
