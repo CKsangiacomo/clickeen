@@ -347,9 +347,12 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 
 | Module | Global Function | Purpose |
 |--------|-----------------|---------|
+| `fill.js` | `CKFill.toCssBackground(fill)` / `CKFill.toCssColor(fill)` | Resolve fill configs (color/gradient/image/video) to CSS |
+| `header.js` | `CKHeader.applyHeader(state, widgetRoot)` | Shared header (title/subtitle/CTA) behavior + CSS vars |
+| `surface.js` | `CKSurface.applyItemCard(itemCard, scopeEl)` | Shared item card surface vars (border/shadow/radius) |
 | `stagePod.js` | `CKStagePod.applyStagePod(stage, pod, scopeEl)` | Stage/pod layout, padding, radius, alignment |
 | `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig)` | Typography with dynamic Google Fonts (17 curated fonts) |
-| `branding.js` | `CKBranding` | "Made with Clickeen" backlink |
+| `branding.js` | *(self-executing)* | Injects "Made with Clickeen" backlink + reacts to state updates |
 
 ### Stage/Pod Architecture
 

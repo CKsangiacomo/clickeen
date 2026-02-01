@@ -33,6 +33,10 @@ Only read these:
 - `tokyo/widgets/shared/stagePod.js`
 - `tokyo/widgets/shared/typography.js`
 - `tokyo/widgets/shared/branding.js`
+- `tokyo/widgets/shared/fill.js`
+- `tokyo/widgets/shared/header.js`
+- `tokyo/widgets/shared/header.css`
+- `tokyo/widgets/shared/surface.js`
 - `tokyo/widgets/{widgetType}/limits.json` (read-only unless PRD requires edits)
 - `tokyo/widgets/{widgetType}/localization.json` (read-only unless PRD requires edits)
 - `tokyo/widgets/{widgetType}/layers/*.allowlist.json` (read-only unless PRD requires edits)
@@ -115,6 +119,11 @@ Checklist:
 - Arrays have a container role and item role.
 - Subparts that change with state have a stable role.
 - No inline styles or inline scripts.
+- Shared modules are loaded when used:
+  - Always: `../shared/stagePod.js`, `../shared/typography.js`, `../shared/branding.js`
+  - If any fill controls exist: `../shared/fill.js`
+  - If using the shared header primitive: `../shared/header.css` + `../shared/header.js`
+  - If exposing `appearance.itemCard.*`: `../shared/surface.js`
 
 ---
 
@@ -140,6 +149,10 @@ Rules:
   - `window.CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `window.CKTypography.applyTypography(state.typography, root, roleMap)`
 - Use `data-role` selectors only.
+ - If used by the widget:
+   - Shared header: `window.CKHeader.applyHeader(state, root)`
+   - Item card surface: `window.CKSurface.applyItemCard(state.appearance.itemCard, scopeEl)`
+   - Fill resolution: `window.CKFill.toCssBackground(...)` / `toCssColor(...)`
 
 Checklist:
 - All state paths referenced in JS exist in `spec.json`.

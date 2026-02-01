@@ -73,6 +73,24 @@ MUST NOT
 
 If a widget needs anything outside this rule, it must be explicitly required by the PRD.
 
+### 2.2) Item card surface (optional global primitive)
+If a widget exposes `appearance.itemCard.*` controls (border/shadow/radius for items), it MUST use the shared Surface primitive:
+- Runtime: `tokyo/widgets/shared/surface.js` (`window.CKSurface.applyItemCard(state.appearance.itemCard, scopeEl)`)
+- CSS vars set on `scopeEl`:
+  - `--ck-item-card-border-width`
+  - `--ck-item-card-border-color`
+  - `--ck-item-card-shadow`
+  - `--ck-item-card-radius`
+
+MUST
+- Load `../shared/surface.js` in `widget.html` (before `widget.client.js`).
+- Apply item card vars via `CKSurface.applyItemCard(...)` on every state update.
+- Reference only `--ck-item-card-*` vars in `widget.css` for item card styling.
+
+MUST NOT
+- Reimplement border/shadow/radius math per widget (use `CKSurface`).
+- Put any layout logic (grid/list/accordion/masonry) inside `CKSurface`.
+
 ### 3) Typography (required if any text renders)
 MUST
 - Define `defaults.typography.roles` for all visible text parts.

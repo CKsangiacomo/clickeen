@@ -462,13 +462,6 @@
     return String(value ?? '');
   }
 
-  function computeShadowBoxShadow(shadow) {
-    if (shadow.enabled !== true || shadow.alpha <= 0) return 'none';
-    const alphaMix = 100 - shadow.alpha;
-    const color = `color-mix(in oklab, ${shadow.color}, transparent ${alphaMix}%)`;
-    return `${shadow.inset === true ? 'inset ' : ''}${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${color}`;
-  }
-
   function applyAppearanceVars(state) {
     const textColor = resolveFillColor(state.appearance.textColor);
     const itemBackground = resolveFillBackground(state.appearance.itemBackground);
@@ -483,31 +476,10 @@
       podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
       podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
     }
-
-    const border = state.appearance.itemCard.border;
-    const borderEnabled = border.enabled === true && border.width > 0;
-    countdownRoot.style.setProperty('--countdown-item-border-width', borderEnabled ? `${border.width}px` : '0px');
-    countdownRoot.style.setProperty('--countdown-item-border-color', borderEnabled ? border.color : 'transparent');
-    countdownRoot.style.setProperty('--countdown-item-shadow', computeShadowBoxShadow(state.appearance.itemCard.shadow));
-
-    const tokenize = (value) => {
-      const normalized = String(value || '').trim();
-      return normalized === 'none' ? '0' : `var(--control-radius-${normalized})`;
-    };
-    const radiusCfg = state.appearance.itemCard;
-    const r =
-      radiusCfg.radiusLinked === false
-        ? {
-            tl: tokenize(radiusCfg.radiusTL),
-            tr: tokenize(radiusCfg.radiusTR),
-            br: tokenize(radiusCfg.radiusBR),
-            bl: tokenize(radiusCfg.radiusBL),
-          }
-        : (() => {
-            const all = tokenize(radiusCfg.radius);
-            return { tl: all, tr: all, br: all, bl: all };
-          })();
-    countdownRoot.style.setProperty('--countdown-item-radius', `${r.tl} ${r.tr} ${r.br} ${r.bl}`);
+    if (!window.CKSurface?.applyItemCard) {
+      throw new Error('[Countdown] Missing CKSurface.applyItemCard');
+    }
+    window.CKSurface.applyItemCard(state.appearance.itemCard, countdownRoot);
 
     const separatorText = String(state.appearance.separator || ':');
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {

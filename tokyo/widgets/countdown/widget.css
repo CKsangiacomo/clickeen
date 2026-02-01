@@ -207,9 +207,9 @@ body {
   justify-content: center;
   padding: var(--space-4) var(--space-5);
   background: var(--countdown-item-bg, var(--color-system-gray-5));
-  border: var(--countdown-item-border-width, 0px) solid var(--countdown-item-border-color, transparent);
-  box-shadow: var(--countdown-item-shadow, none);
-  border-radius: var(--countdown-item-radius, var(--control-radius-md));
+  border: var(--ck-item-card-border-width, 0px) solid var(--ck-item-card-border-color, transparent);
+  box-shadow: var(--ck-item-card-shadow, none);
+  border-radius: var(--ck-item-card-radius, var(--control-radius-md));
   min-width: 120px;
 }
 
@@ -229,9 +229,9 @@ body {
   min-width: 72px;
   padding: var(--space-3) var(--space-4);
   background: var(--countdown-item-bg, var(--color-system-gray-5));
-  border: var(--countdown-item-border-width, 0px) solid var(--countdown-item-border-color, transparent);
-  box-shadow: var(--countdown-item-shadow, none);
-  border-radius: var(--countdown-item-radius, var(--control-radius-md));
+  border: var(--ck-item-card-border-width, 0px) solid var(--ck-item-card-border-color, transparent);
+  box-shadow: var(--ck-item-card-shadow, none);
+  border-radius: var(--ck-item-card-radius, var(--control-radius-md));
 }
 
 .ck-countdown__separator {

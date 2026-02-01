@@ -235,7 +235,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **Border**: `appearance.itemCard.border` (object schema; `dropdown-border`)
   - **Shadow**: `appearance.itemCard.shadow` (object schema; `dropdown-shadow`)
   - **Radius**: `appearance.itemCard.radiusLinked` + `appearance.itemCard.radius*` (linked/unlinked)
-  - **how**: runtime applies these via CSS variables on the logo tile wrapper
+  - **how**: runtime calls `CKSurface.applyItemCard(state.appearance.itemCard, root)` which sets `--ck-item-card-*` vars on the widget root; the logo tile CSS consumes them
 
 - **Header text styling**: Typography roles `title` + `body`
   - **changes**: header title/subtitle font + text color
