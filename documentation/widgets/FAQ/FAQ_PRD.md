@@ -284,7 +284,7 @@ Why it exists:
 
 Controls (FAQ roles):
 - `typography.roles.title.*`
-- `typography.roles.body.*`
+- `typography.roles.body.*` (Header subtitle; shown as “Subtitle” in the Typography panel)
 - `typography.roles.section.*`
 - `typography.roles.question.*`
 - `typography.roles.answer.*`

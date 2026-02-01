@@ -198,7 +198,7 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `stage.background` | `.stage` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
 | `pod.background` | `.pod` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
 | `typography.roles.title.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
-| `typography.roles.body.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
+| `typography.roles.body.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` sets `--typo-body-*` vars consumed by `.ck-header__subtitle` |
 | `typography.roles.section.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
 | `typography.roles.question.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
 | `typography.roles.answer.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
