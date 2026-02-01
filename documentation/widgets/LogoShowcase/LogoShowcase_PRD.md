@@ -185,7 +185,7 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **how**:
     - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
     - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
-    - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`
+    - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`, `header.gap`, `header.textGap`, `header.innerGap`
     - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
 
 ### Panel: Layout (common)

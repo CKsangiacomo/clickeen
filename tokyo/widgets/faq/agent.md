@@ -49,6 +49,10 @@ Header (global primitive):
 - `header.alignment` (`left` | `center` | `right`)
 - `header.placement` (`top` | `bottom` | `left` | `right`)
 - `header.ctaPlacement` (`right` | `below`)
+- Header spacing (layout; px):
+  - `header.gap` (number; header ↔ content)
+  - `header.textGap` (number; title ↔ subtitle)
+  - `header.innerGap` (number; text ↔ CTA)
 
 CTA (global primitive):
 - `cta.enabled` (boolean)
@@ -150,6 +154,9 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `header.alignment` | `.ck-header` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-align` |
 | `header.placement` | `.ck-headerLayout` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-header-placement` |
 | `header.ctaPlacement` | `.ck-header` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-cta-placement` |
+| `header.gap` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-gap` (header ↔ content) |
+| `header.textGap` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-text-gap` (title ↔ subtitle) |
+| `header.innerGap` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-inner-gap` (text ↔ CTA) |
 | `cta.enabled` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` toggles visibility |
 | `cta.label` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets `.ck-header__ctaLabel.textContent` |
 | `cta.href` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets clickable `href` only for `http(s)://` |

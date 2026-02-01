@@ -65,6 +65,9 @@ export function buildHeaderLayoutPanelFields(): string[] {
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.placement' label='Header placement' placeholder='Choose placement' value='{{header.placement}}' options='${headerPlacementOptions}' show-if=\"header.enabled == true\" />`,
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.alignment' label='Header alignment' placeholder='Choose alignment' value='{{header.alignment}}' options='${headerAlignmentOptions}' show-if=\"header.enabled == true\" />`,
     `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.ctaPlacement' label='CTA position' placeholder='Choose position' value='{{header.ctaPlacement}}' options='${headerCtaPlacementOptions}' show-if=\"header.enabled == true && cta.enabled == true\" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='Header/content gap (px)' show-if=\"header.enabled == true\" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.textGap' label='Title/subtitle gap (px)' show-if=\"header.enabled == true && header.showSubtitle == true\" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.innerGap' label='Text/CTA gap (px)' show-if=\"header.enabled == true && cta.enabled == true\" />`,
     '  </tooldrawer-cluster>',
   ];
 }

@@ -209,6 +209,10 @@ Header layout controls (compiler-injected when `defaults.header` + `defaults.cta
 - `header.placement`
 - `header.alignment`
 - `header.ctaPlacement` (show-if `cta.enabled == true`)
+- Header spacing (px; compiler-injected):
+  - `header.gap` (header ↔ content)
+  - `header.textGap` (title ↔ subtitle; show-if `header.showSubtitle == true`)
+  - `header.innerGap` (text ↔ CTA; show-if `cta.enabled == true`)
 
 Stage/Pod layout controls (compiler-injected for all widgets):
 - `pod.widthMode`, `pod.contentWidth`

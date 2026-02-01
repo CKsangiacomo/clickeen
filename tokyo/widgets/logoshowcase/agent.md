@@ -45,6 +45,9 @@ Content:
   - `header.alignment` (`left` | `center` | `right`)
   - `header.placement` (`top` | `bottom` | `left` | `right`)
   - `header.ctaPlacement` (`right` | `below`)
+  - `header.gap` (number; px; header ↔ content spacing)
+  - `header.textGap` (number; px; title ↔ subtitle spacing)
+  - `header.innerGap` (number; px; text ↔ CTA spacing)
 - Strips / Logos:
   - `strips[]` (array)
   - `strips[].logos[]` (array)

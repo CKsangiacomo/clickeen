@@ -91,7 +91,10 @@
       "subtitleHtml": "Polished design, effortless updates, and SEO foundations—ready for any language.",
       "alignment": "left",
       "placement": "top",
-      "ctaPlacement": "right"
+      "ctaPlacement": "right",
+      "gap": 16,
+      "innerGap": 12,
+      "textGap": 8
     },
     "cta": {
       "enabled": false,

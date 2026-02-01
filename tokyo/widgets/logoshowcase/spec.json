@@ -84,7 +84,10 @@
       "subtitleHtml": "Trusted by teams worldwide.",
       "alignment": "center",
       "placement": "top",
-      "ctaPlacement": "right"
+      "ctaPlacement": "right",
+      "gap": 24,
+      "innerGap": 16,
+      "textGap": 8
     },
     "seoGeo": {
       "enabled": false

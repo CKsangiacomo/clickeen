@@ -25,6 +25,19 @@
     }
   }
 
+  function applyOptionalPxVar(el, cssVar, value, path) {
+    if (!cssVar || typeof cssVar !== 'string') return;
+    if (value === undefined || value === null) {
+      el.style.removeProperty(cssVar);
+      return;
+    }
+    assertNumber(value, path);
+    if (value < 0 || value > 200) {
+      throw new Error(`[CKHeader] ${path} must be 0..200`);
+    }
+    el.style.setProperty(cssVar, String(value) + 'px');
+  }
+
   function sanitizeInlineHtml(html, allowLinks) {
     var wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
@@ -185,6 +198,10 @@
     if (!(layoutEl instanceof HTMLElement)) {
       throw new Error('[CKHeader] Missing .ck-headerLayout');
     }
+
+    applyOptionalPxVar(layoutEl, '--ck-header-gap', state.header.gap, 'state.header.gap');
+    applyOptionalPxVar(layoutEl, '--ck-header-inner-gap', state.header.innerGap, 'state.header.innerGap');
+    applyOptionalPxVar(layoutEl, '--ck-header-text-gap', state.header.textGap, 'state.header.textGap');
 
     var headerEl = layoutEl.querySelector(':scope > .ck-header');
     if (!(headerEl instanceof HTMLElement)) {
