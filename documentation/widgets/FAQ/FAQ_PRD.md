@@ -22,6 +22,7 @@ How it differs from other widgets:
 
 Layout choices (inside the same Type):
 - `layout.type = accordion | list | multicolumn`
+- When `layout.type = multicolumn` (“Cards”), cards packing is controlled by `layout.cardsLayout = grid | masonry`.
 
 ## 0) Non-negotiables (Architecture)
 1. **Starter designs are instances**: curated designs are Clickeen-owned instances that users clone.
@@ -74,6 +75,11 @@ Source of truth for editor state is `tokyo/widgets/faq/spec.json` → `defaults`
   - `id` (string; required, stable)
   - `title`
   - ordered list of `faqs[]` (question/answer items)
+
+Runtime DOM contract (sections):
+- Each section renders as a **wrapper**:
+  - Section header (optional; controlled by `displayCategoryTitles`)
+  - Section body container that holds **only items** (enables Cards grid/masonry without mixing section metadata into the item flow)
 - Each FAQ item has:
   - `id` (string; required, stable)
   - `question` (supports a small allowed set of inline tags; links are not allowed)
@@ -100,6 +106,10 @@ State: `layout.type`
 - `accordion`: interactive expand/collapse
 - `list`: all answers visible, no interaction
 - `multicolumn` (“Cards”): all answers visible, multi-column layout (responsive columns)
+
+Cards packing (only when `layout.type = multicolumn`):
+- `layout.cardsLayout = grid` (row/column grid; DOM order maps to row-scan)
+- `layout.cardsLayout = masonry` (CSS columns; visual scan order is column-first top→bottom per column)
 
 ### Accordion behavior
 State: `behavior.*`
@@ -189,6 +199,7 @@ Widget layout controls (spec-defined):
 - Multicolumn-only:
   - `layout.columns.desktop`
   - `layout.columns.mobile`
+  - `layout.cardsLayout` (`grid | masonry`)
 - Item padding:
   - `layout.itemPaddingLinked`
   - `layout.itemPadding` (when linked)

@@ -8,6 +8,7 @@
 ## State Encoding (DOM `data-*` enums)
 Set on the main element `[data-role="faq"]`:
 - `data-layout`: `accordion` | `list` | `multicolumn`
+- `data-cards-layout`: `grid` | `masonry` (only when `data-layout="multicolumn"`)
 - `data-state`: `ready` | `empty`
 
 ## Parts (query within root)
@@ -18,8 +19,11 @@ Set on the main element `[data-role="faq"]`:
 - Header subtitle: `[data-role="header-subtitle"]`
 - Header CTA: `[data-role="header-cta"]`
 - Empty state: `[data-role="faq-empty"]`
-- Items list: `[data-role="faq-list"]`
+- Sections list: `[data-role="faq-list"]`
+- Section wrapper (generated): `[data-role="faq-section"]`
+- Section header (generated): `[data-role="faq-section-header"]`
 - Section title (generated): `[data-role="faq-section-title"]`
+- Section body list (generated): `[data-role="faq-section-body"]`
 - Item (generated): `[data-role="faq-item"]`
 - Question button (generated): `[data-role="faq-question"]`
 - Answer region (generated): `[data-role="faq-answer"]`
@@ -58,6 +62,7 @@ Layout:
 - `layout.type` (`accordion` | `list` | `multicolumn`)
 - `layout.gap` (number; px)
 - `layout.columns.desktop|mobile` (number; >= 1, `multicolumn` only)
+- `layout.cardsLayout` (`grid` | `masonry`; `multicolumn` only; masonry is column-first visual flow)
 - Item card padding (layout spacing):
   - `layout.itemPaddingLinked` (boolean)
   - `layout.itemPadding` (number; px; when linked)
@@ -154,6 +159,7 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `displayCategoryTitles` | `[data-role="faq-list"]` | dom | `renderItems(..., displayCategoryTitles, ...)` |
 | `sections` | `[data-role="faq-list"]` | dom | `renderItems(state.sections, ...)` |
 | `layout.type` | `[data-role="faq"]` | data-attr | `faqRoot.setAttribute('data-layout', state.layout.type)` |
+| `layout.cardsLayout` | `[data-role="faq"]` | data-attr | `faqRoot.setAttribute('data-cards-layout', state.layout.cardsLayout)` (only when `layout.type === 'multicolumn'`; defaults to `grid`) |
 | `layout.gap` | `[data-role="faq"]` | css-var | `--layout-gap` |
 | `layout.columns.desktop` | `[data-role="faq"]` | css-var | `--faq-columns-desktop` |
 | `layout.columns.mobile` | `[data-role="faq"]` | css-var | `--faq-columns-mobile` |

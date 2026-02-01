@@ -152,6 +152,12 @@
     assertObject(state.layout.columns, 'state.layout.columns');
     assertNumber(state.layout.columns.desktop, 'state.layout.columns.desktop');
     assertNumber(state.layout.columns.mobile, 'state.layout.columns.mobile');
+    if (state.layout.cardsLayout !== undefined) {
+      assertString(state.layout.cardsLayout, 'state.layout.cardsLayout');
+      if (!['grid', 'masonry'].includes(state.layout.cardsLayout)) {
+        throw new Error('[FAQ] state.layout.cardsLayout must be grid|masonry');
+      }
+    }
     assertBoolean(state.layout.itemPaddingLinked, 'state.layout.itemPaddingLinked');
     assertNumber(state.layout.itemPadding, 'state.layout.itemPadding');
     assertNumber(state.layout.itemPaddingTop, 'state.layout.itemPaddingTop');
@@ -428,9 +434,11 @@
     const markup = sections
       .map((section) => {
         const header = displayCategoryTitles
-          ? `<li class="ck-faq__category" data-role="faq-section-title" role="presentation">${escapeHtml(
-              section.title,
-            )}</li>`
+          ? `
+              <div class="ck-faq__section-header" data-role="faq-section-header">
+                <div class="ck-faq__category" data-role="faq-section-title">${escapeHtml(section.title)}</div>
+              </div>
+            `
           : '';
 
         const items = section.faqs
@@ -464,7 +472,12 @@
           })
           .join('');
 
-        return header + items;
+        return `
+          <li class="ck-faq__section" data-role="faq-section">
+            ${header}
+            <ul class="ck-faq__list" data-role="faq-section-body">${items}</ul>
+          </li>
+        `;
       })
       .join('');
 
@@ -510,6 +523,12 @@
     faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
     faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
     faqRoot.setAttribute('data-layout', layout.type);
+    if (layout.type === 'multicolumn') {
+      const cardsLayout = typeof layout.cardsLayout === 'string' ? layout.cardsLayout : 'grid';
+      faqRoot.setAttribute('data-cards-layout', cardsLayout);
+    } else {
+      faqRoot.removeAttribute('data-cards-layout');
+    }
 
     const pad =
       layout.itemPaddingLinked === false

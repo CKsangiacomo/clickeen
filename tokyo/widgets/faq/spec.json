@@ -104,6 +104,7 @@
     "layout": {
       "gap": 16,
       "type": "accordion",
+      "cardsLayout": "grid",
       "columns": {
         "mobile": 1,
         "desktop": 2
@@ -330,6 +331,7 @@
     "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.expandAll' label='Expand all questions' show-if=\"layout.type == 'accordion'\" />",
     "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.columns.desktop' label='Columns (desktop)' show-if=\"layout.type == 'multicolumn'\" />",
     "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.columns.mobile' label='Columns (mobile)' show-if=\"layout.type == 'multicolumn'\" />",
+    "    <tooldrawer-field-type-settings group-label='' type='dropdown-actions' size='md' path='layout.cardsLayout' label='Cards layout' placeholder='Choose layout' value='{{layout.cardsLayout}}' show-if=\"layout.type == 'multicolumn'\" options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;},{&quot;label&quot;:&quot;Masonry&quot;,&quot;value&quot;:&quot;masonry&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
     "    <tooldrawer-field-item-padding group-label='' type='toggle' size='md' path='layout.itemPaddingLinked' label='Link Q&A card padding' label-key='faq.labels.linkItemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{layout.itemPaddingLinked}}' default='true' />",
