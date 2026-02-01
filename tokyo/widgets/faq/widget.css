@@ -320,8 +320,8 @@ body {
 .ck-faq[data-layout='multicolumn'][data-cards-layout='masonry'] .ck-faq__item {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
-  display: inline-block;
-  width: 100%;
+  display: block;
+  box-sizing: border-box;
   margin: 0 0 var(--layout-gap, var(--space-3));
 }
 
