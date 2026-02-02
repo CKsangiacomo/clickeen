@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "40438fa9dfb9e87f82979157116e9d8c1badfa5fa57f139d3228e22b37f915e0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.059Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK-sablonok – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Fedezze fel a GYIK-sablonokat, és induljon egy bevált elrendezésből."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "GYIK-sablonok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Indulj egy bevált elrendezésből – aztán igazítsd a márkádhoz."
+    }
+  ],
+  "v": 1
+}

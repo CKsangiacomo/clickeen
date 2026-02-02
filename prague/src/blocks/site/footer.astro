@@ -1,9 +1,10 @@
 ---
 type Props = {
+  market: string;
   locale: string;
 };
 
-const { locale } = Astro.props;
+const { market, locale } = Astro.props;
 ---
 
 <footer class="ck-canvas ck-footerCanvas">
@@ -11,8 +12,8 @@ const { locale } = Astro.props;
     <div class="ck-row ck-footer__row">
       <div class="label-m">Clickeen</div>
       <div class="ck-row ck-footer__links">
-        <a class="label-s ck-footer__link" href={`/${locale}/pricing`}>Pricing</a>
-        <a class="label-s ck-footer__link" href={`/${locale}/widgets/faq`}>Widgets</a>
+        <a class="label-s ck-footer__link" href={`/${market}/${locale}/pricing`}>Pricing</a>
+        <a class="label-s ck-footer__link" href={`/${market}/${locale}/widgets/faq/`}>Widgets</a>
       </div>
     </div>
     <div class="caption">© {new Date().getFullYear()} Clickeen. All rights reserved.</div>
@@ -36,4 +37,3 @@ const { locale } = Astro.props;
     color: inherit;
   }
 </style>
-

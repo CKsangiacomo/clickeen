@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "40438fa9dfb9e87f82979157116e9d8c1badfa5fa57f139d3228e22b37f915e0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.059Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-maler – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Utforsk FAQ-maler og start med et velprøvd oppsett."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-maler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Start med en velprøvd layout – og tilpass den deretter til merkevaren din."
+    }
+  ],
+  "v": 1
+}

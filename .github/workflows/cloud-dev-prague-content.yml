@@ -64,12 +64,12 @@ jobs:
       - name: Smoke test (en)
         run: |
           set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/en/widgets/faq/" | tee /tmp/headers_en.txt
+          curl -fsSIL "$PRAGUE_BASE_URL/uk/en/widgets/faq/" | tee /tmp/headers_en.txt
           grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt
 
       - name: Smoke test (fr overlay applied)
         run: |
           set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/fr/widgets/faq/" | tee /tmp/headers_fr.txt
+          curl -fsSIL "$PRAGUE_BASE_URL/ca/fr/widgets/faq/" | tee /tmp/headers_fr.txt
           grep -qi "^x-prague-overlay-status: applied" /tmp/headers_fr.txt
           grep -qi "^x-prague-overlay-locale: fr" /tmp/headers_fr.txt

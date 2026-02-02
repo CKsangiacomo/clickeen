@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "8195a1d10f47c5b7f0fe175273741fea4544f526d218b1e02aa79c5e1d8d270b",
+  "baseUpdatedAt": "2026-01-24T00:19:35.064Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Maler for logoer – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Start med et polert oppsett og tilpass logooversikten din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Maler for logooversikt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Start med en gjennomarbeidet layout – og gjør den til din egen."
+    }
+  ],
+  "v": 1
+}

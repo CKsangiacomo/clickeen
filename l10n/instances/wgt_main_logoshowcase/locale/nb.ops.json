@@ -1,0 +1,102 @@
+{
+  "v": 1,
+  "baseFingerprint": "f1012911729b6de667d218d001b52972c36c50b1e6ebb9b32bbd95ac42d46804",
+  "baseUpdatedAt": "2026-01-19T16:34:02.945869+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Noen av kundene våre"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Brukt av team over hele verden."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakt oss"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.0.name",
+      "value": "Audi"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.1.name",
+      "value": "BMW"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.2.name",
+      "value": "Chana"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.3.name",
+      "value": "Daihatsu"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.4.name",
+      "value": "Ford"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.5.name",
+      "value": "Honda"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.6.name",
+      "value": "Isuzu"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.7.name",
+      "value": "Lambo"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.8.name",
+      "value": "Perodua"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.9.name",
+      "value": "Peugeot"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.10.name",
+      "value": "Proton"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.11.name",
+      "value": "Suzuki"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.12.name",
+      "value": "Tesla"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.13.name",
+      "value": "Toyota"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.14.name",
+      "value": "VW"
+    },
+    {
+      "op": "set",
+      "path": "strips.0.logos.15.name",
+      "value": "Volvo"
+    }
+  ]
+}

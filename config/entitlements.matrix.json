@@ -331,6 +331,28 @@
         "tier2": 200,
         "tier3": null
       }
+    },
+    "views.monthly.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": null,
+        "free": 10000,
+        "tier1": 100000,
+        "tier2": null,
+        "tier3": null
+      }
+    },
+    "instances.published.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 0,
+        "free": 1,
+        "tier1": 1,
+        "tier2": 5,
+        "tier3": null
+      }
     }
   }
 }

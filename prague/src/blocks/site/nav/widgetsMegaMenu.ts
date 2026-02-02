@@ -7,8 +7,8 @@ export type WidgetsMegaMenuItem = {
   description: string;
 };
 
-export async function resolveWidgetsMegaMenu(params: { locale: string }) {
-  const { locale } = params;
+export async function resolveWidgetsMegaMenu(params: { market: string; locale: string }) {
+  const { market, locale } = params;
   const widgets = await listWidgets();
 
   const items: WidgetsMegaMenuItem[] = [];
@@ -24,15 +24,14 @@ export async function resolveWidgetsMegaMenu(params: { locale: string }) {
     }
     items.push({
       widget,
-      href: `/${locale}/widgets/${widget}`,
+      href: `/${market}/${locale}/widgets/${widget}/`,
       title,
       description,
     });
   }
 
   return {
-    allWidgetsHref: `/${locale}/widgets/`,
+    allWidgetsHref: `/${market}/${locale}/`,
     items,
   };
 }
-

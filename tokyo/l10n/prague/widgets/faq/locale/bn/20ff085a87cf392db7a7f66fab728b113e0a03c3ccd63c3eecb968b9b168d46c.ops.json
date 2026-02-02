@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উইজেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দ্রুত, সুন্দর একটি FAQ উইজেট তৈরি করুন। মিনিটের মধ্যে কাস্টমাইজ করুন, প্রকাশ করুন এবং লোকালাইজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQs উইজেট। সুন্দর উত্তর। দ্রুতগতির জন্য তৈরি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "পরিপাটি ডিজাইন, সহজ আপডেট, এবং SEO ভিত্তি—যেকোনো ভাষার জন্য প্রস্তুত, AI দ্বারা চালিত।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ভিজিটরদের দ্রুত উত্তর খুঁজে পেতে সহায়তা করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "এটিকে আপনার করে তুলুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "এখানেই আপনার আদর্শ FAQ ডিজাইন করুন। পরিবর্তনগুলো সঙ্গে সঙ্গে দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "বিভক্ত সৃজনশীল (ডান)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "এটি ডানদিকের ভিজ্যুয়াল ভ্যারিয়ান্ট, যা হিরোর মতো একই কিউরেটেড ইনস্ট্যান্স ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "স্প্লিট ক্রিয়েটিভ (বাম)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "এটি বাম-ভিজ্যুয়াল ভ্যারিয়েন্ট, যা হিরোর মতো একই কিউরেটেড ইনস্ট্যান্স ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "রিয়েল-টাইমে দেখুন প্রশ্নগুলো কীভাবে নিজে থেকেই উত্তর পেয়ে যায়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "সুন্দরভাবে ডিজাইন করা একটি FAQ যোগ করুন, যা সংশয়ের মুহূর্তে সঠিক উত্তরটি সামনে এনে দেয়। গ্রাহকরা সঙ্গে সঙ্গে বাধামুক্ত হয়, আপত্তিগুলো টিকিট হওয়ার আগেই মিলিয়ে যায়, আর অতিরিক্ত সাপোর্ট না বাড়িয়েই আপনি আরও বেশি বিক্রি সম্পন্ন করেন। একবার কাস্টমাইজ করুন, যেকোনো জায়গায় এম্বেড করুন, আর ২৪/৭ এটি কাজ করতে দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "স্প্লিট ক্রিয়েটিভ (স্ট্যাকড)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "এটি স্ট্যাকড ভ্যারিয়েন্ট, যা হিরোর মতো একই কিউরেটেড ইনস্ট্যান্স ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "যে FAQs সত্যিই কাজ করে (যাতে আপনাকে করতে না হয়)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "আপনার গ্রাহকদের প্রশ্ন আছে। একবার উত্তর দিন, শতবার নয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "উত্তরহীন প্রশ্নের কারণে বিক্রি হারানো বন্ধ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "আপনার সময় ফিরে পান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ঘুমের মধ্যেই আরও বেশি ডিল ক্লোজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "যে কোনো প্রশ্নের উত্তর না থাকলে একজন গ্রাহক সরে যায়। দর্শকরা চলে যায় যখন তারা যা দরকার তা খুঁজে পায় না। ভালোভাবে ডিজাইন করা একটি FAQ আপত্তি তৈরি হওয়ার আগেই তা দূর করে—ফলে গ্রাহকরা আপনার কাছে না গিয়েই নিজেকে কিনতে রাজি করায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "গ্রাহকরা যখন সঙ্গে সঙ্গে উত্তর পেয়ে যায়, তখন সাপোর্ট ভলিউম ৪০%+ কমান। আর কোনো Slack পিং নয়। আর কোনো \"দ্রুত একটা প্রশ্ন\" ইমেইল নয়। আর কোনো কনটেক্সট-সুইচিংয়ের নরক নয়। যা সত্যিই গুরুত্বপূর্ণ সেই কাজে আপনি মনোযোগ দিন—ভারী কাজটা আপনার FAQ-ই করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "সঠিক FAQ সন্দেহ আগেভাগে বুঝে নেয় এবং আপনি অফলাইনে থাকলেও রাত ২টায় বাধা দূর করে। আপনার উত্তর ২৪/৭ কাজ করে। গ্রাহকরা আপনার জন্য অপেক্ষা করে না—তারা এগোতে পারে, যা দেখে তাতে ভরসা করে, এবং আপনার দিন ব্যাহত না করেই \"buy\" চাপ দেয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "স্প্লিট ক্রিয়েটিভ (ডান)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "এটি ডান-ভিজ্যুয়াল ভ্যারিয়েন্ট, যা হিরোর মতো একই কিউরেটেড ইনস্ট্যান্স ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO এমবেড (ইনডেক্সযোগ্য)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "এই এমবেডটি শ্যাডো মোডে চলে যাতে ইনডেক্সিংয়ের জন্য হোস্ট পেজে JSON-LD (FAQPage) ইনজেক্ট করা যায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "প্রতিটি গ্রাহকের সঙ্গে সংযোগ করুন, সর্বত্র"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-চালিত FAQ যা তাদের ভাষায় কথা বলে এবং তাদের চাহিদা বোঝে।"
+    }
+  ],
+  "v": 1
+}

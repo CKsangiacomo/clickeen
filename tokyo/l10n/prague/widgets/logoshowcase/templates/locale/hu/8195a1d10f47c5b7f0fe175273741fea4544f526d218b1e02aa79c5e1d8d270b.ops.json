@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "8195a1d10f47c5b7f0fe175273741fea4544f526d218b1e02aa79c5e1d8d270b",
+  "baseUpdatedAt": "2026-01-24T00:19:35.064Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logó bemutató sablonok – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Indulj egy igényes elrendezésből, és szabjad testre a logóbemutatódat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logóbemutató sablonok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Indulj egy kifinomult elrendezésből – aztán alakítsd a sajátodra."
+    }
+  ],
+  "v": 1
+}

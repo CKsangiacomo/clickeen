@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-24T00:19:35.060Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "লোগো শোকেস উইজেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দ্রুত, নমনীয় শোকেস উইজেট দিয়ে গ্রাহকের লোগো হাইলাইট করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "লোগো শোকেস। তাৎক্ষণিক সামাজিক প্রমাণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "গ্রাহকদের লোগো সুন্দরভাবে দেখান -- আস্থা গড়ুন এবং কনভার্শন বাড়ান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "লোগো প্রদর্শনী"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "সুন্দরভাবে লোগো প্রদর্শন করুন। আস্থা গড়ে তুলুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "এটি কীভাবে কাজ করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "লোগো যোগ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "সাজান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "এম্বেড করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "কয়েক সেকেন্ডে আপনার গ্রাহকের লোগো (SVG/PNG) আপলোড করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "আপনার সাইটের সাথে মানানসই লেআউট + স্পেসিং নির্বাচন করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "যেকোনো প্ল্যাটফর্মে স্নিপেটটি পেস্ট করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "আপনার লোগো শোকেস তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ফ্রি দিয়ে শুরু করুন। প্রস্তুত হলে প্রকাশ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "লাইভে চেষ্টা করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Minibob-এ একটি ডেমো ইনস্ট্যান্স সম্পাদনা করুন। প্রস্তুত হলে প্রকাশ করুন।"
+    }
+  ],
+  "v": 1
+}

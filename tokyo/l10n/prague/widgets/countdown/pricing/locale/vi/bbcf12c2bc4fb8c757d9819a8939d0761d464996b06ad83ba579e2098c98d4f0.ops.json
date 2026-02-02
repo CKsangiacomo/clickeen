@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+  "baseUpdatedAt": "2026-01-24T01:10:01.412Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Bảng giá Countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bảng giá cho widget Countdown."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Bảng giá Countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Được bao gồm trong mọi gói Clickeen."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "วิดเจ็ต FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "สร้างวิดเจ็ต FAQ ที่รวดเร็วและสวยงาม ปรับแต่ง เผยแพร่ และแปลเป็นภาษาท้องถิ่นได้ภายในไม่กี่นาที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "วิดเจ็ต FAQs คำตอบที่สวยงาม สร้างมาเพื่อความเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ดีไซน์ที่ประณีต อัปเดตได้อย่างง่ายดาย และพื้นฐาน SEO—พร้อมสำหรับทุกภาษา ขับเคลื่อนด้วย AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "คำถามที่พบบ่อย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ช่วยให้ผู้เข้าชมค้นหาคำตอบได้อย่างรวดเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "ปรับให้เป็นของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "ออกแบบคำถามที่พบบ่อย (FAQ) ที่สมบูรณ์แบบของคุณได้ที่นี่ ดูการเปลี่ยนแปลงได้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "ครีเอทีฟแบบแบ่ง (ขวา)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "นี่คือเวอร์ชันที่มีภาพอยู่ด้านขวา โดยใช้อินสแตนซ์ที่คัดสรรเดียวกันกับฮีโร่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "ครีเอทีฟแบบแยก (ซ้าย)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "นี่คือเวอร์ชันที่เน้นภาพด้านซ้าย โดยใช้อินสแตนซ์ที่คัดสรรเดียวกันกับฮีโร่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ดูคำถามได้รับคำตอบเองแบบเรียลไทม์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "เพิ่ม FAQ ที่ออกแบบอย่างสวยงามเพื่อแสดงคำตอบที่ใช่ในช่วงเวลาที่ลังเล ลูกค้าแก้ปัญหาได้ทันที ข้อกังวลถูกคลี่คลายก่อนกลายเป็นทิกเก็ต และคุณปิดการขายได้มากขึ้นโดยไม่ต้องเพิ่มทีมซัพพอร์ต ปรับแต่งครั้งเดียว ฝังได้ทุกที่ และปล่อยให้มันทำงานตลอด 24/7"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "ครีเอทีฟแบบแยก (ซ้อนกัน)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "นี่คือเวอร์ชันแบบซ้อนกัน โดยใช้อินสแตนซ์ที่คัดสรรไว้เดียวกันกับฮีโร่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "คำถามที่พบบ่อยที่ได้ผลจริง (คุณไม่ต้องมานั่งทำเอง)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "ลูกค้าของคุณมีคำถาม ตอบครั้งเดียว ไม่ใช่ร้อยครั้ง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "หยุดเสียยอดขายเพราะคำถามที่ไม่ได้รับคำตอบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "ได้เวลาของคุณคืนมา"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ปิดดีลได้มากขึ้นในขณะที่คุณหลับ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ทุกคำถามที่ปล่อยให้ค้างไว้คือการปล่อยให้ลูกค้าเดินจากไป ผู้เข้าชมจะออกเมื่อหาไม่เจอสิ่งที่ต้องการ FAQ ที่ออกแบบมาดีจะสลายข้อโต้แย้งก่อนที่มันจะก่อตัว—ทำให้ลูกค้าตัดสินใจซื้อเองโดยไม่ต้องทักมาถาม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ลดปริมาณงานซัพพอร์ตได้มากกว่า 40% เมื่อ ลูกค้าหาคำตอบได้ทันที ไม่ต้องมีข้อความเด้งใน Slack อีกต่อไป ไม่ต้องมีอีเมล \"ขอถามนิดนึง\" อีกต่อไป ไม่ต้องทนสลับบริบทจนหัวหมุนอีกต่อไป FAQ ของคุณทำงานหนักแทนคุณ ในขณะที่คุณโฟกัสกับงานที่สำคัญจริงๆ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ ที่ใช่จะคาดการณ์ความลังเลและลดแรงเสียดทานได้แม้ตอนตี 2 ตอนที่คุณออฟไลน์ คำตอบของคุณทำงานได้ตลอด 24 ชั่วโมง ลูกค้าไม่ต้องรอคุณ—พวกเขาเดินหน้าต่อได้ทันที เชื่อมั่นในสิ่งที่เห็น และกด \"ซื้อ\" โดยไม่รบกวนวันของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "สร้างสรรค์แบบแบ่งครึ่ง (ขวา)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "นี่คือรูปแบบที่มีภาพอยู่ด้านขวา โดยใช้อินสแตนซ์ที่คัดสรรเดียวกันกับส่วนฮีโร่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "การฝัง SEO/GEO (จัดทำดัชนีได้)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "การฝังนี้ทำงานในโหมดเงาเพื่อแทรก JSON-LD (FAQPage) ลงในหน้าโฮสต์เพื่อให้จัดทำดัชนีได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "เชื่อมต่อกับลูกค้าทุกคน ได้ทุกที่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ ที่ขับเคลื่อนด้วย AI ซึ่งสื่อสารได้ในภาษาของพวกเขาและเข้าใจความต้องการของพวกเขา"
+    }
+  ],
+  "v": 1
+}

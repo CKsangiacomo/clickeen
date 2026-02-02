@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "97dfd509efb352ffa8f0ee35b1232efbdc327faa651f3924cf9e644ec63f78d0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.061Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logóshowcase példák – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tekintse meg a logóshowcase gyakori elhelyezéseit és felhasználási eseteit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logó bemutató példák"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tekintse meg a gyakori elhelyezéseket és felhasználási eseteket."
+    }
+  ],
+  "v": 1
+}

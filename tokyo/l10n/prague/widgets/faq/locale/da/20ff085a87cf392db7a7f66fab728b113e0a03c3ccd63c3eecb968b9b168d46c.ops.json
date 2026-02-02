@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Byg et hurtigt og flot FAQ-widget. Tilpas, udgiv og lokaliser på få minutter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQs-widget. Smukke svar. Bygget til at være hurtig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Gennemført design, ubesværede opdateringer og SEO-grundlag--klar til ethvert sprog, drevet af AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjælp besøgende med hurtigt at finde svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Gør den til din egen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Design din perfekte FAQ lige her. Se ændringer med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Opdelt kreativ (højre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Dette er varianten med visuel til højre, som bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Split kreativ (venstre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Dette er varianten med visuelt indhold til venstre, der bruger den samme kuraterede instans som hero-sektionen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Se spørgsmål besvare sig selv i realtid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tilføj en smukt designet FAQ, der viser det rigtige svar i det øjeblik, der opstår tvivl. Kunder kommer straks videre, indvendinger forsvinder, før de bliver til tickets, og du lukker flere salg uden at tilføje mere support. Tilpas én gang, indlejre hvor som helst, og lad den arbejde 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split creative (stablet)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Dette er den stablede variant, der bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQs, der faktisk virker (så du slipper for det)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dine kunder har spørgsmål. Besvar dem én gang, ikke hundrede gange."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Stop med at miste salg på ubesvarede spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Få din tid tilbage"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Luk flere aftaler, mens du sover"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Hvert spørgsmål, der står ubesvaret, er en kunde, der går. Besøgende smutter, når de ikke kan finde det, de har brug for. En veludformet FAQ tager indvendinger livet af, før de overhovedet opstår—så kunderne overbeviser sig selv om at købe uden nogensinde at række ud."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Skær supportmængden ned med 40%+ når kunderne finder svar med det samme. Ikke flere Slack-pings. Ikke flere \"hurtigt spørgsmål\"-mails. Ikke mere kontekstskifte-helvede. Din FAQ tager det tunge læs, mens du fokuserer på arbejde, der rent faktisk betyder noget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Den rigtige FAQ forudser tvivl og fjerner friktion kl. 2 om natten, når du er offline. Dine svar arbejder døgnet rundt. Kunder venter ikke på dig—de kommer videre, stoler på det, de ser, og klikker \"køb\" uden at afbryde din dag."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Opdelt kreativ (højre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Dette er varianten med det visuelle element til højre og bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO-embed (indekserbar)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dette embed kører i shadow-tilstand for at indsætte JSON-LD (FAQPage) i værtsiden til indeksering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Kom i kontakt med alle kunder, overalt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-drevet FAQ, der taler deres sprog og forstår deres behov."
+    }
+  ],
+  "v": 1
+}

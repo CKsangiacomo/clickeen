@@ -3,9 +3,12 @@ type Props = {
   title: string;
   description?: string;
   locale?: string;
+  robots?: string;
+  canonicalPath?: string;
+  alternates?: Array<{ href: string; hreflang: string }>;
 };
 
-const { title, description, locale } = Astro.props;
+const { title, description, locale, robots, canonicalPath, alternates } = Astro.props;
 
 const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
 if (!TOKYO_URL) {
@@ -14,16 +17,40 @@ if (!TOKYO_URL) {
 const TOKENS_HREF = `${TOKYO_URL.replace(/\/$/, '')}/dieter/tokens/tokens.css`;
 
 const isDevProject = (process.env.CF_PAGES_PROJECT_NAME || '').endsWith('-dev');
+const resolvedRobots = robots ?? (isDevProject ? 'noindex,nofollow' : null);
+
+function resolveTextDir(localeValue: string | undefined): 'ltr' | 'rtl' {
+  const lang = String(localeValue || 'en')
+    .trim()
+    .toLowerCase()
+    .split('-')[0];
+  const rtl = new Set(['ar', 'he', 'fa', 'ur']);
+  return rtl.has(lang) ? 'rtl' : 'ltr';
+}
+
+function toAbsoluteUrl(href: string): string {
+  try {
+    return new URL(href, Astro.url).toString();
+  } catch {
+    return href;
+  }
+}
 ---
 
 <!doctype html>
-<html lang={locale ?? 'en'}>
+<html lang={locale ?? 'en'} dir={resolveTextDir(locale)}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    {isDevProject ? <meta name="robots" content="noindex,nofollow" /> : null}
+    {resolvedRobots ? <meta name="robots" content={resolvedRobots} /> : null}
     <title>{title}</title>
     {description ? <meta name="description" content={description} /> : null}
+    {canonicalPath ? <link rel="canonical" href={toAbsoluteUrl(canonicalPath)} /> : null}
+    {Array.isArray(alternates)
+      ? alternates.map((alt) => (
+          <link rel="alternate" hreflang={alt.hreflang} href={toAbsoluteUrl(alt.href)} />
+        ))
+      : null}
     <link rel="stylesheet" href={TOKENS_HREF} />
     <link rel="stylesheet" href="/styles/layout.css" />
     <link rel="stylesheet" href="/styles/primitives.css" />

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5005c53d56c4691f769c347ba44fd744fc8d21195087c025592573fee9bc96e",
+  "baseUpdatedAt": "2026-01-24T00:19:35.056Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-eksempler – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Se eksempler på FAQ-widget i praksis og beste praksis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-eksempler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Se brukstilfeller fra den virkelige verden og beste praksis."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alla frågor"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Finns det en gratisplan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Vad är Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Hur installerar jag en widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Varför ska jag använda Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ja, en aktiv widget med grundfunktioner."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Inbäddningsbara widgetar med inbyggda konverteringar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kopiera inbäddningskoden och klistra in den före </body> på din webbplats."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "För att Clickeen är en fantastisk ny plattform som gör webben vacker och enkel att använda."
+    }
+  ]
+}

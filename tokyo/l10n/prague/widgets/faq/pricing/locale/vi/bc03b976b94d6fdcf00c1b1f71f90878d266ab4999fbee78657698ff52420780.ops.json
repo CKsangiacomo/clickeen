@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bc03b976b94d6fdcf00c1b1f71f90878d266ab4999fbee78657698ff52420780",
+  "baseUpdatedAt": "2026-01-24T00:19:35.058Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Câu hỏi thường gặp về giá - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bảng giá đơn giản cho tiện ích Câu hỏi thường gặp. Nâng cấp khi bạn cần nhiều hơn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Câu hỏi thường gặp về giá"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Các gói đơn giản. Nâng cấp khi bạn cần thêm tiện ích và loại bỏ thương hiệu."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d1d276abb2a79974644d692de54cda9a31f118c646c6b823c9da13977f90cf2b",
+  "baseUpdatedAt": "2026-01-24T00:19:35.063Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logoesittelyn hinnoittelu - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Selkeä hinnoittelu logoesittely-widgetille. Aloita ilmaiseksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logoesittelyn hinnoittelu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Aloita ilmaiseksi. Päivitä, kun haluat lisää widgettejä ja ilman brändäystä."
+    }
+  ],
+  "v": 1
+}

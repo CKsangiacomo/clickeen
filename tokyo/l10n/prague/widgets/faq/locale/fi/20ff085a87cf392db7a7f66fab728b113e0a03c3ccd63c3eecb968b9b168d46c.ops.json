@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Rakenna nopea ja kaunis FAQ-widget. Mukauta, julkaise ja lokalisoi minuuteissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "UKK-widget. Kauniit vastaukset. Rakennettu nopeaksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Viimeistelty muotoilu, vaivattomat päivitykset ja SEO-perusta – valmiina mille tahansa kielelle, tekoälyn vauhdittamana."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "UKK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Auta kävijöitä löytämään vastaukset nopeasti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Tee siitä omasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Suunnittele täydellinen usein kysyttyjen kysymysten osio tässä. Näet muutokset heti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Jaettu luova (oikea)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Tämä on oikeanpuoleinen visuaalinen versio, joka käyttää samaa kuratoitua instanssia kuin hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Jaettu luova (vasen)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Tämä on vasemmanpuoleinen visuaalinen versio, joka käyttää samaa kuratoitua instanssia kuin sankariosio."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Katso, kuinka kysymykset saavat vastauksensa reaaliajassa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Lisää sivustollesi kauniisti suunniteltu UKK, joka tuo oikean vastauksen esiin epäilyksen hetkellä. Asiakkaat pääsevät heti eteenpäin, vastaväitteet hälvenevät ennen kuin niistä tulee tukipyyntöjä, ja teet enemmän kauppaa lisäämättä tukikuormaa. Mukauta kerran, upota minne tahansa ja anna sen toimia 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Jaettu luova (pinottu)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Tämä on pinottu versio, joka käyttää samaa kuratoitua instanssia kuin hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "UKK:t, jotka oikeasti toimivat (jotta sinun ei tarvitse)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Asiakkaillasi on kysymyksiä. Vastaa niihin kerran, älä sata kertaa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Lopeta myynnin menettäminen vastaamattomiin kysymyksiin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Saa aikasi takaisin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Päätä enemmän kauppoja nukkuessasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Jokainen vastaamatta jäänyt kysymys on asiakas, joka kävelee pois. Vierailijat lähtevät, kun he eivät löydä tarvitsemaansa. Hyvin suunniteltu UKK kumoaa vastaväitteet jo ennen kuin ne edes syntyvät – niin asiakkaat vakuuttuvat ostamaan ottamatta koskaan yhteyttä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Vähennä tukipyyntöjen määrää yli 40 %, kun asiakkaat löytävät vastaukset heti. Ei enää Slack-pingejä. Ei enää \"pika kysymys\" -sähköposteja. Ei enää kontekstinvaihdon helvettiä. UKK hoitaa raskaan työn, kun sinä keskityt siihen, millä on oikeasti väliä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Oikea UKK ennakoi epäilykset ja poistaa kitkan kello 2 yöllä, kun olet offline. Vastauksesi toimivat ympäri vuorokauden. Asiakkaat eivät odota sinua – he pääsevät eteenpäin, luottavat näkemäänsä ja painavat \"osta\" keskeyttämättä päivääsi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Jaettu luova (oikea)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Tämä on oikeanpuoleinen visuaalinen variantti, joka käyttää samaa kuratoitua instanssia kuin sankariosio."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO-upotus (indeksoitava)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Tämä upotus toimii shadow-tilassa ja lisää JSON-LD:n (FAQPage) isäntäsivulle indeksointia varten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Ota yhteys jokaiseen asiakkaaseen, kaikkialla"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Tekoälypohjainen UKK, joka puhuu heidän kieltään ja ymmärtää heidän tarpeensa."
+    }
+  ],
+  "v": 1
+}

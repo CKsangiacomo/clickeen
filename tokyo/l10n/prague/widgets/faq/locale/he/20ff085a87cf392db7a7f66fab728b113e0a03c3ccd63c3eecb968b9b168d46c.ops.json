@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ווידג'ט שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "בנו ווידג'ט שאלות נפוצות מהיר ויפה. התאימו אישית, פרסמו ולוקליזציה תוך דקות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ווידג'ט שאלות נפוצות. תשובות יפות. נבנה כדי להיות מהיר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "עיצוב מלוטש, עדכונים ללא מאמץ, ויסודות SEO — מוכנים לכל שפה, מופעלים על ידי AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "עזרו למבקרים למצוא תשובות במהירות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "הפכו אותו לשלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "עצבו את ה-FAQ המושלם שלכם כאן. ראו את השינויים מייד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "קריאייטיב מפוצל (ימין)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "זו הווריאציה עם הוויז'ואל בצד ימין, המשתמשת באותו מופע שנאצר כמו ההירו."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "קריאייטיב מפוצל (שמאל)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "זוהי הגרסה הוויזואלית עם התמונה בצד שמאל, תוך שימוש באותה וריאציה שנבחרה בקפידה כמו בהירו."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "צפו בשאלות מקבלות תשובות בזמן אמת"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "הטמיעו שאלות נפוצות (FAQ) בעיצוב יפהפה שמציג את התשובה הנכונה ברגע של ספק. הלקוחות משתחררים מהחסימה מיד, ההתנגדויות מתפוגגות לפני שהן הופכות לפניות תמיכה, ואתם סוגרים יותר מכירות בלי להוסיף עוד תמיכה. התאימו פעם אחת, הטמיעו בכל מקום, ותנו לזה לעבוד 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "קריאייטיב מפוצל (מוערם)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "זו הווריאציה המוערמת, המשתמשת באותו מופע שנאצר כמו בהירו."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "שאלות נפוצות שבאמת עובדות (כדי שלא תצטרכו)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "ללקוחות שלכם יש שאלות. תענו עליהן פעם אחת, לא מאה פעמים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "הפסיקו לאבד מכירות בגלל שאלות שלא נענו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "קבלו את הזמן שלכם בחזרה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "סגרו יותר עסקאות בזמן שאתם ישנים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "כל שאלה שנשארת בלי מענה היא לקוח שמתרחק. מבקרים עוזבים כשהם לא מוצאים את מה שהם צריכים. FAQ מתוכנן היטב מנטרל התנגדויות עוד לפני שהן נוצרות—כך שלקוחות משכנעים את עצמם לקנות בלי בכלל ליצור קשר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "צמצמו את נפח הפניות לתמיכה ב-40%+ כשהלקוחות מוצאים תשובות מיד. בלי עוד התראות Slack. בלי עוד מיילים של \"שאלה קצרה\". בלי עוד גיהינום של מעבר הקשר. ה-FAQ שלכם עושה את העבודה הקשה בזמן שאתם מתמקדים בעבודה שבאמת חשובה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ נכון צופה ספק ומסיר חיכוך בשתיים בלילה כשאתם לא זמינים. התשובות שלכם עובדות מסביב לשעון. לקוחות לא מחכים לכם—הם מתגברים על החסם, סומכים על מה שהם רואים, ולוחצים \"קנה\" בלי להפריע ליום שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "קריאייטיב מפוצל (ימין)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "זוהי הגרסה עם הוויזואל בצד ימין, המשתמשת באותו מופע שנבחר בקפידה כמו ב-Hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "הטמעת SEO/GEO (ניתנת לאינדוקס)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "הטמעה זו פועלת במצב shadow כדי להזריק JSON-LD (FAQPage) אל דף המארח לצורך אינדוקס."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "התחברו לכל לקוח, בכל מקום"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "שאלות נפוצות מבוססות בינה מלאכותית שמדברות בשפתם ומבינות את הצרכים שלהם."
+    }
+  ],
+  "v": 1
+}

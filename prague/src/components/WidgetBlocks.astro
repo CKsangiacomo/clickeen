@@ -23,11 +23,12 @@ type Block = {
 type Props = {
   blocks: Block[];
   widget: string;
+  market: string;
   locale: string;
   activeSubpage?: 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
 };
 
-const { blocks, widget, locale, activeSubpage = 'overview' } = Astro.props;
+const { blocks, widget, market, locale, activeSubpage = 'overview' } = Astro.props;
 const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
 const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
 const showcasePublicId =
@@ -37,13 +38,13 @@ const createFreeLabel = await pragueT(locale, 'prague.cta.createFree');
 const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
 const heroPrimaryCta = {
   label: createFreeLabel,
-  href: hasMinibob ? '#minibob' : `/${locale}/create`,
+  href: hasMinibob ? '#minibob' : `/${market}/${locale}/create`,
 };
 const heroSecondaryCta =
   activeSubpage === 'overview'
     ? {
         label: seeTemplatesLabel,
-        href: resolvePragueHref({ href: '/widgets/{widget}/templates', locale, widget }),
+        href: resolvePragueHref({ href: '/widgets/{widget}/templates', market, locale, widget }),
       }
     : undefined;
 ---
@@ -81,7 +82,7 @@ const heroSecondaryCta =
           }
           personalization={personalization ?? undefined}
         >
-          <WidgetSubnav slot="subnav" locale={locale} widget={widget} active={activeSubpage} variant="inline" />
+          <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
       );
     }

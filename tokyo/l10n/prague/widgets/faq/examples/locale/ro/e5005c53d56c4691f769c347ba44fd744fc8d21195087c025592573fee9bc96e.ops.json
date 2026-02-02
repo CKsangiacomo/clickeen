@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5005c53d56c4691f769c347ba44fd744fc8d21195087c025592573fee9bc96e",
+  "baseUpdatedAt": "2026-01-24T00:19:35.056Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemple de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vezi exemple reale de widgeturi FAQ și cele mai bune practici."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemple de întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vezi cazuri de utilizare din lumea reală și bune practici."
+    }
+  ],
+  "v": 1
+}

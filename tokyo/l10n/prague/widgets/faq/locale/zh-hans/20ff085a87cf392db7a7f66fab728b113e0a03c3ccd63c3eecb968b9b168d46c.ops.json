@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 小部件 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "构建快速、美观的 FAQ 小部件。几分钟内即可自定义、发布并本地化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "常见问题小组件。精美的答案。为速度而生。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "精致的设计、轻松的更新与 SEO 基础——适配任何语言，由 AI 驱动。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常见问题"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "帮助访客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "让它成为你的专属"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "在这里设计你的完美常见问题解答。即时查看更改。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "创意分屏（右侧）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "这是右侧视觉版本，使用与主视觉相同的精选实例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "拆分创意（左）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "这是左侧视觉变体，使用与主视觉相同的精选实例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "实时观看问题自我解答"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "嵌入一套设计精美的常见问题解答（FAQ），在客户产生疑虑的那一刻呈现正确答案。客户即时解惑，异议在变成工单前就被化解，你无需增加支持人手也能促成更多成交。只需自定义一次，随处嵌入，让它 24/7 持续工作。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "分割创意（堆叠）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "这是堆叠版本，使用与主视觉相同的精选实例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "真正有效的常见问题（所以你不用操心）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "你的客户有问题。回答一次，而不是一百次。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "别再因为问题无人解答而流失订单"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "把你的时间夺回来"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "睡着也能成交更多"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "每一个没被解答的问题，都是一个转身离开的客户。访客找不到所需信息就会离开。一个设计得当的常见问题能在异议出现前就把它消除——让客户无需联系你，也能说服自己下单。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "当客户能立刻找到答案时，支持咨询量可减少 40%+。不再有 Slack 催问。不再有“快速问个问题”的邮件。不再有频繁切换上下文的崩溃。你的常见问题替你扛起重任，而你专注于真正重要的工作。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "合适的常见问题会提前预判疑虑，在你离线的凌晨 2 点消除阻碍。你的回答 24 小时不打烊。客户不会等你——他们会解除卡点，信任所见内容，然后点下“购买”，不打断你的一天。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "分屏创意（右侧）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "这是右侧视觉的变体，使用与主视觉相同的精选实例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO 嵌入（可索引）"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "此嵌入以 shadow 模式运行，将 JSON-LD（FAQPage）注入到宿主页面中以便索引。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "与每一位客户随时随地建立连接"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI 驱动的常见问题解答，用他们的语言交流并理解他们的需求。"
+    }
+  ],
+  "v": 1
+}

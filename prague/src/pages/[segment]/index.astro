@@ -1,0 +1,20 @@
+---
+export const prerender = false;
+
+import { getPragueMarket } from '../../lib/markets';
+
+const url = Astro.url;
+if (!url.pathname.endsWith('/')) {
+  return Astro.redirect(`${url.pathname}/${url.search}`, 301);
+}
+
+const { segment } = Astro.params;
+const token = String(segment || '').trim().toLowerCase();
+
+const market = getPragueMarket(token);
+if (market) {
+  return Astro.redirect(`/${market.key}/${market.defaultLocale}/${url.search}`, 302);
+}
+
+return Astro.redirect(`/${url.search}`, 302);
+---

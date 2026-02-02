@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Mga Madalas Itanong"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Lahat ng Tanong"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "May libreng plano ba?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ano ang Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Paano ako mag-i-install ng widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bakit ko dapat gamitin ang Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oo, isang aktibong widget na may mga pangunahing feature."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Mga na-e-embed na widget na may built-in na conversions."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kopyahin ang embed code at i-paste ito bago ang </body> sa iyong site."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Dahil ang Clickeen ay isang kahanga-hangang bagong platform para gawing maganda at madaling gamitin ang web."
+    }
+  ]
+}

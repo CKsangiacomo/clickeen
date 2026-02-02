@@ -4,6 +4,7 @@ import { pragueT } from '../../../lib/i18n';
 type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
 
 type Props = {
+  market: string;
   locale: string;
   widget: string;
   active: WidgetSubpage;
@@ -11,7 +12,7 @@ type Props = {
   variant?: 'page' | 'inline';
 };
 
-const { locale, widget, active, variant = 'page' } = Astro.props;
+const { market, locale, widget, active, variant = 'page' } = Astro.props;
 
 const overviewLabel = await pragueT(locale, 'prague.tabs.overview');
 const templatesLabel = await pragueT(locale, 'prague.tabs.templates');
@@ -20,11 +21,11 @@ const featuresLabel = await pragueT(locale, 'prague.tabs.features');
 const pricingLabel = await pragueT(locale, 'prague.tabs.pricing');
 
 const tabs: { key: WidgetSubpage; label: string; href: string }[] = [
-  { key: 'overview', label: overviewLabel, href: `/${locale}/widgets/${widget}` },
-  { key: 'templates', label: templatesLabel, href: `/${locale}/widgets/${widget}/templates` },
-  { key: 'examples', label: examplesLabel, href: `/${locale}/widgets/${widget}/examples` },
-  { key: 'features', label: featuresLabel, href: `/${locale}/widgets/${widget}/features` },
-  { key: 'pricing', label: pricingLabel, href: `/${locale}/widgets/${widget}/pricing` },
+  { key: 'overview', label: overviewLabel, href: `/${market}/${locale}/widgets/${widget}/` },
+  { key: 'templates', label: templatesLabel, href: `/${market}/${locale}/widgets/${widget}/templates/` },
+  { key: 'examples', label: examplesLabel, href: `/${market}/${locale}/widgets/${widget}/examples/` },
+  { key: 'features', label: featuresLabel, href: `/${market}/${locale}/widgets/${widget}/features/` },
+  { key: 'pricing', label: pricingLabel, href: `/${market}/${locale}/widgets/${widget}/pricing/` },
 ];
 ---
 

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+  "baseUpdatedAt": "2026-01-24T01:10:13.110Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "কাউন্টডাউন টেমপ্লেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "কাউন্টডাউন উইজেটের জন্য টেমপ্লেট ব্রাউজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "কাউন্টডাউন টেমপ্লেটসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "সাধারণ কাউন্টডাউন ব্যবহারক্ষেত্রের জন্য প্রস্তুত-তৈরি লেআউট।"
+    }
+  ],
+  "v": 1
+}

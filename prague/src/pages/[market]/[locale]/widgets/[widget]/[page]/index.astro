@@ -1,0 +1,167 @@
+---
+import Base from '../../../../../../layouts/Base.astro';
+import Nav from '../../../../../../blocks/site/nav/Nav.astro';
+import Footer from '../../../../../../blocks/site/footer.astro';
+import WidgetBlocks from '../../../../../../components/WidgetBlocks.astro';
+import { loadRequiredWidgetPageJsonForLocaleWithOverlayMeta } from '../../../../../../lib/markdown';
+import { pragueT } from '../../../../../../lib/i18n';
+import { getPragueCanonicalOverlayContext } from '../../../../../../lib/requestContext';
+import { getPragueMarket, toMarketHreflang } from '../../../../../../lib/markets';
+import { isPragueOverlayFailureError, type PragueOverlayMeta } from '../../../../../../lib/pragueL10n';
+import { setPragueOverlayHeaders } from '../../../../../../lib/pragueOverlayHeaders';
+
+const { market, locale, widget, page } = Astro.params;
+export const prerender = false;
+
+type WidgetSubpage = 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+const activeSubpage: WidgetSubpage =
+  page === 'overview' || page === 'templates' || page === 'examples' || page === 'features' || page === 'pricing'
+    ? (page as WidgetSubpage)
+    : 'overview';
+
+const url = Astro.url;
+if (!url.pathname.endsWith('/')) {
+  return Astro.redirect(`${url.pathname}/${url.search}`, 301);
+}
+
+const marketKey = String(market || '').trim().toLowerCase();
+const localeKey = String(locale || '').trim().toLowerCase();
+const widgetKey = String(widget || '').trim();
+const pageKey = String(page || '').trim().toLowerCase();
+
+if (pageKey === 'overview') {
+  return Astro.redirect(`/${marketKey}/${localeKey}/widgets/${encodeURIComponent(widgetKey)}/${url.search}`, 301);
+}
+
+const isValidSubpage = pageKey === 'templates' || pageKey === 'examples' || pageKey === 'features' || pageKey === 'pricing';
+
+const marketConfig = getPragueMarket(marketKey);
+if (!marketConfig) {
+  return Astro.redirect(`/${url.search}`, 302);
+}
+if (marketConfig && !marketConfig.locales.includes(localeKey)) {
+  return Astro.redirect(
+    `/${marketConfig.key}/${marketConfig.defaultLocale}/widgets/${encodeURIComponent(widgetKey)}/${encodeURIComponent(activeSubpage)}/${url.search}`,
+    302,
+  );
+}
+if (!isValidSubpage) {
+  Astro.response.status = 404;
+}
+
+const widgetSegment = encodeURIComponent(widgetKey);
+const canonicalPath =
+  marketConfig && isValidSubpage ? `/${marketConfig.key}/${localeKey}/widgets/${widgetSegment}/${encodeURIComponent(activeSubpage)}/` : null;
+const alternates =
+  marketConfig && isValidSubpage
+    ? [
+        ...marketConfig.locales.map((l) => ({
+          hreflang: toMarketHreflang({ locale: l, country: marketConfig.country }),
+          href: `/${marketConfig.key}/${l}/widgets/${widgetSegment}/${encodeURIComponent(activeSubpage)}/`,
+        })),
+        {
+          hreflang: 'x-default',
+          href: `/${marketConfig.key}/${marketConfig.defaultLocale}/widgets/${widgetSegment}/${encodeURIComponent(activeSubpage)}/`,
+        },
+      ]
+    : null;
+
+const englishHref = marketConfig
+  ? `/${marketConfig.key}/en/widgets/${encodeURIComponent(widgetKey)}/${encodeURIComponent(activeSubpage)}/`
+  : `/`;
+
+let blocks: any[] = [];
+let hasHero = false;
+let pageTitle = '';
+let pageDescription = '';
+let createFreeLabel = '';
+let overlayMeta: PragueOverlayMeta = { overlayStatus: 'skipped', overlayLocale: String(localeKey || 'en') };
+let overlayError: string | null = null;
+
+if (!marketConfig) {
+  Astro.response.status = 404;
+  pageTitle = 'Not found';
+  pageDescription = 'Unknown market.';
+} else if (!isValidSubpage) {
+  Astro.response.status = 404;
+  pageTitle = 'Not found';
+  pageDescription = 'Unknown widget subpage.';
+} else {
+  try {
+    const overlayContext = getPragueCanonicalOverlayContext({ req: Astro.request, market: marketConfig.key });
+    const result = await loadRequiredWidgetPageJsonForLocaleWithOverlayMeta({
+      widget: widgetKey,
+      page: pageKey,
+      locale: localeKey,
+      ...overlayContext,
+    });
+    overlayMeta = result.overlay;
+    const pageJson = result.json;
+    blocks = Array.isArray((pageJson as any).blocks) ? (pageJson as any).blocks : [];
+    hasHero = blocks.some((b: any) => b && b.type === 'hero');
+    const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
+    const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
+    pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
+    pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
+    if (!pageTitle || !pageDescription) {
+      throw new Error(
+        `[prague] Invalid tokyo/widgets/${widgetKey}/pages/${page}.json (page-meta.copy.title/description required)`,
+      );
+    }
+    createFreeLabel = await pragueT(localeKey, 'prague.cta.createFree');
+  } catch (err) {
+    if (!isPragueOverlayFailureError(err)) throw err;
+    overlayMeta = { overlayStatus: err.overlayStatus, overlayLocale: err.overlayLocale };
+    overlayError = err.message;
+    Astro.response.status = err.statusCode;
+    pageTitle = 'Translations unavailable';
+    pageDescription = 'Required translation overlays are missing or stale.';
+  }
+}
+
+setPragueOverlayHeaders(Astro.response.headers, overlayMeta);
+---
+
+<Base title={pageTitle || 'Not found'} description={pageDescription || undefined} locale={localeKey || 'en'} canonicalPath={canonicalPath ?? undefined} alternates={alternates ?? undefined}>
+  {overlayError || !marketConfig || !isValidSubpage ? (
+    <main class="ck-canvas">
+      <div class="ck-inline">
+        <div class="ck-stack">
+          <h1 class="heading-3 ck-m0">{marketConfig && isValidSubpage ? pageTitle : 'Not found'}</h1>
+          <p class="body-1 ck-text-muted ck-m0">
+            {overlayError ?? (!marketConfig ? 'Unknown market.' : 'Unknown widget subpage.')}
+          </p>
+          {overlayError && marketConfig ? (
+            <>
+              <p class="body-2 ck-text-subtle ck-m0">
+                This route requires localized overlays to be published to Tokyo. Try the English page while cloud-dev is repaired.
+              </p>
+              <a class="body-2 ck-link" href={englishHref}>Open English version</a>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </main>
+  ) : (
+    <main>
+      <Nav
+        title="Clickeen"
+        market={marketConfig.key}
+        locale={localeKey}
+        homeHref={`/${marketConfig.key}/${localeKey}/`}
+        overlay={hasHero}
+        cta={{ label: createFreeLabel, href: `/${marketConfig.key}/${localeKey}/create`, variant: 'primary' }}
+      />
+
+      <WidgetBlocks
+        blocks={blocks}
+        widget={widgetKey}
+        market={marketConfig.key}
+        locale={localeKey}
+        activeSubpage={activeSubpage}
+      />
+
+      <Footer market={marketConfig.key} locale={localeKey} />
+    </main>
+  )}
+</Base>

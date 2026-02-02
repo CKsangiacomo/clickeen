@@ -156,6 +156,17 @@ if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] AI_GRANT_HMAC_SECRET not set; AI copilots will be disabled in local dev."
 fi
 
+USAGE_EVENT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/usage.event.hmac.secret"
+if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
+  if [ -f "$USAGE_EVENT_HMAC_SECRET_FILE" ]; then
+    USAGE_EVENT_HMAC_SECRET="$(cat "$USAGE_EVENT_HMAC_SECRET_FILE")"
+  fi
+fi
+if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
+  echo "[dev-up] USAGE_EVENT_HMAC_SECRET not set; view metering will be disabled in local dev."
+  echo "[dev-up] Set USAGE_EVENT_HMAC_SECRET in $ROOT_DIR/.env.local or create $USAGE_EVENT_HMAC_SECRET_FILE."
+fi
+
 SF_BASE_URL=""
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   SF_BASE_URL="http://localhost:3002"
@@ -257,6 +268,9 @@ echo "[dev-up] Starting Paris Worker (3001)"
   if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
   fi
+  if [ -n "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
+    VARS+=(--var "USAGE_EVENT_HMAC_SECRET:$USAGE_EVENT_HMAC_SECRET")
+  fi
 
   nohup pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
     "${VARS[@]}" \
@@ -273,7 +287,7 @@ echo "[dev-up] Note: instances are created/edited from DevStudio Local (human-dr
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
   cd "$ROOT_DIR/venice"
-  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/venice.dev.log" 2>&1 &
+  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" nohup pnpm dev > "$LOG_DIR/venice.dev.log" 2>&1 &
   VENICE_PID=$!
   echo "[dev-up] Venice PID: $VENICE_PID"
 )

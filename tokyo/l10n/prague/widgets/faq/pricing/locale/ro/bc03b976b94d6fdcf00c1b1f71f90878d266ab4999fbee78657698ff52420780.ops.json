@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bc03b976b94d6fdcf00c1b1f71f90878d266ab4999fbee78657698ff52420780",
+  "baseUpdatedAt": "2026-01-24T00:19:35.058Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Întrebări frecvente despre prețuri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Prețuri simple pentru widgetul de întrebări frecvente. Treci la un plan superior când ai nevoie de mai mult."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Întrebări frecvente despre prețuri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Niveluri simple. Fă upgrade când ai nevoie de mai multe widgeturi și elimină brandingul."
+    }
+  ],
+  "v": 1
+}

@@ -1,4 +1,5 @@
 import type { PragueOverlayContext } from './pragueL10n';
+import { resolveMarketCountry } from './markets';
 
 type ParsedCookies = Record<string, string>;
 
@@ -50,4 +51,9 @@ export function getPragueOverlayContext(req: Request): PragueOverlayContext {
       behaviorKeys: parseList(behaviorRaw),
     },
   };
+}
+
+export function getPragueCanonicalOverlayContext(args: { req: Request; market: string }): PragueOverlayContext {
+  const country = resolveMarketCountry(args.market);
+  return { country, layerContext: undefined };
 }

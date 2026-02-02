@@ -2,9 +2,11 @@
 import { resolveWidgetsMegaMenu } from './widgetsMegaMenu';
 import { pragueT } from '../../../lib/i18n';
 import { listPragueLocales } from '../../../lib/locales';
+import { getPragueMarket } from '../../../lib/markets';
 
 type Props = {
   title: string;
+  market: string;
   locale: string;
   homeHref?: string;
   cta?: { label: string; href: string; variant?: 'primary' | 'secondary' };
@@ -12,25 +14,27 @@ type Props = {
   overlay?: boolean;
 };
 
-const { title, locale, homeHref = `/${locale}/`, cta, overlay = false } = Astro.props;
+const { title, market, locale, homeHref = `/${market}/${locale}/`, cta, overlay = false } = Astro.props;
 const ctaVariant = cta?.variant ?? 'secondary';
 
 const widgetsLabel = await pragueT(locale, 'prague.nav.widgets');
 const viewAllWidgetsLabel = await pragueT(locale, 'prague.nav.viewAllWidgets');
 
-const mega = await resolveWidgetsMegaMenu({ locale });
-const locales = listPragueLocales();
-const currentPath = Astro.url?.pathname ?? `/${locale}/`;
+const mega = await resolveWidgetsMegaMenu({ market, locale });
+const marketConfig = getPragueMarket(market);
+const locales = marketConfig?.locales ?? listPragueLocales();
+const currentPath = Astro.url?.pathname ?? `/${market}/${locale}/`;
 const currentSearch = Astro.url?.search ?? '';
 const localeHrefFor = (targetLocale: string) => {
-  const prefix = `/${locale}`;
-  if (currentPath === '/' || currentPath === '') return `/${targetLocale}/${currentSearch}`;
-  if (currentPath === prefix) return `/${targetLocale}/${currentSearch}`;
+  const prefix = `/${market}/${locale}`;
+  if (currentPath === '/' || currentPath === '') return `/${market}/${targetLocale}/${currentSearch}`;
+  if (currentPath === prefix) return `/${market}/${targetLocale}/${currentSearch}`;
+  if (currentPath === `${prefix}/`) return `/${market}/${targetLocale}/${currentSearch}`;
   if (currentPath.startsWith(`${prefix}/`)) {
     const rest = currentPath.slice(prefix.length) || '/';
-    return `/${targetLocale}${rest}${currentSearch}`;
+    return `/${market}/${targetLocale}${rest}${currentSearch}`;
   }
-  return `/${targetLocale}/${currentSearch}`;
+  return `/${market}/${targetLocale}/${currentSearch}`;
 };
 ---
 

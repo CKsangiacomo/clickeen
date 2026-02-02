@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Készíts gyors, gyönyörű GYIK widgetet. Testreszabás, közzététel és lokalizálás percek alatt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "GYIK widget. Szép válaszok. Gyors működésre tervezve."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Letisztult dizájn, könnyed frissítések és SEO-alapok – bármilyen nyelvre készen, MI által hajtva."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "GYIK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Segítsen a látogatóknak gyorsan választ találni."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Tedd a sajátoddá"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Tervezd meg itt a tökéletes GYIK-et. Azonnal lásd a változásokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Split kreatív (jobb)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Ez a jobb oldali vizuális változat, ugyanazt a gondosan válogatott példányt használja, mint a hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Kreatív felosztás (bal)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Ez a bal oldali vizuális változat, amely ugyanazt a gondosan válogatott példányt használja, mint a hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Nézd, ahogy a kérdések valós időben megválaszolják önmagukat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Illessz be egy gyönyörűen megtervezett GYIK-et, amely a bizonytalanság pillanatában a megfelelő választ hozza felszínre. Az ügyfelek azonnal továbblépnek, a kifogások még azelőtt eloszlanak, hogy jeggyé válnának, te pedig több eladást zársz le anélkül, hogy több támogatást kellene hozzáadnod. Egyszer testreszabod, bárhová beágyazod, és hagyod, hogy a nap 24 órájában, a hét minden napján dolgozzon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Kreatív split (egymásra rakva)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Ez az egymásra rakott változat, amely ugyanazt a kurált példányt használja, mint a hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "GYIK, ami tényleg működik (hogy neked ne kelljen)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "A vásárlóidnak kérdéseik vannak. Válaszold meg őket egyszer, ne százszor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Ne veszíts el eladásokat megválaszolatlan kérdések miatt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Szerezd vissza az idődet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Zárj le több üzletet, miközben alszol"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Minden megválaszolatlan kérdés egy vásárló távozását jelenti. A látogatók elmennek, ha nem találják meg, amire szükségük van. Egy jól megtervezett GYIK még azelőtt eloszlatja az ellenvetéseket, hogy azok egyáltalán kialakulnának — így a vásárlók magukat győzik meg a vásárlásról anélkül, hogy kapcsolatba lépnének veled."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Csökkentsd az ügyfélszolgálati terhelést 40%+kal, amikor a vásárlók azonnal megtalálják a válaszokat. Nincs több Slack-ping. Nincs több „gyors kérdés” email. Nincs több kontextusváltás-pokol. A GYIK elvégzi a nehéz munkát, miközben te arra koncentrálsz, ami tényleg számít."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "A megfelelő GYIK előre látja a kételyeket, és megszünteti a súrlódást hajnali 2-kor, amikor offline vagy. A válaszaid a nap 24 órájában működnek. A vásárlók nem várnak rád — továbblépnek, megbíznak abban, amit látnak, és megnyomják a „Vásárlás” gombot anélkül, hogy megzavarnák a napodat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Kreatív split (jobb)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Ez a jobb oldali vizuális változat, amely ugyanazt a gondosan válogatott példányt használja, mint a hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO beágyazás (indexelhető)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Ez a beágyazás shadow módban fut, hogy JSON-LD-t (FAQPage) injektáljon a host oldalba az indexeléshez."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Kapcsolódj minden ügyfélhez, mindenhol"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "MI-vezérelt GYIK, amely az ő nyelvükön szól, és megérti az igényeiket."
+    }
+  ],
+  "v": 1
+}

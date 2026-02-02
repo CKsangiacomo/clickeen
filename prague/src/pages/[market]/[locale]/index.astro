@@ -1,0 +1,109 @@
+---
+export const prerender = false;
+
+import Base from '../../../layouts/Base.astro';
+import Nav from '../../../blocks/site/nav/Nav.astro';
+import Footer from '../../../blocks/site/footer.astro';
+import { listWidgets, loadRequiredWidgetPageJsonForLocale } from '../../../lib/markdown';
+import { getPragueMarket, toMarketHreflang } from '../../../lib/markets';
+
+const url = Astro.url;
+if (!url.pathname.endsWith('/')) {
+  return Astro.redirect(`${url.pathname}/${url.search}`, 301);
+}
+
+const { market, locale } = Astro.params;
+const marketKey = String(market || '').trim().toLowerCase();
+const localeKey = String(locale || '').trim().toLowerCase();
+
+const marketConfig = getPragueMarket(marketKey);
+if (!marketConfig) {
+  return Astro.redirect(`/${url.search}`, 302);
+}
+if (!marketConfig.locales.includes(localeKey)) {
+  return Astro.redirect(`/${marketConfig.key}/${marketConfig.defaultLocale}/${url.search}`, 302);
+}
+
+const canonicalPath = `/${marketConfig.key}/${localeKey}/`;
+const alternates = [
+  ...marketConfig.locales.map((l) => ({
+    hreflang: toMarketHreflang({ locale: l, country: marketConfig.country }),
+    href: `/${marketConfig.key}/${l}/`,
+  })),
+  { hreflang: 'x-default', href: `/${marketConfig.key}/${marketConfig.defaultLocale}/` },
+];
+
+const widgets = await listWidgets();
+if (!widgets.length) {
+  throw new Error('[prague] No widgets found in tokyo/widgets (expected at least one)');
+}
+
+const widgetCards = await Promise.all(
+  widgets.map(async (widget) => {
+    const overview = await loadRequiredWidgetPageJsonForLocale({
+      widget,
+      page: 'overview',
+      locale: localeKey,
+      country: marketConfig.country,
+    });
+    const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
+    const hero = blocks ? blocks.find((b: any) => b && b.id === 'hero' && b.type === 'hero') : null;
+    const copy = hero && typeof hero === 'object' ? (hero as any).copy : null;
+    const headline = copy && typeof copy === 'object' ? String((copy as any).headline ?? '') : '';
+    const subheadline = copy && typeof copy === 'object' ? String((copy as any).subheadline ?? '') : '';
+    if (!headline || !subheadline) {
+      throw new Error(
+        `[prague] Invalid tokyo/widgets/${widget}/pages/overview.json (hero.copy.headline/subheadline required)`,
+      );
+    }
+    return { widget, headline, subheadline };
+  }),
+);
+
+const widgetCardsSafe = widgetCards.filter(Boolean) as NonNullable<(typeof widgetCards)[number]>[];
+---
+
+<Base title="Clickeen" locale={localeKey} canonicalPath={canonicalPath} alternates={alternates}>
+    <main>
+      <Nav
+        title="Clickeen"
+        market={marketConfig.key}
+        locale={localeKey}
+        homeHref={`/${marketConfig.key}/${localeKey}/`}
+        cta={{ label: 'Create free', href: `/${marketConfig.key}/${localeKey}/create`, variant: 'primary' }}
+      />
+
+      <section class="ck-canvas" style="padding-top: 0;">
+        <div class="ck-inline ck-stack" style="gap: var(--space-8);">
+          <div class="ck-stack" style="gap: var(--space-2);">
+            <h1 class="heading-1" style="margin: 0; letter-spacing: -0.02em;">Widgets</h1>
+            <p class="body-xxl" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 56%);">
+              Pick a widget to explore templates, pricing, and try it live.
+            </p>
+          </div>
+
+          <div class="ck-stack" style="gap: var(--space-4);">
+            {widgetCardsSafe.map((w) => (
+              <a
+                class="ck-card"
+                href={`/${marketConfig.key}/${localeKey}/widgets/${w.widget}/`}
+                style="display: block; padding: var(--space-6); text-decoration: none; color: inherit;"
+              >
+                <div class="ck-stack" style="gap: var(--space-2);">
+                  <div class="label-m" style="text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.65;">
+                    {w.widget}
+                  </div>
+                  <div class="heading-3" style="margin: 0;">{w.headline}</div>
+                  <div class="body-xxl" style="margin: 0; color: color-mix(in oklab, var(--color-system-black), transparent 45%);">
+                    {w.subheadline}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Footer market={marketConfig.key} locale={localeKey} />
+    </main>
+  </Base>

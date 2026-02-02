@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5005c53d56c4691f769c347ba44fd744fc8d21195087c025592573fee9bc96e",
+  "baseUpdatedAt": "2026-01-24T00:19:35.056Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উদাহরণসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "বাস্তব উদাহরণসহ FAQ উইজেটের উদাহরণ এবং সেরা অনুশীলন দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ উদাহরণসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "বাস্তব জগতের ব্যবহার উদাহরণ এবং সেরা অনুশীলনগুলো দেখুন।"
+    }
+  ],
+  "v": 1
+}

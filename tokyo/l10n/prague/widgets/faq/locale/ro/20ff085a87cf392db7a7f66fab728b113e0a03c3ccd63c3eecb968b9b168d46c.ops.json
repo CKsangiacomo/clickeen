@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Creează un widget FAQ rapid și frumos. Personalizează, publică și localizează în câteva minute."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget pentru întrebări frecvente. Răspunsuri frumoase. Creat pentru viteză."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Design rafinat, actualizări fără efort și baze SEO—pregătit pentru orice limbă, alimentat de AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ajutați vizitatorii să găsească rapid răspunsuri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Fă-l al tău"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Proiectează-ți aici FAQ-ul perfect. Vezi schimbările instantaneu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Creativ împărțit (dreapta)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Aceasta este varianta cu vizualul în dreapta, folosind aceeași instanță curatoriată ca în secțiunea hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Creativitate împărțită (stânga)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Aceasta este varianta cu elementul vizual în stânga, folosind aceeași instanță selectată ca în secțiunea hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Privește cum întrebările își găsesc singure răspunsul în timp real"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Adaugă un FAQ cu design impecabil, care afișează răspunsul potrivit exact în momentul îndoielii. Clienții se deblochează instant, obiecțiile se dizolvă înainte să se transforme în tichete, iar tu închei mai multe vânzări fără să adaugi mai mult suport. Personalizezi o singură dată, îl încorporezi oriunde și îl lași să lucreze 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split creativ (stivuit)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Aceasta este varianta stivuită, folosind aceeași instanță curatoriată ca și hero-ul."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Întrebări frecvente care chiar funcționează (ca să nu trebuiască tu)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Clienții tăi au întrebări. Răspunde-le o singură dată, nu de o sută de ori."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Nu mai pierde vânzări din cauza întrebărilor fără răspuns"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Recuperează-ți timpul"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Închide mai multe deal-uri cât timp dormi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Fiecare întrebare rămasă fără răspuns înseamnă un client care pleacă. Vizitatorii pleacă atunci când nu găsesc ceea ce au nevoie. Un FAQ bine conceput elimină obiecțiile înainte să se formeze—astfel clienții se conving singuri să cumpere fără să te contacteze."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Redu volumul de suport cu peste 40% atunci când clienții găsesc răspunsuri instant. Gata cu ping-urile pe Slack. Gata cu emailurile de tip „o întrebare rapidă”. Gata cu iadul schimbării de context. FAQ-ul tău face munca grea, iar tu te concentrezi pe ceea ce contează cu adevărat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ-ul potrivit anticipează îndoiala și elimină fricțiunea la 2 dimineața, când ești offline. Răspunsurile tale funcționează non-stop. Clienții nu te așteaptă—își deblochează situația, au încredere în ceea ce văd și apasă „cumpără” fără să-ți întrerupă ziua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Creativ împărțit (dreapta)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Aceasta este varianta cu vizualul în dreapta, folosind aceeași instanță selectată ca și în secțiunea hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Embed SEO/GEO (indexabil)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Acest embed rulează în modul shadow pentru a injecta JSON-LD (FAQPage) în pagina gazdă pentru indexare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Conectează-te cu fiecare client, oriunde"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ alimentat de AI care vorbește limba lor și le înțelege nevoile."
+    }
+  ],
+  "v": 1
+}

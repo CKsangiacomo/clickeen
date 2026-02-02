@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.057Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Функції FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Усе необхідне, щоб випустити довершений віджет FAQ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Функції FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Усе, що потрібно, щоб запустити швидкий і відшліфований розділ FAQ."
+    }
+  ],
+  "v": 1
+}

@@ -37,6 +37,7 @@ import {
   handleWorkspaceLocalesGet,
   handleWorkspaceLocalesPut,
 } from './domains/l10n';
+import { handleFrozenResets, handleUsageEvent } from './domains/usage';
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -53,7 +54,7 @@ export default {
 
       if (pathname === '/api/usage') {
         if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
-        return handleNotImplemented(req, env, 'usage');
+        return handleUsageEvent(req, env);
       }
 
       const submitMatch = pathname.match(/^\/api\/submit\/([^/]+)$/);
@@ -225,5 +226,6 @@ export default {
   },
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(handleL10nGenerateRetries(env));
+    ctx.waitUntil(handleFrozenResets(env));
   },
 };

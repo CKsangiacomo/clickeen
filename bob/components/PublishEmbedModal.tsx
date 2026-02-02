@@ -69,30 +69,37 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
     const canRender = Boolean(publicId && loaderSrc);
 
     const safeSnippet = canRender
-      ? `<script
-  src="${loaderSrc}"
-  data-public-id="${publicId}"
-  data-trigger="immediate"
-></script>`
+      ? `<div data-clickeen-id="${publicId}"></div>
+<script src="${loaderSrc}" async></script>`
+      : '';
+
+    const scriptlessSnippet = canRender
+      ? `<iframe
+  src="${veniceBase}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=en"
+  title="Clickeen widget"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  style="width:100%;border:0;min-height:420px;"
+></iframe>`
       : '';
 
     const seoGeoSnippet = canRender
-      ? `<script
-  src="${loaderSrc}"
-  data-public-id="${publicId}"
-  data-trigger="immediate"
+      ? `<div
+  data-clickeen-id="${publicId}"
   data-ck-optimization="seo-geo"
   data-max-width="0"
   data-min-height="420"
   data-width="100%"
-></script>`
+></div>
+<script src="${loaderSrc}" async></script>`
       : '';
 
     const previewSeoGeoHref = publicId
       ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&theme=light&device=desktop&mode=seo-geo`
       : '/bob/preview-shadow?mode=seo-geo';
 
-    return { veniceBase, loaderSrc, canRender, safeSnippet, seoGeoSnippet, previewSeoGeoHref };
+    return { veniceBase, loaderSrc, canRender, safeSnippet, scriptlessSnippet, seoGeoSnippet, previewSeoGeoHref };
   }, [publicId]);
 
   const copySnippet = useCallback(async (label: string, snippet: string) => {
@@ -127,19 +134,37 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
           <div className="ck-publishModal__content">
             <div>
               <div className="settings-panel__row">
-                <div className="label-s">Safe embed (iframe)</div>
+                <div className="label-s">Recommended embed (loader)</div>
                 <button
                   className="diet-btn-txt"
                   data-size="md"
                   data-variant="neutral"
                   type="button"
-                  onClick={() => void copySnippet('safe embed', embed.safeSnippet)}
+                  onClick={() => void copySnippet('recommended embed', embed.safeSnippet)}
                 >
                   <span className="diet-btn-txt__label">Copy</span>
                 </button>
               </div>
               <pre className="settings-panel__code">
                 <code>{embed.safeSnippet}</code>
+              </pre>
+            </div>
+
+            <div>
+              <div className="settings-panel__row">
+                <div className="label-s">Scriptless embed (iframe only)</div>
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="neutral"
+                  type="button"
+                  onClick={() => void copySnippet('scriptless iframe embed', embed.scriptlessSnippet)}
+                >
+                  <span className="diet-btn-txt__label">Copy</span>
+                </button>
+              </div>
+              <pre className="settings-panel__code">
+                <code>{embed.scriptlessSnippet}</code>
               </pre>
             </div>
 
@@ -205,4 +230,3 @@ export function PublishEmbedModal({ open, onClose }: PublishEmbedModalProps) {
     </div>
   );
 }
-

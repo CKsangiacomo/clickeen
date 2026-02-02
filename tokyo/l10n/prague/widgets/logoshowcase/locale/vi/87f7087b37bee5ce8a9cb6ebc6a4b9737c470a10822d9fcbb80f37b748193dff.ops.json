@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-24T00:19:35.060Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget Trưng bày Logo - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Làm nổi bật logo khách hàng với một widget trưng bày nhanh, linh hoạt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Trưng bày logo. Bằng chứng xã hội tức thì."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Hiển thị logo khách hàng thật đẹp -- xây dựng niềm tin và tăng tỷ lệ chuyển đổi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Trưng bày logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Trưng bày logo một cách đẹp mắt. Xây dựng niềm tin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Cách hoạt động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Thêm logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Sắp xếp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Nhúng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Tải lên logo khách hàng của bạn (SVG/PNG) trong vài giây."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Chọn bố cục + khoảng cách để phù hợp với trang web của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Dán đoạn mã vào bất kỳ nền tảng nào."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Tạo trang trưng bày logo của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bắt đầu miễn phí. Xuất bản khi bạn sẵn sàng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Dùng thử trực tiếp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Chỉnh sửa một phiên bản demo trong Minibob. Xuất bản khi bạn sẵn sàng."
+    }
+  ],
+  "v": 1
+}

@@ -41,6 +41,13 @@ type SessionError =
   | { source: 'ops'; errors: WidgetOpError[] }
   | { source: 'publish'; message: string; paths?: string[] };
 
+type EnforcementState = {
+  mode: 'frozen';
+  periodKey: string;
+  frozenAt: string;
+  resetAt: string;
+};
+
 type PreviewSettings = {
   device: 'desktop' | 'mobile';
   theme: 'light' | 'dark';
@@ -78,6 +85,7 @@ type SessionState = {
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
   policy: Policy;
+  enforcement: EnforcementState | null;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
   isPublishing: boolean;
   preview: PreviewSettings;
@@ -101,6 +109,7 @@ type WidgetBootstrapMessage = {
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;
+  enforcement?: unknown;
   publicId?: string;
   workspaceId?: string;
   label?: string;
@@ -247,6 +256,21 @@ function assertPolicy(value: unknown): Policy {
   return value as Policy;
 }
 
+function normalizeEnforcement(raw: unknown): EnforcementState | null {
+  if (!isRecord(raw)) return null;
+  if ((raw as any).mode !== 'frozen') return null;
+  const resetAt = typeof (raw as any).resetAt === 'string' ? (raw as any).resetAt : '';
+  if (!resetAt) return null;
+  const resetMs = Date.parse(resetAt);
+  if (!Number.isFinite(resetMs) || resetMs <= Date.now()) return null;
+  return {
+    mode: 'frozen',
+    periodKey: typeof (raw as any).periodKey === 'string' ? (raw as any).periodKey : '',
+    frozenAt: typeof (raw as any).frozenAt === 'string' ? (raw as any).frozenAt : '',
+    resetAt,
+  };
+}
+
 function resolveSubjectModeFromUrl(): SubjectMode {
   if (typeof window === 'undefined') return 'devstudio';
   const params = new URLSearchParams(window.location.search);
@@ -348,6 +372,7 @@ function useWidgetSessionInternal() {
     previewOps: null,
     isDirty: false,
     policy: initialPolicy,
+    enforcement: null,
     upsell: null,
     isPublishing: false,
     preview: DEFAULT_PREVIEW,
@@ -413,6 +438,13 @@ function useWidgetSessionInternal() {
         }));
         return result;
       };
+
+      if (state.enforcement?.mode === 'frozen') {
+        return denyOps(0, ops[0]?.path, {
+          reasonKey: 'coreui.upsell.reason.viewsFrozen',
+          detail: `Frozen until ${state.enforcement.resetAt}`,
+        });
+      }
 
       const editsBudget = state.policy.budgets['budget.edits'];
       if (editsBudget) {
@@ -1025,6 +1057,7 @@ function useWidgetSessionInternal() {
 
       let resolved: Record<string, unknown> = {};
       let nextWorkspaceId = message.workspaceId;
+      let nextEnforcement: EnforcementState | null = normalizeEnforcement(message.enforcement);
 
       const nextSubjectMode: SubjectMode = message.subjectMode ?? resolveSubjectModeFromUrl();
       let nextPolicy: Policy = resolveDevPolicy(nextSubjectMode);
@@ -1057,6 +1090,7 @@ function useWidgetSessionInternal() {
           : structuredClone(defaults);
         if (json.policy && typeof json.policy === 'object') nextPolicy = assertPolicy(json.policy);
         else nextPolicy = resolveDevPolicy(nextSubjectMode);
+        nextEnforcement = normalizeEnforcement(json.enforcement);
         nextWorkspaceId = message.workspaceId;
       } else {
         resolved = incoming == null ? structuredClone(defaults) : structuredClone(incoming);
@@ -1080,6 +1114,7 @@ function useWidgetSessionInternal() {
         publishedBaseInstanceData: structuredClone(resolved),
         isDirty: false,
         policy: nextPolicy,
+        enforcement: nextEnforcement,
         selectedPath: null,
         error: null,
         upsell: null,
@@ -1111,6 +1146,7 @@ function useWidgetSessionInternal() {
         isDirty: false,
         error: { source: 'load', message: messageText },
         upsell: null,
+        enforcement: null,
         locale: { ...DEFAULT_LOCALE_STATE },
         meta: null,
       }));
@@ -1169,6 +1205,18 @@ function useWidgetSessionInternal() {
       setState((prev) => ({
         ...prev,
         error: { source: 'publish', message: 'coreui.errors.widgetType.invalid' },
+      }));
+      return;
+    }
+    if (state.enforcement?.mode === 'frozen') {
+      setState((prev) => ({
+        ...prev,
+        error: null,
+        upsell: {
+          reasonKey: 'coreui.upsell.reason.viewsFrozen',
+          detail: `Frozen until ${state.enforcement?.resetAt}`,
+          cta: prev.policy.profile === 'minibob' ? 'signup' : 'upgrade',
+        },
       }));
       return;
     }
@@ -1271,6 +1319,9 @@ function useWidgetSessionInternal() {
           return nextBase;
         })(),
         policy: json?.policy && typeof json.policy === 'object' ? assertPolicy(json.policy) : prev.policy,
+        enforcement: Object.prototype.hasOwnProperty.call(json ?? {}, 'enforcement')
+          ? normalizeEnforcement(json?.enforcement)
+          : prev.enforcement,
       }));
 
       try {
@@ -1356,17 +1407,18 @@ function useWidgetSessionInternal() {
         compiled.presets = { ...(compiled.presets ?? {}), ...themePresets };
       }
     }
-    await loadInstance({
-      type: 'devstudio:load-instance',
-      widgetname: widgetType,
-      compiled,
-      instanceData: instanceJson.config,
-      policy: instanceJson.policy,
-      publicId: instanceJson.publicId ?? publicId,
-      workspaceId,
-      label: instanceJson.publicId ?? publicId,
-      subjectMode: subject,
-    });
+	    await loadInstance({
+	      type: 'devstudio:load-instance',
+	      widgetname: widgetType,
+	      compiled,
+	      instanceData: instanceJson.config,
+	      policy: instanceJson.policy,
+	      enforcement: instanceJson.enforcement,
+	      publicId: instanceJson.publicId ?? publicId,
+	      workspaceId,
+	      label: instanceJson.publicId ?? publicId,
+	      subjectMode: subject,
+	    });
   }, [loadInstance]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {

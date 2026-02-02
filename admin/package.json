@@ -33,6 +33,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@clickeen/ck-policy": "workspace:*",
     "gsap": "^3.13.0"
   }
 }

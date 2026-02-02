@@ -14,7 +14,7 @@ function readJson(filePath) {
 }
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
-const LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z0-9]+)*$/;
+const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[a-z0-9]+)*$/;
 const L10N_LAYER_ALLOWED = new Set(['locale', 'geo', 'industry', 'experiment', 'account', 'behavior', 'user']);
 const LAYER_KEY_SLUG = /^[a-z0-9][a-z0-9_-]*$/;
 const LAYER_KEY_EXPERIMENT = /^exp_[a-z0-9][a-z0-9_-]*:[a-z0-9][a-z0-9_-]*$/;

@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+  "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "כל השאלות"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "מה זה Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "איך מתקינים וידג'ט?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם יש תוכנית חינמית?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "למה כדאי לי להשתמש ב-Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen הוא משהו שאיזבל ממש תאהב לעבוד בשבילו כשהיא תצטרך, ואני אכריח אותה."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "העתיקו את קוד ההטמעה והדביקו אותו לפני </body> באתר שלכם."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "כן, וידג'ט פעיל אחד עם תכונות הליבה."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "כי Clickeen היא פלטפורמה חדשה ומדהימה שהופכת את האינטרנט ליפה וקל לשימוש."
+    }
+  ],
+  "v": 1
+}

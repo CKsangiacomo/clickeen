@@ -24,7 +24,7 @@ For localized embeds, Venice may apply a locale-specific, Tokyo-hosted overlay t
   - `GET /embed/latest/loader.js` (alias of v2)
   - `GET /embed/v1/loader.js` (legacy iframe loader)
   - `GET /embed/v2/loader.js` (iframe by default; optional shadow render via `data-force-shadow="true"`. Optional SEO/GEO via `data-ck-optimization="seo-geo"`. Supports `data-trigger`, `data-delay`, `data-scroll-pct`, `data-click-selector`, `data-locale`, `data-ts` (preferred), `data-cache-bust` (legacy), `data-max-width`, `data-min-height`, `data-width` (v0.2: `100%` only).)
-- `GET /embed/pixel` (best-effort proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
+- `GET /embed/pixel` (best-effort view meter; signs + forwards to Paris `POST /api/usage` for capped tiers)
 - `POST /s/:publicId` (submission proxy; Paris currently returns 501 `NOT_IMPLEMENTED`)
 
 **Shipped SEO/GEO (Iframe++):**
@@ -159,8 +159,20 @@ Widgets can use this when they need absolute URLs (e.g. Dieter icon `mask-image`
 
 ### Embed loader (v2) data attributes (shipped)
 
-The v2 loader reads `data-*` attributes from the script tag:
-- `data-public-id` (required)
+The v2 loader supports two install shapes:
+1) **Recommended (multi-embed / SPA-safe):** placeholders + one loader script  
+   - Placeholder: `<div data-clickeen-id="wgt_..."></div>` (required)  
+   - Loader: `<script src="<VENICE_URL>/embed/latest/loader.js" async></script>`
+2) **Legacy (single-embed):** `data-public-id` on the script tag  
+   - `<script src="..." data-public-id="wgt_..." ...></script>`
+
+**Scriptless mode (builders that block scripts):**
+- Use a plain iframe to `GET /e/:publicId`:
+  - `<iframe src="<VENICE_URL>/e/wgt_...?theme=light&device=desktop&locale=en" ...></iframe>`
+
+Attributes can live on the placeholder (recommended) or on the script tag (legacy / defaults):
+- `data-clickeen-id` (required for placeholder mode)
+- `data-public-id` (required for legacy script mode)
 - `data-trigger` (`immediate` | `time` | `scroll` | `click` | `overlay`)
 - `data-delay` (ms, used when `data-trigger="time"`)
 - `data-scroll-pct` (0-100, used when `data-trigger="scroll"`)
@@ -176,10 +188,15 @@ The v2 loader reads `data-*` attributes from the script tag:
 - `data-min-height` (px)
 - `data-width` (v0.2: only `100%` supported)
 
-### Usage Pixel + Submissions (Present but Not Implemented End-to-End)
+**Behavior (shipped):**
+- **Auto-resize:** listens for `postMessage` `{ type: "ck:resize", height }` from the iframe (origin-checked) and updates iframe height.
+- **Fail-visible host diagnostics:** if the iframe is blocked by CSP (`frame-src`/`child-src`) or fails to load within a short timeout, the loader renders a host-page error card with actionable CSP guidance.
+- **SPA/AJAX mount reliability:** the loader scans for `data-clickeen-id` placeholders and uses a `MutationObserver`; you can also call `window.Clickeen.mount()` after injecting DOM.
 
-- `GET /embed/pixel` forwards to Paris `POST /api/usage` (Paris returns 501 in this repo snapshot).
-- `POST /s/:publicId` forwards to Paris `POST /api/submit/:publicId` (Paris returns 501 in this repo snapshot).
+### Usage Pixel + Submissions
+
+- `GET /embed/pixel` signs and forwards view events to Paris `POST /api/usage` (HMAC; only capped tiers are metered; frozen snapshots omit the pixel).
+- `POST /s/:publicId` forwards to Paris `POST /api/submit/:publicId` (Paris returns 501 `NOT_IMPLEMENTED` in this repo snapshot).
 
 ## SEO + GEO (Cross-Cutting)
 
@@ -207,5 +224,6 @@ Venice is a Next.js Edge app. The supported deploy surface is Cloudflare Pages u
 - Environment variables (set once per environment):
   - `PARIS_URL` (Paris base URL; falls back to `NEXT_PUBLIC_PARIS_URL`)
   - `TOKYO_URL` (Tokyo base URL; falls back to `TOKYO_BASE_URL` or `NEXT_PUBLIC_TOKYO_URL`)
+  - `USAGE_EVENT_HMAC_SECRET` (shared with Paris; required for `/embed/pixel` → `/api/usage` metering)
 
 Venice fails fast in deployed environments if `PARIS_URL` or `TOKYO_URL` is missing (to avoid stale/incorrect hardcoded endpoints).

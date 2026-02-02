@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "9541ddedd158583b7edae759aa31651ff1be17a42681f995d1dc412be6cc079e",
+  "baseUpdatedAt": "2026-01-24T00:19:35.063Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "লোগো শোকেস ফিচারসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দ্রুত, নমনীয়, এবং সর্বত্র দারুণ দেখানোর জন্য ডিজাইন করা হয়েছে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "লোগো শোকেসের বৈশিষ্ট্যসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "দ্রুত, নমনীয়, এবং সর্বত্র দারুণ দেখানোর জন্য ডিজাইন করা।"
+    }
+  ],
+  "v": 1
+}

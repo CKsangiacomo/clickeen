@@ -63,12 +63,11 @@ So: we keep iframe UI for safety and compatibility, but we also place the **SEO/
 
 Opt-in is host-controlled by a single attribute:
 ```html
-<script
-  src="<VENICE_URL>/embed/latest/loader.js"
-  data-public-id="wgt_..."
-  data-trigger="immediate"
+<div
+  data-clickeen-id="wgt_..."
   data-ck-optimization="seo-geo"
-></script>
+></div>
+<script src="<VENICE_URL>/embed/latest/loader.js" async></script>
 ```
 
 Important invariants:

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bbcf12c2bc4fb8c757d9819a8939d0761d464996b06ad83ba579e2098c98d4f0",
+  "baseUpdatedAt": "2026-01-24T01:10:01.412Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תמחור ספירה לאחור - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "תמחור עבור ווידג׳ט הספירה לאחור."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "תמחור ספירה לאחור"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "כלול בכל תוכנית של Clickeen."
+    }
+  ],
+  "v": 1
+}

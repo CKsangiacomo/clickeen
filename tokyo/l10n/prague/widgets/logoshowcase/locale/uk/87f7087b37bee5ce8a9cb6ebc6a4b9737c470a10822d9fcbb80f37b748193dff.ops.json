@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-24T00:19:35.060Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Віджет демонстрації логотипів — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Виділяйте логотипи клієнтів за допомогою швидкого та гнучкого віджета-вітрини."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Вітрина логотипів. Миттєве соціальне підтвердження."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Красиво показуйте логотипи клієнтів — зміцнюйте довіру та підвищуйте конверсії."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Вітрина логотипів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Показуйте логотипи красиво. Формуйте довіру."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Як це працює"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Додайте логотипи"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Упорядкуйте"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Вбудуйте"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Завантажте логотипи ваших клієнтів (SVG/PNG) за лічені секунди."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Виберіть макет і відступи, щоб вони пасували вашому сайту."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Вставте фрагмент коду на будь-яку платформу."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Створіть вітрину своїх логотипів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Почніть безкоштовно. Опублікуйте, коли будете готові."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Спробуйте наживо"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Відредагуйте демо-екземпляр у Minibob. Опублікуйте, коли будете готові."
+    }
+  ],
+  "v": 1
+}

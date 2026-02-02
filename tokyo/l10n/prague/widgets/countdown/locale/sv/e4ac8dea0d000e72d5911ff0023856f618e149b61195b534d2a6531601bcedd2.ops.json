@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-24T01:09:25.269Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Nedräkningswidget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Skapa brådska med anpassningsbara nedräkningstimers. Lansera, sälj och tillkännage med trygghet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Nedräkningswidget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Skapa brådska och driv till handling med snabba, flexibla nedräkningar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Nedräkning"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Skapa en känsla av brådska med flexibla nedräkningstimers."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Prova live"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Redigera en demoinstans i Minibob. Publicera när du är redo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget för nedräkningstimer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Skapa brådska och driva till handling med anpassningsbara nedräkningstimers."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Flexibla timerlägen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Datumbaserade, personliga eller sifferräknare för alla scenarier."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Gör uppmärksamhet till handling"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Använd nedräkningar som passar lanseringar, reor, evenemang och personliga mål. Ställ in den en gång och låt den köras överallt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Enkel anpassning"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Justera utseende, layout och åtgärder för att passa ditt varumärke."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Lansera snabbare med nedräkningar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Från uppsättning till publicering på några minuter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Välj din timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Matcha ditt varumärke"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publicera och lokalisera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Välj datum-, evergreen- eller sifferräknare för ditt användningsfall."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Anpassa färger, etiketter och layout för att passa vilken webbplats som helst."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Gå live snabbt och nå en global publik med inbyggd lokalisering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Öka konverteringarna"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Uppmuntra till omedelbar handling med tidsbegränsade erbjudanden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO- och GEO-optimerad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Inbyggt stöd för schema och lokalisering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Skapa brådska, öka försäljningen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kraftfulla nedräkningstimers som förvandlar besökare till kunder."
+    }
+  ],
+  "v": 1
+}

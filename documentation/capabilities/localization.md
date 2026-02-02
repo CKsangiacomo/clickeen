@@ -117,7 +117,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
 - `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths (wired into Prague build/dev-up).
 - `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.
-  - Publish target MUST be explicit:
+  - To publish, pass `--publish` with an explicit target:
     - `--remote` in cloud-dev/prod (writes to Cloudflare R2)
     - `--local` in local dev (writes to Wrangler local R2)
 - Prague loads page JSON base copy and applies overlays at runtime via Tokyo fetch.

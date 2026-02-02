@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2025-12-28"
 workers_dev = true
 
+[[kv_namespaces]]
+binding = "USAGE_KV"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
+
 [[queues.producers]]
 binding = "L10N_GENERATE_QUEUE"
 queue = "instance-l10n-generate-cloud-dev"
@@ -20,6 +25,11 @@ crons = ["*/5 * * * *"]
 
 [env.local]
 name = "paris-local"
+
+[[env.local.kv_namespaces]]
+binding = "USAGE_KV"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
 
 [[env.local.queues.producers]]
 binding = "L10N_GENERATE_QUEUE"

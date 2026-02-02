@@ -6,10 +6,12 @@ Purpose: quick reference for repo scripts (what they do + how to run).
 - `dev-up.sh` — canonical local startup (Supabase + Tokyo + Bob + DevStudio + Prague, etc.).
   - Run: `bash scripts/dev-up.sh` (or `bash scripts/dev-up.sh --full` for rebuild)
 - `prague-sync.mjs` — Prague local alignment + l10n publish to R2.
-  - Run (foreground): `node scripts/prague-sync.mjs`
+  - Run (verify/translate only): `node scripts/prague-sync.mjs`
   - Run (background + log): `node scripts/prague-sync.mjs --background`
-  - Behavior: runs `scripts/prague-l10n/verify.mjs` first and only runs `scripts/prague-l10n/translate.mjs` when verification fails (then re-verifies), then publishes to R2.
-  - Flags: `--skip-translate`, `--skip-verify`, `--skip-publish` (CI uses `--publish --remote` for clarity, but publish is the default).
+  - Run (publish to cloud-dev R2): `node scripts/prague-sync.mjs --publish --remote`
+  - Run (publish to wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
+  - Behavior: runs `scripts/prague-l10n/verify.mjs` first and only runs `scripts/prague-l10n/translate.mjs` when verification fails (then re-verifies). Publishing to R2 happens only when `--publish` is passed.
+  - Flags: `--publish` (requires `--remote` or `--local`), `--skip-translate`, `--skip-verify`, `--skip-publish` (compat).
   - Env: `WRANGLER_BIN` (defaults to `tokyo-worker/node_modules/.bin/wrangler`), `TOKYO_R2_BUCKET`
   - Log: `Logs/prague-sync.log`
 
@@ -28,6 +30,8 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs`
 - `l10n/build.mjs` + `l10n/validate.mjs` — build + validate l10n overlays.
   - Run: `node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs`
+- `l10n/translate-instances.mjs` — generate missing locale overlays for checked-in instances via local San Francisco translator.
+  - Run: `node scripts/l10n/translate-instances.mjs`
 - `prague-l10n/verify.mjs` / `prague-l10n/translate.mjs` — Prague overlay verify/translate.
   - Run: `node scripts/prague-l10n/verify.mjs` / `node scripts/prague-l10n/translate.mjs`
 

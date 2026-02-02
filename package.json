@@ -52,7 +52,7 @@
     "prague:blocks:migrate": "node scripts/prague-blocks/migrate.mjs",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
     "prague:blocks:diff": "node scripts/prague-blocks/diff.mjs",
-    "prague:sync": "node scripts/prague-sync.mjs"
+    "prague:sync": "node scripts/prague-sync.mjs --publish --local"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

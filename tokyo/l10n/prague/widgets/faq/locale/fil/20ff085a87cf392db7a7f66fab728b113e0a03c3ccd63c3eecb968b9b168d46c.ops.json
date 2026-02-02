@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ Widget - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Gumawa ng mabilis at magandang FAQ widget. I-customize, i-publish, at i-localize sa loob ng ilang minuto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQs Widget. Magagandang sagot. Ginawang mabilis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Pinong disenyo, walang kahirap-hirap na mga update, at mga pundasyon ng SEO--handa para sa anumang wika, pinapagana ng AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Tulungan ang mga bisita na makahanap ng mga sagot nang mabilis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Gawin mo itong sa’yo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Idisenyo rito mismo ang perpektong FAQ mo. Makikita agad ang mga pagbabago."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Split creative (kanan)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Ito ang variant na may biswal sa kanan, gamit ang parehong piniling instance gaya ng hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Hating malikhaing split (kaliwa)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Ito ang bersyon na may biswal sa kaliwa, na gumagamit ng kaparehong piniling instance gaya ng hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Panoorin ang mga tanong na nasasagot nang kusa sa real-time"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Maglagay ng magandang dinisenyong FAQ na inilalabas ang tamang sagot sa mismong sandali ng pag-aalinlangan. Agad na natutulungan ang mga customer, nawawala ang mga pagdududa bago pa maging mga ticket, at mas marami kang nasasarang benta nang hindi nadaragdagan ang support. I-customize nang isang beses, i-embed kahit saan, at hayaan itong gumana 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Hating creative (naka-stack)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Ito ang naka-stack na variant, gamit ang parehong na-curate na instance gaya ng hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Mga FAQ na talagang gumagana (para hindi mo na kailangang gawin)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "May mga tanong ang iyong mga customer. Sagutin mo nang isang beses, hindi isang daang beses."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Tigilan ang pagkawala ng benta dahil sa mga tanong na walang sagot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Bawiin ang iyong oras"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Mas marami pang deals ang maisara habang natutulog ka"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Bawat tanong na hindi nasasagot ay isang customer na umaalis. Umaalis ang mga bisita kapag hindi nila makita ang kailangan nila. Ang isang maayos na disenyo na FAQ ay pumapatay sa mga pagtutol bago pa man mabuo—kaya nakukumbinsi ng mga customer ang sarili nilang bumili nang hindi na kailangang makipag-ugnayan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Bawasan ang dami ng support nang 40%+ kapag agad na nakakahanap ng sagot ang mga customer. Wala nang Slack pings. Wala nang mga email na \"mabilis lang na tanong\". Wala nang impiyerno ng palipat-lipat ng context. Ginagawa ng iyong FAQ ang mabibigat na trabaho habang nakatuon ka sa trabahong talagang mahalaga."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Inaasahan ng tamang FAQ ang pagdududa at inaalis ang sagabal sa 2 AM kapag offline ka. Gumagana ang iyong mga sagot 24/7. Hindi naghihintay ang mga customer sa iyo—nakakausad sila, nagtitiwala sa nakikita nila, at pinipindot ang \"buy\" nang hindi naaabala ang araw mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Hating malikhaing disenyo (kanan)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Ito ang variant na may biswal sa kanan, gamit ang parehong piniling instance gaya ng hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO embed (na-i-index)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Tumatakbo ang embed na ito sa shadow mode upang mag-inject ng JSON-LD (FAQPage) sa host page para sa pag-index."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Makipag-ugnayan sa bawat customer, saanman"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ na pinapagana ng AI na nagsasalita ng kanilang wika at nauunawaan ang kanilang mga pangangailangan."
+    }
+  ],
+  "v": 1
+}

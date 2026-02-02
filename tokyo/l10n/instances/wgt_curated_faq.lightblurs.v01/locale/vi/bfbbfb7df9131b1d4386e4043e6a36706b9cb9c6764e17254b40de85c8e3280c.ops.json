@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "bfbbfb7df9131b1d4386e4043e6a36706b9cb9c6764e17254b40de85c8e3280c",
+  "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Tất cả câu hỏi"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeen là gì?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Tôi cài đặt một widget như thế nào?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Có gói miễn phí không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Vì sao tôi nên dùng Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen là thứ mà Isabel sẽ rất thích làm việc cho nó khi cô ấy phải làm và tôi sẽ ép cô ấy."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Sao chép mã nhúng và dán nó trước </body> trên trang web của bạn."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Có, một widget đang hoạt động với các tính năng cốt lõi."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Vì Clickeen là một nền tảng mới tuyệt vời giúp làm cho web đẹp và dễ sử dụng."
+    }
+  ],
+  "v": 1
+}

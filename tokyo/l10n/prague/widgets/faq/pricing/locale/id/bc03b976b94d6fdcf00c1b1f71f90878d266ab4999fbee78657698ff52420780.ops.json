@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "bc03b976b94d6fdcf00c1b1f71f90878d266ab4999fbee78657698ff52420780",
+  "baseUpdatedAt": "2026-01-24T00:19:35.058Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ Harga - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Harga sederhana untuk widget FAQ. Tingkatkan saat Anda membutuhkan lebih banyak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ Harga"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tingkatan sederhana. Upgrade saat Anda membutuhkan lebih banyak widget dan menghapus branding."
+    }
+  ],
+  "v": 1
+}

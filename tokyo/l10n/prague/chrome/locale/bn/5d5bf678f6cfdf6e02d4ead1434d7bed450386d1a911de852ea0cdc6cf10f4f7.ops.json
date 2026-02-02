@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "5d5bf678f6cfdf6e02d4ead1434d7bed450386d1a911de852ea0cdc6cf10f4f7",
+  "baseUpdatedAt": "2026-01-21T02:59:11.486Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "উইজেটসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "সব উইজেট দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "সংক্ষিপ্ত বিবরণ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.templates",
+      "value": "টেমপ্লেটসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "উদাহরণসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "বৈশিষ্ট্যসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "মূল্য নির্ধারণ"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "বিনামূল্যে তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.seeTemplates",
+      "value": "টেমপ্লেট দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "শীঘ্রই আসছে।"
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "আপনার ওয়েবসাইটে এই উইজেটটি ব্যবহার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "শেয়ার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "লিংক কপি করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "কপি হয়েছে"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "আরও"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "এসএমএস"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "ইমেইল"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "Clickeen উইজেট"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "আপনার ওয়েবসাইটে এই উইজেটটি ব্যবহার করুন।"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "মেসেজ হিসেবে এই উইজেট টেমপ্লেটটি পাঠান"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "সোশ্যাল মিডিয়ায় এই উইজেট টেমপ্লেটটি শেয়ার করুন"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "মূল্য নির্ধারণ"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "উইজেটসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "সর্বস্বত্ব সংরক্ষিত।"
+    }
+  ],
+  "v": 1
+}

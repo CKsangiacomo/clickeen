@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 export const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
-const LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z0-9]+)*$/;
+const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[a-z0-9]+)*$/;
 
 export function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);

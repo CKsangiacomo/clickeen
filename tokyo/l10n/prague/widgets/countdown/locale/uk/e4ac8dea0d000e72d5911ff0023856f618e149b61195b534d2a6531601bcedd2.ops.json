@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-24T01:09:25.269Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Віджет зворотного відліку — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Створюйте відчуття терміновості за допомогою налаштовуваних таймерів зворотного відліку. Запускайте, продавайте й оголошуйте з упевненістю."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Віджет таймера зворотного відліку"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Створюйте відчуття терміновості та спонукайте до дії за допомогою швидких і гнучких зворотних відліків."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Зворотний відлік"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Додайте відчуття терміновості за допомогою гнучких таймерів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Спробуйте наживо"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Редагуйте демо-екземпляр у Minibob. Опублікуйте, коли будете готові."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Віджет таймера зворотного відліку"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Створюйте відчуття терміновості та спонукайте до дії за допомогою налаштовуваних таймерів зворотного відліку."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Гнучкі режими таймера"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Лічильники за датою, персональні або числові — для будь-якого сценарію."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Перетворюйте увагу на дію"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Використовуйте таймери, що підходять для запусків, розпродажів, подій і особистих цілей. Налаштуйте один раз — і нехай працює всюди."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Легка кастомізація"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Налаштуйте вигляд, макет і дії відповідно до вашого бренду."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Запускайте швидше з таймерами зворотного відліку"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Від налаштування до публікації — за лічені хвилини."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Оберіть свій таймер"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Узгодьте з вашим брендом"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Опублікуйте та локалізуйте"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Обирайте лічильники до дати, evergreen або числові — під ваш сценарій."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Налаштовуйте кольори, підписи та макет, щоб підійшло для будь-якого сайту."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Швидко запускайтеся та охоплюйте аудиторії по всьому світу завдяки вбудованій локалізації."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Збільшуйте конверсії"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Стимулюйте негайні дії завдяки обмеженим у часі пропозиціям."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Оптимізовано для SEO та GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Вбудована підтримка schema та локалізації."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Створюйте терміновість, збільшуйте продажі"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Потужні таймери зворотного відліку, що перетворюють відвідувачів на клієнтів."
+    }
+  ],
+  "v": 1
+}

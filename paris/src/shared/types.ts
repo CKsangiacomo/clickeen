@@ -13,6 +13,8 @@ export type Env = {
   ENV_STAGE?: string;
   MINIBOB_RATELIMIT_KV?: KVNamespace;
   MINIBOB_RATELIMIT_MODE?: 'off' | 'log' | 'enforce';
+  USAGE_KV?: KVNamespace;
+  USAGE_EVENT_HMAC_SECRET?: string;
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;

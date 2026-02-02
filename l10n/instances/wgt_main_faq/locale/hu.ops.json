@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Gyakran Ismételt Kérdések"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Összes kérdés"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Van ingyenes csomag?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Mi a Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Hogyan telepíthetek egy widgetet?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miért érdemes a Clickeen-t használnom?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Igen, egy aktív widget az alapfunkciókkal."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Beágyazható widgetek beépített konverziós funkciókkal."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Másold ki a beágyazási kódot, és illeszd be a webhelyeden a </body> elé."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Mert a Clickeen egy lenyűgöző, új platform, amellyel a webet széppé és könnyen használhatóvá teheted."
+    }
+  ]
+}

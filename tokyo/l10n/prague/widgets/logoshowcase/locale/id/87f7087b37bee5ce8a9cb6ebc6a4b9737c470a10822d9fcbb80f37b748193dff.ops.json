@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-24T00:19:35.060Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget Showcase Logo - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Soroti logo pelanggan dengan widget showcase yang cepat dan fleksibel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Etalase Logo. Bukti sosial instan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tampilkan logo pelanggan dengan indah -- bangun kepercayaan dan tingkatkan konversi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Pameran Logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Tampilkan logo dengan indah. Bangun kepercayaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Cara kerjanya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Tambahkan logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Atur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Sematkan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Unggah logo pelanggan Anda (SVG/PNG) dalam hitungan detik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Pilih tata letak + jarak agar sesuai dengan situs Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Tempelkan cuplikan kode ke platform apa pun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Buat showcase logo Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Mulai gratis. Publikasikan saat Anda siap."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Coba secara langsung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Edit instance demo di Minibob. Publikasikan saat Anda siap."
+    }
+  ],
+  "v": 1
+}

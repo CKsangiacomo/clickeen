@@ -187,7 +187,7 @@ function assertIndexFixture() {
 function normalizeLocaleToken(raw) {
   const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
   if (!value) return null;
-  if (!/^[a-z]{2}(?:-[a-z0-9]+)*$/.test(value)) return null;
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(value)) return null;
   return value;
 }
 
@@ -197,6 +197,7 @@ function assertLocaleCanonicalization() {
     ['FR-ca', 'fr-ca'],
     ['  en ', 'en'],
     ['zh-TW', 'zh-tw'],
+    ['fil', 'fil'],
     ['en--us', null],
     ['', null],
   ]);

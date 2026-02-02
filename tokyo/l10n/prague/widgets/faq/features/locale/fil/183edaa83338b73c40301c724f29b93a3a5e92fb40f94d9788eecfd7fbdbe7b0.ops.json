@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.057Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga Tampok ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Lahat ng kailangan mo para makapagpadala ng isang pulidong FAQ widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga Tampok ng FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Lahat ng kailangan mo para maglunsad ng mabilis at pulidong FAQ."
+    }
+  ],
+  "v": 1
+}

@@ -103,10 +103,10 @@ prague/src/blocks/cta/cta.astro
 - Primary nav is derived from the URL and `resolveWidgetsMegaMenu()` (no page-authored `items[]` in the scalable path).
 - The **Widgets** nav item behaves as:
   - Hover/focus opens the mega menu (CSS-only via `:has()` + `focus-within`)
-  - “View all widgets” CTA links to `/{locale}/` (directory page)
+  - “View all widgets” CTA links to `/{market}/{locale}/` (directory page)
 - Widget secondary tabs are also derived from the URL:
-  - `/[locale]/widgets/[widget]` → Overview
-  - `/[locale]/widgets/[widget]/templates|examples|features|pricing`
+  - `/[market]/[locale]/widgets/[widget]` → Overview
+  - `/[market]/[locale]/widgets/[widget]/templates|examples|features|pricing`
 
 `site/nav/widgetsMegaMenu.ts`
 - Resolves mega menu content from the canonical widget registry + each widget’s localized page JSON:
@@ -115,7 +115,7 @@ prague/src/blocks/cta/cta.astro
   - Source: `tokyo/widgets/{widget}/pages/overview.json` + localized overlays (`tokyo/l10n/prague/**`)
 
 `site/footer`
-- Props: `{ locale: string }`
+- Props: `{ market: string, locale: string }`
 
 Non-visual block contracts (required):
 - `navmeta` (overview only) requires `copy.title` + `copy.description` or the build fails.
@@ -246,8 +246,8 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Prague validates `curatedRef.publicId` during page load; missing curated instances fail fast in dev/build.
   - Page JSON is layout + base copy; Tokyo overlays overwrite `blocks[].copy` at runtime.
   - Copy is loaded from page JSON and Tokyo overlays `tokyo/l10n/prague/**`, then merged into `copy`.
-  - Runtime copy overlays (geo/industry/experiment) apply on widget pages; composition stays static.
-- Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[locale]/widgets/[widget]/index.astro`.
+  - Runtime overlays are deterministic for canonical pages (locale + market-bound geo); composition stays static.
+- Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
 
 ---
 

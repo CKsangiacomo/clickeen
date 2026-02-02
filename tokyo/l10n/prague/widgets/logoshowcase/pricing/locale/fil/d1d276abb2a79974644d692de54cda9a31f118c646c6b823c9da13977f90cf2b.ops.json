@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d1d276abb2a79974644d692de54cda9a31f118c646c6b823c9da13977f90cf2b",
+  "baseUpdatedAt": "2026-01-24T00:19:35.063Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Pagpepresyo ng Logo Showcase - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Simpleng pagpepresyo para sa logo showcase widget. Magsimula nang libre."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Pagpepresyo ng Logo Showcase"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Magsimula nang libre. Mag-upgrade kapag gusto mo ng mas maraming widget at walang branding."
+    }
+  ],
+  "v": 1
+}

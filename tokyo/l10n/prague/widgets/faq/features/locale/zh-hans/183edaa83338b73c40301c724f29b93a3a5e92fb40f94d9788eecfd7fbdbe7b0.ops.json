@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "183edaa83338b73c40301c724f29b93a3a5e92fb40f94d9788eecfd7fbdbe7b0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.057Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 功能 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "打造精致 FAQ 小部件所需的一切。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 功能"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "打造快速、精致的 FAQ 所需的一切。"
+    }
+  ],
+  "v": 1
+}

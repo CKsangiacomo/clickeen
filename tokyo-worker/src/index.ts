@@ -1036,6 +1036,48 @@ type RenderIndex = {
   current: Record<string, RenderIndexEntry>;
 };
 
+type InstanceEnforcementState = {
+  mode: 'frozen';
+  periodKey: string;
+  frozenAt: string;
+  resetAt: string;
+};
+
+async function loadInstanceEnforcement(env: Env, publicId: string): Promise<InstanceEnforcementState | null> {
+  try {
+    const params = new URLSearchParams({
+      select: 'public_id,mode,period_key,frozen_at,reset_at',
+      public_id: `eq.${publicId}`,
+      limit: '1',
+    });
+    const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) return null;
+    const rows = (await res.json().catch(() => null)) as Array<{
+      public_id?: unknown;
+      mode?: unknown;
+      period_key?: unknown;
+      frozen_at?: unknown;
+      reset_at?: unknown;
+    }> | null;
+    const row = rows?.[0];
+    if (!row) return null;
+    if (row.mode !== 'frozen') return null;
+    const resetAt = typeof row.reset_at === 'string' ? row.reset_at : '';
+    const resetMs = resetAt ? Date.parse(resetAt) : NaN;
+    if (!Number.isFinite(resetMs) || resetMs <= Date.now()) return null;
+    const periodKey = typeof row.period_key === 'string' ? row.period_key : '';
+    const frozenAt = typeof row.frozen_at === 'string' ? row.frozen_at : '';
+    return {
+      mode: 'frozen',
+      periodKey,
+      frozenAt,
+      resetAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function resolveVeniceBase(env: Env): string {
   const raw = typeof env.VENICE_BASE_URL === 'string' ? env.VENICE_BASE_URL.trim() : '';
   if (!raw) throw new Error('[tokyo] Missing VENICE_BASE_URL for render snapshot generation');
@@ -1161,21 +1203,39 @@ async function generateRenderSnapshots(args: {
   locales: string[];
 }): Promise<void> {
   const { env, publicId } = args;
-  const locales = args.locales.length ? args.locales : ['en'];
-  const existing = await loadRenderIndex(env, publicId).catch(() => null);
+  const enforcement = await loadInstanceEnforcement(env, publicId);
+  const locales = enforcement ? ['en'] : args.locales.length ? args.locales : ['en'];
+  const existing = enforcement ? null : await loadRenderIndex(env, publicId).catch(() => null);
   const nextCurrent: Record<string, RenderIndexEntry> = existing?.current ? { ...existing.current } : {};
 
   for (const locale of locales) {
     const bypassHeaders = { 'X-Ck-Snapshot-Bypass': '1' };
-    const e = await fetchVeniceBytes(env, `/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`, {
+    const enforcementQuery = enforcement
+      ? `&enforcement=frozen&frozenAt=${encodeURIComponent(enforcement.frozenAt)}&resetAt=${encodeURIComponent(
+          enforcement.resetAt,
+        )}`
+      : '';
+    const e = await fetchVeniceBytes(
+      env,
+      `/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}${enforcementQuery}`,
+      {
       headers: bypassHeaders,
-    });
-    const r = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`, {
+      },
+    );
+    const r = await fetchVeniceBytes(
+      env,
+      `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}${enforcementQuery}`,
+      {
       headers: bypassHeaders,
-    });
-    const meta = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}&meta=1`, {
+      },
+    );
+    const meta = await fetchVeniceBytes(
+      env,
+      `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}&meta=1${enforcementQuery}`,
+      {
       headers: bypassHeaders,
-    });
+      },
+    );
 
     const eFp = await putImmutableRenderArtifact({
       env,

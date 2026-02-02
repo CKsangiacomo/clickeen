@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local --port 8787",
-    "deploy": "node ../scripts/infra/ensure-queues.mjs --queue instance-l10n-generate-cloud-dev && wrangler deploy"
+    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queue instance-l10n-generate-cloud-dev && wrangler deploy"
   },
   "dependencies": {
     "@clickeen/ck-policy": "workspace:*",

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "e4ac8dea0d000e72d5911ff0023856f618e149b61195b534d2a6531601bcedd2",
+  "baseUpdatedAt": "2026-01-24T01:09:25.269Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget ng Countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Lumikha ng sense of urgency gamit ang mga nako-customize na countdown timer. Mag-launch, magbenta, at mag-anunsyo nang may kumpiyansa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget ng Countdown Timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Lumikha ng agarang pakiramdam at hikayatin ang pagkilos gamit ang mabilis at flexible na mga countdown."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Magdagdag ng pagkaapurahan gamit ang mga flexible na timer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Subukan ito nang live"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "I-edit ang isang demo instance sa Minibob. I-publish kapag handa ka na."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget ng Countdown Timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Lumikha ng sense of urgency at hikayatin ang pagkilos gamit ang mga nako-customize na countdown timer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Mga Flexible na Mode ng Timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Batay sa petsa, personal, o mga counter ng numero para sa anumang sitwasyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Gawing aksyon ang atensyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Gumamit ng mga timer na bagay para sa mga paglulunsad, sale, event, at personal na layunin. I-set ito nang isang beses at hayaan itong tumakbo kahit saan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Madaling Pag-customize"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Ayusin ang hitsura, layout, at mga aksyon para umangkop sa iyong brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Mas mabilis na maglunsad gamit ang mga countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Mula sa setup hanggang sa pag-publish sa loob lang ng ilang minuto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Piliin ang iyong timer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Itugma sa iyong brand"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "I-publish at i-localize"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Pumili ng date, evergreen, o number counters para sa iyong gamit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "I-customize ang mga kulay, mga label, at layout para bumagay sa anumang site."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Maging live agad at maabot ang mga audience sa buong mundo gamit ang built-in na localization."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Pataasin ang mga Conversion"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Hikayatin ang agarang pagkilos gamit ang mga alok na may limitadong oras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Na-optimize para sa SEO at GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "May built-in na schema at suporta para sa localization."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Lumikha ng Sense of Urgency, Palakasin ang Benta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Makapangyarihang mga countdown timer na nagko-convert ng mga bisita tungo sa mga customer."
+    }
+  ],
+  "v": 1
+}

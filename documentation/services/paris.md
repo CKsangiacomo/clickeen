@@ -4,11 +4,11 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 
 ## AIs Quick Scan
 
-**Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway (usage/submissions are placeholders in this repo snapshot).
+**Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway + metering enforcement (usage is shipped; submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (501), `POST /api/submit/:publicId` (501).
-**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`.
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
+**Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
 ## Runtime Reality (this repo snapshot)
@@ -356,7 +356,26 @@ Notes:
 - Cloud-dev should be updated via DevStudio’s “promote instance” path (direct upsert), not by calling this local-only endpoint.
 
 ### Usage & submissions (not shipped here)
-- `POST /api/usage` and `POST /api/submit/:publicId` exist only as explicit `501 NOT_IMPLEMENTED` placeholders in this repo snapshot.
+
+### Usage (Shipped: PRD 37 metering)
+
+`POST /api/usage` accepts a signed view event from Venice:
+```json
+{ "publicId": "wgt_...", "event": "view", "tier": "free|tier1|...", "sig": "<hmac>" }
+```
+
+**Behavior (v1):**
+- Only capped tiers are counted (`free`, `tier1`). Other tiers are treated as unlimited and skipped.
+- Counts monthly views in `USAGE_KV`. On first overage view (`next > cap`), Paris marks the instance as frozen:
+  - Upserts `instance_enforcement_state` with `{ mode: "frozen", period_key, frozen_at, reset_at }`
+  - Enqueues a PRD 38 render snapshot regen for `locales: ["en"]` (Frozen Billboard contract: base locale only)
+
+**Requirements:**
+- `USAGE_EVENT_HMAC_SECRET` (shared secret with Venice)
+- `USAGE_KV` binding (KV namespace for view counters + frozen markers)
+
+### Submissions (Not Shipped Here)
+- `POST /api/submit/:publicId` exists only as an explicit `501 NOT_IMPLEMENTED` placeholder in this repo snapshot.
 
 ### Health & System (Phase-1)
 #### `GET /api/healthz`
@@ -370,8 +389,8 @@ Notes:
 ```
 **Status**: Always `200` when the worker is up.
 
-### Privacy, Rate Limiting, Usage, Submissions (Not Shipped Here)
-- `POST /api/usage` and `POST /api/submit/:publicId` exist only as explicit `501 NOT_IMPLEMENTED` placeholders in this repo snapshot.
+### Privacy, Rate Limiting, Submissions (Not Shipped Here)
+- `POST /api/submit/:publicId` exists only as an explicit `501 NOT_IMPLEMENTED` placeholder in this repo snapshot.
 - Document token flows, event storage tables, and rate-limit behavior as “shipped” only once the endpoints exist and `supabase/migrations/` includes the authoritative schema.
 
 ## Database Integration (This Repo Snapshot)
@@ -406,6 +425,6 @@ const supabase = createClient(
 - Auth failures: `401` with `{ "error": "AUTH_REQUIRED" }` (dev/local gate)
 - Not found: `404` with `{ "error": "NOT_FOUND" }`
 - Validation: `422` with `[{ "path": "...", "message": "..." }]`
-- Not implemented: `501` with `{ "error": "NOT_IMPLEMENTED" }` (usage/submissions)
+- Not implemented: `501` with `{ "error": "NOT_IMPLEMENTED" }` (submissions)
 
 For exact response shapes and status codes, inspect `paris/src/index.ts`.

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tạo một widget FAQ nhanh, đẹp. Tùy chỉnh, xuất bản và bản địa hóa chỉ trong vài phút."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget Câu hỏi thường gặp. Câu trả lời đẹp mắt. Được xây dựng để nhanh chóng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Thiết kế tinh tế, cập nhật dễ dàng và nền tảng SEO—sẵn sàng cho mọi ngôn ngữ, được hỗ trợ bởi AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Giúp khách truy cập tìm câu trả lời nhanh chóng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Hãy biến nó thành của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Thiết kế mục FAQ hoàn hảo của bạn ngay tại đây. Xem thay đổi ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Sáng tạo chia đôi (phải)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Đây là biến thể hiển thị hình ảnh bên phải, sử dụng cùng một phiên bản được tuyển chọn như phần hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Sáng tạo tách đôi (trái)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Đây là biến thể hình ảnh bên trái, sử dụng cùng một phiên bản được tuyển chọn như ở phần hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Xem các câu hỏi tự được trả lời theo thời gian thực"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Thêm một mục Câu hỏi thường gặp (FAQ) được thiết kế đẹp mắt, hiển thị đúng câu trả lời ngay tại khoảnh khắc do dự. Khách hàng được gỡ vướng ngay lập tức, các phản đối tan biến trước khi trở thành yêu cầu hỗ trợ, và bạn chốt được nhiều đơn hơn mà không cần tăng thêm đội ngũ support. Tùy chỉnh một lần, nhúng ở bất kỳ đâu, và để nó hoạt động 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Sáng tạo chia đôi (xếp chồng)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Đây là biến thể xếp chồng, sử dụng cùng một phiên bản được tuyển chọn như phần hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQs thực sự hiệu quả (để bạn khỏi phải làm) "
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Khách hàng của bạn có câu hỏi. Hãy trả lời một lần, không phải cả trăm lần."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Ngừng mất doanh số vì câu hỏi không được giải đáp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Lấy lại thời gian của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Chốt nhiều deal hơn trong lúc bạn ngủ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Mỗi câu hỏi không được trả lời là một khách hàng rời đi. Khách truy cập sẽ bỏ đi khi họ không tìm thấy thứ họ cần. Một trang FAQ được thiết kế tốt sẽ dập tắt phản đối ngay cả trước khi nó hình thành—để khách hàng tự thuyết phục mình mua mà không cần liên hệ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Giảm khối lượng hỗ trợ hơn 40% khi khách hàng tìm thấy câu trả lời ngay lập tức. Không còn ping Slack. Không còn email “hỏi nhanh”. Không còn địa ngục chuyển ngữ cảnh liên tục. FAQ của bạn làm phần việc nặng, để bạn tập trung vào công việc thực sự quan trọng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Một trang FAQ đúng chuẩn sẽ dự đoán nghi ngờ và loại bỏ ma sát lúc 2 giờ sáng khi bạn đang offline. Câu trả lời của bạn hoạt động 24/7. Khách hàng không chờ bạn—họ được gỡ vướng, tin vào những gì họ thấy, và nhấn “mua” mà không làm gián đoạn ngày làm việc của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Sáng tạo chia đôi (phải)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Đây là biến thể hình ảnh bên phải, sử dụng cùng một phiên bản được tuyển chọn như phần hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Nhúng SEO/GEO (có thể lập chỉ mục)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Phần nhúng này chạy ở chế độ shadow để chèn JSON-LD (FAQPage) vào trang chủ để lập chỉ mục."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Kết nối với mọi khách hàng, ở mọi nơi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ ứng dụng AI nói ngôn ngữ của họ và hiểu nhu cầu của họ."
+    }
+  ],
+  "v": 1
+}

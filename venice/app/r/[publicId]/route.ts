@@ -15,6 +15,7 @@ interface InstanceResponse {
   widgetType?: string | null;
   config: Record<string, unknown>;
   updatedAt?: string;
+  policy?: { flags?: Record<string, boolean> } | null;
 }
 
 const CACHE_PUBLISHED = 'public, max-age=300, s-maxage=600, stale-while-revalidate=1800';
@@ -107,6 +108,19 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
   const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
+  const enforcement = (url.searchParams.get('enforcement') || '').trim().toLowerCase();
+  const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
+  const resetAt = (url.searchParams.get('resetAt') || '').trim();
+  const isFrozenRequest = bypassSnapshot && enforcement === 'frozen' && frozenAt && resetAt;
+  const effectiveLocale = isFrozenRequest ? 'en' : locale;
+  const enforcementPayload = isFrozenRequest
+    ? {
+        mode: 'frozen' as const,
+        frozenAt,
+        resetAt,
+        upgradeUrl: 'https://clickeen.com/upgrade',
+      }
+    : null;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -119,11 +133,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   let snapshotReason: string | null = null;
 
   if (!ts && !auth && !embedToken && !bypassSnapshot) {
-    const snapshot = await loadRenderSnapshot({
+    let snapshotLocale = locale;
+    let snapshot = await loadRenderSnapshot({
       publicId,
-      locale,
+      locale: snapshotLocale,
       variant: metaOnly ? 'meta' : 'r',
     });
+    if (!snapshot.ok && snapshot.reason === 'LOCALE_MISSING' && snapshotLocale !== 'en') {
+      snapshotLocale = 'en';
+      snapshot = await loadRenderSnapshot({
+        publicId,
+        locale: snapshotLocale,
+        variant: metaOnly ? 'meta' : 'r',
+      });
+    }
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
@@ -139,8 +162,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       if (!metaOnly) {
         try {
           const parsed = JSON.parse(raw) as Record<string, unknown>;
+          const mode = (parsed as any)?.enforcement?.mode;
+          const resolvedLocale = mode === 'frozen' ? 'en' : snapshotLocale;
           parsed.theme = theme;
           parsed.device = device;
+          parsed.locale = resolvedLocale;
           const body = JSON.stringify(parsed);
           headers['ETag'] = etag;
           headers['Cache-Control'] = CACHE_PUBLISHED;
@@ -230,26 +256,42 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(JSON.stringify({ error: 'MISSING_WIDGET_TYPE' }), { status: 500, headers });
   }
 
-  const localizedState = await applyTokyoInstanceOverlay({
-    publicId: instance.publicId,
-    locale,
-    country,
-    baseUpdatedAt: instance.updatedAt ?? null,
-    widgetType,
-    config: instance.config,
-    explicitLocale: true,
-  });
+  const localizedState = isFrozenRequest
+    ? instance.config
+    : await applyTokyoInstanceOverlay({
+        publicId: instance.publicId,
+        locale: effectiveLocale,
+        country,
+        baseUpdatedAt: instance.updatedAt ?? null,
+        widgetType,
+        config: instance.config,
+        explicitLocale: true,
+      });
+
+  const canRemoveBranding = instance.policy?.flags?.['branding.remove'] === true;
+  if (!canRemoveBranding) {
+    const behavior = (localizedState as any)?.behavior;
+    if (behavior && typeof behavior === 'object' && !Array.isArray(behavior)) {
+      if (behavior.showBacklink === false) behavior.showBacklink = true;
+    }
+  }
+  if (isFrozenRequest) {
+    const behavior = (localizedState as any)?.behavior;
+    if (behavior && typeof behavior === 'object' && !Array.isArray(behavior)) {
+      behavior.showBacklink = true;
+    }
+  }
 
   const schemaJsonLd = generateSchemaJsonLd({
     widgetType,
     state: localizedState,
-    locale,
+    locale: effectiveLocale,
   });
 
   const excerptHtml = generateExcerptHtml({
     widgetType,
     state: localizedState,
-    locale,
+    locale: effectiveLocale,
   });
 
   if (metaOnly) {
@@ -257,7 +299,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       publicId: instance.publicId,
       status: instance.status,
       widgetType,
-      locale,
+      locale: effectiveLocale,
+      enforcement: enforcementPayload,
       schemaJsonLd,
       excerptHtml,
     };
@@ -289,6 +332,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const styles = extractStylesheetHrefs(widgetHtml, widgetType).filter(Boolean);
   const scripts = extractScriptSrcs(bodyHtml, widgetType).filter(Boolean);
   const renderHtml = injectPublicId(stripScriptTags(bodyHtml), widgetType, instance.publicId);
+  const frozenOverlay = isFrozenRequest ? renderFrozenShadowBillboardHtml({ frozenAt, resetAt }) : '';
+  const frozenStyle = isFrozenRequest ? renderFrozenShadowBillboardCss() : '';
+  const frozenRenderHtml = isFrozenRequest ? `${renderHtml}\n${frozenStyle}\n${frozenOverlay}` : renderHtml;
 
   const payload = {
     publicId: instance.publicId,
@@ -296,11 +342,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     widgetType,
     theme,
     device,
-    locale,
+    locale: effectiveLocale,
     state: localizedState,
+    enforcement: enforcementPayload,
     schemaJsonLd,
     excerptHtml,
-    renderHtml,
+    renderHtml: frozenRenderHtml,
     assets: { styles, scripts },
   };
 
@@ -317,4 +364,94 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
 
   return new NextResponse(JSON.stringify(payload), { status: 200, headers });
+}
+
+function renderFrozenShadowBillboardCss(): string {
+  return `<style>
+    :host { position: relative; display: block; }
+    .ck-frozen {
+      position: absolute;
+      inset: auto 0 0 0;
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      pointer-events: none;
+    }
+    .ck-frozen__card {
+      pointer-events: auto;
+      width: min(560px, calc(100% - 32px));
+      border-radius: 20px;
+      border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
+      background: color-mix(in oklab, var(--color-system-white), transparent 6%);
+      box-shadow: 0 24px 60px color-mix(in oklab, var(--color-system-black), transparent 88%);
+      backdrop-filter: blur(10px);
+      padding: 18px 18px 16px;
+    }
+    .ck-frozen__title {
+      margin: 0 0 6px;
+      font: 600 var(--fs-14, 14px) / 1.2 var(--font-ui, system-ui, sans-serif);
+      color: var(--color-text);
+    }
+    .ck-frozen__meta {
+      margin: 0 0 10px;
+      font: 500 var(--fs-12, 12px) / 1.3 var(--font-ui, system-ui, sans-serif);
+      color: color-mix(in oklab, var(--color-text), transparent 28%);
+    }
+    .ck-frozen__actions {
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .ck-frozen__link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 8px 12px;
+      border-radius: var(--control-radius-sm, 0.5rem);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      text-decoration: none;
+      font: 600 var(--fs-12, 12px) / 1.1 var(--font-ui, system-ui, sans-serif);
+      box-shadow: 0 10px 24px color-mix(in oklab, var(--color-primary), transparent 65%);
+    }
+    .ck-frozen__link:hover { filter: brightness(1.03); }
+    .ck-frozen__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font: 500 var(--fs-12, 12px) / 1.1 var(--font-ui, system-ui, sans-serif);
+      color: color-mix(in oklab, var(--color-text), transparent 35%);
+      white-space: nowrap;
+    }
+    /* Make the widget a billboard: visible, but non-interactive. */
+    [data-ck-widget], [data-role="root"] { pointer-events: none !important; }
+  </style>`;
+}
+
+function renderFrozenShadowBillboardHtml(args: { frozenAt: string; resetAt: string }): string {
+  const frozenText = args.frozenAt
+    ? new Date(args.frozenAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })
+    : '';
+  const resetText = args.resetAt
+    ? new Date(args.resetAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })
+    : '';
+  const metaParts = [
+    frozenText ? `Data frozen on ${frozenText}` : null,
+    resetText ? `Resets on ${resetText}` : null,
+  ].filter(Boolean);
+  const meta = metaParts.join(' • ');
+
+  return `<div class="ck-frozen" role="alert" aria-live="polite">
+    <div class="ck-frozen__card">
+      <p class="ck-frozen__title">Upgrade for live updates</p>
+      <p class="ck-frozen__meta">${meta || 'This widget is frozen.'}</p>
+      <div class="ck-frozen__actions">
+        <a class="ck-frozen__link" href="https://clickeen.com/upgrade" target="_blank" rel="noreferrer">Upgrade</a>
+        <span class="ck-frozen__badge">Powered by Clickeen</span>
+      </div>
+    </div>
+  </div>`;
 }

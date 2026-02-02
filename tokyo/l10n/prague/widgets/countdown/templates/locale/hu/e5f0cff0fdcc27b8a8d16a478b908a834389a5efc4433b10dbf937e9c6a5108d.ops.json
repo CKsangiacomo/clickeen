@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "e5f0cff0fdcc27b8a8d16a478b908a834389a5efc4433b10dbf937e9c6a5108d",
+  "baseUpdatedAt": "2026-01-24T01:10:13.110Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Visszaszámlálási sablonok - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Böngésszen sablonokat a Visszaszámlálás widgethez."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Visszaszámlálási sablonok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kész elrendezések a visszaszámlálók gyakori felhasználási eseteihez."
+    }
+  ],
+  "v": 1
+}

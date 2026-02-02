@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d1d276abb2a79974644d692de54cda9a31f118c646c6b823c9da13977f90cf2b",
+  "baseUpdatedAt": "2026-01-24T00:19:35.063Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Ціни на демонстрацію логотипів — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Просте ціноутворення для віджета демонстрації логотипів. Почніть безкоштовно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ціни на вітрину логотипів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Почніть безкоштовно. Переходьте на вищий план, коли захочете більше віджетів і без брендингу."
+    }
+  ],
+  "v": 1
+}

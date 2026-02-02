@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "87f7087b37bee5ce8a9cb6ebc6a4b9737c470a10822d9fcbb80f37b748193dff",
+  "baseUpdatedAt": "2026-01-24T00:19:35.060Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "วิดเจ็ตแสดงโลโก้ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ไฮไลต์โลโก้ลูกค้าด้วยวิดเจ็ตแสดงผลงานที่รวดเร็วและยืดหยุ่น"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "โชว์เคสโลโก้ หลักฐานทางสังคมได้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "แสดงโลโก้ลูกค้าอย่างสวยงาม -- สร้างความน่าเชื่อถือและเพิ่มอัตราการคอนเวอร์ชัน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "โชว์เคสโลโก้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "แสดงโลโก้อย่างสวยงาม สร้างความน่าเชื่อถือ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "วิธีการทำงาน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "เพิ่มโลโก้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "จัดเรียง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ฝังโค้ด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "อัปโหลดโลโก้ลูกค้าของคุณ (SVG/PNG) ได้ภายในไม่กี่วินาที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "เลือกรูปแบบเลย์เอาต์ + ระยะห่างให้เข้ากับเว็บไซต์ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "วางสไนปเป็ตลงในแพลตฟอร์มใดก็ได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "สร้างโลโก้โชว์เคสของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "เริ่มฟรี เผยแพร่เมื่อคุณพร้อม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "ลองใช้งานแบบสด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "แก้ไขอินสแตนซ์เดโมใน Minibob แล้วเผยแพร่เมื่อคุณพร้อม"
+    }
+  ],
+  "v": 1
+}

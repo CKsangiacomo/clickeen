@@ -1,0 +1,102 @@
+<header class="devstudio-page__header">
+  <h1 class="heading-2" style="margin: 0">Entitlements Matrix</h1>
+  <p class="body-s" style="margin: 8px 0 0 0;">
+    Deterministic view of product caps and flags. This page reads directly from <code>@clickeen/ck-policy</code>,
+    which is the same source Paris uses for enforcement.
+  </p>
+</header>
+
+<section class="devstudio-page-section" id="entitlements-root" aria-live="polite"></section>
+
+<script type="module">
+  const root = document.getElementById('entitlements-root');
+  const matrix = window.__CK_ENTITLEMENTS__;
+
+  if (!root || !matrix) {
+    const error = document.createElement('p');
+    error.className = 'body-s';
+    error.textContent = 'Missing entitlements data. Ensure @clickeen/ck-policy is available in DevStudio build.';
+    root?.appendChild(error);
+  } else {
+    const tiers = matrix.tiers;
+    const groups = {
+      flag: [],
+      cap: [],
+      budget: [],
+    };
+
+    Object.entries(matrix.capabilities).forEach(([key, cap]) => {
+      groups[cap.kind]?.push({ key, cap });
+    });
+
+    const renderTable = (title, entries) => {
+      const section = document.createElement('section');
+      section.className = 'devstudio-page-section';
+
+      const heading = document.createElement('h2');
+      heading.className = 'heading-3';
+      heading.textContent = title;
+      section.appendChild(heading);
+
+      const table = document.createElement('table');
+      table.className = 'body-s';
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+
+      const capHeader = document.createElement('th');
+      capHeader.textContent = 'Capability';
+      capHeader.className = 'label-s';
+      capHeader.style.textAlign = 'left';
+      capHeader.style.padding = '8px 12px';
+      headRow.appendChild(capHeader);
+
+      tiers.forEach((tier) => {
+        const th = document.createElement('th');
+        th.textContent = tier.replace(/\b\w/g, (c) => c.toUpperCase());
+        th.className = 'label-s';
+        th.style.textAlign = 'left';
+        th.style.padding = '8px 12px';
+        headRow.appendChild(th);
+      });
+
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      entries.forEach(({ key, cap }) => {
+        const row = document.createElement('tr');
+
+        const nameCell = document.createElement('td');
+        nameCell.textContent = key;
+        nameCell.className = 'body-s';
+        nameCell.style.padding = '8px 12px';
+        row.appendChild(nameCell);
+
+        tiers.forEach((tier) => {
+          const valueCell = document.createElement('td');
+          const value = cap.values[tier];
+          let display = String(value);
+          if (cap.kind === 'flag') display = value ? '✓' : '✗';
+          if (value === null) display = '∞';
+          valueCell.textContent = display;
+          valueCell.className = 'body-s';
+          valueCell.style.padding = '8px 12px';
+          row.appendChild(valueCell);
+        });
+
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      section.appendChild(table);
+      return section;
+    };
+
+    root.appendChild(renderTable('Flags', groups.flag));
+    root.appendChild(renderTable('Caps', groups.cap));
+    root.appendChild(renderTable('Budgets', groups.budget));
+  }
+</script>

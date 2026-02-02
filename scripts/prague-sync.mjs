@@ -28,12 +28,26 @@ const runBackground = args.has('--background');
 const isBackgroundChild = args.has('--background-child');
 const runTranslate = !args.has('--skip-translate');
 const runVerify = !args.has('--skip-verify');
-const runPublish = !args.has('--skip-publish');
+const runPublish = args.has('--publish') && !args.has('--skip-publish');
 const publishRemote = args.has('--remote');
 const publishLocal = args.has('--local');
 
 if (publishRemote && publishLocal) {
   console.error('[prague-sync] Use only one of --remote or --local.');
+  process.exit(1);
+}
+
+if ((publishRemote || publishLocal) && !args.has('--publish')) {
+  console.error('[prague-sync] --remote/--local require --publish.');
+  process.exit(1);
+}
+
+if (args.has('--publish') && args.has('--skip-publish')) {
+  console.warn('[prague-sync] Both --publish and --skip-publish set; publish will be skipped.');
+}
+
+if (runPublish && !publishRemote && !publishLocal) {
+  console.error('[prague-sync] --publish requires exactly one of --remote or --local.');
   process.exit(1);
 }
 
@@ -102,13 +116,15 @@ async function publishOverlays() {
     process.exit(1);
   }
 
+  const target = publishRemote ? 'remote' : 'local';
+  console.log(`[prague-sync] Publishing Prague overlays to R2 (${target}). Bucket: "${R2_BUCKET}"`);
   console.log(`[prague-sync] Uploading ${files.length} files to R2 bucket "${R2_BUCKET}"...`);
   for (const filePath of files) {
     const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
     const key = relFromTokyo; // e.g. l10n/prague/...
     const objectPath = `${R2_BUCKET}/${key}`;
-    const modeFlag = publishRemote ? '--remote' : publishLocal ? '--local' : null;
-    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath, ...(modeFlag ? [modeFlag] : [])]);
+    const modeFlag = publishRemote ? '--remote' : '--local';
+    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath, modeFlag]);
   }
 }
 
@@ -150,6 +166,8 @@ async function main() {
 
   if (runPublish) {
     await publishOverlays();
+  } else {
+    console.log('[prague-sync] Skipping publish (pass --publish --remote|--local to publish overlays).');
   }
   console.log('[prague-sync] Done.');
   if (isBackgroundChild) {

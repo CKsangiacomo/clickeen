@@ -1,4 +1,4 @@
-export function resolvePragueHref(opts: { href: string; locale: string; widget?: string }): string {
+export function resolvePragueHref(opts: { href: string; market: string; locale: string; widget?: string }): string {
   const raw = String(opts.href || '').trim();
   if (!raw) return '#';
 
@@ -14,11 +14,11 @@ export function resolvePragueHref(opts: { href: string; locale: string; widget?:
   // Ensure it starts with "/" so we can prefix locale.
   const path = withPlaceholders.startsWith('/') ? withPlaceholders : `/${withPlaceholders}`;
 
-  // If already locale-prefixed (e.g. /en/...), keep it.
-  if (/^\/[a-z]{2}(?:-[a-z0-9]{2,8})?\//i.test(path)) return path;
+  // If already market+locale-prefixed, keep it.
+  if (/^\/[a-z][a-z0-9-]{0,31}\/[a-z]{2,3}(?:-[a-z0-9]+)*\//i.test(path)) return path;
 
-  const locale = String(opts.locale || '').trim() || 'en';
-  return `/${locale}${path}`;
+  const market = String(opts.market || '').trim();
+  const locale = String(opts.locale || '').trim();
+  if (!market || !locale) return path;
+  return `/${market}/${locale}${path}`;
 }
-
-

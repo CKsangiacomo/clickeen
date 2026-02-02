@@ -1,4 +1,48 @@
 ---
-return Astro.redirect('/en');
----
+export const prerender = false;
 
+import { getPragueMarket, isValidLocaleForMarket, PRAGUE_MARKETS, resolveMarketFromCountry } from '../lib/markets';
+
+type ParsedCookies = Record<string, string>;
+
+function parseCookies(header: string | null): ParsedCookies {
+  if (!header) return {};
+  return header.split(';').reduce<ParsedCookies>((acc, part) => {
+    const [rawKey, ...rest] = part.split('=');
+    const key = String(rawKey || '').trim();
+    if (!key) return acc;
+    const value = rest.join('=').trim();
+    acc[key] = decodeURIComponent(value);
+    return acc;
+  }, {});
+}
+
+const cookies = parseCookies(Astro.request.headers.get('cookie'));
+
+const cookieMarket = String(cookies.ck_market || '').trim().toLowerCase();
+const cookieLocale = String(cookies.ck_locale || '').trim().toLowerCase();
+
+const cookieMarketConfig = cookieMarket ? getPragueMarket(cookieMarket) : null;
+if (cookieMarketConfig) {
+  return Astro.redirect(
+    `/${cookieMarketConfig.key}/${
+      cookieLocale && isValidLocaleForMarket({ market: cookieMarketConfig.key, locale: cookieLocale })
+        ? cookieLocale
+        : cookieMarketConfig.defaultLocale
+    }/${Astro.url.search}`,
+    302,
+  );
+}
+
+const country = Astro.request.headers.get('cf-ipcountry');
+const geoMarket = resolveMarketFromCountry(country);
+if (geoMarket) {
+  return Astro.redirect(`/${geoMarket.key}/${geoMarket.defaultLocale}/${Astro.url.search}`, 302);
+}
+
+const defaultMarket = getPragueMarket('uk') ?? PRAGUE_MARKETS.markets[0] ?? null;
+if (!defaultMarket) {
+  throw new Error('[prague] No markets configured (expected at least one entry in config/markets.json)');
+}
+return Astro.redirect(`/${defaultMarket.key}/${defaultMarket.defaultLocale}/${Astro.url.search}`, 302);
+---

@@ -2,13 +2,13 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-01-31
+Last updated: 2026-02-02
 
 ---
 
 ## 0) What Prague is (in this repo)
 
-Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. Widget pages render server-side to apply runtime overlays (geo/industry/experiment); other routes remain pre-rendered.
+Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side so Prague can apply deterministic overlays and emit canonical SEO tags.
 
 In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/widgets/*/pages/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/l10n/prague/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
@@ -20,7 +20,7 @@ At build time, Prague:
 
 At request time (widget pages only), Prague:
 - loads page JSON + locale overlays
-- applies geo/industry/experiment overlays using the Babel Protocol order
+- applies deterministic overlays only (locale + market-bound geo)
 - renders HTML with the merged copy (composition remains static)
 
 Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no longer parses markdown. It loads the JSON page specs described below.
@@ -29,22 +29,31 @@ Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no l
 
 ## 1) Routes (shipped)
 
+Prague’s canonical URL identity is `/{market}/{locale}/...`:
+- `market` is allowlisted and configured in `config/markets.json` (e.g. `uk`, `it`, `ca`)
+- `locale` is a supported locale token (from `config/locales.json`, further constrained per-market by `config/markets.json`)
+
+Root `/` is a non-canonical entry surface:
+- if a valid cookie market exists, it 302s to `/{market}/{locale}/`
+- else if IP geo maps to a market, it 302s to `/{market}/{defaultLocale}/`
+- else it 302s to the default canonical (v0.2: `/uk/en/`) — **no picker UI**
+
 ### 1.1 Widget directory
 
-- `/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from overlays)
+- `/{market}/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from deterministic overlays)
 
-There is currently no dedicated `/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
+There is currently no dedicated `/{market}/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
 
 ### 1.2 Widget overview
 
-- `/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing block stack from:
+- `/{market}/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing block stack from:
   - `tokyo/widgets/{widget}/pages/overview.json`
 
 This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
 
 ### 1.3 Widget subpages
 
-- `/{locale}/widgets/{widget}/{page}` where `page ∈ { templates, examples, features, pricing }`
+- `/{market}/{locale}/widgets/{widget}/{page}` where `page ∈ { templates, examples, features, pricing }`
 
 Current repo behavior:
 - these pages render blocks from JSON like overview; in this snapshot many subpages are intentionally minimal (typically `page-meta` + `hero`) until richer stacks are authored
@@ -133,6 +142,7 @@ Required env:
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
 - Curated embeds (visual widget instances inside Prague blocks) remain locale-free; locale is passed as a query param and/or applied via overlays at runtime.
+- For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound geo overlays are derived from `config/markets.json`.
 
 ---
 

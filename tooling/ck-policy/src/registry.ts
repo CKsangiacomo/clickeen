@@ -34,6 +34,8 @@ export const CAPABILITY_KEYS = [
   'budget.copilot.turns',
   'budget.edits',
   'budget.uploads',
+  'views.monthly.max',
+  'instances.published.max',
 ] as const;
 export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 
@@ -69,6 +71,8 @@ export const CAP_KEYS = [
   'text.answer.max',
   'text.caption.max',
   'text.headerHtml.max',
+  'views.monthly.max',
+  'instances.published.max',
 ] as const satisfies readonly CapabilityKey[];
 export type CapKey = (typeof CAP_KEYS)[number];
 

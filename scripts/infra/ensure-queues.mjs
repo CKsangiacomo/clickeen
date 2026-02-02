@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 function printHelp() {
   console.log(`Usage: ensure-queues --queue <name> [--queue <name> ...]
        ensure-queues --queues <name,name,...>
+       ensure-queues ... --write
 
 Ensures Cloudflare Queues exist by creating missing queues.
 `);
@@ -11,9 +12,14 @@ Ensures Cloudflare Queues exist by creating missing queues.
 
 const args = process.argv.slice(2);
 const queues = [];
+let write = false;
 
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
+  if (arg === '--write') {
+    write = true;
+    continue;
+  }
   if (arg === '--queue') {
     const value = args[i + 1];
     if (!value) {
@@ -46,6 +52,12 @@ for (let i = 0; i < args.length; i += 1) {
 const uniqueQueues = Array.from(new Set(queues)).filter(Boolean);
 if (uniqueQueues.length === 0) {
   console.error('[ensure-queues] No queues provided.');
+  printHelp();
+  process.exit(1);
+}
+
+if (!write) {
+  console.error('[ensure-queues] Refusing to create queues without --write.');
   printHelp();
   process.exit(1);
 }

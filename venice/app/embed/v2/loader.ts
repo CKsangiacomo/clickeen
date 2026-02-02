@@ -20,15 +20,88 @@ const script = `(() => {
 		    locale: localeAttr,
 		  } = scriptEl.dataset;
 
-  if (!publicId) {
-    console.warn('[Clickeen] Missing data-public-id');
-    return;
-  }
+  function createHostErrorCard(title, message, details, maxWidthPx) {
+    const card = document.createElement('div');
+    card.setAttribute('data-ck-embed-error', '1');
+    card.style.boxSizing = 'border-box';
+    card.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    card.style.border = '1px solid rgba(148, 163, 184, 0.6)';
+    card.style.borderRadius = '14px';
+    card.style.background = 'rgba(248, 250, 252, 0.98)';
+    card.style.color = '#0f172a';
+    card.style.padding = '14px 14px 12px';
+    card.style.width = '100%';
+    const resolvedMaxWidth = typeof maxWidthPx === 'number' && Number.isFinite(maxWidthPx) ? maxWidthPx : 640;
+    card.style.maxWidth = resolvedMaxWidth === 0 ? 'none' : resolvedMaxWidth + 'px';
+    card.style.boxShadow = '0 10px 30px rgba(15, 23, 42, 0.12)';
 
-		  const origin = new URL(scriptEl.src, window.location.href).origin;
-			  const preferredLocale = typeof localeAttr === 'string' ? localeAttr.trim().toLowerCase() : '';
-			  const locale = preferredLocale || (navigator.language || 'en').split('-')[0] || 'en';
+    const h = document.createElement('div');
+    h.textContent = title;
+    h.style.fontSize = '14px';
+    h.style.fontWeight = '650';
+    h.style.marginBottom = '6px';
+    card.appendChild(h);
+
+    const p = document.createElement('div');
+    p.textContent = message;
+    p.style.fontSize = '13px';
+    p.style.lineHeight = '1.4';
+    p.style.opacity = '0.92';
+    card.appendChild(p);
+
+    if (details) {
+      const pre = document.createElement('pre');
+      pre.textContent = details;
+      pre.style.marginTop = '10px';
+      pre.style.padding = '10px 12px';
+      pre.style.background = 'rgba(15, 23, 42, 0.04)';
+      pre.style.borderRadius = '12px';
+      pre.style.overflowX = 'auto';
+      pre.style.fontSize = '12px';
+      pre.style.lineHeight = '1.35';
+      card.appendChild(pre);
+    }
+
+	    return card;
+	  }
+
+			  const origin = new URL(scriptEl.src, window.location.href).origin;
 			  window.CK_ASSET_ORIGIN = origin;
+
+			  const PLACEHOLDER_SELECTOR = '[data-clickeen-id]';
+
+			  const resolveLocale = (raw) => {
+			    const preferred = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+			    if (preferred) return preferred;
+			    const nav = (navigator.language || 'en').split('-')[0] || 'en';
+			    return String(nav || 'en').trim().toLowerCase() || 'en';
+			  };
+
+			  const locale = resolveLocale(localeAttr);
+
+			  let missingIdErrorEl = null;
+			  let missingIdErrorTimer = null;
+			  const clearMissingIdError = () => {
+			    if (missingIdErrorTimer) clearTimeout(missingIdErrorTimer);
+			    missingIdErrorTimer = null;
+			    if (missingIdErrorEl && missingIdErrorEl.parentNode) missingIdErrorEl.parentNode.removeChild(missingIdErrorEl);
+			    missingIdErrorEl = null;
+			  };
+			  const scheduleMissingIdError = () => {
+			    if (publicId) return;
+			    clearMissingIdError();
+			    missingIdErrorTimer = setTimeout(() => {
+			      if (document.querySelector(PLACEHOLDER_SELECTOR)) return;
+			      missingIdErrorEl = createHostErrorCard(
+			        'Clickeen embed error',
+			        'Missing data-public-id on the loader script (and no data-clickeen-id placeholders found).',
+			        'Fix: either add data-public-id=\"wgt_...\" to the <script> tag OR add <div data-clickeen-id=\"wgt_...\"></div> placeholders.',
+			        640,
+			      );
+			      if (scriptEl.parentNode) scriptEl.parentNode.insertBefore(missingIdErrorEl, scriptEl);
+			    }, 1500);
+			  };
+			  scheduleMissingIdError();
 
 		  const optimization = typeof ckOptimization === 'string' ? ckOptimization.trim().toLowerCase() : '';
 		  const seoGeoOptimization = optimization === 'seo-geo';
@@ -37,30 +110,33 @@ const script = `(() => {
 		  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
 		  const tsParam = tsToken ? { ts: tsToken } : {};
 
-	  const DEFAULT_MAX_WIDTH = 640;
-	  const DEFAULT_MIN_HEIGHT = 420;
+		  const DEFAULT_MAX_WIDTH = 640;
+		  const DEFAULT_MIN_HEIGHT = 420;
 
-	  const maxWidthValue = (() => {
-	    const raw = typeof maxWidthAttr === 'string' ? maxWidthAttr.trim() : '';
-	    if (!raw) return DEFAULT_MAX_WIDTH;
-	    const n = Number(raw);
-	    if (!Number.isFinite(n) || n < 0) {
-	      console.warn('[Clickeen] Invalid data-max-width; using default');
-	      return DEFAULT_MAX_WIDTH;
-	    }
-	    return Math.round(n);
-	  })();
+		  const parseMaxWidth = (rawValue, fallback) => {
+		    const raw = typeof rawValue === 'string' ? rawValue.trim() : '';
+		    if (!raw) return fallback;
+		    const n = Number(raw);
+		    if (!Number.isFinite(n) || n < 0) {
+		      console.warn('[Clickeen] Invalid data-max-width; using fallback');
+		      return fallback;
+		    }
+		    return Math.round(n);
+		  };
 
-	  const minHeightValue = (() => {
-	    const raw = typeof minHeightAttr === 'string' ? minHeightAttr.trim() : '';
-	    if (!raw) return DEFAULT_MIN_HEIGHT;
-	    const n = Number(raw);
-	    if (!Number.isFinite(n) || n <= 0) {
-	      console.warn('[Clickeen] Invalid data-min-height; using default');
-	      return DEFAULT_MIN_HEIGHT;
-	    }
-	    return Math.round(n);
-	  })();
+		  const parseMinHeight = (rawValue, fallback) => {
+		    const raw = typeof rawValue === 'string' ? rawValue.trim() : '';
+		    if (!raw) return fallback;
+		    const n = Number(raw);
+		    if (!Number.isFinite(n) || n <= 0) {
+		      console.warn('[Clickeen] Invalid data-min-height; using fallback');
+		      return fallback;
+		    }
+		    return Math.round(n);
+		  };
+
+		  const maxWidthValue = parseMaxWidth(maxWidthAttr, DEFAULT_MAX_WIDTH);
+		  const minHeightValue = parseMinHeight(minHeightAttr, DEFAULT_MIN_HEIGHT);
 
 	  const widthValue = typeof widthAttr === 'string' ? widthAttr.trim() : '';
 	  if (widthValue && widthValue !== '100%') {
@@ -82,16 +158,18 @@ const script = `(() => {
   window.ckeenBus = window.ckeenBus || bus;
   window.Clickeen = window.Clickeen || window.ckeenBus;
 
-  const makeUrl = (path, params = {}) => {
-    const url = new URL(origin + path);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
-    });
-    return url.toString();
-  };
+	  const makeUrl = (path, params = {}) => {
+	    const url = new URL(origin + path);
+	    Object.entries(params).forEach(([key, value]) => {
+	      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
+	    });
+	    return url.toString();
+	  };
 
-  const embedUrl = (path, params = {}) => makeUrl(path, { theme, device, ...tsParam, ...params });
-  const assetUrl = (path, params = {}) => makeUrl(path, { ...tsParam, ...params });
+	  const embedUrl = (path, params = {}) => makeUrl(path, { theme, device, ...tsParam, ...params });
+	  const embedUrlFor = (opts, path, params = {}) =>
+	    makeUrl(path, { theme: opts.theme, device: opts.device, ...opts.tsParam, ...params });
+	  const assetUrl = (path, params = {}) => makeUrl(path, { ...tsParam, ...params });
 
   function setReadyOnce() {
     if (bus.ready) return;
@@ -202,12 +280,66 @@ const script = `(() => {
 	    iframe.style.minHeight = minHeightValue + 'px';
 
     container.replaceChildren(iframe);
-    iframe.addEventListener('load', () => setReadyOnce());
+
+    let errorEl = null;
+    const clearError = () => {
+      if (errorEl && errorEl.parentNode) errorEl.parentNode.removeChild(errorEl);
+      errorEl = null;
+    };
+
+    const showFrameError = (title, message, details) => {
+      if (errorEl) return;
+      errorEl = createHostErrorCard(title, message, details, maxWidthValue);
+      errorEl.style.marginTop = '10px';
+      container.appendChild(errorEl);
+    };
+
+    const onResizeMessage = (event) => {
+      if (!event || event.origin !== origin) return;
+      if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
+      const data = event.data;
+      if (!data || typeof data !== 'object' || data.type !== 'ck:resize') return;
+      const h = Number(data.height);
+      if (!Number.isFinite(h) || h <= 0) return;
+      const next = Math.max(minHeightValue, Math.min(12000, Math.ceil(h)));
+      iframe.style.height = next + 'px';
+      container.style.minHeight = next + 'px';
+    };
+    window.addEventListener('message', onResizeMessage);
+
+    const onCspViolation = (event) => {
+      const dir = String((event && (event.effectiveDirective || event.violatedDirective)) || '').toLowerCase();
+      if (dir !== 'frame-src' && dir !== 'child-src') return;
+      const blocked = String((event && event.blockedURI) || '');
+      if (!blocked) return;
+      if (!blocked.startsWith(origin)) return;
+      showFrameError(
+        'Clickeen blocked by CSP',
+        'Your site Content Security Policy is blocking the embed iframe.',
+        'Allow in CSP: frame-src (or child-src) ' + origin,
+      );
+    };
+    document.addEventListener('securitypolicyviolation', onCspViolation);
+
+    const loadTimeout = setTimeout(() => {
+      showFrameError(
+        'Clickeen failed to load',
+        'The iframe did not finish loading. This is usually a CSP (frame-src) block or an ad-blocker.',
+        'If you use CSP, allow: frame-src ' + origin,
+      );
+    }, 8000);
+
+    iframe.addEventListener('load', () => {
+      clearTimeout(loadTimeout);
+      document.removeEventListener('securitypolicyviolation', onCspViolation);
+      clearError();
+      setReadyOnce();
+    });
   }
 
-  function upsertSchema(schemaJsonLd) {
+  function upsertSchema(targetPublicId, schemaJsonLd) {
     if (!schemaJsonLd) return;
-    const id = 'ck-schema-' + publicId;
+    const id = 'ck-schema-' + targetPublicId;
     let script = document.getElementById(id);
     if (!(script instanceof HTMLScriptElement)) {
       script = document.createElement('script');
@@ -218,8 +350,8 @@ const script = `(() => {
     script.textContent = schemaJsonLd;
   }
 
-  function ensureExcerptShell() {
-    const id = 'ck-excerpt-' + publicId;
+  function ensureExcerptShell(targetPublicId, anchorEl, maxWidthPx) {
+    const id = 'ck-excerpt-' + targetPublicId;
     let details = document.getElementById(id);
     if (details instanceof HTMLDetailsElement) return details;
 
@@ -227,7 +359,7 @@ const script = `(() => {
     details.id = id;
     details.setAttribute('data-ck-excerpt', '1');
     details.style.width = '100%';
-    details.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
+    details.style.maxWidth = maxWidthPx === 0 ? 'none' : maxWidthPx + 'px';
     details.style.marginTop = '12px';
 
     const summary = document.createElement('summary');
@@ -239,9 +371,9 @@ const script = `(() => {
     body.style.marginTop = '8px';
     details.appendChild(body);
 
-    const parent = container.parentNode;
+    const parent = anchorEl && anchorEl.parentNode;
     if (parent) {
-      if (container.nextSibling) parent.insertBefore(details, container.nextSibling);
+      if (anchorEl.nextSibling) parent.insertBefore(details, anchorEl.nextSibling);
       else parent.appendChild(details);
     } else {
       document.body.appendChild(details);
@@ -250,9 +382,9 @@ const script = `(() => {
     return details;
   }
 
-  function upsertExcerpt(excerptHtml) {
+  function upsertExcerpt(targetPublicId, anchorEl, maxWidthPx, excerptHtml) {
     if (!excerptHtml) return;
-    const shell = ensureExcerptShell();
+    const shell = ensureExcerptShell(targetPublicId, anchorEl, maxWidthPx);
     const body = shell.querySelector('[data-ck-excerpt-body=\"1\"]');
     if (!body) return;
     body.innerHTML = excerptHtml;
@@ -339,10 +471,10 @@ const script = `(() => {
       state: renderPayload.state,
 	    });
 
-	    upsertSchema(renderPayload.schemaJsonLd);
-	    if (seoGeoOptimization) {
-	      upsertExcerpt(renderPayload.excerptHtml);
-	    }
+		    upsertSchema(renderPayload.publicId || publicId, renderPayload.schemaJsonLd);
+		    if (seoGeoOptimization) {
+		      upsertExcerpt(renderPayload.publicId || publicId, container, maxWidthValue, renderPayload.excerptHtml);
+		    }
 
     // Widgets expect their runtime scripts to be rendered inside the widget root
     // so document.currentScript.closest('[data-ck-widget]') resolves deterministically.
@@ -386,9 +518,9 @@ const script = `(() => {
 		          if (!metaRes.ok || !metaPayload) {
 		            console.warn('[Clickeen] SEO/GEO meta failed', metaRes.status, metaPayload);
 		          } else {
-		            upsertSchema(metaPayload.schemaJsonLd);
-		            upsertExcerpt(metaPayload.excerptHtml);
-		          }
+			            upsertSchema(publicId, metaPayload.schemaJsonLd);
+			            upsertExcerpt(publicId, container, maxWidthValue, metaPayload.excerptHtml);
+			          }
 		        } catch (err) {
 		          console.warn('[Clickeen] SEO/GEO meta failed', err);
 		        }
@@ -464,7 +596,212 @@ const script = `(() => {
     }
   }
 
-  scheduleMount();
+  function mountPlaceholderNow(hostEl) {
+    if (!(hostEl instanceof HTMLElement)) return;
+    if (hostEl.getAttribute('data-ck-mounted') === '1') return;
+
+    const pid = typeof hostEl.dataset.clickeenId === 'string' ? hostEl.dataset.clickeenId.trim() : '';
+    if (!pid) return;
+
+    hostEl.setAttribute('data-ck-mounted', '1');
+    hostEl.setAttribute('data-ck-public-id', pid);
+    clearMissingIdError();
+
+    const hostThemeRaw = typeof hostEl.dataset.theme === 'string' ? hostEl.dataset.theme.trim().toLowerCase() : '';
+    const hostTheme = hostThemeRaw === 'dark' ? 'dark' : theme;
+
+    const hostDeviceRaw = typeof hostEl.dataset.device === 'string' ? hostEl.dataset.device.trim().toLowerCase() : '';
+    const hostDevice = hostDeviceRaw === 'mobile' ? 'mobile' : device;
+
+    const hostLocaleRaw = typeof hostEl.dataset.locale === 'string' ? hostEl.dataset.locale : locale;
+    const hostLocale = resolveLocale(hostLocaleRaw);
+
+    const hostExplicitTs = typeof hostEl.dataset.ts === 'string' ? hostEl.dataset.ts.trim() : '';
+    const hostCacheBust = typeof hostEl.dataset.cacheBust === 'string' ? hostEl.dataset.cacheBust.trim().toLowerCase() : '';
+    const hostTsToken = hostExplicitTs || (hostCacheBust === 'true' ? String(Date.now()) : tsToken);
+    const hostTsParam = hostTsToken ? { ts: hostTsToken } : tsParam;
+
+    const hostMaxWidth = parseMaxWidth(hostEl.dataset.maxWidth, maxWidthValue);
+    const hostMinHeight = parseMinHeight(hostEl.dataset.minHeight, minHeightValue);
+
+    const hostWidth = typeof hostEl.dataset.width === 'string' ? hostEl.dataset.width.trim() : '';
+    if (hostWidth && hostWidth !== '100%') {
+      console.warn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', hostWidth);
+    }
+
+    hostEl.style.position = 'relative';
+    hostEl.style.width = '100%';
+    hostEl.style.maxWidth = hostMaxWidth === 0 ? 'none' : hostMaxWidth + 'px';
+    hostEl.style.minHeight = hostMinHeight + 'px';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = embedUrlFor({ theme: hostTheme, device: hostDevice, tsParam: hostTsParam }, '/e/' + encodeURIComponent(pid), {
+      locale: hostLocale,
+    });
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('title', 'Clickeen widget');
+    iframe.setAttribute('referrerpolicy', 'no-referrer');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+    iframe.style.width = '100%';
+    iframe.style.border = '0';
+    iframe.style.maxWidth = hostMaxWidth === 0 ? 'none' : hostMaxWidth + 'px';
+    iframe.style.minHeight = hostMinHeight + 'px';
+
+    hostEl.replaceChildren(iframe);
+
+    let errorEl = null;
+    const clearError = () => {
+      if (errorEl && errorEl.parentNode) errorEl.parentNode.removeChild(errorEl);
+      errorEl = null;
+    };
+
+    const showFrameError = (title, message, details) => {
+      if (errorEl) return;
+      errorEl = createHostErrorCard(title, message, details, hostMaxWidth);
+      errorEl.style.marginTop = '10px';
+      hostEl.appendChild(errorEl);
+    };
+
+    const onResizeMessage = (event) => {
+      if (!event || event.origin !== origin) return;
+      if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
+      const data = event.data;
+      if (!data || typeof data !== 'object' || data.type !== 'ck:resize') return;
+      const h = Number(data.height);
+      if (!Number.isFinite(h) || h <= 0) return;
+      const next = Math.max(hostMinHeight, Math.min(12000, Math.ceil(h)));
+      iframe.style.height = next + 'px';
+      hostEl.style.minHeight = next + 'px';
+    };
+    window.addEventListener('message', onResizeMessage);
+
+    const onCspViolation = (event) => {
+      const dir = String((event && (event.effectiveDirective || event.violatedDirective)) || '').toLowerCase();
+      if (dir !== 'frame-src' && dir !== 'child-src') return;
+      const blocked = String((event && event.blockedURI) || '');
+      if (!blocked) return;
+      if (!blocked.startsWith(origin)) return;
+      showFrameError(
+        'Clickeen blocked by CSP',
+        'Your site Content Security Policy is blocking the embed iframe.',
+        'Allow in CSP: frame-src (or child-src) ' + origin,
+      );
+    };
+    document.addEventListener('securitypolicyviolation', onCspViolation);
+
+    const loadTimeout = setTimeout(() => {
+      showFrameError(
+        'Clickeen failed to load',
+        'The iframe did not finish loading. This is usually a CSP (frame-src) block or an ad-blocker.',
+        'If you use CSP, allow: frame-src ' + origin,
+      );
+    }, 8000);
+
+    iframe.addEventListener('load', () => {
+      clearTimeout(loadTimeout);
+      document.removeEventListener('securitypolicyviolation', onCspViolation);
+      clearError();
+      setReadyOnce();
+    });
+
+    const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
+    const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
+    if (hostSeoGeoOptimization) {
+      fetch(embedUrlFor({ theme: hostTheme, device: hostDevice, tsParam: hostTsParam }, '/r/' + encodeURIComponent(pid), { locale: hostLocale, meta: '1' }), {
+        mode: 'cors',
+        credentials: 'omit',
+      })
+        .then((res) => res.json().catch(() => null).then((payload) => ({ res, payload })))
+        .then(({ res, payload }) => {
+          if (!res.ok || !payload) {
+            console.warn('[Clickeen] SEO/GEO meta failed', res.status, payload);
+            return;
+          }
+          upsertSchema(pid, payload.schemaJsonLd);
+          upsertExcerpt(pid, hostEl, hostMaxWidth, payload.excerptHtml);
+        })
+        .catch((err) => console.warn('[Clickeen] SEO/GEO meta failed', err));
+    }
+  }
+
+  function mountPlaceholder(hostEl) {
+    if (!(hostEl instanceof HTMLElement)) return;
+    const mounted = hostEl.getAttribute('data-ck-mounted');
+    if (mounted === '1' || mounted === 'pending') return;
+
+    const pid = typeof hostEl.dataset.clickeenId === 'string' ? hostEl.dataset.clickeenId.trim() : '';
+    if (!pid) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      mountPlaceholderNow(hostEl);
+      return;
+    }
+
+    const LOADER_STATE_KEY = '__CK_V2_EMBED_LOADER__';
+    const loaderState = window[LOADER_STATE_KEY] || { observer: null, io: null };
+    window[LOADER_STATE_KEY] = loaderState;
+
+    const rect = hostEl.getBoundingClientRect();
+    const margin = 240;
+    const inRange = rect.top < window.innerHeight + margin && rect.bottom > -margin;
+    if (inRange) {
+      mountPlaceholderNow(hostEl);
+      return;
+    }
+
+    if (!loaderState.io) {
+      loaderState.io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const el = entry.target;
+            if (!(el instanceof HTMLElement)) continue;
+            loaderState.io.unobserve(el);
+            mountPlaceholderNow(el);
+          }
+        },
+        { rootMargin: '240px 0px' },
+      );
+    }
+
+    hostEl.setAttribute('data-ck-mounted', 'pending');
+    loaderState.io.observe(hostEl);
+  }
+
+  function scanPlaceholders(root) {
+    const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+    if (root && root instanceof HTMLElement && typeof root.matches === 'function' && root.matches(PLACEHOLDER_SELECTOR)) {
+      mountPlaceholder(root);
+    }
+    const nodes = scope.querySelectorAll(PLACEHOLDER_SELECTOR);
+    nodes.forEach((el) => mountPlaceholder(el));
+  }
+
+  const LOADER_STATE_KEY = '__CK_V2_EMBED_LOADER__';
+  const loaderState = window[LOADER_STATE_KEY] || { observer: null, io: null };
+  window[LOADER_STATE_KEY] = loaderState;
+
+  const mount = (root) => scanPlaceholders(root || document);
+  if (window.Clickeen && typeof window.Clickeen === 'object') {
+    window.Clickeen.mount = window.Clickeen.mount || mount;
+  }
+
+  mount(document);
+
+  if (!loaderState.observer && typeof MutationObserver !== 'undefined') {
+    loaderState.observer = new MutationObserver((records) => {
+      for (const record of records) {
+        const added = record.addedNodes || [];
+        for (const node of added) {
+          if (!(node instanceof HTMLElement)) continue;
+          scanPlaceholders(node);
+        }
+      }
+    });
+    loaderState.observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  if (publicId) scheduleMount();
 })();
 `;
 

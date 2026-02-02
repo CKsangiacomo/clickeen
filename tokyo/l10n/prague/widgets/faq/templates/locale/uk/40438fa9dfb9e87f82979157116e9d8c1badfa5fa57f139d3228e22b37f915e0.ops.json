@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "40438fa9dfb9e87f82979157116e9d8c1badfa5fa57f139d3228e22b37f915e0",
+  "baseUpdatedAt": "2026-01-24T00:19:35.059Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Шаблони FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Перегляньте шаблони FAQ та почніть із перевіреного макета."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Шаблони FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Почніть із перевіреного макета — а потім адаптуйте його під свій бренд."
+    }
+  ],
+  "v": 1
+}

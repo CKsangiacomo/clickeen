@@ -42,6 +42,9 @@ importers:
 
   admin:
     dependencies:
+      '@clickeen/ck-policy':
+        specifier: workspace:*
+        version: link:../tooling/ck-policy
       gsap:
         specifier: ^3.13.0
         version: 3.13.0

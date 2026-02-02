@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Skapa en snabb och snygg FAQ-widget. Anpassa, publicera och lokalisera på några minuter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget för vanliga frågor. Vackra svar. Byggd för att vara snabb."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Polerad design, smidiga uppdateringar och SEO-grunder – redo för alla språk, drivs av AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjälp besökare att snabbt hitta svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Gör den till din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Designa din perfekta FAQ här. Se ändringar direkt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Delad kreativ (höger)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Detta är varianten med bild till höger, med samma kurerade instans som i heron."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Delad kreativ (vänster)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Det här är varianten med visualisering till vänster och använder samma utvalda instans som heron."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Se frågor besvara sig själva i realtid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Lägg till en vackert designad FAQ som lyfter fram rätt svar i samma ögonblick som tvivlet uppstår. Kunderna kommer vidare direkt, invändningar löses upp innan de blir ärenden, och du stänger fler affärer utan att lägga till mer support. Anpassa en gång, bädda in var som helst och låt den jobba dygnet runt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split creative (staplad)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Detta är den staplade varianten som använder samma kurerade instans som hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Vanliga frågor som faktiskt funkar (så att du slipper)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dina kunder har frågor. Svara på dem en gång, inte hundra."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Sluta tappa försäljning på grund av obesvarade frågor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Få tillbaka din tid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Stäng fler affärer medan du sover"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Varje fråga som lämnas obesvarad är en kund som går vidare. Besökare lämnar när de inte hittar det de behöver. En väl utformad FAQ slår hål på invändningar innan de ens uppstår – så kunderna övertygar sig själva att köpa utan att ens höra av sig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Minska supportvolymen med 40%+ när kunder hittar svar direkt. Inga fler Slack-pingar. Inga fler mejl med \"snabb fråga\". Inget mer kontextväxlingshelvete. Din FAQ gör grovjobbet medan du fokuserar på arbete som faktiskt spelar roll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Rätt FAQ förutser tvivel och tar bort friktion klockan 2 på natten när du är offline. Dina svar jobbar dygnet runt. Kunder väntar inte på dig – de kommer vidare, litar på det de ser och trycker på \"köp\" utan att avbryta din dag."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Delad kreativ (höger)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Det här är varianten med bild på höger sida, som använder samma kurerade instans som heron."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO-inbäddning (indexerbar)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Denna inbäddning körs i shadow-läge för att injicera JSON-LD (FAQPage) i värdsidan för indexering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Nå varje kund, överallt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-driven FAQ som talar deras språk och förstår deras behov."
+    }
+  ],
+  "v": 1
+}

@@ -1,4 +1,4 @@
-const LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z0-9]+)*$/;
+const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[a-z0-9]+)*$/;
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 
 export type AllowlistEntry = { path: string; type?: 'string' | 'richtext' };

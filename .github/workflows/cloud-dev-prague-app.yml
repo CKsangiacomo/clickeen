@@ -54,5 +54,5 @@ jobs:
       - name: Smoke test (en)
         run: |
           set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/en/widgets/faq/" | tee /tmp/headers_en.txt
+          curl -fsSIL "$PRAGUE_BASE_URL/uk/en/widgets/faq/" | tee /tmp/headers_en.txt
           grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt

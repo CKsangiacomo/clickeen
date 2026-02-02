@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "20ff085a87cf392db7a7f66fab728b113e0a03c3ccd63c3eecb968b9b168d46c",
+  "baseUpdatedAt": "2026-01-30T22:13:44.715Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Buat widget FAQ yang cepat dan indah. Sesuaikan, publikasikan, dan lokalkan dalam hitungan menit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ. Jawaban yang indah. Dibuat agar cepat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Desain yang rapi, pembaruan tanpa repot, dan fondasi SEO--siap untuk bahasa apa pun, didukung oleh AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Bantu pengunjung menemukan jawaban dengan cepat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Jadikan milik Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Rancang FAQ sempurna Anda di sini. Lihat perubahan secara instan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Split kreatif (kanan)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Ini adalah varian visual-kanan, menggunakan instance terkurasi yang sama seperti hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Kreatif terpisah (kiri)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Ini adalah varian visual-kiri, menggunakan instance terkurasi yang sama seperti hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Lihat pertanyaan terjawab sendiri secara real-time"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tambahkan FAQ berdesain indah yang menampilkan jawaban yang tepat pada saat muncul keraguan. Pelanggan langsung terbantu, keberatan menghilang sebelum berubah menjadi tiket, dan Anda menutup lebih banyak penjualan tanpa menambah dukungan. Kustomisasi sekali, sematkan di mana saja, dan biarkan bekerja 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Kreatif terpisah (bertumpuk)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Ini adalah varian bertumpuk, menggunakan instance terkurasi yang sama seperti hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ yang benar-benar bekerja (jadi Anda tidak perlu repot)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Pelanggan Anda punya pertanyaan. Jawab sekali, bukan seratus kali."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Berhenti kehilangan penjualan karena pertanyaan yang tidak terjawab"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Ambil kembali waktu Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Tutup lebih banyak deal saat Anda tidur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Setiap pertanyaan yang tidak terjawab adalah pelanggan yang pergi. Pengunjung akan pergi ketika mereka tidak bisa menemukan yang mereka butuhkan. FAQ yang dirancang dengan baik mematahkan keberatan bahkan sebelum muncul—jadi pelanggan meyakinkan diri sendiri untuk membeli tanpa perlu menghubungi Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Kurangi volume dukungan 40%+ ketika pelanggan menemukan jawaban secara instan. Tidak ada lagi ping Slack. Tidak ada lagi email \"pertanyaan cepat\". Tidak ada lagi neraka pindah konteks. FAQ Anda melakukan pekerjaan berat sementara Anda fokus pada pekerjaan yang benar-benar penting."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ yang tepat mengantisipasi keraguan dan menghilangkan hambatan pada pukul 2 pagi saat Anda offline. Jawaban Anda bekerja sepanjang waktu. Pelanggan tidak menunggu Anda—mereka mendapatkan kejelasan, percaya pada apa yang mereka lihat, dan menekan \"beli\" tanpa mengganggu hari Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Kreatif terpisah (kanan)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Ini adalah varian visual di kanan, menggunakan instance terkurasi yang sama seperti hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Sematan SEO/GEO (dapat diindeks)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Sematan ini berjalan dalam mode shadow untuk menyisipkan JSON-LD (FAQPage) ke dalam halaman host untuk pengindeksan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Terhubung dengan setiap pelanggan, di mana pun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ bertenaga AI yang berbicara dalam bahasa mereka dan memahami kebutuhan mereka."
+    }
+  ],
+  "v": 1
+}

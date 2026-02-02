@@ -23,6 +23,7 @@ import {
 import { isKnownWidgetType, loadWidgetLimits } from '../../shared/tokyo';
 import { requireWorkspace } from '../../shared/workspaces';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
+import { normalizeLocaleList } from '../../shared/l10n';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -41,6 +42,57 @@ import {
   resolveWidgetTypeForInstance,
 } from '../instances';
 import { enqueueL10nJobs } from '../l10n';
+
+type EnforcementRow = {
+  public_id: string;
+  mode: 'frozen';
+  period_key: string;
+  frozen_at: string;
+  reset_at: string;
+};
+
+async function loadEnforcement(env: Env, publicId: string): Promise<EnforcementRow | null> {
+  const params = new URLSearchParams({
+    select: 'public_id,mode,period_key,frozen_at,reset_at',
+    public_id: `eq.${publicId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) return null;
+  const rows = (await res.json().catch(() => null)) as EnforcementRow[] | null;
+  return rows?.[0] ?? null;
+}
+
+function normalizeActiveEnforcement(row: EnforcementRow | null): null | {
+  mode: 'frozen';
+  periodKey: string;
+  frozenAt: string;
+  resetAt: string;
+} {
+  if (!row) return null;
+  const resetAt = typeof row.reset_at === 'string' ? row.reset_at : '';
+  if (!resetAt) return null;
+  const resetMs = Date.parse(resetAt);
+  if (!Number.isFinite(resetMs)) return null;
+  if (resetMs <= Date.now()) return null;
+  return {
+    mode: 'frozen',
+    periodKey: row.period_key,
+    frozenAt: row.frozen_at,
+    resetAt: row.reset_at,
+  };
+}
+
+async function enqueueRenderSnapshot(env: Env, job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] }) {
+  if (!env.RENDER_SNAPSHOT_QUEUE) return;
+  await env.RENDER_SNAPSHOT_QUEUE.send({
+    v: 1,
+    kind: 'render-snapshot',
+    publicId: job.publicId,
+    action: job.action,
+    locales: job.locales,
+  });
+}
 
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
   const auth = assertDevAuth(req, env);
@@ -73,6 +125,8 @@ export async function handleWorkspaceGetInstance(req: Request, env: Env, workspa
   if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
+  const enforcementRow = await loadEnforcement(env, publicId);
+  const enforcement = normalizeActiveEnforcement(enforcementRow);
 
   return json({
     publicId: instance.public_id,
@@ -82,6 +136,7 @@ export async function handleWorkspaceGetInstance(req: Request, env: Env, workspa
     meta: isCuratedInstanceRow(instance) ? instance.meta ?? null : null,
     updatedAt: instance.updated_at ?? null,
     baseFingerprint,
+    enforcement,
     policy: policyResult.policy,
     workspace: {
       id: workspace.id,
@@ -178,6 +233,20 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
   if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
+  const enforcementRow = await loadEnforcement(env, publicId);
+  const enforcement = normalizeActiveEnforcement(enforcementRow);
+  if (enforcement && config !== undefined) {
+    return ckError(
+      {
+        kind: 'DENY',
+        reasonKey: 'coreui.upsell.reason.viewsFrozen',
+        upsell: 'UP',
+        detail: `Frozen until ${enforcement.resetAt}`,
+      },
+      403,
+    );
+  }
+
   const isCurated = resolveInstanceKind(instance) === 'curated';
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
@@ -208,6 +277,44 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
 
     const denyByLimits = await enforceLimits(env, policyResult.policy, widgetType, config);
     if (denyByLimits) return denyByLimits;
+  }
+
+  const prevStatus = instance.status;
+  const nextStatus = status ?? prevStatus;
+  const statusChanged = status !== undefined && status !== prevStatus;
+
+  // Enforce published-instance slots (per workspace tier).
+  if (!isCurated && statusChanged && prevStatus !== 'published' && nextStatus === 'published') {
+    const max = policyResult.policy.caps['instances.published.max'];
+    if (max != null && typeof max === 'number') {
+      const params = new URLSearchParams({
+        select: 'public_id',
+        workspace_id: `eq.${workspaceId}`,
+        status: 'eq.published',
+        limit: '250',
+      });
+      const countRes = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+      if (!countRes.ok) {
+        const details = await readJson(countRes);
+        return ckError(
+          { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+          500,
+        );
+      }
+      const publishedRows = (await countRes.json().catch(() => null)) as Array<{ public_id?: string }> | null;
+      const publishedCount = Array.isArray(publishedRows) ? publishedRows.length : 0;
+      if (publishedCount >= max) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: 'coreui.upsell.reason.capReached',
+            upsell: 'UP',
+            detail: `instances.published.max=${max}`,
+          },
+          403,
+        );
+      }
+    }
   }
 
   const update: Record<string, unknown> = {};
@@ -260,6 +367,21 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
           500,
         );
       }
+    }
+
+    // Keep Venice snapshots correct for the public embed path (PRD 38).
+    // When status/config changes for published instances, regenerate render snapshots.
+    // When an instance is unpublished, delete the snapshot index to enforce "published-only".
+    const updatedPrevStatus = prevStatus;
+    const updatedNextStatus = updatedInstance.status;
+    const configChanged = config !== undefined;
+    if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
+      const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+      const locales = policyResult.policy.flags['l10n.enabled'] === true && normalized.ok ? normalized.locales : [];
+      const deduped = Array.from(new Set(['en', ...locales]));
+      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: deduped });
+    } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
+      await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
     }
   }
 
