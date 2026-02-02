@@ -1,16 +1,73 @@
-<header class="devstudio-page__header">
-  <h1 class="heading-2" style="margin: 0">Entitlements Matrix</h1>
-  <p class="body-s" style="margin: 8px 0 0 0;">
-    Deterministic view of product caps and flags. This page reads directly from <code>@clickeen/ck-policy</code>,
-    which is the same source Paris uses for enforcement.
-  </p>
-</header>
+<style>
+  .entitlements-section {
+    margin-top: 24px;
+  }
+
+  .entitlements-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .entitlements-table__tier {
+    width: 56px;
+  }
+
+  .entitlements-table__cap-col {
+    width: 180px;
+  }
+
+  .entitlements-table__token-col {
+    width: 200px;
+  }
+
+  .entitlements-table__desc-col {
+    width: 320px;
+  }
+
+  .entitlements-table th,
+  .entitlements-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid var(--role-border);
+  }
+
+  .entitlements-table th {
+    white-space: nowrap;
+  }
+
+  .entitlements-table__token {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    font-size: var(--fs-10);
+  }
+
+  .entitlements-table__token-head {
+    font-size: var(--fs-10);
+  }
+
+  .entitlements-table__value {
+    font-family: var(--font-mono);
+  }
+
+  .entitlements-table__desc {
+    color: color-mix(in oklab, var(--color-text), transparent 35%);
+  }
+
+  .entitlements-table__capability {
+    font-weight: 500;
+  }
+</style>
+
+<h1 class="heading-2">Entitlements Matrix</h1>
 
 <section class="devstudio-page-section" id="entitlements-root" aria-live="polite"></section>
 
 <script type="module">
   const root = document.getElementById('entitlements-root');
   const matrix = window.__CK_ENTITLEMENTS__;
+  const meta = window.__CK_ENTITLEMENTS_META__ || {};
 
   if (!root || !matrix) {
     const error = document.createElement('p');
@@ -31,7 +88,7 @@
 
     const renderTable = (title, entries) => {
       const section = document.createElement('section');
-      section.className = 'devstudio-page-section';
+      section.className = 'devstudio-page-section entitlements-section';
 
       const heading = document.createElement('h2');
       heading.className = 'heading-3';
@@ -39,9 +96,22 @@
       section.appendChild(heading);
 
       const table = document.createElement('table');
-      table.className = 'body-s';
-      table.style.width = '100%';
-      table.style.borderCollapse = 'collapse';
+      table.className = 'body-s entitlements-table';
+
+      const colgroup = document.createElement('colgroup');
+      const colCapability = document.createElement('col');
+      colCapability.className = 'entitlements-table__cap-col';
+      const colToken = document.createElement('col');
+      colToken.className = 'entitlements-table__token-col';
+      const colDesc = document.createElement('col');
+      colDesc.className = 'entitlements-table__desc-col';
+      colgroup.append(colCapability, colToken, colDesc);
+      tiers.forEach(() => {
+        const col = document.createElement('col');
+        col.className = 'entitlements-table__tier';
+        colgroup.appendChild(col);
+      });
+      table.appendChild(colgroup);
 
       const thead = document.createElement('thead');
       const headRow = document.createElement('tr');
@@ -49,16 +119,22 @@
       const capHeader = document.createElement('th');
       capHeader.textContent = 'Capability';
       capHeader.className = 'label-s';
-      capHeader.style.textAlign = 'left';
-      capHeader.style.padding = '8px 12px';
       headRow.appendChild(capHeader);
+
+      const tokenHeader = document.createElement('th');
+      tokenHeader.textContent = 'Token';
+      tokenHeader.className = 'label-s';
+      headRow.appendChild(tokenHeader);
+
+      const descHeader = document.createElement('th');
+      descHeader.textContent = 'Description';
+      descHeader.className = 'label-s';
+      headRow.appendChild(descHeader);
 
       tiers.forEach((tier) => {
         const th = document.createElement('th');
         th.textContent = tier.replace(/\b\w/g, (c) => c.toUpperCase());
         th.className = 'label-s';
-        th.style.textAlign = 'left';
-        th.style.padding = '8px 12px';
         headRow.appendChild(th);
       });
 
@@ -69,11 +145,22 @@
       entries.forEach(({ key, cap }) => {
         const row = document.createElement('tr');
 
+        const metaEntry = meta[key] || { label: key, description: '' };
+
         const nameCell = document.createElement('td');
-        nameCell.textContent = key;
-        nameCell.className = 'body-s';
-        nameCell.style.padding = '8px 12px';
+        nameCell.textContent = metaEntry.label || key;
+        nameCell.className = 'body-s entitlements-table__capability';
         row.appendChild(nameCell);
+
+        const tokenCell = document.createElement('td');
+        tokenCell.textContent = key;
+        tokenCell.className = 'body-s entitlements-table__token';
+        row.appendChild(tokenCell);
+
+        const descCell = document.createElement('td');
+        descCell.textContent = metaEntry.description || '';
+        descCell.className = 'body-s entitlements-table__desc';
+        row.appendChild(descCell);
 
         tiers.forEach((tier) => {
           const valueCell = document.createElement('td');
@@ -82,8 +169,7 @@
           if (cap.kind === 'flag') display = value ? '✓' : '✗';
           if (value === null) display = '∞';
           valueCell.textContent = display;
-          valueCell.className = 'body-s';
-          valueCell.style.padding = '8px 12px';
+          valueCell.className = 'body-s entitlements-table__value';
           row.appendChild(valueCell);
         });
 

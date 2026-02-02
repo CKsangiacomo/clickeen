@@ -22,9 +22,10 @@ import {
 } from '@dieter/components';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, getTypographySampleText } from './data/typography';
-import { getEntitlementsMatrix } from '@clickeen/ck-policy';
+import { CAPABILITY_META, getEntitlementsMatrix } from '@clickeen/ck-policy';
 
 window.__CK_ENTITLEMENTS__ = getEntitlementsMatrix();
+window.__CK_ENTITLEMENTS_META__ = CAPABILITY_META;
 
 const appRoot = document.getElementById('app');
 if (!appRoot) {

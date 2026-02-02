@@ -11,6 +11,7 @@ declare module '*.css?raw' {
 declare global {
   interface Window {
     __CK_ENTITLEMENTS__?: import('@clickeen/ck-policy').EntitlementsMatrix;
+    __CK_ENTITLEMENTS_META__?: typeof import('@clickeen/ck-policy').CAPABILITY_META;
   }
 }
 
