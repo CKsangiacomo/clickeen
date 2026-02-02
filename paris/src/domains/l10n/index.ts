@@ -779,13 +779,6 @@ export async function handleL10nGenerateRetries(env: Env): Promise<void> {
   }
 }
 
-function requirePolicyFlag(policy: Policy, key: string): boolean {
-  if (!(key in policy.flags)) {
-    throw new Error(`[ParisWorker] Policy missing flag key: ${key}`);
-  }
-  return Boolean(policy.flags[key]);
-}
-
 function requirePolicyCap(policy: Policy, key: string): number | null {
   if (!(key in policy.caps)) {
     throw new Error(`[ParisWorker] Policy missing cap key: ${key}`);
@@ -809,46 +802,40 @@ function readWorkspaceLocales(workspace: WorkspaceRow): Response | { locales: st
 }
 
 function enforceL10nSelection(policy: Policy, locales: string[]) {
-  if (locales.length === 0) return null;
-  const enabled = requirePolicyFlag(policy, 'l10n.enabled');
-  if (!enabled) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
-  }
-  const max = requirePolicyCap(policy, 'l10n.locales.max');
-  if (max != null && locales.length > max) {
+  const maxLocalesTotal = requirePolicyCap(policy, 'l10n.locales.max');
+  const maxAdditional = maxLocalesTotal == null ? null : Math.max(0, maxLocalesTotal - 1);
+  if (maxAdditional != null && locales.length > maxAdditional) {
     return ckError(
       {
         kind: 'DENY',
         reasonKey: 'coreui.upsell.reason.capReached',
         upsell: 'UP',
-        detail: `l10n.locales.max=${max}`,
+        detail: `l10n.locales.max=${maxLocalesTotal}`,
       },
       403
     );
   }
+  const maxCustom = requirePolicyCap(policy, 'l10n.locales.custom.max');
+  if (maxCustom != null) {
+    // Some tiers reserve a subset of locale slots for system-chosen locales (e.g. Free = EN + GEO).
+    const systemReserved = maxAdditional == null ? 0 : Math.max(0, maxAdditional - maxCustom);
+    const customCount = Math.max(0, locales.length - systemReserved);
+    if (customCount > maxCustom) {
+      return ckError(
+        {
+          kind: 'DENY',
+          reasonKey: 'coreui.upsell.reason.capReached',
+          upsell: 'UP',
+          detail: `l10n.locales.custom.max=${maxCustom}`,
+        },
+        403
+      );
+    }
+  }
   return null;
 }
 
-const LAYER_FLAG_MAP: Record<string, string> = {
-  geo: 'l10n.layer.geo.enabled',
-  industry: 'l10n.layer.industry.enabled',
-  experiment: 'l10n.layer.experiment.enabled',
-  account: 'l10n.layer.account.enabled',
-  behavior: 'l10n.layer.behavior.enabled',
-  user: 'l10n.layer.user.enabled',
-};
-
-function enforceLayerEntitlement(policy: Policy, layer: string): Response | null {
-  const enabled = requirePolicyFlag(policy, 'l10n.enabled');
-  if (!enabled) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
-  }
-  if (layer === 'locale') return null;
-  const flagKey = LAYER_FLAG_MAP[layer];
-  if (!flagKey) return null;
-  if (!requirePolicyFlag(policy, flagKey)) {
-    return ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP' }, 403);
-  }
+function enforceLayerEntitlement(_policy: Policy, _layer: string): Response | null {
   return null;
 }
 

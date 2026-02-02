@@ -159,12 +159,10 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const isLocaleMode = activeLocale !== baseLocale;
   const isStale = locale.stale;
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
-  const l10nEnabled = Boolean(policy.flags?.['l10n.enabled']);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
     !hasInstance ||
     locale.loading ||
-    (curated ? false : !l10nEnabled) ||
     (curated ? instanceLoading : workspaceLoading) ||
     availableLocales.length <= 1;
   const publishGate = can(policy, 'instance.publish');

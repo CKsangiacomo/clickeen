@@ -250,8 +250,6 @@ function setAt(obj: unknown, path: string, value: unknown): unknown {
 
 function reasonKeyForLimit(limit: LimitEntry): string {
   if (limit.kind === 'cap') return 'coreui.upsell.reason.capReached';
-  if (limit.key === 'seoGeo.enabled') return 'coreui.upsell.reason.embed.seoGeo';
-  if (limit.key === 'context.websiteUrl.enabled') return 'coreui.upsell.reason.context.websiteUrl';
   return 'coreui.upsell.reason.flagBlocked';
 }
 

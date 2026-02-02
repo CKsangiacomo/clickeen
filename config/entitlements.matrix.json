@@ -2,102 +2,25 @@
   "v": 1,
   "tiers": ["devstudio", "minibob", "free", "tier1", "tier2", "tier3"],
   "capabilities": {
-    "seoGeo.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.geo.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.industry.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.experiment.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.account.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.behavior.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "l10n.layer.user.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
     "l10n.locales.max": {
       "kind": "cap",
       "values": {
         "devstudio": null,
         "minibob": 0,
+        "free": 2,
+        "tier1": 4,
+        "tier2": null,
+        "tier3": null
+      }
+    },
+    "l10n.locales.custom.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 0,
         "free": 0,
-        "tier1": 0,
-        "tier2": 3,
+        "tier1": 3,
+        "tier2": null,
         "tier3": null
       }
     },
@@ -112,29 +35,7 @@
         "tier3": 10
       }
     },
-    "personalization.preview.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": true,
-        "free": true,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "personalization.onboarding.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "personalization.sources.website.depth": {
+    "personalization.sources.website.depth.max": {
       "kind": "cap",
       "values": {
         "devstudio": null,
@@ -145,158 +46,15 @@
         "tier3": 5
       }
     },
-    "personalization.sources.gbp.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "personalization.sources.facebook.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": false,
-        "tier2": true,
-        "tier3": true
-      }
-    },
     "branding.remove": {
       "kind": "flag",
       "values": {
         "devstudio": true,
         "minibob": false,
         "free": false,
-        "tier1": true,
+        "tier1": false,
         "tier2": true,
         "tier3": true
-      }
-    },
-    "context.websiteUrl.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": true,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "links.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": true,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "media.meta.enabled": {
-      "kind": "flag",
-      "values": {
-        "devstudio": true,
-        "minibob": false,
-        "free": false,
-        "tier1": true,
-        "tier2": true,
-        "tier3": true
-      }
-    },
-    "list.primary.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 1,
-        "free": 2,
-        "tier1": 10,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "list.secondary.rich.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 4,
-        "free": 4,
-        "tier1": 10,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "list.secondary.rich.total.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 6,
-        "free": 8,
-        "tier1": 100,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "list.secondary.dense.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 6,
-        "free": 10,
-        "tier1": 20,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "text.question.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 120,
-        "free": 200,
-        "tier1": 400,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "text.answer.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 240,
-        "free": 600,
-        "tier1": 1200,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "text.caption.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 40,
-        "free": 80,
-        "tier1": 120,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "text.headerHtml.max": {
-      "kind": "cap",
-      "values": {
-        "devstudio": null,
-        "minibob": 140,
-        "free": 200,
-        "tier1": 300,
-        "tier2": null,
-        "tier3": null
       }
     },
     "budget.copilot.turns": {
@@ -310,18 +68,7 @@
         "tier3": null
       }
     },
-    "budget.edits": {
-      "kind": "budget",
-      "values": {
-        "devstudio": null,
-        "minibob": 10,
-        "free": null,
-        "tier1": null,
-        "tier2": null,
-        "tier3": null
-      }
-    },
-    "budget.uploads": {
+    "budget.uploads.count": {
       "kind": "budget",
       "values": {
         "devstudio": null,
@@ -329,6 +76,50 @@
         "free": 10,
         "tier1": 50,
         "tier2": 200,
+        "tier3": null
+      }
+    },
+    "budget.personalization.runs": {
+      "kind": "budget",
+      "values": {
+        "devstudio": null,
+        "minibob": 10,
+        "free": 20,
+        "tier1": 100,
+        "tier2": 300,
+        "tier3": null
+      }
+    },
+    "budget.personalization.website.crawls": {
+      "kind": "budget",
+      "values": {
+        "devstudio": null,
+        "minibob": 5,
+        "free": 10,
+        "tier1": 30,
+        "tier2": 100,
+        "tier3": null
+      }
+    },
+    "budget.snapshots.regens": {
+      "kind": "budget",
+      "values": {
+        "devstudio": null,
+        "minibob": 10,
+        "free": 20,
+        "tier1": 100,
+        "tier2": 300,
+        "tier3": null
+      }
+    },
+    "budget.l10n.publishes": {
+      "kind": "budget",
+      "values": {
+        "devstudio": null,
+        "minibob": 10,
+        "free": 20,
+        "tier1": 100,
+        "tier2": 300,
         "tier3": null
       }
     },
@@ -351,6 +142,50 @@
         "free": 1,
         "tier1": 1,
         "tier2": 5,
+        "tier3": null
+      }
+    },
+    "uploads.size.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": 104857600,
+        "minibob": 5242880,
+        "free": 10485760,
+        "tier1": 26214400,
+        "tier2": 104857600,
+        "tier3": 262144000
+      }
+    },
+    "cap.group.items.small.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 5,
+        "free": 5,
+        "tier1": 10,
+        "tier2": 25,
+        "tier3": null
+      }
+    },
+    "cap.group.items.medium.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 10,
+        "free": 10,
+        "tier1": 25,
+        "tier2": 50,
+        "tier3": null
+      }
+    },
+    "cap.group.items.large.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 25,
+        "free": 25,
+        "tier1": 50,
+        "tier2": 100,
         "tier3": null
       }
     }

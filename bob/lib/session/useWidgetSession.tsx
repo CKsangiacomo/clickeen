@@ -446,16 +446,10 @@ function useWidgetSessionInternal() {
         });
       }
 
-      const editsBudget = state.policy.budgets['budget.edits'];
-      if (editsBudget) {
-        const decision = canConsume(state.policy, 'budget.edits', 1);
-        if (!decision.ok) return denyOps(0, ops[0]?.path, decision);
-      }
-
       const uploadCount = countUploadOps(ops);
-      const uploadsBudget = state.policy.budgets['budget.uploads'];
+      const uploadsBudget = state.policy.budgets['budget.uploads.count'];
       if (uploadCount > 0 && uploadsBudget) {
-        const decision = canConsume(state.policy, 'budget.uploads', uploadCount);
+        const decision = canConsume(state.policy, 'budget.uploads.count', uploadCount);
         if (!decision.ok) return denyOps(0, ops[0]?.path, decision);
       }
 
@@ -530,8 +524,7 @@ function useWidgetSessionInternal() {
           upsell: null,
           policy: (() => {
             let next = prev.policy;
-            if (editsBudget) next = consume(next, 'budget.edits', 1);
-            if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads', uploadCount);
+            if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads.count', uploadCount);
             return next;
           })(),
           lastUpdate: {
@@ -554,8 +547,7 @@ function useWidgetSessionInternal() {
         upsell: null,
         policy: (() => {
           let next = prev.policy;
-          if (editsBudget) next = consume(next, 'budget.edits', 1);
-          if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads', uploadCount);
+          if (uploadCount > 0 && uploadsBudget) next = consume(next, 'budget.uploads.count', uploadCount);
           return next;
         })(),
         lastUpdate: {

@@ -377,9 +377,12 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const configChanged = config !== undefined;
     if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
       const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-      const locales = policyResult.policy.flags['l10n.enabled'] === true && normalized.ok ? normalized.locales : [];
+      const locales = normalized.ok ? normalized.locales : [];
+      const maxLocalesTotalRaw = policyResult.policy.caps['l10n.locales.max'];
+      const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
       const deduped = Array.from(new Set(['en', ...locales]));
-      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: deduped });
+      const limited = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
+      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: limited });
     } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
       await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
     }

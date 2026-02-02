@@ -3,15 +3,6 @@
   "limits": [
     {
       "kind": "flag",
-      "key": "seoGeo.enabled",
-      "path": "seoGeo.enabled",
-      "mode": "boolean",
-      "deny": true,
-      "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    {
-      "kind": "flag",
       "key": "branding.remove",
       "path": "behavior.showBacklink",
       "mode": "boolean",
@@ -19,10 +10,8 @@
       "sanitizeTo": true,
       "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
     },
-    { "kind": "cap", "key": "list.primary.max", "path": "sections[]", "metric": "count" },
-    { "kind": "cap", "key": "list.secondary.rich.max", "path": "sections[].faqs[]", "metric": "count" },
-    { "kind": "cap", "key": "list.secondary.rich.total.max", "path": "sections[].faqs[]", "metric": "count-total" },
-    { "kind": "cap", "key": "text.question.max", "path": "sections[].faqs[].question", "metric": "chars" },
-    { "kind": "cap", "key": "text.answer.max", "path": "sections[].faqs[].answer", "metric": "chars" }
+    { "kind": "cap", "key": "cap.group.items.small.max", "path": "sections[]", "metric": "count" },
+    { "kind": "cap", "key": "cap.group.items.medium.max", "path": "sections[].faqs[]", "metric": "count" },
+    { "kind": "cap", "key": "cap.group.items.large.max", "path": "sections[].faqs[]", "metric": "count-total" }
   ]
 }
