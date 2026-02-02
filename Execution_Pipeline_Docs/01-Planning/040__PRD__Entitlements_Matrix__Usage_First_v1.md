@@ -3,7 +3,7 @@
 **Status:** `01-Planning` (peer review)  
 **Date:** 2026-02-02  
 **Owner:** Product Dev Team (AI) + Human Architect  
-**Impacted systems:** `config/entitlements.matrix.json`, `tooling/ck-policy`, Paris, Bob, Venice, Tokyo widgets (`limits.json`)
+**Impacted systems:** `config/entitlements.matrix.json`, `tooling/ck-policy`, Paris, Bob, Venice, San Francisco (AI executor), Tokyo widgets (`limits.json`)
 
 ---
 
@@ -154,6 +154,41 @@ Cost control comes from:
 - crawl depth caps, and/or
 - budgets for crawls/runs per month.
 
+### 4.6 Agency packaging (portfolio + client workspaces)
+Goal: be extremely aggressive for agencies while keeping packaging deterministic and easy to reason about.
+
+**What “agency” means in Clickeen (and what we already have):**
+- Clickeen is workspace-native (see `supabase/migrations/20260105000000__workspaces.sql` and `documentation/capabilities/multitenancy.md`).
+- A single user can be **owner/admin** in many workspaces via `workspace_members`. This is the core “GEICO model”: one login, many “policies” (client workspaces), each with its own tier.
+
+**What we need to add for agency packaging:**
+- An explicit concept of an **Agency Portfolio workspace** that can **create and manage client workspaces**.
+- A cap that controls “how many clients can you manage”:
+  - `agency.clients.max` (cap) = how many client workspaces can be attached to a portfolio.
+- Each client workspace keeps its own tier (`free|tier1|tier2|tier3`), so agencies can manage customers on different tiers without special cases.
+
+**Why this is the right model:**
+- It matches how agencies actually operate (separate clients, separate sites, separate billing decisions).
+- It preserves the architecture: policy is still resolved per workspace; we’re not inventing a new “account policy” system.
+- It is easy to upsell: “add more client slots” is a clean, user-visible packaging lever.
+
+Suggested plan shape (initial):
+- Tier2: agency portfolio with **3 clients**
+- Tier3: agency portfolio with **20 clients**
+- Enterprise/off-matrix: **100+ clients** (sales / manual override)
+
+### 4.7 Copilot LLMs by tier (AI profiles; already wired)
+We already have a tiered AI control plane:
+- `tooling/ck-policy/src/ai.ts` maps `PolicyProfile → AiProfile` (e.g. `free → free_low`, `tier3 → paid_premium`).
+- `AiProfile` determines:
+  - allowed providers (`deepseek|openai|anthropic`)
+  - per-request budgets (maxTokens/timeout/requests) per agent
+- Paris issues grants that contain the “AI policy capsule” (`/api/ai/grant` in `paris/src/domains/ai/index.ts`).
+
+**Why this belongs in packaging:**
+- Model/provider choice is a *direct cost driver* and a user-visible quality difference.
+- We can keep “model names” fluid while keeping packaging stable: tiers map to `AiProfile`, and we can evolve the actual model behind each provider.
+
 ---
 
 ## 5) The new matrix (peer‑reviewable tables)
@@ -173,6 +208,7 @@ Legend:
 | Capability | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Published widgets max | `instances.published.max` | ∞ | 0 | 1 | 1 | 5 | ∞ |
+| Agency client workspaces max | `agency.clients.max` | ∞ | 0 | 0 | 0 | 3 | 20 |
 | Monthly views cap (freeze on exceed) | `views.monthly.max` | ∞ | ∞ | 10,000 | 100,000 | ∞ | ∞ |
 | Locales per widget (total incl. EN) | `l10n.locales.max` | ∞ | 0 | 2 | 4 | ∞ | ∞ |
 | Custom locales (user‑selectable, excl. EN) | `l10n.locales.custom.max` | ∞ | 0 | 0 | 3 | ∞ | ∞ |
@@ -201,6 +237,7 @@ This table is the “contract” engineers implement against. If a token can’t
 |---|---|---|---|---|---|
 | `branding.remove` | flag | Can remove Clickeen backlink/branding on public embeds | Acquisition (not cost) | Venice runtime + publish enforcement | Force backlink on (no silent removal) |
 | `instances.published.max` | cap | How many published widgets a workspace can have at once | Snapshot storage + support load | Paris publish + Bob UI | Block publish; offer “unpublish or upgrade” |
+| `agency.clients.max` | cap | How many client workspaces an agency portfolio can manage | Support surface + packaging | Paris workspace provisioning + Bob agency UI | Block “create client”; upgrade CTA |
 | `views.monthly.max` | cap | Monthly public embed views for Free/Tier1 | CDN/edge + rendering + abuse vector | Venice runtime (freeze), Paris usage counters | Freeze to snapshot + upgrade overlay (“Frozen Billboard”) |
 | `l10n.locales.max` | cap | Total locales per widget (incl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Prevent adding more locales; upsell |
 | `l10n.locales.custom.max` | cap | User‑selectable locales (excl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Free shows EN+GEO only; Tier1 caps chooser |
@@ -216,6 +253,31 @@ This table is the “contract” engineers implement against. If a token can’t
 | `budget.personalization.website.crawls` | budget | Monthly website crawls | Crawl compute | Paris (metered) | Block crawl; reuse last crawl; upgrade CTA |
 | `budget.snapshots.regens` | budget | Monthly snapshot regenerations (publish/update) | Rendering compute + storage | Tokyo‑worker/Paris (metered) | Reuse last snapshot; mark “stale”; upgrade CTA |
 | `budget.l10n.publishes` | budget | Monthly l10n publish ops | Overlay compute + storage | Paris (metered) | Block publish of new locales; keep existing |
+
+### 5.5 Copilot LLM profiles by tier (packaging)
+Copilot is tiered on two axes:
+- **Monthly usage**: `budget.copilot.turns` (entitlements matrix)
+- **Quality/cost per turn**: `AiProfile` (AI control plane; already implemented)
+
+Current implementation notes:
+- Mapping lives in `tooling/ck-policy/src/ai.ts` (`PROFILE_BY_POLICY`).
+- Providers are enforced server-side via Paris AI grants (`paris/src/domains/ai/index.ts`).
+- For `sdr.widget.copilot.v1`, paid profiles can request `provider` (and optionally `model`), while Free cannot.
+
+**Proposed tier → AiProfile mapping (so tiers actually differ):**
+
+| Policy tier | AiProfile | Allowed providers | Default provider (when user doesn’t choose) | Copilot per-request budget (maxTokens/timeout/requests) | User provider choice |
+|---|---|---|---|---|---|
+| Free | `free_low` | `deepseek` | `deepseek` | 650 / 45s / 2 | No |
+| Tier1 | `paid_standard` | `deepseek`, `openai`, `anthropic` | `deepseek` (cost-optimized) | 900 / 45s / 3 | Yes |
+| Tier2 | `paid_premium` | `deepseek`, `openai`, `anthropic` | `openai` (quality-optimized) | 1400 / 60s / 3 | Yes |
+| Tier3 | `paid_premium` | `deepseek`, `openai`, `anthropic` | `openai` (quality-optimized) | 1400 / 60s / 3 | Yes (plus future “model choice”) |
+
+Note: the grant can include `ai.selectedProvider` only when the user explicitly chooses. Otherwise, the executor (San Francisco) picks the default provider deterministically from `ai.profile`.
+
+Why this is the right lever:
+- It cleanly matches unit economics: better models cost more per token and per request.
+- It’s still “show everything”: Free has Copilot; paid tiers get higher quality and higher budgets.
 
 ---
 
@@ -279,6 +341,7 @@ Actions:
    - `list.*` and `text.*`
    - legacy budgets (`budget.uploads`, `budget.edits`) replaced by explicit keys
 2) Add new keys:
+   - `agency.clients.max`
    - `l10n.locales.custom.max`
    - `personalization.sources.website.depth.max` (rename from `.depth`)
    - `uploads.size.max`
@@ -365,6 +428,27 @@ This is the critical peer‑review section: it shows how we delete complexity wi
 | `views.monthly.max` | Keep | Direct cost + abuse driver; supports Frozen Billboard |
 | `instances.published.max` | Keep | Clear packaging + cost driver |
 
+### 7.8 Agency portfolio support (new)
+Files/systems (expected):
+- DB (Michael/Supabase): add a workspace relationship so we can represent “portfolio → client workspaces”.
+  - Minimal shape: `workspaces.portfolio_workspace_id UUID NULL REFERENCES workspaces(id)`
+  - Alternative (more flexible): a join table `workspace_portfolios(portfolio_id, client_id)` with constraints + RLS.
+- Paris: add workspace provisioning endpoints:
+  - `POST /api/workspaces/:portfolioId/clients` (create client workspace)
+  - optionally `POST /api/workspaces/:portfolioId/clients/:clientId/attach` (adopt existing workspace)
+- Enforcement: on create/attach, enforce `agency.clients.max` using the portfolio workspace policy.
+- Bob: add an “Agency” surface (list clients, create, switch, view usage, upgrade client tier).
+
+### 7.9 Copilot LLM tiering (AI profile mapping)
+Files/systems (expected):
+- `tooling/ck-policy/src/ai.ts`:
+  - update `PROFILE_BY_POLICY` to map `tier2 → paid_premium` (so Tier2 is meaningfully different from Tier1)
+  - keep provider enforcement server-side via Paris grants
+- San Francisco (AI executor):
+  - choose default provider deterministically from `ai.profile` when `ai.selectedProvider` is not set (e.g., `free_low → deepseek`, `paid_premium → openai`)
+- Bob:
+  - show “Copilot quality” messaging in upsell (Tier1 vs Tier2) without exposing raw model names.
+
 ---
 
 ## 8) Open questions for peer review (yes/no where possible)
@@ -376,6 +460,8 @@ This is the critical peer‑review section: it shows how we delete complexity wi
    - locales packaging: Free 2 (EN+GEO), Tier1 4 (EN+3 chosen), Tier2 unlimited
 3) Upload size caps: do these values match our storage economics?
 4) Are we comfortable treating links/media metadata as baseline product behavior (non‑tiered)?
+5) Agency: do we adopt the “portfolio workspace + client workspaces” model, and are the caps right (`agency.clients.max`: Tier2=3, Tier3=20; Enterprise=100+ off-matrix)?
+6) Copilot: do we approve the tier→AI mapping (Tier1=`paid_standard`, Tier2+ =`paid_premium`), and do we want provider choice exposed starting in Tier1 or only Tier2+?
 
 ---
 
@@ -385,3 +471,5 @@ This is the critical peer‑review section: it shows how we delete complexity wi
 2) Localization is always available; Free has EN + GEO locale (no picker); Tier1 can pick 3 locales; Tier2+ unlimited.
 3) View caps enforce Frozen Billboard (no disappearing widgets; EN‑only snapshots when frozen).
 4) The entitlements matrix is materially smaller in flags and no longer contains schema‑only constraints.
+5) Agency portfolios can manage client workspaces up to `agency.clients.max`, and client workspaces can be on different tiers.
+6) Copilot quality differs by tier via `AiProfile` mapping (Free < Tier1 < Tier2+).
