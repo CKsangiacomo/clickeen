@@ -168,6 +168,7 @@ Goal: make agencies a first-class GTM channel **without** exploding the entitlem
 
 **Agency pricing rules (the ladder):**
 1) An agency can manage **up to 2 Free** client workspaces.
+   - Free allowance rule: `freeClientsMax = max(2, 2 × paidClientsCount)` (e.g., 2 paid → 4 free max; 20 paid → 40 free max).
 2) If they want **more than 2** client workspaces, they must add at least **1 paid** client workspace (Tier1+).
    - Minimum “paid agency” footprint: **2 Free + 1 paid = 3 client workspaces**.
 3) Discounts apply to **paid** client workspaces only (Free stays Free).
@@ -439,7 +440,7 @@ Files/systems (expected):
   - add an “Agency Dashboard” with workspace switcher + lightweight rollups (activity + usage status) across managed workspaces.
   - route agencies to a dedicated pricing calculator (not the standard pricing page).
 - Billing:
-  - implement the agency discount ladder (2 free workspaces allowed; paid required for >2; discounts start at 3+ paid workspaces).
+  - implement the agency discount ladder (2 free allowed; paid required for >2; discounts start at 3+ paid) + free allowance rule (`freeClientsMax = max(2, 2 × paidClientsCount)`).
   - discounts apply only to paid workspaces; annual prepay can stack.
 - Paris (if needed):
   - add a minimal “list my workspaces” endpoint and/or aggregate usage endpoints to power the rollups.
