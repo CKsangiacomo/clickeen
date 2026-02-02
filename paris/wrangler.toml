@@ -5,8 +5,8 @@ workers_dev = true
 
 [[kv_namespaces]]
 binding = "USAGE_KV"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
+id = "a9396f7fee7f47bc9b1be520c78a24c9"
+preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
 
 [[queues.producers]]
 binding = "L10N_GENERATE_QUEUE"
