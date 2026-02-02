@@ -3,7 +3,7 @@
 **Status:** `01-Planning` (peer review)  
 **Date:** 2026-02-02  
 **Owner:** Product Dev Team (AI) + Human Architect  
-**Impacted systems:** `config/entitlements.matrix.json`, `tooling/ck-policy`, Paris, Bob, Venice, San Francisco (AI executor), Tokyo widgets (`limits.json`)
+**Impacted systems:** `config/entitlements.matrix.json`, `tooling/ck-policy`, Paris, Bob, Venice, San Francisco (AI executor), Tokyo widgets (`limits.json`), Billing (agency discounts + calculator)
 
 ---
 
