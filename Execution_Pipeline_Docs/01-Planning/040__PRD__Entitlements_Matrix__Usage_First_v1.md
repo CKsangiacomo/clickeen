@@ -154,28 +154,34 @@ Cost control comes from:
 - crawl depth caps, and/or
 - budgets for crawls/runs per month.
 
-### 4.6 Agency packaging (portfolio + client workspaces)
-Goal: be extremely aggressive for agencies while keeping packaging deterministic and easy to reason about.
+### 4.6 Agency packaging (multi‑workspace + billing discounts)
+Goal: make agencies a first-class GTM channel **without** exploding the entitlements matrix.
 
-**What “agency” means in Clickeen (and what we already have):**
-- Clickeen is workspace-native (see `supabase/migrations/20260105000000__workspaces.sql` and `documentation/capabilities/multitenancy.md`).
-- A single user can be **owner/admin** in many workspaces via `workspace_members`. This is the core “GEICO model”: one login, many “policies” (client workspaces), each with its own tier.
+**Agency is not an entitlement.** It’s a multitenancy + billing wrapper:
+- Product model: an agency user is owner/admin in multiple workspaces (`workspace_members`). They switch “which client I’m acting as” via a workspace switcher.
+- Pricing model: each client workspace is on a normal tier (`free|tier1|tier2|tier3`), and agencies get **discounts** based on how many paid client workspaces they manage.
 
-**What we need to add for agency packaging:**
-- An explicit concept of an **Agency Portfolio workspace** that can **create and manage client workspaces**.
-- A cap that controls “how many clients can you manage”:
-  - `agency.clients.max` (cap) = how many client workspaces can be attached to a portfolio.
-- Each client workspace keeps its own tier (`free|tier1|tier2|tier3`), so agencies can manage customers on different tiers without special cases.
+**Agency UX (simple, not fancy):**
+- An “Agency Dashboard” with:
+  - workspace switcher (client selector)
+  - lightweight rollups across all managed workspaces (activity + usage status), but editing still happens inside a workspace.
 
-**Why this is the right model:**
-- It matches how agencies actually operate (separate clients, separate sites, separate billing decisions).
-- It preserves the architecture: policy is still resolved per workspace; we’re not inventing a new “account policy” system.
-- It is easy to upsell: “add more client slots” is a clean, user-visible packaging lever.
+**Agency pricing rules (the ladder):**
+1) An agency can manage **up to 2 Free** client workspaces.
+2) If they want **more than 2** client workspaces, they must add at least **1 paid** client workspace (Tier1+).
+   - Minimum “paid agency” footprint: **2 Free + 1 paid = 3 client workspaces**.
+3) Discounts apply to **paid** client workspaces only (Free stays Free).
+4) Discount starts when the agency has **3+ paid** client workspaces:
+   - At 3 paid workspaces (Tier1+), discount = **10%**.
+   - Discount increases as paid workspace count increases and/or as tiers increase (exact schedule is pricing-owned).
+5) Agency discounts can stack with annual prepay (we want agencies to consolidate and commit).
+6) Agencies use a dedicated **pricing calculator** (not the regular pricing page).
 
-Suggested plan shape (initial):
-- Tier2: agency portfolio with **3 clients**
-- Tier3: agency portfolio with **20 clients**
-- Enterprise/off-matrix: **100+ clients** (sales / manual override)
+Why this is the best solution:
+- Zero new gating primitives in `entitlements.matrix.json` (keeps the system simple).
+- Matches how agencies think: “I manage many clients”, each with its own plan.
+- Clean upgrade incentive: pay for client workspaces; get rewarded for volume and commitment.
+- Easy to implement incrementally: multi-workspace is already shipped; discounts + calculator can be built without touching widget/runtime enforcement.
 
 ### 4.7 Copilot LLMs by tier (AI profiles; already wired)
 We already have a tiered AI control plane:
@@ -208,7 +214,6 @@ Legend:
 | Capability | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Published widgets max | `instances.published.max` | ∞ | 0 | 1 | 1 | 5 | ∞ |
-| Agency client workspaces max | `agency.clients.max` | ∞ | 0 | 0 | 0 | 3 | 20 |
 | Monthly views cap (freeze on exceed) | `views.monthly.max` | ∞ | ∞ | 10,000 | 100,000 | ∞ | ∞ |
 | Locales per widget (total incl. EN) | `l10n.locales.max` | ∞ | 0 | 2 | 4 | ∞ | ∞ |
 | Custom locales (user‑selectable, excl. EN) | `l10n.locales.custom.max` | ∞ | 0 | 0 | 3 | ∞ | ∞ |
@@ -237,7 +242,6 @@ This table is the “contract” engineers implement against. If a token can’t
 |---|---|---|---|---|---|
 | `branding.remove` | flag | Can remove Clickeen backlink/branding on public embeds | Acquisition (not cost) | Venice runtime + publish enforcement | Force backlink on (no silent removal) |
 | `instances.published.max` | cap | How many published widgets a workspace can have at once | Snapshot storage + support load | Paris publish + Bob UI | Block publish; offer “unpublish or upgrade” |
-| `agency.clients.max` | cap | How many client workspaces an agency portfolio can manage | Support surface + packaging | Paris workspace provisioning + Bob agency UI | Block “create client”; upgrade CTA |
 | `views.monthly.max` | cap | Monthly public embed views for Free/Tier1 | CDN/edge + rendering + abuse vector | Venice runtime (freeze), Paris usage counters | Freeze to snapshot + upgrade overlay (“Frozen Billboard”) |
 | `l10n.locales.max` | cap | Total locales per widget (incl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Prevent adding more locales; upsell |
 | `l10n.locales.custom.max` | cap | User‑selectable locales (excl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Free shows EN+GEO only; Tier1 caps chooser |
@@ -341,7 +345,6 @@ Actions:
    - `list.*` and `text.*`
    - legacy budgets (`budget.uploads`, `budget.edits`) replaced by explicit keys
 2) Add new keys:
-   - `agency.clients.max`
    - `l10n.locales.custom.max`
    - `personalization.sources.website.depth.max` (rename from `.depth`)
    - `uploads.size.max`
@@ -428,16 +431,18 @@ This is the critical peer‑review section: it shows how we delete complexity wi
 | `views.monthly.max` | Keep | Direct cost + abuse driver; supports Frozen Billboard |
 | `instances.published.max` | Keep | Clear packaging + cost driver |
 
-### 7.8 Agency portfolio support (new)
+### 7.8 Agency packaging (multi-workspace + billing discounts)
+This PRD keeps “agency” out of the entitlements matrix on purpose.
+
 Files/systems (expected):
-- DB (Michael/Supabase): add a workspace relationship so we can represent “portfolio → client workspaces”.
-  - Minimal shape: `workspaces.portfolio_workspace_id UUID NULL REFERENCES workspaces(id)`
-  - Alternative (more flexible): a join table `workspace_portfolios(portfolio_id, client_id)` with constraints + RLS.
-- Paris: add workspace provisioning endpoints:
-  - `POST /api/workspaces/:portfolioId/clients` (create client workspace)
-  - optionally `POST /api/workspaces/:portfolioId/clients/:clientId/attach` (adopt existing workspace)
-- Enforcement: on create/attach, enforce `agency.clients.max` using the portfolio workspace policy.
-- Bob: add an “Agency” surface (list clients, create, switch, view usage, upgrade client tier).
+- Bob:
+  - add an “Agency Dashboard” with workspace switcher + lightweight rollups (activity + usage status) across managed workspaces.
+  - route agencies to a dedicated pricing calculator (not the standard pricing page).
+- Billing:
+  - implement the agency discount ladder (2 free workspaces allowed; paid required for >2; discounts start at 3+ paid workspaces).
+  - discounts apply only to paid workspaces; annual prepay can stack.
+- Paris (if needed):
+  - add a minimal “list my workspaces” endpoint and/or aggregate usage endpoints to power the rollups.
 
 ### 7.9 Copilot LLM tiering (AI profile mapping)
 Files/systems (expected):
@@ -460,7 +465,7 @@ Files/systems (expected):
    - locales packaging: Free 2 (EN+GEO), Tier1 4 (EN+3 chosen), Tier2 unlimited
 3) Upload size caps: do these values match our storage economics?
 4) Are we comfortable treating links/media metadata as baseline product behavior (non‑tiered)?
-5) Agency: do we adopt the “portfolio workspace + client workspaces” model, and are the caps right (`agency.clients.max`: Tier2=3, Tier3=20; Enterprise=100+ off-matrix)?
+5) Agency: do we approve the discount ladder (2 free; >2 requires 1 paid; discounts start at 3+ paid) and that agencies use a dedicated pricing calculator?
 6) Copilot: do we approve the tier→AI mapping (Tier1=`paid_standard`, Tier2+ =`paid_premium`), and do we want provider choice exposed starting in Tier1 or only Tier2+?
 
 ---
@@ -471,5 +476,5 @@ Files/systems (expected):
 2) Localization is always available; Free has EN + GEO locale (no picker); Tier1 can pick 3 locales; Tier2+ unlimited.
 3) View caps enforce Frozen Billboard (no disappearing widgets; EN‑only snapshots when frozen).
 4) The entitlements matrix is materially smaller in flags and no longer contains schema‑only constraints.
-5) Agency portfolios can manage client workspaces up to `agency.clients.max`, and client workspaces can be on different tiers.
+5) Agency workflow works via multitenancy + billing discounts (no new entitlements keys), with a simple agency dashboard + pricing calculator.
 6) Copilot quality differs by tier via `AiProfile` mapping (Free < Tier1 < Tier2+).
