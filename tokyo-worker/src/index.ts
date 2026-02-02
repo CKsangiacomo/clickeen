@@ -5,6 +5,8 @@ type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
+  RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
+  VENICE_BASE_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   TOKYO_L10N_HTTP_BASE?: string;
@@ -162,6 +164,14 @@ type LayerPublishJob = {
 
 type L10nPublishQueueJob = LayerPublishJob;
 
+type RenderSnapshotQueueJob = {
+  v: 1;
+  kind: 'render-snapshot';
+  publicId: string;
+  action?: 'upsert' | 'delete';
+  locales?: string[];
+};
+
 type L10nPublishRequest = {
   publicId: string;
   layer: string;
@@ -307,6 +317,24 @@ function prettyStableJson(value: any): string {
   return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/i;
+
+function normalizeSha256Hex(raw: unknown): string | null {
+  const value = String(raw || '').trim().toLowerCase();
+  if (!SHA256_HEX_RE.test(value)) return null;
+  return value;
+}
+
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  const view = new Uint8Array(hash);
+  let out = '';
+  for (let i = 0; i < view.length; i += 1) {
+    out += view[i]!.toString(16).padStart(2, '0');
+  }
+  return out;
+}
+
 function assertOverlayShape(payload: any): L10nOverlay {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('[tokyo] overlay must be an object');
@@ -327,7 +355,7 @@ function assertOverlayShape(payload: any): L10nOverlay {
   });
 
   const baseFingerprint = typeof payload.baseFingerprint === 'string' ? payload.baseFingerprint.trim() : '';
-  if (!/^[a-f0-9]{64}$/i.test(baseFingerprint)) {
+  if (!SHA256_HEX_RE.test(baseFingerprint)) {
     throw new Error('[tokyo] overlay.baseFingerprint must be a sha256 hex string');
   }
   return { v: 1, baseUpdatedAt: payload.baseUpdatedAt ?? null, baseFingerprint, ops };
@@ -1000,6 +1028,180 @@ async function handleGetCuratedAsset(req: Request, env: Env, key: string): Promi
   return new Response(obj.body, { status: 200, headers });
 }
 
+type RenderIndexEntry = { e: string; r: string; meta: string };
+
+type RenderIndex = {
+  v: 1;
+  publicId: string;
+  current: Record<string, RenderIndexEntry>;
+};
+
+function resolveVeniceBase(env: Env): string {
+  const raw = typeof env.VENICE_BASE_URL === 'string' ? env.VENICE_BASE_URL.trim() : '';
+  if (!raw) throw new Error('[tokyo] Missing VENICE_BASE_URL for render snapshot generation');
+  return raw.replace(/\/+$/, '');
+}
+
+function isRenderSnapshotJob(value: unknown): value is RenderSnapshotQueueJob {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const job = value as any;
+  if (job.v !== 1) return false;
+  if (job.kind !== 'render-snapshot') return false;
+  return typeof job.publicId === 'string';
+}
+
+function normalizeRenderLocales(locales: unknown): string[] {
+  if (!Array.isArray(locales)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  locales.forEach((raw) => {
+    const normalized = normalizeLocale(raw);
+    if (!normalized) return;
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    out.push(normalized);
+  });
+  return out;
+}
+
+function renderIndexKey(publicId: string): string {
+  return `renders/instances/${publicId}/index.json`;
+}
+
+function renderArtifactKey(publicId: string, fingerprint: string, filename: 'e.html' | 'r.json' | 'meta.json'): string {
+  return `renders/instances/${publicId}/${fingerprint}/${filename}`;
+}
+
+function assertRenderIndexShape(payload: any, publicId: string): RenderIndex {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('[tokyo] render index must be an object');
+  }
+  if (payload.v !== 1) throw new Error('[tokyo] render index.v must be 1');
+  const pid = typeof payload.publicId === 'string' ? payload.publicId.trim() : '';
+  if (pid && pid !== publicId) throw new Error('[tokyo] render index.publicId mismatch');
+  const current = payload.current;
+  if (!current || typeof current !== 'object' || Array.isArray(current)) {
+    throw new Error('[tokyo] render index.current must be an object');
+  }
+
+  const normalized: Record<string, RenderIndexEntry> = {};
+  for (const [rawLocale, entry] of Object.entries(current)) {
+    const locale = normalizeLocale(rawLocale);
+    if (!locale || !entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const e = normalizeSha256Hex((entry as any).e);
+    const r = normalizeSha256Hex((entry as any).r);
+    const meta = normalizeSha256Hex((entry as any).meta);
+    if (!e || !r || !meta) continue;
+    normalized[locale] = { e, r, meta };
+  }
+
+  return { v: 1, publicId, current: normalized };
+}
+
+async function loadRenderIndex(env: Env, publicId: string): Promise<RenderIndex | null> {
+  const obj = await env.TOKYO_R2.get(renderIndexKey(publicId));
+  if (!obj) return null;
+  const json = (await obj.json().catch(() => null)) as any;
+  if (!json) return null;
+  return assertRenderIndexShape(json, publicId);
+}
+
+async function putRenderIndex(env: Env, publicId: string, index: RenderIndex): Promise<void> {
+  await env.TOKYO_R2.put(renderIndexKey(publicId), prettyStableJson(index), {
+    httpMetadata: { contentType: 'application/json; charset=utf-8' },
+  });
+}
+
+async function deleteRenderIndex(env: Env, publicId: string): Promise<void> {
+  await env.TOKYO_R2.delete(renderIndexKey(publicId));
+}
+
+async function fetchVeniceBytes(env: Env, pathnameWithQuery: string): Promise<{ bytes: ArrayBuffer; contentType: string | null }> {
+  const base = resolveVeniceBase(env);
+  const res = await fetch(`${base}${pathnameWithQuery.startsWith('/') ? pathnameWithQuery : `/${pathnameWithQuery}`}`, {
+    method: 'GET',
+    headers: { 'X-Request-ID': crypto.randomUUID() },
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Venice snapshot fetch failed (${res.status}) ${detail}`.trim());
+  }
+  const bytes = await res.arrayBuffer();
+  const contentType = res.headers.get('content-type');
+  return { bytes, contentType };
+}
+
+async function putImmutableRenderArtifact(args: {
+  env: Env;
+  publicId: string;
+  filename: 'e.html' | 'r.json' | 'meta.json';
+  bytes: ArrayBuffer;
+  contentType: string;
+}): Promise<string> {
+  const fingerprint = await sha256Hex(args.bytes);
+  const key = renderArtifactKey(args.publicId, fingerprint, args.filename);
+  await args.env.TOKYO_R2.put(key, args.bytes, {
+    httpMetadata: { contentType: args.contentType },
+  });
+  return fingerprint;
+}
+
+async function generateRenderSnapshots(args: {
+  env: Env;
+  publicId: string;
+  locales: string[];
+}): Promise<void> {
+  const { env, publicId } = args;
+  const locales = args.locales.length ? args.locales : ['en'];
+  const existing = await loadRenderIndex(env, publicId).catch(() => null);
+  const nextCurrent: Record<string, RenderIndexEntry> = existing?.current ? { ...existing.current } : {};
+
+  for (const locale of locales) {
+    const e = await fetchVeniceBytes(env, `/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`);
+    const r = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`);
+    const meta = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}&meta=1`);
+
+    const eFp = await putImmutableRenderArtifact({
+      env,
+      publicId,
+      filename: 'e.html',
+      bytes: e.bytes,
+      contentType: e.contentType || 'text/html; charset=utf-8',
+    });
+    const rFp = await putImmutableRenderArtifact({
+      env,
+      publicId,
+      filename: 'r.json',
+      bytes: r.bytes,
+      contentType: r.contentType || 'application/json; charset=utf-8',
+    });
+    const metaFp = await putImmutableRenderArtifact({
+      env,
+      publicId,
+      filename: 'meta.json',
+      bytes: meta.bytes,
+      contentType: meta.contentType || 'application/json; charset=utf-8',
+    });
+
+    nextCurrent[locale] = { e: eFp, r: rFp, meta: metaFp };
+  }
+
+  const index: RenderIndex = { v: 1, publicId, current: nextCurrent };
+  await putRenderIndex(env, publicId, index);
+}
+
+async function handleGetRenderObject(env: Env, key: string, cacheControl: string): Promise<Response> {
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+
+  const ext = key.split('.').pop() || '';
+  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const headers = new Headers();
+  headers.set('content-type', contentType);
+  headers.set('cache-control', cacheControl);
+  return new Response(obj.body, { status: 200, headers });
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
@@ -1012,6 +1214,55 @@ export default {
 
       if (pathname === '/healthz') {
         return withCors(json({ up: true }, { status: 200 }));
+      }
+
+      const renderIndexMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/index\.json$/);
+      if (renderIndexMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderIndexMatch[1]));
+        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        return withCors(await handleGetRenderObject(env, renderIndexKey(publicId), 'public, max-age=60, s-maxage=300'));
+      }
+
+      const renderArtifactMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/([^/]+)\/(e\.html|r\.json|meta\.json)$/);
+      if (renderArtifactMatch) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(renderArtifactMatch[1]));
+        const fingerprint = normalizeSha256Hex(decodeURIComponent(renderArtifactMatch[2]));
+        const filename = renderArtifactMatch[3] as 'e.html' | 'r.json' | 'meta.json';
+        if (!publicId || !fingerprint) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        }
+        return withCors(
+          await handleGetRenderObject(
+            env,
+            renderArtifactKey(publicId, fingerprint, filename),
+            'public, max-age=31536000, immutable',
+          ),
+        );
+      }
+
+      const renderSnapshotMatch = pathname.match(/^\/renders\/instances\/([^/]+)\/snapshot$/);
+      if (renderSnapshotMatch) {
+        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const authError = requireDevAuth(req, env);
+        if (authError) return withCors(authError);
+        const publicId = normalizePublicId(decodeURIComponent(renderSnapshotMatch[1]));
+        if (!publicId) return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        let payload: { action?: string; locales?: unknown } | null = null;
+        try {
+          payload = (await req.json()) as any;
+        } catch {
+          payload = null;
+        }
+        const action = payload?.action === 'delete' ? 'delete' : 'upsert';
+        if (action === 'delete') {
+          await deleteRenderIndex(env, publicId);
+          return withCors(json({ ok: true, publicId, action }, { status: 200 }));
+        }
+        const locales = normalizeRenderLocales(payload?.locales);
+        await generateRenderSnapshots({ env, publicId, locales: locales.length ? locales : ['en'] });
+        return withCors(json({ ok: true, publicId, action, locales: locales.length ? locales : ['en'] }, { status: 200 }));
       }
 
       if (pathname === '/l10n/publish') {
@@ -1074,9 +1325,26 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<L10nPublishQueueJob>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
     for (const msg of batch.messages) {
       const body = msg.body;
+      if (isRenderSnapshotJob(body)) {
+        const publicId = normalizePublicId(body.publicId);
+        if (!publicId) continue;
+        const action = body.action === 'delete' ? 'delete' : 'upsert';
+        try {
+          if (action === 'delete') {
+            await deleteRenderIndex(env, publicId);
+          } else {
+            const locales = normalizeRenderLocales(body.locales);
+            await generateRenderSnapshots({ env, publicId, locales: locales.length ? locales : ['en'] });
+          }
+        } catch (err) {
+          console.error('[tokyo] render snapshot job failed', err);
+        }
+        continue;
+      }
+
       if (!isPublishJob(body)) continue;
       const publicId = normalizePublicId(body.publicId);
       if (!publicId) continue;
@@ -1100,6 +1368,16 @@ export default {
             await recordL10nOverlayVersion(env, result);
           }
           await publishLayerIndex(env, publicId);
+        }
+
+        if ((layer === 'locale' || layer === 'user') && env.RENDER_SNAPSHOT_QUEUE) {
+          await env.RENDER_SNAPSHOT_QUEUE.send({
+            v: 1,
+            kind: 'render-snapshot',
+            publicId,
+            locales: [layerKey],
+            action: 'upsert',
+          });
         }
       } catch (err) {
         console.error('[tokyo] publish job failed', err);

@@ -22,16 +22,19 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isWorkspaceAsset = normalized.startsWith('/workspace-assets/');
   const isCuratedAsset = normalized.startsWith('/curated-assets/');
+  const isRender = normalized.startsWith('/renders/');
+  const isRenderIndex = isRender && normalized.endsWith('/index.json');
+  const isRenderArtifact = isRender && !isRenderIndex;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
 
-  if (isL10nOverlay || isWorkspaceAsset || isCuratedAsset) {
+  if (isL10nOverlay || isWorkspaceAsset || isCuratedAsset || isRenderArtifact) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
-  if (isL10nIndex || isI18nManifest) {
+  if (isL10nIndex || isI18nManifest || isRenderIndex) {
     return { cache: 'force-cache', next: { revalidate: 300 } };
   }
   if (isDieter || isWidget) {

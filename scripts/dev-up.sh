@@ -229,6 +229,7 @@ echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
   cd "$ROOT_DIR/tokyo-worker"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
   VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
+  VARS+=(--var "VENICE_BASE_URL:http://localhost:3003")
   if [ -n "${TOKYO_DEV_JWT:-}" ]; then
     VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   fi

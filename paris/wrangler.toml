@@ -11,6 +11,10 @@ queue = "instance-l10n-generate-cloud-dev"
 binding = "L10N_PUBLISH_QUEUE"
 queue = "instance-l10n-publish-cloud-dev"
 
+[[queues.producers]]
+binding = "RENDER_SNAPSHOT_QUEUE"
+queue = "instance-render-snapshot-cloud-dev"
+
 [triggers]
 crons = ["*/5 * * * *"]
 
@@ -24,3 +28,7 @@ queue = "instance-l10n-generate-local"
 [[env.local.queues.producers]]
 binding = "L10N_PUBLISH_QUEUE"
 queue = "instance-l10n-publish-local"
+
+[[env.local.queues.producers]]
+binding = "RENDER_SNAPSHOT_QUEUE"
+queue = "instance-render-snapshot-local"

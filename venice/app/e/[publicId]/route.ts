@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
+import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { escapeHtml } from '@venice/lib/html';
 import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
@@ -18,6 +19,35 @@ interface InstanceResponse {
 
 const CACHE_PUBLISHED = 'public, max-age=300, s-maxage=600, stale-while-revalidate=1800';
 const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
+
+function patchCkWidgetJson(html: string, updates: { theme: string; device: string; locale: string }): string | null {
+  const re = /window\.CK_WIDGET=([^;]+);/;
+  const match = html.match(re);
+  if (!match) return null;
+  const rawJson = match[1] || '';
+  const parsed = JSON.parse(rawJson) as Record<string, unknown>;
+  parsed.theme = updates.theme;
+  parsed.device = updates.device;
+  parsed.locale = updates.locale;
+  const nextJson = JSON.stringify(parsed).replace(/</g, '\\u003c');
+  return html.replace(re, `window.CK_WIDGET=${nextJson};`);
+}
+
+function patchHtmlTag(html: string, updates: { theme: string; device: string; locale: string }): string | null {
+  const re = /<html\b[^>]*>/i;
+  const match = html.match(re);
+  if (!match) return null;
+  const tag = `<html lang="${escapeHtml(updates.locale)}" data-theme="${escapeHtml(updates.theme)}" data-device="${escapeHtml(
+    updates.device,
+  )}" data-locale="${escapeHtml(updates.locale)}">`;
+  return html.replace(re, tag);
+}
+
+function extractNonce(html: string): string | null {
+  const match = html.match(/\bnonce="([^"]+)"/i);
+  const nonce = match?.[1]?.trim() || '';
+  return nonce ? nonce : null;
+}
 
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
@@ -47,6 +77,55 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
   if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
 
+  let snapshotReason: string | null = null;
+  if (!ts && !auth && !embedToken) {
+    const snapshot = await loadRenderSnapshot({ publicId, locale, variant: 'e' });
+    if (snapshot.ok) {
+      const etag = `W/"${snapshot.fingerprint}"`;
+      const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
+      if (ifNoneMatch && ifNoneMatch === etag) {
+        headers['ETag'] = etag;
+        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'snapshot';
+        return new NextResponse(null, { status: 304, headers });
+      }
+
+      let html = new TextDecoder().decode(snapshot.bytes);
+      try {
+        const updated = patchHtmlTag(html, { theme, device, locale });
+        if (!updated) throw new Error('HTML_TAG_MISSING');
+        html = updated;
+        const patched = patchCkWidgetJson(html, { theme, device, locale });
+        if (!patched) throw new Error('CK_WIDGET_MISSING');
+        html = patched;
+      } catch {
+        snapshotReason = 'SNAPSHOT_INVALID';
+      }
+
+      const nonce = extractNonce(html);
+      if (!nonce) snapshotReason = snapshotReason ?? 'SNAPSHOT_NONCE_MISSING';
+
+      if (!snapshotReason && nonce) {
+        headers['ETag'] = etag;
+        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'snapshot';
+
+        const parisOrigin = new URL(getParisBase()).origin;
+        const tokyoOrigin = new URL(getTokyoBase()).origin;
+        headers['Content-Security-Policy'] = buildCsp(nonce, { parisOrigin, tokyoOrigin });
+        return new NextResponse(html, { status: 200, headers });
+      }
+    } else {
+      snapshotReason = snapshot.reason;
+    }
+  } else if (ts) {
+    snapshotReason = 'SKIP_TS';
+  } else if (auth || embedToken) {
+    snapshotReason = 'SKIP_AUTH';
+  }
+
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
     `/api/instance/${encodeURIComponent(publicId)}?subject=venice`,
     {
@@ -66,6 +145,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       tokyoBase,
     });
     headers['Cache-Control'] = 'no-store';
+    headers['X-Venice-Render-Mode'] = 'dynamic';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(html, { status, headers });
   }
 
@@ -82,6 +163,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     });
     headers['Cache-Control'] = 'no-store';
     headers['Vary'] = 'Authorization, X-Embed-Token';
+    headers['X-Venice-Render-Mode'] = 'dynamic';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(html, { status: 404, headers });
   }
   const nonce = crypto.randomUUID();
@@ -100,6 +183,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (!ts) {
     if (ifNoneMatch && etag && ifNoneMatch === etag) {
       headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'dynamic';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
       return new NextResponse(null, { status: 304, headers });
     }
     if (ifModifiedSince && instance.updatedAt) {
@@ -107,6 +192,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       const updated = Date.parse(instance.updatedAt);
       if (!Number.isNaN(since) && !Number.isNaN(updated) && updated <= since) {
         headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'dynamic';
+        if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
         return new NextResponse(null, { status: 304, headers });
       }
     }
@@ -122,6 +209,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   }
 
   headers['Vary'] = 'Authorization, X-Embed-Token';
+  headers['X-Venice-Render-Mode'] = 'dynamic';
+  if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
 
   const parisOrigin = new URL(getParisBase()).origin;
   const tokyoOrigin = new URL(getTokyoBase()).origin;

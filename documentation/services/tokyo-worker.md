@@ -1,8 +1,8 @@
-# System: Tokyo Worker - Asset Uploads + Instance l10n Publisher
+# System: Tokyo Worker - Asset Uploads + Instance l10n Publisher + Render Snapshots
 
 ## Identity
 - Tier: Supporting
-- Purpose: Serve workspace assets and materialize **instance** localization overlays into Tokyo/R2.
+- Purpose: Serve workspace assets and materialize **instance** localization overlays + **published render snapshots** into Tokyo/R2.
 
 ## Interfaces
 - `POST /workspace-assets/upload` (auth required; writes to R2)
@@ -13,15 +13,20 @@
 - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)
 - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)
 - `GET /l10n/v/:token/**` (public; cache-bust wrapper for `/l10n/**` used by Prague; token is ignored for storage keys)
+- `GET /renders/instances/:publicId/index.json` (public; short TTL pointer to latest per-locale render artifacts)
+- `GET /renders/instances/:publicId/:fingerprint/(e.html|r.json|meta.json)` (public; immutable, cache-forever)
+- `POST /renders/instances/:publicId/snapshot` (dev auth; manually generate/delete render snapshot artifacts)
 
 ## Dependencies
 - Supabase (service role) for `widget_instance_overlays` + `l10n_publish_state`
 - Tokyo R2 bucket for artifacts
 - Paris for queueing publish jobs
+- Venice for render snapshot generation (Tokyo-worker fetches Venice dynamic endpoints; Venice remains the only renderer)
 
 ## Deployment
 - Cloudflare Workers + Queues
 - Queue names: `instance-l10n-publish-{env}` (`local`, `cloud-dev`, `prod`)
+- Queue names: `instance-render-snapshot-{env}` (`local`, `cloud-dev`, `prod`)
 - Scheduled repair publishes only dirty rows (bounded; no full-table scans).
 
 ## l10n Publish Flow (executed)
@@ -43,6 +48,24 @@
 - Cache semantics:
   - `.../index.json` is mutable and served with a short TTL (`cache-control: public, max-age=60`).
   - Fingerprinted overlay files are immutable (`cache-control: public, max-age=31536000, immutable`).
+
+## Render Snapshots (PRD 38)
+
+**Goal:** allow Venice to serve published `/e/:publicId` + `/r/:publicId` without hitting Paris, by serving immutable artifacts from Tokyo/R2.
+
+Artifacts (authoritative paths):
+- `renders/instances/<publicId>/index.json` (mutable pointer, per-locale)
+- `renders/instances/<publicId>/<fingerprint>/e.html` (immutable)
+- `renders/instances/<publicId>/<fingerprint>/r.json` (immutable)
+- `renders/instances/<publicId>/<fingerprint>/meta.json` (immutable)
+
+Generation:
+- Triggered by Paris on publish/unpublish (via `instance-render-snapshot-{env}` queue).
+- Also triggered by Tokyo-worker after l10n overlay publish (locale-scoped).
+- Materialization is done by fetching Venice dynamic endpoints:
+  - `/e/:publicId?locale=<locale>`
+  - `/r/:publicId?locale=<locale>`
+  - `/r/:publicId?locale=<locale>&meta=1`
 
 ## Links
 - Tokyo: `documentation/services/tokyo.md`

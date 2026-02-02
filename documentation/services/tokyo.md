@@ -10,6 +10,7 @@
   - `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
   - `limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`
 - Serves localization overlays for instances (`tokyo/l10n/**`) materialized from Supabase overlays
+- Serves published render snapshots for Venice (`tokyo/renders/instances/**`) materialized by `tokyo-worker` (PRD 38)
 - Prague website base copy is repo-local in `tokyo/widgets/*/pages/*.json`; localized overlays are stored under `tokyo/l10n/prague/**` and fetched by Prague from `${PUBLIC_TOKYO_URL}/l10n/v/<PUBLIC_PRAGUE_BUILD_ID>/prague/**` (Chrome UI strings remain in `prague/content/base/v1/chrome.json`).
 
 ## Dependencies
@@ -71,6 +72,7 @@ Local dev:
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/curated-assets/*` from `tokyo/curated-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
+- `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
   - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)

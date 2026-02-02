@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
+import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { generateExcerptHtml, generateSchemaJsonLd } from '@venice/lib/schema';
 import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
 
@@ -112,14 +113,65 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     'X-Content-Type-Options': 'nosniff',
   };
 
+  const auth = req.headers.get('authorization') ?? req.headers.get('Authorization');
+  const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
+  let snapshotReason: string | null = null;
+
+  if (!ts && !auth && !embedToken) {
+    const snapshot = await loadRenderSnapshot({
+      publicId,
+      locale,
+      variant: metaOnly ? 'meta' : 'r',
+    });
+    if (snapshot.ok) {
+      const etag = `W/"${snapshot.fingerprint}"`;
+      const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
+      if (ifNoneMatch && ifNoneMatch === etag) {
+        headers['ETag'] = etag;
+        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'snapshot';
+        return new NextResponse(null, { status: 304, headers });
+      }
+
+      const raw = new TextDecoder().decode(snapshot.bytes);
+      if (!metaOnly) {
+        try {
+          const parsed = JSON.parse(raw) as Record<string, unknown>;
+          parsed.theme = theme;
+          parsed.device = device;
+          const body = JSON.stringify(parsed);
+          headers['ETag'] = etag;
+          headers['Cache-Control'] = CACHE_PUBLISHED;
+          headers['Vary'] = 'Authorization, X-Embed-Token';
+          headers['X-Venice-Render-Mode'] = 'snapshot';
+          return new NextResponse(body, { status: 200, headers });
+        } catch {
+          snapshotReason = 'SNAPSHOT_INVALID';
+        }
+      } else {
+        headers['ETag'] = etag;
+        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'snapshot';
+        return new NextResponse(raw, { status: 200, headers });
+      }
+
+      // Fall through to dynamic rendering if snapshot payload is invalid.
+    }
+    if (!snapshot.ok && !snapshotReason) snapshotReason = snapshot.reason;
+  } else if (ts) {
+    snapshotReason = 'SKIP_TS';
+  } else if (auth || embedToken) {
+    snapshotReason = 'SKIP_AUTH';
+  }
+
   const forwardHeaders: HeadersInit = {
     'X-Request-ID': req.headers.get('x-request-id') ?? crypto.randomUUID(),
     'Cache-Control': 'no-store',
   };
 
-  const auth = req.headers.get('authorization') ?? req.headers.get('Authorization');
   if (auth) forwardHeaders['Authorization'] = auth;
-  const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
   if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
@@ -134,6 +186,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (!res.ok) {
     const status = res.status === 401 || res.status === 403 ? 403 : res.status;
     headers['Cache-Control'] = 'no-store';
+    headers['X-Venice-Render-Mode'] = 'dynamic';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(JSON.stringify(body), { status, headers });
   }
 
@@ -151,6 +205,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (!ts) {
     if (ifNoneMatch && etag && ifNoneMatch === etag) {
       headers['Vary'] = 'Authorization, X-Embed-Token';
+      headers['X-Venice-Render-Mode'] = 'dynamic';
+      if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
       return new NextResponse(null, { status: 304, headers });
     }
     if (ifModifiedSince && instance.updatedAt) {
@@ -158,6 +214,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       const updated = Date.parse(instance.updatedAt);
       if (!Number.isNaN(since) && !Number.isNaN(updated) && updated <= since) {
         headers['Vary'] = 'Authorization, X-Embed-Token';
+        headers['X-Venice-Render-Mode'] = 'dynamic';
+        if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
         return new NextResponse(null, { status: 304, headers });
       }
     }
@@ -210,6 +268,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     }
 
     headers['Vary'] = 'Authorization, X-Embed-Token';
+    headers['X-Venice-Render-Mode'] = 'dynamic';
+    if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
     return new NextResponse(JSON.stringify(payload), { status: 200, headers });
   }
 
@@ -250,6 +310,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   }
 
   headers['Vary'] = 'Authorization, X-Embed-Token';
+  headers['X-Venice-Render-Mode'] = 'dynamic';
+  if (snapshotReason) headers['X-Venice-Snapshot-Reason'] = snapshotReason;
 
   return new NextResponse(JSON.stringify(payload), { status: 200, headers });
 }

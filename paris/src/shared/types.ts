@@ -15,6 +15,7 @@ export type Env = {
   MINIBOB_RATELIMIT_MODE?: 'off' | 'log' | 'enforce';
   L10N_GENERATE_QUEUE?: Queue<L10nJob>;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
+  RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
 };
 
 export type InstanceKind = 'curated' | 'user';
@@ -147,6 +148,14 @@ export type LayerPublishJob = {
 };
 
 export type L10nPublishQueueJob = LayerPublishJob;
+
+export type RenderSnapshotQueueJob = {
+  v: 1;
+  kind: 'render-snapshot';
+  publicId: string;
+  action?: 'upsert' | 'delete';
+  locales?: string[];
+};
 
 export type InstanceOverlayRow = {
   public_id: string;

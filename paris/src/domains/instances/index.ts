@@ -1,10 +1,18 @@
 import { computeBaseFingerprint } from '@clickeen/l10n';
 import { resolvePolicy } from '@clickeen/ck-policy';
 import type { Policy } from '@clickeen/ck-policy';
-import type { CuratedInstanceRow, Env, InstanceRow, UpdatePayload, WidgetRow } from '../../shared/types';
+import type {
+  CuratedInstanceRow,
+  Env,
+  InstanceRow,
+  RenderSnapshotQueueJob,
+  UpdatePayload,
+  WidgetRow,
+} from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { asBearerToken, assertDevAuth, requireEnv } from '../../shared/auth';
+import { SUPPORTED_LOCALES, normalizeLocaleList } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
 import {
   asTrimmedString,
@@ -29,6 +37,19 @@ import {
   resolveInstanceKind,
   resolveInstanceWorkspaceId,
 } from '../../shared/instances';
+
+async function enqueueRenderSnapshot(env: Env, job: RenderSnapshotQueueJob) {
+  if (!env.RENDER_SNAPSHOT_QUEUE) return;
+  await env.RENDER_SNAPSHOT_QUEUE.send(job);
+}
+
+async function resolveSnapshotLocales(env: Env, args: { workspaceId: string; kind: 'curated' | 'user' }): Promise<string[]> {
+  if (args.kind === 'curated') return [...SUPPORTED_LOCALES];
+  const workspace = await loadWorkspaceById(env, args.workspaceId).catch(() => null);
+  const normalized = normalizeLocaleList(workspace?.l10n_locales ?? [], 'l10n_locales');
+  const locales = normalized.ok ? normalized.locales : [];
+  return Array.from(new Set(['en', ...locales]));
+}
 
 async function loadUserInstanceByPublicId(env: Env, publicId: string): Promise<InstanceRow | null> {
   const params = new URLSearchParams({
@@ -549,6 +570,25 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
       const details = await readJson(patchRes);
       return json({ error: 'DB_ERROR', details }, { status: 500 });
     }
+  }
+
+  const prevStatus = instance.status;
+  const nextStatus = status ?? prevStatus;
+  const statusChanged = status !== undefined && status !== prevStatus;
+  const configChanged = config !== undefined;
+
+  if (nextStatus === 'published' && (statusChanged || configChanged)) {
+    const kind = isCurated ? 'curated' : 'user';
+    const locales = await resolveSnapshotLocales(env, { workspaceId, kind });
+    await enqueueRenderSnapshot(env, {
+      v: 1,
+      kind: 'render-snapshot',
+      publicId,
+      action: 'upsert',
+      locales,
+    });
+  } else if (prevStatus === 'published' && nextStatus === 'unpublished') {
+    await enqueueRenderSnapshot(env, { v: 1, kind: 'render-snapshot', publicId, action: 'delete' });
   }
 
   return handleGetInstance(req, env, publicId);

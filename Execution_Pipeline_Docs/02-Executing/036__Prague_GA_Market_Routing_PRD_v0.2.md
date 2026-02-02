@@ -1,14 +1,26 @@
-# 36 — Prague GA Market Routing & SEO Architecture PRD (Draft v0.2)
+# PRD 36 — Prague GA Market Routing (Market + Locale URLs) v0.2
 
-Status: Planning. This is not active execution.
-Source of truth: `documentation/` for current Prague behavior.
-
+**Status:** EXECUTING  
 **Date:** 2026-01-26  
 **Owner:** Clickeen Product Dev Team (Prague)  
 **Stakeholders:** Human architect (Pietro), GTM Dev Team (Prague), Product Dev Team (Bob/DevStudio), Platform/Security (Paris/SF), SEO Agent owners  
-**Status:** Draft for peer review (validated against current Prague implementation)
+**Decision (locked for v0.2):** Option C — `/{market}/{locale}/...`
+
+Source of truth for current Prague behavior: `documentation/`. This PRD defines the v0.2 contract Prague must implement.
 
 ---
+
+## 0) Locked Decisions (v0.2)
+
+- **Canonical URL identity is `{market}/{locale}`.** Market is the business contract (legal/currency/availability). Locale is language only.
+- **Markets are allowlisted slugs** (ex: `uk`, `it`, `ca`, `us`, `intl`) in a repo config file; unknown markets 404.
+- **v0.2 markets are country-markets + `intl`.**
+  - Country-markets map to ISO country codes (`uk → GB`) so we can reuse the existing `geo` overlay layer deterministically.
+  - `intl` is the explicit “global fallback market” (no geo overlays; generic legal/currency).
+- **Canonical pages MUST be deterministic.** When `{market}` is explicit, Prague must not vary canonical content by IP, cookies, or experiment keys.
+- **IP geo is used only for redirects** (when market is missing), never as a hidden content switch for canonical pages.
+- **Locale is required in v0.2 URLs** (no market-only routes). Invalid locale for a market redirects to that market’s default locale (never “best effort” render).
+- **No experiments/personalization on canonical pages in v0.2.** If we later add experimentation, it must not change canonical identity and must ship with explicit canonical rules.
 
 ## 1) Problem Statement
 
@@ -201,9 +213,9 @@ This PRD assumes we start with country-based markets and add grouping later only
 
 ---
 
-## 7) Recommended Approach (Draft)
+## 7) Locked Approach (v0.2)
 
-### 7.1 Recommended: Option C (Market + Locale explicit)
+### 7.1 Decision: Option C (Market + Locale explicit)
 For GA-grade Prague where market drives legal/currency/availability, the cleanest identity is:
 
 - `/{market}/{locale}/...`
@@ -252,11 +264,12 @@ Market-specific SEO changes should be expressed as:
 - `/intl/en/` global fallback
 
 ### 9.2 Redirects and legacy compatibility
-- Legacy `/{locale}/...` should 301 to `/intl/{locale}/...` or to a default market per locale policy.
-- Root `/` should 302 to inferred market+locale:
-  1) explicit cookie selection
-  2) IP geo mapping to market
-  3) fallback `intl`
+- **Root `/` is non-canonical** and MUST redirect:
+  1) explicit cookie selection (user-chosen market+locale)
+  2) IP geo mapping → market (then market default locale)
+  3) fallback `intl/en`
+- Legacy locale-first `/{locale}/...` MUST 301 to `/intl/{locale}/...` (pre-GA cleanup: no “guess market” redirects from legacy URLs).
+- Invalid `{locale}` for a valid `{market}` MUST redirect to that market’s default locale (302) to avoid 404 churn from human typos / old links.
 
 ---
 
@@ -303,11 +316,20 @@ Market-specific SEO changes should be expressed as:
 
 ---
 
-## 13) Open Questions (for peer review)
+## 13) Explicit Decisions (v0.2)
 
-1) Market keys: friendly slugs (`uk`) vs ISO country keys (`gb`). (Implementation can support slugs with mapping; what do we want externally?)  
-2) Do we require locale in URL for all GA pages, or allow market-only URLs for pricing/legal?  
-3) Do we need per-market allowed locales (recommended) and how strict should invalid combinations be (404 vs redirect)?
+1) **Market keys:** use friendly slugs (`uk`, `it`, `ca`, `us`, `intl`) + explicit mapping to ISO country codes when needed (`uk → GB`).  
+2) **Locale in URL:** required for all pages in v0.2.  
+3) **Per-market allowed locales:** yes. Invalid `{market}/{locale}` combos redirect to the market default locale (302). Unknown markets 404.
+
+---
+
+## 14) Definition of Done (v0.2)
+
+- Prague routes exist for `/{market}/{locale}/...` and are used by all internal links/navigation.
+- Canonical pages do not vary by request IP/cookies/experiments when `{market}` is explicit (deterministic renders for crawlers).
+- Root `/` redirects as specified; legacy `/{locale}/...` redirects as specified.
+- Market allowlist + mapping are code-owned and reviewable (no hidden rules in runtime).
 
 ---
 
