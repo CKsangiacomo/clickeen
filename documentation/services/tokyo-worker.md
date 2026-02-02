@@ -66,6 +66,7 @@ Generation:
   - `/e/:publicId?locale=<locale>`
   - `/r/:publicId?locale=<locale>`
   - `/r/:publicId?locale=<locale>&meta=1`
+  - Requests include `X-Ck-Snapshot-Bypass: 1` so Venice **never** serves the old snapshot while generating the next snapshot.
 
 ## Links
 - Tokyo: `documentation/services/tokyo.md`

@@ -106,6 +106,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
+  const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -117,7 +118,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
   let snapshotReason: string | null = null;
 
-  if (!ts && !auth && !embedToken) {
+  if (!ts && !auth && !embedToken && !bypassSnapshot) {
     const snapshot = await loadRenderSnapshot({
       publicId,
       locale,
@@ -164,6 +165,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     snapshotReason = 'SKIP_TS';
   } else if (auth || embedToken) {
     snapshotReason = 'SKIP_AUTH';
+  } else if (bypassSnapshot) {
+    snapshotReason = 'SKIP_BYPASS';
   }
 
   const forwardHeaders: HeadersInit = {
@@ -202,7 +205,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
   const ifModifiedSince = req.headers.get('if-modified-since') ?? req.headers.get('If-Modified-Since');
-  if (!ts) {
+  if (!ts && !bypassSnapshot) {
     if (ifNoneMatch && etag && ifNoneMatch === etag) {
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'dynamic';
@@ -259,7 +262,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       excerptHtml,
     };
 
-    if (ts) {
+    if (ts || bypassSnapshot) {
       headers['Cache-Control'] = 'no-store';
     } else if (instance.status === 'published') {
       headers['Cache-Control'] = CACHE_PUBLISHED;
@@ -301,7 +304,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     assets: { styles, scripts },
   };
 
-  if (ts) {
+  if (ts || bypassSnapshot) {
     headers['Cache-Control'] = 'no-store';
   } else if (instance.status === 'published') {
     headers['Cache-Control'] = CACHE_PUBLISHED;

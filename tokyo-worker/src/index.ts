@@ -1116,11 +1116,20 @@ async function deleteRenderIndex(env: Env, publicId: string): Promise<void> {
   await env.TOKYO_R2.delete(renderIndexKey(publicId));
 }
 
-async function fetchVeniceBytes(env: Env, pathnameWithQuery: string): Promise<{ bytes: ArrayBuffer; contentType: string | null }> {
+async function fetchVeniceBytes(
+  env: Env,
+  pathnameWithQuery: string,
+  opts?: { headers?: Record<string, string> },
+): Promise<{ bytes: ArrayBuffer; contentType: string | null }> {
   const base = resolveVeniceBase(env);
+  const headers: Record<string, string> = {
+    'X-Request-ID': crypto.randomUUID(),
+    ...opts?.headers,
+  };
   const res = await fetch(`${base}${pathnameWithQuery.startsWith('/') ? pathnameWithQuery : `/${pathnameWithQuery}`}`, {
     method: 'GET',
-    headers: { 'X-Request-ID': crypto.randomUUID() },
+    headers,
+    cache: 'no-store',
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
@@ -1157,9 +1166,16 @@ async function generateRenderSnapshots(args: {
   const nextCurrent: Record<string, RenderIndexEntry> = existing?.current ? { ...existing.current } : {};
 
   for (const locale of locales) {
-    const e = await fetchVeniceBytes(env, `/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`);
-    const r = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`);
-    const meta = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}&meta=1`);
+    const bypassHeaders = { 'X-Ck-Snapshot-Bypass': '1' };
+    const e = await fetchVeniceBytes(env, `/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`, {
+      headers: bypassHeaders,
+    });
+    const r = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}`, {
+      headers: bypassHeaders,
+    });
+    const meta = await fetchVeniceBytes(env, `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}&meta=1`, {
+      headers: bypassHeaders,
+    });
 
     const eFp = await putImmutableRenderArtifact({
       env,

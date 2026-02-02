@@ -60,6 +60,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
   const ts = url.searchParams.get('ts');
+  const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
 
   const headers: Record<string, string> = {
     'Content-Type': 'text/html; charset=utf-8',
@@ -78,7 +79,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
 
   let snapshotReason: string | null = null;
-  if (!ts && !auth && !embedToken) {
+  if (!ts && !auth && !embedToken && !bypassSnapshot) {
     const snapshot = await loadRenderSnapshot({ publicId, locale, variant: 'e' });
     if (snapshot.ok) {
       const etag = `W/"${snapshot.fingerprint}"`;
@@ -124,6 +125,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     snapshotReason = 'SKIP_TS';
   } else if (auth || embedToken) {
     snapshotReason = 'SKIP_AUTH';
+  } else if (bypassSnapshot) {
+    snapshotReason = 'SKIP_BYPASS';
   }
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(
@@ -180,7 +183,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
   const ifModifiedSince = req.headers.get('if-modified-since') ?? req.headers.get('If-Modified-Since');
-  if (!ts) {
+  if (!ts && !bypassSnapshot) {
     if (ifNoneMatch && etag && ifNoneMatch === etag) {
       headers['Vary'] = 'Authorization, X-Embed-Token';
       headers['X-Venice-Render-Mode'] = 'dynamic';
@@ -201,6 +204,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   const isPublishable = instance.status === 'published' || isCurated;
   if (ts) {
+    headers['Cache-Control'] = 'no-store';
+  } else if (bypassSnapshot) {
     headers['Cache-Control'] = 'no-store';
   } else if (isPublishable) {
     headers['Cache-Control'] = CACHE_PUBLISHED;

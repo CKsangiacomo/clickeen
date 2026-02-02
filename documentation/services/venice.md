@@ -68,7 +68,7 @@ Venice must **never** serve unpublished instances.
 **Purpose:** Return complete widget HTML suitable for iframing on third-party sites.
 
 **Render algorithm (high level):**
-0. **Snapshot fast path (PRD 38):** when request has no auth signals (`Authorization`, `X-Embed-Token`) and no cache-bust (`?ts=`), Venice first tries to serve `e.html` from Tokyo `renders/instances/<publicId>/index.json` + immutable `.../<fingerprint>/e.html` (per-locale). Venice patches request-time `theme` + `device` into the snapshot response. Response header: `X-Venice-Render-Mode: snapshot`.
+0. **Snapshot fast path (PRD 38):** when request has no auth signals (`Authorization`, `X-Embed-Token`), no cache-bust (`?ts=`), and no internal bypass (`X-Ck-Snapshot-Bypass: 1`), Venice first tries to serve `e.html` from Tokyo `renders/instances/<publicId>/index.json` + immutable `.../<fingerprint>/e.html` (per-locale). Venice patches request-time `theme` + `device` into the snapshot response. Response header: `X-Venice-Render-Mode: snapshot`.
 1. **Dynamic fallback:** fetch instance snapshot from Paris (`GET /api/instance/:publicId?subject=venice`) to get `widgetType`, `status`, and `config`. Venice forwards `Authorization` and `X-Embed-Token` headers when present and varies responses on those headers.
 2. Fetch `widget.html` from Tokyo via Venice’s proxy routes.
 3. Apply Tokyo `l10n` overlay (if present) from deterministic overlay paths:
@@ -119,11 +119,11 @@ Response includes (as implemented today):
 - `excerptHtml` (derived from `widgetType + state + locale`)
 - `state` (localized instance config; overlays applied the same as `/e`)
 
-**Snapshot fast path (PRD 38):** when request has no auth signals (`Authorization`, `X-Embed-Token`) and no cache-bust (`?ts=`), Venice first tries to serve `r.json` (or `meta.json` when `?meta=1`) from Tokyo `renders/instances/<publicId>/index.json` + immutable artifacts (per-locale). Venice patches request-time `theme` + `device` into the payload. Response header: `X-Venice-Render-Mode: snapshot`.
+**Snapshot fast path (PRD 38):** when request has no auth signals (`Authorization`, `X-Embed-Token`), no cache-bust (`?ts=`), and no internal bypass (`X-Ck-Snapshot-Bypass: 1`), Venice first tries to serve `r.json` (or `meta.json` when `?meta=1`) from Tokyo `renders/instances/<publicId>/index.json` + immutable artifacts (per-locale). Venice patches request-time `theme` + `device` into the payload. Response header: `X-Venice-Render-Mode: snapshot`.
 
 **Dynamic fallback:** Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`. When snapshot is skipped/missing/invalid, Venice emits:
 - `X-Venice-Render-Mode: dynamic`
-- `X-Venice-Snapshot-Reason: <reason>` (e.g. `SKIP_TS`, `SKIP_AUTH`, `MISS_INDEX`, `MISS_LOCALE`, `INVALID_JSON`)
+- `X-Venice-Snapshot-Reason: <reason>` (e.g. `SKIP_TS`, `SKIP_AUTH`, `SKIP_BYPASS`, `MISS_INDEX`, `MISS_LOCALE`, `INVALID_JSON`)
 
 **Meta-only mode (shipped):**
 - `GET /r/:publicId?meta=1` returns a minimal payload used by iframe++ SEO/GEO injection:

@@ -159,6 +159,8 @@ For each target locale:
    - `/e/:publicId?locale=<locale>`
    - `/r/:publicId?locale=<locale>`
    - `/r/:publicId?locale=<locale>&meta=1`
+   - Include header `X-Ck-Snapshot-Bypass: 1` so Venice never serves the *existing* snapshot while generating the *next* snapshot.
+     - Do **not** use `?ts=` as a bypass for `/e` because `ts` mutates asset URLs inside `e.html`.
 2) Compute `renderFingerprint = sha256(bytes)` per response and write immutable artifacts:
    - `.../<fp>/e.html`, `.../<fp>/r.json`, `.../<fp>/meta.json`
 3) Update `index.json.current[locale]` pointers to the new fingerprints.
@@ -177,14 +179,15 @@ Applies to:
 Algorithm:
 1) If request includes `Authorization` or `X-Embed-Token` → **skip snapshot** (must honor gated flows)  
 2) If request includes `ts` (cache-bust/dev) → **skip snapshot**  
-3) Resolve `locale` (normalize; default `en`)  
-4) Fetch `tokyo/renders/instances/<publicId>/index.json` (cached)  
-5) Resolve `current[locale]` (must include fingerprints for `e`, `r`, `meta`)  
-6) Fetch immutable artifact from Tokyo and return:
+3) If request includes `X-Ck-Snapshot-Bypass: 1` → **skip snapshot** (internal regeneration jobs)  
+4) Resolve `locale` (normalize; default `en`)  
+5) Fetch `tokyo/renders/instances/<publicId>/index.json` (cached)  
+6) Resolve `current[locale]` (must include fingerprints for `e`, `r`, `meta`)  
+7) Fetch immutable artifact from Tokyo and return:
    - `/e` → `.../<fp>/e.html`
    - `/r` + `meta=1` → `.../<fp>/meta.json`
    - `/r` (full) → `.../<fp>/r.json`
-7) Emit `X-Venice-Render-Mode: snapshot`
+8) Emit `X-Venice-Render-Mode: snapshot`
 
 Result:
 - **No Paris call** on the hot path
