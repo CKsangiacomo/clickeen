@@ -9,6 +9,11 @@ routes = [
   { pattern = "tokyo.dev.clickeen.com/renders/*", zone_name = "clickeen.com" },
 ]
 
+[[kv_namespaces]]
+binding = "USAGE_KV"
+id = "a9396f7fee7f47bc9b1be520c78a24c9"
+preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
+
 [[r2_buckets]]
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
@@ -29,6 +34,11 @@ queue = "instance-render-snapshot-cloud-dev"
 
 [env.local]
 name = "tokyo-assets-local"
+
+[[env.local.kv_namespaces]]
+binding = "USAGE_KV"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000000"
 
 [[env.local.r2_buckets]]
 binding = "TOKYO_R2"

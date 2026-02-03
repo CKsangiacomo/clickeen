@@ -41,6 +41,7 @@ import {
   resolveInstanceKind,
   resolveInstanceWorkspaceId,
 } from '../../shared/instances';
+import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { requireWorkspace } from '../../shared/workspaces';
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
@@ -1099,6 +1100,18 @@ export async function handleWorkspaceInstanceLayerUpsert(
     return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
   }
 
+  const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
+  const publish = await consumeBudget({
+    env,
+    scope: { kind: 'workspace', workspaceId },
+    budgetKey: 'budget.l10n.publishes',
+    max: maxPublishes,
+    amount: 1,
+  });
+  if (!publish.ok) {
+    return ckError({ kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail }, 403);
+  }
+
   let row: InstanceOverlayRow | null = null;
   if (hasOps) {
     const geoTargets = hasGeoTargets ? geoResult?.geoCountries ?? null : existing?.geo_targets ?? null;
@@ -1302,6 +1315,18 @@ export async function handleWorkspaceInstanceLayerDelete(
   const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
   if (!existing) {
     return json({ publicId: publicIdResult.value, layer, layerKey, deleted: false, reason: 'not_found' });
+  }
+
+  const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
+  const publish = await consumeBudget({
+    env,
+    scope: { kind: 'workspace', workspaceId },
+    budgetKey: 'budget.l10n.publishes',
+    max: maxPublishes,
+    amount: 1,
+  });
+  if (!publish.ok) {
+    return ckError({ kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail }, 403);
   }
 
   const deleteRes = await supabaseFetch(

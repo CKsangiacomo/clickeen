@@ -4,6 +4,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
+  USAGE_KV?: KVNamespace;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
   VENICE_BASE_URL?: string;
@@ -799,6 +800,57 @@ async function listDirtyPublishStates(env: Env, limit = 200): Promise<L10nPublis
 
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
 const DEFAULT_L10N_VERSION_LIMIT = 1;
+const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
+const UPLOADS_COUNT_BUDGET_KEY = 'budget.uploads.count';
+const DEFAULT_UPLOAD_SIZE_MAX_BYTES = 5 * 1024 * 1024;
+const DEFAULT_UPLOADS_COUNT_MAX = 5;
+
+function getUtcPeriodKey(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
+async function readKvCounter(kv: KVNamespace, key: string): Promise<number> {
+  const raw = await kv.get(key);
+  const value = raw ? Number(raw) : 0;
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+async function consumeWorkspaceBudget(args: {
+  env: Env;
+  workspaceId: string;
+  budgetKey: string;
+  max: number | null;
+  amount?: number;
+}): Promise<
+  | { ok: true; used: number; nextUsed: number }
+  | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string }
+> {
+  const amount = typeof args.amount === 'number' ? args.amount : 1;
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('[tokyo] consumeWorkspaceBudget amount must be positive');
+  if (args.max == null) return { ok: true, used: 0, nextUsed: amount };
+  const max = Math.max(0, Math.floor(args.max));
+  const kv = args.env.USAGE_KV;
+  if (!kv) return { ok: true, used: 0, nextUsed: amount };
+
+  const periodKey = getUtcPeriodKey(new Date());
+  const counterKey = `usage.budget.v1.${args.budgetKey}.${periodKey}.ws:${args.workspaceId}`;
+  const used = await readKvCounter(kv, counterKey);
+  const nextUsed = used + amount;
+  if (nextUsed > max) {
+    return {
+      ok: false,
+      used,
+      max,
+      reasonKey: 'coreui.upsell.reason.budgetExceeded',
+      detail: `${args.budgetKey} budget exceeded (max=${max})`,
+    };
+  }
+
+  await kv.put(counterKey, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
+  return { ok: true, used, nextUsed };
+}
 
 function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
@@ -812,6 +864,34 @@ function resolveL10nVersionLimit(tier: string | null): number | null {
   if (value == null) return null;
   if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_L10N_VERSION_LIMIT;
   return Math.max(1, Math.floor(value));
+}
+
+function resolveUploadSizeLimitBytes(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[UPLOAD_SIZE_CAP_KEY];
+  if (!entry || entry.kind !== 'cap') return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
+  return Math.max(1, Math.floor(value));
+}
+
+function resolveUploadsCountBudgetMax(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[UPLOADS_COUNT_BUDGET_KEY];
+  if (!entry || entry.kind !== 'budget') return DEFAULT_UPLOADS_COUNT_MAX;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_UPLOADS_COUNT_MAX;
+  return Math.floor(value);
 }
 
 async function loadWorkspaceTier(env: Env, workspaceId: string): Promise<string | null> {
@@ -944,6 +1024,19 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
   }
 
+  const tier = await loadWorkspaceTier(env, workspaceId).catch(() => null);
+  const uploadsMax = resolveUploadsCountBudgetMax(tier);
+  const uploadBudget = await consumeWorkspaceBudget({
+    env,
+    workspaceId,
+    budgetKey: UPLOADS_COUNT_BUDGET_KEY,
+    max: uploadsMax,
+    amount: 1,
+  });
+  if (!uploadBudget.ok) {
+    return json({ error: { kind: 'DENY', reasonKey: uploadBudget.reasonKey, upsell: 'UP', detail: uploadBudget.detail } }, { status: 403 });
+  }
+
   const variant = (req.headers.get('x-variant') || '').trim() || 'original';
   if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
@@ -953,9 +1046,25 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
 
+  const maxBytes = resolveUploadSizeLimitBytes(tier);
+  const contentLengthRaw = (req.headers.get('content-length') || '').trim();
+  const contentLength = contentLengthRaw ? Number.parseInt(contentLengthRaw, 10) : NaN;
+  if (maxBytes != null && Number.isFinite(contentLength) && contentLength > maxBytes) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
+      { status: 413 },
+    );
+  }
+
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
+  }
+  if (maxBytes != null && body.byteLength > maxBytes) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
+      { status: 413 },
+    );
   }
 
   const assetId = crypto.randomUUID();

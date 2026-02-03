@@ -1,15 +1,53 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { resolvePolicy } from '@clickeen/ck-policy';
+import type { Policy } from '@clickeen/ck-policy';
 import type { Env } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord } from '../../shared/validation';
 import { requireWorkspace } from '../../shared/workspaces';
-import { isFlagEnabled, resolveWebsiteDepthCap } from '../../shared/policy';
+import { consumeBudget, currentUtcBudgetPeriodKey } from '../../shared/budgets';
 import { issueAiGrant } from '../ai';
 
 const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
 const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,40}$/;
+
+function resolveWebsiteDepthCap(policy: Policy): number {
+  const capRaw = policy.caps['personalization.sources.website.depth.max'];
+  if (capRaw == null) return 5;
+  if (typeof capRaw !== 'number' || !Number.isFinite(capRaw)) return 1;
+  return Math.min(Math.max(1, Math.floor(capRaw)), 5);
+}
+
+function headerValue(headers: Headers, name: string, fallback = ''): string {
+  const raw = headers.get(name);
+  return raw && raw.trim() ? raw.trim() : fallback;
+}
+
+function getClientIp(req: Request): string {
+  const cfIp = headerValue(req.headers, 'cf-connecting-ip');
+  if (cfIp) return cfIp;
+  const forwarded = headerValue(req.headers, 'x-forwarded-for');
+  if (!forwarded) return 'local';
+  return forwarded.split(',')[0]?.trim() || 'local';
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return new Uint8Array(sig);
+}
+
+async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
+  return base64UrlEncodeBytes(await hmacSha256(secret, message));
+}
 
 function normalizePreviewOverrideKeys(raw: unknown): string[] {
   if (!Array.isArray(raw)) return PREVIEW_DEFAULT_OVERRIDES.slice();
@@ -96,6 +134,17 @@ export async function handlePersonalizationPreviewCreate(req: Request, env: Env)
   const allowedOverrides = normalizePreviewOverrideKeys((body as any).allowedOverrides);
   const sessionId = asTrimmedString((body as any).sessionId) || crypto.randomUUID();
 
+  const minibobPolicy = resolvePolicy({ profile: 'minibob', role: 'editor' });
+  const maxRuns = minibobPolicy.budgets['budget.personalization.runs']?.max ?? null;
+  const secret = maxRuns != null ? asTrimmedString(env.AI_GRANT_HMAC_SECRET) : null;
+  const previewBudgetFingerprint =
+    maxRuns != null && secret
+      ? await hmacSha256Base64Url(
+          secret,
+          `personalization.preview.v1|${currentUtcBudgetPeriodKey()}|${getClientIp(req)}|${headerValue(req.headers, 'user-agent', 'unknown')}|${headerValue(req.headers, 'accept-language', 'unknown')}`,
+        )
+      : null;
+
   const issued = await issueAiGrant({
     env,
     agentId: 'agent.personalization.preview.v1',
@@ -103,6 +152,19 @@ export async function handlePersonalizationPreviewCreate(req: Request, env: Env)
     trace: { sessionId },
   });
   if (!issued.ok) return issued.response;
+
+  if (maxRuns != null && previewBudgetFingerprint) {
+    const consumed = await consumeBudget({
+      env,
+      scope: { kind: 'anon', fingerprint: previewBudgetFingerprint },
+      budgetKey: 'budget.personalization.runs',
+      max: maxRuns,
+      amount: 1,
+    });
+    if (!consumed.ok) {
+      return json({ error: { kind: 'DENY', reasonKey: consumed.reasonKey, upsell: 'UP', detail: consumed.detail } }, { status: 403 });
+    }
+  }
 
   const dispatch = await dispatchPersonalizationPreviewJob({
     env,
@@ -216,17 +278,15 @@ export async function handlePersonalizationOnboardingCreate(req: Request, env: E
 
   const policy = resolvePolicy({ profile: workspace.tier, role: 'editor' });
   const websiteDepth = resolveWebsiteDepthCap(policy);
-  const allowGbp = isFlagEnabled(policy, 'personalization.sources.gbp.enabled');
-  const allowFacebook = isFlagEnabled(policy, 'personalization.sources.facebook.enabled');
 
   const localeRaw = normalizeLocaleToken((body as any).locale);
   if ((body as any).locale && !localeRaw) {
     return json([{ path: 'locale', message: 'invalid locale' }], { status: 422 });
   }
 
-  const gbpPlaceId = allowGbp ? asTrimmedString((body as any).gbpPlaceId) : '';
-  const facebookPageId = allowFacebook ? asTrimmedString((body as any).facebookPageId) : '';
-  const instagramHandle = allowFacebook ? asTrimmedString((body as any).instagramHandle) : '';
+  const gbpPlaceId = asTrimmedString((body as any).gbpPlaceId) || '';
+  const facebookPageId = asTrimmedString((body as any).facebookPageId) || '';
+  const instagramHandle = asTrimmedString((body as any).instagramHandle) || '';
 
   const sessionId = asTrimmedString((body as any).sessionId) || crypto.randomUUID();
   const issued = await issueAiGrant({
