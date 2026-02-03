@@ -1,9 +1,10 @@
 # PRD 41 — LLM Access Control by Tier
 
-**Status:** `01-Planning`
-**Date:** 2026-02-02
-**Owner:** Product + Engineering
-**Type:** System enhancement (internal cost optimization + minor UX addition)
+**Status:** EXECUTING  
+**Date:** 2026-02-02  
+**Executing:** 2026-02-03  
+**Owner:** Product + Engineering  
+**Type:** System enhancement (internal cost optimization + minor UX addition)  
 **User-facing change:** Settings dropdown for AI provider/model selection (Tier1+ only)
 
 ---
@@ -243,7 +244,7 @@ async function issueAiGrant(req: Request): Promise<AiGrant> {
 
 ### 3.3 Enforcement (San Francisco)
 
-**File:** `san-francisco/src/executor.ts`
+**Files:** `sanfrancisco/src/grants.ts`, `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts`
 
 **Validate grants before execution:**
 ```typescript
@@ -326,15 +327,13 @@ async function executeWithGroq(params: {
 
 **Security note:** San Francisco NEVER trusts client input for provider/model. It only reads from the signed grant issued by Paris.
 
-**SDK dependencies:**
-- OpenAI: `@openai/openai` (already exists)
-- Anthropic: `@anthropic-ai/sdk` (already exists)
-- Amazon Bedrock: `@aws-sdk/client-bedrock-runtime` (already exists)
-- **Groq**: `groq-sdk` (NEW — add to package.json)
+**Provider adapters (Cloudflare Workers):**
+- Existing adapters call provider HTTP APIs via `fetch` in `sanfrancisco/src/providers/*` (no Node SDKs required).
+- New providers (Amazon/Groq) require a new adapter file + env vars (keys), plus wiring in the shared router.
 
 ### 3.4 User interface (Bob)
 
-**File:** `bob/src/components/WorkspaceSettings.tsx` (or similar)
+**File:** `bob/components/CopilotPane.tsx` (or a small dedicated settings component used by the Copilot pane)
 
 **Add AI settings section (Tier1+ only):**
 ```tsx
@@ -525,7 +524,7 @@ Tier3 user ($149.50 budget):
 
 ### 4.2 Dollar budget implementation
 
-**Entitlements matrix addition** (PRD 40):
+**Entitlements matrix addition** (PRD 41):
 ```json
 "budget.copilot.dollars": {
   "kind": "budget",
@@ -864,4 +863,4 @@ function AiBudgetDisplay({ workspace, policy }: Props) {
 
 ---
 
-**Status**: Ready for peer review. This is a low-risk, high-value system enhancement with minimal product surface area.
+**Status**: EXECUTING.
