@@ -1,10 +1,11 @@
 # PRD 38 — Infra: Published Render Snapshot v1
 *(Jackpot-scale embed economics + reliability)*
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Priority:** P0 (economics + reliability at GA traffic)  
 **Owner:** Product Dev Team (Paris/Venice/Tokyo-worker)  
 **Date:** 2026-01-31  
+**Executed:** 2026-02-03  
 
 ## Goal (v1)
 Eliminate per-view dynamic work against **Paris/Michael** for **published widget instances** by serving Venice’s embed endpoints from **immutable artifacts** in Tokyo (R2).

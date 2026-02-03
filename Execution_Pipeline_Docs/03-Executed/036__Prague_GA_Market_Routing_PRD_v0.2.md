@@ -1,7 +1,8 @@
 # PRD 36 — Prague GA Market Routing (Market + Locale URLs) v0.2
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Date:** 2026-02-02  
+**Executed:** 2026-02-03  
 **Owner:** Clickeen Product Dev Team (Prague)  
 **Stakeholders:** Human architect (Pietro), GTM Dev Team (Prague), Product Dev Team (Bob/DevStudio), Platform/Security (Paris/SF), SEO Agent owners  
 **Decision (locked for v0.2):** Option C — `/{market}/{locale}/...`
