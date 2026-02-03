@@ -1,21 +1,26 @@
 {
-  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
-  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
   "ops": [
     {
       "op": "set",
+      "path": "header.title",
+      "value": "Perguntas Frequentes"
+    },
+    {
+      "op": "set",
       "path": "sections.0.title",
-      "value": "Perguntas gerais"
+      "value": "Todas as Perguntas"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "O que é o Clickeen?"
+      "value": "Existe um plano gratuito?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Existe um plano gratuito?"
+      "value": "O que é o Clickeen?"
     },
     {
       "op": "set",
@@ -30,12 +35,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen é algo que vai tornar a Margherita muito, muito rica"
+      "value": "Sim, um widget ativo com recursos principais."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Sim, um widget ativo com recursos principais."
+      "value": "Widgets incorporáveis com conversões integradas."
     },
     {
       "op": "set",
@@ -46,21 +51,6 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "Porque o Clickeen é uma nova plataforma incrível para tornar a web bonita e fácil de usar."
-    },
-    {
-      "op": "set",
-      "path": "cta.label",
-      "value": "Entre em contato"
-    },
-    {
-      "op": "set",
-      "path": "header.subtitleHtml",
-      "value": "Design polido, atualizações sem esforço e fundamentos de SEO—pronto para qualquer idioma."
-    },
-    {
-      "op": "set",
-      "path": "header.title",
-      "value": "Perguntas Frequentes"
     }
   ],
   "v": 1

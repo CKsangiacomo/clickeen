@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Pertanyaan yang Sering Diajukan"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Semua Pertanyaan"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Apakah ada paket gratis?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Apa itu Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Bagaimana cara memasang widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Mengapa saya harus menggunakan Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ya, satu widget aktif dengan fitur inti."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Widget yang bisa disematkan dengan konversi bawaan."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Salin kode sematan dan tempelkan sebelum </body> di situs Anda."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Karena Clickeen adalah platform baru yang luar biasa untuk membuat web menjadi indah dan mudah digunakan."
+    }
+  ],
+  "v": 1
+}

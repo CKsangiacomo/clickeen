@@ -1,21 +1,26 @@
 {
-  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
-  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
   "ops": [
     {
       "op": "set",
+      "path": "header.title",
+      "value": "अक्सर पूछे जाने वाले प्रश्न"
+    },
+    {
+      "op": "set",
       "path": "sections.0.title",
-      "value": "सामान्य प्रश्न"
+      "value": "सभी प्रश्न"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Clickeen क्या है?"
+      "value": "क्या कोई मुफ्त योजना है?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "क्या कोई मुफ़्त योजना है?"
+      "value": "Clickeen क्या है?"
     },
     {
       "op": "set",
@@ -30,12 +35,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen एक ऐसी चीज़ है जो मार्गेरिटा को बहुत अमीर बना देगी"
+      "value": "हां, कोर सुविधाओं के साथ एक सक्रिय विजेट।"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "हाँ, मुख्य सुविधाओं के साथ एक सक्रिय विजेट।"
+      "value": "एम्बेडेबल विजेट्स जिनमें रूपांतरण अंतर्निहित हैं।"
     },
     {
       "op": "set",
@@ -46,21 +51,6 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "क्योंकि Clickeen वेब को सुंदर और उपयोग में आसान बनाने के लिए एक अद्भुत नया प्लेटफॉर्म है।"
-    },
-    {
-      "op": "set",
-      "path": "cta.label",
-      "value": "हमसे संपर्क करें"
-    },
-    {
-      "op": "set",
-      "path": "header.subtitleHtml",
-      "value": "पॉलिश किया हुआ डिज़ाइन, आसान अपडेट, और SEO की बुनियाद—किसी भी भाषा के लिए तैयार।"
-    },
-    {
-      "op": "set",
-      "path": "header.title",
-      "value": "अक्सर पूछे जाने वाले प्रश्न"
     }
   ],
   "v": 1

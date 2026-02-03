@@ -1,21 +1,26 @@
 {
-  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
-  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
   "ops": [
     {
       "op": "set",
+      "path": "header.title",
+      "value": "Questions Fréquemment Posées"
+    },
+    {
+      "op": "set",
       "path": "sections.0.title",
-      "value": "Questions générales"
+      "value": "Toutes les Questions"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Qu'est-ce que Clickeen ?"
+      "value": "Existe-t-il un plan gratuit ?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Y a-t-il un plan gratuit ?"
+      "value": "Qu'est-ce que Clickeen ?"
     },
     {
       "op": "set",
@@ -30,12 +35,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen est quelque chose qui rendra Margherita très très riche"
+      "value": "Oui, un widget actif avec les fonctionnalités de base."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Oui, un widget actif avec les fonctionnalités principales."
+      "value": "Widgets intégrables avec des conversions intégrées."
     },
     {
       "op": "set",
@@ -46,21 +51,6 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "Parce que Clickeen est une nouvelle plateforme incroyable pour rendre le web beau et facile à utiliser."
-    },
-    {
-      "op": "set",
-      "path": "cta.label",
-      "value": "Contactez-nous"
-    },
-    {
-      "op": "set",
-      "path": "header.subtitleHtml",
-      "value": "Design soigné, mises à jour faciles et bases SEO—prêt pour n'importe quelle langue."
-    },
-    {
-      "op": "set",
-      "path": "header.title",
-      "value": "Questions Fréquemment Posées"
     }
   ],
   "v": 1

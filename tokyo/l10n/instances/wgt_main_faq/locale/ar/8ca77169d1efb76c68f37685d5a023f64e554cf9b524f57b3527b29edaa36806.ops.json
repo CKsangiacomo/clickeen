@@ -1,21 +1,26 @@
 {
-  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
-  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
+  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
+  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
   "ops": [
     {
       "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
       "path": "sections.0.title",
-      "value": "أسئلة عامة"
+      "value": "جميع الأسئلة"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "ما هو Clickeen؟"
+      "value": "هل هناك خطة مجانية؟"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "هل هناك خطة مجانية؟"
+      "value": "ما هو Clickeen؟"
     },
     {
       "op": "set",
@@ -30,12 +35,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Clickeen هو شيء سيجعل مارغريتا غنية جدًا جدًا"
+      "value": "نعم، عنصر واجهة مستخدم نشط واحد مع الميزات الأساسية."
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "نعم، عنصر واجهة مستخدم نشط واحد مع ميزات أساسية."
+      "value": "عناصر واجهة المستخدم القابلة للتضمين مع تحويلات مدمجة."
     },
     {
       "op": "set",
@@ -46,21 +51,6 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "لأن Clickeen هو منصة جديدة مذهلة لجعل الويب جميلاً وسهل الاستخدام."
-    },
-    {
-      "op": "set",
-      "path": "cta.label",
-      "value": "اتصل بنا"
-    },
-    {
-      "op": "set",
-      "path": "header.subtitleHtml",
-      "value": "تصميم أنيق، تحديثات سهلة، وأساسيات SEO—جاهز لأي لغة."
-    },
-    {
-      "op": "set",
-      "path": "header.title",
-      "value": "الأسئلة الشائعة"
     }
   ],
   "v": 1

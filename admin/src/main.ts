@@ -1,5 +1,7 @@
 import '@dieter/tokens/tokens.css';
 import '@dieter/components/popover/popover.css';
+import '@dieter/components/valuefield/valuefield.css';
+import '@dieter/components/toggle/toggle.css';
 import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { generateBobNativeCatalog } from './BobNativeCatalog';
 import { getIcon } from './data/icons';
