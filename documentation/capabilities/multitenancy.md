@@ -267,14 +267,14 @@ While we are building (before full auth/billing enforcement ships), we still nee
 - **Output**: a single `policy` object (flags + caps + budgets) used by Bob for gating and ops validation.
 
 **Budgets (MiniBob + Free conversion gates):**
-- Budgets are per-session counters for actions we want to keep bounded in demo/free usage (example: uploads, Copilot turns).
-- When a budget is exhausted, Bob blocks the action and shows a conversion gate (e.g. “Create a free account to continue”).
-- Budgets are defined by the subject policy (e.g. `minibob` vs `devstudio`), not by individual widgets.
+- Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
+- Budgets are **metered and enforced server-side** at the point where cost is incurred (Paris/Tokyo-worker/Venice); Bob uses the resolved policy for UX gating + upsell messaging.
+- Budgets are defined by the subject policy (e.g. `minibob` vs `devstudio`) and workspace tier, not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
 - Tier values live only in the global matrix: `config/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/widgets/{widget}/limits.json` (flags/caps). Budgets are global, per-session.
+- Widget enforcement lives in `tokyo/widgets/{widget}/limits.json` (flags/caps). Budgets are global and metered server-side.
 - Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**
@@ -294,10 +294,10 @@ While we are building (before full auth/billing enforcement ships), we still nee
   - Bootstrap message: `postMessage { type:'devstudio:load-instance', subjectMode:'minibob'|'devstudio', ... }`
 
 **What Bob enforces today (example):**
-- `seoGeo.enabled` is sanitized to `false` on load and rejected on ops/publish when the policy flag is off.
 - `branding.remove` maps to `behavior.showBacklink` and is sanitized on load when blocked.
-- `context.websiteUrl.enabled` is a workspace-level flag; when website URL is surfaced, enforcement happens at the usage boundary (not by hiding UI).
-- Enforcement is centralized via `limits.json` + policy, so we do not scatter `if (minibob)` checks.
+- `minibob` cannot create/publish instances (action gates).
+- Uploads are bounded by caps/budgets (`uploads.size.max`, `budget.uploads.count`) and enforced server-side.
+- Enforcement is centralized via `limits.json` + policy + server metering, so we do not scatter `if (minibob)` checks.
 
 **Why this scales:**
 - New surfaces add a new `subjectMode` without changing widget code.

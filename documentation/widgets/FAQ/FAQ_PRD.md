@@ -44,13 +44,10 @@ Entitlements mapping (must match `tokyo/widgets/faq/limits.json`):
 ```text
 Key                      | Kind | Path(s)                    | Metric/Mode            | Enforcement        | Notes
 ------------------------ | ---- | -------------------------- | ---------------------- | ------------------ | ----------------------------
-seoGeo.enabled           | flag | seoGeo.enabled             | boolean (deny true)    | load+ops+publish   | sanitize to false on load
 branding.remove          | flag | behavior.showBacklink      | boolean (deny false)   | load+ops+publish   | sanitize to true on load
-list.primary.max         | cap  | sections[]                 | count                  | ops+publish        | section count cap
-list.secondary.rich.max  | cap  | sections[].faqs[]          | count                  | ops+publish        | per-section Q/A count cap
-list.secondary.rich.total.max | cap | sections[].faqs[]       | count-total            | ops+publish        | total Q/A count cap
-text.question.max        | cap  | sections[].faqs[].question | chars                  | ops+publish        | question length cap
-text.answer.max          | cap  | sections[].faqs[].answer   | chars                  | ops+publish        | answer length cap
+cap.group.items.small.max  | cap  | sections[]                 | count                  | ops+publish        | section count cap (cap group)
+cap.group.items.medium.max | cap  | sections[].faqs[]          | count                  | ops+publish        | per-section Q/A count cap (cap group)
+cap.group.items.large.max  | cap  | sections[].faqs[]          | count-total            | ops+publish        | total Q/A count cap (cap group)
 ```
 
 ## 1) Where the widget lives

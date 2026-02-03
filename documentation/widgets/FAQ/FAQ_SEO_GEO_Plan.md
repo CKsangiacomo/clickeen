@@ -45,7 +45,8 @@ These are instance-owned settings (edited in Bob):
 - `geo.enableDeepLinks` (enables `#` deep links for FAQ questions in accordion mode)
 
 Entitlements:
-- Enforcement is defined in `tokyo/widgets/faq/limits.json` (Paris sanitizes/rejects based on tier).
+- `seoGeo.enabled` is an instance-owned setting (not tier-gated).
+- Tiered enforcement for FAQ is handled via `tokyo/widgets/faq/limits.json` (branding + cap groups).
 
 ### Schema (`schemaJsonLd`)
 - Type: `FAQPage` JSON‑LD string (may be empty)

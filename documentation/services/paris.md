@@ -106,10 +106,16 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
 
 **Validation contract (fail-fast):** before writing curated instances, Paris validates `widget_type` against the Tokyo widget registry (or cached manifest) and rejects unknown types.
 
-### Entitlements + limits (v1)
-- Paris computes entitlements from `config/entitlements.matrix.json` using `subject` + `workspaces.tier`.
-- On create/publish, Paris loads `tokyo/widgets/{widget}/limits.json` and rejects configs that violate caps/flags.
-- Budgets are per-session and enforced in Bob; Paris only enforces caps/flags at the product boundary.
+### Entitlements + limits (usage-first; executed)
+- Paris computes policy from `config/entitlements.matrix.json` using `subject` + `workspaces.tier`.
+- On create/publish (and any config write), Paris loads `tokyo/widgets/{widget}/limits.json` and evaluates it via `@clickeen/ck-policy` to sanitize/reject violations deterministically.
+- **Budgets are metered server-side** at the cost boundary (not “trust the browser”):
+  - **AI**: Paris consumes budgets when issuing grants (ex: `budget.copilot.turns`, personalization budgets for onboarding agents).
+  - **Localization**: Paris consumes `budget.l10n.publishes` on overlay publish actions.
+  - **Snapshots**: Paris consumes `budget.snapshots.regens` when triggering published render snapshot regeneration.
+  - **Uploads**: Tokyo-worker enforces `uploads.size.max` and consumes `budget.uploads.count` on `/workspace-assets/upload`.
+  - **Views**: Venice `/embed/pixel` signs and forwards view events to Paris `POST /api/usage` (capped tiers only) → Frozen Billboard enforcement.
+- Flags are intentionally minimal (currently only `branding.remove` is tiered).
 
 ### Localization (l10n) (Layered, canonical)
 - Workspace locale selection lives in `workspaces.l10n_locales`.

@@ -27,15 +27,16 @@ Curated instances always localize to all supported locales. User instances local
 Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace locale selection**.
 
 - Entitlement keys:
-  - `l10n.enabled` (flag)
-  - `l10n.locales.max` (cap)
-  - `l10n.versions.max` (cap)
-- Tier rules (V0):
-  - Minibob / Free / Tier 1: ❌ no localization
-  - Tier 2: ✅ up to 3 locales
-  - Tier 3: ✅ unlimited locales
-  - DevStudio: ✅ uncapped
-- Workspace selection source: `workspaces.l10n_locales` (JSON array)
+  - `l10n.locales.max` (cap; total locales including EN)
+  - `l10n.locales.custom.max` (cap; how many non‑EN locales the user can choose)
+  - `l10n.versions.max` (cap; retained overlay versions)
+- Tier rules (v1; executed):
+  - Minibob: EN only (0 additional locales)
+  - Free: EN + 1 system-chosen locale (no picker)
+  - Tier1: EN + 3 user-selected locales (total = 4)
+  - Tier2+: unlimited locales
+  - DevStudio: uncapped
+- Workspace selection source: `workspaces.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 
 ## Localization systems (runtime)
 

@@ -20,10 +20,9 @@ OUTPUT
 ```text
 Key                      | Kind  | Path(s)                    | Metric/Mode      | Enforcement       | Notes
 ------------------------ | ----- | -------------------------- | ---------------- | ----------------- | ----------------
-seoGeo.enabled           | flag  | seoGeo.enabled             | boolean (deny T) | load+ops+publish  | sanitize on load
-list.primary.max         | cap   | sections[]                 | count            | ops+publish       | -
-text.question.max        | cap   | sections[].faqs[].question | chars            | ops+publish       | -
-budget.copilot.turns     | budget| (copilot send)             | per prompt       | session           | global budget
+branding.remove          | flag  | behavior.showBacklink      | boolean (deny F) | load+ops+publish  | sanitize on load
+cap.group.items.small.max  | cap | items[] / sections[]       | count            | ops+publish       | cap group binding
+cap.group.items.large.max  | cap | items[]                    | count-total      | ops+publish       | cap group binding
 ```
 
 GATE

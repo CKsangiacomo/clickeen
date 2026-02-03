@@ -45,16 +45,12 @@ Notes:
 ```text
 key                  | kind | path(s)                           | metric/mode          | enforce                    | notes
 -------------------- | ---- | --------------------------------- | -------------------- | -------------------------- | ------------------------------
-seoGeo.enabled       | flag | seoGeo.enabled (TBD)              | boolean (deny true)  | load sanitize; ops+publish | SEO/GEO toggle
 branding.remove      | flag | behavior.showBacklink (TBD)       | boolean (deny false) | load sanitize; ops+publish | Remove branding
-links.enabled        | flag | posts[].linkUrl (TBD)             | nonempty-string      | ops+publish                | Post links require link access
-media.meta.enabled   | flag | posts[].alt/posts[].title (TBD)   | nonempty-string      | ops+publish                | Meta requires meta access
 ```
 
-Budgets are global, per-session counters (no per-widget matrices):
+Budgets are global usage counters (no per-widget matrices):
 - `budget.copilot.turns` (Copilot send)
-- `budget.edits` (any successful edit)
-- `budget.uploads` (file inputs; InstagramFeed may add uploads later)
+- `budget.uploads.count` (file uploads; if/when this widget adds uploads)
 
 If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `config/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
 

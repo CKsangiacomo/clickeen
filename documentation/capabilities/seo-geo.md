@@ -139,18 +139,13 @@ Source-of-truth implementation:
 
 ---
 
-## Entitlements & enforcement (platform rule)
+## Entitlements (updated)
 
-`seoGeo.enabled` is a Tier-gated capability enforced server-side.
+`seoGeo.enabled` is **not tier-gated**. It is a per-instance setting:
+- The host opt-in (`data-ck-optimization="seo-geo"`) controls whether the loader injects host-page metadata.
+- The instance opt-in (`state.seoGeo.enabled === true`) controls whether Venice emits `schemaJsonLd`/`excerptHtml`.
 
-Rules:
-- When not entitled, loads sanitize `seoGeo.enabled` to `false`.
-- Ops/publish must reject attempts to set/publish `seoGeo.enabled === true` when policy disallows it.
-
-Source-of-truth:
-- Entitlement matrix: `config/entitlements.matrix.json`
-- Widget limits: `tokyo/widgets/{widgetType}/limits.json`
-- Enforcement: Paris (load + ops + publish)
+All tiers can toggle SEO/GEO optimization; there is no `seoGeo.enabled` key in `config/entitlements.matrix.json` and no Paris tier enforcement for this setting.
 
 ---
 

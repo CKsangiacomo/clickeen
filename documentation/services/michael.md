@@ -77,7 +77,7 @@ Core columns:
 - `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
 - `name` (text)
 - `slug` (text) — URL-safe workspace slug
-- `website_url` (text, nullable) — workspace setting used by Copilot; gated by `context.websiteUrl.enabled` where it is surfaced/consumed
+- `website_url` (text, nullable) — workspace setting used by Copilot/personalization context (action-gated; not tier-flagged)
 - `l10n_locales` (jsonb, nullable) — workspace-selected locales for auto-translate
 
 ### `workspace_members`

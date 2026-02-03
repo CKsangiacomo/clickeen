@@ -161,18 +161,14 @@ This section lists **only controls that apply to every Type**. Type-specific con
       - Editor-time value is an in-memory CSS fill string (e.g. `url("data:image/png;base64,...") center center / cover no-repeat`)
     - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
-- `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s) (**editable via Logo details popup when `links.enabled` is true**)
-- `strips[i].logos[j].targetBlank=true` → set `target="_blank"` (**editable via Logo details popup when `links.enabled` is true**)
-- `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`) (**editable via Logo details popup when `links.enabled` is true**)
-- `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image) (**editable when `media.meta.enabled` is true**)
-- `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface (**editable when `media.meta.enabled` is true**)
+- `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
+- `strips[i].logos[j].targetBlank=true` → set `target="_blank"`
+- `strips[i].logos[j].nofollow=true` → set `rel="nofollow noopener noreferrer"` (else `rel="noopener noreferrer"`)
+- `strips[i].logos[j].alt` → set `alt` on the rendered `<img>` (or `aria-label` on the clickable logo surface if using background-image)
+- `strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface
     - `strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
-**Policy enforcement rule (required; no subject checks in runtime):**
-- If `links.enabled` is blocked for the session:
-  - Bob must force-clear `href/targetBlank/nofollow` on load, and reject any ops that set them.
-- If `media.meta.enabled` is blocked for the session:
-  - Bob must force-clear `alt/title` on load, and reject any ops that set them.
+Note: Links + media metadata are baseline product behavior (not tier-gated). Invalid URLs should render as non-clickable logos.
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
@@ -287,33 +283,28 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
 
 - Entry point: a single button near the strips/logos editor: **“Logo details…”**
   - Always visible.
-  - Gated on interaction via the Upsell popup:
-    - If `links.enabled` and `media.meta.enabled` are both blocked: clicking opens Upsell and does nothing else.
-    - Otherwise: open modal.
+  - Opens the modal (no entitlement gating).
 - Modal content: a table with **one row per logo**, including:
   - **Logo**: thumbnail + `name`
   - **URL**: `href` textfield
   - **Open in new tab**: checkbox → `targetBlank`
   - **Nofollow**: checkbox → `nofollow`
   - **Caption**: `caption` textfield
-- Policy-gated columns inside the same modal:
-  - **links.enabled**: URL + targetBlank + nofollow
-  - **media.meta.enabled**: Alt (`alt`) + Title (`title`)
-  - Caption/name remain available in all profiles
+- Alt/title fields are optional but always allowed (no tier gating).
 - Save behavior: the modal writes standard ops (`set`) to the underlying paths above; there is no special persistence logic.
 
 **Implementation note (scales across many widgets):**
 - This modal should be implemented as a reusable Bob primitive (generic “bulk edit table” for an array-of-items), configured by:
   - row source: flattened `strips[].logos[]`
-  - columns: a list of `{ label, path, controlType }`, with per-column gating driven by policy flags (`links.enabled`, `media.meta.enabled`)
+  - columns: a list of `{ label, path, controlType }`
   - save: emits standard ops (`set`) only
 
 #### AI behavior (Copilot, uses `websiteUrl`)
 `websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config.
 
-If `websiteUrl` is present and policy allows it, Copilot may:
+If `websiteUrl` is present, Copilot may:
 - Propose or rewrite LogoShowcase copy (header/CTA) based on the website URL.
-- When `media.meta.enabled` is true (same tiers as SEO/GEO in v1), propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
+- Propose `alt`/`title` values for logos using the website URL context plus the logos (name/caption and/or the selected image).
 
 ### Type = `grid`
 #### Content panel (below Type picker)

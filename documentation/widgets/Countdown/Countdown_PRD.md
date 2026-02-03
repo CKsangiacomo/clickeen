@@ -22,17 +22,14 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ```text
 key                 | kind | path(s)                        | metric/mode        | enforce                    | notes
 ------------------- | ---- | ------------------------------ | ------------------ | -------------------------- | -----------------------------
-seoGeo.enabled      | flag | seoGeo.enabled                 | boolean (deny true)| load sanitize; ops+publish | SEO/GEO toggle
 branding.remove     | flag | behavior.showBacklink          | boolean (deny false)| load sanitize; ops+publish | Remove branding
-links.enabled       | flag | actions.*.url (TBD)            | nonempty-string    | ops+publish                | CTA links require link access
 ```
 
-Budgets are global, per-session counters (no per-widget matrices):
+Budgets are global usage counters (no per-widget matrices):
 - `budget.copilot.turns` (Copilot send)
-- `budget.edits` (any successful edit)
-- `budget.uploads` (file inputs; not used by Countdown unless uploads are added)
+- `budget.uploads.count` (file uploads; enforced at upload boundary)
 
-If Countdown needs tier-gated modes (date/personal/number), add a new global flag key in `config/entitlements.matrix.json` and map it in `limits.json` (no per-widget tier tables).
+If Countdown needs tier packaging beyond usage/caps, prefer caps/budgets first; only introduce new flags when the capability is truly binary and user-visible.
 
 ## 1) Where the widget lives (authoritative)
 Widget definition (the software): `tokyo/widgets/countdown/`
@@ -64,7 +61,7 @@ Top-level groups:
 - `appearance.*` — paint (fills, borders, colors)
 - `behavior.*` — backlink + small toggles
 - `actions.*` — "during" CTA + "after end" behavior
-- `seoGeo.*` — embed optimization toggle (policy-gated)
+- `seoGeo.*` — embed optimization toggle (instance setting; not tier-gated)
 - `typography.*` — roles (compiler-injected)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
 
@@ -139,7 +136,7 @@ Panels:
 - **Typography**: injected (roles: `heading`, `timer`, `label`, `button`)
 - **Behavior**: `behavior.showBacklink` + small toggles
 - **Actions**: `actions.*` (CTA during + after-end behavior)
-- **Settings**: workspace website URL setting (policy-gated; not widget instance state)
+- **Settings**: workspace website URL setting (action-gated; not widget instance state)
 - **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
 
 ToolDrawer spacing rule (authoring):
