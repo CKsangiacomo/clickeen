@@ -1,26 +1,21 @@
 {
-  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
-  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
+  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
   "ops": [
     {
       "op": "set",
-      "path": "header.title",
-      "value": "자주 묻는 질문"
-    },
-    {
-      "op": "set",
       "path": "sections.0.title",
-      "value": "모든 질문"
+      "value": "일반 질문"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "무료 플랜이 있나요?"
+      "value": "Clickeen이란 무엇인가요?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Clickeen이 무엇인가요?"
+      "value": "무료 플랜이 있나요?"
     },
     {
       "op": "set",
@@ -35,12 +30,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "네, 핵심 기능을 갖춘 하나의 활성 위젯이 무료로 제공됩니다."
+      "value": "Clickeen은 Margherita를 매우 매우 부유하게 만들어 줄 것입니다"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "전환 기능이 내장된 임베디드 위젯입니다."
+      "value": "네, 핵심 기능을 갖춘 하나의 활성 위젯을 무료로 이용할 수 있습니다."
     },
     {
       "op": "set",
@@ -51,6 +46,21 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "Clickeen은 웹을 아름답고 사용하기 쉽게 만드는 놀라운 새로운 플랫폼이기 때문입니다."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "문의하기"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "정교한 디자인, 손쉬운 업데이트, SEO 기반—어떤 언어든 준비 완료."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "자주 묻는 질문"
     }
   ],
   "v": 1

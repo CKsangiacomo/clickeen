@@ -106,6 +106,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     defaultProvider: 'deepseek',
     executionSurface: 'execute',
     allowProviderChoice: true,
+    requiredEntitlements: ['budget.copilot.turns'],
     budgetsByProfile: CS_BUDGETS,
   },
   {
@@ -200,7 +201,7 @@ const PROFILE_BY_POLICY: Record<PolicyProfile, AiProfile> = {
   minibob: 'free_low',
   free: 'free_low',
   tier1: 'paid_standard',
-  tier2: 'paid_standard',
+  tier2: 'paid_premium',
   tier3: 'paid_premium',
 };
 

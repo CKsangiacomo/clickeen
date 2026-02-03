@@ -1,0 +1,12 @@
+{
+  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
+  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen — це те, що зробить Маргариту дуже-дуже багатою"
+    }
+  ],
+  "v": 1
+}

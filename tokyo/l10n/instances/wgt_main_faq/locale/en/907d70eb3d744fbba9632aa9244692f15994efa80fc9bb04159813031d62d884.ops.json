@@ -1,26 +1,21 @@
 {
-  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
-  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
+  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
   "ops": [
     {
       "op": "set",
-      "path": "header.title",
-      "value": "Frequently Asked Questions"
-    },
-    {
-      "op": "set",
       "path": "sections.0.title",
-      "value": "All Questions"
+      "value": "General questions"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Is there a free plan?"
+      "value": "What is Clickeen?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "What is Clickeen?"
+      "value": "Is there a free plan?"
     },
     {
       "op": "set",
@@ -35,12 +30,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Yes, one active widget with core features."
+      "value": "Clickeen is something that will make Margherita very very rich"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Embeddable widgets with conversions built in."
+      "value": "Yes, one active widget with core features."
     },
     {
       "op": "set",
@@ -51,6 +46,21 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contact us"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Polished design, effortless updates, and SEO foundations—ready for any language."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Frequently Asked Questions"
     }
   ],
   "v": 1

@@ -1,26 +1,21 @@
 {
-  "baseFingerprint": "8ca77169d1efb76c68f37685d5a023f64e554cf9b524f57b3527b29edaa36806",
-  "baseUpdatedAt": "2026-01-14T17:06:24.399296+00:00",
+  "baseFingerprint": "907d70eb3d744fbba9632aa9244692f15994efa80fc9bb04159813031d62d884",
+  "baseUpdatedAt": "2026-02-02T19:19:14.178626+00:00",
   "ops": [
     {
       "op": "set",
-      "path": "header.title",
-      "value": "Sıkça Sorulan Sorular"
-    },
-    {
-      "op": "set",
       "path": "sections.0.title",
-      "value": "Tüm Sorular"
+      "value": "Genel sorular"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.0.question",
-      "value": "Ücretsiz bir plan var mı?"
+      "value": "Clickeen nedir?"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.question",
-      "value": "Clickeen nedir?"
+      "value": "Ücretsiz bir plan var mı?"
     },
     {
       "op": "set",
@@ -35,12 +30,12 @@
     {
       "op": "set",
       "path": "sections.0.faqs.0.answer",
-      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
+      "value": "Clickeen, Margherita'yı çok ama çok zengin edecek bir şeydir"
     },
     {
       "op": "set",
       "path": "sections.0.faqs.1.answer",
-      "value": "Yerleşik dönüşümlerle gömülebilir widget'lar."
+      "value": "Evet, temel özelliklerle birlikte bir aktif widget."
     },
     {
       "op": "set",
@@ -51,6 +46,21 @@
       "op": "set",
       "path": "sections.0.faqs.3.answer",
       "value": "Çünkü Clickeen, web'i güzel ve kullanımı kolay hale getirmek için harika bir yeni platformdur."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Bize Ulaşın"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Zarif tasarım, zahmetsiz güncellemeler ve SEO temelleri—herhangi bir dil için hazır."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Sıkça Sorulan Sorular"
     }
   ],
   "v": 1

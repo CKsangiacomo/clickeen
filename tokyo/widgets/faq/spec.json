@@ -2,14 +2,30 @@
   "widgetname": "faq",
   "itemKey": "faq.item",
   "defaults": {
-    "geo": {
-      "enableDeepLinks": true
+    "cta": {
+      "href": "https://example.com",
+      "label": "Contact us",
+      "enabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconEnabled": true,
+      "iconPlacement": "right"
     },
-    "context": {
-      "websiteUrl": ""
+    "geo": {
+      "answerFormat": "direct-first",
+      "enableDeepLinks": true
     },
     "pod": {
       "radius": "4xl",
+      "shadow": {
+        "x": 0,
+        "y": 8,
+        "blur": 24,
+        "alpha": 18,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
       "padding": {
         "mobile": {
           "all": 28,
@@ -37,20 +53,11 @@
         "type": "color",
         "color": "var(--color-system-white)"
       },
-      "shadow": {
-        "x": 0,
-        "y": 8,
-        "blur": 24,
-        "alpha": 18,
-        "color": "#000000",
-        "inset": false,
-        "spread": 0,
-        "enabled": false
-      },
       "contentWidth": 960,
       "radiusLinked": true
     },
     "seo": {
+      "businessType": "online-service",
       "canonicalUrl": "",
       "enableSchema": true
     },
@@ -84,34 +91,27 @@
         "color": "#d1d1d6"
       }
     },
+    "title": "Frequently Asked Questions",
     "header": {
-      "enabled": true,
+      "gap": 28,
       "title": "Frequently Asked Questions",
-      "showSubtitle": false,
-      "subtitleHtml": "Polished design, effortless updates, and SEO foundations—ready for any language.",
+      "enabled": true,
+      "textGap": 4,
+      "innerGap": 16,
       "alignment": "left",
       "placement": "top",
       "ctaPlacement": "right",
-      "gap": 16,
-      "innerGap": 12,
-      "textGap": 8
-    },
-    "cta": {
-      "enabled": false,
-      "label": "Contact us",
-      "href": "https://example.com",
-      "iconEnabled": false,
-      "iconName": "arrow.right",
-      "iconPlacement": "right"
+      "showSubtitle": true,
+      "subtitleHtml": "Polished design, effortless updates, and SEO foundations—ready for any language."
     },
     "layout": {
       "gap": 16,
-      "type": "accordion",
-      "cardsLayout": "grid",
+      "type": "list",
       "columns": {
         "mobile": 1,
         "desktop": 2
       },
+      "cardsLayout": "grid",
       "itemPadding": 20,
       "itemPaddingTop": 20,
       "itemPaddingLeft": 20,
@@ -122,11 +122,16 @@
     "seoGeo": {
       "enabled": false
     },
+    "context": {
+      "websiteUrl": ""
+    },
     "behavior": {
       "expandAll": false,
       "multiOpen": false,
-      "expandFirst": false,
-      "showBacklink": true
+      "expandFirst": true,
+      "showBacklink": true,
+      "displayImages": true,
+      "displayVideos": true
     },
     "sections": [
       {
@@ -134,7 +139,7 @@
         "faqs": [
           {
             "id": "q1",
-            "answer": "Embeddable widgets with conversions built in. And it's awesome. And amazing/ And it always works.<br>",
+            "answer": "Clickeen is something that will make Margherita very very rich",
             "question": "What is Clickeen?",
             "defaultOpen": false
           },
@@ -157,11 +162,49 @@
             "defaultOpen": false
           }
         ],
-        "title": "All Questions"
+        "title": "General questions"
       }
     ],
+    "showTitle": true,
     "appearance": {
       "theme": "custom",
+      "itemCard": {
+        "border": {
+          "color": "#efeff2",
+          "width": 1,
+          "enabled": true
+        },
+        "radius": "2xl",
+        "shadow": {
+          "x": 7,
+          "y": 7,
+          "blur": 16,
+          "alpha": 13,
+          "color": "#007aff",
+          "inset": false,
+          "spread": 0,
+          "enabled": true
+        },
+        "radiusBL": "2xl",
+        "radiusBR": "2xl",
+        "radiusTL": "2xl",
+        "radiusTR": "2xl",
+        "radiusLinked": true
+      },
+      "ctaBorder": {
+        "color": "var(--color-system-blue)",
+        "width": 1,
+        "enabled": false
+      },
+      "ctaRadius": "md",
+      "iconColor": "var(--typo-question-color)",
+      "iconStyle": "plus",
+      "linkStyle": "underline",
+      "podBorder": {
+        "color": "var(--color-system-gray-5)",
+        "width": 1,
+        "enabled": false
+      },
       "cardwrapper": {
         "border": {
           "color": "#efeff2",
@@ -185,76 +228,52 @@
         "radiusTR": "2xl",
         "radiusLinked": true
       },
-      "iconStyle": "plus",
-      "iconColor": "var(--typo-question-color)",
-      "linkStyle": "underline",
+      "ctaIconSize": 16,
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaSizePreset": "m",
       "linkTextColor": "var(--color-system-blue)",
       "itemBackground": {
         "type": "color",
         "color": "var(--color-system-white)"
       },
-      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkUnderlineColor": "var(--color-system-blue)",
-      "ctaBackground": "var(--color-system-blue)",
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "var(--color-system-blue)"
-      },
-      "ctaRadius": "md",
-      "ctaSizePreset": "m",
-      "ctaPaddingLinked": false,
-      "ctaPaddingInline": 16,
       "ctaPaddingBlock": 12,
+      "ctaPaddingInline": 16,
+      "ctaPaddingLinked": false,
       "ctaIconSizePreset": "m",
-      "ctaIconSize": 16,
-      "podBorder": {
-        "color": "var(--color-system-gray-5)",
-        "width": 1,
-        "enabled": false
-      }
+      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+      "linkUnderlineColor": "var(--color-system-blue)"
     },
     "typography": {
       "roles": {
-        "title": {
-          "color": "var(--color-system-black)",
-          "family": "Inter",
-          "weight": "600",
-          "fontStyle": "normal",
-          "sizeCustom": 24,
-          "sizePreset": "m"
-        },
         "body": {
           "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": 14,
-          "sizePreset": "m"
+          "sizePreset": "l"
+        },
+        "title": {
+          "color": {
+            "type": "color",
+            "color": "#545456"
+          },
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "24px",
+          "sizePreset": "l"
         },
         "answer": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+          "color": {
+            "type": "color",
+            "color": "#585858"
+          },
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": 15,
-          "sizePreset": "m"
-        },
-        "section": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
-          "family": "Inter",
-          "weight": "600",
-          "fontStyle": "normal",
-          "sizeCustom": 14,
-          "sizePreset": "m"
-        },
-        "question": {
-          "color": "var(--color-system-black)",
-          "family": "Inter",
-          "weight": "600",
-          "fontStyle": "normal",
-          "sizeCustom": 16,
+          "sizeCustom": "15px",
           "sizePreset": "m"
         },
         "button": {
@@ -264,16 +283,31 @@
           "fontStyle": "normal",
           "sizeCustom": 14,
           "sizePreset": "m"
+        },
+        "section": {
+          "color": {
+            "type": "color",
+            "color": "#757575"
+          },
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": "14px",
+          "sizePreset": "s"
+        },
+        "question": {
+          "color": {
+            "type": "color",
+            "color": "#212121"
+          },
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": "16px",
+          "sizePreset": "m"
         }
       },
       "roleScales": {
-        "title": {
-          "l": "28px",
-          "m": "24px",
-          "s": "20px",
-          "xl": "32px",
-          "xs": "18px"
-        },
         "body": {
           "l": "16px",
           "m": "14px",
@@ -281,12 +315,26 @@
           "xl": "18px",
           "xs": "12px"
         },
+        "title": {
+          "l": "28px",
+          "m": "24px",
+          "s": "20px",
+          "xl": "32px",
+          "xs": "18px"
+        },
         "answer": {
           "l": "17px",
           "m": "15px",
           "s": "14px",
           "xl": "19px",
           "xs": "13px"
+        },
+        "button": {
+          "l": "15px",
+          "m": "14px",
+          "s": "13px",
+          "xl": "16px",
+          "xs": "12px"
         },
         "section": {
           "l": "16px",
@@ -301,18 +349,11 @@
           "s": "15px",
           "xl": "20px",
           "xs": "14px"
-        },
-        "button": {
-          "l": "15px",
-          "m": "14px",
-          "s": "13px",
-          "xl": "16px",
-          "xs": "12px"
         }
       },
       "globalFamily": "Inter"
     },
-    "displayCategoryTitles": false
+    "displayCategoryTitles": true
   },
   "html": [
     "<bob-panel id='content'>",
