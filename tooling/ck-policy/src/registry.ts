@@ -4,82 +4,52 @@ const matrix = getEntitlementsMatrix();
 
 // Keep in sync with config/entitlements.matrix.json (registry is the typed source of truth).
 export const CAPABILITY_KEYS = [
-  'seoGeo.enabled',
-  'l10n.enabled',
-  'l10n.layer.geo.enabled',
-  'l10n.layer.industry.enabled',
-  'l10n.layer.experiment.enabled',
-  'l10n.layer.account.enabled',
-  'l10n.layer.behavior.enabled',
-  'l10n.layer.user.enabled',
   'l10n.locales.max',
+  'l10n.locales.custom.max',
   'l10n.versions.max',
-  'personalization.preview.enabled',
-  'personalization.onboarding.enabled',
-  'personalization.sources.website.depth',
-  'personalization.sources.gbp.enabled',
-  'personalization.sources.facebook.enabled',
+  'personalization.sources.website.depth.max',
   'branding.remove',
-  'context.websiteUrl.enabled',
-  'links.enabled',
-  'media.meta.enabled',
-  'list.primary.max',
-  'list.secondary.rich.max',
-  'list.secondary.rich.total.max',
-  'list.secondary.dense.max',
-  'text.question.max',
-  'text.answer.max',
-  'text.caption.max',
-  'text.headerHtml.max',
   'budget.copilot.turns',
-  'budget.edits',
-  'budget.uploads',
+  'budget.uploads.count',
+  'budget.personalization.runs',
+  'budget.personalization.website.crawls',
+  'budget.snapshots.regens',
+  'budget.l10n.publishes',
   'views.monthly.max',
   'instances.published.max',
+  'uploads.size.max',
+  'cap.group.items.small.max',
+  'cap.group.items.medium.max',
+  'cap.group.items.large.max',
 ] as const;
 export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 
 export const FLAG_KEYS = [
-  'seoGeo.enabled',
-  'l10n.enabled',
-  'l10n.layer.geo.enabled',
-  'l10n.layer.industry.enabled',
-  'l10n.layer.experiment.enabled',
-  'l10n.layer.account.enabled',
-  'l10n.layer.behavior.enabled',
-  'l10n.layer.user.enabled',
-  'personalization.preview.enabled',
-  'personalization.onboarding.enabled',
-  'personalization.sources.gbp.enabled',
-  'personalization.sources.facebook.enabled',
   'branding.remove',
-  'context.websiteUrl.enabled',
-  'links.enabled',
-  'media.meta.enabled',
 ] as const satisfies readonly CapabilityKey[];
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
 export const CAP_KEYS = [
   'l10n.locales.max',
+  'l10n.locales.custom.max',
   'l10n.versions.max',
-  'personalization.sources.website.depth',
-  'list.primary.max',
-  'list.secondary.rich.max',
-  'list.secondary.rich.total.max',
-  'list.secondary.dense.max',
-  'text.question.max',
-  'text.answer.max',
-  'text.caption.max',
-  'text.headerHtml.max',
+  'personalization.sources.website.depth.max',
   'views.monthly.max',
   'instances.published.max',
+  'uploads.size.max',
+  'cap.group.items.small.max',
+  'cap.group.items.medium.max',
+  'cap.group.items.large.max',
 ] as const satisfies readonly CapabilityKey[];
 export type CapKey = (typeof CAP_KEYS)[number];
 
 export const BUDGET_KEYS = [
   'budget.copilot.turns',
-  'budget.edits',
-  'budget.uploads',
+  'budget.uploads.count',
+  'budget.personalization.runs',
+  'budget.personalization.website.crawls',
+  'budget.snapshots.regens',
+  'budget.l10n.publishes',
 ] as const satisfies readonly CapabilityKey[];
 export type BudgetKey = (typeof BUDGET_KEYS)[number];
 
@@ -91,125 +61,49 @@ export type CapabilityMeta = {
 };
 
 export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
-  'seoGeo.enabled': {
-    label: 'SEO/GEO optimization',
-    description: 'Allow indexable embed output (schema + excerpt).',
-  },
-  'l10n.enabled': {
-    label: 'Localization enabled',
-    description: 'Enable localization overlays for instances.',
-  },
-  'l10n.layer.geo.enabled': {
-    label: 'Geo overlays',
-    description: 'Allow geo layer overlays.',
-  },
-  'l10n.layer.industry.enabled': {
-    label: 'Industry overlays',
-    description: 'Allow industry layer overlays.',
-  },
-  'l10n.layer.experiment.enabled': {
-    label: 'Experiment overlays',
-    description: 'Allow experiment layer overlays.',
-  },
-  'l10n.layer.account.enabled': {
-    label: 'Account overlays',
-    description: 'Allow account layer overlays.',
-  },
-  'l10n.layer.behavior.enabled': {
-    label: 'Behavior overlays',
-    description: 'Allow behavior layer overlays.',
-  },
-  'l10n.layer.user.enabled': {
-    label: 'User overlays',
-    description: 'Allow user layer overlays.',
-  },
   'l10n.locales.max': {
     label: 'Max locales',
-    description: 'Maximum locale overlays per instance.',
+    description: 'Maximum locale overlays per widget (total, including EN).',
+  },
+  'l10n.locales.custom.max': {
+    label: 'Max custom locales',
+    description: 'Maximum user-selectable locales per widget (excluding EN).',
   },
   'l10n.versions.max': {
     label: 'Max l10n versions',
     description: 'Maximum overlay versions retained.',
   },
-  'personalization.preview.enabled': {
-    label: 'Personalization preview',
-    description: 'Allow personalization preview UI.',
-  },
-  'personalization.onboarding.enabled': {
-    label: 'Personalization onboarding',
-    description: 'Allow onboarding personalization flow.',
-  },
-  'personalization.sources.website.depth': {
+  'personalization.sources.website.depth.max': {
     label: 'Website crawl depth',
     description: 'Maximum website crawl depth for personalization.',
-  },
-  'personalization.sources.gbp.enabled': {
-    label: 'Google Business Profile',
-    description: 'Allow GBP as a personalization source.',
-  },
-  'personalization.sources.facebook.enabled': {
-    label: 'Facebook source',
-    description: 'Allow Facebook as a personalization source.',
   },
   'branding.remove': {
     label: 'Remove branding',
     description: 'Allow removing Clickeen branding.',
   },
-  'context.websiteUrl.enabled': {
-    label: 'Website URL context',
-    description: 'Allow setting website URL context.',
-  },
-  'links.enabled': {
-    label: 'Links enabled',
-    description: 'Allow links in rich text fields.',
-  },
-  'media.meta.enabled': {
-    label: 'Media metadata',
-    description: 'Allow media metadata in outputs.',
-  },
-  'list.primary.max': {
-    label: 'Primary list max',
-    description: 'Maximum primary list items.',
-  },
-  'list.secondary.rich.max': {
-    label: 'Secondary rich max',
-    description: 'Maximum rich secondary list items.',
-  },
-  'list.secondary.rich.total.max': {
-    label: 'Secondary rich total',
-    description: 'Maximum total rich secondary list items.',
-  },
-  'list.secondary.dense.max': {
-    label: 'Secondary dense max',
-    description: 'Maximum dense secondary list items.',
-  },
-  'text.question.max': {
-    label: 'Question length',
-    description: 'Maximum question text length.',
-  },
-  'text.answer.max': {
-    label: 'Answer length',
-    description: 'Maximum answer text length.',
-  },
-  'text.caption.max': {
-    label: 'Caption length',
-    description: 'Maximum caption text length.',
-  },
-  'text.headerHtml.max': {
-    label: 'Header HTML length',
-    description: 'Maximum header rich text length.',
-  },
   'budget.copilot.turns': {
     label: 'Copilot turns',
     description: 'Monthly AI copilot turns.',
   },
-  'budget.edits': {
-    label: 'AI edits',
-    description: 'Monthly AI edit operations.',
-  },
-  'budget.uploads': {
+  'budget.uploads.count': {
     label: 'Uploads',
-    description: 'Monthly uploads budget.',
+    description: 'Monthly uploads budget (count).',
+  },
+  'budget.personalization.runs': {
+    label: 'Personalization runs',
+    description: 'Monthly personalization runs budget.',
+  },
+  'budget.personalization.website.crawls': {
+    label: 'Website crawls',
+    description: 'Monthly website crawls budget.',
+  },
+  'budget.snapshots.regens': {
+    label: 'Snapshot regenerations',
+    description: 'Monthly snapshot regeneration budget.',
+  },
+  'budget.l10n.publishes': {
+    label: 'L10n publishes',
+    description: 'Monthly localization publish budget.',
   },
   'views.monthly.max': {
     label: 'Monthly views',
@@ -218,6 +112,22 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
   'instances.published.max': {
     label: 'Published instances',
     description: 'Maximum published instances.',
+  },
+  'uploads.size.max': {
+    label: 'Upload size max',
+    description: 'Maximum upload size per file (bytes).',
+  },
+  'cap.group.items.small.max': {
+    label: 'Items cap group (small)',
+    description: 'Shared max items cap for “small” list-style widgets.',
+  },
+  'cap.group.items.medium.max': {
+    label: 'Items cap group (medium)',
+    description: 'Shared max items cap for “medium” list-style widgets.',
+  },
+  'cap.group.items.large.max': {
+    label: 'Items cap group (large)',
+    description: 'Shared max items cap for “large” list-style widgets.',
   },
 };
 

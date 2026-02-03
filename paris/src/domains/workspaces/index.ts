@@ -24,6 +24,7 @@ import { isKnownWidgetType, loadWidgetLimits } from '../../shared/tokyo';
 import { requireWorkspace } from '../../shared/workspaces';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { normalizeLocaleList } from '../../shared/l10n';
+import { consumeBudget } from '../../shared/budgets';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -377,9 +378,26 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const configChanged = config !== undefined;
     if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
       const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-      const locales = policyResult.policy.flags['l10n.enabled'] === true && normalized.ok ? normalized.locales : [];
+      const locales = normalized.ok ? normalized.locales : [];
+      const maxLocalesTotalRaw = policyResult.policy.caps['l10n.locales.max'];
+      const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
       const deduped = Array.from(new Set(['en', ...locales]));
-      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: deduped });
+      const limited = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
+      if (env.RENDER_SNAPSHOT_QUEUE) {
+        const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
+        const regen = await consumeBudget({
+          env,
+          scope: { kind: 'workspace', workspaceId },
+          budgetKey: 'budget.snapshots.regens',
+          max: maxRegens,
+          amount: 1,
+        });
+        if (regen.ok) {
+          await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: limited });
+        } else {
+          console.log('[ParisWorker] Snapshot regen budget exceeded', { workspaceId, publicId, detail: regen.detail });
+        }
+      }
     } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
       await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
     }

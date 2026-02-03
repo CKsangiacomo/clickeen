@@ -141,7 +141,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     executionSurface: 'endpoint',
     allowProviderChoice: false,
     budgetsByProfile: PERSONALIZATION_PREVIEW_BUDGETS,
-    requiredEntitlements: ['personalization.preview.enabled'],
+    requiredEntitlements: ['budget.personalization.runs'],
     toolCaps: ['tool:fetchHeadMeta', 'tool:fetchHomepageSnippet'],
   },
   {
@@ -154,7 +154,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     executionSurface: 'endpoint',
     allowProviderChoice: true,
     budgetsByProfile: PERSONALIZATION_ONBOARDING_BUDGETS,
-    requiredEntitlements: ['personalization.onboarding.enabled'],
+    requiredEntitlements: ['budget.personalization.runs', 'budget.personalization.website.crawls'],
     toolCaps: ['tool:fetchWebsite', 'tool:fetchGBP', 'tool:fetchFacebook', 'tool:writeWorkspaceProfile'],
   },
   {

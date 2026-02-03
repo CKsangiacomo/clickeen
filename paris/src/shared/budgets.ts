@@ -94,3 +94,4 @@ export async function consumeBudget(args: {
   await kv.put(key, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
   return { ok: true, used, nextUsed };
 }
+

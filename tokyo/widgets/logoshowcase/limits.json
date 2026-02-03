@@ -3,15 +3,6 @@
   "limits": [
     {
       "kind": "flag",
-      "key": "seoGeo.enabled",
-      "path": "seoGeo.enabled",
-      "mode": "boolean",
-      "deny": true,
-      "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    {
-      "kind": "flag",
       "key": "branding.remove",
       "path": "behavior.showBacklink",
       "mode": "boolean",
@@ -19,36 +10,8 @@
       "sanitizeTo": true,
       "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
     },
-    {
-      "kind": "flag",
-      "key": "links.enabled",
-      "path": "strips[].logos[].href",
-      "mode": "nonempty-string",
-      "deny": "nonempty",
-      "sanitizeTo": "",
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    {
-      "kind": "flag",
-      "key": "links.enabled",
-      "paths": ["strips[].logos[].targetBlank", "strips[].logos[].nofollow"],
-      "mode": "boolean",
-      "deny": true,
-      "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    {
-      "kind": "flag",
-      "key": "media.meta.enabled",
-      "paths": ["strips[].logos[].alt", "strips[].logos[].title"],
-      "mode": "nonempty-string",
-      "deny": "nonempty",
-      "sanitizeTo": "",
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
-    },
-    { "kind": "cap", "key": "list.primary.max", "path": "strips[]", "metric": "count" },
-    { "kind": "cap", "key": "list.secondary.dense.max", "path": "strips[].logos[]", "metric": "count" },
-    { "kind": "cap", "key": "text.caption.max", "path": "strips[].logos[].caption", "metric": "chars" },
-    { "kind": "cap", "key": "text.headerHtml.max", "path": "header.subtitleHtml", "metric": "chars" }
+    { "kind": "cap", "key": "cap.group.items.small.max", "path": "strips[]", "metric": "count" },
+    { "kind": "cap", "key": "cap.group.items.medium.max", "path": "strips[].logos[]", "metric": "count" },
+    { "kind": "cap", "key": "cap.group.items.large.max", "path": "strips[].logos[]", "metric": "count-total" }
   ]
 }

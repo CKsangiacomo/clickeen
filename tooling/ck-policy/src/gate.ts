@@ -39,19 +39,13 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       return { allow: true };
     }
     case 'context.websiteUrl.set': {
-      if (policy.flags['context.websiteUrl.enabled'] !== true) {
-        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.context.websiteUrl' };
-      }
       return { allow: true };
     }
     case 'embed.seoGeo.toggle': {
-      if (policy.flags['seoGeo.enabled'] !== true) {
-        return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.embed.seoGeo' };
-      }
       return { allow: true };
     }
     case 'platform.upload': {
-      const uploadBudget = policy.budgets['budget.uploads'];
+      const uploadBudget = policy.budgets['budget.uploads.count'];
       if (uploadBudget && uploadBudget.max === 0) {
         return { allow: false, upsell: 'UP', reasonKey: 'coreui.upsell.reason.platform.uploads' };
       }

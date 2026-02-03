@@ -69,6 +69,27 @@
   const matrix = window.__CK_ENTITLEMENTS__;
   const meta = window.__CK_ENTITLEMENTS_META__ || {};
 
+  const formatBytes = (bytes) => {
+    if (!Number.isFinite(bytes) || bytes < 0) return String(bytes);
+    const gb = 1024 * 1024 * 1024;
+    const mb = 1024 * 1024;
+    if (bytes >= gb) return `${Math.round(bytes / gb)}GB`;
+    if (bytes >= mb) return `${Math.round(bytes / mb)}MB`;
+    if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+    return `${bytes}B`;
+  };
+
+  const formatValue = ({ key, cap, value }) => {
+    if (value === null) return '∞';
+    if (cap.kind === 'flag') return value ? '✓' : '✗';
+    if (typeof value === 'number') {
+      if (key === 'uploads.size.max') return formatBytes(value);
+      if (Number.isFinite(value) && Math.abs(value) >= 1000) return value.toLocaleString('en-US');
+      return String(value);
+    }
+    return String(value);
+  };
+
   if (!root || !matrix) {
     const error = document.createElement('p');
     error.className = 'body-s';
@@ -161,9 +182,7 @@
         tiers.forEach((tier) => {
           const valueCell = document.createElement('td');
           const value = cap.values[tier];
-          let display = String(value);
-          if (cap.kind === 'flag') display = value ? '✓' : '✗';
-          if (value === null) display = '∞';
+          const display = formatValue({ key, cap, value });
           valueCell.textContent = display;
           valueCell.className = 'body-s entitlements-table__value';
           row.appendChild(valueCell);
