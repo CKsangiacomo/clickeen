@@ -62,7 +62,7 @@
     },
     {
       "id": "steps-customization",
-      "type": "steps",
+      "type": "control-moat",
       "copy": {
         "title": "Design freedom, built in.",
         "subhead": "From layouts to finishes to fonts—customization that feels effortless.",

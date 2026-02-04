@@ -112,6 +112,83 @@
       }
     },
     {
+      "id": "control-moat",
+      "type": "control-moat",
+      "copy": {
+        "title": "Design control, down to the pixel",
+        "subhead": "Match your site and brand without compromise.",
+        "items": [
+          {
+            "title": "Layouts",
+            "body": "Choose structure per breakpoint—accordion, list, or cards. Control spacing, density, and alignment so it feels native."
+          },
+          {
+            "title": "Appearance",
+            "body": "Radius, borders, shadows, and surfaces that match your UI language. Make it look like it shipped with your product."
+          },
+          {
+            "title": "Typography",
+            "body": "Role-based type styles that keep hierarchy clean. Headings, body, labels—tuned to your brand."
+          }
+        ]
+      }
+    },
+    {
+      "id": "global-moat",
+      "type": "global-moat",
+      "copy": {
+        "title": "Global by default",
+        "subhead": "One widget, every market.",
+        "items": [
+          {
+            "title": "Instant localization",
+            "body": "Ship in new languages without a translation project. Keep the experience consistent everywhere."
+          },
+          {
+            "title": "RTL ready",
+            "body": "Support right-to-left languages without redesigning layouts. Directionality stays correct."
+          },
+          {
+            "title": "Locale-aware copy",
+            "body": "Adapt tone and phrasing for the audience, not just the words. The content reads natural."
+          },
+          {
+            "title": "SEO foundations",
+            "body": "Structured content that can be indexed when you need it. Make answers discoverable."
+          },
+          {
+            "title": "Governance",
+            "body": "Strict contracts prevent drift. Changes are explicit, auditable, and repeatable."
+          },
+          {
+            "title": "Performance",
+            "body": "Fast renders and sensible loading so the page stays smooth across devices and networks."
+          }
+        ]
+      }
+    },
+    {
+      "id": "platform-strip",
+      "type": "platform-strip",
+      "copy": {
+        "title": "Built like a platform",
+        "items": [
+          {
+            "title": "Fast",
+            "body": "Lightweight embeds and lazy loading. No layout jank."
+          },
+          {
+            "title": "Reliable",
+            "body": "Deterministic contracts and build gates keep shipping safe at scale."
+          },
+          {
+            "title": "Accessible",
+            "body": "Clear hierarchy, readable type, and interaction patterns that work across input methods."
+          }
+        ]
+      }
+    },
+    {
       "id": "cta-features",
       "type": "cta-bottom-block",
       "copy": {
