@@ -145,7 +145,12 @@ async function main() {
 
       const expectedFingerprint = strictLatest ? baseFingerprint : publishedFingerprint;
       if (!expectedFingerprint) {
-        problems.push({ pageId: entry.pageId, locale, kind: 'missing_index_fingerprint' });
+        (strictLatest ? errors : warnings).push({
+          pageId: entry.pageId,
+          locale,
+          kind: 'missing_index_fingerprint',
+          path: path.join(TOKYO_PRAGUE_ROOT, entry.pageId, 'index.json'),
+        });
         continue;
       }
 
