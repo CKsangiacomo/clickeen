@@ -4,6 +4,9 @@ import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverla
 const CURATED_VALIDATE =
   process.env.PRAGUE_VALIDATE_CURATED === '1' ||
   (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_CURATED !== '0');
+const CURATED_VALIDATE_STRICT =
+  process.env.PRAGUE_VALIDATE_CURATED_STRICT === '1' ||
+  (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_CURATED === '1');
 const CURATED_VALIDATION_CACHE = new Map<string, Promise<void>>();
 
 function buildPageBase(args: { pageId: string; pagePath: string; blocks: unknown[] }) {
@@ -49,7 +52,17 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
 
   const task = (async () => {
     const url = `${baseUrl}/api/instance/${encodeURIComponent(publicId)}`;
-    const res = await fetch(url, { method: 'GET' });
+    let res: Response | null = null;
+    try {
+      res = await fetch(url, { method: 'GET' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const detail = message ? ` (${message})` : '';
+      const warning = `[prague] ${args.pagePath}: curated validation skipped (Paris unreachable) for ${publicId}${detail}`;
+      if (CURATED_VALIDATE_STRICT) throw new Error(warning);
+      console.warn(warning);
+      return;
+    }
     if (res.ok) return;
     if (res.status !== 404) {
       throw new Error(`[prague] Curated validation failed for ${publicId} (${res.status})`);
@@ -57,22 +70,33 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
 
     const devToken = String(process.env.PARIS_DEV_JWT || '').trim();
     if (devToken) {
-      const devRes = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${devToken}` } });
+      let devRes: Response | null = null;
+      try {
+        devRes = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${devToken}` } });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const detail = message ? ` (${message})` : '';
+        const warning = `[prague] ${args.pagePath}: curated validation skipped (Paris unreachable) for ${publicId}${detail}`;
+        if (CURATED_VALIDATE_STRICT) throw new Error(warning);
+        console.warn(warning);
+        return;
+      }
       if (devRes.ok) {
         const payload = await devRes.json().catch(() => null);
         const status = payload && typeof payload.status === 'string' ? payload.status : 'unpublished';
-        throw new Error(
-          `[prague] ${args.pagePath}: curated instance ${publicId} is ${status}; publish it before embedding.`,
-        );
+        const message = `[prague] ${args.pagePath}: curated instance ${publicId} is ${status}; publish it before embedding.`;
+        if (CURATED_VALIDATE_STRICT) throw new Error(message);
+        console.warn(message);
+        return;
       }
       if (devRes.status !== 404) {
         throw new Error(`[prague] Curated validation failed for ${publicId} (${devRes.status})`);
       }
     }
 
-    throw new Error(
-      `[prague] ${args.pagePath}: curated instance ${publicId} not found (seed curated_widget_instances or apply migrations).`,
-    );
+    const message = `[prague] ${args.pagePath}: curated instance ${publicId} not found (seed curated_widget_instances or apply migrations).`;
+    if (CURATED_VALIDATE_STRICT) throw new Error(message);
+    console.warn(message);
   })();
 
   CURATED_VALIDATION_CACHE.set(publicId, task);

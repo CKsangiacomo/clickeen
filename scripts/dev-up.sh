@@ -434,4 +434,4 @@ fi
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  Pitch:     http://localhost:8790/healthz"
-echo "  Prague:    http://localhost:4321/en/widgets/faq"
+echo "  Prague:    http://localhost:4321/us/en/widgets/faq"

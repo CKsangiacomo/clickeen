@@ -5,6 +5,17 @@ import { getPragueMarket, isValidLocaleForMarket, PRAGUE_MARKETS, resolveMarketF
 
 type ParsedCookies = Record<string, string>;
 
+function buildSetCookie(args: { name: string; value: string; secure: boolean }): string {
+  const parts = [
+    `${args.name}=${encodeURIComponent(args.value)}`,
+    'Path=/',
+    'Max-Age=31536000',
+    'SameSite=Lax',
+  ];
+  if (args.secure) parts.push('Secure');
+  return parts.join('; ');
+}
+
 function parseCookies(header: string | null): ParsedCookies {
   if (!header) return {};
   return header.split(';').reduce<ParsedCookies>((acc, part) => {
@@ -18,6 +29,27 @@ function parseCookies(header: string | null): ParsedCookies {
 }
 
 const cookies = parseCookies(Astro.request.headers.get('cookie'));
+
+const protocol = Astro.url.protocol;
+const secureCookie = protocol === 'https:';
+
+const queryMarket = String(Astro.url.searchParams.get('market') || Astro.url.searchParams.get('ck_market') || '')
+  .trim()
+  .toLowerCase();
+const queryLocale = String(Astro.url.searchParams.get('locale') || Astro.url.searchParams.get('ck_locale') || '')
+  .trim()
+  .toLowerCase();
+const queryMarketConfig = queryMarket ? getPragueMarket(queryMarket) : null;
+if (queryMarketConfig) {
+  const nextLocale =
+    queryLocale && isValidLocaleForMarket({ market: queryMarketConfig.key, locale: queryLocale })
+      ? queryLocale
+      : queryMarketConfig.defaultLocale;
+
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: queryMarketConfig.key, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: nextLocale, secure: secureCookie }));
+  return Astro.redirect(`/${queryMarketConfig.key}/${nextLocale}/${Astro.url.search}`, 302);
+}
 
 const cookieMarket = String(cookies.ck_market || '').trim().toLowerCase();
 const cookieLocale = String(cookies.ck_locale || '').trim().toLowerCase();
@@ -37,6 +69,8 @@ if (cookieMarketConfig) {
 const country = Astro.request.headers.get('cf-ipcountry');
 const geoMarket = resolveMarketFromCountry(country);
 if (geoMarket) {
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: geoMarket.key, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: geoMarket.defaultLocale, secure: secureCookie }));
   return Astro.redirect(`/${geoMarket.key}/${geoMarket.defaultLocale}/${Astro.url.search}`, 302);
 }
 
@@ -44,5 +78,7 @@ const defaultMarket = getPragueMarket('us') ?? PRAGUE_MARKETS.markets[0] ?? null
 if (!defaultMarket) {
   throw new Error('[prague] No markets configured (expected at least one entry in config/markets.json)');
 }
+Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: defaultMarket.key, secure: secureCookie }));
+Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: defaultMarket.defaultLocale, secure: secureCookie }));
 return Astro.redirect(`/${defaultMarket.key}/${defaultMarket.defaultLocale}/${Astro.url.search}`, 302);
 ---
