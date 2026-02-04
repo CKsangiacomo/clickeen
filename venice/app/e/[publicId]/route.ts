@@ -6,7 +6,7 @@ import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { escapeHtml } from '@venice/lib/html';
 import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
 
-export const runtime = 'edge';
+export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
 export const dynamic = 'force-dynamic';
 
 interface InstanceResponse {
