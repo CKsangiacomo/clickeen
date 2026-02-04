@@ -50,12 +50,7 @@ async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   await fs.writeFile(outPath, prettyStableJson(index));
 }
 
-async function writeBaseSnapshot(args: {
-  pageId: string;
-  baseFingerprint: string;
-  baseUpdatedAt: string | null;
-  snapshot: Record<string, string>;
-}) {
+async function writeBaseSnapshot(args) {
   if (!args.pageId || !args.baseFingerprint) return;
   const outDir = path.join(TOKYO_PRAGUE_ROOT, args.pageId, 'bases');
   await ensureDir(outDir);
@@ -63,7 +58,7 @@ async function writeBaseSnapshot(args: {
   await fs.writeFile(outPath, prettyStableJson({ v: 1, pageId: args.pageId, baseFingerprint: args.baseFingerprint, baseUpdatedAt: args.baseUpdatedAt ?? null, snapshot: args.snapshot }));
 }
 
-async function loadLayerIndex(pageId: string) {
+async function loadLayerIndex(pageId) {
   const indexPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'index.json');
   if (!(await fileExists(indexPath))) return null;
   const index = await readJson(indexPath).catch(() => null);
@@ -352,7 +347,7 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
 
   const blockItems = new Map();
   const expectedPaths = new Set();
-  const baseSnapshot: Record<string, string> = {};
+  const baseSnapshot = {};
   for (const [blockId, blockType] of blockTypeMap.entries()) {
     const allowlistPath = path.join(ALLOWLIST_ROOT, 'blocks', `${blockType}.allowlist.json`);
     if (!(await fileExists(allowlistPath))) {
@@ -568,7 +563,7 @@ async function main() {
     const chromeFingerprint = computeBaseFingerprint(chromeBase);
     const chromeAllowlist = await loadAllowlist(path.join(ALLOWLIST_ROOT, 'chrome.allowlist.json'));
     const chromeItems = collectTranslatableEntries(chromeBase, chromeAllowlist.entries);
-    const chromeSnapshot: Record<string, string> = {};
+    const chromeSnapshot = {};
     for (const item of chromeItems) {
       if (typeof item?.path === 'string' && typeof item?.value === 'string') {
         chromeSnapshot[item.path] = item.value;
