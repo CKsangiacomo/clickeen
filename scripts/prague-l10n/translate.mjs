@@ -28,6 +28,11 @@ const DOTENV_LOCAL = path.join(REPO_ROOT, '.env.local');
 
 let cachedSfBaseUrl = null;
 
+const TRANSLATE_BATCH_MAX_ITEMS = 60;
+const TRANSLATE_BATCH_MAX_CHARS = 2500;
+const TRANSLATE_REQUEST_RETRIES = 2;
+const TRANSLATE_SPLIT_MAX_DEPTH = 7;
+
 async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   const keys = [...locales].sort((a, b) => a.localeCompare(b));
   if (!keys.length) return;
@@ -245,6 +250,56 @@ async function loadAllowlist(filePath) {
   return { v: allowlist.v, entries };
 }
 
+function parseSfStatus(err) {
+  const message = err instanceof Error ? err.message : String(err);
+  const match = message.match(/San Francisco error (\d{3})\b/);
+  if (!match) return null;
+  const status = Number.parseInt(match[1], 10);
+  return Number.isFinite(status) ? status : null;
+}
+
+function shouldSplitTranslateError(err) {
+  const status = parseSfStatus(err);
+  if (status !== 502) return false;
+  const message = err instanceof Error ? err.message : String(err);
+  return message.includes('Invalid JSON response') || message.includes('Empty model response');
+}
+
+async function sleep(ms) {
+  if (!ms || ms <= 0) return;
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function splitTranslateBatches(items) {
+  const batches = [];
+  let current = [];
+  let currentChars = 0;
+
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    const value = item.value;
+    if (typeof value !== 'string') continue;
+    const itemChars = value.length;
+    if (itemChars > TRANSLATE_BATCH_MAX_CHARS) {
+      throw new Error(`[prague-l10n] Translation item too large (${itemChars} chars): ${String(item.path || '')}`);
+    }
+
+    const wouldExceedItems = current.length >= TRANSLATE_BATCH_MAX_ITEMS;
+    const wouldExceedChars = currentChars + itemChars > TRANSLATE_BATCH_MAX_CHARS;
+    if (current.length > 0 && (wouldExceedItems || wouldExceedChars)) {
+      batches.push(current);
+      current = [];
+      currentChars = 0;
+    }
+
+    current.push(item);
+    currentChars += itemChars;
+  }
+
+  if (current.length) batches.push(current);
+  return batches;
+}
+
 async function translateWithSanFrancisco({ job, items }) {
   const auth = getSfAuth();
   if (!auth) {
@@ -281,6 +336,38 @@ async function translateWithSanFrancisco({ job, items }) {
     out.push({ path: actual.path, value: actual.value });
   }
   return out;
+}
+
+async function translateWithSanFranciscoResilient({ job, items, depth = 0 }) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= TRANSLATE_REQUEST_RETRIES; attempt += 1) {
+    try {
+      return await translateWithSanFrancisco({ job, items });
+    } catch (err) {
+      lastError = err;
+      const status = parseSfStatus(err);
+      const retryable = status === 429 || status === 502 || status === 503 || status === 504;
+      if (!retryable || attempt === TRANSLATE_REQUEST_RETRIES) break;
+      await sleep(350 * attempt);
+    }
+  }
+
+  if (shouldSplitTranslateError(lastError) && items.length > 1 && depth < TRANSLATE_SPLIT_MAX_DEPTH) {
+    const mid = Math.ceil(items.length / 2);
+    const leftItems = items.slice(0, mid);
+    const rightItems = items.slice(mid);
+    console.warn(
+      `[prague-l10n] ${job.chunkKey} ${job.locale}: retrying with smaller batches (${leftItems.length}+${rightItems.length})`,
+    );
+    const [left, right] = await Promise.all([
+      translateWithSanFranciscoResilient({ job: { ...job, chunkKey: `${job.chunkKey}#a` }, items: leftItems, depth: depth + 1 }),
+      translateWithSanFranciscoResilient({ job: { ...job, chunkKey: `${job.chunkKey}#b` }, items: rightItems, depth: depth + 1 }),
+    ]);
+    return [...left, ...right];
+  }
+
+  throw lastError;
 }
 
 async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }) {
@@ -345,15 +432,17 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     }
   }
 
-  const blockItems = new Map();
   const expectedPaths = new Set();
   const baseSnapshot = {};
+  const pageItems = [];
+  let allowlistVersionMax = 1;
   for (const [blockId, blockType] of blockTypeMap.entries()) {
     const allowlistPath = path.join(ALLOWLIST_ROOT, 'blocks', `${blockType}.allowlist.json`);
     if (!(await fileExists(allowlistPath))) {
       throw new Error(`[prague-l10n] Missing allowlist for block type ${blockType}: ${allowlistPath}`);
     }
     const allowlist = await loadAllowlist(allowlistPath);
+    allowlistVersionMax = Math.max(allowlistVersionMax, allowlist.v);
     const blockBase = base.blocks[blockId];
     if (!isPlainObject(blockBase)) {
       throw new Error(`[prague-l10n] ${pageId}: block ${blockId} base missing`);
@@ -362,13 +451,17 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     if (!items.length) {
       throw new Error(`[prague-l10n] NOT TRANSLATED: ${pagePath} block "${blockId}" missing copy paths`);
     }
-    blockItems.set(blockId, { items, blockType, allowlistVersion: allowlist.v });
     for (const item of items) {
       const fullPath = normalizeOpPath(`blocks.${blockId}.${item.path}`);
-      expectedPaths.add(fullPath);
-      if (typeof item.value === 'string') {
-        baseSnapshot[fullPath] = item.value;
+      if (!fullPath || hasProhibitedSegment(fullPath)) {
+        throw new Error(`[prague-l10n] ${pageId}: prohibited op path "${fullPath}"`);
       }
+      expectedPaths.add(fullPath);
+      if (typeof item.value !== 'string') {
+        throw new Error(`[prague-l10n] ${pageId}: expected string value for ${fullPath}`);
+      }
+      baseSnapshot[fullPath] = item.value;
+      pageItems.push({ path: fullPath, type: item.type, value: item.value });
     }
   }
 
@@ -459,72 +552,73 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     previousByLocale.set(locale, { prevFingerprint, prevOpsByPath, prevSnapshot });
   }
 
-  for (const [blockId, meta] of blockItems.entries()) {
-    const fullItems = meta.items.map((item) => ({
-      ...item,
-      fullPath: normalizeOpPath(`blocks.${blockId}.${item.path}`),
-    }));
+  for (const locale of missingLocales) {
+    const prev = previousByLocale.get(locale) ?? null;
 
-    for (const locale of missingLocales) {
-      const prev = previousByLocale.get(locale) ?? null;
+    const carry = new Map();
+    const toTranslate = [];
+    for (const item of pageItems) {
+      const fullPath = item.path;
+      const currentBase = baseSnapshot[fullPath];
+      if (typeof currentBase !== 'string') continue;
 
-      const carry = new Map();
-      const toTranslate = [];
-      for (const item of fullItems) {
-        const fullPath = item.fullPath;
-        if (!fullPath) continue;
-        const currentBase = baseSnapshot[fullPath];
-
-        if (prev && typeof currentBase === 'string') {
-          const prevBase = prev.prevSnapshot[fullPath];
-          const unchanged = typeof prevBase === 'string' && prevBase === currentBase;
-          if (unchanged) {
-            const prevValue = prev.prevOpsByPath.get(fullPath);
-            if (typeof prevValue === 'string' && prevValue.trim()) {
-              carry.set(item.path, prevValue);
-              continue;
-            }
+      if (prev) {
+        const prevBase = prev.prevSnapshot[fullPath];
+        const unchanged = typeof prevBase === 'string' && prevBase === currentBase;
+        if (unchanged) {
+          const prevValue = prev.prevOpsByPath.get(fullPath);
+          if (typeof prevValue === 'string' && prevValue.trim()) {
+            carry.set(fullPath, prevValue);
+            continue;
           }
         }
-
-        toTranslate.push({ path: item.path, type: item.type, value: item.value });
       }
 
-      const job = {
-        v: 1,
-        surface: 'prague',
-        kind: 'system',
-        chunkKey: `${pageId}/blocks/${blockId}`,
-        blockKind: meta.blockType,
-        locale,
-        baseFingerprint,
-        baseUpdatedAt,
-        allowlistVersion: meta.allowlistVersion,
-      };
-      const total = fullItems.length;
-      const changed = toTranslate.length;
-      console.log(`[prague-l10n] ${pageId} ${locale}: translating ${changed}/${total} item(s) for ${meta.blockType}`);
+      toTranslate.push({ path: fullPath, type: item.type, value: currentBase });
+    }
 
-      const translated = changed ? await translateWithSanFrancisco({ job, items: toTranslate }) : [];
-      const translatedByPath = new Map();
+    const jobBase = {
+      v: 1,
+      surface: 'prague',
+      kind: 'system',
+      chunkKey: `${pageId}/page`,
+      blockKind: 'page',
+      locale,
+      baseFingerprint,
+      baseUpdatedAt,
+      allowlistVersion: allowlistVersionMax,
+    };
+
+    const batches = splitTranslateBatches(toTranslate);
+    const translatedByPath = new Map();
+    for (let i = 0; i < batches.length; i += 1) {
+      const batch = batches[i];
+      if (!batch.length) continue;
+      const total = toTranslate.length;
+      const label = batches.length === 1 ? `${batch.length}/${total}` : `${batch.length}/${total} (batch ${i + 1}/${batches.length})`;
+      console.log(`[prague-l10n] ${pageId} ${locale}: translating ${label} item(s)`);
+
+      const translated = await translateWithSanFranciscoResilient({
+        job: batches.length === 1 ? jobBase : { ...jobBase, chunkKey: `${jobBase.chunkKey}#${i + 1}` },
+        items: batch,
+      });
       for (const item of translated) {
         if (typeof item?.path === 'string' && typeof item?.value === 'string') {
           translatedByPath.set(item.path, item.value);
         }
       }
-
-      const ops = [];
-      for (const item of fullItems) {
-        const value = carry.has(item.path) ? carry.get(item.path) : translatedByPath.get(item.path);
-        if (typeof value !== 'string') continue;
-        ops.push({
-          op: 'set',
-          path: `blocks.${blockId}.${item.path}`,
-          value,
-        });
-      }
-      overlaysByLocale.get(locale).push(...ops);
     }
+
+    const ops = [];
+    for (const item of pageItems) {
+      const value = carry.has(item.path) ? carry.get(item.path) : translatedByPath.get(item.path);
+      if (typeof value !== 'string') {
+        throw new Error(`[prague-l10n] ${pageId} ${locale}: missing translation for ${item.path}`);
+      }
+      ops.push({ op: 'set', path: item.path, value });
+    }
+
+    overlaysByLocale.set(locale, ops);
   }
 
   for (const locale of missingLocales) {

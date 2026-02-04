@@ -42,7 +42,15 @@ const PUBLISH_CONCURRENCY = parsePositiveInt(
   process.env.PRAGUE_SYNC_PUBLISH_CONCURRENCY,
   process.env.CI ? 8 : 4,
 );
+const PUBLISH_BULK_CONCURRENCY = parsePositiveInt(
+  process.env.PRAGUE_SYNC_PUBLISH_BULK_CONCURRENCY,
+  process.env.CI ? 20 : 10,
+);
 const PUBLISH_TIMEOUT_MS = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_TIMEOUT_MS, 120_000);
+const PUBLISH_BULK_TIMEOUT_MS = parsePositiveInt(
+  process.env.PRAGUE_SYNC_PUBLISH_BULK_TIMEOUT_MS,
+  process.env.CI ? 1_800_000 : 900_000,
+);
 const PUBLISH_RETRIES = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_RETRIES, 2);
 const PUBLISH_PROGRESS_EVERY = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_PROGRESS_EVERY, 25);
 
@@ -190,7 +198,7 @@ async function publishOverlays() {
   const target = publishRemote ? 'remote' : 'local';
   console.log(`[prague-sync] Publishing Prague overlays to R2 (${target}). Bucket: "${R2_BUCKET}"`);
   console.log(
-    `[prague-sync] Uploading ${files.length} files (concurrency=${PUBLISH_CONCURRENCY}, timeout=${PUBLISH_TIMEOUT_MS}ms, retries=${PUBLISH_RETRIES})...`,
+    `[prague-sync] Uploading ${files.length} files (bulk concurrency=${PUBLISH_BULK_CONCURRENCY}, bulk timeout=${PUBLISH_BULK_TIMEOUT_MS}ms; fallback concurrency=${PUBLISH_CONCURRENCY})...`,
   );
 
   files.sort();
@@ -199,8 +207,42 @@ async function publishOverlays() {
     const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
     const key = relFromTokyo; // e.g. l10n/prague/...
     const objectPath = `${R2_BUCKET}/${key}`;
-    return { objectPath, filePath, modeFlag };
+    return { key, objectPath, filePath, modeFlag };
   });
+
+  // Bulk upload (single Wrangler invocation). This is dramatically faster than spawning Wrangler per file.
+  // Wrangler supports this as an "experimental" command, but it exists in v4+ and is stable enough for CI.
+  try {
+    await fs.mkdir(LOG_DIR, { recursive: true });
+    const bulkFilePath = path.join(LOG_DIR, `prague-sync-bulk-${Date.now()}.json`);
+    const bulkEntries = tasks.map((task) => ({ key: task.key, file: task.filePath }));
+    await fs.writeFile(bulkFilePath, JSON.stringify(bulkEntries, null, 2));
+
+    const bulkArgsList = [
+      'r2',
+      'bulk',
+      'put',
+      R2_BUCKET,
+      '--filename',
+      bulkFilePath,
+      modeFlag,
+      '--concurrency',
+      String(PUBLISH_BULK_CONCURRENCY),
+    ];
+
+    const bulkResult = await runWranglerAsync(bulkArgsList, { timeoutMs: PUBLISH_BULK_TIMEOUT_MS });
+    if (!bulkResult.ok) {
+      const hint = bulkResult.timedOut ? ` (timed out after ${PUBLISH_BULK_TIMEOUT_MS}ms)` : '';
+      console.warn(`[prague-sync] Bulk upload failed${hint}; falling back to per-file uploads.`);
+      if (bulkResult.stdout) console.warn(bulkResult.stdout.trim());
+      if (bulkResult.stderr) console.warn(bulkResult.stderr.trim());
+    } else {
+      return;
+    }
+  } catch (err) {
+    console.warn('[prague-sync] Bulk upload unavailable; falling back to per-file uploads.');
+    console.warn(err instanceof Error ? err.message : String(err));
+  }
 
   const startedAt = Date.now();
   const total = tasks.length;

@@ -12,7 +12,8 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run (publish to wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
   - Behavior: runs `scripts/prague-l10n/verify.mjs` first and only runs `scripts/prague-l10n/translate.mjs` when verification fails (then re-verifies). Publishing to R2 happens only when `--publish` is passed.
   - Flags: `--publish` (requires `--remote` or `--local`), `--skip-translate`, `--skip-verify`, `--skip-publish` (compat).
-  - Env: `WRANGLER_BIN` (defaults to `tokyo-worker/node_modules/.bin/wrangler`), `TOKYO_R2_BUCKET`
+  - Publish: uses Wrangler `r2 bulk put` (fast), falls back to per-file uploads if unavailable.
+  - Env: `WRANGLER_BIN` (defaults to `tokyo-worker/node_modules/.bin/wrangler`), `TOKYO_R2_BUCKET`, `PRAGUE_SYNC_PUBLISH_BULK_CONCURRENCY`, `PRAGUE_SYNC_PUBLISH_BULK_TIMEOUT_MS`
   - Log: `Logs/prague-sync.log`
 
 ## Build / compile

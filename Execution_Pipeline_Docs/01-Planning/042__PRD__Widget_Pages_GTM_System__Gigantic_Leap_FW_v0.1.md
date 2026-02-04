@@ -493,8 +493,8 @@ We need a repeatable way to generate new widget pages:
 
 **L10n status / generation**
 - Status check: `node scripts/prague-l10n/status.mjs` (best-available by default; add `--strict-latest` to see what’s missing for “latest”)
-- Generate overlays + snapshots: `node scripts/prague-l10n/translate.mjs` (requires `SANFRANCISCO_BASE_URL` + `PARIS_DEV_JWT`; SanFrancisco must be configured with an AI provider key)
-- Publish overlays to R2: `node scripts/prague-sync.mjs --publish --remote` (add `--best-available` if you want to publish without requiring latest translations)
+- Generate overlays + snapshots: `node scripts/prague-l10n/translate.mjs` (requires `SANFRANCISCO_BASE_URL` + `PARIS_DEV_JWT`; SanFrancisco must be configured with an AI provider key). Implementation detail: translations are **batched per page/locale** (fast) and the script will **auto-retry and split** if the provider returns malformed JSON.
+- Publish overlays to R2: `node scripts/prague-sync.mjs --publish --remote` (publishes via Wrangler **bulk put**; add `--best-available` if you want to publish without requiring latest translations)
 
 **Runtime debug signal**
 - Prague pages send:
