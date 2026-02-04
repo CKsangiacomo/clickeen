@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga tampok ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Lahat ng kailangan mo para magpadala ng mga AI-powered na FAQ na gumagana sa buong mundo at lumalago nang viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Bakit mas angat ang FAQ widget kaysa Elfsight, Typeform, at custom-built"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ginawa mula sa simula para sa AI. Gumagana sa buong mundo. Lumalago nang viral. Isang FAQ, walang hanggang posibilidad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Pag-edit gamit ang AI: ilarawan lang, tapos na"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Sabihin mo lang ang gusto mo sa simpleng English. 'Gawing mas kaswal ang mga tanong' o 'magdagdag ng seksyon tungkol sa pagpepresyo.' Naiintindihan ng AI at agad itong isinasagawa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Agad-agad sa buong mundo: anumang wika, ngayon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Ang heograpiya ay parameter, hindi proyekto. Magdagdag ng Spanish, Japanese, o Arabic sa isang click. Walang manual na pagsasalin, walang delay."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Composable kahit saan: isang FAQ, walang hanggang konteksto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Ang iisang FAQ ay gumagana sa website, email, landing pages, ads. Isang pinagmulan, walang hanggang posibilidad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Bakit binabago ng Clickeen ang lahat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Agarang personalized na localization"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mga template o pixel-perfect na custom"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Composable na arkitektura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL ng website → personalized na content sa 29 na wika agad. Walang manual na pagsasalin, walang gastos sa translator. Naiintindihan ng AI ang konteksto ng negosyo mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Magsimula sa isang curated na template O ikaw mismo ang magtakda ng lahat—ikaw ang bahala, ganap na kalayaan. Walang kompromiso, walang limitasyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Ang iisang FAQ ay gumagana kahit saan: website, email, landing pages, ads. Iisang content, walang hanggang konteksto. Walang muling paggawa para sa bawat channel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Ginawa para sa AI, pinapatakbo ng AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Ang Clickeen ay hindi lang isa pang FAQ builder—ito ang unang produktong dinisenyo para sa AI operation mula pa noong unang araw. Habang ang mga kakumpitensya ay nagre-retrofit ng mga AI feature, gumawa kami ng arkitekturang kayang intindihin, baguhin, at i-optimize nang awtonomo ng mga AI agent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Paano gumagana ang AI ecosystem ng Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Isang kumpletong platform na mas tumatalino sa bawat interaksyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Nauunawaan ng AI ang iyong intensyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Global na operasyon bilang default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Tuloy-tuloy na pagkatuto at pagpapabuti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automation ng viral na distribusyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Ilarawan ang mga pagbabago nang natural. 'Gawin itong mas propesyonal' o 'magdagdag ng urgency sa CTA.' Perpektong isinasagawa ng AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Hinahawakan ng AI ang localization, suporta, at marketing sa lahat ng market nang sabay-sabay."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Bawat interaksyon ng user ay nagtuturo sa AI system, kaya mas tumatalino ang lahat ng FAQ sa paglipas ng panahon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Nagiging mga marketing channel ang mga libreng FAQ na awtomatikong nagtutulak ng acquisition."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kontrol sa disenyo, hanggang sa pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "I-match ang iyong site at brand nang walang kompromiso."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Mga layout"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Itsura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipograpiya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Pumili ng istruktura bawat breakpoint—accordion, listahan, o mga card. Kontrolin ang spacing, density, at alignment para magmukhang native."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius, mga border, mga anino, at mga surface na tumutugma sa UI language mo. Gawin itong mukhang kasama itong ipinadala sa iyong produkto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Mga type style ayon sa role na pinananatiling malinaw ang hierarchy. Mga heading, body, label—naka-tune sa iyong brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global bilang default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Isang widget, para sa bawat merkado."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Agarang paglokalisa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Handa para sa RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Copy na ayon sa locale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Mga pundasyon ng SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Pamamahala"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Pagganap"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Maglunsad sa mga bagong wika nang walang proyektong pagsasalin. Panatilihing pare-pareho ang karanasan saanman."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Suportahan ang mga wikang right-to-left nang hindi nire-redesign ang mga layout. Nanatiling tama ang direksiyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Iangkop ang tono at pananalita para sa audience, hindi lang ang mga salita. Likas pakinggan ang nilalaman."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Naka-istrukturang nilalaman na puwedeng ma-index kapag kailangan mo. Gawing madaling matuklasan ang mga sagot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Pinipigilan ng mahihigpit na kontrata ang paglihis. Ang mga pagbabago ay malinaw, na-a-audit, at nauulit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Mabilis na pag-render at matinong pag-load para manatiling maayos at tuloy-tuloy ang page sa iba’t ibang device at network."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Binuo na parang isang platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Mabilis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Maaasahan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Accessible"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Magagaan na embed at lazy loading. Walang layout jank."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministic na mga kontrata at build gates ang nagpapanatiling ligtas ang pag-ship sa malakihang saklaw."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Malinaw na hierarchy, madaling basahing type, at mga interaction pattern na gumagana sa iba’t ibang paraan ng input."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Marasan ang hinaharap ng mga FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Ang platform na mas nagiging matalino sa bawat pakikipag-ugnayan. Binuo para sa panahon ng AI."
+    }
+  ],
+  "v": 1
+}

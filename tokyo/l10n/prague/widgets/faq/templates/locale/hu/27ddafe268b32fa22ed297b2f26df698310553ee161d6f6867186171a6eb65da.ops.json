@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK-sablonok – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Válassz lenyűgöző GYIK-dizájnok közül, amelyek megragadják a figyelmet és konvertálják a látogatókat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "A te GYIK-ed. A te módod."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Alapból gyönyörű. Tervezésből fakadóan egyértelműen a tiéd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Merész, amikor szükséged van rá"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism — trendkövető megjelenések világos és sötét módban."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegáns, amikor úgy szeretnéd"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalista, letisztult és modern. Időtálló stílusok, amelyek mindig aktuálisnak hatnak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Indulj egy dizájnnal. Aztán tedd a sajátoddá."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Szerezd meg az esztétikát azonnal. Trenddiktáló dizájnok vagy időtálló klasszikusok. Aztán szabj testre korlátok nélkül — sarokkénti sugár, oldalankénti árnyékok, szerepenkénti tipográfia és reszponzív töréspontok. Egy sablon, amely a védjegyeddé válik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "GYIK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Segíts, hogy a látogatók gyorsan megtalálják a válaszokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Tervezési szabadság, beépítve."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Elrendezésektől a felületeken át a betűkig — testreszabás, ami erőfeszítés nélkül megy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Elrendezések, a te módod"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Korlátok nélküli megjelenésvezérlés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Tipográfiai precizitás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Sok elrendezési rendszer, nem csak egy. Töréspontonkénti struktúra. Független desktop/mobil belső margó és térköz. Oszlopok, egymás alá rendezés, igazítás és újratördelés vezérlése — pontosan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Sarokkénti sugár. Keretek egyedi színekkel. Külső és belső árnyékok (összekapcsolva vagy oldalanként külön). Átmenetes, képes vagy videós hátterek. Teljes vizuális kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Hat külön szerep (cím, törzsszöveg, kérdés, válasz, gomb, szakasz). Válassz 17 Google Font közül. Vastagság, stílus, méret — mind testreszabható szerepenként. Dinamikus skálák."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Három elrendezésmotor a GYIK widgetedhez"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Harmonika a fokozatos kibontáshoz. Lista az egyszerűségért. Kártyák a vizuális hierarchiáért. Rács vagy masonry. Reszponzív oszlopok. Részletes kontroll a hézagok és a belső margók felett."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Korlátok nélküli megjelenésvezérlés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Sarokkénti sugár. Keretek egyedi színekkel. Külső és belső árnyékok (összekapcsolva vagy oldalanként külön). Átmenetes, képes vagy videós hátterek. Teljes vizuális kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipográfiai precizitás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Hat külön szerep (cím, törzsszöveg, kérdés, válasz, gomb, szakasz). Válassz 17 Google Font közül. Vastagság, stílus, méret — mind testreszabható szerepenként. Dinamikus skálák."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Sötét mód: kifinomult és modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "A modern felületek sötétben igazán élnek. Prémium érzet csúcstechnológiás esztétikával. Minden sablonhoz jár."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Asztali és mobil, tökéletesen hangolva"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "A GYIK widgeted minden töréspontnál alkalmazkodik. Eszközönként eltérő oszlopszám, belső margó és térköz. Egy dizájnnyelv, végtelen nézetablak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Sablontól a tökéletes illeszkedésig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Hogyan építsd fel a GYIK widgetedet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Válassz egy dizájnsablont"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Szabd testre az elrendezéseket és a megjelenést"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Finomítsd a tipográfiát és a reszponzivitást"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendi, klasszikus vagy minimalista. Világos és sötét módok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Harmonika, lista vagy kártyák. Sarkonkénti lekerekítés, oldalak szerinti árnyékok, színátmenetek, szegélyek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Hat betűtípus-szerep, 17 Google Fonts. Tökéletes asztali gépen és mobilon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Készíts ingyenes GYIK widgetet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Kezdj egy dizájnsablonnal, vagy építsd fel nulláról. Teljes kreatív kontroll."
+    }
+  ],
+  "v": 1
+}

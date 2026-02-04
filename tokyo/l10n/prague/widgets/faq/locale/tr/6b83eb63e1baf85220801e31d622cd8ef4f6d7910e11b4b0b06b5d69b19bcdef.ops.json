@@ -1,0 +1,352 @@
+{
+  "baseFingerprint": "6b83eb63e1baf85220801e31d622cd8ef4f6d7910e11b4b0b06b5d69b19bcdef",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS widget’ı - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hızlı ve şık bir SSS widget’ı oluşturun. Dakikalar içinde özelleştirin, yayınlayın ve yerelleştirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "SSS widget’ı. Şık yanıtlar. Hız için üretildi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Özenli tasarım, zahmetsiz güncellemeler ve SEO temelleri—her dile hazır, yapay zeka destekli."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "SSS"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ziyaretçilerin hızlıca yanıt bulmasına yardımcı olun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Kendine göre yap"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Mükemmel SSS’nizi burada tasarlayın. Değişiklikleri anında görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Nelerin mümkün olduğunu keşfedin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Şablonlarla başlayın, örneklerden öğrenin, sonra hazır olduğunuzda özelliklere dalın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Şablonlar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Örnekler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Özellikler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Markanıza uyarlayabileceğiniz özenle hazırlanmış başlangıç noktalarıyla hızlıca yayına çıkın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Gerçek dünyada harika SSS’lerin nasıl göründüğünü görün—ve dönüşüm sağlayan kalıpları ödünç alın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Düzen ve stil ayarlarından yerelleştirme ve SEO’ya kadar neleri kontrol edebileceğinizi anlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Gerçek dillerde önizleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "SSS’nizin pazarlara göre nasıl okunduğunu görmek için yerel ayarları değiştirin—hiçbir şeyi yeniden kurmadan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Bölünmüş yaratıcı (sağ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Bu, kahraman bölümüyle aynı seçilmiş örneği kullanan sağ görsel varyantıdır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Split yaratıcı (sol)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sol görselli varyanttır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Soruların gerçek zamanlı olarak kendiliğinden yanıtlandığını izleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tereddüt anında doğru yanıtı öne çıkaran, şık tasarımlı bir SSS ekleyin. Müşteriler anında tıkanıklığı aşar, itirazlar destek talebine dönüşmeden erir ve daha fazla destek eklemeden daha çok satış kapatırsınız. Bir kez özelleştirin, her yere gömün ve 7/24 çalışmasına izin verin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Yaratıcı bölünmüş (üst üste) "
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Bu, hero ile aynı küratörlü örneği kullanan üst üste yerleştirilmiş varyanttır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Gerçekten işe yarayan SSS'ler (siz uğraşmak zorunda kalmayın diye)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Müşterilerinizin soruları var. Onları yüz kez değil, bir kez yanıtlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Yanıtsız sorular yüzünden satış kaybetmeyi bırakın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Zamanınızı geri kazanın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Siz uyurken daha fazla satış kapatın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Yanıtsız kalan her soru, bir müşterinin uzaklaşması demektir. Ziyaretçiler ihtiyaç duyduklarını bulamadıklarında siteyi terk eder. İyi tasarlanmış bir SSS, itirazlar daha oluşmadan onları ortadan kaldırır—böylece müşteriler size hiç ulaşmadan satın almaya kendilerini ikna eder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Müşteriler yanıtları anında bulduğunda destek hacmini %40+ azaltın. Artık Slack’ten dürtmeler yok. Artık \"kısa bir soru\" e-postaları yok. Artık bağlam değiştirmenin cehennemi yok. Siz gerçekten önemli işe odaklanırken ağır işi SSS’niz yapar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Doğru SSS, çevrimdışı olduğunuz saat 02:00'de bile şüpheyi öngörür ve sürtünmeyi ortadan kaldırır. Yanıtlarınız 7/24 çalışır. Müşteriler sizi beklemez—önleri açılır, gördüklerine güvenir ve gününüzü bölmeden \"satın al\"a basar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Yaratıcı bölünmüş (sağ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sağ görsel varyantıdır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Yaratıcı bölünmüş (sol)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Bu, hero ile aynı özenle seçilmiş örneği kullanan sol görsel varyantıdır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Piksele kadar tasarım kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Sitenize ve markanıza taviz vermeden uyum sağlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Düzenler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Görünüm"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Her kırılım noktası için yapıyı seçin—or akordeon, liste ya da kartlar. Yerel durması için boşlukları, yoğunluğu ve hizalamayı kontrol edin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "UI dilinizle uyumlu köşe yarıçapı, kenarlıklar, gölgeler ve yüzeyler. Ürününüzle birlikte çıkmış gibi görünsün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Hiyerarşiyi temiz tutan role dayalı yazı stilleri. Başlıklar, gövde, etiketler—markanıza göre ayarlanmış."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Varsayılan olarak global"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Tek widget, her pazar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Anında yerelleştirme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL hazır"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Yerel ayara duyarlı metin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO temelleri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Yönetişim"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Performans"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Bir çeviri projesi olmadan yeni dillerde yayına çıkın. Deneyimi her yerde tutarlı tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Düzenleri yeniden tasarlamadan sağdan sola dilleri destekleyin. Yön doğruluğu korunur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Sadece kelimeleri değil, hedef kitleye göre tonu ve ifadeyi uyarlayın. İçerik doğal okur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "İhtiyaç duyduğunuzda indekslenebilen yapılandırılmış içerik. Yanıtları keşfedilebilir kılın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Sıkı sözleşmeler sapmayı önler. Değişiklikler açık, denetlenebilir ve tekrarlanabilirdir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Hızlı çizimler ve makul yükleme sayesinde sayfa, cihazlar ve ağlar arasında akıcı kalır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Platform gibi inşa edildi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Hızlı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Güvenilir"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Erişilebilir"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Hafif gömmeler ve gecikmeli yükleme. Düzen kayması yok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministik sözleşmeler ve build kapıları, ölçekli yayınlarda güvenliği korur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Net hiyerarşi, okunabilir yazı tipi ve farklı giriş yöntemlerinde çalışan etkileşim kalıpları."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Her müşteriyle her yerde bağlantı kurun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Onların dilinde konuşan ve ihtiyaçlarını anlayan yapay zekâ destekli SSS."
+    }
+  ],
+  "v": 1
+}

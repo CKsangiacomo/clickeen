@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQテンプレート - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "目を引き、訪問者をコンバージョンへ導く魅力的なFAQデザインから選べます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "あなたのFAQを、あなたの方法で。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "デフォルトで美しく。デザインで、紛れもなくあなたらしく。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "必要なときは大胆に"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "グラスモーフィズム、リキッドグラス、ニューモーフィズム——ライト/ダーク両方でトレンド感のあるルック。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "望むときはエレガントに"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "ミニマルでクリーン、そしてモダン。いつも今っぽく感じられる、色あせないスタイル。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "デザインから始めて、あなた仕様に。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "美しさをすぐに手に入れよう。トレンドデザインでも、時代を超える定番でも。そこから、角ごとの角丸、辺ごとのシャドウ、役割別タイポグラフィ、レスポンシブのブレークポイントまで、制限なくカスタマイズ。あなたのシグネチャーになるテンプレートです。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "訪問者が素早く答えを見つけられるように。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "自由なデザインを、標準装備。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "レイアウトから仕上げ、フォントまで——手間なく感じるカスタマイズ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "レイアウトは思いのまま"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "制限のない外観コントロール"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "タイポグラフィの精密さ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "単一ではなく、多彩なレイアウトシステム。ブレークポイントごとの構造。デスクトップ/モバイルそれぞれ独立したパディングと余白。カラム、積み重ね、整列、リフローまで——正確にコントロールできます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "角ごとの角丸。カスタムカラーのボーダー。外側/内側のシャドウ（連動または辺ごとに独立）。グラデーション、画像、動画背景。完全なビジュアル主導権を。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "6つの明確な役割（見出し、本文、質問、回答、ボタン、セクション）。17種のGoogle Fontsから選択。ウェイト、スタイル、サイズ——すべて役割ごとにカスタマイズ可能。動的スケール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "FAQウィジェットのための3つのレイアウトエンジン"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "段階的に表示するアコーディオン。シンプルなリスト。視覚的な階層を作るカード。グリッドまたはメイソンリー。レスポンシブなカラム。ギャップとパディングを細かく制御。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "制限のない外観コントロール"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "角ごとの角丸。カスタムカラーのボーダー。外側/内側のシャドウ（連動または辺ごとに独立）。グラデーション、画像、動画背景。完全なビジュアル主導権を。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "タイポグラフィの精密さ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "6つの明確な役割（見出し、本文、質問、回答、ボタン、セクション）。17種のGoogle Fontsから選択。ウェイト、スタイル、サイズ——すべて役割ごとにカスタマイズ可能。動的スケール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "ダークモード：洗練とモダンさ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "モダンなインターフェースは暗闇で映えます。最先端の美学でプレミアムな印象に。すべてのテンプレートに含まれています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "デスクトップもモバイルも、完璧にチューニング"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "FAQウィジェットはあらゆるブレークポイントに対応。デバイスごとにカラム数、パディング、余白を変更できます。ひとつのデザイン言語で、無限のビューポートへ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "テンプレートから、ぴったりの仕上がりへ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "FAQウィジェットの作り方"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "デザインテンプレートを選ぶ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "レイアウトと外観をカスタマイズ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "タイポグラフィとレスポンシブを整える"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "トレンド、クラシック、またはミニマル。ライト/ダークモード。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "アコーディオン、リスト、またはカード。角ごとの角丸、辺ごとのシャドウ、グラデーション、ボーダー。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "6つのフォントロール、17のGoogle Fonts。デスクトップでもモバイルでも完璧。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "無料のFAQウィジェットを作成"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "デザインテンプレートから始めるか、ゼロから構築。創造性を完全にコントロール。"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 예시 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "호텔, 레스토랑, 투어 운영업체는 Clickeen을 사용하여 29개 언어로 국제 고객에게 즉시 서비스를 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "호텔, 레스토랑, 투어 운영사 등 다양한 업종을 위한 FAQ 예시"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ombra에 웹사이트 URL을 알려주세요. 29개 언어로 귀사의 비즈니스에 맞춘 FAQ를 즉시 받아보세요. 번역가가 필요 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "바르셀로나 호텔: 50개국+의 투숙객이 15개 언어로 ‘체크인 시간은?’을 묻습니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "호텔 웹사이트를 Ombra에 제공하세요. 귀하의 숙소에 맞춘 FAQ를 29개 언어로 즉시 생성합니다. 프런트 데스크 문의를 60% 줄이고, 투숙객 만족도 점수를 개선하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "파리의 레스토랑: 관광객이 프랑스어, 영어, 스페인어, 중국어, 일본어로 식단 관련 질문을 합니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "메뉴 FAQ를 29개 언어로—즉시. 번역가도, 수작업도 필요 없습니다. 테이블 회전율을 높이고, 직원 호출로 인한 방해를 줄이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "토스카나의 Airbnb 호스트를 위한 안내: 체크인 지침, Wi‑Fi 비밀번호, 현지 팁을 게스트의 언어로"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Ombra에 숙소 리스팅 URL을 공유하세요. 29개 언어로 하우스 룰을 즉시 제공. 해외 게스트로부터 5성급 리뷰."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "해외 고객은 번역을 기다리지 않습니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "로마의 한 호텔은 독일인 관광객이 체크인 정보를 찾지 못하면 예약을 놓칩니다. 도쿄의 한 레스토랑은 영어 사용자가 영업 시간을 찾지 못하면 예약이 줄어듭니다. 고객의 언어로 된 질문에 답이 없을 때마다 고객을 잃게 됩니다. Ombra가 이를 해결합니다: 웹사이트 URL → 29개 언어로 된 맞춤형 FAQ를 즉시 제공합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "태국 투어 운영사: 해외 여행자를 위한 예약, 안전, 일정 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Ombra에 투어 웹사이트를 맡기세요. 29개 언어로 FAQ를 즉시 제공하세요. 이메일 지원을 70% 줄이고 해외 시장 전환율을 높이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "로마 박물관: 전 세계 방문객을 위한 전시 정보, 티켓, 운영 시간"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "29개 언어로 제공되는 방문객 FAQ—즉시. 방문객 경험을 개선하고 안내 데스크 문의를 50% 줄이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "국제적 혼란에서 즉각적인 명확함으로"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "호스피탈리티 비즈니스가 Clickeen을 활용하는 방법"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Ombra에 웹사이트 URL을 제공하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "29개 언어로 즉시 제공되는, 비즈니스 맞춤 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "임베드하고 해외 문의가 줄어드는 것을 확인하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI가 위치, 서비스, 정책 등 비즈니스 맥락을 읽습니다. 고객의 구체적인 니즈를 자동으로 이해합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "번역가가 필요 없습니다. 수작업도 없습니다. 콘텐츠가 비즈니스에 맞게 조정되고 전 세계에서 즉시 이용 가능합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3줄짜리 스크립트. 어디에서나 작동합니다. 게스트, 관광객, 여행자는 묻기 전에 자신의 언어로 답을 얻습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "플랫폼처럼 만들어졌습니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "빠름"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "신뢰성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "접근성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "가벼운 임베드와 지연 로딩. 레이아웃 흔들림이 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "결정론적 계약과 빌드 게이트가 대규모에서도 안전한 배포를 보장합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "명확한 계층 구조, 읽기 쉬운 타이포그래피, 그리고 다양한 입력 방식 전반에서 작동하는 인터랙션 패턴."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "29개 언어로 FAQ를 즉시 제공하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "ombra에 웹사이트 URL을 알려주세요. 비즈니스에 맞게 개인화되어 전 세계에서 이용할 수 있습니다. 번역가가 필요 없습니다."
+    }
+  ],
+  "v": 1
+}

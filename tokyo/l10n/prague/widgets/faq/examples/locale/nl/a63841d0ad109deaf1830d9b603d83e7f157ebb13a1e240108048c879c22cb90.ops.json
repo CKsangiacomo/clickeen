@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-voorbeelden - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotels, restaurants en touroperators gebruiken Clickeen om internationale klanten in 29 talen direct te bedienen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-voorbeelden voor hotels, restaurants, touroperators en meer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Geef Ombra de URL van je website. Ontvang je FAQ direct gepersonaliseerd voor je bedrijf in 29 talen. Geen vertaler nodig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotels in Barcelona: gasten uit 50+ landen vragen in 15 talen ‘hoe laat is de check-in?’"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Geef Ombra je hotelwebsite. Direct een FAQ die is gepersonaliseerd voor jouw accommodatie in 29 talen. Verminder vragen aan de receptie met 60%, verbeter de gasttevredenheidsscores."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restaurants in Parijs: toeristen stellen dieetvragen in het Frans, Engels, Spaans, Chinees, Japans"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Je menu-FAQ’s in 29 talen—direct. Geen vertaler, geen handmatig werk. Verbeter de tafelomzet, verminder onderbrekingen van het bedienend personeel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-hosts in Toscane: incheckinstructies, wifi-wachtwoord, lokale tips in de taal van je gast"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Geef Ombra de URL van je advertentie. Huisregels in 29 talen, direct. 5-sterrenreviews van internationale gasten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Internationale klanten wachten niet op vertalingen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Een hotel in Rome verliest boekingen wanneer Duitse toeristen geen informatie over het inchecken kunnen vinden. Een restaurant in Tokio verliest reserveringen wanneer Engelstaligen de openingstijden niet kunnen vinden. Elke onbeantwoorde vraag in hun taal is een verloren klant. Ombra lost dit op: website-URL → gepersonaliseerde FAQ in 29 talen, direct."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Tour operators in Thailand: boeking, veiligheid, routeplanning – veelgestelde vragen voor internationale reizigers"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Geef Ombra je tourwebsite. FAQ in 29 talen, direct. Verminder e-mailondersteuning met 70% en verhoog de conversie uit internationale markten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Musea in Rome: tentoonstellingsinformatie, tickets, openingstijden voor bezoekers van over de hele wereld"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Veelgestelde vragen van bezoekers in 29 talen—direct. Verbeter de bezoekerservaring en verminder vragen bij de informatiebalie met 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Van internationale verwarring naar directe duidelijkheid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Hoe hospitalitybedrijven Clickeen gebruiken"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Geef Ombra de URL van je website"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ gepersonaliseerd voor je bedrijf in 29 talen—direct"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Integreer en zie internationale vragen afnemen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI leest je bedrijfscontext—locatie, diensten, beleid. Begrijpt automatisch je specifieke behoeften."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Geen vertaler nodig. Geen handmatig werk. Content aangepast aan je bedrijf ÉN wereldwijd direct beschikbaar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Script van 3 regels. Werkt overal. Gasten, toeristen en reizigers krijgen antwoorden in hun taal voordat ze het vragen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Gebouwd als een platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Betrouwbaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Toegankelijk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lichtgewicht embeds en lazy loading. Geen layoutverspringingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministische contracten en build gates houden releases veilig op schaal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Duidelijke hiërarchie, goed leesbare typografie en interactiepatronen die werken met verschillende invoermethoden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Zet je FAQ direct in 29 talen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Geef ombra de URL van je website. Gepersonaliseerd voor je bedrijf, wereldwijd beschikbaar. Geen vertaler nodig."
+    }
+  ],
+  "v": 1
+}

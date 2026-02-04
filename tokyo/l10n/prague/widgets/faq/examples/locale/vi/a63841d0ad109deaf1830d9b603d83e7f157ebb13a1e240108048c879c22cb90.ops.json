@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Ví dụ Câu hỏi thường gặp - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Khách sạn, nhà hàng và các đơn vị tổ chức tour sử dụng Clickeen để phục vụ khách hàng quốc tế bằng 29 ngôn ngữ ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ví dụ FAQ cho khách sạn, nhà hàng, đơn vị tổ chức tour và hơn thế nữa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Cung cấp URL website của bạn cho Ombra. Nhận FAQ được cá nhân hóa theo doanh nghiệp của bạn bằng 29 ngôn ngữ—ngay lập tức. Không cần dịch giả."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Khách sạn ở Barcelona: khách từ hơn 50 quốc gia hỏi “giờ nhận phòng?” bằng 15 ngôn ngữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Cung cấp cho Ombra website khách sạn của bạn. FAQ được cá nhân hóa theo cơ sở của bạn bằng 29 ngôn ngữ—ngay lập tức. Giảm 60% câu hỏi tại quầy lễ tân, cải thiện điểm hài lòng của khách."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Nhà hàng ở Paris: du khách đặt câu hỏi về chế độ ăn bằng tiếng Pháp, tiếng Anh, tiếng Tây Ban Nha, tiếng Trung, tiếng Nhật"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Câu hỏi thường gặp trên thực đơn của bạn bằng 29 ngôn ngữ—ngay lập tức. Không cần biên dịch viên, không cần làm thủ công. Tăng tốc độ xoay vòng bàn, giảm việc nhân viên phục vụ bị gián đoạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Chủ nhà Airbnb ở Tuscany: hướng dẫn nhận phòng, mật khẩu Wi‑Fi, mẹo địa phương bằng ngôn ngữ của khách"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Hãy đưa cho Ombra URL chỗ ở của bạn. Nội quy nhà bằng 29 ngôn ngữ ngay lập tức. Đánh giá 5 sao từ khách quốc tế."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Khách hàng quốc tế không chờ bản dịch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Một khách sạn ở Rome mất lượt đặt phòng khi du khách Đức không tìm thấy thông tin nhận phòng. Một nhà hàng ở Tokyo mất đặt chỗ khi người nói tiếng Anh không tìm thấy giờ mở cửa. Mọi câu hỏi không được trả lời bằng ngôn ngữ của họ đều đồng nghĩa với một khách hàng bị mất. Ombra giải quyết điều này: URL website → FAQ được cá nhân hóa bằng 29 ngôn ngữ, ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Các đơn vị tổ chức tour tại Thái Lan: Câu hỏi thường gặp về đặt chỗ, an toàn và lịch trình cho du khách quốc tế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Hãy đưa website tour của bạn cho Ombra. FAQ với 29 ngôn ngữ ngay lập tức. Giảm 70% email hỗ trợ, tăng tỷ lệ chuyển đổi từ các thị trường quốc tế."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Các bảo tàng ở Rome: thông tin triển lãm, vé, giờ mở cửa cho du khách từ khắp nơi trên thế giới"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Câu hỏi thường gặp của du khách bằng 29 ngôn ngữ—ngay lập tức. Cải thiện trải nghiệm của du khách, giảm 50% số câu hỏi tại quầy thông tin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Từ bối rối quốc tế đến rõ ràng tức thì"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Cách các doanh nghiệp dịch vụ lưu trú sử dụng Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Cung cấp cho Ombra URL website của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ được cá nhân hóa cho doanh nghiệp của bạn bằng 29 ngôn ngữ—ngay lập tức"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Nhúng vào và thấy các yêu cầu từ khách quốc tế giảm xuống"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI đọc bối cảnh doanh nghiệp của bạn—vị trí, dịch vụ, chính sách. Tự động hiểu các nhu cầu cụ thể của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Không cần người dịch. Không cần làm thủ công. Nội dung được điều chỉnh theo doanh nghiệp của bạn VÀ có sẵn toàn cầu, ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Script 3 dòng. Hoạt động ở mọi nơi. Khách, du khách, người đi lại nhận được câu trả lời bằng ngôn ngữ của họ trước khi họ hỏi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Được xây dựng như một nền tảng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nhanh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Đáng tin cậy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dễ tiếp cận"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Nhúng gọn nhẹ và tải lười. Không bị giật bố cục."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Các hợp đồng mang tính xác định và các cổng kiểm tra khi build giúp triển khai an toàn ở quy mô lớn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Phân cấp rõ ràng, chữ dễ đọc và các mẫu tương tác hoạt động tốt trên nhiều phương thức nhập liệu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Nhận FAQ của bạn bằng 29 ngôn ngữ—ngay lập tức"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Cung cấp URL website của bạn cho ombra. Được cá nhân hóa theo doanh nghiệp của bạn, sẵn sàng trên toàn cầu. Không cần dịch giả."
+    }
+  ],
+  "v": 1
+}

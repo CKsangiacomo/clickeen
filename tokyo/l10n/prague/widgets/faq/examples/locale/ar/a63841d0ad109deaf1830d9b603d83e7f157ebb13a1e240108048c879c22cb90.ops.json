@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أمثلة على الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "تستخدم الفنادق والمطاعم ومنظمو الجولات Clickeen لخدمة العملاء الدوليين بـ 29 لغة فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أمثلة على الأسئلة الشائعة للفنادق والمطاعم ومنظّمي الرحلات وغير ذلك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "أعطِ Ombra عنوان URL لموقعك الإلكتروني. احصل على أسئلة شائعة مخصّصة لنشاطك التجاري بـ 29 لغة—فورًا. لا حاجة لمترجم."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "فنادق في برشلونة: ضيوف من أكثر من 50 دولة يسألون «ما موعد تسجيل الوصول؟» بـ15 لغة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "امنح Ombra موقع فندقك الإلكتروني. أسئلة شائعة مخصّصة لمنشأتك بـ29 لغة—فورًا. قلّل استفسارات مكتب الاستقبال بنسبة 60%، وحسّن درجات رضا الضيوف."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "مطاعم في باريس: السياح يطرحون أسئلة غذائية بالفرنسية والإنجليزية والإسبانية والصينية واليابانية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "أسئلة شائعة لقائمتك في 29 لغة—فورًا. بدون مترجم، وبدون عمل يدوي. حسّن معدل دوران الطاولات وقلّل مقاطعات طاقم الخدمة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "مضيفو Airbnb في توسكانا: تعليمات تسجيل الوصول، كلمة مرور Wi‑Fi، ونصائح محلية بلغة ضيفك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "أعطِ Ombra رابط إعلانك. قواعد المنزل بـ 29 لغة فورًا. تقييمات 5 نجوم من ضيوف دوليين."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "العملاء الدوليون لا ينتظرون الترجمات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "يفقد فندق في روما الحجوزات عندما لا يستطيع السياح الألمان العثور على معلومات تسجيل الوصول. ويفقد مطعم في طوكيو الحجوزات عندما لا يتمكن الناطقون بالإنجليزية من العثور على ساعات العمل. كل سؤال بلا إجابة بلغتهم هو عميل مفقود. Ombra تحل ذلك: رابط الموقع → أسئلة شائعة مخصصة بـ 29 لغة، فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "منظمو الرحلات في تايلاند: أسئلة شائعة حول الحجز والسلامة وخطة الرحلة للمسافرين الدوليين"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "امنح Ombra موقع رحلاتك. أسئلة شائعة بـ 29 لغة فورًا. قلّل دعم البريد الإلكتروني بنسبة 70% وزِد التحويل من الأسواق الدولية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "المتاحف في روما: معلومات المعارض، التذاكر، وساعات الزيارة للزوّار من جميع أنحاء العالم"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "أسئلة شائعة للزوّار بـ29 لغة—فورًا. حسّن تجربة الزائر وقلّل استفسارات مكتب المعلومات بنسبة 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "من الارتباك الدولي إلى الوضوح الفوري"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "كيف تستخدم شركات الضيافة Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "قدّم لعُمبرا عنوان URL لموقعك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "أسئلة شائعة مُخصّصة لعملك بـ 29 لغة — فورًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "ضمّنها وشاهد تراجع الاستفسارات الدولية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "يقرأ الذكاء الاصطناعي سياق عملك—الموقع، الخدمات، السياسات. ويفهم احتياجاتك المحددة تلقائيًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "لا حاجة إلى مترجم. لا عمل يدوي. محتوى مُكيَّف لعملك ومتاح عالميًا على الفور."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "سكريبت من 3 أسطر. يعمل في أي مكان. يحصل الضيوف والسياح والمسافرون على إجابات بلغتهم قبل أن يسألوا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "مبني كمنصة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "سريع"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "موثوق"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "مُتاح للجميع"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "تضمينات خفيفة الوزن وتحميل كسول. بدون اضطراب في التخطيط."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "عقود حتمية وبوابات بناء تحافظ على أمان الإصدارات على نطاق واسع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "هرمية واضحة، خط مقروء، وأنماط تفاعل تعمل عبر طرق الإدخال المختلفة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "احصل على صفحة الأسئلة الشائعة الخاصة بك بـ 29 لغة—فورًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "قدّم لـ ombra رابط موقعك الإلكتروني. مخصّصة لأعمالك ومتاحة عالميًا. لا حاجة إلى مترجم."
+    }
+  ],
+  "v": 1
+}

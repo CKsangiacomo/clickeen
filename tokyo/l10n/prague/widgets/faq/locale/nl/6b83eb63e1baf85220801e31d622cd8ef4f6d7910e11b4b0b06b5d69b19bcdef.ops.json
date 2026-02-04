@@ -1,0 +1,352 @@
+{
+  "baseFingerprint": "6b83eb63e1baf85220801e31d622cd8ef4f6d7910e11b4b0b06b5d69b19bcdef",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bouw een snelle, mooie FAQ-widget. Pas aan, publiceer en lokaliseer in minuten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-widget. Prachtige antwoorden. Gemaakt om snel te zijn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Verfijnd design, moeiteloze updates en SEO-basis—klaar voor elke taal, aangedreven door AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Help bezoekers snel antwoorden te vinden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Maak het van jou"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Ontwerp hier je perfecte FAQ. Zie wijzigingen direct."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Ontdek wat er mogelijk is"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Begin met templates, leer van voorbeelden en duik daarna in de functies wanneer je er klaar voor bent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Templates"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Voorbeelden"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Functies"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Ga snel live met verfijnde startpunten die je aan je merk kunt aanpassen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Bekijk hoe geweldige FAQ’s er in de praktijk uitzien—en neem de patronen over die converteren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Begrijp wat je kunt beheren, van layouts en styling tot lokalisatie en SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Bekijk het in echte talen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Wissel van locale om te zien hoe je FAQ in verschillende markten leest—zonder iets opnieuw op te bouwen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Creatieve split (rechts)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Dit is de variant met de visual rechts, waarbij dezelfde samengestelde instantie als in de hero wordt gebruikt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Creatieve split (links)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Dit is de variant met de visual links, waarbij dezelfde samengestelde instantie als in de hero wordt gebruikt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Zie vragen zichzelf in realtime beantwoorden"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Plaats een prachtig ontworpen FAQ die op het moment van twijfel het juiste antwoord naar boven haalt. Klanten komen direct weer verder, bezwaren verdwijnen voordat ze tickets worden, en je sluit meer verkopen af zonder extra support toe te voegen. Pas het één keer aan, embed het overal en laat het 24/7 zijn werk doen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split creatief (gestapeld)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Dit is de gestapelde variant, met dezelfde samengestelde instantie als de hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ's die echt werken (zodat jij dat niet hoeft te doen)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Je klanten hebben vragen. Beantwoord ze één keer, niet honderd keer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Stop met sales verliezen door onbeantwoorde vragen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Krijg je tijd terug"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Sluit meer deals terwijl je slaapt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Elke vraag die onbeantwoord blijft is een klant die afhaakt. Bezoekers vertrekken wanneer ze niet kunnen vinden wat ze nodig hebben. Een goed ontworpen FAQ neemt bezwaren weg nog vóór ze ontstaan—zodat klanten zichzelf overtuigen om te kopen zonder ooit contact op te nemen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Verlaag het supportvolume met 40%+ wanneer klanten direct antwoorden vinden. Geen Slack-pings meer. Geen \"snelle vraag\"-emails meer. Geen context-switching-hel meer. Je FAQ doet het zware werk terwijl jij je richt op werk dat echt belangrijk is."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "De juiste FAQ anticipeert op twijfel en haalt wrijving weg om 2 uur 's nachts wanneer je offline bent. Je antwoorden werken 24/7. Klanten wachten niet op jou—ze komen weer verder, vertrouwen wat ze zien en klikken op \"kopen\" zonder jouw dag te onderbreken."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Creatieve split (rechts)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Dit is de variant met het beeld rechts, waarbij dezelfde zorgvuldig geselecteerde instantie als in de hero wordt gebruikt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Creatieve split (links)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dit is de variant met het beeld links, met dezelfde zorgvuldig samengestelde instantie als de hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designcontrole, tot op de pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Laat je site en merk perfect aansluiten, zonder concessies."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Uiterlijk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Kies de structuur per breakpoint—accordion, lijst of kaarten. Beheer spacing, dichtheid en uitlijning zodat het native aanvoelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius, randen, schaduwen en oppervlakken die bij je UI-taal passen. Laat het eruitzien alsof het met je product is meegeleverd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Rolgebaseerde typestijlen die de hiërarchie helder houden. Koppen, body, labels—afgestemd op je merk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Standaard wereldwijd"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Eén widget, elke markt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Directe lokalisatie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Klaar voor RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Locale-bewuste copy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-basis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Governance"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Prestaties"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Ga live in nieuwe talen zonder een vertaalproject. Houd de ervaring overal consistent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Ondersteun talen van rechts naar links zonder layouts opnieuw te ontwerpen. De leesrichting blijft correct."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Pas toon en formulering aan voor het publiek, niet alleen de woorden. De content leest natuurlijk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Gestructureerde content die geïndexeerd kan worden wanneer je dat nodig hebt. Maak antwoorden vindbaar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Strikte contracten voorkomen afwijkingen. Wijzigingen zijn expliciet, auditbaar en herhaalbaar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Snelle rendering en slim laden zodat de pagina soepel blijft op verschillende apparaten en netwerken."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Gebouwd als een platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Betrouwbaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Toegankelijk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lichtgewicht embeds en lazy loading. Geen layoutverspringingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministische contracten en build-gates houden uitrollen veilig op schaal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Duidelijke hiërarchie, goed leesbare typografie en interactiepatronen die werken met verschillende invoermethoden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Maak verbinding met elke klant, overal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-gestuurde FAQ die hun taal spreekt en hun behoeften begrijpt."
+    }
+  ],
+  "v": 1
+}

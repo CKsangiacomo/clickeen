@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Tính năng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Mọi thứ bạn cần để triển khai FAQ dùng AI hoạt động toàn cầu và lan truyền tự nhiên."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vì sao widget FAQ vượt trội hơn Elfsight, Typeform và giải pháp tự xây"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Xây dựng từ đầu cho AI. Hoạt động toàn cầu. Tăng trưởng lan truyền. Một FAQ, vô hạn khả năng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Chỉnh sửa bằng AI: mô tả là xong"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Chỉ cần nói điều bạn muốn bằng tiếng Anh đơn giản. \"Make the questions more casual\" hoặc \"add a section about pricing.\" AI hiểu và thực hiện ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Toàn cầu tức thì: mọi ngôn ngữ, ngay bây giờ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Địa lý là một tham số, không phải một dự án. Thêm tiếng Tây Ban Nha, tiếng Nhật hoặc tiếng Ả Rập chỉ với một cú nhấp. Không dịch thủ công, không chậm trễ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Lắp ghép mọi nơi: một FAQ, vô hạn ngữ cảnh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Cùng một FAQ hoạt động trên website, email, landing page, quảng cáo. Một nguồn, vô hạn khả năng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Vì sao Clickeen thay đổi mọi thứ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Bản địa hóa cá nhân hóa tức thì"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mẫu có sẵn hoặc tùy chỉnh chuẩn từng pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Kiến trúc lắp ghép"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL website → nội dung cá nhân hóa tức thì bằng 29 ngôn ngữ. Không dịch thủ công, không tốn chi phí dịch thuật. AI hiểu bối cảnh kinh doanh của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Bắt đầu với một mẫu được tuyển chọn HOẶC tự bạn định nghĩa mọi thứ—bạn chọn, tự do tuyệt đối. Không thỏa hiệp, không giới hạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Một FAQ dùng được ở mọi nơi: website, email, landing page, quảng cáo. Cùng nội dung, vô hạn ngữ cảnh. Không phải xây lại cho từng kênh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Xây cho AI, vận hành bởi AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen không chỉ là một công cụ tạo FAQ khác—đây là sản phẩm đầu tiên được thiết kế để vận hành bằng AI ngay từ ngày đầu. Trong khi đối thủ chắp vá thêm tính năng AI, chúng tôi xây dựng một kiến trúc để các tác nhân AI có thể hiểu, chỉnh sửa và tối ưu một cách tự động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Hệ sinh thái AI của Clickeen hoạt động như thế nào"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Một nền tảng toàn diện, càng thông minh hơn sau mỗi tương tác."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI hiểu ý định của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Vận hành toàn cầu theo mặc định"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Học hỏi và cải thiện liên tục"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Tự động hóa phân phối lan truyền"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Mô tả thay đổi một cách tự nhiên. \"Làm cho chuyên nghiệp hơn\" hoặc \"thêm tính khẩn trương cho CTA\". AI thực hiện hoàn hảo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI xử lý bản địa hóa, hỗ trợ và marketing trên tất cả các thị trường cùng lúc."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Mỗi tương tác của người dùng đều huấn luyện hệ thống AI, khiến tất cả FAQ trở nên thông minh hơn theo thời gian."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Các FAQ miễn phí trở thành kênh marketing tự động thúc đẩy thu hút người dùng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kiểm soát thiết kế, đến từng pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Khớp với website và thương hiệu của bạn mà không phải thỏa hiệp."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Bố cục"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Giao diện"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Kiểu chữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Chọn cấu trúc theo từng breakpoint—accordion, danh sách hoặc thẻ. Kiểm soát khoảng cách, độ dày đặc và căn chỉnh để cảm giác như phần gốc của sản phẩm."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Bo góc, viền, đổ bóng và bề mặt khớp với ngôn ngữ UI của bạn. Khiến nó trông như được phát hành cùng sản phẩm của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Các kiểu chữ theo vai trò giúp hệ phân cấp rõ ràng. Tiêu đề, nội dung, nhãn—được tinh chỉnh theo thương hiệu của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Toàn cầu theo mặc định"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Một widget, mọi thị trường."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Bản địa hóa tức thì"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Sẵn sàng cho RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Nội dung phù hợp theo từng locale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Nền tảng SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Quản trị"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Hiệu năng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Triển khai thêm ngôn ngữ mới mà không cần một dự án dịch thuật. Giữ trải nghiệm nhất quán ở mọi nơi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Hỗ trợ các ngôn ngữ viết từ phải sang trái mà không cần thiết kế lại bố cục. Hướng đọc luôn chính xác."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Điều chỉnh giọng điệu và cách diễn đạt theo đối tượng, không chỉ là dịch từng chữ. Nội dung đọc tự nhiên."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Nội dung có cấu trúc để có thể được lập chỉ mục khi bạn cần. Giúp câu trả lời dễ được tìm thấy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Các hợp đồng nghiêm ngặt ngăn ngừa sai lệch. Thay đổi rõ ràng, có thể kiểm tra và lặp lại."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Kết xuất nhanh và tải hợp lý để trang luôn mượt trên mọi thiết bị và mạng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Xây dựng như một nền tảng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nhanh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Tin cậy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dễ tiếp cận"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Nhúng gọn nhẹ và tải trì hoãn. Không giật bố cục."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Các hợp đồng mang tính xác định và cổng kiểm tra bản dựng giúp triển khai an toàn ở quy mô lớn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Phân cấp rõ ràng, chữ dễ đọc và các mẫu tương tác hoạt động tốt trên nhiều phương thức nhập liệu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Trải nghiệm tương lai của FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Nền tảng thông minh hơn sau mỗi lần tương tác. Được xây dựng cho kỷ nguyên AI."
+    }
+  ],
+  "v": 1
+}

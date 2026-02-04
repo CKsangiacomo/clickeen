@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-maler – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Velg blant flotte FAQ-design som fanger oppmerksomheten og konverterer besøkende."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Din FAQ. På din måte."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vakker som standard. Umiskjennelig din, gjennom design."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Dristig når du trenger det"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorfisme, flytende glass, neumorfisme—trendriktige uttrykk i lys og mørk modus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegant når du vil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalistisk, rent og moderne. Tidløse stiler som alltid føles aktuelle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Start med et design. Gjør det deretter til ditt eget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Få estetikken umiddelbart. Trendende design eller tidløse klassikere. Deretter kan du tilpasse uten begrensninger—hjørneradius per hjørne, skygger per side, typografi per rolle og responsive brytpunkter. En mal som blir din signatur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjelp besøkende med å finne svar raskt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Designfrihet, innebygd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Fra oppsett til finish til fonter—tilpasning som føles uanstrengt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Oppsett, på din måte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Utseendekontroll uten grenser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Typografisk presisjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Mange oppsettsystemer, ikke bare ett. Struktur per brytpunkt. Uavhengig padding og avstand for desktop/mobil. Kontroller kolonner, stabling, justering og omflyt—helt presist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Hjørneradius per hjørne. Kantlinjer med egendefinerte farger. Skygger utenpå og inni (koblede eller uavhengige per side). Bakgrunner med gradient, bilde eller video. Full visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Seks tydelige roller (overskrift, brødtekst, spørsmål, svar, knapp, seksjon). Velg blant 17 Google Fonts. Vekt, stil, størrelse—alt kan tilpasses per rolle. Dynamiske skalaer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tre layoutmotorer for FAQ-widgeten din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Trekkspill for gradvis visning. Liste for enkelhet. Kort for visuell hierarki. Rutenett eller masonry. Responsive kolonner. Detaljert kontroll over mellomrom og padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Utseendekontroll uten grenser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hjørneradius per hjørne. Kantlinjer med egendefinerte farger. Skygger utenpå og inni (koblede eller uavhengige per side). Bakgrunner med gradient, bilde eller video. Full visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografisk presisjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Seks tydelige roller (overskrift, brødtekst, spørsmål, svar, knapp, seksjon). Velg blant 17 Google Fonts. Vekt, stil, størrelse—alt kan tilpasses per rolle. Dynamiske skalaer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Mørk modus: sofistikert og moderne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Moderne grensesnitt trives i mørket. Premiumfølelse med banebrytende estetikk. Inkludert i hver mal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop og mobil, perfekt finjustert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "FAQ-widgeten din tilpasser seg hvert brytpunkt. Ulike kolonneantall, padding og avstand per enhet. Ett designspråk, uendelig mange visningsflater."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Fra mal til perfekt tilpasning"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Slik bygger du FAQ-widgeten din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Velg en designmal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Tilpass oppsett og utseende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Finjuster typografi og responsivitet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendende, klassisk eller minimalistisk. Lys og mørk modus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Accordion, liste eller kort. Hjørneradius per hjørne, skygger per side, gradienter, rammer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Seks fontroller, 17 Google-skrifttyper. Perfekt på desktop og mobil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Lag en gratis FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Start med en designtemplate eller bygg fra bunnen av. Total kreativ kontroll."
+    }
+  ],
+  "v": 1
+}

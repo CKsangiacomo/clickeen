@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Contoh FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotel, restoran, dan operator tur menggunakan Clickeen untuk melayani pelanggan internasional dalam 29 bahasa secara instan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Contoh FAQ untuk hotel, restoran, operator tur, dan lainnya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Berikan URL situs web Anda kepada Ombra. Dapatkan FAQ yang dipersonalisasi untuk bisnis Anda dalam 29 bahasa—secara instan. Tanpa penerjemah."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotel di Barcelona: tamu dari 50+ negara bertanya ‘jam check-in?’ dalam 15 bahasa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Berikan situs web hotel Anda kepada Ombra. FAQ dipersonalisasi untuk properti Anda dalam 29 bahasa—secara instan. Kurangi pertanyaan ke resepsionis hingga 60%, tingkatkan skor kepuasan tamu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restoran di Paris: turis menanyakan pertanyaan diet dalam bahasa Prancis, Inggris, Spanyol, Mandarin, Jepang"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "FAQ menu Anda dalam 29 bahasa—seketika. Tanpa penerjemah, tanpa pekerjaan manual. Tingkatkan perputaran meja, kurangi gangguan pada staf layanan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Host Airbnb di Tuscany: petunjuk check-in, kata sandi Wi‑Fi, tips lokal dalam bahasa tamu Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Berikan URL listing Anda kepada Ombra. Aturan rumah dalam 29 bahasa secara instan. Ulasan bintang 5 dari tamu internasional."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Pelanggan internasional tidak menunggu terjemahan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Sebuah hotel di Roma kehilangan pemesanan ketika turis Jerman tidak dapat menemukan info check-in. Sebuah restoran di Tokyo kehilangan reservasi ketika penutur bahasa Inggris tidak dapat menemukan jam operasional. Setiap pertanyaan yang tidak terjawab dalam bahasa mereka adalah pelanggan yang hilang. Ombra menyelesaikan ini: URL situs web → FAQ yang dipersonalisasi dalam 29 bahasa, seketika."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Operator tur di Thailand: FAQ pemesanan, keamanan, dan itinerary untuk pelancong internasional"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Berikan situs web tur Anda kepada Ombra. FAQ dalam 29 bahasa secara instan. Kurangi dukungan lewat email hingga 70%, tingkatkan konversi dari pasar internasional."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museum di Roma: info pameran, tiket, jam buka untuk pengunjung dari seluruh dunia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "FAQ pengunjung dalam 29 bahasa—secara instan. Tingkatkan pengalaman pengunjung, kurangi pertanyaan di meja informasi hingga 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Dari kebingungan internasional ke kejelasan instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Bagaimana bisnis perhotelan menggunakan Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Berikan URL situs web Anda kepada Ombra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ yang dipersonalisasi untuk bisnis Anda dalam 29 bahasa—secara instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Sematkan dan lihat pertanyaan dari internasional menurun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI membaca konteks bisnis Anda—lokasi, layanan, kebijakan. Memahami kebutuhan spesifik Anda secara otomatis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Tidak perlu penerjemah. Tidak ada pekerjaan manual. Konten disesuaikan dengan bisnis Anda DAN tersedia secara global, seketika."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Skrip 3 baris. Berfungsi di mana saja. Tamu, turis, pelancong mendapatkan jawaban dalam bahasa mereka sebelum mereka bertanya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Dibangun layaknya sebuah platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Cepat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Andal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Aksesibel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Embed yang ringan dan lazy loading. Tanpa layout jank."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Kontrak yang deterministik dan build gate menjaga rilis tetap aman dalam skala besar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Hierarki yang jelas, tipografi yang mudah dibaca, dan pola interaksi yang berfungsi di berbagai metode input."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Dapatkan FAQ Anda dalam 29 bahasa—secara instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Berikan URL situs web Anda kepada ombra. Dipersonalisasi untuk bisnis Anda, tersedia secara global. Tidak perlu penerjemah."
+    }
+  ],
+  "v": 1
+}

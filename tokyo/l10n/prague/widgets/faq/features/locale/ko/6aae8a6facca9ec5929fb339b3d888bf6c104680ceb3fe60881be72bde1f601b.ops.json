@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 기능 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "전 세계에서 통하고 바이럴로 성장하는 AI 기반 FAQ를 출시하는 데 필요한 모든 것."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 위젯이 Elfsight, Typeform, 그리고 맞춤 개발보다 나은 이유"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI를 위해 처음부터 설계했습니다. 전 세계에서 작동합니다. 바이럴로 성장합니다. 하나의 FAQ, 무한한 가능성."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI 편집: 설명하면 끝"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "원하는 것을 쉬운 영어로 말해보세요. '질문을 더 캐주얼하게 만들어' 또는 '가격에 대한 섹션을 추가해.' AI가 이해하고 즉시 실행합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "글로벌 즉시 적용: 지금, 어떤 언어든"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "지리적 범위는 프로젝트가 아니라 설정값입니다. 스페인어, 일본어, 아랍어를 한 번의 클릭으로 추가하세요. 수동 번역도, 지연도 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "어디서나 조합 가능: 하나의 FAQ, 무한한 맥락"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "같은 FAQ가 웹사이트, 이메일, 랜딩 페이지, 광고에서 작동합니다. 하나의 소스, 무한한 가능성."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeen이 모든 것을 바꾸는 이유"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "즉시 개인화된 로컬라이제이션"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "템플릿 또는 픽셀 퍼펙트 커스텀"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "조합형 아키텍처"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "웹사이트 URL → 29개 언어로 개인화된 콘텐츠를 즉시 생성. 수동 번역도, 번역가 비용도 없습니다. AI가 비즈니스 맥락을 이해합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "엄선된 템플릿으로 시작하거나 모든 것을 직접 정의하세요—선택은 당신의 몫, 완전한 자유. 타협도, 제한도 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "하나의 FAQ가 어디서나 작동합니다: 웹사이트, 이메일, 랜딩 페이지, 광고. 같은 콘텐츠, 무한한 맥락. 채널마다 다시 만들 필요가 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI를 위해 만들고, AI로 운영합니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen은 또 하나의 FAQ 빌더가 아닙니다—첫날부터 AI 운영을 위해 설계된 최초의 제품입니다. 경쟁사들이 AI 기능을 덧붙이는 동안, 우리는 AI 에이전트가 자율적으로 이해하고, 수정하고, 최적화할 수 있는 아키텍처를 구축했습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen의 AI 에코시스템 작동 방식"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "매번의 상호작용으로 더 똑똑해지는 완전한 플랫폼."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI가 의도를 이해합니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "기본값으로 글로벌 운영"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "지속적인 학습과 개선"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "바이럴 유통 자동화"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "변경 사항을 자연스럽게 설명하세요. “더 전문적으로 만들어줘” 또는 “CTA에 긴급함을 더해줘.” AI가 완벽하게 실행합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI가 모든 시장에서 현지화, 지원, 마케팅을 동시에 처리합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "모든 사용자 상호작용이 AI 시스템을 학습시켜, 시간이 지날수록 모든 FAQ가 더 똑똑해집니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "무료 FAQ가 자동으로 유입을 이끄는 마케팅 채널이 됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "픽셀 단위까지 디자인 제어"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "타협 없이 사이트와 브랜드에 맞추세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "레이아웃"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "외관"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "타이포그래피"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "브레이크포인트별로 아코디언, 목록, 카드 등 구조를 선택하세요. 간격, 밀도, 정렬을 제어해 자연스럽게 어우러지게 합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "UI 언어에 맞는 라운드, 테두리, 그림자, 서페이스. 제품에 기본으로 포함된 것처럼 보이게 하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "역할 기반 글꼴 스타일로 계층 구조를 깔끔하게 유지합니다. 제목, 본문, 라벨—브랜드에 맞게 조정됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "기본값으로 글로벌"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "하나의 위젯으로 모든 시장을 커버하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "즉시 로컬라이징"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL 지원"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "로케일을 고려한 카피"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO 기반"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "거버넌스"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "성능"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "번역 프로젝트 없이도 새로운 언어로 출시하세요. 어디서나 일관된 경험을 유지할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "레이아웃을 재설계하지 않고도 오른쪽에서 왼쪽으로 쓰는 언어를 지원하세요. 방향성은 항상 정확하게 유지됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "단어만이 아니라 대상에 맞게 톤과 표현을 조정하세요. 콘텐츠가 자연스럽게 읽힙니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "필요할 때 인덱싱할 수 있는 구조화된 콘텐츠. 답변이 검색되도록 만드세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "엄격한 계약으로 이탈을 방지합니다. 변경 사항은 명확하고, 감사 가능하며, 반복 가능합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "빠른 렌더링과 합리적인 로딩으로 기기와 네트워크 환경 전반에서 페이지가 매끄럽게 유지됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "플랫폼처럼 설계했습니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "빠름"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "신뢰성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "접근성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "가벼운 임베드와 지연 로딩. 레이아웃 깨짐 없이."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "결정론적 계약과 빌드 게이트로 대규모에서도 안전하게 배포할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "명확한 계층 구조, 가독성 좋은 타이포그래피, 그리고 다양한 입력 방식에서 작동하는 인터랙션 패턴."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQ의 미래를 경험하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "상호작용할수록 더 똑똑해지는 플랫폼. AI 시대를 위해 만들었습니다."
+    }
+  ],
+  "v": 1
+}

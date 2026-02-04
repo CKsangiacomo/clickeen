@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Можливості FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Усе, що потрібно, щоб запускати FAQ на основі ШІ, які працюють глобально та вірусно зростають."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Чому FAQ-виджет кращий за Elfsight, Typeform і кастомну розробку"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Створено з нуля для ШІ. Працює глобально. Вірусно зростає. Один FAQ — безмежні можливості."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Редагування ШІ: опишіть — і готово"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Скажіть, що хочете, простою англійською. «Зроби запитання більш невимушеними» або «додай розділ про ціни». ШІ розуміє й миттєво виконує."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Глобально миттєво: будь-яка мова — вже зараз"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Географія — це параметр, а не проєкт. Додайте іспанську, японську чи арабську в один клік. Без ручного перекладу й без затримок."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Компонованість всюди: один FAQ — безліч контекстів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Той самий FAQ працює на сайті, в email, на лендінгах, у рекламі. Одне джерело — безмежні можливості."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Чому Clickeen змінює все"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Миттєва персоналізована локалізація"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Шаблони або піксельна точність під кастом"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Компонована архітектура"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL сайту → персоналізований контент 29 мовами миттєво. Без ручного перекладу й витрат на перекладачів. ШІ розуміє контекст вашого бізнесу."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Почніть із підібраного шаблону АБО визначте все самі — на ваш вибір, повна свобода. Жодних компромісів, жодних обмежень."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Один FAQ працює всюди: сайт, email, лендінги, реклама. Той самий контент — безліч контекстів. Без перезбірки для кожного каналу."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Створено для ШІ, керується ШІ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen — не просто черговий конструктор FAQ; це перший продукт, спроєктований для роботи ШІ з першого дня. Поки конкуренти додають ШІ-функції заднім числом, ми побудували архітектуру, яку ШІ-агенти можуть розуміти, змінювати та автономно оптимізувати."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Як працює AI-екосистема Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Повноцінна платформа, що стає розумнішою з кожною взаємодією."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "ШІ розуміє ваш намір"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Глобальна робота за замовчуванням"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Безперервне навчання та вдосконалення"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Автоматизація вірального поширення"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Описуйте зміни природною мовою. «Зроби це більш професійним» або «додай терміновості до CTA». ШІ виконує бездоганно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "ШІ забезпечує локалізацію, підтримку та маркетинг на всіх ринках одночасно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Кожна взаємодія користувача навчає систему ШІ, роблячи всі FAQ з часом розумнішими."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Безкоштовні FAQ стають маркетинговими каналами, які автоматично стимулюють залучення."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Контроль дизайну — до пікселя"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Підлаштуйте під ваш сайт і бренд без компромісів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Макети"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Зовнішній вигляд"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Типографіка"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Обирайте структуру для кожного брейкпойнта — акордеон, список або картки. Керуйте відступами, щільністю та вирівнюванням, щоб усе виглядало нативно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Радіус, межі, тіні й поверхні, що відповідають вашій UI-мові. Нехай виглядає так, ніби це поставляється разом із вашим продуктом."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Типові стилі за ролями, що зберігають чисту ієрархію. Заголовки, основний текст, мітки — налаштовано під ваш бренд."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Глобально за замовчуванням"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Один віджет — для кожного ринку."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Миттєва локалізація"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Готово для RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Тексти з урахуванням локалі"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Основи SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Управління"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Продуктивність"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Запускайте нові мови без окремого проєкту перекладу. Зберігайте однаковий досвід всюди."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Підтримуйте мови справа наліво без переробки макетів. Напрямок відображення лишається коректним."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Адаптуйте тон і формулювання під аудиторію, а не лише слова. Контент звучить природно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Структурований контент, який можна індексувати, коли це потрібно. Зробіть відповіді такими, що їх легко знайти."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Суворі контракти запобігають розходженню. Зміни явні, піддаються аудиту та відтворювані."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Швидкий рендеринг і розумне завантаження — сторінка лишається плавною на різних пристроях і в різних мережах."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Побудовано як платформа"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Швидко"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Надійно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Доступно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Легкі вбудовування та ліниве завантаження. Жодних стрибків макета."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Детерміновані контракти та контрольні етапи збірки забезпечують безпечні релізи в масштабі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Чітка ієрархія, читабельна типографіка та патерни взаємодії, що працюють із різними способами введення."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Відчуйте майбутнє FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Платформа, що розумнішає з кожною взаємодією. Створена для епохи ШІ."
+    }
+  ],
+  "v": 1
+}

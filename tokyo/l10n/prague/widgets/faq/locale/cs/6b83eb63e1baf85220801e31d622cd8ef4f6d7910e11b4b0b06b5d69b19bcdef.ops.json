@@ -1,0 +1,352 @@
+{
+  "baseFingerprint": "6b83eb63e1baf85220801e31d622cd8ef4f6d7910e11b4b0b06b5d69b19bcdef",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vytvořte rychlý a krásný widget s častými dotazy. Přizpůsobte, publikujte a lokalizujte během několika minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ. Krásné odpovědi. Navržený pro rychlost."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vyladěný design, snadné aktualizace a SEO základy—připravené pro jakýkoli jazyk, poháněné AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Často kladené otázky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomozte návštěvníkům rychle najít odpovědi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Udělejte si to po svém"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Navrhněte si své dokonalé FAQ přímo tady. Změny uvidíte okamžitě."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Prozkoumejte, co je možné"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Začněte šablonami, učte se z příkladů a pak se ponořte do funkcí, až budete připraveni."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Šablony"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Příklady"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Funkce"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Spusťte to rychle s vyladěnými základy, které snadno přizpůsobíte své značce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Podívejte se, jak vypadají skvělé FAQ v praxi—a převezměte vzory, které konvertují."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Pochopte, co můžete ovládat—od rozvržení a stylů až po lokalizaci a SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Prohlédněte si to ve skutečných jazycích"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Přepínejte lokality a uvidíte, jak vaše FAQ zní napříč trhy—bez nutnosti cokoli znovu stavět."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Kreativní rozdělení (vpravo)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Toto je varianta s vizuálem vpravo, využívající stejnou kurátorovanou instanci jako hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Kreativní rozdělení (vlevo)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Toto je varianta s vizuálem vlevo, která používá stejnou kurátorsky vybranou instanci jako hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Sledujte, jak se otázky zodpovídají v reálném čase"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Vložte nádherně navržené FAQ, které nabídne správnou odpověď přesně ve chvíli pochybností. Zákazníci se okamžitě posunou dál, námitky se rozplynou dřív, než se z nich stanou tickety, a vy uzavřete více prodejů, aniž byste museli rozšiřovat podporu. Nastavte jednou, vložte kamkoli a nechte to fungovat 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Rozdělený kreativ (skládaný)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Toto je skládaná varianta, která používá stejnou kurátorovanou instanci jako hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ, která opravdu fungují (abyste se tím nemuseli zabývat vy)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Vaši zákazníci mají otázky. Odpovězte na ně jednou, ne stokrát."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Přestaňte přicházet o prodeje kvůli nezodpovězeným otázkám"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Získejte svůj čas zpět"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Uzavírejte více obchodů, i když spíte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Každá nezodpovězená otázka je zákazník, který odchází. Návštěvníci odcházejí, když nenajdou, co potřebují. Dobře navržené FAQ zabije námitky ještě dřív, než vzniknou — takže se zákazníci přesvědčí k nákupu, aniž by se vůbec museli ozvat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Snižte objem podpory o 40 % a více, když zákazníci najdou odpovědi okamžitě. Žádné další pípnutí na Slacku. Žádné další e-maily typu „jen rychlý dotaz“. Žádné další peklo s přepínáním kontextu. Vaše FAQ udělá těžkou práci za vás, zatímco vy se soustředíte na práci, na které skutečně záleží."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Správné FAQ předvídá pochybnosti a odstraňuje tření ve 2 ráno, když jste offline. Vaše odpovědi fungují nonstop. Zákazníci na vás nečekají — dostanou se dál, uvěří tomu, co vidí, a kliknou na „koupit“, aniž by vám narušili den."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Rozdělený kreativní (vpravo)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Toto je varianta s vizuálem vpravo, používá stejnou kurátorovanou instanci jako hero."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO vložení (indexovatelné)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Toto vložení běží ve stínovém režimu a vkládá JSON-LD (FAQPage) do hostitelské stránky pro indexování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kontrola nad designem, až na úroveň pixelu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Slaďte web i značku bez kompromisů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Rozvržení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Vzhled"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Zvolte strukturu pro každý breakpoint—akordeon, seznam nebo karty. Ovládejte rozestupy, hustotu i zarovnání, aby to působilo nativně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Zaoblení, ohraničení, stíny a plochy, které odpovídají vašemu UI jazyku. Ať to vypadá, jako by to přišlo přímo s vaším produktem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Typografické styly podle rolí, které udržují čistou hierarchii. Nadpisy, text, štítky—vyladěné pro vaši značku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globální ve výchozím nastavení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Jeden widget, každý trh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Okamžitá lokalizace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Připraveno pro RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Text přizpůsobený lokalitě"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO základy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Správa a řízení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Výkon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Nasazujte nové jazyky bez překladatelského projektu. Udržte konzistentní zkušenost všude."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Podpora jazyků zprava doleva bez přepracování rozvržení. Směr čtení zůstane správný."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Přizpůsobte tón a formulace publiku, ne jen slovům. Obsah zní přirozeně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Strukturovaný obsah, který lze podle potřeby indexovat. Zajistěte, aby byly odpovědi dohledatelné."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Přísné kontrakty brání rozjíždění. Změny jsou explicitní, auditovatelné a opakovatelné."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Rychlé vykreslení a rozumné načítání, aby stránka zůstala plynulá napříč zařízeními a sítěmi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Postavené jako platforma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rychlé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Spolehlivé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Přístupné"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lehké vložení a líné načítání. Žádné poskakování rozvržení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministické kontrakty a kontrolní brány buildů udržují nasazování bezpečné i ve velkém měřítku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Jasná hierarchie, čitelná typografie a interakční vzory, které fungují napříč vstupními metodami."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Spojte se s každým zákazníkem, kdekoli"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ poháněné AI, které mluví jejich jazykem a rozumí jejich potřebám."
+    }
+  ],
+  "v": 1
+}

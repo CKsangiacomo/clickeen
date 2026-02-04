@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Przykłady FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotele, restauracje i organizatorzy wycieczek korzystają z Clickeen, aby natychmiast obsługiwać międzynarodowych klientów w 29 językach."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Przykłady FAQ dla hoteli, restauracji, touroperatorów i nie tylko"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Podaj Ombra adres URL swojej strony. Otrzymaj FAQ spersonalizowane pod Twoją firmę w 29 językach — natychmiast. Bez tłumacza."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotele w Barcelonie: goście z ponad 50 krajów pytają o „godzinę zameldowania?” w 15 językach"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Daj Ombra swoją stronę hotelu. FAQ spersonalizowane pod Twój obiekt w 29 językach — natychmiast. Zmniejsz liczbę zapytań do recepcji o 60%, popraw wyniki satysfakcji gości."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restauracje w Paryżu: turyści zadają pytania o dietę po francusku, angielsku, hiszpańsku, chińsku, japońsku"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "FAQ do Twojego menu w 29 językach — natychmiast. Bez tłumacza, bez ręcznej pracy. Zwiększ rotację stolików, ogranicz przerywanie pracy obsługi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Gospodarze Airbnb w Toskanii: instrukcje zameldowania, hasło do Wi‑Fi, lokalne wskazówki w języku Twojego gościa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Podaj Ombra URL swojego ogłoszenia. Zasady domu w 29 językach natychmiast. 5‑gwiazdkowe recenzje od międzynarodowych gości."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Międzynarodowi klienci nie czekają na tłumaczenia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Hotel w Rzymie traci rezerwacje, gdy niemieccy turyści nie mogą znaleźć informacji o zameldowaniu. Restauracja w Tokio traci rezerwacje stolików, gdy osoby mówiące po angielsku nie mogą znaleźć godzin otwarcia. Każde pytanie bez odpowiedzi w ich języku to stracony klient. Ombra rozwiązuje ten problem: adres URL strony → spersonalizowane FAQ w 29 językach, natychmiast."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Organizatorzy wycieczek w Tajlandii: FAQ dla podróżnych międzynarodowych dotyczące rezerwacji, bezpieczeństwa i planu podróży"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Daj Ombra swoją stronę internetową z ofertą wycieczek. FAQ w 29 językach natychmiast. Zmniejsz liczbę zgłoszeń e-mailowych do wsparcia o 70% i zwiększ konwersję z rynków międzynarodowych."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Muzea w Rzymie: informacje o wystawach, bilety, godziny otwarcia dla zwiedzających z całego świata"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "FAQ dla zwiedzających w 29 językach — natychmiast. Popraw doświadczenie zwiedzających, zmniejsz liczbę zapytań w punkcie informacyjnym o 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Od międzynarodowego chaosu do natychmiastowej jasności"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Jak firmy z branży hotelarskiej korzystają z Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Podaj Ombra adres URL swojej strony"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ spersonalizowane pod Twoją firmę w 29 językach — natychmiast"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Osadź i obserwuj, jak spada liczba zapytań z zagranicy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI odczytuje kontekst Twojej firmy — lokalizację, usługi, zasady. Automatycznie rozumie Twoje konkretne potrzeby."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Nie potrzebujesz tłumacza. Bez ręcznej pracy. Treści dopasowane do Twojej firmy I dostępne globalnie — od razu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Skrypt z 3 linijek. Działa wszędzie. Goście, turyści i podróżni otrzymują odpowiedzi w swoim języku, zanim zapytają."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Zbudowane jak platforma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Szybkie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Niezawodne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dostępne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lekkie osadzenia i leniwe ładowanie. Bez przeskoków układu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministyczne kontrakty i bramki w procesie budowania utrzymują bezpieczne wdrażanie na dużą skalę."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Jasna hierarchia, czytelna typografia i wzorce interakcji działające w różnych metodach wprowadzania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Zyskaj swoje FAQ w 29 językach — natychmiast"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Podaj ombra adres URL swojej strony. Spersonalizowane pod Twoją firmę, dostępne globalnie. Bez tłumacza."
+    }
+  ],
+  "v": 1
+}

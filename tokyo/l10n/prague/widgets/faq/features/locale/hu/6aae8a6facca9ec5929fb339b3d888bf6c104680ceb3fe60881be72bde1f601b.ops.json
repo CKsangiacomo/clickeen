@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK funkciók – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Minden, amire szükséged van, hogy AI-alapú, világszerte működő és virálisan növekedő GYIK-et tegyél közzé."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Miért veri a GYIK widget az Elfsightot, a Typeformot és az egyedileg fejlesztett megoldásokat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Nulláról AI-ra építve. Világszerte működik. Virálisan növekszik. Egy GYIK, végtelen lehetőség."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-szerkesztés: leírod, kész"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Mondd el egyszerűen, mit szeretnél. „Legyenek lazábbak a kérdések” vagy „adj hozzá egy árazásról szóló részt.” Az AI megérti, és azonnal végrehajtja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Azonnali globalitás: bármely nyelv, most"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "A földrajz paraméter, nem projekt. Egy kattintással hozzáadhatsz spanyolt, japánt vagy arabot. Nincs kézi fordítás, nincs késedelem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Komponálható mindenhol: egy GYIK, végtelen kontextus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Ugyanaz a GYIK működik weboldalon, e-mailben, landing oldalakon, hirdetésekben. Egy forrás, végtelen lehetőség."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Miért változtat meg mindent a Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Azonnali, személyre szabott lokalizáció"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Sablonok vagy pixelpontos egyedi megoldás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponálható architektúra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Weboldal URL → személyre szabott tartalom 29 nyelven azonnal. Nincs kézi fordítás, nincsenek fordítói költségek. Az AI érti az üzleti kontextusodat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Kezdj egy gondosan válogatott sablonnal VAGY határozz meg mindent te magad — a te döntésed, teljes szabadság. Nincs kompromisszum, nincs korlátozás."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Egy GYIK mindenhol működik: weboldal, e-mail, landing oldalak, hirdetések. Ugyanaz a tartalom, végtelen kontextus. Nincs újraépítés csatornánként."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI-ra építve, AI által üzemeltetve"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "A Clickeen nem csak egy újabb GYIK-készítő — ez az első termék, amelyet az első naptól AI-üzemeltetésre terveztek. Míg a versenytársak utólag toldoznak AI-funkciókat, mi olyan architektúrát építettünk, amelyet az AI-ügynökök önállóan megértenek, módosítanak és optimalizálnak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Így működik a Clickeen AI-ökoszisztémája"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Egy teljes платформ, amely minden interakcióval okosabbá válik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Az AI megérti a szándékodat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Alapértelmezetten globális működés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Folyamatos tanulás és fejlesztés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Vírusos terjesztési automatizálás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Írd le természetesen a változtatásokat: „Tedd professzionálisabbá” vagy „adj több sürgetést a CTA-hoz.” Az AI hibátlanul végrehajtja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Az AI egyszerre kezeli a lokalizációt, az ügyféltámogatást és a marketinget minden piacon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Minden felhasználói interakció tanítja az AI-rendszert, így idővel minden GYIK okosabbá válik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Az ingyenes GYIK-ek marketingcsatornákká válnak, amelyek automatikusan növelik az ügyfélszerzést."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Dizájnkontroll, egészen pixelpontosan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Illeszd a weboldaladhoz és a márkádhoz kompromisszumok nélkül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Elrendezések"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Megjelenés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipográfia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Válassz struktúrát töréspontonként—harmonika, lista vagy kártyák. Szabályozd a térközöket, a sűrűséget és az igazítást, hogy natívnak hasson."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Lekerekítés, szegélyek, árnyékok és felületek, amelyek illeszkednek a UI-nyelvedhez. Úgy fog kinézni, mintha a termékeddel együtt érkezett volna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Szerepköralapú betűstílusok, amelyek tisztán tartják a hierarchiát. Címsorok, törzsszöveg, címkék— a márkádhoz hangolva."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Alapértelmezetten globális"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Egy widget, minden piacra."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Azonnali lokalizáció"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL-kész"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Helyi sajátosságokra szabott szöveg"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO alapok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Irányítás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Teljesítmény"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Indulj új nyelveken fordítási projekt nélkül. Tartsd mindenhol egységesen az élményt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Támogasd a jobbról balra író nyelveket az elrendezések újratervezése nélkül. A szövegirány mindig helyes marad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Igazítsd a hangnemet és a megfogalmazást a közönséghez, ne csak a szavakat. A tartalom természetesen hat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Strukturált tartalom, amit akkor lehet indexelni, amikor szükség van rá. Tedd felfedezhetővé a válaszokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "A szigorú szerződések megakadályozzák az eltéréseket. A változtatások egyértelműek, auditálhatók és megismételhetők."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Gyors renderelés és ésszerű betöltés, hogy az oldal zökkenőmentes maradjon eszközökön és hálózatokon át."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Platformként felépítve"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Gyors"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Megbízható"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Akadálymentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Könnyű beágyazás és lusta betöltés. Nincs elrendezés-ugrálás."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Determinista szerződések és build kapuk gondoskodnak a biztonságos, nagy léptékű szállításról."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tiszta hierarchia, jól olvasható tipográfia és olyan interakciós minták, amelyek minden beviteli módon működnek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Tapasztald meg a GYIK-ek jövőjét"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "A platform, amely minden interakcióval okosabb lesz. Az AI-korszakra építve."
+    }
+  ],
+  "v": 1
+}

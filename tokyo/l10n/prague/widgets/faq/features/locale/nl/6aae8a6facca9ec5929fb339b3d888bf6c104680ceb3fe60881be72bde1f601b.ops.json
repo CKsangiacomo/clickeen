@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-functies - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alles wat je nodig hebt om AI-gestuurde FAQ’s te lanceren die wereldwijd werken en viraal groeien."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Waarom de FAQ-widget beter is dan Elfsight, Typeform en maatwerk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vanaf nul gebouwd voor AI. Werkt wereldwijd. Groeit viraal. Eén FAQ, oneindige mogelijkheden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-bewerking: beschrijf het, klaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Zeg in gewone mensentaal wat je wilt. ‘Maak de vragen wat informeler’ of ‘voeg een sectie toe over prijzen.’ AI begrijpt het en voert het direct uit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Wereldwijd direct: elke taal, nu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie is een parameter, geen project. Voeg Spaans, Japans of Arabisch toe met één klik. Geen handmatige vertaling, geen vertragingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Overal inzetbaar: één FAQ, oneindige contexten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Dezelfde FAQ werkt op de website, in e-mail, landingspagina’s en advertenties. Eén bron, oneindige mogelijkheden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Waarom Clickeen alles verandert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Directe gepersonaliseerde lokalisatie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Templates of pixelperfect maatwerk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Composable-architectuur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Website-URL → direct gepersonaliseerde content in 29 talen. Geen handmatige vertaling, geen vertaalkosten. AI begrijpt je bedrijfscontext."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Begin met een zorgvuldig samengestelde template OF bepaal alles zelf—jouw keuze, totale vrijheid. Geen compromissen, geen beperkingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Eén FAQ werkt overal: website, e-mail, landingspagina’s, advertenties. Dezelfde content, oneindige contexten. Niet opnieuw bouwen voor elk kanaal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Gebouwd voor AI, aangestuurd door AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen is niet zomaar nog een FAQ-builder—het is het eerste product dat vanaf dag één is ontworpen om door AI te worden aangestuurd. Terwijl concurrenten AI-functies achteraf toevoegen, hebben wij een architectuur gebouwd die AI-agents zelfstandig kunnen begrijpen, aanpassen en optimaliseren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Hoe het AI-ecosysteem van Clickeen werkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Een compleet platform dat met elke interactie slimmer wordt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI begrijpt je intentie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Standaard wereldwijd actief"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Continu leren en verbeteren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisering van virale distributie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beschrijf wijzigingen op een natuurlijke manier. 'Maak het professioneler' of 'voeg urgentie toe aan de CTA.' De AI voert het perfect uit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI regelt lokalisatie, support en marketing in alle markten tegelijk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Elke gebruikersinteractie leert het AI-systeem, waardoor alle FAQ’s na verloop van tijd slimmer worden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Gratis FAQ’s worden marketingkanalen die automatisch acquisitie stimuleren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Ontwerpcontrole, tot op de pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Laat het naadloos aansluiten op je site en merk, zonder compromissen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Uiterlijk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Kies de structuur per breakpoint—accordion, lijst of kaarten. Beheer tussenruimte, dichtheid en uitlijning zodat het native aanvoelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Rondingen, randen, schaduwen en oppervlakken die passen bij je UI-taal. Laat het eruitzien alsof het met je product is meegeleverd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Rolgebaseerde typestijlen die de hiërarchie helder houden. Koppen, body, labels—afgestemd op je merk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Standaard wereldwijd"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Eén widget, elke markt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Directe lokalisatie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Klaar voor RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Tekst afgestemd op de locale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-basis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Governance"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Prestaties"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Lanceer in nieuwe talen zonder een vertaalproject. Houd de ervaring overal consistent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Ondersteun talen van rechts naar links zonder lay-outs opnieuw te ontwerpen. De leesrichting blijft correct."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Pas toon en formulering aan het publiek aan, niet alleen de woorden. De content leest natuurlijk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Gestructureerde content die geïndexeerd kan worden wanneer je het nodig hebt. Maak antwoorden vindbaar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Strikte contracten voorkomen afwijkingen. Wijzigingen zijn expliciet, controleerbaar en herhaalbaar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Snelle rendering en slim laden zodat de pagina soepel blijft op verschillende apparaten en netwerken."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Gebouwd als een platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Betrouwbaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Toegankelijk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lichtgewicht embeds en lazy loading. Geen layoutverschuivingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministische contracten en build gates houden releasen veilig op schaal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Duidelijke hiërarchie, goed leesbare typografie en interactiepatronen die werken met verschillende invoermethoden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Ervaar de toekomst van FAQ’s"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Het platform dat met elke interactie slimmer wordt. Gebouwd voor het AI-tijdperk."
+    }
+  ],
+  "v": 1
+}

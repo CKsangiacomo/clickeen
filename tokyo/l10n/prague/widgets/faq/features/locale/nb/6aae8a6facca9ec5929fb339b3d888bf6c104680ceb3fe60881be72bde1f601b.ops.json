@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-funksjoner – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alt du trenger for å lansere AI-drevne FAQ-er som fungerer globalt og vokser viralt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Derfor slår FAQ-widgeten Elfsight, Typeform og skreddersøm"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Bygget fra bunnen av for AI. Fungerer globalt. Vokser viralt. Én FAQ, uendelige muligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-redigering: beskriv, ferdig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Fortell hva du vil på vanlig engelsk. «Gjør spørsmålene mer uformelle» eller «legg til en seksjon om prising». AI forstår og utfører umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globalt, umiddelbart: hvilket som helst språk, nå"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografi er en parameter, ikke et prosjekt. Legg til spansk, japansk eller arabisk med ett klikk. Ingen manuell oversettelse, ingen forsinkelser."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Komponerbar overalt: én FAQ, uendelige kontekster"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Samme FAQ fungerer på nettsted, i e-post, på landingssider og i annonser. Én kilde, uendelige muligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Hvorfor Clickeen endrer alt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Umiddelbar, personlig tilpasset lokalisering"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Maler eller pikselperfekt skreddersøm"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponerbar arkitektur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Nettsteds-URL → personlig tilpasset innhold på 29 språk, umiddelbart. Ingen manuell oversettelse, ingen kostnader til oversettere. AI forstår forretningskonteksten din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Start med en kuratert mal ELLER definer alt selv – du velger, full frihet. Ingen kompromisser, ingen begrensninger."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Én FAQ fungerer overalt: nettsted, e-post, landingssider, annonser. Samme innhold, uendelige kontekster. Ingen gjenoppbygging for hver kanal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Bygget for AI, drevet av AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen er ikke bare enda en FAQ-bygger – det er det første produktet som er designet for AI-drift fra dag én. Mens konkurrenter ettermonterer AI-funksjoner, har vi bygget en arkitektur som AI-agenter kan forstå, endre og optimalisere autonomt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Slik fungerer Clickeens AI-økosystem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "En komplett plattform som blir smartere for hver interaksjon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI forstår intensjonen din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Global drift som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Kontinuerlig læring og forbedring"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisering av viral distribusjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beskriv endringer på en naturlig måte. «Gjør det mer profesjonelt» eller «legg til mer hastverk i CTA-en». AI utfører det perfekt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI håndterer lokalisering, support og markedsføring på tvers av alle markeder samtidig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Hver brukerinteraksjon lærer opp AI-systemet, slik at alle FAQ-er blir smartere over tid."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Gratis FAQ-er blir markedsføringskanaler som automatisk driver kundeanskaffelse."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designkontroll, ned til pikselen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Match nettstedet og merkevaren din uten kompromisser."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Oppsett"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Utseende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Velg struktur per breakpoint—trekkspill, liste eller kort. Kontroller avstand, tetthet og justering slik at det føles innebygd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius, kanter, skygger og flater som matcher UI-språket ditt. Få det til å se ut som om det fulgte med produktet ditt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Rollebaserte typestiler som holder hierarkiet ryddig. Overskrifter, brødtekst, etiketter—finjustert til merkevaren din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Én widget, alle markeder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Umiddelbar lokalisering"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Klar for RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Lokaletilpasset tekst"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-grunnmur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Styring"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Ytelse"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Lanser på nye språk uten et oversettelsesprosjekt. Hold opplevelsen konsekvent overalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Støtt høyre-til-venstre-språk uten å redesigne layout. Retningen forblir korrekt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Tilpass tone og formulering til målgruppen, ikke bare ordene. Innholdet leses naturlig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Strukturert innhold som kan indekseres når du trenger det. Gjør svarene søkbare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Strenge kontrakter hindrer avvik. Endringer er tydelige, reviderbare og repeterbare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Rask rendering og fornuftig innlasting gjør at siden forblir smidig på tvers av enheter og nettverk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Bygget som en plattform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rask"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Pålitelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tilgjengelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lette innbygginger og lat innlasting. Ingen layout-hakking."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministiske kontrakter og byggesjekker gjør utrulling trygg i stor skala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tydelig hierarki, lettlest typografi og interaksjonsmønstre som fungerer på tvers av inputmetoder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Opplev fremtidens FAQ-er"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Plattformen som blir smartere for hver interaksjon. Bygget for AI-æraen."
+    }
+  ],
+  "v": 1
+}

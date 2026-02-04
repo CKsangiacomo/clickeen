@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS şablonları - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Dikkat çeken ve ziyaretçileri dönüştüren göz alıcı SSS tasarımları arasından seçim yapın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "SSS’niz. Sizin tarzınız."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Varsayılan olarak şık. Tasarım gereği benzersiz bir şekilde sizin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "İhtiyacınız olduğunda cesur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—aydınlık ve karanlıkta trend odaklı görünümler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "İstediğinizde zarif"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimal, temiz ve modern. Her zaman güncel hissettiren zamansız stiller."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Bir tasarımla başlayın. Sonra onu size ait yapın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Estetiği anında yakalayın. Trend tasarımlar veya zamansız klasikler. Sonra sınır olmadan özelleştirin—köşe başına radius, kenar başına gölgeler, rol bazında tipografi ve duyarlı kırılım noktaları. İmzanız hâline gelen bir şablon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "SSS"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ziyaretçilerin hızlıca yanıt bulmasına yardımcı olun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Tasarım özgürlüğü, içine işlenmiş."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Düzenlerden bitişlere, yazı tiplerine—zahmetsiz hissettiren özelleştirme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Düzenler, sizin tarzınız"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Sınırsız görünüm kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Tipografide hassasiyet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Tek bir düzen sistemi değil, birçok sistem. Kırılım noktası başına yapı. Masaüstü/mobil için bağımsız padding ve boşluklar. Sütunları, yığılmayı, hizalamayı ve yeniden akışı—tam olarak—kontrol edin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Köşe başına radius. Özel renklerle kenarlıklar. Dışta ve içte gölgeler (bağlı veya kenar başına bağımsız). Degrade, görsel veya video arka planlar. Tam görsel yetki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Altı ayrı rol (başlık, gövde, soru, yanıt, buton, bölüm). 17 Google Fonts arasından seçin. Ağırlık, stil, boyut—her rol için tamamen özelleştirilebilir. Dinamik ölçekler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "SSS widget’ınız için üç düzen motoru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Kademeli açılım için akordeon. Basitlik için liste. Görsel hiyerarşi için kartlar. Izgara veya masonry. Duyarlı sütunlar. Aralıklar ve padding üzerinde ayrıntılı kontrol."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Sınırsız görünüm kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Köşe başına radius. Özel renklerle kenarlıklar. Dışta ve içte gölgeler (bağlı veya kenar başına bağımsız). Degrade, görsel veya video arka planlar. Tam görsel yetki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipografide hassasiyet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Altı ayrı rol (başlık, gövde, soru, yanıt, buton, bölüm). 17 Google Fonts arasından seçin. Ağırlık, stil, boyut—her rol için tamamen özelleştirilebilir. Dinamik ölçekler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Karanlık mod: sofistike ve modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Modern arayüzler karanlıkta parıldar. En yeni estetikle premium bir his. Her şablonla birlikte gelir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Masaüstü ve mobil, kusursuz ayarlı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "SSS widget’ınız her kırılım noktasına uyum sağlar. Cihaza göre farklı sütun sayıları, padding ve boşluklar. Tek bir tasarım dili, sonsuz görünüm alanı."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Şablondan mükemmel uyuma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "SSS widget’ınızı nasıl oluşturursunuz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Bir tasarım şablonu seçin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Düzenleri ve görünümü özelleştirin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Tipografiyi ve duyarlılığı ince ayarlayın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trend, klasik veya minimal. Aydınlık ve karanlık modlar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Akordeon, liste veya kartlar. Köşe başına yarıçap, kenar başına gölgeler, degradeler, kenarlıklar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Altı yazı tipi rolü, 17 Google Yazı Tipi. Masaüstünde ve mobilde mükemmel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Ücretsiz bir SSS widget’ı oluşturun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Bir tasarım şablonuyla başlayın veya sıfırdan oluşturun. Tam yaratıcı kontrol."
+    }
+  ],
+  "v": 1
+}

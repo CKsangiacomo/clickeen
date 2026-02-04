@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-ominaisuudet – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kaikki, mitä tarvitset julkaistaksesi tekoälyllä tehostetut UKK:t, jotka toimivat globaalisti ja kasvavat viraalisti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Miksi UKK-widget päihittää Elfsightin, Typeformin ja räätälöidyt toteutukset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Rakennettu alusta asti tekoälyä varten. Toimii globaalisti. Kasvaa viraalisti. Yksi UKK, loputtomasti mahdollisuuksia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Tekoälymuokkaus: kuvaile, valmista"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Kerro selkeällä englannilla, mitä haluat. ”Make the questions more casual” tai ”add a section about pricing.” Tekoäly ymmärtää ja toteuttaa heti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globaali heti: mikä tahansa kieli, nyt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Maantiede on parametri, ei projekti. Lisää espanja, japani tai arabia yhdellä klikkauksella. Ei manuaalista käännöstä, ei viiveitä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Koostettavissa kaikkialla: yksi UKK, loputtomat kontekstit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Sama UKK toimii verkkosivulla, sähköpostissa, laskeutumissivuilla ja mainoksissa. Yksi lähde, loputtomasti mahdollisuuksia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Miksi Clickeen muuttaa kaiken"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Välitön personoitu lokalisaatio"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mallit tai pikselintarkka räätälöinti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Koostettava arkkitehtuuri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Verkkosivun URL → personoitu sisältö 29 kielellä välittömästi. Ei manuaalista käännöstä, ei kääntäjäkuluja. Tekoäly ymmärtää liiketoimintasi kontekstin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Aloita kuratoidulla mallilla TAI määritä kaikki itse—valinta on sinun, täydellinen vapaus. Ei kompromisseja, ei rajoituksia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Yksi UKK toimii kaikkialla: verkkosivulla, sähköpostissa, laskeutumissivuilla ja mainoksissa. Sama sisältö, loputtomat kontekstit. Ei uudelleenrakentamista joka kanavaa varten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Rakennettu tekoälyä varten, tekoälyn operoima"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ei ole vain yksi UKK-rakentaja lisää—se on ensimmäinen tuote, joka on suunniteltu tekoälyn operoitavaksi alusta alkaen. Kun kilpailijat lisäävät tekoälyominaisuuksia jälkikäteen, me rakensimme arkkitehtuurin, jonka tekoälyagentit voivat ymmärtää, muokata ja optimoida autonomisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Näin Clickeenin tekoälyekosysteemi toimii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Täydellinen alusta, joka älykkääntyy jokaisen vuorovaikutuksen myötä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Tekoäly ymmärtää tarkoituksesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globaali toiminta oletuksena"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Jatkuva oppiminen ja parantaminen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Viraalisen jakelun automaatio"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Kuvaile muutokset luonnollisesti. ”Tee tästä ammattimaisempi” tai ”lisää CTA:han kiireellisyyttä.” Tekoäly toteuttaa sen täydellisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Tekoäly hoitaa lokalisoinnin, tuen ja markkinoinnin kaikilla markkinoilla samanaikaisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Jokainen käyttäjän vuorovaikutus opettaa tekoälyjärjestelmää, jolloin kaikki FAQ:t muuttuvat ajan myötä älykkäämmiksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Ilmaisista FAQ:ista tulee markkinointikanavia, jotka ohjaavat hankintaa automaattisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Suunnittelun hallinta pikselintarkasti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Sovita sivustoosi ja brändiisi ilman kompromisseja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Asettelut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Ulkoasu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Valitse rakenne responsiivisten katkaisupisteiden mukaan—haitari, lista tai kortit. Hallitse välistystä, tiheyttä ja kohdistusta, jotta se tuntuu natiivisti osalta sivustoasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Kulmasäteet, reunukset, varjot ja pinnat, jotka sopivat käyttöliittymäsi tyyliin. Tee siitä sellainen, että se näyttää toimitetulta osana tuotettasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Roolipohjaiset tekstityylit, jotka pitävät hierarkian selkeänä. Otsikot, leipäteksti, tunnisteet—viritetty brändiisi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globaali oletuksena"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Yksi widget, jokaiselle markkinalle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Välitön lokalisointi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Valmis RTL-kielille"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Lokaaliin mukautuva teksti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-perusta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Hallintamalli"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Suorituskyky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Julkaise uusilla kielillä ilman käännösprojektia. Pidä kokemus yhtenäisenä kaikkialla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Tuki oikealta vasemmalle luettaville kielille ilman asettelujen uudelleensuunnittelua. Suunta pysyy oikeana."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Mukauta sävy ja sanavalinnat yleisölle, ei vain sanoja. Sisältö kuulostaa luonnolliselta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Jäsennelty sisältö, jonka voi indeksoida tarvittaessa. Tee vastaukset löydettäviksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Tiukat sopimukset estävät ajautumisen. Muutokset ovat selkeitä, auditoitavia ja toistettavia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Nopea renderöinti ja järkevä lataus pitävät sivun sulavana eri laitteilla ja verkoissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Rakennettu kuin alusta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nopea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Luotettava"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Saavutettava"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Kevyet upotukset ja laiska lataus. Ei asettelun nykimistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministiset sopimukset ja build-portit pitävät julkaisut turvallisina mittakaavassa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Selkeä hierarkia, luettava typografia ja vuorovaikutusmallit, jotka toimivat eri syöttötavoilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Koe usein kysyttyjen kysymysten tulevaisuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Alusta, joka viisastuu jokaisesta vuorovaikutuksesta. Rakennettu AI-aikakauteen."
+    }
+  ],
+  "v": 1
+}

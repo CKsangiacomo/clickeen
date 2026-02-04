@@ -1,0 +1,12 @@
+{
+  "baseFingerprint": "b4a4a7941e0ce43f8e07123f70bcc017bd1b394b4ca890dc40608d797f09e958",
+  "baseUpdatedAt": "2026-02-04T17:11:44.985Z",
+  "pageId": "widgets/countdown/features",
+  "snapshot": {
+    "blocks.hero.copy.headline": "Countdown features",
+    "blocks.hero.copy.subheadline": "Everything you need to create urgency and drive action.",
+    "blocks.page-meta.copy.description": "Explore the features of the countdown widget.",
+    "blocks.page-meta.copy.title": "Countdown features - Clickeen"
+  },
+  "v": 1
+}

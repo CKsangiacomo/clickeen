@@ -1,0 +1,12 @@
+{
+  "baseFingerprint": "17e311c289a11d4f6ae90843eb3b6c00808a6b664e79814428552bc207764f5f",
+  "baseUpdatedAt": "2026-02-04T17:11:44.988Z",
+  "pageId": "widgets/countdown/templates",
+  "snapshot": {
+    "blocks.hero.copy.headline": "Countdown templates",
+    "blocks.hero.copy.subheadline": "Ready-made layouts for common countdown use cases.",
+    "blocks.page-meta.copy.description": "Browse templates for the countdown widget.",
+    "blocks.page-meta.copy.title": "Countdown templates - Clickeen"
+  },
+  "v": 1
+}

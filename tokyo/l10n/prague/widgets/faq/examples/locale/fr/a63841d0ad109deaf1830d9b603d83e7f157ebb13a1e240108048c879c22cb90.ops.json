@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemples de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Les hôtels, les restaurants et les tour-opérateurs utilisent Clickeen pour servir instantanément une clientèle internationale dans 29 langues."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemples de FAQ pour hôtels, restaurants, tour-opérateurs et plus encore"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Donnez à Ombra l’URL de votre site web. Obtenez une FAQ personnalisée pour votre entreprise en 29 langues — instantanément. Aucun traducteur nécessaire."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hôtels à Barcelone : des voyageurs de plus de 50 pays demandent « à quelle heure est le check-in ? » en 15 langues"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Donnez à Ombra votre site web d’hôtel. Une FAQ personnalisée pour votre établissement en 29 langues—instantanément. Réduisez de 60 % les demandes à la réception, améliorez les scores de satisfaction des clients."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restaurants à Paris : les touristes posent des questions alimentaires en français, anglais, espagnol, chinois, japonais"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "La FAQ de votre menu en 29 langues—instantanément. Aucun traducteur, aucun travail manuel. Améliorez la rotation des tables, réduisez les interruptions du personnel de salle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Hôtes Airbnb en Toscane : instructions d’arrivée, mot de passe Wi‑Fi, conseils locaux dans la langue de votre voyageur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Donnez à Ombra l’URL de votre annonce. Règlement intérieur en 29 langues, instantanément. Des avis 5 étoiles de la part de voyageurs internationaux."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Les clients internationaux n’attendent pas les traductions"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Un hôtel à Rome perd des réservations lorsque des touristes allemands ne trouvent pas les informations d’enregistrement. Un restaurant à Tokyo perd des réservations lorsque des anglophones ne trouvent pas les horaires. Chaque question sans réponse dans leur langue est un client perdu. Ombra résout ce problème : URL du site web → FAQ personnalisée en 29 langues, instantanément."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Voyagistes en Thaïlande : réservation, sécurité, itinéraires — FAQ pour les voyageurs internationaux"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Donnez à Ombra le site web de votre tour. FAQ instantanée en 29 langues. Réduisez de 70 % le support par e-mail, augmentez les conversions depuis les marchés internationaux."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Musées à Rome : infos sur les expositions, billets, horaires pour les visiteurs du monde entier"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "FAQ visiteurs en 29 langues — instantanément. Améliorez l’expérience des visiteurs, réduisez de 50 % les demandes au comptoir d’information."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "De la confusion internationale à la clarté immédiate"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Comment les entreprises hôtelières utilisent Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Donnez à Ombra l’URL de votre site web"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ personnalisée pour votre entreprise en 29 langues — instantanément"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Intégrez et regardez les demandes internationales chuter"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "L’IA analyse le contexte de votre entreprise — emplacement, services, politiques. Elle comprend automatiquement vos besoins spécifiques."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Aucun traducteur nécessaire. Aucun travail manuel. Contenu adapté à votre entreprise ET disponible dans le monde entier, immédiatement."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Script en 3 lignes. Fonctionne partout. Les clients, touristes et voyageurs obtiennent des réponses dans leur langue avant même de les demander."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Conçu comme une plateforme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rapide"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Fiable"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Accessible"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Intégrations légères et chargement paresseux. Pas de décalage de mise en page."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Des contrats déterministes et des garde-fous de build garantissent des mises en production sûres à grande échelle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Hiérarchie claire, typographie lisible et schémas d’interaction qui fonctionnent avec tous les modes de saisie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Obtenez votre FAQ en 29 langues—instantanément"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Donnez à ombra l’URL de votre site web. Personnalisé pour votre entreprise, disponible dans le monde entier. Aucun traducteur nécessaire."
+    }
+  ],
+  "v": 1
+}

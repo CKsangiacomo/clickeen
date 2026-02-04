@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funkce FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vše, co potřebujete k nasazení FAQ s AI, která fungují globálně a rostou virálně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Proč FAQ widget poráží Elfsight, Typeform i řešení na míru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Postaveno od nuly pro AI. Funguje globálně. Roste virálně. Jedno FAQ, nekonečné možnosti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Úpravy pomocí AI: popište, hotovo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Řekněte jí běžnou češtinou, co chcete. „Udělej otázky neformálnější“ nebo „přidej sekci o cenách“. AI porozumí a hned to provede."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globálně okamžitě: jakýkoli jazyk, hned"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie je parametr, ne projekt. Přidejte španělštinu, japonštinu nebo arabštinu jedním kliknutím. Bez ručního překladu, bez zdržení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Skládatelné všude: jedno FAQ, nekonečno kontextů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Stejné FAQ funguje na webu, v e-mailu, na landing pages i v reklamách. Jeden zdroj, nekonečné možnosti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Proč Clickeen mění pravidla hry"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Okamžitá personalizovaná lokalizace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Šablony nebo pixelově přesné řešení na míru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Skládatelná architektura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL webu → okamžitě personalizovaný obsah v 29 jazycích. Bez ručního překladu, bez nákladů na překladatele. AI rozumí kontextu vašeho byznysu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Začněte s pečlivě vybranou šablonou NEBO si vše definujte sami — je to na vás, naprostá svoboda. Žádné kompromisy, žádná omezení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Jedno FAQ funguje všude: web, e-mail, landing pages, reklamy. Stejný obsah, nekonečno kontextů. Bez přestavování pro každý kanál."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Postaveno pro AI, provozované AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen není jen další nástroj na tvorbu FAQ — je to první produkt navržený pro provoz s AI od prvního dne. Zatímco konkurence AI funkce dodatečně doplňuje, my jsme vybudovali architekturu, které AI agenti rozumí, umí ji upravovat a autonomně optimalizovat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Jak funguje AI ekosystém Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Kompletní platforma, která je s každou interakcí chytřejší."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI rozumí vašemu záměru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globální provoz ve výchozím nastavení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Průběžné učení a zlepšování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatizace virální distribuce"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Popište změny přirozeně. „Udělej to profesionálnější“ nebo „přidej do CTA naléhavost“. AI to provede perfektně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI zvládá lokalizaci, podporu i marketing na všech trzích současně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Každá interakce uživatele učí AI systém, takže se všechny FAQ časem zlepšují."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Bezplatné FAQ se stávají marketingovými kanály, které automaticky přivádějí nové uživatele."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kontrola designu až na úroveň pixelu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Sladění s vaším webem a značkou bez kompromisů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Rozvržení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Vzhled"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Zvolte strukturu pro každý breakpoint—akordeon, seznam nebo karty. Ovládejte rozestupy, hustotu i zarovnání, aby to působilo nativně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Zaoblení, okraje, stíny a povrchy, které odpovídají vašemu UI jazyku. Ať to vypadá, jako by to bylo součástí vašeho produktu od začátku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Styly písma podle rolí, které udržují čistou hierarchii. Nadpisy, běžný text, popisky—vyladěné pro vaši značku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globální ve výchozím nastavení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Jeden widget pro každý trh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Okamžitá lokalizace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Připraveno pro RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Texty podle lokality"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Základy SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Řízení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Výkon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Nasazujte nové jazyky bez překladového projektu. Udržte všude konzistentní zážitek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Podporujte jazyky zprava doleva bez přepracování rozvržení. Směr zůstává správný."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Přizpůsobte tón a formulace publiku, ne jen slovům. Obsah zní přirozeně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Strukturovaný obsah, který lze indexovat, když to potřebujete. Zpřístupněte odpovědi ve vyhledávání."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Přísné kontrakty brání odchylkám. Změny jsou explicitní, auditovatelné a opakovatelné."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Rychlé vykreslování a rozumné načítání, aby stránka zůstala plynulá napříč zařízeními i sítěmi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Postavené jako platforma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rychlé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Spolehlivé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Přístupné"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lehké vložení a líné načítání. Žádné poskakování rozvržení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministické kontrakty a kontrolní brány sestavení udržují nasazování bezpečné ve velkém měřítku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Jasná hierarchie, čitelná typografie a vzorce interakcí, které fungují napříč vstupními metodami."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Zažijte budoucnost FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Platforma, která se s každou interakcí zlepšuje. Vytvořeno pro éru AI."
+    }
+  ],
+  "v": 1
+}

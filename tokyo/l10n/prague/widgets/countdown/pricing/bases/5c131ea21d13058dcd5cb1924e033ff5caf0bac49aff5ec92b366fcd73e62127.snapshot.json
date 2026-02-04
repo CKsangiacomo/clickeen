@@ -1,0 +1,12 @@
+{
+  "baseFingerprint": "5c131ea21d13058dcd5cb1924e033ff5caf0bac49aff5ec92b366fcd73e62127",
+  "baseUpdatedAt": "2026-02-04T17:11:44.987Z",
+  "pageId": "widgets/countdown/pricing",
+  "snapshot": {
+    "blocks.hero.copy.headline": "Countdown pricing",
+    "blocks.hero.copy.subheadline": "Included with every Clickeen plan.",
+    "blocks.page-meta.copy.description": "Pricing for the countdown widget.",
+    "blocks.page-meta.copy.title": "Countdown pricing - Clickeen"
+  },
+  "v": 1
+}

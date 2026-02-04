@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Šablony FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vyberte si z úchvatných designů FAQ, které upoutají pozornost a promění návštěvníky v zákazníky."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vaše FAQ. Po vašem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Krásné už v základu. Díky designu nezaměnitelně vaše."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Odvážné, když to potřebujete"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism — trendy vzhledy ve světlém i tmavém režimu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegantní, když ho chcete"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalistické, čisté a moderní. Nadčasové styly, které působí vždy aktuálně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Začněte designem. Pak si ho přizpůsobte."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Získejte estetiku okamžitě. Trendové designy nebo nadčasové klasiky. Pak si vše přizpůsobte bez limitů — poloměr každého rohu zvlášť, stíny pro každou stranu zvlášť, typografii podle role a responsivní breakpointy. Šablona, která se stane vaším podpisem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomozte návštěvníkům rychle najít odpovědi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Designová svoboda, už v základu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Od rozvržení přes finální úpravy až po písma — přizpůsobení, které působí bez námahy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Rozvržení podle vás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Ovládání vzhledu bez limitů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Precizní typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Spousta rozvrhových systémů, ne jen jeden. Struktura podle breakpointů. Nezávislé odsazení a rozestupy pro desktop a mobil. Mějte přesnou kontrolu nad sloupci, skládáním, zarovnáním i přetékáním obsahu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Poloměr každého rohu zvlášť. Ohraničení s vlastními barvami. Stíny vně i uvnitř (propojené nebo nezávislé pro každou stranu). Pozadí s přechodem, obrázkem nebo videem. Naprostá vizuální kontrola."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Šest odlišných rolí (nadpis, text, otázka, odpověď, tlačítko, sekce). Vyberte si ze 17 Google Fonts. Tloušťka, styl, velikost — vše nastavitelné pro každou roli. Dynamické škálování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tři rozvrhové enginy pro váš FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Akordeon pro postupné odhalování. Seznam pro jednoduchost. Karty pro vizuální hierarchii. Grid nebo masonry. Responsivní sloupce. Detailní kontrola mezer a odsazení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Ovládání vzhledu bez limitů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Poloměr každého rohu zvlášť. Ohraničení s vlastními barvami. Stíny vně i uvnitř (propojené nebo nezávislé pro každou stranu). Pozadí s přechodem, obrázkem nebo videem. Naprostá vizuální kontrola."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Precizní typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Šest odlišných rolí (nadpis, text, otázka, odpověď, tlačítko, sekce). Vyberte si ze 17 Google Fonts. Tloušťka, styl, velikost — vše nastavitelné pro každou roli. Dynamické škálování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Tmavý režim: sofistikovaný a moderní"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Moderním rozhraním tmavý režim sluší. Prémiový dojem se špičkovou estetikou. Součástí každé šablony."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop i mobil, dokonale vyladěné"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Váš FAQ widget reaguje na každý breakpoint. Různé počty sloupců, odsazení a rozestupy podle zařízení. Jeden designový jazyk, nekonečně mnoho viewportů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Od šablony k perfektnímu výsledku"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Jak vytvořit váš FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Vyberte si designovou šablonu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Přizpůsobte rozvržení a vzhled"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Vylaďte typografii a responsivitu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendové, klasické nebo minimalistické. Ve světlém i tmavém režimu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Akordeon, seznam nebo karty. Poloměr zaoblení pro každý roh, stíny pro každou stranu, přechody, ohraničení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Šest rolí písma, 17 Google Fonts. Dokonalé na počítači i na mobilu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Vytvořte si zdarma FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Začněte s designovou šablonou nebo tvořte od nuly. Naprostá tvůrčí kontrola."
+    }
+  ],
+  "v": 1
+}

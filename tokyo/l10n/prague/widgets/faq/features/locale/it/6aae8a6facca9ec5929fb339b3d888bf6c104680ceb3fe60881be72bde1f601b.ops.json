@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funzionalità FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tutto ciò di cui hai bisogno per pubblicare FAQ basate sull’AI che funzionano a livello globale e crescono in modo virale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Perché il widget FAQ batte Elfsight, Typeform e le soluzioni sviluppate su misura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Creato da zero per l’AI. Funziona a livello globale. Cresce in modo virale. Una FAQ, possibilità infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Editing con AI: descrivi, fatto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Dille cosa vuoi in un italiano semplice. \"Rendi le domande più informali\" oppure \"aggiungi una sezione sui prezzi\". L’AI capisce ed esegue all’istante."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Global, istantaneo: qualsiasi lingua, subito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "La geografia è un parametro, non un progetto. Aggiungi spagnolo, giapponese o arabo con un clic. Niente traduzioni manuali, nessun ritardo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Componibile ovunque: una FAQ, contesti infiniti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "La stessa FAQ funziona su sito web, email, landing page, annunci. Un’unica fonte, possibilità infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Perché Clickeen cambia tutto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Localizzazione personalizzata istantanea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Template o personalizzazione pixel-perfect"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Architettura componibile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL del sito web → contenuti personalizzati in 29 lingue all’istante. Niente traduzioni manuali, nessun costo di traduttori. L’AI comprende il contesto del tuo business."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Inizia con un template curato OPPURE definisci tutto da zero—scegli tu, libertà totale. Nessun compromesso, nessuna limitazione."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Una FAQ funziona ovunque: sito web, email, landing page, annunci. Stesso contenuto, contesti infiniti. Nessuna ricostruzione per ogni canale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Progettato per l’AI, gestito dall’AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen non è solo un altro builder di FAQ: è il primo prodotto progettato fin dal primo giorno per essere gestito dall’AI. Mentre i competitor aggiungono funzionalità AI in un secondo momento, noi abbiamo creato un’architettura che gli agenti AI possono comprendere, modificare e ottimizzare in autonomia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Come funziona l’ecosistema AI di Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Una piattaforma completa che diventa più intelligente a ogni interazione."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "L’AI capisce la tua intenzione"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Operatività globale di default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Apprendimento e miglioramento continui"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automazione della distribuzione virale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Descrivi le modifiche in modo naturale. «Rendilo più professionale» o «aggiungi urgenza alla CTA». L’AI esegue alla perfezione."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "L’AI gestisce localizzazione, assistenza e marketing su tutti i mercati contemporaneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Ogni interazione dell’utente istruisce il sistema AI, rendendo tutte le FAQ più intelligenti nel tempo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Le FAQ gratuite diventano canali di marketing che generano acquisizione in automatico."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Controllo del design, fino al pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Allinea sito e brand senza compromessi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layout"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Aspetto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipografia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Scegli la struttura per breakpoint—fisarmonica, elenco o schede. Controlla spaziatura, densità e allineamento perché sembri nativo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Raggio, bordi, ombre e superfici che corrispondono al linguaggio della tua UI. Fallo sembrare integrato nel tuo prodotto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Stili tipografici basati sui ruoli che mantengono una gerarchia pulita. Titoli, corpo testo, etichette—ottimizzati per il tuo brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globale di default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Un widget, ogni mercato."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Localizzazione immediata"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Pronto per RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Testi adattati alla lingua"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Fondamenta SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Governance"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Prestazioni"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Lancia nuove lingue senza un progetto di traduzione. Mantieni un’esperienza coerente ovunque."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Supporta le lingue da destra a sinistra senza riprogettare i layout. La direzionalità resta corretta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Adatta tono e formulazioni al pubblico, non solo le parole. Il contenuto si legge in modo naturale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Contenuti strutturati che possono essere indicizzati quando serve. Rendi le risposte facilmente trovabili."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Contratti rigorosi impediscono deviazioni. Le modifiche sono esplicite, verificabili e replicabili."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Rendering rapido e caricamento intelligente per mantenere la pagina fluida su dispositivi e reti diverse."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Progettato come una piattaforma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Veloce"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Affidabile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Accessibile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Incorporamenti leggeri e caricamento differito. Nessun salto di layout."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Contratti deterministici e controlli di build mantengono le release sicure su larga scala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Gerarchia chiara, testo leggibile e pattern di interazione che funzionano con diversi metodi di input."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Scopri il futuro delle FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "La piattaforma che diventa più intelligente a ogni interazione. Pensata per l’era dell’AI."
+    }
+  ],
+  "v": 1
+}

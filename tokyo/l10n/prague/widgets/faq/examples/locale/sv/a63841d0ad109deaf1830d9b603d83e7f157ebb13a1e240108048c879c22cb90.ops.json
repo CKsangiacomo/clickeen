@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-exempel – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotell, restauranger och researrangörer använder Clickeen för att betjäna internationella kunder på 29 språk direkt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-exempel för hotell, restauranger, researrangörer och mer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ge Ombra din webbplats-URL. Få din FAQ anpassad till ditt företag på 29 språk – direkt. Ingen översättare behövs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotell i Barcelona: gäster från 50+ länder frågar ”incheckningstid?” på 15 språk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Ge Ombra din hotellwebbplats. FAQ anpassad till ditt boende på 29 språk – direkt. Minska frågor till receptionen med 60 %, förbättra gästnöjdhetsbetygen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restauranger i Paris: turister ställer kostrelaterade frågor på franska, engelska, spanska, kinesiska, japanska"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Vanliga frågor om menyn på 29 språk – direkt. Ingen översättare, inget manuellt arbete. Förbättra bordsomsättningen och minska avbrott för serveringspersonalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-värdar i Toscana: incheckningsinstruktioner, Wi‑Fi-lösenord, lokala tips på din gästs språk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Ge Ombra din annons-URL. Husregler på 29 språk direkt. 5-stjärniga recensioner från internationella gäster."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Internationella kunder väntar inte på översättningar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Ett hotell i Rom tappar bokningar när tyska turister inte hittar incheckningsinformation. En restaurang i Tokyo tappar reservationer när engelsktalande inte hittar öppettider. Varje obesvarad fråga på deras språk är en förlorad kund. Ombra löser detta: webbplatsens URL → personliga FAQ på 29 språk, direkt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Researrangörer i Thailand: bokning, säkerhet, resplan – vanliga frågor för internationella resenärer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Ge Ombra din turwebbplats. Vanliga frågor på 29 språk direkt. Minska e-postsupporten med 70 %, öka konverteringen från internationella marknader."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museer i Rom: utställningsinfo, biljetter, öppettider för besökare från hela världen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Vanliga frågor för besökare på 29 språk – direkt. Förbättra besökarupplevelsen och minska frågor vid informationsdisken med 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Från internationell förvirring till omedelbar tydlighet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Så använder företag inom hotell och besöksnäringen Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Ge Ombra din webbplats-URL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ anpassad för ditt företag på 29 språk – direkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Bädda in och se internationella förfrågningar minska"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI läser in din verksamhets kontext – plats, tjänster, policyer. Förstår dina specifika behov automatiskt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Ingen översättare behövs. Inget manuellt arbete. Innehåll anpassat till din verksamhet OCH tillgängligt globalt, omedelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3-raders skript. Fungerar överallt. Gäster, turister och resenärer får svar på sitt språk innan de ens frågar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Byggd som en plattform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snabb"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Pålitlig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tillgänglig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lättviktiga inbäddningar och lazy loading. Ingen layoutjank."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministiska kontrakt och byggspärrar håller leveranserna säkra i stor skala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tydlig hierarki, lättläst typografi och interaktionsmönster som fungerar över olika inmatningsmetoder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Få dina vanliga frågor i 29 språk – direkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Ge ombra din webbplats-URL. Anpassad efter ditt företag, tillgänglig globalt. Ingen översättare behövs."
+    }
+  ],
+  "v": 1
+}

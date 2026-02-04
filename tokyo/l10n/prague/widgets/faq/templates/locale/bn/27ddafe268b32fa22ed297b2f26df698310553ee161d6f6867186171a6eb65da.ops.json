@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ টেমপ্লেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দৃষ্টিনন্দন FAQ ডিজাইন থেকে বেছে নিন, যা নজর কাড়ে এবং ভিজিটরদের কনভার্ট করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "আপনার FAQ। আপনার মতো করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ডিফল্টেই সুন্দর। ডিজাইনে নিঃসন্দেহে আপনার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "যখন দরকার, তখনই বোল্ড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—লাইট ও ডার্ক—দুই মোডেই ট্রেন্ড-ফরওয়ার্ড লুক।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "যখন চান, তখনই এলিগ্যান্ট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "মিনিমাল, ক্লিন, আর মডার্ন। চিরসবুজ স্টাইল, যা সবসময়ই বর্তমান মনে হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "একটি ডিজাইন দিয়ে শুরু করুন। তারপর এটাকে আপনার করে তুলুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "তৎক্ষণাৎ সেই এস্থেটিক পান। ট্রেন্ডিং ডিজাইন বা চিরসবুজ ক্লাসিক। তারপর সীমাহীন কাস্টমাইজ করুন—প্রতি-কোণ রেডিয়াস, প্রতি-পাশ শ্যাডো, প্রতি-রোল টাইপোগ্রাফি, আর রেসপনসিভ ব্রেকপয়েন্ট। এমন একটি টেমপ্লেট, যা হয়ে ওঠে আপনার সিগনেচার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ভিজিটরদের দ্রুত উত্তর খুঁজে পেতে সাহায্য করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "ডিজাইন ফ্রিডম, বিল্ট-ইন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "লেআউট থেকে ফিনিশ থেকে ফন্ট—এমন কাস্টমাইজেশন, যা অনায়াস লাগে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "লেআউট, আপনার মতো করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "সীমাহীন অ্যাপিয়ারেন্স কন্ট্রোল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "টাইপোগ্রাফির নিখুঁততা"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "একটি নয়—অনেক লেআউট সিস্টেম। প্রতি-ব্রেকপয়েন্ট স্ট্রাকচার। ডেস্কটপ/মোবাইলে আলাদা প্যাডিং ও স্পেসিং। কলাম, স্ট্যাকিং, অ্যালাইনমেন্ট, আর রিফ্লো—একদম নিখুঁতভাবে নিয়ন্ত্রণ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "প্রতি-কোণ রেডিয়াস। কাস্টম রঙের বর্ডার। বাইরে ও ভেতরের শ্যাডো (লিঙ্কড বা প্রতি-পাশ স্বাধীন)। গ্রেডিয়েন্ট, ইমেজ, বা ভিডিও ব্যাকগ্রাউন্ড। সম্পূর্ণ ভিজ্যুয়াল কর্তৃত্ব।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "ছয়টি পৃথক রোল (headline, body, question, answer, button, section)। ১৭টি Google Fonts থেকে বেছে নিন। ওজন, স্টাইল, সাইজ—সবই প্রতি রোল অনুযায়ী কাস্টমাইজেবল। ডাইনামিক স্কেল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "আপনার FAQ উইজেটের জন্য তিনটি লেআউট ইঞ্জিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "প্রগ্রেসিভ রিভিলের জন্য অ্যাকর্ডিয়ন। সরলতার জন্য লিস্ট। ভিজ্যুয়াল হায়ারার্কির জন্য কার্ডস। গ্রিড বা মেসনারি। রেসপনসিভ কলাম। গ্যাপ আর প্যাডিংয়ের উপর সূক্ষ্ম নিয়ন্ত্রণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "সীমাহীন অ্যাপিয়ারেন্স কন্ট্রোল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "প্রতি-কোণ রেডিয়াস। কাস্টম রঙের বর্ডার। বাইরে ও ভেতরের শ্যাডো (লিঙ্কড বা প্রতি-পাশ স্বাধীন)। গ্রেডিয়েন্ট, ইমেজ, বা ভিডিও ব্যাকগ্রাউন্ড। সম্পূর্ণ ভিজ্যুয়াল কর্তৃত্ব।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "টাইপোগ্রাফির নিখুঁততা"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "ছয়টি পৃথক রোল (headline, body, question, answer, button, section)। ১৭টি Google Fonts থেকে বেছে নিন। ওজন, স্টাইল, সাইজ—সবই প্রতি রোল অনুযায়ী কাস্টমাইজেবল। ডাইনামিক স্কেল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "ডার্ক মোড: পরিশীলিত এবং আধুনিক"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "আধুনিক ইন্টারফেস অন্ধকারে আরও উজ্জ্বল হয়ে ওঠে। কাটিং-এজ এস্থেটিক্সসহ প্রিমিয়াম অনুভূতি। প্রতিটি টেমপ্লেটেই অন্তর্ভুক্ত।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "ডেস্কটপ ও মোবাইল—পারফেক্টভাবে টিউন করা"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "আপনার FAQ উইজেট প্রতিটি ব্রেকপয়েন্টে সাড়া দেয়। ডিভাইসভেদে আলাদা কলাম কাউন্ট, প্যাডিং, স্পেসিং। একটিই ডিজাইন ভাষা, অসীম ভিউপোর্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "টেমপ্লেট থেকে পারফেক্ট ফিট পর্যন্ত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "কীভাবে আপনার FAQ উইজেট তৈরি করবেন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "একটি ডিজাইন টেমপ্লেট বেছে নিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "লেআউট ও অ্যাপিয়ারেন্স কাস্টমাইজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "টাইপোগ্রাফি ও রেসপনসিভনেস পরিমার্জন করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "ট্রেন্ডিং, ক্লাসিক, বা মিনিমাল। লাইট ও ডার্ক মোড।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "অ্যাকর্ডিয়ন, তালিকা বা কার্ড। প্রতি-কোণার রেডিয়াস, প্রতি-পাশের শ্যাডো, গ্রেডিয়েন্ট, বর্ডার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "ছয়টি ফন্ট রোল, ১৭টি Google Fonts। ডেস্কটপ এবং মোবাইলে নিখুঁত।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "একটি বিনামূল্যের FAQ উইজেট তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "একটি ডিজাইন টেমপ্লেট দিয়ে শুরু করুন অথবা একেবারে শুরু থেকে তৈরি করুন। সম্পূর্ণ সৃজনশীল নিয়ন্ত্রণ।"
+    }
+  ],
+  "v": 1
+}

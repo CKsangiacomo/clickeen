@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "דוגמאות לשאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "מלונות, מסעדות ומפעילי טיולים משתמשים ב-Clickeen כדי לשרת לקוחות בינלאומיים באופן מיידי ב-29 שפות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "דוגמאות לשאלות נפוצות למלונות, מסעדות, מפעילי טיולים ועוד"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "תנו ל-Ombra את כתובת האתר שלכם. קבלו שאלות נפוצות מותאמות אישית לעסק שלכם ב-29 שפות—באופן מיידי. אין צורך במתרגם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "מלונות בברצלונה: אורחים מ-50+ מדינות שואלים \"מתי הצ'ק-אין?\" ב-15 שפות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "תנו ל-Ombra את אתר המלון שלכם. שאלות נפוצות מותאמות לנכס שלכם ב-29 שפות — באופן מיידי. הפחיתו פניות לדלפק הקבלה ב-60%, ושפרו את ציוני שביעות רצון האורחים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "מסעדות בפריז: תיירים שואלים שאלות תזונתיות בצרפתית, אנגלית, ספרדית, סינית, יפנית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "שאלות נפוצות על התפריט שלך ב-29 שפות—מיידית. בלי מתרגם, בלי עבודה ידנית. שפרו את תחלופת השולחנות, הפחיתו הפרעות לצוות השירות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "מארחי Airbnb בטוסקנה: הוראות צ'ק-אין, סיסמת Wi‑Fi, טיפים מקומיים בשפת האורח שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "תנו ל-Ombra את כתובת ה-URL של המודעה שלכם. כללי הבית ב-29 שפות באופן מיידי. ביקורות 5 כוכבים מאורחים בינלאומיים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "לקוחות בינלאומיים לא מחכים לתרגומים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "מלון ברומא מאבד הזמנות כשמתיירים גרמנים לא מצליחים למצוא מידע על הצ'ק-אין. מסעדה בטוקיו מאבדת הזמנות כשדוברי אנגלית לא מצליחים למצוא את שעות הפעילות. כל שאלה שלא נענית בשפתם היא לקוח שאבד. Ombra פותרת זאת: כתובת URL של האתר → שאלות נפוצות מותאמות אישית ב-29 שפות, באופן מיידי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "מפעילי טיולים בתאילנד: הזמנות, בטיחות ושאלות נפוצות על מסלול למטיילים בינלאומיים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "תנו ל-Ombra את אתר הטיולים שלכם. שאלות נפוצות ב-29 שפות באופן מיידי. צמצמו את התמיכה במייל ב-70%, והגדילו את ההמרה משווקים בינלאומיים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "מוזיאונים ברומא: מידע על תערוכות, כרטיסים ושעות פתיחה למבקרים מכל העולם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "שאלות נפוצות למבקרים ב-29 שפות — באופן מיידי. שפרו את חוויית המבקרים, הפחיתו פניות לעמדת המידע ב-50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "מבלבול בינלאומי לבהירות מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "כיצד עסקי אירוח משתמשים ב-Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "תנו ל-Ombra את כתובת ה-URL של האתר שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "שאלות נפוצות מותאמות לעסק שלכם ב-29 שפות — באופן מיידי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "הטמיעו וצפו בפניות בינלאומיות פוחתות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "ה-AI קורא את ההקשר העסקי שלכם — מיקום, שירותים, מדיניות. מבין את הצרכים הספציפיים שלכם באופן אוטומטי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "אין צורך במתרגם. אין עבודה ידנית. תוכן מותאם לעסק שלכם וגם זמין ברחבי העולם, מיד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "סקריפט של 3 שורות. עובד בכל מקום. אורחים, תיירים ומטיילים מקבלים תשובות בשפה שלהם עוד לפני שהם שואלים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "בנוי כמו פלטפורמה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "מהיר"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "אמין"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "נגיש"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "הטמעות קלות משקל וטעינה עצלה. בלי קפיצות בפריסה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "חוזים דטרמיניסטיים ושערי בנייה שומרים על שחרור בטוח בקנה מידה גדול."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "היררכיה ברורה, טיפוגרפיה קריאה ודפוסי אינטראקציה שעובדים בכל שיטות הקלט."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "קבלו את ה-FAQ שלכם ב-29 שפות — מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "תנו ל-ombra את כתובת ה-URL של האתר שלכם. מותאם אישית לעסק שלכם, זמין בכל העולם. אין צורך במתרגם."
+    }
+  ],
+  "v": 1
+}

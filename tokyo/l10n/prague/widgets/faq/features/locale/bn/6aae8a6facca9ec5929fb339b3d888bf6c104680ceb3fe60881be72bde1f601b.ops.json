@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ ফিচারসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "বিশ্বজুড়ে কাজ করে এবং ভাইরালভাবে বাড়ে—এমন AI-চালিত FAQ প্রকাশ করতে যা যা দরকার, সবই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "কেন FAQ উইজেট Elfsight, Typeform, এবং কাস্টম-বিল্টের চেয়ে ভালো"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI-এর জন্য শূন্য থেকে তৈরি। বিশ্বজুড়ে কাজ করে। ভাইরালভাবে বাড়ে। এক FAQ, অসীম সম্ভাবনা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI এডিটিং: বলুন, হয়ে গেল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "সহজ ইংরেজিতে আপনার চাহিদা বলুন। 'Make the questions more casual' অথবা 'add a section about pricing.' AI বুঝে নিয়ে সাথে সাথে করে দেয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "তাৎক্ষণিক গ্লোবাল: যেকোনো ভাষা, এখনই"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "ভূগোল এখানে প্রজেক্ট নয়—একটা প্যারামিটার। এক ক্লিকেই Spanish, Japanese, বা Arabic যোগ করুন। ম্যানুয়াল অনুবাদ নেই, দেরিও নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "সবখানে কম্পোজেবল: এক FAQ, অসীম কনটেক্সট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "একই FAQ কাজ করে ওয়েবসাইট, ইমেইল, ল্যান্ডিং পেজ, বিজ্ঞাপনে। এক উৎস, অসীম সম্ভাবনা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "কেন Clickeen সবকিছু বদলে দেয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "তাৎক্ষণিক পার্সোনালাইজড লোকালাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "টেমপ্লেট বা পিক্সেল-পারফেক্ট কাস্টম"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "কম্পোজেবল আর্কিটেকচার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Website URL → সঙ্গে সঙ্গে 29টি ভাষায় পার্সোনালাইজড কনটেন্ট। ম্যানুয়াল অনুবাদ নেই, অনুবাদক খরচও নেই। AI আপনার ব্যবসার প্রেক্ষাপট বোঝে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "কিউরেটেড টেমপ্লেট দিয়ে শুরু করুন অথবা সবকিছু নিজে নির্ধারণ করুন—আপনার ইচ্ছা, সম্পূর্ণ স্বাধীনতা। কোনো আপস নেই, কোনো সীমাবদ্ধতাও নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "এক FAQ সবখানে কাজ করে: ওয়েবসাইট, ইমেইল, ল্যান্ডিং পেজ, বিজ্ঞাপন। একই কনটেন্ট, অসীম কনটেক্সট। প্রতিটি চ্যানেলের জন্য নতুন করে বানাতে হয় না।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI-এর জন্য তৈরি, AI দিয়ে পরিচালিত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen শুধু আরেকটা FAQ বিল্ডার নয়—প্রথম দিন থেকেই AI অপারেশনের জন্য ডিজাইন করা প্রথম প্রোডাক্ট। যেখানে প্রতিযোগীরা পরে AI ফিচার জোড়াতালি দেয়, আমরা এমন এক আর্কিটেকচার বানিয়েছি যা AI এজেন্টরা স্বয়ংক্রিয়ভাবে বুঝতে, পরিবর্তন করতে এবং অপ্টিমাইজ করতে পারে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen-এর AI ইকোসিস্টেম কীভাবে কাজ করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "একটি সম্পূর্ণ প্ল্যাটফর্ম, যা প্রতিটি ইন্টারঅ্যাকশনের সঙ্গে আরও স্মার্ট হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI আপনার উদ্দেশ্য বুঝে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "ডিফল্টভাবে বিশ্বব্যাপী অপারেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "নিরবচ্ছিন্ন শেখা ও উন্নতি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "ভাইরাল ডিস্ট্রিবিউশন অটোমেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "স্বাভাবিকভাবে পরিবর্তন বর্ণনা করুন। 'এটাকে আরও প্রফেশনাল করুন' বা 'CTA-তে জরুরিতা যোগ করুন।' AI নিখুঁতভাবে কাজটি করে দেয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI একসঙ্গে সব মার্কেটে লোকালাইজেশন, সাপোর্ট ও মার্কেটিং সামলায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "প্রতিটি ইউজার ইন্টারঅ্যাকশন AI সিস্টেমকে শেখায়, ফলে সময়ের সঙ্গে সব FAQ আরও স্মার্ট হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "ফ্রি FAQ-গুলো মার্কেটিং চ্যানেলে পরিণত হয়, যা স্বয়ংক্রিয়ভাবে অ্যাকুইজিশন চালায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ডিজাইন কন্ট্রোল, পিক্সেল পর্যন্ত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "কোনো আপস ছাড়াই আপনার সাইট ও ব্র্যান্ডের সঙ্গে মিলিয়ে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "অ্যাপিয়ারেন্স"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "টাইপোগ্রাফি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "প্রতি ব্রেকপয়েন্ট অনুযায়ী স্ট্রাকচার বেছে নিন—অ্যাকর্ডিয়ন, লিস্ট, বা কার্ড। স্পেসিং, ডেনসিটি, ও অ্যালাইনমেন্ট নিয়ন্ত্রণ করুন যাতে এটি নেটিভ মনে হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "রেডিয়াস, বর্ডার, শ্যাডো, এবং সারফেস—যা আপনার UI ভাষার সঙ্গে মানানসই। এটিকে এমন দেখান যেন এটি আপনার প্রোডাক্টের সঙ্গেই শিপ হয়েছে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "রোল-ভিত্তিক টাইপ স্টাইল, যা হায়ারার্কি পরিষ্কার রাখে। হেডিং, বডি, লেবেল—আপনার ব্র্যান্ড অনুযায়ী টিউন করা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "ডিফল্টভাবে গ্লোবাল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "একটি উইজেট, প্রতিটি বাজারের জন্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "তাৎক্ষণিক লোকালাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL-প্রস্তুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "লোকেল-সচেতন কপি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO ভিত্তি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "গভর্ন্যান্স"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "পারফরম্যান্স"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "অনুবাদ প্রজেক্ট ছাড়াই নতুন ভাষায় লঞ্চ করুন। সব জায়গায় অভিজ্ঞতাকে একরকম রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "লেআউট নতুন করে ডিজাইন না করেই ডান-থেকে-বাম ভাষা সমর্থন করুন। দিকনির্দেশনা ঠিক থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "শুধু শব্দ নয়—শ্রোতার জন্য টোন ও বাক্যভঙ্গি মানিয়ে নিন। কনটেন্ট স্বাভাবিকভাবে পড়ে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "যখন দরকার, তখন ইনডেক্স করা যায় এমন কাঠামোবদ্ধ কনটেন্ট। উত্তরগুলো সহজে খুঁজে পাওয়া যায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "কঠোর কনট্র্যাক্ট ড্রিফট ঠেকায়। পরিবর্তনগুলো স্পষ্ট, নিরীক্ষাযোগ্য এবং পুনরাবৃত্তিযোগ্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "দ্রুত রেন্ডার এবং যুক্তিসংগত লোডিং—যাতে ডিভাইস ও নেটওয়ার্ক জুড়ে পেজ মসৃণ থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "প্ল্যাটফর্মের মতো করে তৈরি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "দ্রুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "নির্ভরযোগ্য"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "অ্যাক্সেসিবল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "লাইটওয়েট এমবেড এবং লেজি লোডিং। লেআউট জ্যাঙ্ক নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "নির্ধারিত কনট্র্যাক্ট ও বিল্ড গেট স্কেলেও শিপিংকে নিরাপদ রাখে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "স্পষ্ট হায়ারার্কি, পাঠযোগ্য টাইপ, এবং এমন ইন্টারঅ্যাকশন প্যাটার্ন যা বিভিন্ন ইনপুট মেথডে কাজ করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQ-এর ভবিষ্যৎ অনুভব করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "প্রতিটি ইন্টারঅ্যাকশনের সঙ্গে যে প্ল্যাটফর্ম আরও স্মার্ট হয়। AI যুগের জন্য তৈরি।"
+    }
+  ],
+  "v": 1
+}

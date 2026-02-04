@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Beispiele – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotels, Restaurants und Reiseveranstalter nutzen Clickeen, um internationale Kunden in 29 Sprachen sofort zu bedienen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-Beispiele für Hotels, Restaurants, Reiseveranstalter und mehr"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Geben Sie Ombra die URL Ihrer Website. Erhalten Sie Ihre FAQs, personalisiert für Ihr Unternehmen, in 29 Sprachen – sofort. Kein Übersetzer erforderlich."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotels in Barcelona: Gäste aus 50+ Ländern fragen in 15 Sprachen „Wann ist der Check-in?“"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Gib Ombra die Website deines Hotels. FAQ, personalisiert für dein Haus, in 29 Sprachen – sofort. Reduziere Anfragen an der Rezeption um 60%, verbessere die Gästebewertung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restaurants in Paris: Touristen stellen Ernährungsfragen auf Französisch, Englisch, Spanisch, Chinesisch, Japanisch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Ihre Menü-FAQs in 29 Sprachen – sofort. Kein Übersetzer, keine manuelle Arbeit. Verbessern Sie den Tischumschlag, reduzieren Sie Unterbrechungen des Servicepersonals."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-Gastgeber in der Toskana: Check-in-Anweisungen, WLAN-Passwort, lokale Tipps in der Sprache Ihres Gastes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Geben Sie Ombra die URL Ihres Inserats. Hausregeln sofort in 29 Sprachen. 5-Sterne-Bewertungen von internationalen Gästen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Internationale Kund:innen warten nicht auf Übersetzungen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Ein Hotel in Rom verliert Buchungen, wenn deutsche Tourist:innen keine Check-in-Infos finden. Ein Restaurant in Tokio verliert Reservierungen, wenn Englischsprachige die Öffnungszeiten nicht finden. Jede unbeantwortete Frage in ihrer Sprache ist ein verlorener Kunde. Ombra löst das: Website-URL → personalisierte FAQ in 29 Sprachen, sofort."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Reiseveranstalter in Thailand: FAQs zu Buchung, Sicherheit und Reiseverlauf für internationale Reisende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Gib Ombra deine Tour-Website. FAQs in 29 Sprachen sofort. Reduziere den E-Mail-Support um 70 % und steigere die Conversion aus internationalen Märkten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museen in Rom: Ausstellungsinfos, Tickets, Öffnungszeiten für Besucherinnen und Besucher aus aller Welt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Besucher-FAQs in 29 Sprachen – sofort. Verbessern Sie das Besuchererlebnis und reduzieren Sie Anfragen am Informationsschalter um 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Von internationaler Verwirrung zu sofortiger Klarheit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "So nutzen Hospitality-Unternehmen Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Geben Sie Ombra die URL Ihrer Website"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ sofort auf Ihr Unternehmen personalisiert – in 29 Sprachen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Einbetten und zusehen, wie internationale Anfragen zurückgehen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "KI erfasst Ihren Unternehmenskontext – Standort, Services, Richtlinien. Versteht Ihre spezifischen Bedürfnisse automatisch."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Kein Übersetzer nötig. Kein manueller Aufwand. Inhalte an Ihr Unternehmen angepasst UND weltweit sofort verfügbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3-Zeilen-Script. Funktioniert überall. Gäste, Touristen, Reisende erhalten Antworten in ihrer Sprache, bevor sie fragen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Wie eine Plattform gebaut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Schnell"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Zuverlässig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Barrierefrei"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Leichtgewichtige Einbettungen und Lazy Loading. Kein Layout-Ruckeln."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministische Verträge und Build-Gates sorgen dafür, dass Releases auch im großen Maßstab sicher bleiben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Klare Hierarchie, gut lesbare Typografie und Interaktionsmuster, die über verschiedene Eingabemethoden hinweg funktionieren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Erhalten Sie Ihre FAQ sofort in 29 Sprachen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Geben Sie ombra die URL Ihrer Website. Auf Ihr Unternehmen zugeschnitten, weltweit verfügbar. Kein Übersetzer erforderlich."
+    }
+  ],
+  "v": 1
+}

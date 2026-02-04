@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Приклади FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Готелі, ресторани та туроператори використовують Clickeen, щоб миттєво обслуговувати міжнародних клієнтів 29 мовами."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Приклади FAQ для готелів, ресторанів, туроператорів та інших бізнесів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Надайте Ombra URL вашого вебсайту. Отримайте FAQ, персоналізований під ваш бізнес, 29 мовами — миттєво. Перекладач не потрібен."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Готелі в Барселоні: гості з понад 50 країн запитують «о котрій заїзд?» 15 мовами"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Дайте Ombra ваш сайт готелю. FAQ, персоналізований під ваш об’єкт, 29 мовами — миттєво. Скоротіть кількість звернень до стійки реєстрації на 60%, підвищте показники задоволеності гостей."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Ресторани в Парижі: туристи ставлять запитання про дієтичні потреби французькою, англійською, іспанською, китайською, японською"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "FAQ вашого меню 29 мовами — миттєво. Без перекладача, без ручної роботи. Покращуйте обіг столів, зменшуйте переривання роботи офіціантів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Господарі Airbnb у Тоскані: інструкції з заселення, пароль Wi‑Fi, місцеві поради мовою вашого гостя"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Надішліть Ombra URL вашого оголошення. Правила помешкання 29 мовами миттєво. 5‑зіркові відгуки від міжнародних гостей."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Міжнародні клієнти не чекатимуть на переклади"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Готель у Римі втрачає бронювання, коли німецькі туристи не можуть знайти інформацію про заселення. Ресторан у Токіо втрачає резервування, коли англомовні не можуть знайти години роботи. Кожне питання, що лишається без відповіді їхньою мовою, — це втрачений клієнт. Ombra вирішує це: URL вебсайту → персоналізований FAQ 29 мовами, миттєво."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Туроператори в Таїланді: поширені запитання щодо бронювання, безпеки та маршруту для міжнародних мандрівників"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Надайте Ombra свій сайт туру. FAQ 29 мовами миттєво. Скоротіть підтримку електронною поштою на 70%, підвищте конверсію з міжнародних ринків."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Музеї в Римі: інформація про експозиції, квитки та години роботи для відвідувачів з усього світу"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Запитання й відповіді для відвідувачів 29 мовами — миттєво. Покращуйте досвід відвідувачів і зменшуйте кількість звернень до інформаційної стійки на 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Від міжнародної плутанини до миттєвої ясності"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Як бізнеси у сфері гостинності використовують Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Надайте Ombra URL вашого сайту"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ, персоналізований під ваш бізнес 29 мовами — миттєво"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Вбудуйте — і спостерігайте, як зменшується кількість міжнародних звернень"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "ШІ зчитує контекст вашого бізнесу — локацію, послуги, політики. Автоматично розуміє ваші конкретні потреби."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Перекладач не потрібен. Жодної ручної роботи. Контент адаптований під ваш бізнес І доступний у всьому світі одразу."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Скрипт із 3 рядків. Працює будь-де. Гості, туристи, мандрівники отримують відповіді своєю мовою ще до того, як запитають."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Створено як платформа"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Швидко"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Надійно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Доступно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Легкі вбудовування та ліниве завантаження. Без зсувів макета."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Детерміновані контракти та контрольні ворота збірки забезпечують безпечні релізи у масштабі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Чітка ієрархія, читабельна типографіка та патерни взаємодії, що працюють з різними способами введення."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Отримайте ваш FAQ 29 мовами — миттєво"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Надайте ombra URL вашого вебсайту. Персоналізовано під ваш бізнес, доступно по всьому світу. Перекладач не потрібен."
+    }
+  ],
+  "v": 1
+}

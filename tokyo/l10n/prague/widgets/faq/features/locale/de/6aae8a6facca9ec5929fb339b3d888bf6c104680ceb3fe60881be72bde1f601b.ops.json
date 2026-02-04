@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Funktionen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alles, was du brauchst, um KI-gestützte FAQs auszuliefern, die weltweit funktionieren und sich viral verbreiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Warum das FAQ-Widget Elfsight, Typeform und Eigenentwicklungen schlägt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Von Grund auf für KI gebaut. Funktioniert weltweit. Wächst viral. Eine FAQ, unendliche Möglichkeiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "KI-Bearbeitung: beschreiben, fertig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Sag in einfachem Englisch, was du willst. „Make the questions more casual“ oder „add a section about pricing.“ Die KI versteht es und setzt es sofort um."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Sofort global: jede Sprache, jetzt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie ist ein Parameter, kein Projekt. Füge Spanisch, Japanisch oder Arabisch mit einem Klick hinzu. Keine manuelle Übersetzung, keine Verzögerungen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Überall composable: eine FAQ, unendliche Kontexte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Dieselbe FAQ funktioniert auf Website, in E-Mail, auf Landingpages, in Anzeigen. Eine Quelle, unendliche Möglichkeiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Warum Clickeen alles verändert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Sofortige personalisierte Lokalisierung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Vorlagen oder pixelgenau individuell"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Composable-Architektur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Website-URL → personalisierte Inhalte in 29 Sprachen sofort. Keine manuelle Übersetzung, keine Übersetzerkosten. KI versteht deinen geschäftlichen Kontext."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Starte mit einer kuratierten Vorlage ODER definiere alles selbst – deine Wahl, totale Freiheit. Keine Kompromisse, keine Einschränkungen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Eine FAQ funktioniert überall: Website, E-Mail, Landingpages, Anzeigen. Gleiche Inhalte, unendliche Kontexte. Kein Neubau für jeden Kanal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Für KI gebaut, von KI betrieben"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ist nicht nur ein weiterer FAQ-Builder – es ist das erste Produkt, das von Tag eins an für den KI-Betrieb entwickelt wurde. Während Wettbewerber KI-Funktionen nachrüsten, haben wir eine Architektur gebaut, die KI-Agenten verstehen, autonom verändern und optimieren können."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "So funktioniert Clickeens KI-Ökosystem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Eine komplette Plattform, die mit jeder Interaktion intelligenter wird."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "KI versteht Ihre Absicht"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globaler Betrieb standardmäßig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Kontinuierliches Lernen und Verbesserung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisierte virale Verbreitung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beschreiben Sie Änderungen ganz natürlich. „Mach es professioneller“ oder „füge dem CTA mehr Dringlichkeit hinzu.“ Die KI setzt es perfekt um."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Die KI übernimmt Lokalisierung, Support und Marketing in allen Märkten gleichzeitig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Jede Nutzerinteraktion trainiert das KI-System und macht alle FAQs mit der Zeit intelligenter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Kostenlose FAQs werden zu Marketingkanälen, die automatisch Akquise antreiben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designkontrolle bis auf das Pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Passen Sie Ihre Website und Marke kompromisslos an."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Erscheinungsbild"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Wählen Sie die Struktur je Breakpoint—Akkordeon, Liste oder Karten. Steuern Sie Abstände, Dichte und Ausrichtung, damit es sich nativ anfühlt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius, Rahmen, Schatten und Flächen, die zu Ihrer UI-Sprache passen. Lassen Sie es so aussehen, als wäre es mit Ihrem Produkt ausgeliefert worden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Rollenbasierte Schriftstile, die die Hierarchie klar halten. Überschriften, Fließtext, Labels—abgestimmt auf Ihre Marke."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global standardmäßig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Ein Widget, jeder Markt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Sofortige Lokalisierung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL-fähig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Lokalisierungsbewusste Texte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-Grundlagen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Governance"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Performance"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "In neuen Sprachen ausrollen, ohne ein Übersetzungsprojekt. Das Erlebnis bleibt überall konsistent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Unterstützen Sie Rechts-nach-links-Sprachen, ohne Layouts neu zu gestalten. Die Schreibrichtung bleibt korrekt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Passen Sie Ton und Formulierungen an die Zielgruppe an – nicht nur die Wörter. Die Inhalte lesen sich natürlich."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Strukturierte Inhalte, die bei Bedarf indexiert werden können. Machen Sie Antworten auffindbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Strenge Verträge verhindern Drift. Änderungen sind explizit, prüfbar und wiederholbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Schnelles Rendering und sinnvolles Laden, damit die Seite auf Geräten und in Netzwerken flüssig bleibt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Wie eine Plattform gebaut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Schnell"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Zuverlässig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Barrierefrei"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Leichtgewichtige Einbettungen und Lazy Loading. Keine Layout-Sprünge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministische Verträge und Build-Gates sorgen für sicheres Ausliefern im großen Maßstab."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Klare Hierarchie, gut lesbare Typografie und Interaktionsmuster, die über Eingabemethoden hinweg funktionieren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Erleben Sie die Zukunft der FAQs"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Die Plattform, die mit jeder Interaktion smarter wird. Entwickelt für das KI-Zeitalter."
+    }
+  ],
+  "v": 1
+}

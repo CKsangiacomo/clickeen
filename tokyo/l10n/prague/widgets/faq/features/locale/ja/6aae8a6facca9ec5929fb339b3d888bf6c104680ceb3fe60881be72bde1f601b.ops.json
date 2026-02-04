@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ機能 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "世界中で機能し、口コミで広がるAI搭載FAQを提供するために必要なすべて。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQウィジェットがElfsight、Typeform、そして自社開発を上回る理由"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AIのためにゼロから設計。世界中で動作。口コミで拡散。1つのFAQで、無限の可能性。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI編集：説明するだけで完了"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "やりたいことを平易な英語で伝えるだけ。「質問をもっとカジュアルにして」や「料金についてのセクションを追加して」。AIが理解し、即座に実行します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "グローバル即対応：どの言語でも、今すぐ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "地理はプロジェクトではなくパラメータ。スペイン語、日本語、アラビア語をワンクリックで追加。手動翻訳も遅延もありません。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "どこでもコンポーザブル：1つのFAQ、無限のコンテキスト"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "同じFAQがWebサイト、メール、ランディングページ、広告で機能します。1つのソースで、無限の可能性。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeenがすべてを変える理由"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "瞬時にパーソナライズされたローカライズ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "テンプレートでも、ピクセル単位のカスタムでも"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "コンポーザブルなアーキテクチャ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "WebサイトURL → 29言語でパーソナライズされたコンテンツを即時生成。手動翻訳不要、翻訳者コスト不要。AIがあなたのビジネス文脈を理解します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "厳選テンプレートから始めることも、すべてを自分で定義することも可能—選ぶのはあなた。妥協なし、制限なし。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "1つのFAQがどこでも機能：Webサイト、メール、ランディングページ、広告。同じコンテンツで、無限のコンテキスト。チャネルごとの作り直しは不要です。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AIのために作られ、AIによって運用される"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeenは単なるFAQ作成ツールではありません—初日からAI運用を前提に設計された最初のプロダクトです。競合がAI機能を後付けする一方で、私たちはAIエージェントが理解し、自律的に変更・最適化できるアーキテクチャを構築しました。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "ClickeenのAIエコシステムの仕組み"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "あらゆるやり取りのたびに賢くなる、完全なプラットフォーム。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AIが意図を理解"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "標準でグローバル運用"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "継続的な学習と改善"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "バイラル配信の自動化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "変更点を自然な言葉で伝えるだけ。『もっとプロっぽくして』や『CTAに緊急性を加えて』など。AIが完璧に実行します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AIがローカライズ、サポート、マーケティングを、すべての市場で同時に対応します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "ユーザーとのあらゆるやり取りがAIシステムを学習させ、時間とともにすべてのFAQが賢くなります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "無料のFAQがマーケティングチャネルとなり、自動的に獲得を促進します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ピクセル単位までデザインをコントロール"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "妥協なく、サイトとブランドに合わせられます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "レイアウト"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "外観"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "タイポグラフィ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "ブレークポイントごとに構造を選択—アコーディオン、リスト、カード。余白、密度、配置をコントロールして、ネイティブな見た目に。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "UI言語に合う角丸、境界線、影、サーフェス。製品に最初から同梱されていたかのように見せられます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "階層が崩れない役割ベースの文字スタイル。見出し、本文、ラベル—ブランドに合わせて調整。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "標準でグローバル対応"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "1つのウィジェットで、あらゆる市場へ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "即時ローカライズ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL対応"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "ロケールに配慮したコピー"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEOの基盤"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "ガバナンス"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "パフォーマンス"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "翻訳プロジェクトなしで新しい言語に展開。どこでも一貫した体験を維持します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "レイアウトを作り直すことなく右から左の言語をサポート。方向性は常に正しく保たれます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "言葉だけでなく、読者に合わせてトーンや言い回しを調整。自然に読めるコンテンツにします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "必要なときにインデックス可能な構造化コンテンツ。回答を見つけやすくします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "厳格な契約でブレを防止。変更は明示的で、監査可能かつ再現性があります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "高速なレンダリングと適切な読み込みで、端末やネットワークを問わずページの動作を滑らかに保ちます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "プラットフォームとして設計"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "高速"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "信頼性"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "アクセシブル"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "軽量な埋め込みと遅延読み込み。レイアウトのガタつきなし。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "決定論的な契約とビルドのゲートで、大規模でも安全にリリースできます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "明確な階層、読みやすい文字組み、さまざまな入力手段で機能するインタラクションパターン。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQの未来を体験しよう"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "あらゆるやり取りで賢くなるプラットフォーム。AI時代のために設計されています。"
+    }
+  ],
+  "v": 1
+}

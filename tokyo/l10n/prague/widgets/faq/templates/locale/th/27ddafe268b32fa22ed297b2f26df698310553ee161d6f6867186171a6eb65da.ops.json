@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "เทมเพลต FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "เลือกจากดีไซน์ FAQ ที่สวยสะดุดตาและช่วยเปลี่ยนผู้เข้าชมให้กลายเป็นลูกค้า"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ ของคุณ ในแบบของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "สวยงามตั้งแต่ค่าเริ่มต้น เป็นคุณอย่างชัดเจนด้วยการออกแบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "โดดเด่นเมื่อคุณต้องการ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—ลุคที่นำเทรนด์ ทั้งโหมดสว่างและโหมดมืด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "หรูหราเมื่อคุณอยากได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "มินิมอล สะอาดตา และทันสมัย สไตล์เหนือกาลเวลาที่ดูร่วมสมัยเสมอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "เริ่มจากดีไซน์ แล้วทำให้เป็นของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "ได้ลุคที่ใช่ทันที ทั้งดีไซน์ตามเทรนด์หรือคลาสสิกที่ใช้ได้เสมอ แล้วปรับแต่งได้แบบไร้ขีดจำกัด—รัศมีมุมแยกแต่ละมุม เงาแยกแต่ละด้าน ตัวอักษรแยกตามบทบาท และ responsive breakpoints เทมเพลตที่กลายเป็นซิกเนเจอร์ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ช่วยให้ผู้เข้าชมหาคำตอบได้อย่างรวดเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "อิสระในการออกแบบ มีมาให้ในตัว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "ตั้งแต่เลย์เอาต์ไปจนถึงผิวสัมผัสและฟอนต์—การปรับแต่งที่รู้สึกง่ายดาย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "เลย์เอาต์ ในแบบของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "ควบคุมรูปลักษณ์ได้แบบไร้ขีดจำกัด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "ความแม่นยำด้านตัวพิมพ์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "หลายระบบเลย์เอาต์ ไม่ใช่แค่แบบเดียว โครงสร้างแยกตาม breakpoint ระยะขอบและระยะห่างเดสก์ท็อป/มือถือแยกอิสระ ควบคุมคอลัมน์ การซ้อน การจัดแนว และการไหลใหม่—ได้อย่างแม่นยำ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "รัศมีมุมแยกแต่ละมุม เส้นขอบพร้อมสีที่กำหนดเอง เงาด้านนอกและด้านใน (เชื่อมกันหรือแยกอิสระรายด้าน) พื้นหลังแบบไล่สี รูปภาพ หรือวิดีโอ อำนาจการควบคุมภาพลักษณ์เต็มรูปแบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "6 บทบาทที่แตกต่างกัน (headline, body, question, answer, button, section) เลือกจาก 17 Google Fonts น้ำหนัก สไตล์ ขนาด—ปรับได้ทั้งหมดแยกตามบทบาท สเกลแบบไดนามิก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "3 เอนจินเลย์เอาต์สำหรับวิดเจ็ต FAQ ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion สำหรับการเปิดเผยทีละส่วน List เพื่อความเรียบง่าย Cards สำหรับลำดับชั้นเชิงภาพ Grid หรือ masonry คอลัมน์แบบ responsive ควบคุมช่องว่างและระยะขอบได้ละเอียด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "ควบคุมรูปลักษณ์ได้แบบไร้ขีดจำกัด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "รัศมีมุมแยกแต่ละมุม เส้นขอบพร้อมสีที่กำหนดเอง เงาด้านนอกและด้านใน (เชื่อมกันหรือแยกอิสระรายด้าน) พื้นหลังแบบไล่สี รูปภาพ หรือวิดีโอ อำนาจการควบคุมภาพลักษณ์เต็มรูปแบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "ความแม่นยำด้านตัวพิมพ์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "6 บทบาทที่แตกต่างกัน (headline, body, question, answer, button, section) เลือกจาก 17 Google Fonts น้ำหนัก สไตล์ ขนาด—ปรับได้ทั้งหมดแยกตามบทบาท สเกลแบบไดนามิก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "โหมดมืด: หรูหราและทันสมัย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "อินเทอร์เฟซสมัยใหม่โดดเด่นในความมืด ให้ความรู้สึกพรีเมียมด้วยสุนทรียะล้ำสมัย รวมอยู่ในทุกเทมเพลต"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "เดสก์ท็อปและมือถือ ปรับจูนได้อย่างสมบูรณ์แบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "วิดเจ็ต FAQ ของคุณตอบสนองต่อทุก breakpoint จำนวนคอลัมน์ ระยะขอบ และระยะห่างที่ต่างกันตามอุปกรณ์ ภาษาเดียวของดีไซน์ มุมมองไร้ขีดจำกัด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "จากเทมเพลตสู่ความพอดีที่สมบูรณ์แบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "วิธีสร้างวิดเจ็ต FAQ ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "เลือกเทมเพลตดีไซน์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "ปรับแต่งเลย์เอาต์และรูปลักษณ์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "ปรับละเอียดด้านตัวพิมพ์และความ responsive"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "ตามเทรนด์ คลาสสิก หรือมินิมอล ทั้งโหมดสว่างและโหมดมืด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "แบบแอคคอร์เดียน, รายการ หรือการ์ด ปรับรัศมีมุมแยกแต่ละมุม, เงาแยกแต่ละด้าน, ไล่เฉดสี และเส้นขอบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "บทบาทฟอนต์ 6 แบบ, Google Fonts 17 แบบ สวยลงตัวทั้งบนเดสก์ท็อปและมือถือ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "สร้างวิดเจ็ต FAQ ฟรี"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "เริ่มด้วยเทมเพลตดีไซน์หรือสร้างจากศูนย์ ควบคุมความสร้างสรรค์ได้เต็มที่"
+    }
+  ],
+  "v": 1
+}

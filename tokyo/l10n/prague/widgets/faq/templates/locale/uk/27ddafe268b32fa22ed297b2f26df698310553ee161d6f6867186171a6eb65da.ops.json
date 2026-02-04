@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Шаблони FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Обирайте з приголомшливих дизайнів FAQ, які привертають увагу та конвертують відвідувачів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ваш FAQ. Ваші правила."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Гарний за замовчуванням. Безпомилково ваш — за дизайном."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Сміливий, коли це потрібно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism — трендові образи у світлій і темній темах."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Елегантний, коли ви цього хочете"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Мінімалістичний, чистий і сучасний. Позачасові стилі, що завжди виглядають актуально."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Почніть із дизайну. Потім зробіть його своїм."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Миттєво отримайте потрібну естетику. Трендові дизайни або вічна класика. А потім налаштовуйте без обмежень — радіус кожного кута, тіні для кожної сторони, типографіка для кожної ролі та адаптивні брейкпоінти. Шаблон, що стає вашим підписом."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Допоможіть відвідувачам швидко знаходити відповіді."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Свобода дизайну — вбудована."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Від макетів до фінішів і шрифтів — налаштування, що відчувається беззусильним."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Макети — як вам потрібно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Контроль зовнішнього вигляду без меж"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Точність типографіки"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Багато систем макетів, а не одна. Структура для кожного брейкпоінта. Незалежні відступи та інтервали для десктопу й мобільного. Керуйте колонками, стекінгом, вирівнюванням і перетіканням — максимально точно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Радіус кожного кута. Межі з власними кольорами. Тіні зовні та всередині (пов’язані або незалежні для кожної сторони). Градієнтні, зображення або відеофони. Повна візуальна влада."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Шість окремих ролей (заголовок, основний текст, запитання, відповідь, кнопка, секція). Обирайте з 17 шрифтів Google Fonts. Вага, стиль, розмір — усе налаштовується для кожної ролі. Динамічні шкали."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Три рушії макетів для вашого віджета FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Акордеон — для поступового розкриття. Список — для простоти. Картки — для візуальної ієрархії. Сітка або masonry. Адаптивні колонки. Детальний контроль проміжків і відступів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Контроль зовнішнього вигляду без меж"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Радіус кожного кута. Межі з власними кольорами. Тіні зовні та всередині (пов’язані або незалежні для кожної сторони). Градієнтні, зображення або відеофони. Повна візуальна влада."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Точність типографіки"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Шість окремих ролей (заголовок, основний текст, запитання, відповідь, кнопка, секція). Обирайте з 17 шрифтів Google Fonts. Вага, стиль, розмір — усе налаштовується для кожної ролі. Динамічні шкали."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Темний режим: вишуканий і сучасний"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Сучасні інтерфейси розквітають у темряві. Преміальне відчуття з передовою естетикою. У комплекті з кожним шаблоном."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Десктоп і мобільний — ідеально налаштовано"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Ваш віджет FAQ підлаштовується під кожен брейкпоінт. Різна кількість колонок, відступи та інтервали для кожного пристрою. Одна мова дизайну — нескінченні в’юпорти."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Від шаблону до ідеальної відповідності"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Як створити ваш віджет FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Оберіть дизайнерський шаблон"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Налаштуйте макети та зовнішній вигляд"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Відшліфуйте типографіку та адаптивність"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Трендовий, класичний або мінімалістичний. Світлий і темний режими."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Акордеон, список або картки. Заокруглення для кожного кута, тіні для кожної сторони, градієнти, рамки."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Шість ролей шрифтів, 17 шрифтів Google. Ідеально на десктопі та мобільних пристроях."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Створіть безкоштовний віджет FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Почніть із шаблону дизайну або створіть з нуля. Повний творчий контроль."
+    }
+  ],
+  "v": 1
+}

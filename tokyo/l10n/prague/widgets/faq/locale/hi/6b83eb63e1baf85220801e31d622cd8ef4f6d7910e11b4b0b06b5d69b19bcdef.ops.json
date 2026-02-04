@@ -1,0 +1,352 @@
+{
+  "baseFingerprint": "6b83eb63e1baf85220801e31d622cd8ef4f6d7910e11b4b0b06b5d69b19bcdef",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ विजेट - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "तेज़, सुंदर FAQ विजेट बनाएँ। मिनटों में कस्टमाइज़ करें, प्रकाशित करें और स्थानीयकरण करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ विजेट। सुंदर जवाब। तेज़ी के लिए बनाया गया।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "पॉलिश्ड डिज़ाइन, आसान अपडेट, और SEO की मज़बूत नींव—किसी भी भाषा के लिए तैयार, AI द्वारा संचालित।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "अक्सर पूछे जाने वाले प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "आगंतुकों को जल्दी उत्तर ढूँढने में मदद करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "इसे अपना बनाएं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "अपना परफ़ेक्ट FAQ यहीं डिज़ाइन करें। बदलाव तुरंत देखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "देखें क्या-क्या संभव है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "टेम्प्लेट्स से शुरू करें, उदाहरणों से सीखें, फिर जब तैयार हों तो फीचर्स में गहराई से जाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "टेम्प्लेट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "उदाहरण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "फीचर्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "ऐसे पॉलिश्ड शुरुआती विकल्पों के साथ तेज़ी से लॉन्च करें जिन्हें आप अपने ब्रांड के अनुसार ढाल सकते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "देखें कि वास्तविक दुनिया में बेहतरीन FAQs कैसे दिखते हैं—और कन्वर्ट करने वाले पैटर्न अपनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "समझें कि आप क्या-क्या नियंत्रित कर सकते हैं—लेआउट और स्टाइलिंग से लेकर लोकलाइज़ेशन और SEO तक।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "इसे वास्तविक भाषाओं में प्रीव्यू करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "लोकल बदलकर देखें कि अलग-अलग बाजारों में आपका FAQ कैसे पढ़ा जाता है—कुछ भी दोबारा बनाए बिना।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "विभाजित क्रिएटिव (दाएँ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "यह दाएँ-विज़ुअल वैरिएंट है, जो हीरो के समान क्यूरेटेड इंस्टेंस का उपयोग करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "स्प्लिट क्रिएटिव (बाएँ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "यह बाएँ-विज़ुअल वैरिएंट है, जिसमें हीरो के समान क्यूरेटेड इंस्टेंस का उपयोग किया गया है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "देखें कि सवाल रियल-टाइम में अपने आप कैसे जवाब पाते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "एक खूबसूरती से डिज़ाइन किया गया FAQ जोड़ें जो संदेह के क्षण में सही जवाब सामने लाता है। ग्राहक तुरंत अटकने से बच जाते हैं, आपत्तियाँ टिकट बनने से पहले ही खत्म हो जाती हैं, और आप अधिक सपोर्ट जोड़े बिना ज़्यादा बिक्री बंद करते हैं। एक बार कस्टमाइज़ करें, कहीं भी एम्बेड करें, और इसे 24/7 काम करने दें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "विभाजित क्रिएटिव (स्टैक्ड)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "यह स्टैक्ड वैरिएंट है, जिसमें हीरो के समान ही क्यूरेटेड इंस्टेंस का उपयोग किया गया है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "वास्तव में काम करने वाले FAQs (ताकि आपको न करना पड़े)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "आपके ग्राहकों के सवाल होते हैं। उन्हें एक बार जवाब दें, सौ बार नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "अनुत्तरित सवालों की वजह से बिक्री खोना बंद करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "अपना समय वापस पाएं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "सोते हुए भी ज़्यादा डील्स क्लोज़ करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "हर सवाल जो अनुत्तरित रह जाता है, एक ग्राहक के दूर जाने जैसा है। जब विज़िटर को जो चाहिए वह नहीं मिलता, वे साइट छोड़ देते हैं। एक अच्छी तरह डिज़ाइन किया गया FAQ आपत्तियों को बनने से पहले ही खत्म कर देता है—ताकि ग्राहक बिना संपर्क किए खुद को खरीदने के लिए मना कर लें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "जब ग्राहक तुरंत जवाब ढूँढ लेते हैं, तो सपोर्ट वॉल्यूम 40%+ तक घटाएँ। अब और Slack पिंग्स नहीं। अब और \"quick question\" ईमेल नहीं। अब और कॉन्टेक्स्ट-स्विचिंग का नरक नहीं। आपका FAQ भारी काम संभालता है, ताकि आप उस काम पर ध्यान दे सकें जो सच में मायने रखता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "सही FAQ 2 AM पर, जब आप ऑफ़लाइन होते हैं, संदेह का अंदाज़ा लगाता है और घर्षण हटाता है। आपके जवाब 24/7 काम करते हैं। ग्राहक आपका इंतज़ार नहीं करते—वे अटकाव से निकलते हैं, जो देखते हैं उस पर भरोसा करते हैं, और आपके दिन में बाधा डाले बिना \"buy\" पर क्लिक कर देते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "स्प्लिट क्रिएटिव (दाएँ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "यह दाएँ-विज़ुअल वैरिएंट है, जो हीरो के समान ही क्यूरेटेड इंस्टेंस का उपयोग करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "स्प्लिट क्रिएटिव (बाएँ)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "यह बाएँ-विज़ुअल वैरिएंट है, जो हीरो के समान क्यूरेटेड इंस्टेंस का उपयोग करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "डिज़ाइन कंट्रोल, पिक्सेल तक"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "बिना किसी समझौते के अपनी साइट और ब्रांड से मैच करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "लेआउट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "दिखावट"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "टाइपोग्राफी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "हर ब्रेकपॉइंट पर स्ट्रक्चर चुनें—अकॉर्डियन, लिस्ट, या कार्ड्स। स्पेसिंग, डेंसिटी, और अलाइनमेंट नियंत्रित करें ताकि यह नैटिव लगे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "रेडियस, बॉर्डर्स, शैडोज़, और सतहें जो आपकी UI भाषा से मेल खाएँ। इसे ऐसा बनाइए जैसे यह आपके प्रोडक्ट के साथ ही शिप हुआ हो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "रोल-आधारित टाइप स्टाइल्स जो हायरार्की को साफ़ रखते हैं। हेडिंग्स, बॉडी, लेबल्स—आपके ब्रांड के अनुसार ट्यून किए हुए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "डिफ़ॉल्ट रूप से ग्लोबल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "एक विजेट, हर बाजार।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "तुरंत लोकलाइज़ेशन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL तैयार"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "लोकल-अवेयर कॉपी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO की नींव"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "गवर्नेंस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "परफॉर्मेंस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "बिना ट्रांसलेशन प्रोजेक्ट के नई भाषाओं में शिप करें। हर जगह अनुभव एक जैसा रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "लेआउट्स को फिर से डिज़ाइन किए बिना राइट-टू-लेफ्ट भाषाओं का सपोर्ट करें। दिशा-संरेखण सही रहता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "सिर्फ शब्द नहीं, ऑडियंस के लिए टोन और फ्रेज़िंग भी अनुकूलित करें। कंटेंट स्वाभाविक लगता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "स्ट्रक्चर्ड कंटेंट जिसे जरूरत पड़ने पर इंडेक्स किया जा सकता है। जवाब खोजने योग्य बनाइए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "सख्त कॉन्ट्रैक्ट्स ड्रिफ्ट रोकते हैं। बदलाव स्पष्ट, ऑडिटेबल, और दोहराए जा सकने वाले होते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "तेज़ रेंडर और समझदारी भरी लोडिंग ताकि पेज अलग-अलग डिवाइसेज़ और नेटवर्क्स पर भी स्मूद रहे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "प्लेटफ़ॉर्म की तरह बनाया गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "तेज़"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "विश्वसनीय"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "सुलभ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "लाइटवेट एम्बेड्स और लेज़ी लोडिंग। कोई लेआउट जैंक नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "डिटर्मिनिस्टिक कॉन्ट्रैक्ट्स और बिल्ड गेट्स बड़े पैमाने पर शिपिंग को सुरक्षित रखते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "साफ़ हायरार्की, पढ़ने योग्य टाइप, और इंटरैक्शन पैटर्न जो अलग-अलग इनपुट तरीकों पर काम करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "हर ग्राहक से, हर जगह जुड़ें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-संचालित FAQ जो उनकी भाषा बोलता है और उनकी ज़रूरतों को समझता है।"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,12 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T17:11:45.004Z",
+  "pageId": "widgets/logoshowcase/examples",
+  "snapshot": {
+    "blocks.hero.copy.headline": "Logo showcase examples",
+    "blocks.hero.copy.subheadline": "See common placements and use cases.",
+    "blocks.page-meta.copy.description": "See common logo showcase placements and use cases.",
+    "blocks.page-meta.copy.title": "Logo showcase examples - Clickeen"
+  },
+  "v": 1
+}

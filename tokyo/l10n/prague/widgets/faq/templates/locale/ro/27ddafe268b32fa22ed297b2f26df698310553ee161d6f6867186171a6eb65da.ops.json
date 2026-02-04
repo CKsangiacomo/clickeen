@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Șabloane FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alege dintre designuri FAQ uimitoare, care atrag privirile și transformă vizitatorii în clienți."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-ul tău. În felul tău."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Frumos în mod implicit. Inconfundabil al tău, prin design."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Îndrăzneț când ai nevoie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—look-uri în pas cu trendurile, în mod luminos și întunecat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegant când îți dorești"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimal, curat și modern. Stiluri atemporale care se simt mereu actuale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Începe cu un design. Apoi fă-l al tău."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Obții estetica pe loc. Designuri în trend sau clasice mereu actuale. Apoi personalizezi fără limite—rază pe fiecare colț, umbre pe fiecare latură, tipografie pe fiecare rol și breakpoint-uri responsive. Un șablon care devine semnătura ta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ajută vizitatorii să găsească rapid răspunsuri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Libertate de design, integrată."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "De la layout-uri la finisaje la fonturi—personalizare care se simte fără efort."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Layout-uri, în felul tău"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Control al aspectului, fără limite"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Precizie tipografică"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Mai multe sisteme de layout, nu unul singur. Structură pe fiecare breakpoint. Padding și spațiere independente pentru desktop/mobil. Controlezi coloanele, stivuirea, alinierea și reflow-ul—exact."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Rază pe fiecare colț. Borduri cu culori personalizate. Umbre la exterior și interior (legate sau independente pe fiecare latură). Fundaluri gradient, imagine sau video. Control vizual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Șase roluri distincte (headline, body, întrebare, răspuns, buton, secțiune). Alege dintre 17 Google Fonts. Greutate, stil, mărime—totul personalizabil pe rol. Scale dinamice."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Trei motoare de layout pentru widgetul tău FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion pentru dezvăluire progresivă. Listă pentru simplitate. Carduri pentru ierarhie vizuală. Grid sau masonry. Coloane responsive. Control granular asupra spațiilor și padding-ului."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Control al aspectului, fără limite"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Rază pe fiecare colț. Borduri cu culori personalizate. Umbre la exterior și interior (legate sau independente pe fiecare latură). Fundaluri gradient, imagine sau video. Control vizual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Precizie tipografică"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Șase roluri distincte (headline, body, întrebare, răspuns, buton, secțiune). Alege dintre 17 Google Fonts. Greutate, stil, mărime—totul personalizabil pe rol. Scale dinamice."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Mod întunecat: sofisticat și modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Interfețele moderne strălucesc în întuneric. Senzație premium cu estetică de ultimă generație. Inclus în fiecare șablon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop și mobil, perfect calibrate"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Widgetul tău FAQ răspunde la fiecare breakpoint. Număr diferit de coloane, padding și spațiere pe fiecare dispozitiv. Un singur limbaj de design, viewports infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "De la șablon la potrivirea perfectă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Cum să-ți construiești widgetul FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Alege un șablon de design"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Personalizează layout-urile și aspectul"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Rafinează tipografia și responsivitatea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "În trend, clasic sau minimal. Moduri luminos și întunecat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Acordeon, listă sau carduri. Rază pe colțuri individuale, umbre pe laturi individuale, degradeuri, borduri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Șase roluri de font, 17 Google Fonts. Perfect pe desktop și mobil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Creează un widget FAQ gratuit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Începe cu un șablon de design sau construiește de la zero. Control creativ total."
+    }
+  ],
+  "v": 1
+}

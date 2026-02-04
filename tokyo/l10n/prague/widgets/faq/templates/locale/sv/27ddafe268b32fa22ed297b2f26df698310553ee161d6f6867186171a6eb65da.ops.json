@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mall för vanliga frågor – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Välj bland fantastiska FAQ-designer som drar blickarna till sig och konverterar besökare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Dina vanliga frågor. På ditt sätt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vackert som standard. Omisskännligt ditt genom design."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Djärvt när du behöver det"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glasmorfism, liquid glass, neumorfism—trendiga uttryck i ljus- och mörkt läge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegant när du vill ha det"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalistiskt, rent och modernt. Tidstilar som alltid känns aktuella."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Börja med en design. Gör den sedan till din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Få estetiken direkt. Trendiga designer eller tidlösa klassiker. Anpassa sedan utan begränsningar—hörnradie per hörn, skuggor per sida, typografi per roll och responsiva brytpunkter. En mall som blir din signatur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjälp besökare att hitta svar snabbt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Designfrihet, inbyggd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Från layouter till finish till typsnitt—anpassning som känns enkel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Layouter, på ditt sätt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Utseendekontroll utan gränser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Typografisk precision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Många layoutsystem, inte ett. Struktur per brytpunkt. Oberoende padding och mellanrum för desktop/mobil. Styr kolumner, stapling, justering och omflöde—precist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Hörnradie per hörn. Ramar med anpassade färger. Skuggor utvändigt och invändigt (länkade eller oberoende per sida). Gradient-, bild- eller videobakgrunder. Full visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Sex tydliga roller (rubrik, brödtext, fråga, svar, knapp, avsnitt). Välj bland 17 Google Fonts. Vikt, stil, storlek—allt anpassningsbart per roll. Dynamiska skalor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tre layoutmotorer för din FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Dragspel för gradvis visning. Lista för enkelhet. Kort för visuell hierarki. Rutnät eller masonry. Responsiva kolumner. Detaljerad kontroll över mellanrum och padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Utseendekontroll utan gränser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hörnradie per hörn. Ramar med anpassade färger. Skuggor utvändigt och invändigt (länkade eller oberoende per sida). Gradient-, bild- eller videobakgrunder. Full visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografisk precision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Sex tydliga roller (rubrik, brödtext, fråga, svar, knapp, avsnitt). Välj bland 17 Google Fonts. Vikt, stil, storlek—allt anpassningsbart per roll. Dynamiska skalor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Mörkt läge: sofistikerat och modernt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Moderna gränssnitt trivs i mörker. Premiumkänsla med banbrytande estetik. Ingår i varje mall."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop och mobil, perfekt finjusterat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Din FAQ-widget anpassar sig till varje brytpunkt. Olika antal kolumner, padding och mellanrum per enhet. Ett designspråk, oändligt många vyportar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Från mall till perfekt passform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Så bygger du din FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Välj en designmall"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Anpassa layouter och utseende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Finjustera typografi och responsivitet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendigt, klassiskt eller minimalistiskt. Ljust och mörkt läge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Dragspel, lista eller kort. Hörnradie per hörn, skuggor per sida, gradienter, kanter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Sex typsnittsroller, 17 Google Fonts. Perfekt på dator och mobil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Skapa en gratis FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Börja med en designtemplate eller bygg från grunden. Full kreativ kontroll."
+    }
+  ],
+  "v": 1
+}

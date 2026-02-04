@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תכונות שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "כל מה שצריך כדי להשיק שאלות נפוצות מבוססות AI שעובדות גלובלית וגדלות באופן ויראלי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "למה ווידג'ט השאלות הנפוצות מנצח את Elfsight, Typeform ומוצרים שנבנים בהתאמה אישית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "נבנה מאפס עבור AI. עובד גלובלית. גדל באופן ויראלי. FAQ אחד, אינסוף אפשרויות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "עריכת AI: מתארים, וסיימנו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "אמרו לו מה אתם רוצים בעברית פשוטה. \"הפוך את השאלות לקלילות יותר\" או \"הוסף סעיף על תמחור\". ה-AI מבין ומבצע מיד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "גלובלי ומיידי: כל שפה, עכשיו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "גיאוגרפיה היא פרמטר, לא פרויקט. הוסיפו ספרדית, יפנית או ערבית בלחיצה אחת. בלי תרגום ידני, בלי עיכובים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "קומפוזבילי בכל מקום: FAQ אחד, אינסוף הקשרים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "אותו FAQ עובד באתר, באימייל, בדפי נחיתה ובמודעות. מקור אחד, אינסוף אפשרויות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "למה Clickeen משנה הכול"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "לוקליזציה מותאמת אישית מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "תבניות או התאמה אישית ברמת פיקסל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "ארכיטקטורה קומפוזבילית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "כתובת אתר → תוכן מותאם אישית ב-29 שפות, באופן מיידי. בלי תרגום ידני, בלי עלויות מתרגמים. ה-AI מבין את ההקשר העסקי שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "התחילו מתבנית נבחרת בקפידה או הגדירו הכול בעצמכם—לבחירתכם, חופש מוחלט. בלי פשרות, בלי מגבלות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "FAQ אחד עובד בכל מקום: אתר, אימייל, דפי נחיתה, מודעות. אותו תוכן, אינסוף הקשרים. בלי לבנות מחדש לכל ערוץ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "נבנה עבור AI, מופעל על ידי AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen הוא לא סתם עוד בונה שאלות נפוצות—זה המוצר הראשון שתוכנן להפעלה באמצעות AI מהיום הראשון. בזמן שמתחרים מוסיפים יכולות AI בדיעבד, אנחנו בנינו ארכיטקטורה שסוכני AI יכולים להבין, לשנות ולמטב באופן אוטונומי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "איך פועלת מערכת האקוסיסטם של ה-AI של Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "פלטפורמה מלאה שהופכת לחכמה יותר בכל אינטראקציה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "ה-AI מבין את הכוונה שלך"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "תפעול גלובלי כברירת מחדל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "למידה ושיפור מתמשכים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "אוטומציה של הפצה ויראלית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "תארו שינויים בצורה טבעית. \"תעשה את זה יותר מקצועי\" או \"תוסיף דחיפות ל-CTA\". ה-AI מבצע בצורה מושלמת."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "ה-AI מטפל בלוקליזציה, בתמיכה ובשיווק בכל השווקים במקביל."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "כל אינטראקציה של משתמש מלמדת את מערכת ה-AI, והופכת את כל ה-FAQs לחכמים יותר עם הזמן."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "שאלות נפוצות חינמיות הופכות לערוצי שיווק שמניעים רכישה באופן אוטומטי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "שליטה בעיצוב, עד לרמת הפיקסל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "להתאים לאתר ולמותג שלך בלי פשרות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "פריסות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "מראה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "טיפוגרפיה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "בחרו מבנה לכל נקודת שבירה—אקורדיון, רשימה או כרטיסים. שלטו בריווח, בצפיפות וביישור כדי שזה ירגיש טבעי במוצר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "רדיוס, גבולות, צללים ומשטחים שמתאימים לשפת ה-UI שלכם. לגרום לזה להיראות כאילו הגיע מובנה עם המוצר שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "סגנונות טיפוגרפיה מבוססי-תפקיד ששומרים על היררכיה נקייה. כותרות, גוף טקסט, תוויות—מכוּונן למותג שלך."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "גלובלי כברירת מחדל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "ווידג׳ט אחד, לכל שוק."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "לוקליזציה מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "מוכן ל-RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "קופי מותאם לוקאלית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "תשתיות SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "ממשל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "ביצועים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "השיקו בשפות חדשות בלי פרויקט תרגום. שמרו על חוויה עקבית בכל מקום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "תמכו בשפות מימין לשמאל בלי לעצב מחדש את הפריסות. כיווניות נשארת נכונה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "התאימו את הטון והניסוח לקהל, לא רק את המילים. התוכן נקרא טבעי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "תוכן מובנה שניתן לאינדוקס כשצריך. הפכו תשובות לניתנות לגילוי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "חוזים קשיחים מונעים סטייה. שינויים הם מפורשים, ניתנים לביקורת, וניתנים לשחזור."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "רינדור מהיר וטעינה חכמה כדי שהעמוד יישאר חלק בכל מכשיר ורשת."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "בנוי כמו פלטפורמה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "מהיר"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "אמין"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "נגיש"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "הטמעות קלילות וטעינה עצלה. בלי קפיצות בפריסה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "חוזים דטרמיניסטיים ושערי בנייה שומרים על שחרור בטוח בקנה מידה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "היררכיה ברורה, טיפוגרפיה קריאה, ודפוסי אינטראקציה שעובדים בכל שיטות הקלט."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "חוו את העתיד של שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "הפלטפורמה שמתחכמת עם כל אינטראקציה. נבנתה לעידן ה-AI."
+    }
+  ],
+  "v": 1
+}

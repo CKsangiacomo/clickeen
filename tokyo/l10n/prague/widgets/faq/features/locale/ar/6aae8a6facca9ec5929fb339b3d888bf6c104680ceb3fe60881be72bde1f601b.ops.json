@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ميزات الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "كل ما تحتاجه لإطلاق أسئلة شائعة مدعومة بالذكاء الاصطناعي تعمل عالميًا وتنمو بشكل فيروسي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "لماذا تتفوق أداة الأسئلة الشائعة على Elfsight وTypeform والحلول المخصصة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "مبنية من الصفر للذكاء الاصطناعي. تعمل عالميًا. تنمو بشكل فيروسي. أسئلة شائعة واحدة، إمكانيات لا نهائية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "تحرير بالذكاء الاصطناعي: صف، وانتهى"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "أخبره بما تريد بلغة إنجليزية بسيطة. \"اجعل الأسئلة أكثر عفوية\" أو \"أضف قسمًا عن التسعير\". يفهم الذكاء الاصطناعي وينفّذ فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "عالمي وفوري: أي لغة، الآن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "الجغرافيا مُعامل، لا مشروع. أضف الإسبانية أو اليابانية أو العربية بنقرة واحدة. بلا ترجمة يدوية، بلا تأخير."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "قابلة للتركيب في كل مكان: أسئلة شائعة واحدة، وسياقات لا نهائية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "نفس الأسئلة الشائعة تعمل على الموقع، والبريد الإلكتروني، وصفحات الهبوط، والإعلانات. مصدر واحد، إمكانيات لا نهائية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "لماذا يغيّر Clickeen كل شيء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "توطين فوري ومخصص"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "قوالب أو تخصيص متقن حتى أدق بكسل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "بنية قابلة للتركيب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "رابط الموقع → محتوى مخصص بـ 29 لغة فورًا. بلا ترجمة يدوية، بلا تكاليف للمترجمين. يفهم الذكاء الاصطناعي سياق عملك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "ابدأ بقالب مُنتقى بعناية أو حدّد كل شيء بنفسك—الخيار لك، حرية كاملة. بلا تنازلات، بلا قيود."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "أسئلة شائعة واحدة تعمل في كل مكان: الموقع، البريد الإلكتروني، صفحات الهبوط، الإعلانات. نفس المحتوى، سياقات لا نهائية. لا حاجة لإعادة البناء لكل قناة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "مبني للذكاء الاصطناعي، ويُدار بالذكاء الاصطناعي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ليس مجرد أداة أخرى لإنشاء الأسئلة الشائعة—إنه أول منتج صُمّم ليُدار بالذكاء الاصطناعي منذ اليوم الأول. بينما يضيف المنافسون ميزات الذكاء الاصطناعي لاحقًا، بنينا بنية يمكن لوكلاء الذكاء الاصطناعي فهمها وتعديلها وتحسينها بشكل مستقل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "كيف يعمل نظام Clickeen البيئي للذكاء الاصطناعي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "منصة متكاملة تزداد ذكاءً مع كل تفاعل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "يفهم الذكاء الاصطناعي نيتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "تشغيل عالمي افتراضيًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "تعلّم وتحسين مستمران"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "أتمتة التوزيع الفيروسي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "صف التغييرات بشكل طبيعي. \"اجعله أكثر احترافية\" أو \"أضف إحساسًا بالإلحاح إلى CTA\". ينفّذ الذكاء الاصطناعي ذلك بإتقان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "يتولى الذكاء الاصطناعي التوطين والدعم والتسويق عبر جميع الأسواق في الوقت نفسه."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "كل تفاعل للمستخدم يعلّم نظام الذكاء الاصطناعي، ما يجعل جميع الأسئلة الشائعة أكثر ذكاءً بمرور الوقت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "تتحول الأسئلة الشائعة المجانية إلى قنوات تسويق تقود الاكتساب تلقائيًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "تحكم في التصميم حتى مستوى البكسل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "طابق موقعك وعلامتك التجارية دون أي تنازل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "التخطيطات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "المظهر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "الطباعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "اختر البنية لكل نقطة توقف—أكورديون أو قائمة أو بطاقات. تحكّم في التباعد والكثافة والمحاذاة ليبدو جزءًا أصيلًا من موقعك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "نصف القطر والحدود والظلال والأسطح التي تطابق لغة واجهة المستخدم لديك. اجعله يبدو وكأنه جاء مدمجًا مع منتجك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "أنماط كتابة قائمة على الأدوار تحافظ على تسلسل هرمي واضح. العناوين والنصوص والتسميات—مضبوطة وفق علامتك التجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "عالمي افتراضيًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "ودجت واحد، لكل سوق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "توطين فوري"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "جاهز للغات من اليمين إلى اليسار"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "نصوص تراعي الإعدادات المحلية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "أساسيات SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "الحوكمة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "الأداء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "أطلق لغات جديدة دون مشروع ترجمة. حافظ على اتساق التجربة في كل مكان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "ادعم اللغات من اليمين إلى اليسار دون إعادة تصميم التخطيطات. تبقى اتجاهية المحتوى صحيحة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "كيّف النبرة والصياغة لتناسب الجمهور، لا الكلمات فقط. يبدو المحتوى طبيعيًا عند قراءته."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "محتوى منظّم يمكن فهرسته عند الحاجة. اجعل الإجابات قابلة للاكتشاف."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "تمنع العقود الصارمة الانحراف. التغييرات واضحة وقابلة للتدقيق وقابلة للتكرار."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "عرض سريع وتحميل مدروس ليبقى الصفحة سلسة عبر الأجهزة والشبكات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "مبني كمنصة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "سريع"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "موثوق"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "سهل الوصول"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "تضمينات خفيفة وتحميل كسول. دون اهتزاز في التخطيط."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "عقود حتمية وبوابات بناء تحافظ على أمان الإصدارات على نطاق واسع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "تسلسل هرمي واضح، وخط مقروء، وأنماط تفاعل تعمل عبر طرق الإدخال المختلفة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "اختبر مستقبل الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "المنصة التي تزداد ذكاءً مع كل تفاعل. مبنية لعصر الذكاء الاصطناعي."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ตัวอย่าง FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "โรงแรม ร้านอาหาร และผู้ประกอบการทัวร์ใช้ Clickeen เพื่อให้บริการลูกค้านานาชาติได้ทันทีใน 29 ภาษา"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ตัวอย่าง FAQ สำหรับโรงแรม ร้านอาหาร ผู้ประกอบการทัวร์ และอื่นๆ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ส่ง URL เว็บไซต์ของคุณให้ Ombra รับ FAQ ที่ปรับให้เหมาะกับธุรกิจของคุณใน 29 ภาษา—ได้ทันที ไม่ต้องใช้บริการนักแปล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "โรงแรมในบาร์เซโลนา: แขกจากกว่า 50 ประเทศถามว่า ‘เช็คอินกี่โมง?’ ใน 15 ภาษา"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "ส่งเว็บไซต์โรงแรมของคุณให้ Ombra. สร้าง FAQ ที่ปรับให้เหมาะกับที่พักของคุณใน 29 ภาษา—ทันที ลดคำถามที่เคาน์เตอร์ต้อนรับลง 60% และเพิ่มคะแนนความพึงพอใจของแขก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "ร้านอาหารในปารีส: นักท่องเที่ยวถามคำถามเกี่ยวกับข้อจำกัดด้านอาหารเป็นภาษาฝรั่งเศส อังกฤษ สเปน จีน ญี่ปุ่น"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "คำถามที่พบบ่อยของเมนูคุณใน 29 ภาษา—ทันที ไม่ต้องใช้นักแปล ไม่ต้องทำงานด้วยตนเอง เพิ่มอัตราหมุนเวียนโต๊ะ ลดการรบกวนพนักงานเสิร์ฟ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "โฮสต์ Airbnb ในทัสคานี: คำแนะนำการเช็กอิน รหัสผ่าน Wi‑Fi ทิปท้องถิ่นในภาษาของผู้เข้าพัก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "ส่ง URL ที่พักของคุณให้ Ombra กฎของบ้าน 29 ภาษาได้ทันที รีวิว 5 ดาวจากผู้เข้าพักต่างชาติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "ลูกค้าต่างชาติไม่รอการแปล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "โรงแรมในโรมเสียการจองเมื่อ นักท่องเที่ยวชาวเยอรมันหา ข้อมูลเช็คอินไม่เจอ ร้านอาหารในโตเกียวเสียการจองโต๊ะเมื่อ ผู้พูดภาษาอังกฤษหา เวลาเปิด-ปิดไม่เจอ ทุกคำถามที่ไม่ได้รับคำตอบในภาษาของพวกเขาคือลูกค้าที่สูญเสียไป Ombra แก้ปัญหานี้: URL เว็บไซต์ → FAQ แบบปรับให้เหมาะเฉพาะบุคคลใน 29 ภาษา ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "ผู้ให้บริการทัวร์ในประเทศไทย: คำถามที่พบบ่อยเกี่ยวกับการจอง ความปลอดภัย และกำหนดการเดินทางสำหรับนักเดินทางต่างชาติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "มอบเว็บไซต์ทัวร์ของคุณให้ Ombra สร้าง FAQ ได้ทันทีใน 29 ภาษา ลดการซัพพอร์ตทางอีเมลลง 70% และเพิ่มอัตราคอนเวอร์ชันจากตลาดต่างประเทศ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "พิพิธภัณฑ์ในโรม: ข้อมูลนิทรรศการ ตั๋ว เวลาเปิดทำการสำหรับผู้มาเยือนจากทั่วโลก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "คำถามที่พบบ่อยสำหรับผู้มาเยือนใน 29 ภาษา—ทันที ยกระดับประสบการณ์ผู้มาเยือน ลดการสอบถามที่เคาน์เตอร์ข้อมูลลง 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "จากความสับสนระดับนานาชาติสู่ความชัดเจนในทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "ธุรกิจการบริการใช้ Clickeen อย่างไร"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "ส่ง URL เว็บไซต์ของคุณให้ Ombra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ ปรับให้เข้ากับธุรกิจของคุณใน 29 ภาษา—ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "ฝังโค้ดและดูจำนวนคำถามจากต่างประเทศลดลง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI อ่านบริบทธุรกิจของคุณ—ที่ตั้ง บริการ นโยบาย เข้าใจความต้องการเฉพาะของคุณโดยอัตโนมัติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "ไม่ต้องใช้ผู้แปลภาษา ไม่ต้องทำงานด้วยมือ เนื้อหาถูกปรับให้เข้ากับธุรกิจของคุณ และพร้อมใช้งานทั่วโลกทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "สคริปต์ 3 บรรทัด ใช้งานได้ทุกที่ แขก นักท่องเที่ยว นักเดินทางได้รับคำตอบเป็นภาษาของตนก่อนที่จะถาม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "สร้างมาเหมือนแพลตฟอร์ม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "รวดเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "เชื่อถือได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "เข้าถึงได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "ฝังแบบเบาและโหลดแบบ Lazy loading ไม่มีการกระตุกของเลย์เอาต์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "สัญญาที่กำหนดแน่นอนและเกตการบิลด์ช่วยให้การปล่อยใช้งานปลอดภัยในสเกลใหญ่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "ลำดับชั้นชัดเจน ตัวอักษรอ่านง่าย และรูปแบบการโต้ตอบที่ใช้งานได้กับวิธีการป้อนข้อมูลหลากหลาย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "รับ FAQ ของคุณใน 29 ภาษา—ได้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "ส่ง URL เว็บไซต์ของคุณให้กับ ombra ปรับให้เหมาะกับธุรกิจของคุณ พร้อมใช้งานได้ทั่วโลก ไม่ต้องใช้บริการนักแปล"
+    }
+  ],
+  "v": 1
+}

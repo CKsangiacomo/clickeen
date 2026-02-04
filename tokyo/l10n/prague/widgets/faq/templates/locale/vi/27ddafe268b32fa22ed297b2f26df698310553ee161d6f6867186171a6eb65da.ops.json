@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "27ddafe268b32fa22ed297b2f26df698310553ee161d6f6867186171a6eb65da",
+  "baseUpdatedAt": "2026-02-04T21:34:04.655Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mẫu FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Chọn từ những thiết kế FAQ ấn tượng giúp thu hút ánh nhìn và chuyển đổi khách truy cập."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ của bạn. Theo cách của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Đẹp mặc định. Đậm chất bạn ngay từ thiết kế."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Táo bạo khi bạn cần"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—diện mạo bắt trend ở cả sáng và tối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Thanh lịch khi bạn muốn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Tối giản, gọn gàng và hiện đại. Phong cách vượt thời gian luôn hợp xu hướng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Bắt đầu với một thiết kế. Rồi biến nó thành của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Có ngay thẩm mỹ bạn muốn. Thiết kế bắt trend hoặc kinh điển bền vững. Rồi tùy biến không giới hạn—bo góc theo từng góc, đổ bóng theo từng cạnh, kiểu chữ theo từng vai trò, và breakpoint đáp ứng. Một template trở thành dấu ấn của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Giúp khách truy cập tìm câu trả lời nhanh chóng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Tự do thiết kế, tích hợp sẵn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Từ bố cục đến hoàn thiện đến phông chữ—tùy biến nhẹ nhàng, không tốn công."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Bố cục theo cách của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Kiểm soát giao diện không giới hạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Độ chính xác kiểu chữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Nhiều hệ thống bố cục, không chỉ một. Cấu trúc theo từng breakpoint. Padding và khoảng cách desktop/mobile độc lập. Kiểm soát cột, xếp chồng, căn chỉnh và reflow—chính xác tuyệt đối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Bo góc theo từng góc. Viền với màu tùy chỉnh. Đổ bóng ngoài và trong (liên kết hoặc độc lập theo từng cạnh). Nền gradient, hình ảnh hoặc video. Quyền kiểm soát hình ảnh tuyệt đối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Sáu vai trò riêng biệt (headline, body, question, answer, button, section). Chọn từ 17 Google Fonts. Độ đậm, kiểu, cỡ chữ—tất cả tùy chỉnh theo từng vai trò. Tỷ lệ động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Ba engine bố cục cho widget FAQ của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion để mở dần nội dung. List cho sự đơn giản. Cards cho thứ bậc thị giác. Grid hoặc masonry. Cột đáp ứng. Kiểm soát chi tiết khoảng hở và padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Kiểm soát giao diện không giới hạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Bo góc theo từng góc. Viền với màu tùy chỉnh. Đổ bóng ngoài và trong (liên kết hoặc độc lập theo từng cạnh). Nền gradient, hình ảnh hoặc video. Quyền kiểm soát hình ảnh tuyệt đối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Độ chính xác kiểu chữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Sáu vai trò riêng biệt (headline, body, question, answer, button, section). Chọn từ 17 Google Fonts. Độ đậm, kiểu, cỡ chữ—tất cả tùy chỉnh theo từng vai trò. Tỷ lệ động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Chế độ tối: tinh tế và hiện đại"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Giao diện hiện đại tỏa sáng trong bóng tối. Cảm giác cao cấp với thẩm mỹ tiên tiến. Có sẵn trong mọi template."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop và mobile, được tinh chỉnh hoàn hảo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Widget FAQ của bạn đáp ứng ở mọi breakpoint. Số cột, padding, khoảng cách khác nhau theo từng thiết bị. Một ngôn ngữ thiết kế, vô hạn khung nhìn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Từ template đến vừa khít hoàn hảo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Cách xây dựng widget FAQ của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Chọn một template thiết kế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Tùy biến bố cục và giao diện"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Tinh chỉnh kiểu chữ và khả năng đáp ứng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Bắt trend, kinh điển, hoặc tối giản. Chế độ sáng và tối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Accordion, danh sách hoặc thẻ. Bo góc theo từng góc, đổ bóng theo từng cạnh, dải màu chuyển, viền."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Sáu vai trò phông chữ, 17 Google Fonts. Hoàn hảo trên máy tính và thiết bị di động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Tạo widget FAQ miễn phí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Bắt đầu với một mẫu thiết kế hoặc xây dựng từ đầu. Toàn quyền sáng tạo."
+    }
+  ],
+  "v": 1
+}

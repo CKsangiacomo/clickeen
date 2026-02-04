@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-esimerkit – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotellit, ravintolat ja matkanjärjestäjät käyttävät Clickeeniä palvellakseen kansainvälisiä asiakkaita 29 kielellä välittömästi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "UKK-esimerkkejä hotelleille, ravintoloille, matkanjärjestäjille ja muille"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Anna Ombralle verkkosivustosi URL-osoite. Saat liiketoimintaasi räätälöidyn UKK:n 29 kielellä – heti. Kääntäjää ei tarvita."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotellit Barcelonassa: vieraat yli 50 maasta kysyvät ”mihin aikaan sisäänkirjautuminen on?” 15 kielellä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Anna Ombra hotellisi verkkosivusto. Kiinteistöllesi personoitu UKK 29 kielellä – heti. Vähennä vastaanoton kyselyjä 60 %, paranna asiakastyytyväisyyspisteitä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Ravintolat Pariisissa: turistit kysyvät ruokavalioon liittyviä kysymyksiä ranskaksi, englanniksi, espanjaksi, kiinaksi, japaniksi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Ruokalistasi usein kysytyt kysymykset 29 kielellä – heti. Ei kääntäjää, ei manuaalista työtä. Paranna pöytäkiertoa, vähennä tarjoilijoiden keskeytyksiä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-majoittajat Toscanassa: sisäänkirjautumisohjeet, Wi‑Fi-salasana, paikalliset vinkit vieraasi kielellä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Anna Ombra:lle kohteesi URL-osoite. Talon säännöt 29 kielellä välittömästi. 5 tähden arviot kansainvälisiltä vierailta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Kansainväliset asiakkaat eivät odota käännöksiä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Roomassa sijaitseva hotelli menettää varauksia, kun saksalaiset turistit eivät löydä sisäänkirjautumistietoja. Tokiossa sijaitseva ravintola menettää pöytävarauksia, kun englanninkieliset eivät löydä aukioloaikoja. Jokainen heidän kielellään vastaamatta jäänyt kysymys on menetetty asiakas. Ombra ratkaisee tämän: verkkosivun URL → personoitu UKK 29 kielellä, heti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Matkanjärjestäjät Thaimaassa: varaukset, turvallisuus ja reitit – UKK kansainvälisille matkailijoille"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Anna Ombra matkasivustosi. UKK 29 kielellä heti. Vähennä sähköpostitukea 70 % ja kasvata konversiota kansainvälisiltä markkinoilta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Rooman museot: näyttelytiedot, liput ja aukioloajat vierailijoille ympäri maailmaa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Vierailijoiden UKK 29 kielellä – heti. Paranna vierailijakokemusta ja vähennä infopisteen kyselyitä 50 %."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Kansainvälisestä sekavuudesta välittömään selkeyteen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Näin majoitus- ja ravintola-alan yritykset käyttävät Clickeenia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Anna Ombralle verkkosivustosi URL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Yrityksellesi räätälöity FAQ 29 kielellä – heti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Upota ja seuraa, miten kansainväliset tiedustelut vähenevät"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI lukee yrityksesi kontekstin – sijainnin, palvelut, käytännöt. Ymmärtää tarpeesi automaattisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Ei tarvita kääntäjää. Ei manuaalista työtä. Sisältö mukautetaan yritykseesi JA on heti saatavilla maailmanlaajuisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3-rivinen skripti. Toimii missä tahansa. Vieraat, turistit ja matkailijat saavat vastaukset omalla kielellään ennen kuin ehtivät kysyä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Rakennettu kuin alusta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nopea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Luotettava"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Saavutettava"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Kevyet upotukset ja laiska lataus. Ei asettelun nykimistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministiset sopimukset ja build-portit pitävät julkaisemisen turvallisena mittakaavassa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Selkeä hierarkia, luettava typografia ja vuorovaikutusmallit, jotka toimivat eri syöttötavoilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Hanki UKK 29 kielellä – heti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Anna ombralle verkkosivustosi URL-osoite. Räätälöity liiketoimintaasi varten, saatavilla maailmanlaajuisesti. Kääntäjää ei tarvita."
+    }
+  ],
+  "v": 1
+}

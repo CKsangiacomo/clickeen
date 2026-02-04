@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ फीचर्स - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "AI-संचालित FAQs को वैश्विक रूप से लॉन्च करने और वायरल तरीके से बढ़ाने के लिए आपको जो कुछ भी चाहिए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ विजेट Elfsight, Typeform और कस्टम-बिल्ट से बेहतर क्यों है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI के लिए शुरू से बनाया गया। वैश्विक रूप से काम करता है। वायरल तरीके से बढ़ता है। एक FAQ, अनंत संभावनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI एडिटिंग: बताइए, हो गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "साधारण अंग्रेज़ी में बताइए कि आपको क्या चाहिए। 'Make the questions more casual' या 'add a section about pricing.' AI समझता है और तुरंत लागू करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "तुरंत ग्लोबल: कोई भी भाषा, अभी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "भूगोल एक पैरामीटर है, प्रोजेक्ट नहीं। एक क्लिक में स्पैनिश, जापानी या अरबी जोड़ें। न मैन्युअल अनुवाद, न देरी।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "हर जगह कंपोज़ेबल: एक FAQ, अनंत संदर्भ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "एक ही FAQ वेबसाइट, ईमेल, लैंडिंग पेज और विज्ञापनों में काम करता है। एक स्रोत, अनंत संभावनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeen सब कुछ कैसे बदल देता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "तुरंत व्यक्तिगत लोकलाइज़ेशन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "टेम्पलेट्स या पिक्सल-परफेक्ट कस्टम"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "कंपोज़ेबल आर्किटेक्चर"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "वेबसाइट URL → 29 भाषाओं में तुरंत व्यक्तिगत कंटेंट। न मैन्युअल अनुवाद, न अनुवादक की लागत। AI आपके बिज़नेस कॉन्टेक्स्ट को समझता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "क्यूरेटेड टेम्पलेट से शुरू करें या सब कुछ खुद तय करें—आपकी पसंद, पूरी आज़ादी। न समझौते, न सीमाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "एक FAQ हर जगह काम करता है: वेबसाइट, ईमेल, लैंडिंग पेज, विज्ञापन। वही कंटेंट, अनंत संदर्भ। हर चैनल के लिए दोबारा बनाने की जरूरत नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI के लिए बनाया गया, AI द्वारा संचालित"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen सिर्फ एक और FAQ बिल्डर नहीं है—यह पहला प्रोडक्ट है जिसे पहले दिन से ही AI ऑपरेशन के लिए डिज़ाइन किया गया। जहाँ प्रतिस्पर्धी AI फीचर्स को बाद में जोड़ते हैं, हमने ऐसा आर्किटेक्चर बनाया है जिसे AI एजेंट्स स्वतः समझ सकें, संशोधित कर सकें और स्वायत्त रूप से ऑप्टिमाइज़ कर सकें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen का AI इकोसिस्टम कैसे काम करता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "एक संपूर्ण प्लेटफ़ॉर्म, जो हर इंटरैक्शन के साथ और भी स्मार्ट बनता जाता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI आपके इरादे को समझता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "डिफ़ॉल्ट रूप से वैश्विक संचालन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "लगातार सीखना और सुधार"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "वायरल वितरण स्वचालन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "परिवर्तन स्वाभाविक रूप से बताइए। 'इसे और अधिक पेशेवर बनाओ' या 'CTA में तात्कालिकता जोड़ो।' AI इसे पूरी तरह से लागू करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI सभी बाज़ारों में एक साथ स्थानीयकरण, सपोर्ट और मार्केटिंग संभालता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "हर उपयोगकर्ता इंटरैक्शन AI सिस्टम को सिखाता है, जिससे समय के साथ सभी FAQs और भी स्मार्ट होते जाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "मुफ़्त FAQs मार्केटिंग चैनल बन जाते हैं जो स्वचालित रूप से अधिग्रहण बढ़ाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "पिक्सेल स्तर तक डिज़ाइन नियंत्रण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "बिना किसी समझौते के अपनी साइट और ब्रांड से मेल कराएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "लेआउट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "दिखावट"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "टाइपोग्राफी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "हर ब्रेकपॉइंट के लिए संरचना चुनें—एकॉर्डियन, सूची, या कार्ड्स। स्पेसिंग, घनत्व और संरेखण नियंत्रित करें ताकि यह नेटिव लगे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "रेडियस, बॉर्डर्स, शैडोज़ और सरफेसेज़ जो आपकी UI भाषा से मेल खाएँ। इसे ऐसा दिखाएँ जैसे यह आपके प्रोडक्ट के साथ ही शिप हुआ हो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "रोल-आधारित टाइप स्टाइल्स जो हाइरार्की को साफ़ रखते हैं। हेडिंग्स, बॉडी, लेबल्स—आपके ब्रांड के अनुसार ट्यून किए गए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "डिफ़ॉल्ट रूप से वैश्विक"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "एक विजेट, हर बाज़ार।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "तुरंत स्थानीयकरण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL के लिए तैयार"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "लोकेल-अनुकूल कॉपी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO की नींव"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "गवर्नेंस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "परफ़ॉर्मेंस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "अनुवाद प्रोजेक्ट के बिना नई भाषाओं में लॉन्च करें। हर जगह अनुभव एक-सा रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "लेआउट को फिर से डिज़ाइन किए बिना दाएँ-से-बाएँ भाषाओं का समर्थन करें। दिशा-निर्देश सही रहता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "सिर्फ़ शब्दों को नहीं, दर्शकों के अनुसार टोन और वाक्य-रचना को ढालें। सामग्री स्वाभाविक लगती है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "जब ज़रूरत हो, इंडेक्स होने योग्य संरचित सामग्री। जवाबों को खोजने योग्य बनाएं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "कड़े कॉन्ट्रैक्ट्स विचलन को रोकते हैं। बदलाव स्पष्ट, ऑडिट-योग्य और दोहराने योग्य होते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "तेज़ रेंडरिंग और समझदार लोडिंग ताकि पेज डिवाइस और नेटवर्क्स पर स्मूद रहे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "प्लैटफ़ॉर्म की तरह बनाया गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "तेज़"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "विश्वसनीय"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "सुगम"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "हल्के एम्बेड्स और लेज़ी लोडिंग। लेआउट में झटके नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "निर्धारित कॉन्ट्रैक्ट्स और बिल्ड गेट्स बड़े पैमाने पर शिपिंग को सुरक्षित रखते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "स्पष्ट हाइरार्की, पढ़ने योग्य टाइप, और ऐसे इंटरैक्शन पैटर्न जो इनपुट तरीकों के पार काम करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQ के भविष्य का अनुभव करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "ऐसा प्लैटफ़ॉर्म जो हर इंटरैक्शन के साथ और स्मार्ट होता जाता है। AI युग के लिए बनाया गया।"
+    }
+  ],
+  "v": 1
+}

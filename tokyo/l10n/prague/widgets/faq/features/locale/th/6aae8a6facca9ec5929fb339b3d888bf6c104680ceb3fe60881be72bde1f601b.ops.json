@@ -1,0 +1,307 @@
+{
+  "baseFingerprint": "6aae8a6facca9ec5929fb339b3d888bf6c104680ceb3fe60881be72bde1f601b",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ฟีเจอร์ FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ทุกสิ่งที่คุณต้องการเพื่อส่งมอบ FAQ ที่ขับเคลื่อนด้วย AI ใช้งานได้ทั่วโลก และเติบโตแบบไวรัล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ทำไมวิดเจ็ต FAQ ถึงเหนือกว่า Elfsight, Typeform และการทำเองแบบกำหนดเอง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "สร้างขึ้นใหม่ทั้งหมดเพื่อ AI ใช้งานได้ทั่วโลก เติบโตแบบไวรัล หนึ่ง FAQ ความเป็นไปได้ไม่สิ้นสุด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "แก้ไขด้วย AI: บอกมา จบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "บอกสิ่งที่คุณต้องการด้วยภาษาอังกฤษธรรมดา เช่น 'ทำให้คำถามดูเป็นกันเองขึ้น' หรือ 'เพิ่มส่วนเกี่ยวกับราคา' AI เข้าใจและทำให้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "ทั่วโลกแบบทันใจ: ทุกภาษา ตอนนี้เลย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "ภูมิศาสตร์เป็นแค่พารามิเตอร์ ไม่ใช่โปรเจกต์ เพิ่มภาษาสเปน ญี่ปุ่น หรืออาหรับได้ในคลิกเดียว ไม่ต้องแปลด้วยมือ ไม่ต้องรอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "ประกอบใช้ได้ทุกที่: หนึ่ง FAQ ไม่จำกัดบริบท"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "FAQ เดียวกันใช้ได้ทั้งบนเว็บไซต์ อีเมล แลนดิ้งเพจ โฆษณา แหล่งเดียว ความเป็นไปได้ไม่สิ้นสุด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "ทำไม Clickeen ถึงเปลี่ยนทุกอย่าง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "โลคัลไลซ์แบบเฉพาะบุคคลทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "เทมเพลตหรือปรับแต่งเองแบบพิกเซลเป๊ะ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "สถาปัตยกรรมแบบประกอบได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL เว็บไซต์ → เนื้อหาเฉพาะบุคคลใน 29 ภาษาได้ทันที ไม่ต้องแปลด้วยมือ ไม่ต้องเสียค่าแปล AI เข้าใจบริบทธุรกิจของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "เริ่มจากเทมเพลตที่คัดสรรไว้ หรือกำหนดทุกอย่างเอง—คุณเลือกได้ อิสระเต็มที่ ไม่มีการประนีประนอม ไม่มีข้อจำกัด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "FAQ เดียวใช้ได้ทุกที่: เว็บไซต์ อีเมล แลนดิ้งเพจ โฆษณา เนื้อหาเดียว บริบทไม่สิ้นสุด ไม่ต้องสร้างใหม่สำหรับแต่ละช่องทาง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "สร้างมาเพื่อ AI ขับเคลื่อนโดย AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ไม่ใช่แค่เครื่องมือสร้าง FAQ อีกตัว—แต่มันคือผลิตภัณฑ์แรกที่ออกแบบมาเพื่อการทำงานโดย AI ตั้งแต่วันแรก ขณะที่คู่แข่งค่อยๆ ยัดฟีเจอร์ AI เข้าไป เราสร้างสถาปัตยกรรมที่เอเจนต์ AI สามารถเข้าใจ ปรับแก้ และเพิ่มประสิทธิภาพได้อย่างอัตโนมัติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "ระบบนิเวศ AI ของ Clickeen ทำงานอย่างไร"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "แพลตฟอร์มครบวงจรที่ฉลาดขึ้นในทุกๆ การโต้ตอบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI เข้าใจเจตนาของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "ทำงานได้ทั่วโลกเป็นค่าเริ่มต้น"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "เรียนรู้และพัฒนาอย่างต่อเนื่อง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "ระบบอัตโนมัติสำหรับการกระจายแบบไวรัล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "อธิบายการเปลี่ยนแปลงได้อย่างเป็นธรรมชาติ เช่น 'ทำให้ดูเป็นมืออาชีพมากขึ้น' หรือ 'เพิ่มความเร่งด่วนให้ CTA' AI ดำเนินการได้อย่างสมบูรณ์แบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI จัดการการแปลเป็นภาษาท้องถิ่น การสนับสนุน และการตลาดในทุกตลาดพร้อมกัน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "ทุกการโต้ตอบของผู้ใช้ช่วยสอนระบบ AI ทำให้ FAQ ทั้งหมดฉลาดขึ้นเมื่อเวลาผ่านไป"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "FAQ ฟรีกลายเป็นช่องทางการตลาดที่ช่วยขับเคลื่อนการได้มาซึ่งลูกค้าโดยอัตโนมัติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ควบคุมงานดีไซน์ได้ละเอียดถึงระดับพิกเซล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "เข้ากับเว็บไซต์และแบรนด์ของคุณได้โดยไม่ต้องประนีประนอม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "เลย์เอาต์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "รูปลักษณ์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "ตัวอักษร"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "เลือกโครงสร้างตามแต่ละ breakpoint—แบบแอคคอร์เดียน แบบรายการ หรือแบบการ์ด ควบคุมระยะห่าง ความหนาแน่น และการจัดแนวให้ดูกลมกลืนเหมือนเป็นส่วนหนึ่งของระบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "ความโค้งมน ขอบ เงา และพื้นผิวที่เข้ากับภาษาการออกแบบ UI ของคุณ ทำให้ดูเหมือนมากับโปรดักต์ของคุณตั้งแต่แรก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "สไตล์ตัวอักษรตามบทบาทที่ช่วยคงลำดับชั้นให้ชัดเจน หัวข้อ เนื้อหา ป้ายกำกับ—ปรับให้เข้ากับแบรนด์ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "พร้อมใช้งานทั่วโลกเป็นค่าเริ่มต้น"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "วิดเจ็ตเดียว ครอบคลุมทุกตลาด"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "ปรับให้เข้ากับท้องถิ่นได้ทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "รองรับ RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "ข้อความที่คำนึงถึงโลเคล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "รากฐาน SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "การกำกับดูแล"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "ประสิทธิภาพ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "เปิดตัวภาษาใหม่ได้โดยไม่ต้องทำโปรเจกต์แปลภาษา รักษาประสบการณ์ให้สอดคล้องกันทุกที่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "รองรับภาษาที่เขียนจากขวาไปซ้ายโดยไม่ต้องออกแบบเลย์เอาต์ใหม่ ทิศทางการแสดงผลยังคงถูกต้อง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "ปรับโทนและสำนวนให้เข้ากับกลุ่มเป้าหมาย ไม่ใช่แค่แปลคำ เนื้อหาอ่านลื่นและเป็นธรรมชาติ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "เนื้อหาแบบมีโครงสร้างที่สามารถถูกจัดทำดัชนีได้เมื่อคุณต้องการ ทำให้คำตอบค้นหาเจอได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "สัญญาที่เข้มงวดช่วยป้องกันการคลาดเคลื่อน การเปลี่ยนแปลงชัดเจน ตรวจสอบได้ และทำซ้ำได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "เรนเดอร์รวดเร็วและการโหลดที่เหมาะสม ทำให้หน้าลื่นไหลบนทุกอุปกรณ์และทุกเครือข่าย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "สร้างมาเหมือนแพลตฟอร์ม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "รวดเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "เชื่อถือได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "เข้าถึงได้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "ฝังแบบน้ำหนักเบาและโหลดแบบ Lazy loading ไม่มีอาการเลย์เอาต์กระตุก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "สัญญาที่กำหนดผลลัพธ์แน่นอนและเกตในขั้นตอนบิลด์ ช่วยให้ปล่อยงานได้อย่างปลอดภัยแม้ในสเกลใหญ่"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "ลำดับชั้นชัดเจน ตัวอักษรอ่านง่าย และรูปแบบการโต้ตอบที่ใช้ได้กับวิธีป้อนข้อมูลทุกรูปแบบ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "สัมผัสอนาคตของ FAQs"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "แพลตฟอร์มที่ฉลาดขึ้นในทุกการโต้ตอบ สร้างมาเพื่อยุค AI"
+    }
+  ],
+  "v": 1
+}

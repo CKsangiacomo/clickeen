@@ -1,0 +1,352 @@
+{
+  "baseFingerprint": "6b83eb63e1baf85220801e31d622cd8ef4f6d7910e11b4b0b06b5d69b19bcdef",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Byg et hurtigt og flot FAQ-widget. Tilpas, udgiv og lokaliser på få minutter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-widget. Smukke svar. Bygget til at være hurtigt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Gennemført design, nemme opdateringer og SEO-fundament—klar til ethvert sprog, drevet af AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjælp besøgende med hurtigt at finde svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Gør den til din egen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Design din perfekte FAQ lige her. Se ændringer med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Udforsk, hvad der er muligt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Start med skabeloner, lær af eksempler, og dyk derefter ned i funktioner, når du er klar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Skabeloner"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Eksempler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Funktioner"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Kom hurtigt i gang med gennemarbejdede udgangspunkter, som du kan tilpasse til dit brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Se, hvordan gode FAQs ser ud i praksis—og brug mønstrene, der konverterer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Forstå, hvad du kan styre—fra layouts og styling til lokalisering og SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Forhåndsvis det på rigtige sprog"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Skift locale for at se, hvordan din FAQ læses på tværs af markeder—uden at genopbygge noget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Opdelt kreativ (højre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Dette er varianten med visuel til højre, som bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Split kreativ (venstre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Dette er varianten med visuelt indhold til venstre, der bruger den samme kuraterede instans som hero-sektionen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Se spørgsmål besvare sig selv i realtid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tilføj en smukt designet FAQ, der viser det rigtige svar i det øjeblik, der opstår tvivl. Kunder kommer straks videre, indvendinger forsvinder, før de bliver til tickets, og du lukker flere salg uden at tilføje mere support. Tilpas én gang, indlejre hvor som helst, og lad den arbejde 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Split creative (stablet)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Dette er den stablede variant, der bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQs, der faktisk virker (så du slipper for det)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dine kunder har spørgsmål. Besvar dem én gang, ikke hundrede gange."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Stop med at miste salg på ubesvarede spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Få din tid tilbage"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Luk flere aftaler, mens du sover"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Hvert spørgsmål, der står ubesvaret, er en kunde, der går. Besøgende smutter, når de ikke kan finde det, de har brug for. En veludformet FAQ tager indvendinger livet af, før de overhovedet opstår—så kunderne overbeviser sig selv om at købe uden nogensinde at række ud."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Reducér supportmængden med 40%+ når kunder finder svar med det samme. Ikke flere Slack-pings. Ikke flere \"hurtigt spørgsmål\"-emails. Ikke mere helvede med konstante kontekstskift. Din FAQ klarer det hårde arbejde, mens du fokuserer på det, der faktisk betyder noget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Den rigtige FAQ forudser tvivl og fjerner friktion kl. 2 om natten, når du er offline. Dine svar arbejder døgnet rundt. Kunder venter ikke på dig—de kommer videre, stoler på det, de ser, og klikker \"køb\" uden at afbryde din dag."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Opdelt kreativ (højre)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Dette er varianten med det visuelle element til højre og bruger den samme kuraterede instans som heroen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO-embed (indekserbar)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dette embed kører i shadow-tilstand for at indsætte JSON-LD (FAQPage) i værtsiden til indeksering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designkontrol ned til pixelniveau"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Match dit site og brand uden kompromis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Udseende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Vælg struktur pr. breakpoint—accordion, liste eller kort. Styr afstande, tæthed og justering, så det føles indbygget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Hjørneradius, kanter, skygger og flader, der matcher dit UI-sprog. Få det til at se ud, som om det blev leveret sammen med dit produkt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Rollebaserede typografistile, der holder hierarkiet rent. Overskrifter, brødtekst, labels—afstemt til dit brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalt som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Én widget, alle markeder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Øjeblikkelig lokalisering"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL-klar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Locale-tilpasset tekst"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO-fundament"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Styring"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Ydelse"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Lancér på nye sprog uden et oversættelsesprojekt. Hold oplevelsen ens overalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Understøt højre-til-venstre-sprog uden at redesigne layouts. Retningen forbliver korrekt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Tilpas tone og formulering til målgruppen, ikke kun ordene. Indholdet læses naturligt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Struktureret indhold, der kan indekseres, når du har brug for det. Gør svarene nemme at finde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Stramme kontrakter forhindrer afdrift. Ændringer er eksplicitte, auditerbare og gentagelige."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Hurtig rendering og fornuftig indlæsning, så siden forbliver glat på tværs af enheder og netværk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Bygget som en platform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Hurtig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Pålidelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tilgængelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Letvægts-embeds og lazy loading. Ingen layout-jank."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministiske kontrakter og build-gates gør udrulning sikker i stor skala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Klar hierarki, læsbar typografi og interaktionsmønstre, der fungerer på tværs af inputmetoder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Kom i kontakt med alle kunder, overalt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-drevet FAQ, der taler deres sprog og forstår deres behov."
+    }
+  ],
+  "v": 1
+}

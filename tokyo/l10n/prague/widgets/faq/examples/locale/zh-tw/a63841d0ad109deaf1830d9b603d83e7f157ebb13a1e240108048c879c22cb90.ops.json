@@ -1,0 +1,172 @@
+{
+  "baseFingerprint": "a63841d0ad109deaf1830d9b603d83e7f157ebb13a1e240108048c879c22cb90",
+  "baseUpdatedAt": "2026-02-04T21:34:04.720Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 範例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "飯店、餐廳與旅遊業者使用 Clickeen，立即以 29 種語言為國際客戶提供服務。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "適用於飯店、餐廳、旅行社等的 FAQ 範例"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "提供 Ombra 你的網站 URL。立即以 29 種語言取得為你的企業量身打造的 FAQ。不需要翻譯人員。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "巴塞隆納的飯店：來自 50+ 個國家的旅客用 15 種語言詢問「入住時間？」"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "把你的飯店網站交給 Ombra。FAQ 立即以 29 種語言為你的物業個人化。將櫃檯詢問量降低 60%，提升住客滿意度分數。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "巴黎餐廳：旅客以法文、英文、西班牙文、中文、日文詢問飲食需求相關問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "你的菜單常見問題支援 29 種語言——立即完成。無需翻譯、無需手動作業。提升翻桌率，減少服務人員被打斷。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "托斯卡尼的 Airbnb 房東：以房客的語言提供入住指示、Wi‑Fi 密碼與在地小貼士"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "把你的房源網址交給 Ombra。立即以 29 種語言提供住房規則。獲得國際房客的五星好評。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "國際客戶不會等你翻譯"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "羅馬的一家飯店，當德國旅客找不到入住資訊時就會流失訂房。東京的一家餐廳，當英語使用者找不到營業時間時就會流失訂位。每一個無法用他們的語言得到解答的問題，都是流失的一位客戶。Ombra 解決這一點：網站 URL → 立即生成 29 種語言的個人化 FAQ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "泰國旅遊行程營運商：國際旅客的預訂、安全、行程常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "把你的旅遊行程網站交給 Ombra。常見問題可立即提供 29 種語言版本。將電子郵件客服量減少 70%，提升來自國際市場的轉換率。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "羅馬博物館：展覽資訊、門票與開放時間，提供來自世界各地的訪客參考"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "29 種語言的訪客常見問題——即時提供。提升訪客體驗，將服務台詢問量減少 50%。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "從國際混亂到瞬間清晰"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "旅宿業者如何使用 Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "把你的網站 URL 提供給 Ombra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "為你的業務量身打造的 FAQ，29 種語言—即時完成"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "嵌入後就能看到國際諮詢量下降"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI 會讀取你的營運情境—地點、服務、政策，並自動理解你的具體需求。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "不需要翻譯員。不需要手動作業。內容會依你的業務調整，並立即在全球可用。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3 行腳本。到哪都能用。住客、觀光客、旅人會在提問前，就先用自己的語言得到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "以平台規格打造"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "快速"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "可靠"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "無障礙"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "輕量嵌入與延遲載入。沒有版面跳動。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "確定性的契約與建置關卡，讓大規模發布也能安全進行。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "清楚的層級、易讀的字體，以及可跨不同輸入方式運作的互動模式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "立即將你的 FAQ 以 29 種語言呈現"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "把你的網站 URL 交給 ombra。依你的業務量身打造，全球皆可用。不需要翻譯人員。"
+    }
+  ],
+  "v": 1
+}
