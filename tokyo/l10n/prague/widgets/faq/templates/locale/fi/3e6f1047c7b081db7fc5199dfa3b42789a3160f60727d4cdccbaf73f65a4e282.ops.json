@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-mallit - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Valitse upeista FAQ-malleista, jotka kääntävät katseet ja muuttavat kävijät asiakkaiksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "UKK:si. Omalla tavallasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kaunis oletuksena. Suunniteltu tunnistettavasti sinun näköiseksesi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Rohkea silloin kun tarvitset sitä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—trendikkäät ilmeet vaaleana ja tummana."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Tyylikäs silloin kun haluat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalistinen, selkeä ja moderni. Ajattomat tyylit, jotka tuntuvat aina ajankohtaisilta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Aloita mallista. Tee siitä sitten omasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Saat halutun ilmeen heti. Trendaavat designit tai ajattomat klassikot. Sitten muokkaat ilman rajoja — kulmakohtainen pyöristys, sivukohtaiset varjot, roolikohtainen typografia ja responsiiviset taitepisteet. Malli, josta tulee sinun tunnusmerkkisi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "UKK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Auta kävijöitä löytämään vastaukset nopeasti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Suunnittelun vapaus, sisäänrakennettuna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Asettelusta viimeistelyihin ja fontteihin—räätälöintiä, joka tuntuu vaivattomalta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Asettelut, sinun tavallasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Ulkoasun hallinta ilman rajoja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Typografinen tarkkuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Monta asettelujärjestelmää, ei vain yksi. Rakenne erikseen jokaiselle näyttöleveydelle. Erilliset työpöytä-/mobiilitäytteet ja -välit. Hallitse sarakkeita, pinoamista, kohdistusta ja uudelleenvirtausta—täsmällisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Pyöristys kulmittain. Reunukset omilla väreillä. Varjot ulko- ja sisäpuolella (linkitettyinä tai erillisinä sivuittain). Liuku-, kuva- tai videotaustat. Täysi visuaalinen hallinta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Kuusi erillistä roolia (otsikko, leipäteksti, kysymys, vastaus, painike, osio). Valitse 17 Google Fontsin joukosta. Paino, tyyli, koko—kaikki mukautettavissa roolikohtaisesti. Dynaamiset skaala-asetukset."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Kolme asettelumoottoria FAQ-widgetillesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Haitari asteittaiseen paljastamiseen. Luettelo yksinkertaisuuteen. Kortit visuaaliseen hierarkiaan. Ruudukko tai masonry. Responsiiviset sarakkeet. Tarkka hallinta väleihin ja sisätiloihin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Ulkoasun hallinta ilman rajoja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Kulmakohtainen säde. Reunukset mukautetuilla väreillä. Varjot ulko- ja sisäpuolella (sidottuna tai riippumattomina sivukohtaisesti). Liukuväri-, kuva- tai videotaustat. Täysi visuaalinen määräysvalta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografian tarkkuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Kuusi erillistä roolia (otsikko, leipäteksti, kysymys, vastaus, painike, osio). Valitse 17 Google-fontista. Paksuus, tyyli, koko — kaikki muokattavissa roolikohtaisesti. Dynaamiset skaalat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Tumma tila: tyylikäs ja moderni"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Modernit käyttöliittymät kukoistavat pimeydessä. Premium-tuntuma ja huippuluokan estetiikka. Sisältyy jokaiseen mallipohjaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Työpöytä ja mobiili, täydellisesti viritetty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "FAQ-widgetisi mukautuu jokaiseen responsiiviseen kokoon. Eri sarakemäärät, täytteet ja välit laitteittain. Yksi suunnittelukieli, loputtomasti näkymäkokoja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Mallipohjasta täydelliseen istuvuuteen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Näin rakennat UKK-widgetisi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Valitse design-malli"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Mukauta asetteluja ja ulkoasua"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Hio typografia ja responsiivisuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendikäs, klassinen tai minimalistinen. Vaalea ja tumma tila."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Haitari, lista tai kortit. Pyöristys kulmakohtaisesti, varjot sivukohtaisesti, liukuvärit, reunukset."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Kuusi fonttiroolia, 17 Google-fonttia. Täydellinen sekä työpöydällä että mobiilissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Luo ilmainen UKK-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Aloita suunnittelumallilla tai rakenna alusta asti. Täysi luova hallinta."
+    }
+  ],
+  "v": 1
+}

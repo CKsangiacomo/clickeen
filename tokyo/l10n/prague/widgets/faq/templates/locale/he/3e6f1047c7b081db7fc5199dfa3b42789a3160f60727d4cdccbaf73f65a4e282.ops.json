@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תבניות שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "בחרו מתוך עיצובים מרהיבים של שאלות נפוצות שמושכים תשומת לב וממירים מבקרים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "השאלות הנפוצות שלך. בדרך שלך."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "יפה כברירת מחדל. ייחודית לך בעיצוב."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "נועז כשתצטרך את זה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—מראות מובילי-טרנדים במצבי בהיר וכהה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "אלגנטי כשאתם רוצים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "מינימליסטי, נקי ומודרני. סגנונות על-זמניים שתמיד מרגישים עדכניים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "התחילו בעיצוב. ואז הפכו אותו לשלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "קבלו את האסתטיקה מיד. עיצובים טרנדיים או קלאסיקות על-זמניות. ואז התאימו ללא גבולות—רדיוס לכל פינה, צללים לכל צד, טיפוגרפיה לפי תפקיד, ונקודות שבירה רספונסיביות. תבנית שהופכת לחתימה שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "עזרו למבקרים למצוא תשובות במהירות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "חופש עיצובי, מובנה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "מפריסות ועד גימורים ועד פונטים—התאמה אישית שמרגישה ללא מאמץ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "פריסות, בדרך שלך"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "שליטה במראה ללא מגבלות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "דיוק טיפוגרפי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "מערכות פריסה רבות, לא אחת. מבנה לפי נקודת שבירה. ריווח פנימי ומרווחים נפרדים לדסקטופ/מובייל. שליטה בעמודות, ערימה, יישור וזרימה מחדש—בדיוק."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "רדיוס לכל פינה. מסגרות עם צבעים מותאמים אישית. צללים חיצוניים ופנימיים (מקושרים או נפרדים לכל צד). רקעי גרדיאנט, תמונה או וידאו. סמכות חזותית מלאה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "שישה תפקידים מובחנים (כותרת ראשית, גוף, שאלה, תשובה, כפתור, מקטע). בחרו מתוך 17 Google Fonts. משקל, סגנון, גודל—כולם ניתנים להתאמה לכל תפקיד. סקאלות דינמיות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "שלושה מנועי פריסה לוידג׳ט השאלות הנפוצות שלך"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "אקורדיון לחשיפה הדרגתית. רשימה לפשטות. כרטיסים להיררכיה חזותית. גריד או מייסונרי. עמודות רספונסיביות. שליטה מדויקת במרווחים ובריפוד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "שליטה במראה ללא גבולות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "רדיוס לכל פינה. מסגרות עם צבעים מותאמים אישית. צללים חיצוניים ופנימיים (מקושרים או עצמאיים לכל צד). רקעים עם גרדיאנט, תמונה או וידאו. שליטה חזותית מלאה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "דיוק טיפוגרפי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "שישה תפקידים מובחנים (כותרת, גוף הטקסט, שאלה, תשובה, כפתור, סעיף). בחרו מתוך 17 גופנים של Google Fonts. משקל, סגנון, גודל—הכול ניתן להתאמה אישית לכל תפקיד. סולמות דינמיים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "מצב כהה: מתוחכם ומודרני"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "ממשקים מודרניים משגשגים בחשכה. תחושה פרימיום עם אסתטיקה מתקדמת. כלול בכל תבנית."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "דסקטופ ומובייל, מכויל בצורה מושלמת"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "וידג'ט השאלות הנפוצות שלך מגיב לכל נקודת שבירה. מספרי עמודות שונים, ריווח פנימי, מרווחים לכל מכשיר. שפת עיצוב אחת, אינסוף גדלי תצוגה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "מתבנית להתאמה מושלמת"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "איך לבנות את וידג׳ט השאלות הנפוצות שלך"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "בחרו תבנית עיצוב"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "התאימו פריסות ומראה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "שפרו טיפוגרפיה ורספונסיביות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "טרנדי, קלאסי או מינימלי. מצבי בהיר וכהה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "אקורדיון, רשימה או כרטיסים. רדיוס לפי פינה, צללים לפי צד, גרדיאנטים, גבולות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "שישה תפקידי גופן, 17 גופני Google. מושלם למחשב ולמובייל."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "צרו ווידג׳ט שאלות נפוצות בחינם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "התחילו עם תבנית עיצוב או בנו מאפס. שליטה יצירתית מלאה."
+    }
+  ],
+  "v": 1
+}

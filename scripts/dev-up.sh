@@ -5,16 +5,21 @@ set -euo pipefail
 # Logs go to Logs/ and URLs are printed at the end.
 
 DEV_UP_FULL_REBUILD=0
+DEV_UP_PRAGUE_L10N=0
 for arg in "$@"; do
   case "$arg" in
     --full|--rebuild-all)
       DEV_UP_FULL_REBUILD=1
       ;;
+    --prague-l10n|--l10n)
+      DEV_UP_PRAGUE_L10N=1
+      ;;
     --help|-h)
-      echo "Usage: scripts/dev-up.sh [--full]"
+      echo "Usage: scripts/dev-up.sh [--full] [--prague-l10n]"
       echo ""
       echo "Options:"
       echo "  --full        Runs 'pnpm -w build' before starting dev servers."
+      echo "  --prague-l10n Verifies Prague l10n overlays and starts regeneration in the background (requires SanFrancisco + OPENAI_API_KEY)."
       exit 0
       ;;
     *)
@@ -38,6 +43,7 @@ SANFRANCISCO_INSPECTOR_PORT=9233
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
 DEV_UP_STATUS_INTERVAL="${DEV_UP_STATUS_INTERVAL:-15}"
+NEEDS_PRAGUE_L10N_TRANSLATE=0
 
 wait_for_url() {
   local url="$1"
@@ -186,11 +192,20 @@ else
   node "$ROOT_DIR/scripts/i18n/build.mjs"
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-  echo "[dev-up] Verifying Prague l10n overlays (local, no Supabase writes)"
-  if ! node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"; then
-    echo "[dev-up] Prague l10n not translated; generating overlays"
-    run_with_status "Prague l10n translate (may take a while)" node "$ROOT_DIR/scripts/prague-l10n/translate.mjs"
-    node "$ROOT_DIR/scripts/prague-l10n/verify.mjs"
+  echo "[dev-up] Verifying Prague l10n overlays (non-blocking by default)"
+  PRAGUE_L10N_VERIFY_LOG="$LOG_DIR/prague-l10n.verify.log"
+  if node "$ROOT_DIR/scripts/prague-l10n/verify.mjs" > "$PRAGUE_L10N_VERIFY_LOG" 2>&1; then
+    echo "[dev-up] Prague l10n overlays OK"
+  else
+    echo "[dev-up] Prague l10n overlays missing/out-of-date (startup will continue)"
+    echo "[dev-up] See $PRAGUE_L10N_VERIFY_LOG"
+    if [ "$DEV_UP_PRAGUE_L10N" = "1" ]; then
+      NEEDS_PRAGUE_L10N_TRANSLATE=1
+    else
+      echo "[dev-up] To generate overlays (requires SanFrancisco + OPENAI_API_KEY):"
+      echo "[dev-up]   node scripts/prague-l10n/translate.mjs"
+      echo "[dev-up] Or rerun: scripts/dev-up.sh --prague-l10n"
+    fi
   fi
 fi
 
@@ -295,12 +310,19 @@ if ! wait_for_url "http://localhost:3003/dieter/tokens/tokens.css" "Venice"; the
   exit 1
 fi
 
-if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
+if [ -n "${AI_GRANT_HMAC_SECRET:-}" ] || [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
+  SF_REQUIRED=0
+  if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
+    SF_REQUIRED=1
+  fi
   echo "[dev-up] Starting SanFrancisco Worker (3002)"
   (
     cd "$ROOT_DIR/sanfrancisco"
     # DEEPSEEK_API_KEY is required for real executions; missing key is still useful for boot verification.
-    VARS=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
+    VARS=()
+    if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
+      VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
+    fi
     if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
       VARS+=(--var "DEEPSEEK_API_KEY:$DEEPSEEK_API_KEY")
     fi
@@ -323,7 +345,10 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
     echo "[dev-up] SanFrancisco PID: $SF_PID"
   )
   if ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco"; then
-    exit 1
+    if [ "$SF_REQUIRED" = "1" ]; then
+      exit 1
+    fi
+    echo "[dev-up] SanFrancisco failed to start; continuing startup"
   fi
 fi
 
@@ -371,6 +396,22 @@ if [ -n "${PITCH_SERVICE_KEY:-}" ] && [ -n "${OPENAI_API_KEY:-}" ]; then
   ) || echo "[dev-up] Pitch docs sync failed; continuing startup (non-fatal)"
 else
   echo "[dev-up] Skipping pitch docs sync (requires PITCH_SERVICE_KEY + OPENAI_API_KEY in $ROOT_DIR/.env.local)"
+fi
+
+if [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
+  if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "[dev-up] Prague l10n translate requested but OPENAI_API_KEY is missing; skipping"
+  elif ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco (for Prague l10n)"; then
+    echo "[dev-up] Prague l10n translate requested but SanFrancisco is not reachable; skipping"
+  else
+    echo "[dev-up] Starting Prague l10n translate in background (requested)"
+    PRAGUE_L10N_TRANSLATE_LOG="$LOG_DIR/prague-l10n.translate.log"
+    PRAGUE_L10N_VERIFY_LOG="$LOG_DIR/prague-l10n.verify.log"
+    nohup bash -lc "SANFRANCISCO_BASE_URL=\"http://localhost:3002\" node \"$ROOT_DIR/scripts/prague-l10n/translate.mjs\" > \"$PRAGUE_L10N_TRANSLATE_LOG\" 2>&1 && node \"$ROOT_DIR/scripts/prague-l10n/verify.mjs\" > \"$PRAGUE_L10N_VERIFY_LOG\" 2>&1" >/dev/null 2>&1 &
+    PRAGUE_L10N_PID=$!
+    echo "[dev-up] Prague l10n PID: $PRAGUE_L10N_PID"
+    echo "[dev-up] Tail logs: tail -f $PRAGUE_L10N_TRANSLATE_LOG"
+  fi
 fi
 
 echo "[dev-up] Starting Prague marketing site (4321)"

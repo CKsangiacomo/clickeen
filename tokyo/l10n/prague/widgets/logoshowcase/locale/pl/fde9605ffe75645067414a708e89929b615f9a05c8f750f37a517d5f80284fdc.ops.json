@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "fde9605ffe75645067414a708e89929b615f9a05c8f750f37a517d5f80284fdc",
+  "baseUpdatedAt": "2026-02-04T05:36:55.818Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widżet prezentacji logo – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Wyróżnij logotypy klientów dzięki szybkiemu, elastycznemu widżetowi prezentacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Prezentacja logo. Natychmiastowy dowód społeczny."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Pięknie wyeksponuj logo klientów -- buduj zaufanie i zwiększaj konwersje."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Prezentacja logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Wyeksponuj logo w atrakcyjny sposób. Buduj zaufanie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Jak to działa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Dodaj logotypy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Ułóż"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Osadź"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Prześlij logotypy swoich klientów (SVG/PNG) w kilka sekund."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Wybierz układ i odstępy, aby dopasować do swojej strony."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Wklej fragment kodu na dowolnej platformie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Stwórz prezentację swoich logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Zacznij za darmo. Opublikuj, gdy będziesz gotowy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Wypróbuj na żywo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Edytuj instancję demo w minibob. Opublikuj, gdy będziesz gotowy."
+    }
+  ],
+  "v": 1
+}

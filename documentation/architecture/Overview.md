@@ -32,9 +32,9 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 | Principle | Rule |
 |-----------|------|
-| **No Fallbacks** | Orchestrators never apply default values. If data is missing, the system fails visibly. |
+| **No Fallbacks** | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Localization overlays are applied **best-available** (base/fresh/stale) and must never block runtime. |
 | **Widget Files = Truth** | Core runtime files + contract files in `tokyo/widgets/{name}/` define widget behavior and validation. |
-| **Orchestrators = Dumb Pipes** | Bob, Paris, Venice pass data unchanged. Widget-specific rules live only in the widget package. |
+| **Orchestrators = Dumb Pipes** | Bob/Paris/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition) but must not “fix” state ad hoc. |
 | **Dieter Tokens** | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB. |
 | **Locale Is Not Identity** | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out. |
 
@@ -141,12 +141,12 @@ Each release proceeds in 3 steps:
 
 #### Venice (Workers)
 - Public embed surface (third-party websites only talk to Venice).
-- Runtime combines Tokyo widget assets with Paris instance config and optional **instance** l10n overlays from Tokyo.
+- Runtime combines Tokyo widget assets with Paris instance config and **best-available** instance l10n overlays from Tokyo (base/fresh/stale; never block embed render).
 
 #### Tokyo (R2)
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/dieter/manifest.json`.
-- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase.
+- Serves materialized instance l10n overlays (`/l10n/**`) published from Supabase (including per-fingerprint base snapshots used for safe stale apply).
 - Prague website base copy lives in `tokyo/widgets/*/pages/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 #### Tokyo Worker (Workers + Queues)

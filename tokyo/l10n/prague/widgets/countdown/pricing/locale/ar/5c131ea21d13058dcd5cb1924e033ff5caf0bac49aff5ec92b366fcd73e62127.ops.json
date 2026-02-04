@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "5c131ea21d13058dcd5cb1924e033ff5caf0bac49aff5ec92b366fcd73e62127",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أسعار العدّ التنازلي - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "أسعار ويدجت العدّ التنازلي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "تسعير العدّ التنازلي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "مضمّن مع كل خطة من Clickeen."
+    }
+  ],
+  "v": 1
+}

@@ -513,7 +513,7 @@ tokyo/
 
 **Why this matters:**
 - Only translate what changed (cost optimization)
-- Prevents stale translations (fingerprint validation)
+- Detects stale overlays (fingerprint mismatch) and triggers regeneration; runtime keeps serving best-available overlays (fresh or safe-stale) without breaking surfaces
 - Enables partial updates (ops overlay system)
 - User overrides preserved in layer=user (`user_ops` separate from AI ops)
 
@@ -534,15 +534,15 @@ tokyo/
 ```
 User visits: /e/wgt_curated_faq.lightblurs.v01?locale=fr
     ↓
-Venice receives request, resolves locale: French
+Venice receives request, resolves requested→resolved locale and selects **effective** locale (best available)
     ↓
 Loads base config from Paris/Michael (instance config)
     ↓
-Loads French overlay: tokyo/l10n/instances/.../locale/fr/<baseFingerprint>.ops.json
+Loads best-available French overlay from Tokyo (fresh preferred; safe stale apply when needed)
     ↓
-Applies ops to base config (set operations)
+Applies ops to base config (set-only; safe stale apply uses base snapshot to avoid clobbering edits)
     ↓
-Renders widget in French
+Renders widget in the effective locale and declares it (no lying)
     ↓
 Serves localized output
 ```

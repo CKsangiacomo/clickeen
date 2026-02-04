@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Visszaszámláló widget - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kelts sürgősséget testreszabható visszaszámláló időzítőkkel. Indíts, értékesíts és jelents be magabiztosan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Visszaszámláló időzítő widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kelts sürgősségérzetet, és ösztönözz cselekvésre gyors, rugalmas visszaszámlálásokkal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Visszaszámlálás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Teremts sürgősségérzetet rugalmas időzítőkkel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Próbáld ki élőben"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Szerkessz egy demó példányt a minibobban. Tedd közzé, amikor készen állsz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Visszaszámláló időzítő widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Kelts sürgető érzést és ösztönözd a cselekvést testreszabható visszaszámláló időzítőkkel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Rugalmas időzítő módok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Dátumalapú, személyes vagy számlálószámlálók bármilyen helyzetre."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Alakítsd a figyelmet cselekvéssé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Használj időzítőket, amelyek illenek termékbevezetésekhez, akciókhoz, eseményekhez és személyes célokhoz. Állítsd be egyszer, és hagyd, hogy mindenhol fusson."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Egyszerű testreszabás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Igazítsd a megjelenést, az elrendezést és a műveleteket a márkádhoz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Indíts gyorsabban visszaszámlálókkal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Beállítástól a publikálásig percek alatt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Válaszd ki az időzítőt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Igazítsd a márkádhoz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikálás és lokalizálás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Válassz dátum-, evergreen- vagy számláló típusú visszaszámlálót az igényeidhez."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Szabd testre a színeket, címkéket és az elrendezést, hogy bármelyik oldalhoz illeszkedjen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Indítsd el gyorsan, és érd el a globális közönséget a beépített lokalizációval."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Növeld a konverziókat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Ösztönözz azonnali cselekvésre időhöz kötött ajánlatokkal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO- és GEO-optimalizált"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Beépített sématámogatás és lokalizációs támogatás."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Teremts sürgősséget, növeld az eladásokat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Hatékony visszaszámlálók, amelyek a látogatókat vásárlókká alakítják."
+    }
+  ],
+  "v": 1
+}

@@ -86,7 +86,9 @@ Bob resolves a single subject mode and computes a single policy object:
 - **Subject input**: `subjectMode` from the bootstrap message, or URL `?subject=minibob|devstudio` (with backward compatibility for `?minibob=true`).
 - **Policy output**: `policy = { flags, caps, budgets }` used to gate controls and reject ops deterministically.
 
-Example enforcement (today): `minibob` cannot enable `seoGeo.enabled`.
+Example enforcement (today):
+- `minibob` cannot create/publish instances (`can(policy, 'instance.create'|'instance.publish')` denies with upsell).
+- Uploads + Copilot are bounded by budgets/caps (server-enforced; Bob uses policy for UX gating).
 
 Read-only mode (DevStudio cloud):
 - Passing `?readonly=1` (or `?role=viewer`) forces `policy.role = viewer`.
@@ -306,7 +308,7 @@ This is the foundation for both strict manual editing and future Copilot editing
 
 `bob/components/Workspace.tsx`:
 - Loads the widget runtime iframe at `compiled.assets.htmlUrl` (canonical preview path).
-- Standard preview is Tokyo-runtime only; config flags like `seoGeo.enabled` do not change the preview engine.
+- Standard preview is Tokyo-runtime only; SEO/GEO “iframe++” is a **Venice embed optimization** and does not change the Bob preview engine.
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
 - Supports **workspace modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
@@ -334,7 +336,7 @@ Compiled Dieter stencils can emit:
 - `data-i18n-params="{'item':{'$t':'faq.item','count':1}}"` (JSON string)
 
 At runtime, Bob:
-- Resolves locale (`?locale=`, `ck_locale` cookie, then `navigator.language`, then `en`)
+- Resolves locale (`?locale=`, `ck_locale` cookie, then primary language from `navigator.language` (`fr-FR` → `fr`), then `en`)
 - Loads `coreui` + current widget bundle
 - Replaces text content for elements with `[data-i18n-key]`
 

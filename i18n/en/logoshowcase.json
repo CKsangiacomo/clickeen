@@ -11,5 +11,12 @@
   "logoshowcase.labels.itemBottomRightRadius": "{item} bottom-right radius",
   "logoshowcase.labels.itemBottomLeftRadius": "{item} bottom-left radius",
   "logoshowcase.labels.itemBorder": "{item} border",
-  "logoshowcase.labels.itemShadow": "{item} shadow"
+  "logoshowcase.labels.itemShadow": "{item} shadow",
+  "logoshowcase.labels.itemOutsideShadow": "{item} outside shadow",
+  "logoshowcase.labels.linkItemInsideShadows": "Link {item} inside shadows",
+  "logoshowcase.labels.itemInsideShadow": "{item} inside shadow",
+  "logoshowcase.labels.itemInsideShadowTop": "{item} inside shadow (top)",
+  "logoshowcase.labels.itemInsideShadowRight": "{item} inside shadow (right)",
+  "logoshowcase.labels.itemInsideShadowBottom": "{item} inside shadow (bottom)",
+  "logoshowcase.labels.itemInsideShadowLeft": "{item} inside shadow (left)"
 }

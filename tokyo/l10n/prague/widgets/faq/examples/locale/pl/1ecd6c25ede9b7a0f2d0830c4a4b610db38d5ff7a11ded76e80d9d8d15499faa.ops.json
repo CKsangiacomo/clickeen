@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Przykłady FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Zobacz, jak prawdziwe firmy wykorzystują FAQ, aby rozwiązywać problemy i finalizować więcej transakcji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ, które rozwiązują realne problemy biznesowe"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Od gabinetów dentystycznych po rezerwacje DJ-ów — zobacz, jak firmy takie jak Twoja zamieniają pytania w klientów."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Opieka zdrowotna: zmniejsz liczbę nieobecności o 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Dentyści odpowiadają na najczęstsze pytania dotyczące zabiegów, ubezpieczenia i umawiania wizyt — zanim pacjenci w ogóle zadzwonią."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-commerce: Obsługuj zwroty natychmiast"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Zasady wysyłki, tabelki rozmiarów, terminy zwrotów — odpowiadaj na pytania, które zapobiegają porzucaniu koszyka."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Zamieniaj wersje próbne w klientów"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Pytania o funkcje, wątpliwości dotyczące cen, obawy związane z integracją — rozwiewaj zastrzeżenia, zanim staną się straconymi szansami."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Każda branża ma możliwości w zakresie FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Pytania to cichy zabójca konwersji. Niezależnie od tego, czy umawiasz wizyty, obsługujesz zwroty, czy wyjaśniasz funkcje, pytania bez odpowiedzi oznaczają utracone przychody. FAQ od Clickeen działają wszędzie, natychmiast mówiąc językiem każdego klienta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Usługi kreatywne: usprawnij zapytania rezerwacyjne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ-e, fotografowie i konsultanci odpowiadają na pytania o ceny, dostępność i przebieg współpracy 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Od pytań do klientów"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Wdrażanie FAQ, które naprawdę przynosi rezultaty, opiera się na sprawdzonym procesie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Zidentyfikuj najważniejsze kategorie pytań"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Wybierz odpowiedni styl FAQ dla swojej grupy odbiorców"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Osadź i optymalizuj w oparciu o dane"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Przeanalizuj zgłoszenia do wsparcia, rozmowy sprzedażowe i logi czatu, aby znaleźć najczęściej zadawane pytania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Akordeon dla szczegółowych odpowiedzi, karty dla informacji do szybkiego przejrzenia, listy dla prostych zestawów pytań i odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Monitoruj, które pytania są klikane najczęściej, i dopracowuj odpowiedzi na podstawie tego, co zwiększa konwersje."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Znajdź rozwiązanie FAQ dla swojej branży"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Szablony zaprojektowane specjalnie dla firm takich jak Twoja, z AI, które dopasowuje się do Twoich potrzeb."
+    }
+  ],
+  "v": 1
+}

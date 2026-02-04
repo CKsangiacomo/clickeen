@@ -10,6 +10,10 @@
       "createFree": "Create free",
       "seeTemplates": "See templates"
     },
+    "localeShowcase": {
+      "subtitle": "Same curated widget. Three locales. One codepath.",
+      "title": "Designed to speak every language"
+    },
     "footer": {
       "brand": "Clickeen",
       "pricing": "Pricing",

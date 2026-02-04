@@ -27,6 +27,157 @@ export default defineConfig({
   },
   plugins: [
     {
+      name: 'local-edit-entitlements-matrix',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+
+          const wantsGet = pathname === '/api/entitlements/matrix' && req.method === 'GET';
+          const wantsUpdateCell = pathname === '/api/entitlements/matrix/cell' && req.method === 'POST';
+          if (!wantsGet && !wantsUpdateCell) return next();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+
+          const matrixPath = path.resolve(__dirname, '..', 'config', 'entitlements.matrix.json');
+
+          const readMatrix = () => {
+            if (!fs.existsSync(matrixPath)) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.entitlements.notFound' } }));
+              return null;
+            }
+            const raw = fs.readFileSync(matrixPath, 'utf8');
+            return JSON.parse(raw);
+          };
+
+          if (wantsGet) {
+            try {
+              const matrix = readMatrix();
+              if (!matrix) return;
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, path: matrixPath, matrix }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.db.readFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
+            return;
+          }
+
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk.toString();
+          });
+          req.on('end', () => {
+            let payload: any;
+            try {
+              payload = body ? JSON.parse(body) : null;
+            } catch (_err) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }));
+              return;
+            }
+
+            const capabilityKey = String(payload?.capabilityKey || '').trim();
+            const tier = String(payload?.tier || '').trim();
+            const value = payload?.value as unknown;
+
+            if (!capabilityKey) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.capabilityKey.invalid' } }));
+              return;
+            }
+
+            if (!tier) {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.tier.invalid' } }));
+              return;
+            }
+
+            try {
+              const matrix = readMatrix();
+              if (!matrix) return;
+
+              const tiers = Array.isArray(matrix?.tiers) ? (matrix.tiers as string[]) : [];
+              if (!tiers.includes(tier)) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.tier.unknown', detail: tier } }));
+                return;
+              }
+
+              const cap = matrix?.capabilities?.[capabilityKey];
+              if (!cap || typeof cap !== 'object') {
+                res.statusCode = 404;
+                res.end(
+                  JSON.stringify({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.entitlements.capability.notFound' } }),
+                );
+                return;
+              }
+
+              const kind = String((cap as any).kind || '').trim();
+              if (kind === 'flag') {
+                if (typeof value !== 'boolean') {
+                  res.statusCode = 422;
+                  res.end(
+                    JSON.stringify({
+                      error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.value.invalid', detail: 'expected boolean' },
+                    }),
+                  );
+                  return;
+                }
+              } else if (kind === 'cap' || kind === 'budget') {
+                if (value !== null && (typeof value !== 'number' || !Number.isFinite(value))) {
+                  res.statusCode = 422;
+                  res.end(
+                    JSON.stringify({
+                      error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.entitlements.value.invalid', detail: 'expected number or null' },
+                    }),
+                  );
+                  return;
+                }
+              } else {
+                res.statusCode = 500;
+                res.end(
+                  JSON.stringify({
+                    error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.entitlements.kind.invalid', detail: kind },
+                  }),
+                );
+                return;
+              }
+
+              if (!cap.values || typeof cap.values !== 'object') (cap as any).values = {};
+              (cap as any).values[tier] = value;
+
+              fs.writeFileSync(matrixPath, `${JSON.stringify(matrix, null, 2)}\n`, 'utf8');
+
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, capabilityKey, tier, value }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.db.writeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
+          });
+        });
+      },
+    },
+    {
       name: 'tokyo-update-widget-spec-defaults',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {

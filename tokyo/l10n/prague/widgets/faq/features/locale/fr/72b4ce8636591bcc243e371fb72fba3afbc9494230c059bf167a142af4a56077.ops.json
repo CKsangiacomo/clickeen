@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Fonctionnalités de la FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tout ce dont vous avez besoin pour publier des FAQ alimentées par l’IA, efficaces à l’échelle mondiale et qui se développent de façon virale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Pourquoi le widget FAQ surpasse Elfsight, TypeForm et le sur-mesure"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Conçu de zéro pour l’IA. Fonctionne partout. Se propage viralement. Une FAQ, des possibilités infinies."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Montage IA : décrivez, c’est fait"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Dites-lui ce que vous voulez en français courant. « Rends les questions plus décontractées » ou « Ajoute une section sur les tarifs ». L’IA comprend et exécute instantanément."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Instantané mondial : n’importe quelle langue, maintenant"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "La géographie est un paramètre, pas un projet. Ajoutez l’espagnol, le japonais ou l’arabe en un clic. Aucune traduction manuelle, aucun délai."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Composable partout : une FAQ, une infinité de contextes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "La même FAQ fonctionne sur le site web, dans les e-mails, les pages de destination, les publicités. Une seule source, une infinité de possibilités."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Pourquoi Clickeen change tout"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Localisation personnalisée instantanée"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Modèles OU sur-mesure au pixel près"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Architecture composable"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL du site → contenu personnalisé instantanément en 29 langues. Aucune traduction manuelle, aucun coût de traducteur. L’IA comprend le contexte de votre entreprise."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Commencez avec un modèle sélectionné OU définissez tout vous-même — à vous de choisir, liberté totale. Aucun compromis, aucune limitation."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Une seule FAQ fonctionne partout : site web, e-mail, pages d’atterrissage, publicités. Même contenu, une infinité de contextes. Pas besoin de reconstruire pour chaque canal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Conçu pour l’IA, piloté par l’IA"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen n’est pas un simple créateur de FAQ — c’est le premier produit conçu pour être opéré par l’IA dès le premier jour. Là où les concurrents ajoutent l’IA a posteriori, nous avons bâti une architecture que des agents IA peuvent comprendre, modifier et optimiser de manière autonome."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Comment fonctionne l’écosystème IA de Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Une plateforme complète qui devient plus intelligente à chaque interaction."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "L’IA comprend votre intention"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Fonctionnement mondial par défaut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Apprentissage et amélioration continus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisation de la distribution virale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Décrivez les changements naturellement. « Rendez-le plus professionnel » ou « Ajoutez de l’urgence au CTA ». L’IA exécute parfaitement."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "L’IA gère la localisation, le support et le marketing sur tous les marchés simultanément."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Chaque interaction utilisateur apprend au système d’IA, rendant toutes les FAQ plus intelligentes au fil du temps."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Les FAQ gratuites deviennent des canaux marketing qui génèrent automatiquement de l’acquisition."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Découvrez l’avenir des FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "La plateforme qui s’améliore à chaque interaction. Conçue pour l’ère de l’IA."
+    }
+  ],
+  "v": 1
+}

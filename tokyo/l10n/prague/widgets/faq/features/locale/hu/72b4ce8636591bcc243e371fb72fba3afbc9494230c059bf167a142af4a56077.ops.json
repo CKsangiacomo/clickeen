@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK funkciók – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Minden, amire szükséged van ahhoz, hogy AI-alapú, világszerte működő és vírusosan terjedő GYIK-et indíts."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Miért jobb a FAQ Widget az Elfsightnál, a TypeFormnál és az egyedi fejlesztésnél"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Nulláról, mesterséges intelligenciára tervezve. Világszerte működik. Vírusosan terjed. Egy GYIK, végtelen lehetőség."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-szerkesztés: Mondd el, kész"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Mondd el köznyelven, mit szeretnél. „Tedd a kérdéseket lazább hangvételűvé” vagy „Adj hozzá egy árazásról szóló részt.” Az AI megérti és azonnal végrehajtja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globális azonnaliság: bármely nyelv, azonnal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "A földrajz egy paraméter, nem egy projekt. Adj hozzá spanyolt, japánt vagy arabot egyetlen kattintással. Nincs kézi fordítás, nincs késlekedés."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Komponálható bárhol: Egy GYIK, végtelen kontextus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Ugyanaz a GYIK működik a weboldalon, e-mailben, landing oldalakon, hirdetésekben. Egy forrás, végtelen lehetőség."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Miért változtat meg mindent a Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Azonnali, személyre szabott lokalizáció"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Sablonok VAGY pixelpontos egyedi megoldás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponálható architektúra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Weboldal URL → személyre szabott tartalom azonnal 29 nyelven. Nincs kézi fordítás, nincsenek fordítói költségek. Az AI érti az üzleti kontextusodat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Kezdj egy gondosan válogatott sablonnal VAGY határozz meg mindent te magad — a te döntésed, teljes szabadság. Nincsenek kompromisszumok, nincsenek korlátok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Egyetlen GYIK mindenhol működik: weboldalon, e-mailben, landing oldalakban, hirdetésekben. Ugyanaz a tartalom, végtelen kontextus. Nincs újraépítés csatornánként."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "MI-re tervezve, MI által működtetve"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "A Clickeen nem csupán egy újabb GYIK-készítő – ez az első termék, amelyet az első naptól kezdve MI általi működtetésre terveztek. Míg a versenytársak utólag építik be az MI-funkciókat, mi olyan architektúrát hoztunk létre, amelyet az MI-ügynökök önállóan képesek megérteni, módosítani és optimalizálni."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Hogyan működik a Clickeen AI-ökoszisztémája"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Egy teljes platform, amely minden interakcióval okosabbá válik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Az AI megérti a szándékodat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Alapértelmezetten globális működés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Folyamatos tanulás és fejlődés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Vírusos terjesztés automatizálása"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Írd le természetesen a változtatásokat: „Legyen professzionálisabb” vagy „Adj sürgetést a CTA-hoz.” Az AI tökéletesen végrehajtja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Az AI egyszerre kezeli a lokalizációt, az ügyféltámogatást és a marketinget minden piacon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Minden felhasználói interakció tanítja az AI-rendszert, így idővel az összes GYIK okosabbá válik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Az ingyenes GYIK-ek marketingcsatornákká válnak, amelyek automatikusan növelik az ügyfélszerzést."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Tapasztald meg a GYIK-ek jövőjét"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "A platform, amely minden interakcióval okosabbá válik. Az MI korszakára tervezve."
+    }
+  ],
+  "v": 1
+}

@@ -15,6 +15,15 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function safeJsonParse(text: string): unknown | null {
+  if (!text || typeof text !== 'string') return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 function isCuratedPublicId(value: string): boolean {
   if (!value) return false;
   if (/^wgt_curated_/.test(value)) return true;
@@ -107,7 +116,11 @@ export async function POST(request: NextRequest) {
     });
 
     const text = await res.text().catch(() => '');
+    const payload = safeJsonParse(text);
     if (!res.ok) {
+      if (payload && typeof payload === 'object' && (payload as any).error) {
+        return NextResponse.json(payload, { status: res.status, headers: CORS_HEADERS });
+      }
       return NextResponse.json(
         {
           error: {

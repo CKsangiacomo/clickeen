@@ -24,6 +24,7 @@ import { isKnownWidgetType, loadWidgetLimits } from '../../shared/tokyo';
 import { requireWorkspace } from '../../shared/workspaces';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
 import { normalizeLocaleList } from '../../shared/l10n';
+import { consumeBudget } from '../../shared/budgets';
 import {
   allowCuratedWrites,
   assertPublicId,
@@ -377,9 +378,26 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const configChanged = config !== undefined;
     if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
       const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-      const locales = policyResult.policy.flags['l10n.enabled'] === true && normalized.ok ? normalized.locales : [];
+      const locales = normalized.ok ? normalized.locales : [];
+      const maxLocalesTotalRaw = policyResult.policy.caps['l10n.locales.max'];
+      const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
       const deduped = Array.from(new Set(['en', ...locales]));
-      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: deduped });
+      const limited = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
+      if (env.RENDER_SNAPSHOT_QUEUE) {
+        const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
+        const regen = await consumeBudget({
+          env,
+          scope: { kind: 'workspace', workspaceId },
+          budgetKey: 'budget.snapshots.regens',
+          max: maxRegens,
+          amount: 1,
+        });
+        if (regen.ok) {
+          await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: limited });
+        } else {
+          console.log('[ParisWorker] Snapshot regen budget exceeded', { workspaceId, publicId, detail: regen.detail });
+        }
+      }
     } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
       await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
     }
@@ -491,6 +509,10 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     const created = (await curatedInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     createdInstance = created?.[0] ?? null;
   } else {
+    const widgetTypesCapRaw = policyResult.policy.caps['widgets.types.max'];
+    const widgetTypesCap =
+      typeof widgetTypesCapRaw === 'number' && Number.isFinite(widgetTypesCapRaw) ? Math.max(0, Math.floor(widgetTypesCapRaw)) : null;
+
     let widget = await loadWidgetByType(env, widgetType);
     if (!widget) {
       const widgetName = (payload as any).widgetName;
@@ -512,6 +534,82 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
 
     if (!widget?.id) {
       return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+    }
+
+    // Enforce distinct widget types cap (per workspace tier).
+    // This is a packaging lever separate from instance slots: it limits how many widget types a workspace can use.
+    if (widgetTypesCap != null) {
+      if (widgetTypesCap === 0) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: 'coreui.upsell.reason.capReached',
+            upsell: 'UP',
+            detail: `widgets.types.max=${widgetTypesCap}`,
+          },
+          403,
+        );
+      }
+
+      const existingTypeParams = new URLSearchParams({
+        select: 'public_id',
+        workspace_id: `eq.${workspaceId}`,
+        widget_id: `eq.${widget.id}`,
+        limit: '1',
+      });
+      const existingTypeRes = await supabaseFetch(env, `/rest/v1/widget_instances?${existingTypeParams.toString()}`, { method: 'GET' });
+      if (!existingTypeRes.ok) {
+        const details = await readJson(existingTypeRes);
+        return ckError(
+          { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+          500,
+        );
+      }
+      const existingTypeRows = (await existingTypeRes.json().catch(() => null)) as Array<{ public_id?: string | null }> | null;
+      const hasWidgetType = Boolean(existingTypeRows?.length);
+
+      if (!hasWidgetType) {
+        const pageSize = 500;
+        let offset = 0;
+        const widgetIds = new Set<string>();
+        while (widgetIds.size < widgetTypesCap) {
+          const params = new URLSearchParams({
+            select: 'widget_id',
+            workspace_id: `eq.${workspaceId}`,
+            limit: String(pageSize),
+            offset: String(offset),
+          });
+          const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+          if (!res.ok) {
+            const details = await readJson(res);
+            return ckError(
+              { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+              500,
+            );
+          }
+          const rows = (await res.json().catch(() => null)) as Array<{ widget_id?: string | null }> | null;
+          if (!rows?.length) break;
+          for (const row of rows) {
+            const id = typeof row?.widget_id === 'string' ? row.widget_id : null;
+            if (id) widgetIds.add(id);
+            if (widgetIds.size >= widgetTypesCap) break;
+          }
+          if (rows.length < pageSize) break;
+          offset += pageSize;
+        }
+
+        if (widgetIds.size >= widgetTypesCap) {
+          return ckError(
+            {
+              kind: 'DENY',
+              reasonKey: 'coreui.upsell.reason.capReached',
+              upsell: 'UP',
+              detail: `widgets.types.max=${widgetTypesCap}`,
+            },
+            403,
+          );
+        }
+      }
     }
 
     const instanceInsert = await supabaseFetch(env, `/rest/v1/widget_instances`, {

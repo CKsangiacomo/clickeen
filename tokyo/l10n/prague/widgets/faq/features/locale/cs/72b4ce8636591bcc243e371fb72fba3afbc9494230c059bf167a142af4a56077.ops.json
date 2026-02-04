@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funkce FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vše, co potřebujete k tomu, abyste nasadili FAQ poháněné AI, které fungují globálně a šíří se virálně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Proč widget FAQ předčí Elfsight, TypeForm a řešení na míru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Navrženo od základu pro AI. Funguje globálně. Šíří se virálně. Jedno FAQ, nekonečné možnosti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI úpravy: Popište, hotovo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Řekněte mu, co chcete, jednoduše a srozumitelně. „Udělej otázky uvolněnější“ nebo „Přidej sekci o cenách.“ AI to pochopí a okamžitě provede."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Okamžitě globálně: Jakýkoli jazyk, hned teď"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie je parametr, ne projekt. Přidejte španělštinu, japonštinu nebo arabštinu jedním kliknutím. Žádné ruční překlady, žádná zdržení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Komponovatelné všude: Jedno FAQ, nekonečno kontextů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Stejné FAQ funguje na webu, v e-mailu, na landing page i v reklamách. Jeden zdroj, nekonečné možnosti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Proč Clickeen mění pravidla hry"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Okamžitá personalizovaná lokalizace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Šablony NEBO pixelově přesné řešení na míru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Kompozitní architektura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL webu → personalizovaný obsah v 29 jazycích okamžitě. Žádný ruční překlad, žádné náklady na překladatele. AI rozumí kontextu vašeho podnikání."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Začněte s pečlivě vybranou šablonou NEBO si definujte vše sami — je to na vás, naprostá svoboda. Žádné kompromisy, žádná omezení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Jedno FAQ funguje všude: na webu, v e-mailu, na landing pages i v reklamách. Stejný obsah, nekonečně kontextů. Není potřeba vše znovu vytvářet pro každý kanál."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Vytvořeno pro AI, provozováno AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen není jen další nástroj pro tvorbu FAQ — je to první produkt navržený pro provoz pomocí AI od prvního dne. Zatímco konkurence dodatečně doplňuje funkce AI, my jsme vybudovali architekturu, kterou AI agenti dokážou pochopit, upravovat a autonomně optimalizovat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Jak funguje AI ekosystém Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Kompletní platforma, která je s každou interakcí chytřejší."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI rozumí vašemu záměru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globální provoz jako výchozí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Průběžné učení a zlepšování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatizace virální distribuce"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Popište změny přirozeně. „Udělej to profesionálnější“ nebo „Přidej naléhavost do CTA.“ AI vše provede perfektně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI zajišťuje lokalizaci, podporu a marketing napříč všemi trhy současně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Každá interakce uživatele učí AI systém, takže se všechny FAQ časem stávají chytřejšími."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Bezplatné FAQ se stávají marketingovými kanály, které automaticky podporují akvizici."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Zažijte budoucnost FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Platforma, která se s každou interakcí stává chytřejší. Vytvořeno pro éru AI."
+    }
+  ],
+  "v": 1
+}

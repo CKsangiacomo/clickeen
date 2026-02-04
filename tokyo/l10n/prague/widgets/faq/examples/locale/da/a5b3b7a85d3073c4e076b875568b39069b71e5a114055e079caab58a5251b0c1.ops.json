@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-eksempler - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hoteller, restauranter og turoperatører bruger Clickeen til at betjene internationale kunder på 29 sprog med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ-eksempler til hoteller, restauranter, turoperatører og meget mere"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Giv Ombra din websteds-URL. Få din FAQ tilpasset din virksomhed på 29 sprog – med det samme. Ingen oversætter nødvendig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hoteller i Barcelona: Gæster fra 50+ lande spørger \"Hvornår er check-in?\" på 15 sprog"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Giv Ombra dit hotels hjemmeside. FAQ tilpasset din ejendom på 29 sprog – med det samme. Reducér henvendelser til receptionen med 60 %, og forbedr gæstetilfredshedsscorer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restauranter i Paris: Turister stiller diætspørgsmål på fransk, engelsk, spansk, kinesisk, japansk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Dine menu-FAQ'er på 29 sprog – med det samme. Ingen oversætter, intet manuelt arbejde. Forbedr bordomsætningen, reducer afbrydelser af serveringspersonalet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-værter i Toscana: Indtjekningsinstruktioner, WiFi-adgangskode, lokale tips på din gæsts sprog"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Giv Ombra din opslagets URL. Husregler på 29 sprog med det samme. 5-stjernede anmeldelser fra internationale gæster."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Internationale kunder venter ikke på oversættelser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Et hotel i Rom mister bookinger, når tyske turister ikke kan finde information om check-in. En restaurant i Tokyo mister reservationer, når engelsktalende ikke kan finde åbningstider. Hvert ubesvaret spørgsmål på deres sprog er en tabt kunde. Ombra løser dette: website-URL → personliggjort FAQ på 29 sprog, med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Turoperatører i Thailand: Booking, sikkerhed og rejseplan – FAQ for internationale rejsende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Giv Ombra dit tur-website. FAQ på 29 sprog med det samme. Reducér e-mailsupport med 70 %, og øg konverteringen fra internationale markeder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museer i Rom: Udstillingsinfo, billetter og åbningstider for besøgende fra hele verden"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Ofte stillede spørgsmål for besøgende på 29 sprog – med det samme. Forbedr besøgsoplevelsen, og reducer henvendelser til informationsskranken med 50 %."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Fra international forvirring til øjeblikkelig klarhed"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Sådan bruger hospitality-virksomheder Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Giv Ombra din hjemmesides URL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ tilpasset din virksomhed på 29 sprog – øjeblikkeligt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Indlejr, og se internationale henvendelser falde"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI læser din virksomheds kontekst – lokation, services, politikker. Forstår automatisk dine specifikke behov."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Ingen oversætter nødvendig. Intet manuelt arbejde. Indhold tilpasset din virksomhed OG tilgængeligt globalt med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Script på 3 linjer. Virker overalt. Gæster, turister og rejsende får svar på deres sprog, før de spørger."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Få din FAQ på 29 sprog – med det samme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Giv Ombra din websteds-URL. Tilpasset din virksomhed, tilgængelig globalt. Ingen oversætter nødvendig."
+    }
+  ],
+  "v": 1
+}

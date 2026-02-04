@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ उदाहरण - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "होटल, रेस्तरां और टूर ऑपरेटर अंतरराष्ट्रीय ग्राहकों को 29 भाषाओं में तुरंत सेवा देने के लिए Clickeen का उपयोग करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "होटल, रेस्तरां, टूर ऑपरेटर और अन्य के लिए FAQ उदाहरण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ombra को अपनी वेबसाइट का URL दें। 29 भाषाओं में अपने व्यवसाय के अनुसार व्यक्तिगत FAQ—तुरंत—पाएं। किसी अनुवादक की जरूरत नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "बार्सिलोना में होटल: 50+ देशों के मेहमान 15 भाषाओं में 'चेक-इन का समय?' पूछते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Ombra को अपनी होटल वेबसाइट दें। आपके प्रॉपर्टी के अनुसार 29 भाषाओं में व्यक्तिगत FAQ—तुरंत। फ्रंट डेस्क पूछताछ 60% तक कम करें, मेहमान संतुष्टि स्कोर बेहतर करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "पेरिस के रेस्टोरेंट: पर्यटक फ़्रेंच, अंग्रेज़ी, स्पेनिश, चीनी, जापानी में आहार संबंधी सवाल पूछते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "29 भाषाओं में आपके मेनू के FAQ—तुरंत। न अनुवादक, न मैनुअल काम। टेबल टर्नओवर बढ़ाएँ, वेट स्टाफ में होने वाली बाधाओं को कम करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "टस्कनी में Airbnb होस्ट: चेक-इन निर्देश, WiFi पासवर्ड, स्थानीय सुझाव आपके मेहमान की भाषा में"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Ombra को अपनी लिस्टिंग URL दें। 29 भाषाओं में तुरंत घर के नियम। अंतरराष्ट्रीय मेहमानों से 5-स्टार रिव्यू।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "अंतरराष्ट्रीय ग्राहक अनुवाद के लिए इंतज़ार नहीं करते"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "रोम का एक होटल बुकिंग खो देता है जब जर्मन पर्यटकों को चेक-इन की जानकारी नहीं मिलती। टोक्यो का एक रेस्तरां आरक्षण खो देता है जब अंग्रेज़ी बोलने वालों को खुलने का समय नहीं मिलता। उनकी भाषा में हर अनुत्तरित सवाल एक खोया हुआ ग्राहक है। Ombra इसे हल करता है: वेबसाइट URL → 29 भाषाओं में व्यक्तिगत FAQ, तुरंत।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "थाईलैंड में टूर ऑपरेटर: अंतरराष्ट्रीय यात्रियों के लिए बुकिंग, सुरक्षा, यात्रा-कार्यक्रम संबंधी FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Ombra को अपनी टूर वेबसाइट दें। 29 भाषाओं में तुरंत FAQ। ईमेल सपोर्ट 70% तक कम करें, अंतरराष्ट्रीय बाजारों से रूपांतरण बढ़ाएं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "रोम के संग्रहालय: दुनिया भर से आने वाले आगंतुकों के लिए प्रदर्शनी जानकारी, टिकट, खुलने का समय"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "29 भाषाओं में आगंतुक FAQ—तुरंत। आगंतुक अनुभव बेहतर करें, सूचना डेस्क पर पूछताछ 50% तक कम करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "अंतरराष्ट्रीय उलझन से तुरंत स्पष्टता तक"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "हॉस्पिटैलिटी व्यवसाय Clickeen का उपयोग कैसे करते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Ombra को अपनी वेबसाइट का URL दें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "आपके व्यवसाय के लिए 29 भाषाओं में तुरंत—व्यक्तिगत FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "एम्बेड करें और अंतरराष्ट्रीय पूछताछ में गिरावट देखें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI आपके व्यवसाय के संदर्भ—स्थान, सेवाएँ, नीतियाँ—को पढ़ता है। आपकी विशिष्ट ज़रूरतों को स्वचालित रूप से समझता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "किसी अनुवादक की जरूरत नहीं। कोई मैनुअल काम नहीं। सामग्री आपके व्यवसाय के अनुसार अनुकूलित होती है और तुरंत, वैश्विक रूप से उपलब्ध होती है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3-पंक्तियों की स्क्रिप्ट। कहीं भी काम करती है। मेहमान, पर्यटक, यात्री पूछने से पहले ही अपनी भाषा में जवाब पा लेते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "अपना FAQ 29 भाषाओं में—तुरंत पाएँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Ombra को अपनी वेबसाइट का URL दें। आपके व्यवसाय के अनुसार व्यक्तिगत, वैश्विक रूप से उपलब्ध। अनुवादक की ज़रूरत नहीं।"
+    }
+  ],
+  "v": 1
+}

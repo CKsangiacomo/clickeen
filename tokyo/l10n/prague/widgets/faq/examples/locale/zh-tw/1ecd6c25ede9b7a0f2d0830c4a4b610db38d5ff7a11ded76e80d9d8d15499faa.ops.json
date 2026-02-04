@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 範例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "了解真實企業如何運用 FAQ 解決問題並促成更多成交。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "能解決真實商業問題的常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "從牙科診所到 DJ 預約，看看像您這樣的公司如何把問題變成客戶。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "醫療保健：將未到診率降低 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "牙醫在病患打電話之前，就先解答關於療程、保險與預約安排的常見問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "電商：即時處理退貨"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "運送政策、尺寸指南、退貨期限——回答那些會阻止顧客棄單的問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS：將試用者轉換為客戶"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "功能問題、定價疑慮、整合顧慮——在異議成為流失的機會之前先行化解。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "每個產業都有 FAQ 的機會"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "問題是轉換率的無聲殺手。無論你是在安排預約、處理退貨，或是解釋功能，未被解答的問題都意味著流失商機。Clickeen 的 FAQ 隨處都能運作，能即時用每位顧客的語言溝通。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "創意服務：簡化預約洽詢"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ、攝影師與顧問可 24/7 回答價格、檔期與流程相關問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "從問題到客戶"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "導入真正帶來成效的 FAQ，需要遵循一套經驗證的流程。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "找出最重要的問題類別"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "為你的受眾選擇合適的 FAQ 樣式"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "嵌入並依數據進行優化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "分析客服工單、銷售通話與聊天紀錄，找出最常被詢問的問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "手風琴適合詳盡回答、卡片適合可快速掃讀的資訊、清單適合直接的問答。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "追蹤哪些問題被點擊最多，並依據帶來轉換的因素來調整你的答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "找到適合您產業的常見問題解決方案"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "專為像您這樣的企業打造的範本，搭配可依需求調整的 AI。"
+    }
+  ],
+  "v": 1
+}

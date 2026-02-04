@@ -98,8 +98,12 @@ function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
     Array.isArray(allowedProvidersRaw) && allowedProvidersRaw.every((p) => typeof p === 'string' && p.trim())
       ? (allowedProvidersRaw.map((p) => p.trim()) as string[])
       : null;
-  if (!profile || !allowedProviders || allowedProviders.length === 0) {
+  const defaultProvider = asString((value as any).defaultProvider);
+  if (!profile || !allowedProviders || allowedProviders.length === 0 || !defaultProvider) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy missing required fields' });
+  }
+  if (!allowedProviders.includes(defaultProvider)) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy defaultProvider is not allowed' });
   }
   const allowProviderChoice = (value as any).allowProviderChoice === true;
   const allowModelChoice = (value as any).allowModelChoice === true;
@@ -108,12 +112,34 @@ function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy selectedProvider is not allowed' });
   }
   const selectedModel = asString((value as any).selectedModel);
+  const modelsRaw = (value as any).models;
+  const models: Record<string, { defaultModel: string; allowed: string[] }> = {};
+  if (modelsRaw !== undefined) {
+    if (!isRecord(modelsRaw)) {
+      throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy models must be an object' });
+    }
+    for (const [provider, config] of Object.entries(modelsRaw)) {
+      if (!allowedProviders.includes(provider)) continue;
+      if (!isRecord(config)) continue;
+      const defaultModel = asString((config as any).defaultModel);
+      const allowedRaw = (config as any).allowed;
+      const allowed =
+        Array.isArray(allowedRaw) && allowedRaw.every((m) => typeof m === 'string' && m.trim())
+          ? allowedRaw.map((m) => m.trim())
+          : [];
+      if (!defaultModel || allowed.length === 0) continue;
+      if (!allowed.includes(defaultModel)) continue;
+      models[provider] = { defaultModel, allowed };
+    }
+  }
   const tokenBudgetDay = asNumber((value as any).tokenBudgetDay);
   const tokenBudgetMonth = asNumber((value as any).tokenBudgetMonth);
 
   const policy: AIGrant['ai'] = {
     profile: profile as AIGrant['ai']['profile'],
     allowedProviders: allowedProviders as AIGrant['ai']['allowedProviders'],
+    defaultProvider: defaultProvider as AIGrant['ai']['defaultProvider'],
+    ...(Object.keys(models).length ? { models: models as any } : {}),
     ...(allowProviderChoice ? { allowProviderChoice: true } : {}),
     ...(allowModelChoice ? { allowModelChoice: true } : {}),
     ...(selectedProvider ? { selectedProvider: selectedProvider as AIGrant['ai']['selectedProvider'] } : {}),

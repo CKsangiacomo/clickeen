@@ -80,6 +80,7 @@ Local dev:
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
   - `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
+  - `POST /l10n/instances/:publicId/bases/:baseFingerprint` (dev-only; writes `tokyo/l10n/instances/**/bases/*.snapshot.json`)
   - `POST /l10n/instances/:publicId/index` (dev-only; writes layer index into `tokyo/l10n/**`)
   - `DELETE /l10n/instances/:publicId/index` (dev-only; removes layer index from `tokyo/l10n/**`)
 - Local l10n publish path: `tokyo-worker` reads Supabase and POSTs to the dev server when `TOKYO_L10N_HTTP_BASE` is set.
@@ -91,6 +92,7 @@ Tokyo serves **instance localization overlays** as deterministic baseFingerprint
 
 - Build output path: `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json` (locale + user layers active; other layers use the same path)
 - Locale index: `tokyo/l10n/instances/<publicId>/index.json` (hybrid layer index)
+- Base snapshots: `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot values; used by Venice for safe stale apply)
 
 Rules:
 - Overlays are set-only ops (no structural mutations).

@@ -15,6 +15,14 @@ This document defines how Clickeen handles language and localization across:
 
 This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps caching + ownership clean.
 
+## Canonical locale registry (shared)
+
+`config/locales.json` is the canonical registry of supported locale tokens **and** how to label them in different UI languages.
+
+- Use `code` as the locale token everywhere (lowercase BCP47-ish like `fr-ca`, `zh-hans`).
+- For locale pickers, always render locale names using `labels[uiLocale]` (not `nativeLabel`) so an English UI user does not see Chinese/Arabic script in the picker.
+- Use `@clickeen/l10n` helpers (e.g. `normalizeLocaleToken`, `normalizeCanonicalLocalesFile`, `resolveLocaleLabel`) instead of ad-hoc parsing (`split('-')[0]` is forbidden).
+
 ## Instance kinds + entitlement gating (Phase 1)
 
 ### Instance kinds (authoritative)
@@ -27,15 +35,16 @@ Curated instances always localize to all supported locales. User instances local
 Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace locale selection**.
 
 - Entitlement keys:
-  - `l10n.enabled` (flag)
-  - `l10n.locales.max` (cap)
-  - `l10n.versions.max` (cap)
-- Tier rules (V0):
-  - Minibob / Free / Tier 1: ❌ no localization
-  - Tier 2: ✅ up to 3 locales
-  - Tier 3: ✅ unlimited locales
-  - DevStudio: ✅ uncapped
-- Workspace selection source: `workspaces.l10n_locales` (JSON array)
+  - `l10n.locales.max` (cap; total locales including EN)
+  - `l10n.locales.custom.max` (cap; how many non‑EN locales the user can choose)
+  - `l10n.versions.max` (cap; retained overlay versions)
+- Tier rules (v1; executed):
+  - Minibob: EN only (0 additional locales)
+  - Free: EN + 1 system-chosen locale (no picker)
+  - Tier1: EN + 3 user-selected locales (total = 4)
+  - Tier2+: unlimited locales
+  - DevStudio: uncapped
+- Workspace selection source: `workspaces.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 
 ## Localization systems (runtime)
 
@@ -58,6 +67,7 @@ Use `l10n` when the surface is “content inside an instance config” (copy, he
 **Tokyo output (layered)**
 - `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`
 - `tokyo/l10n/instances/<publicId>/index.json` (layer keys + optional geoTargets for locale selection)
+- `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot values for safe stale apply)
 
 Rule: overlays are **set-only ops** applied on top of the base instance config at runtime.
 Rule: `baseFingerprint` is computed from the **allowlist snapshot** (translatable fields only), not the full config.
@@ -85,7 +95,9 @@ This is not “manual editing of locales” — it’s the expected artifact reg
 - Paris rebases user overrides onto the new snapshot fingerprint (drops removed paths, keeps valid overrides).
 - Paris marks `l10n_publish_state` as dirty and enqueues publish jobs.
 - Tokyo-worker materializes overlays into Tokyo/R2 using deterministic paths (no global manifest) and writes `index.json` for locale selection.
-- Venice applies the overlay at render time (if present and not stale).
+- Venice applies the **best available** overlay at render time:
+  - **fresh:** `overlay.baseFingerprint` matches the current base
+  - **stale:** may apply the last published overlay ops **selectively** when safe (see staleness guard)
 
 **Widget allowlist (authoritative)**
 - Locale layer allowlist: `tokyo/widgets/{widgetType}/localization.json`
@@ -115,7 +127,9 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `PARIS_DEV_JWT`).
 - Provider: OpenAI for Prague strings; instance l10n agents use DeepSeek.
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
-- `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths (wired into Prague build/dev-up).
+- `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths.
+  - Default mode is **best-available**: it validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.
+  - Strict mode is `node scripts/prague-l10n/verify.mjs --strict-latest` (or `PRAGUE_L10N_VERIFY_STRICT=1`) and enforces “latest base fingerprint translated for all locales”.
 - `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.
   - To publish, pass `--publish` with an explicit target:
     - `--remote` in cloud-dev/prod (writes to Cloudflare R2)
@@ -127,8 +141,13 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Strict rules**
 - Overlays are set-only ops and must include `baseFingerprint`.
-- Verification fails if any non-en locale is missing an overlay.
 - Same staleness guard as instance overlays (`baseFingerprint`).
+- Best-available fallback is supported:
+  - Prague can apply stale overlays **safely** when the base value at a path is unchanged (using a base snapshot).
+
+**Base snapshots (Prague)**
+- `scripts/prague-l10n/translate.mjs` writes base snapshots to `tokyo/l10n/prague/{pageId}/bases/{baseFingerprint}.snapshot.json`.
+- Prague uses snapshots to safely apply stale overlays when page copy changes.
 
 ## Curated embeds (Prague visuals)
 
@@ -177,8 +196,9 @@ Locale index (Tokyo/R2):
 ```
 Rules:
 - `index.json` is updated by Tokyo-worker whenever locales are published or deleted.
-- `geoTargets` is optional; Venice does not use it for runtime locale selection (explicit `?locale` or default `en`).
-- Runtime applies overlays only when `overlay.baseFingerprint` matches the current base.
+- `geoTargets` is optional and is used only for **variant selection within a language** (e.g. `fr` vs `fr-ca`); it must never override an explicit unrelated locale.
+- Runtime prefers overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
+  - If the latest overlay is stale (fingerprint mismatch), Venice may apply the last published overlay ops **selectively** when safe, using `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`.
 
 Example:
 ```json
@@ -201,8 +221,10 @@ Rules:
 We use one staleness guard everywhere (Prague pages, curated instances, user instances):
 
 - `baseFingerprint` is the canonical staleness guard.
-- Runtime applies an overlay only when:
+- Fresh overlays apply when:
   - `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`.
+- Stale overlays may apply **partially** when safe:
+  - Venice compares the current base value at each op path to the published base snapshot for the stale overlay fingerprint.
 
 This keeps “locale overlays” deterministic across file-based content (Prague pages) and DB-based content (instances).
 

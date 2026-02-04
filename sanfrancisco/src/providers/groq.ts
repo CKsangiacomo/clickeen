@@ -1,0 +1,86 @@
+import { HttpError, asString, isRecord } from '../http';
+import type { Env, Usage } from '../types';
+import type { ChatMessage } from '../ai/chat';
+
+type GroqChatResponse = {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  model?: string;
+};
+
+export async function callGroqChat(args: {
+  env: Env;
+  model: string;
+  messages: ChatMessage[];
+  temperature: number;
+  maxTokens: number;
+  timeoutMs: number;
+}): Promise<{ content: string; usage: Usage }> {
+  if (!args.env.GROQ_API_KEY) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'groq', message: 'Missing GROQ_API_KEY' });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), args.timeoutMs);
+  const startedAt = Date.now();
+
+  try {
+    let res: Response;
+    try {
+      const baseUrl = (args.env.GROQ_BASE_URL ?? 'https://api.groq.com').replace(/\/+$/, '');
+      res = await fetch(`${baseUrl}/openai/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${args.env.GROQ_API_KEY}`,
+          'content-type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: args.model,
+          messages: args.messages,
+          temperature: args.temperature,
+          max_tokens: args.maxTokens,
+        }),
+      });
+    } catch (err: unknown) {
+      const name = isRecord(err) ? asString((err as any).name) : null;
+      if (name === 'AbortError') {
+        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      }
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'groq', message: 'Upstream request failed' });
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'groq', message: `Upstream error (${res.status}) ${text}`.trim() });
+    }
+
+    let responseJson: GroqChatResponse;
+    try {
+      responseJson = (await res.json()) as GroqChatResponse;
+    } catch (err: unknown) {
+      const name = isRecord(err) ? asString((err as any).name) : null;
+      if (name === 'AbortError') {
+        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      }
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'groq', message: 'Invalid upstream JSON' });
+    }
+
+    const latencyMs = Date.now() - startedAt;
+    const content = responseJson.choices?.[0]?.message?.content ?? '';
+    if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'groq', message: 'Empty model response' });
+
+    const usage: Usage = {
+      provider: 'groq',
+      model: responseJson.model ?? args.model,
+      promptTokens: responseJson.usage?.prompt_tokens ?? 0,
+      completionTokens: responseJson.usage?.completion_tokens ?? 0,
+      latencyMs,
+    };
+
+    return { content, usage };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+

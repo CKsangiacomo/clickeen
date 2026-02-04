@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উদাহরণ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "হোটেল, রেস্তোরাঁ এবং ট্যুর অপারেটররা ২৯টি ভাষায় তাৎক্ষণিকভাবে আন্তর্জাতিক গ্রাহকদের সেবা দিতে Clickeen ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "হোটেল, রেস্তোরাঁ, ট্যুর অপারেটর ও আরও অনেকের জন্য FAQ উদাহরণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ombra-কে আপনার ওয়েবসাইটের URL দিন। ২৯টি ভাষায়—তাৎক্ষণিকভাবে—আপনার ব্যবসার জন্য ব্যক্তিগতকৃত FAQ পান। অনুবাদক লাগবে না।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "বার্সেলোনার হোটেল: ৫০+ দেশের অতিথিরা ১৫টি ভাষায় জিজ্ঞাসা করেন ‘চেক-ইন সময়?’"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Ombra-কে আপনার হোটেল ওয়েবসাইট দিন। আপনার সম্পত্তির জন্য ব্যক্তিগতকৃত FAQ ২৯টি ভাষায়—তাৎক্ষণিকভাবে। ফ্রন্ট ডেস্কের জিজ্ঞাসা ৬০% কমান, অতিথি সন্তুষ্টির স্কোর উন্নত করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "প্যারিসের রেস্তোরাঁ: পর্যটকরা ফরাসি, ইংরেজি, স্প্যানিশ, চীনা, জাপানি ভাষায় খাদ্যসংক্রান্ত প্রশ্ন করেন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "২৯টি ভাষায় আপনার মেনুর FAQ—মুহূর্তেই। অনুবাদক নেই, হাতে-কলমে কাজ নেই। টেবিল টার্নওভার বাড়ান, ওয়েট স্টাফের বিঘ্ন কমান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "টাস্কানিতে Airbnb হোস্টদের জন্য: চেক-ইন নির্দেশনা, WiFi পাসওয়ার্ড, আপনার অতিথির ভাষায় স্থানীয় টিপস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Ombra-কে আপনার লিস্টিং URL দিন। ২৯টি ভাষায় সঙ্গে সঙ্গে বাড়ির নিয়মাবলি। আন্তর্জাতিক অতিথিদের কাছ থেকে ৫-তারকা রিভিউ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "আন্তর্জাতিক গ্রাহকরা অনুবাদের জন্য অপেক্ষা করেন না"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "রোমের একটি হোটেল বুকিং হারায় যখন জার্মান পর্যটকরা চেক-ইন তথ্য খুঁজে পান না। টোকিওর একটি রেস্তোরাঁ রিজার্ভেশন হারায় যখন ইংরেজিভাষীরা খোলার সময় খুঁজে পান না। তাদের ভাষায় প্রতিটি অনুত্তরিত প্রশ্নই একজন হারানো গ্রাহক। Ombra এটি সমাধান করে: ওয়েবসাইট URL → ২৯টি ভাষায় ব্যক্তিগতকৃত FAQ, সঙ্গে সঙ্গে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "থাইল্যান্ডে ট্যুর অপারেটর: আন্তর্জাতিক ভ্রমণকারীদের জন্য বুকিং, নিরাপত্তা, ভ্রমণসূচি সম্পর্কিত FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Ombra-কে আপনার ট্যুর ওয়েবসাইট দিন। ২৯টি ভাষায় তাৎক্ষণিকভাবে FAQ। ইমেইল সাপোর্ট ৭০% কমান, আন্তর্জাতিক বাজার থেকে কনভার্সন বাড়ান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "রোমের জাদুঘর: বিশ্বজুড়ে দর্শকদের জন্য প্রদর্শনী তথ্য, টিকিট, দর্শনার্থী সময়সূচি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "২৯টি ভাষায় দর্শনার্থীদের FAQ—তাৎক্ষণিকভাবে। দর্শনার্থী অভিজ্ঞতা উন্নত করুন, তথ্য ডেস্কে জিজ্ঞাসা ৫০% কমান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "আন্তর্জাতিক বিভ্রান্তি থেকে মুহূর্তেই স্পষ্টতায়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "হসপিটালিটি ব্যবসাগুলো কীভাবে Clickeen ব্যবহার করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Ombra-কে আপনার ওয়েবসাইটের URL দিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "আপনার ব্যবসা অনুযায়ী ব্যক্তিগতকৃত FAQ—২৯টি ভাষায়, সঙ্গে সঙ্গে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "এম্বেড করুন এবং দেখুন আন্তর্জাতিক জিজ্ঞাসা কমে যাচ্ছে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI আপনার ব্যবসার প্রেক্ষাপট—অবস্থান, সেবা, নীতিমালা—পড়ে। আপনার নির্দিষ্ট প্রয়োজনগুলো স্বয়ংক্রিয়ভাবে বোঝে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "অনুবাদক দরকার নেই। কোনো ম্যানুয়াল কাজ নেই। কনটেন্ট আপনার ব্যবসার সাথে মানিয়ে নেওয়া হয় এবং বিশ্বজুড়ে সঙ্গে সঙ্গে উপলভ্য থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "৩ লাইনের স্ক্রিপ্ট। যেকোনো জায়গায় কাজ করে। অতিথি, পর্যটক, ভ্রমণকারীরা জিজ্ঞেস করার আগেই তাদের ভাষায় উত্তর পায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "আপনার FAQ ২৯টি ভাষায়—তাৎক্ষণিকভাবে পান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Ombra-কে আপনার ওয়েবসাইটের URL দিন। আপনার ব্যবসার জন্য ব্যক্তিগতকৃত, বিশ্বজুড়ে উপলব্ধ। অনুবাদক দরকার নেই।"
+    }
+  ],
+  "v": 1
+}

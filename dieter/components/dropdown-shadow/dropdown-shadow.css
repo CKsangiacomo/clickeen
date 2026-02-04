@@ -262,6 +262,14 @@
   border-top: 1px solid var(--color-system-gray-5);
 }
 
+.diet-dropdown-shadow[data-axis='x'] .diet-dropdown-shadow__axis-control--y {
+  display: none;
+}
+
+.diet-dropdown-shadow[data-axis='y'] .diet-dropdown-shadow__axis-control--x {
+  display: none;
+}
+
 .diet-dropdown-shadow[data-shadow-enabled='false'] .diet-dropdown-shadow__shadow-controls > :not(:first-child) {
   opacity: var(--state-muted-opacity, 0.45);
 }

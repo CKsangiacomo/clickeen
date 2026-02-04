@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga Tampok ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Lahat ng kailangan mo para maglunsad ng AI-powered FAQs na gumagana sa buong mundo at lumalago nang viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Bakit Mas Panalo ang FAQ Widget kaysa Elfsight, TypeForm, at Custom-Built"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Binuo mula sa simula para sa AI. Gumagana sa buong mundo. Lumalago nang viral. Isang FAQ, walang katapusang posibilidad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Pag-edit gamit ang AI: Ilarawan, tapos na"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Sabihin kung ano ang gusto mo gamit ang simpleng English. 'Gawing mas kaswal ang mga tanong' o 'Magdagdag ng seksyon tungkol sa pagpepresyo.' Naiintindihan at agad na ginagawa ng AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Agarang pandaigdig: Anumang wika, ngayon din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Ang heograpiya ay isang parameter, hindi isang proyekto. Magdagdag ng Espanyol, Hapones, o Arabe sa isang click. Walang manu-manong pagsasalin, walang pagkaantala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Composable saanman: Isang FAQ, walang hanggang konteksto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Gumagana ang iisang FAQ sa website, email, landing pages, ads. Isang pinagmulan, walang hanggang posibilidad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Bakit binabago ng Clickeen ang lahat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Agarang Naka-personalize na Lokalisasyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mga Template O Pixel-Perfect na Custom"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Composable na Arkitektura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL ng website → naka-personalize na nilalaman sa 29 wika agad-agad. Walang manu-manong pagsasalin, walang gastos sa tagasalin. Nauunawaan ng AI ang konteksto ng iyong negosyo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Magsimula sa isang piniling template O ikaw na ang magtakda ng lahat—ikaw ang bahala, ganap na kalayaan. Walang kompromiso, walang limitasyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Isang FAQ na gumagana saanman: website, email, mga landing page, mga ad. Iisang nilalaman, walang hanggang konteksto. Walang muling pagbuo para sa bawat channel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Ginawa para sa AI, pinapatakbo ng AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Ang Clickeen ay hindi lang isa pang FAQ builder—ito ang unang produktong idinisenyo para sa AI operation mula pa noong unang araw. Habang ang mga kakumpitensya ay nag-aangkop na lang ng mga AI feature, bumuo kami ng arkitekturang kayang maunawaan, mabago, at ma-optimize ng mga AI agent nang awtonomo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Paano gumagana ang AI ecosystem ng Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Isang kumpletong platform na lalong gumagaling sa bawat interaksyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Nauunawaan ng AI ang iyong layunin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Pandaigdigang operasyon bilang default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Tuloy-tuloy na pagkatuto at pagpapahusay"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automation ng viral na distribusyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Ilarawan ang mga pagbabago nang natural. 'Gawin itong mas propesyonal' o 'Magdagdag ng sense of urgency sa CTA.' Perpektong isinasagawa ng AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Pinapangasiwaan ng AI ang localization, suporta, at marketing sa lahat ng merkado nang sabay-sabay."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Bawat interaksyon ng user ay nagtuturo sa AI system, kaya mas nagiging matalino ang lahat ng FAQ sa paglipas ng panahon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Ang mga libreng FAQ ay nagiging mga marketing channel na awtomatikong nagtutulak ng pagkuha ng mga bagong user."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Mararanasan ang kinabukasan ng mga FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Ang platform na mas lalong gumagaling sa bawat pakikipag-ugnayan. Ginawa para sa panahon ng AI."
+    }
+  ],
+  "v": 1
+}

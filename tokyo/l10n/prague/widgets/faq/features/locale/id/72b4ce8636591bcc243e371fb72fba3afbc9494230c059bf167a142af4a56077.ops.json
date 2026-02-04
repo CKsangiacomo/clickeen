@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Fitur FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Semua yang Anda butuhkan untuk meluncurkan FAQ bertenaga AI yang berfungsi secara global dan berkembang secara viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mengapa Widget FAQ Mengungguli Elfsight, TypeForm, dan Solusi Kustom"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dibangun dari nol untuk AI. Berfungsi secara global. Tumbuh secara viral. Satu FAQ, kemungkinan tak terbatas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Pengeditan AI: Jelaskan, selesai"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Katakan apa yang Anda inginkan dengan bahasa Inggris yang sederhana. \"Buat pertanyaannya lebih santai\" atau \"Tambahkan bagian tentang harga.\" AI memahami dan mengeksekusi seketika."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Instan global: Bahasa apa pun, sekarang"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografi adalah sebuah parameter, bukan proyek. Tambahkan bahasa Spanyol, Jepang, atau Arab dengan satu klik. Tanpa terjemahan manual, tanpa penundaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Dapat dikomposisikan di mana saja: Satu FAQ, konteks tak terbatas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "FAQ yang sama berfungsi di website, email, landing page, iklan. Satu sumber, kemungkinan tak terbatas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Mengapa Clickeen mengubah segalanya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Lokalisasi Personal Instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Template ATAU Kustom Presisi Pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Arsitektur Composable"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL website → konten yang dipersonalisasi dalam 29 bahasa secara instan. Tanpa terjemahan manual, tanpa biaya penerjemah. AI memahami konteks bisnis Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Mulai dengan template terkurasi ATAU tentukan semuanya sendiri—pilihan Anda, kebebasan total. Tanpa kompromi, tanpa batasan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Satu FAQ berfungsi di mana saja: website, email, landing page, iklan. Konten yang sama, konteks tak terbatas. Tanpa membangun ulang untuk tiap channel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Dibuat untuk AI, dioperasikan oleh AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen bukan sekadar pembuat FAQ lainnya—ini adalah produk pertama yang dirancang untuk dioperasikan oleh AI sejak hari pertama. Sementara pesaing menambahkan fitur AI belakangan, kami membangun arsitektur yang dapat dipahami, diubah, dan dioptimalkan secara otonom oleh agen AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Cara kerja ekosistem AI Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Platform lengkap yang semakin cerdas dengan setiap interaksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI memahami maksud Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Operasi global secara default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Pembelajaran dan peningkatan berkelanjutan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Otomatisasi distribusi viral"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Jelaskan perubahan secara alami. 'Buat lebih profesional' atau 'Tambahkan urgensi pada CTA.' AI mengeksekusi dengan sempurna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI menangani pelokalan, dukungan, dan pemasaran di semua pasar secara bersamaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Setiap interaksi pengguna mengajari sistem AI, membuat semua FAQ semakin cerdas seiring waktu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "FAQ gratis menjadi saluran pemasaran yang secara otomatis mendorong akuisisi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Rasakan masa depan FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Platform yang semakin cerdas dengan setiap interaksi. Dibuat untuk era AI."
+    }
+  ],
+  "v": 1
+}

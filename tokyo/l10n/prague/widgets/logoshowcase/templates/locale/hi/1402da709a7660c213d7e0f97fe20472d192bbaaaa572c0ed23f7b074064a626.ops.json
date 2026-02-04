@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "1402da709a7660c213d7e0f97fe20472d192bbaaaa572c0ed23f7b074064a626",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "लोगो शोकेस टेम्पलेट्स - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "एक परिष्कृत लेआउट से शुरू करें और अपने लोगो शोकेस को अनुकूलित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "लोगो शोकेस टेम्पलेट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "एक परिष्कृत लेआउट से शुरू करें -- फिर उसे अपना बनाएं।"
+    }
+  ],
+  "v": 1
+}

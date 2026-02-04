@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أمثلة الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "اطّلع على كيفية استخدام الشركات الحقيقية للأسئلة الشائعة لحل المشكلات وإتمام المزيد من الصفقات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أسئلة شائعة تحل مشكلات أعمال حقيقية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "من عيادات الأسنان إلى حجوزات منسقي الأغاني، تعرّف كيف تحوّل شركات مثل شركتك الأسئلة إلى عملاء."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "الرعاية الصحية: خفّض حالات عدم الحضور بنسبة 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "يجيب أطباء الأسنان عن الأسئلة الشائعة حول الإجراءات والتأمين والجدولة—قبل أن يتصل المرضى أصلًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "التجارة الإلكترونية: تعامل مع المرتجعات فورًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "سياسات الشحن، أدلة المقاسات، فترات الإرجاع—أجب عن الأسئلة التي تمنع التخلي عن سلة التسوق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: حوّل التجارب إلى عملاء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "أسئلة حول الميزات، شكوك حول التسعير، مخاوف بشأن التكامل—عالج الاعتراضات قبل أن تتحول إلى فرص ضائعة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "كل صناعة لديها فرص للأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "الأسئلة هي القاتل الصامت لمعدلات التحويل. سواء كنت تحجز مواعيد، أو تعالج المرتجعات، أو تشرح الميزات، فإن الأسئلة غير المُجاب عنها تعني خسارة أعمال. تعمل أسئلة Clickeen الشائعة في كل مكان، وتتحدث لغة كل عميل فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "الخدمات الإبداعية: تبسيط استفسارات الحجز"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "منسقو الأغاني (DJs) والمصورون والاستشاريون يجيبون عن أسئلة التسعير والتوفر وآلية العمل على مدار الساعة طوال أيام الأسبوع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "من الأسئلة إلى العملاء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "إن تنفيذ الأسئلة الشائعة التي تحقق نتائج فعلية يتبع عملية مجرّبة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "حدّد أكبر فئات الأسئلة لديك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "اختر نمط الأسئلة الشائعة المناسب لجمهورك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "ضمّنها وحسّنها بناءً على البيانات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "حلّل تذاكر الدعم، ومكالمات المبيعات، وسجلات الدردشة للعثور على أكثر الأسئلة تكرارًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "أكورديون للإجابات المفصّلة، وبطاقات لمعلومات قابلة للتصفّح سريعًا، وقوائم لأسئلة وأجوبة مباشرة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "راقب أكثر الأسئلة التي يتم النقر عليها، وحسّن إجاباتك بناءً على ما يدفع التحويلات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "اعثر على حل الأسئلة الشائعة المناسب لمجالك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "قوالب مُصمَّمة خصيصًا لأعمال مثل عملك، مع ذكاء اصطناعي يتكيّف مع احتياجاتك."
+    }
+  ],
+  "v": 1
+}

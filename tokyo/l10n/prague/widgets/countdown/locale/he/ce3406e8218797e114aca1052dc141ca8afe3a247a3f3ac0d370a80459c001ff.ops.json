@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ווידג'ט ספירה לאחור - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "צרו תחושת דחיפות עם טיימרים לספירה לאחור הניתנים להתאמה אישית. השיקו, מכרו והכריזו בביטחון."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "וידג'ט טיימר ספירה לאחור"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "צרו תחושת דחיפות ועודדו פעולה באמצעות ספירות לאחור מהירות וגמישות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "ספירה לאחור"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "הוסיפו תחושת דחיפות באמצעות טיימרים גמישים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "נסו את זה בשידור חי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "ערכו מופע דמו ב-minibob. פרסמו כשאתם מוכנים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "וידג'ט טיימר ספירה לאחור"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "צרו תחושת דחיפות והניעו לפעולה באמצעות טיימרים לספירה לאחור הניתנים להתאמה אישית."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "מצבי טיימר גמישים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "טיימרים לפי תאריך, אישיים או מונים מספריים לכל תרחיש."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "הפכו תשומת לב לפעולה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "השתמשו בטיימרים שמתאימים להשקות, מבצעים, אירועים ומטרות אישיות. הגדירו פעם אחת ותנו לזה לפעול בכל מקום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "התאמה אישית קלה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "התאם את המראה, הפריסה והפעולות כך שיתאימו למותג שלך."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "השיקו מהר יותר עם ספירות לאחור"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "מהגדרה ועד פרסום בתוך דקות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "בחרו את הטיימר שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "התאימו למותג שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "פרסמו והתאימו לשפות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "בחרו ספירה לתאריך, ספירה מתמשכת (evergreen) או מונה מספרי בהתאם לצורך שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "התאימו צבעים, תוויות ופריסה כך שיתאימו לכל אתר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "עלו לאוויר במהירות והגיעו לקהלים ברחבי העולם עם לוקליזציה מובנית."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "הגדילו המרות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "עודדו פעולה מיידית באמצעות הצעות מוגבלות בזמן."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "מותאם ל-SEO ול-GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "תמיכה מובנית בסכמות ובלוקליזציה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "צרו דחיפות, הגדילו מכירות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "טיימרים עוצמתיים של ספירה לאחור שממירים מבקרים ללקוחות."
+    }
+  ],
+  "v": 1
+}

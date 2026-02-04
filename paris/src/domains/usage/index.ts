@@ -91,11 +91,14 @@ async function resolveSnapshotLocalesForInstance(env: Env, publicId: string): Pr
     if (!tier) return ['en'];
 
     const policy = resolvePolicy({ profile: tier as any, role: 'editor' });
-    if (policy.flags['l10n.enabled'] !== true) return ['en'];
+    const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
+    const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
 
     const normalized = normalizeLocaleList(row?.l10n_locales, 'l10n_locales');
     const locales = normalized.ok ? normalized.locales : [];
-    return Array.from(new Set(['en', ...locales]));
+    const deduped = Array.from(new Set(['en', ...locales]));
+    if (maxLocalesTotal == null) return deduped;
+    return deduped.slice(0, maxLocalesTotal);
   } catch {
     return ['en'];
   }

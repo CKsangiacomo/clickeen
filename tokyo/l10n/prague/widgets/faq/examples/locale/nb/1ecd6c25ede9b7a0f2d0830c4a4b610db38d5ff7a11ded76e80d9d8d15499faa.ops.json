@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Eksempler på vanlige spørsmål – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Se hvordan ekte bedrifter bruker vanlige spørsmål for å løse problemer og avslutte flere avtaler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vanlige spørsmål som løser reelle forretningsutfordringer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Fra tannlegekontorer til DJ-bookinger – se hvordan selskaper som ditt gjør spørsmål om til kunder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Helsevesen: Reduser uteblivelser med 40 %"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Tannleger svarer på vanlige spørsmål om prosedyrer, forsikring og timebestilling – før pasientene i det hele tatt ringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-handel: Håndter returer umiddelbart"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Fraktpolicyer, størrelsesguider, returfrister – svar på spørsmålene som hindrer at kunder forlater handlekurven."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Konverter prøver til kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Spørsmål om funksjoner, tvil om priser, bekymringer rundt integrasjoner – håndter innvendinger før de blir til tapte muligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Alle bransjer har muligheter for ofte stilte spørsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Spørsmål er den stille konverteringsdreperen. Enten du bestiller avtaler, håndterer returer eller forklarer funksjoner, betyr ubesvarte spørsmål tapt salg. Clickeens FAQ-er fungerer overalt og snakker umiddelbart språket til hver eneste kunde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Kreative tjenester: Effektiviser bookingforespørsler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ-er, fotografer og konsulenter svarer på spørsmål om priser, tilgjengelighet og prosess døgnet rundt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Fra spørsmål til kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Å implementere ofte stilte spørsmål som faktisk gir resultater, følger en velprøvd prosess."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifiser de største spørsmålskategoriene dine"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Velg riktig FAQ-stil for målgruppen din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Bygg inn og optimaliser basert på data"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analyser supporthenvendelser, salgsanrop og chatlogger for å finne spørsmålene som stilles oftest."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Trekspill for detaljerte svar, kort for informasjon som er lett å skanne, lister for enkle spørsmål og svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Følg med på hvilke spørsmål som blir klikket mest, og forbedre svarene dine basert på hva som gir konverteringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Finn en FAQ-løsning for din bransje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Maler utviklet spesielt for bedrifter som din, med KI som tilpasser seg behovene dine."
+    }
+  ],
+  "v": 1
+}

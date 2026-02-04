@@ -70,11 +70,16 @@ const script = `(() => {
 
 			  const PLACEHOLDER_SELECTOR = '[data-clickeen-id]';
 
+			  const normalizeLocaleToken = (raw) => {
+			    const value = typeof raw === 'string' ? raw.trim().toLowerCase().replace(/_/g, '-') : '';
+			    return value || '';
+			  };
+
 			  const resolveLocale = (raw) => {
-			    const preferred = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+			    const preferred = normalizeLocaleToken(raw);
 			    if (preferred) return preferred;
-			    const nav = (navigator.language || 'en').split('-')[0] || 'en';
-			    return String(nav || 'en').trim().toLowerCase() || 'en';
+			    const nav = normalizeLocaleToken(navigator.language || '');
+			    return nav || 'en';
 			  };
 
 			  const locale = resolveLocale(localeAttr);

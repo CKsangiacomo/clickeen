@@ -1,7 +1,7 @@
 # SEO + GEO Platform Architecture (Iframe++ SEO/GEO)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-01-30
+Last updated: 2026-02-03
 
 This document defines the **shipped** SEO/GEO model and contracts across:
 - **Tokyo** widget definitions (state shape + limits + l10n allowlists)
@@ -24,7 +24,7 @@ If anything here disagrees with runtime code, treat it as a P0 doc bug and updat
 - **Gating is instance-owned (not host-owned).**
   - `seoGeo.enabled === true` → allows SEO/GEO artifacts to be generated
   - `seo.enableSchema !== false` → allows schema emission (excerpt may still emit)
-- **Locale should be explicit.** Pass `data-locale` for deterministic behavior (otherwise the loader falls back to `navigator.language` and Venice normalizes/applies overlays when available).
+- **Locale is best-effort and explicit when needed.** Pass `data-locale` for deterministic behavior (otherwise the loader falls back to `navigator.language`). Venice always returns the **effective** locale (and `X-Ck-L10n-*` headers) so callers never assume “requested === rendered”.
 - **Bob UX:** embed snippets are surfaced under the **Publish** button (modal). Settings must not render embed code.
 
 ---
@@ -131,26 +131,24 @@ Source-of-truth implementation:
 
 ## Localization contract (SEO/GEO must be locale-correct)
 
-- Host embeds should pass locale explicitly (`data-locale="<token>"`). If omitted, the loader falls back to `navigator.language`.
-- Venice applies a Tokyo l10n overlay to the instance config before generating schema/excerpt:
-  - overlay is **set-only ops**
+- Host embeds can pass locale explicitly (`data-locale="<token>"`). If omitted, the loader falls back to `navigator.language`.
+- Venice applies **best-available** Tokyo instance l10n overlays to the instance config before generating schema/excerpt:
+  - overlays are **set-only ops**
   - locale is never encoded into `publicId`
-- Schema and excerpt are generated from the **localized state**, so they match the host locale.
+  - Venice exposes `X-Ck-L10n-Requested-Locale`, `X-Ck-L10n-Resolved-Locale`, `X-Ck-L10n-Effective-Locale`, `X-Ck-L10n-Status`
+- Schema and excerpt are generated from the **effective localized state** and must match:
+  - `payload.locale` (effective), and
+  - `X-Ck-L10n-Effective-Locale` (header truth)
 
 ---
 
-## Entitlements & enforcement (platform rule)
+## Entitlements (updated)
 
-`seoGeo.enabled` is a Tier-gated capability enforced server-side.
+`seoGeo.enabled` is **not tier-gated**. It is a per-instance setting:
+- The host opt-in (`data-ck-optimization="seo-geo"`) controls whether the loader injects host-page metadata.
+- The instance opt-in (`state.seoGeo.enabled === true`) controls whether Venice emits `schemaJsonLd`/`excerptHtml`.
 
-Rules:
-- When not entitled, loads sanitize `seoGeo.enabled` to `false`.
-- Ops/publish must reject attempts to set/publish `seoGeo.enabled === true` when policy disallows it.
-
-Source-of-truth:
-- Entitlement matrix: `config/entitlements.matrix.json`
-- Widget limits: `tokyo/widgets/{widgetType}/limits.json`
-- Enforcement: Paris (load + ops + publish)
+All tiers can toggle SEO/GEO optimization; there is no `seoGeo.enabled` key in `config/entitlements.matrix.json` and no Paris tier enforcement for this setting.
 
 ---
 

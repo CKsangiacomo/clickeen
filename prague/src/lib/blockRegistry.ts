@@ -3,7 +3,6 @@ import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
-import Outcomes from '../blocks/outcomes/outcomes.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 
@@ -15,9 +14,8 @@ export type BlockType =
   | 'hero'
   | 'split'
   | 'steps'
-  | 'cta'
+  | 'cta-bottom-block'
   | 'minibob'
-  | 'outcomes'
   | 'navmeta'
   | 'page-meta';
 
@@ -64,10 +62,10 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'title', type: 'string' },
       { key: 'items', type: 'array' },
     ],
-    meta: [],
+    meta: ['visual'],
   },
-  cta: {
-    type: 'cta',
+  'cta-bottom-block': {
+    type: 'cta-bottom-block',
     component: Cta,
     required: [
       { key: 'headline', type: 'string' },
@@ -83,12 +81,6 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'subhead', type: 'string' },
     ],
     meta: ['copy'],
-  },
-  outcomes: {
-    type: 'outcomes',
-    component: Outcomes,
-    required: [],
-    meta: [],
   },
   navmeta: {
     type: 'navmeta',
@@ -129,8 +121,10 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
       throw new Error(`[prague] ${pagePath}: block "${type}" contains unsupported field "${key}"`);
     }
   }
-  if (contract.meta.includes('visual') && block.visual != null && typeof block.visual !== 'boolean') {
-    throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean`);
+  if (contract.meta.includes('visual') && block.visual != null) {
+    if (typeof block.visual !== 'boolean' && typeof block.visual !== 'object') {
+      throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean or object`);
+    }
   }
   if (contract.meta.includes('curatedRef') && block.curatedRef != null) {
     if (typeof block.curatedRef !== 'object' || Array.isArray(block.curatedRef)) {
@@ -156,6 +150,110 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
     }
     if (requirement.type === 'array' && !Array.isArray(value)) {
       throw new Error(`[prague] ${pagePath}: block "${blockId}" missing array "${requirement.key}"`);
+    }
+  }
+
+  if (blockType === 'steps') {
+    const items = (strings as any).items;
+    if (!Array.isArray(items)) {
+      throw new Error(`[prague] ${pagePath}: block "${blockId}" missing array "items"`);
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}] must be an object`);
+      }
+      const title = (item as any).title;
+      const body = (item as any).body;
+      if (typeof title !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].title must be a string`);
+      }
+      if (typeof body !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].body must be a string`);
+      }
+
+      const iconEnabled = (item as any).iconEnabled;
+      if (iconEnabled != null && typeof iconEnabled !== 'boolean') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].iconEnabled must be boolean`);
+      }
+      const iconName = (item as any).iconName;
+      if (iconName != null && typeof iconName !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].iconName must be a string`);
+      }
+      const legacyIcon = (item as any).icon;
+      if (legacyIcon != null && typeof legacyIcon !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].icon must be a string`);
+      }
+
+      const backgroundEnabled = (item as any).backgroundEnabled;
+      if (backgroundEnabled != null && typeof backgroundEnabled !== 'boolean') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].backgroundEnabled must be boolean`);
+      }
+      const backgroundPath = (item as any).backgroundPath;
+      if (backgroundPath != null && typeof backgroundPath !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].backgroundPath must be a string`);
+      }
+      const legacyBackground = (item as any).background;
+      if (legacyBackground != null && typeof legacyBackground !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].background must be a string`);
+      }
+
+      const imageEnabled = (item as any).imageEnabled;
+      if (imageEnabled != null && typeof imageEnabled !== 'boolean') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imageEnabled must be boolean`);
+      }
+      const imagePath = (item as any).imagePath;
+      if (imagePath != null && typeof imagePath !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imagePath must be a string`);
+      }
+      const legacyImage = (item as any).image;
+      if (legacyImage != null && typeof legacyImage !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].image must be a string`);
+      }
+      const imageAlt = (item as any).imageAlt;
+      if (imageAlt != null && typeof imageAlt !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imageAlt must be a string`);
+      }
+
+      const imageLayout = (item as any).imageLayout;
+      if (imageLayout != null) {
+        if (typeof imageLayout !== 'string') {
+          throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imageLayout must be a string`);
+        }
+        const value = imageLayout.trim();
+        if (value !== 'inset' && value !== 'bleed') {
+          throw new Error(
+            `[prague] ${pagePath}: block "${blockId}" items[${i}].imageLayout must be "inset" or "bleed"`,
+          );
+        }
+      }
+
+      const imageFit = (item as any).imageFit;
+      if (imageFit != null) {
+        if (typeof imageFit !== 'string') {
+          throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imageFit must be a string`);
+        }
+        const value = imageFit.trim();
+        if (value !== 'cover' && value !== 'contain') {
+          throw new Error(
+            `[prague] ${pagePath}: block "${blockId}" items[${i}].imageFit must be "cover" or "contain"`,
+          );
+        }
+      }
+
+      const imagePositionY = (item as any).imagePositionY;
+      if (imagePositionY != null) {
+        if (typeof imagePositionY !== 'string') {
+          throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imagePositionY must be a string`);
+        }
+        const value = imagePositionY.trim();
+        if (value !== 'top' && value !== 'center' && value !== 'bottom') {
+          throw new Error(
+            `[prague] ${pagePath}: block "${blockId}" items[${i}].imagePositionY must be "top", "center", or "bottom"`,
+          );
+        }
+      }
     }
   }
 }

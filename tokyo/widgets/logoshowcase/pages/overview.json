@@ -6,7 +6,7 @@
       "type": "page-meta",
       "copy": {
         "description": "Highlight customer logos with a fast, flexible showcase widget.",
-        "title": "Logo Showcase Widget - Clickeen"
+        "title": "Logo showcase widget - Clickeen"
       }
     },
     {
@@ -14,7 +14,7 @@
       "type": "hero",
       "visual": true,
       "copy": {
-        "headline": "Logo Showcase. Instant social proof.",
+        "headline": "Logo showcase. Instant social proof.",
         "subheadline": "Show customer logos beautifully -- build trust and increase conversions."
       }
     },
@@ -23,7 +23,7 @@
       "type": "navmeta",
       "copy": {
         "description": "Show logos beautifully. Build trust.",
-        "title": "Logo Showcase"
+        "title": "Logo showcase"
       }
     },
     {
@@ -49,7 +49,7 @@
     },
     {
       "id": "cta",
-      "type": "cta",
+      "type": "cta-bottom-block",
       "copy": {
         "headline": "Create your logo showcase",
         "subheadline": "Start free. Publish when you're ready."
@@ -60,7 +60,7 @@
       "type": "minibob",
       "copy": {
         "heading": "Try it live",
-        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+        "subhead": "Edit a demo instance in minibob. Publish when you're ready."
       }
     }
   ]

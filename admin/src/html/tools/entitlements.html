@@ -1,16 +1,33 @@
 <style>
   .entitlements-section {
-    margin-top: 24px;
+    margin-top: var(--space-2);
+  }
+
+  .entitlements-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0;
+    margin: 8px 0 12px;
+  }
+
+  .entitlements-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .entitlements-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    border-radius: var(--control-radius-lg);
+    overflow: hidden;
+    background: var(--color-system-white);
   }
 
   .entitlements-table__tier {
-    width: 56px;
+    width: 96px;
   }
 
   .entitlements-table__cap-col {
@@ -28,13 +45,36 @@
   .entitlements-table th,
   .entitlements-table td {
     text-align: left;
-    vertical-align: top;
-    padding: 6px 12px 6px 0;
+    vertical-align: middle;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--role-border);
+  }
+
+  .entitlements-table tbody td {
+    border-bottom: 1px solid var(--color-system-gray-5);
+  }
+
+  .entitlements-table thead th.entitlements-table__tier-head {
+    text-align: right;
+  }
+
+  .entitlements-tier-label {
+    display: block;
+    width: 100%;
+    text-align: right !important;
   }
 
   .entitlements-table th {
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-white) 10%);
+    backdrop-filter: blur(10px);
+  }
+
+  .entitlements-table tbody tr:hover {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-blue) 4%);
   }
 
   .entitlements-table__token {
@@ -51,12 +91,115 @@
     font-family: var(--font-mono);
   }
 
+  .entitlements-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-block-size: var(--control-size-md);
+    width: 100%;
+  }
+
+  .entitlements-cell--flag {
+    justify-content: flex-end;
+  }
+
+  .entitlements-cell--flag .diet-toggle {
+    justify-content: flex-end;
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  .entitlements-valuefield {
+    width: 100%;
+  }
+
+  .entitlements-valuefield .diet-valuefield__control {
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  .entitlements-valuefield .diet-valuefield__input {
+    width: 100%;
+  }
+
+  .entitlements-valuefield .diet-valuefield__field {
+    text-align: right;
+  }
+
+  .entitlements-valuefield.is-editing .diet-valuefield__field {
+    color: var(--color-text);
+  }
+
+  .entitlements-valuefield.entitlements-val--nonzero:not(.is-editing) .diet-valuefield__field {
+    color: var(--color-system-green-contrast);
+  }
+
+  .entitlements-valuefield.entitlements-val--zero:not(.is-editing) .diet-valuefield__field {
+    color: color-mix(in oklab, var(--color-text), transparent 20%);
+  }
+
+  .entitlements-valuefield.entitlements-val--inf:not(.is-editing) .diet-valuefield__field::placeholder {
+    color: var(--color-system-blue);
+    opacity: 1;
+  }
+
+  .entitlements-bytes {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .entitlements-unit {
+    min-block-size: var(--control-size-md, 1.5rem);
+    padding-inline: 10px;
+    border-radius: var(--control-radius-md, 0.375rem);
+    border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
+    background: var(--color-system-white);
+    color: var(--color-text);
+    font: 500 var(--fs-11)/var(--lh-tight) var(--font-ui);
+    letter-spacing: -0.01em;
+    cursor: pointer;
+  }
+
+  .entitlements-unit:focus-visible {
+    outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
+    outline-offset: 2px;
+  }
+
   .entitlements-table__desc {
     color: color-mix(in oklab, var(--color-text), transparent 35%);
   }
 
   .entitlements-table__capability {
     font-weight: 500;
+  }
+
+  .entitlements-ai__hint {
+    margin-top: 4px;
+    color: color-mix(in oklab, var(--color-text), transparent 40%);
+  }
+
+  .entitlements-ai-row__name {
+    font-weight: 600;
+  }
+
+  .entitlements-ai-row__name--model {
+    font-weight: 500;
+    padding-left: 14px;
+  }
+
+  tr.entitlements-ai-row--provider td {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-white) 30%);
+  }
+
+  tr.entitlements-ai-row--provider:hover td {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-blue) 6%);
+  }
+
+  tr.entitlements-ai-row--model td:first-child {
+    color: color-mix(in oklab, var(--color-text), transparent 10%);
   }
 </style>
 
@@ -66,124 +209,758 @@
 
 <script type="module">
   const root = document.getElementById('entitlements-root');
-  const matrix = window.__CK_ENTITLEMENTS__;
   const meta = window.__CK_ENTITLEMENTS_META__ || {};
+  const aiAccess = window.__CK_AI_ACCESS__ || null;
+  const aiAccessByTier = aiAccess?.byTier || null;
+  const aiProviders = Array.isArray(aiAccess?.providers) ? aiAccess.providers : [];
 
-  if (!root || !matrix) {
-    const error = document.createElement('p');
-    error.className = 'body-s';
-    error.textContent = 'Missing entitlements data. Ensure @clickeen/ck-policy is available in DevStudio build.';
-    root?.appendChild(error);
-  } else {
-    const tiers = matrix.tiers;
-    const groups = {
-      flag: [],
-      cap: [],
-      budget: [],
-    };
+  const state = {
+    matrix: null,
+    matrixPath: null,
+    savingCount: 0,
+    lastSavedAt: null,
+    lastError: null,
+    filter: '',
+    unitsByCapabilityKey: {},
+  };
 
+  const setStatus = (next) => {
+    Object.assign(state, next);
+    render();
+  };
+
+  async function fetchMatrix() {
+    const res = await fetch('/api/entitlements/matrix', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.ok) {
+      const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
+      throw new Error(message);
+    }
+    return { matrix: json.matrix, path: json.path || null };
+  }
+
+  async function saveCell({ capabilityKey, tier, value }) {
+    setStatus({ savingCount: state.savingCount + 1, lastError: null });
+    try {
+      const res = await fetch('/api/entitlements/matrix/cell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ capabilityKey, tier, value }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
+        throw new Error(message);
+      }
+      const next = await fetchMatrix();
+      setStatus({ matrix: next.matrix, matrixPath: next.path, lastSavedAt: new Date(), lastError: null });
+    } catch (err) {
+      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+      throw err;
+    } finally {
+      setStatus({ savingCount: Math.max(0, state.savingCount - 1) });
+    }
+  }
+
+  const formatBytes = (bytes) => {
+    if (!Number.isFinite(bytes) || bytes < 0) return String(bytes);
+    const gb = 1024 * 1024 * 1024;
+    const mb = 1024 * 1024;
+    if (bytes >= gb) return `${Math.round(bytes / gb)}GB`;
+    if (bytes >= mb) return `${Math.round(bytes / mb)}MB`;
+    if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+    return `${bytes}B`;
+  };
+
+  const formatValue = ({ key, cap, value }) => {
+    if (value === null) return '∞';
+    if (cap.kind === 'flag') return value ? '✓' : '✗';
+    if (typeof value === 'number') {
+      if (key === 'uploads.size.max' || key === 'budget.uploads.bytes') return formatBytes(value);
+      if (Number.isFinite(value) && Math.abs(value) >= 1000) return value.toLocaleString('en-US');
+      return String(value);
+    }
+    return String(value);
+  };
+
+  const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 20 });
+
+  function formatNumberDisplay(value) {
+    if (value === null || typeof value === 'undefined') return '';
+    if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+    return numberFormatter.format(value);
+  }
+
+  function parseNumberish(raw) {
+    const txt = String(raw ?? '').trim();
+    if (!txt) return null;
+    const cleaned = txt.replace(/,/g, '');
+    const next = Number(cleaned);
+    if (!Number.isFinite(next)) return null;
+    return next;
+  }
+
+  function getByteFactor(unit) {
+    return unit === 'kb' ? 1024 : 1024 * 1024;
+  }
+
+  function bytesToUnitValue(bytes, unit) {
+    if (bytes === null || typeof bytes === 'undefined') return null;
+    if (typeof bytes !== 'number' || !Number.isFinite(bytes)) return null;
+    return bytes / getByteFactor(unit);
+  }
+
+  function unitValueToBytes(value, unit) {
+    if (value === null || typeof value === 'undefined') return null;
+    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+    return Math.round(value * getByteFactor(unit));
+  }
+
+  function renderToolbar(container) {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'entitlements-toolbar';
+
+    const actions = document.createElement('div');
+    actions.className = 'entitlements-actions';
+
+    const reloadBtn = document.createElement('button');
+    reloadBtn.className = 'diet-btn-txt';
+    reloadBtn.setAttribute('data-size', 'md');
+    reloadBtn.setAttribute('data-variant', 'secondary');
+    reloadBtn.type = 'button';
+    reloadBtn.innerHTML = '<span class="diet-btn-txt__label">Reload</span>';
+    reloadBtn.addEventListener('click', async () => {
+      try {
+        const next = await fetchMatrix();
+        setStatus({ matrix: next.matrix, matrixPath: next.path, lastError: null });
+      } catch (err) {
+        setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+      }
+    });
+
+    actions.appendChild(reloadBtn);
+
+    toolbar.append(actions);
+    container.appendChild(toolbar);
+  }
+
+  function createEditableValueCell({ key, cap, tier }) {
+    const td = document.createElement('td');
+    td.className = 'body-s entitlements-table__value';
+
+    const value = cap.values?.[tier];
+    const disabled = state.savingCount > 0;
+
+    const safeId = `ent_${String(key)}_${String(tier)}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
+
+    const cell = document.createElement('div');
+    cell.className = `entitlements-cell entitlements-cell--${cap.kind}`;
+    td.appendChild(cell);
+
+    if (cap.kind === 'flag') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'diet-toggle';
+      wrapper.setAttribute('data-size', 'md');
+      wrapper.innerHTML = `
+        <span class="diet-toggle__label sr-only" id="${safeId}-label">Enabled</span>
+        <input id="${safeId}" class="diet-toggle__input sr-only" type="checkbox" role="switch" aria-labelledby="${safeId}-label" />
+        <label class="diet-toggle__switch" for="${safeId}" aria-hidden="true">
+          <span class="diet-toggle__knob"></span>
+        </label>
+      `;
+
+      const input = wrapper.querySelector('input');
+      if (input) {
+        input.checked = Boolean(value);
+        input.disabled = disabled;
+        input.addEventListener('change', async () => {
+          try {
+            await saveCell({ capabilityKey: key, tier, value: input.checked });
+          } catch (_err) {
+            const nextValue = state.matrix?.capabilities?.[key]?.values?.[tier];
+            input.checked = Boolean(nextValue);
+          }
+        });
+      }
+
+      cell.classList.add('entitlements-cell--flag');
+      cell.appendChild(wrapper);
+      return td;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'diet-valuefield entitlements-valuefield';
+    wrapper.setAttribute('data-size', 'md');
+
+    const isBytes = key === 'uploads.size.max' || key === 'budget.uploads.bytes';
+    const defaultUnit = 'mb';
+    const selectedUnit = (state.unitsByCapabilityKey[key] || defaultUnit).toLowerCase() === 'kb' ? 'kb' : 'mb';
+    if (!state.unitsByCapabilityKey[key]) state.unitsByCapabilityKey[key] = selectedUnit;
+
+    const rawNumber = typeof value === 'number' && Number.isFinite(value) ? value : null;
+    // Color rules apply to the normalized (unfocused) display only.
+    wrapper.classList.remove('entitlements-val--inf', 'entitlements-val--zero', 'entitlements-val--nonzero');
+    if (value === null || typeof value === 'undefined') {
+      wrapper.classList.add('entitlements-val--inf');
+    } else if (rawNumber === 0) {
+      wrapper.classList.add('entitlements-val--zero');
+    } else if (typeof rawNumber === 'number' && Number.isFinite(rawNumber)) {
+      wrapper.classList.add('entitlements-val--nonzero');
+    }
+
+    const displayNumber = isBytes ? bytesToUnitValue(rawNumber, selectedUnit) : rawNumber;
+    const displayText = displayNumber === null ? '' : formatNumberDisplay(displayNumber);
+    const rawText = displayNumber === null ? '' : String(displayNumber);
+    const widthCh = Math.max(1, displayText.length || 1);
+    wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, widthCh))}ch`);
+    wrapper.innerHTML = `
+      <label class="diet-valuefield__control">
+        <span class="diet-valuefield__label is-hidden">Value</span>
+        <span class="diet-valuefield__input">
+          <input
+            id="${safeId}"
+            class="diet-valuefield__field"
+            type="text"
+            inputmode="numeric"
+            aria-label="${String(key)} ${String(tier)}"
+            placeholder="∞"
+          />
+        </span>
+      </label>
+    `;
+
+    const input = wrapper.querySelector('input');
+
+    const bytesWrap = document.createElement('div');
+    bytesWrap.className = 'entitlements-bytes';
+    bytesWrap.appendChild(wrapper);
+
+    let unitSelect = null;
+    if (isBytes) {
+      unitSelect = document.createElement('select');
+      unitSelect.className = 'entitlements-unit';
+      unitSelect.setAttribute('aria-label', 'Units');
+      unitSelect.innerHTML = `
+        <option value="kb">KB</option>
+        <option value="mb">MB</option>
+      `;
+      unitSelect.value = selectedUnit;
+      unitSelect.disabled = disabled;
+      unitSelect.addEventListener('change', () => {
+        const nextUnit = unitSelect.value === 'kb' ? 'kb' : 'mb';
+        state.unitsByCapabilityKey[key] = nextUnit;
+        // Re-render so the displayed number updates to the new unit.
+        render();
+      });
+      bytesWrap.appendChild(unitSelect);
+    }
+
+    if (input) {
+      input.disabled = disabled;
+      input.value = displayText;
+
+      const setDisplay = (numOrNull) => {
+        if (numOrNull === null) {
+          input.value = '';
+          return;
+        }
+        input.value = formatNumberDisplay(numOrNull);
+      };
+
+      const setRaw = (numOrNull) => {
+        if (numOrNull === null) {
+          input.value = '';
+          return;
+        }
+        input.value = String(numOrNull);
+      };
+
+      input.addEventListener('focus', () => {
+        wrapper.classList.add('is-editing');
+        // On focus, show raw number (no commas).
+        const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+        const currentRaw = state.matrix?.capabilities?.[key]?.values?.[tier];
+        const currentNum = typeof currentRaw === 'number' && Number.isFinite(currentRaw) ? currentRaw : null;
+        const rawForEdit = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
+        setRaw(rawForEdit);
+        wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, String(input.value || '').length || 1))}ch`);
+      });
+
+      const commit = async () => {
+        const raw = String(input.value ?? '');
+        const parsed = parseNumberish(raw);
+        const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+        const normalized = isBytes ? unitValueToBytes(parsed, unit) : parsed;
+
+        try {
+          await saveCell({ capabilityKey: key, tier, value: normalized });
+          const savedRaw = state.matrix?.capabilities?.[key]?.values?.[tier];
+          const savedNum = typeof savedRaw === 'number' && Number.isFinite(savedRaw) ? savedRaw : null;
+          const savedDisplay = isBytes ? bytesToUnitValue(savedNum, unit) : savedNum;
+          setDisplay(savedDisplay);
+        } catch (_err) {
+          const current = state.matrix?.capabilities?.[key]?.values?.[tier];
+          const currentNum = typeof current === 'number' && Number.isFinite(current) ? current : null;
+          const currentDisplay = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
+          setDisplay(currentDisplay);
+        }
+      };
+
+      input.addEventListener('blur', () => {
+        wrapper.classList.remove('is-editing');
+        commit();
+      });
+      input.addEventListener('input', () => {
+        const txt = String(input.value ?? '');
+        wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, txt.length || 1))}ch`);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+          const current = parseNumberish(input.value);
+          const baseStep = isBytes ? 1 : 10;
+          const step = e.shiftKey ? baseStep * 10 : baseStep;
+          const next = (current ?? 0) + (e.key === 'ArrowUp' ? step : -step);
+          setRaw(next);
+          wrapper.style.setProperty('--valuefield-ch', `${Math.min(12, Math.max(4, String(input.value || '').length || 1))}ch`);
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          input.blur();
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+          const current = state.matrix?.capabilities?.[key]?.values?.[tier];
+          const currentNum = typeof current === 'number' && Number.isFinite(current) ? current : null;
+          const currentDisplay = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
+          setDisplay(currentDisplay);
+          input.blur();
+        }
+      });
+    }
+
+    cell.appendChild(isBytes ? bytesWrap : wrapper);
+    return td;
+  }
+
+  function renderTable({ title, entries, tiers }) {
+    const section = document.createElement('section');
+    section.className = 'devstudio-page-section entitlements-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'heading-3';
+    heading.textContent = title;
+    section.appendChild(heading);
+
+    const table = document.createElement('table');
+    table.className = 'body-s entitlements-table';
+
+    const colgroup = document.createElement('colgroup');
+    const colCapability = document.createElement('col');
+    colCapability.className = 'entitlements-table__cap-col';
+    const colDesc = document.createElement('col');
+    colDesc.className = 'entitlements-table__desc-col';
+    colgroup.append(colCapability, colDesc);
+    tiers.forEach(() => {
+      const col = document.createElement('col');
+      col.className = 'entitlements-table__tier';
+      colgroup.appendChild(col);
+    });
+    const colToken = document.createElement('col');
+    colToken.className = 'entitlements-table__token-col';
+    colgroup.appendChild(colToken);
+    table.appendChild(colgroup);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+
+    const capHeader = document.createElement('th');
+    capHeader.textContent = 'Capability';
+    capHeader.className = 'label-s';
+    headRow.appendChild(capHeader);
+
+    const descHeader = document.createElement('th');
+    descHeader.textContent = 'Description';
+    descHeader.className = 'label-s';
+    headRow.appendChild(descHeader);
+
+    tiers.forEach((tier) => {
+      const th = document.createElement('th');
+      th.className = 'entitlements-table__tier-head';
+
+      const label = document.createElement('span');
+      label.className = 'label-s entitlements-tier-label';
+      label.textContent = tier.replace(/\b\w/g, (c) => c.toUpperCase());
+      th.appendChild(label);
+      headRow.appendChild(th);
+    });
+
+    const tokenHeader = document.createElement('th');
+    tokenHeader.textContent = 'Token';
+    tokenHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(tokenHeader);
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const normalizedFilter = String(state.filter || '').trim().toLowerCase();
+
+    entries
+      .filter(({ key, cap }) => {
+        if (!normalizedFilter) return true;
+        const metaEntry = meta[key] || { label: '', description: '' };
+        const haystack = [
+          String(key || ''),
+          String(metaEntry.label || ''),
+          String(metaEntry.description || ''),
+          String(cap?.kind || ''),
+        ]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(normalizedFilter);
+      })
+      .forEach(({ key, cap }) => {
+      const row = document.createElement('tr');
+
+      const metaEntry = meta[key] || { label: key, description: '' };
+
+      const nameCell = document.createElement('td');
+      nameCell.textContent = metaEntry.label || key;
+      nameCell.className = 'body-s entitlements-table__capability';
+      row.appendChild(nameCell);
+
+      const descCell = document.createElement('td');
+      descCell.textContent = metaEntry.description || '';
+      descCell.className = 'body-s entitlements-table__desc';
+      row.appendChild(descCell);
+
+      tiers.forEach((tier) => {
+        row.appendChild(createEditableValueCell({ key, cap, tier }));
+      });
+
+      const tokenCell = document.createElement('td');
+      tokenCell.textContent = key;
+      tokenCell.className = 'body-s entitlements-table__token';
+      row.appendChild(tokenCell);
+
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return section;
+  }
+
+  function renderReadonlyToggleCell({ id, checked, label, title }) {
+    const td = document.createElement('td');
+    td.className = 'body-s entitlements-table__value';
+
+    const safeId = String(id).replace(/[^a-zA-Z0-9_-]+/g, '_');
+
+    const cell = document.createElement('div');
+    cell.className = 'entitlements-cell entitlements-cell--flag';
+    td.appendChild(cell);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'diet-toggle';
+    wrapper.setAttribute('data-size', 'md');
+    if (title) wrapper.title = title;
+    wrapper.innerHTML = `
+      <span class="diet-toggle__label sr-only" id="${safeId}-label">${String(label || 'Enabled')}</span>
+      <input id="${safeId}" class="diet-toggle__input sr-only" type="checkbox" role="switch" aria-labelledby="${safeId}-label" />
+      <label class="diet-toggle__switch" for="${safeId}" aria-hidden="true">
+        <span class="diet-toggle__knob"></span>
+      </label>
+    `;
+
+    const input = wrapper.querySelector('input');
+    if (input) {
+      input.checked = Boolean(checked);
+      input.disabled = true;
+      input.tabIndex = -1;
+    }
+
+    cell.appendChild(wrapper);
+    return td;
+  }
+
+  function renderAiAccess({ tiers }) {
+    if (!aiAccessByTier) return null;
+    if (!tiers.length) return null;
+
+    const section = document.createElement('section');
+    section.className = 'devstudio-page-section entitlements-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'heading-3';
+    heading.textContent = 'AI / LLM Access';
+    section.appendChild(heading);
+
+    const hint = document.createElement('p');
+    hint.className = 'body-s entitlements-ai__hint';
+    hint.textContent =
+      'Read-only. Profile-level provider/model allowlist; individual agents may further restrict. Edit in tooling/ck-policy/src/ai.ts.';
+    section.appendChild(hint);
+
+    const providersByKey = new Map();
+    const defaultProviderTiers = new Map();
+    const defaultModelTiers = new Map();
+
+    const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
+
+    tiers.forEach((tier) => {
+      const tierEntry = aiAccessByTier?.[tier];
+      if (!tierEntry) return;
+
+      const defaultProvider = tierEntry.defaultProvider;
+      if (defaultProvider) {
+        const arr = defaultProviderTiers.get(defaultProvider) || [];
+        arr.push(tier);
+        defaultProviderTiers.set(defaultProvider, arr);
+      }
+
+      const providers = Array.isArray(tierEntry.providers) ? tierEntry.providers : [];
+      providers.forEach((provider) => {
+        const existing = providersByKey.get(provider.provider) || { provider: provider.provider, label: provider.label, models: new Map() };
+        existing.label = provider.label || existing.label;
+        const models = Array.isArray(provider.models) ? provider.models : [];
+        models.forEach((model) => {
+          existing.models.set(model.model, model.label || model.model);
+        });
+        providersByKey.set(provider.provider, existing);
+
+        const defaultModel = provider.defaultModel;
+        if (defaultModel) {
+          const mapKey = `${provider.provider}::${defaultModel}`;
+          const arr = defaultModelTiers.get(mapKey) || [];
+          arr.push(tier);
+          defaultModelTiers.set(mapKey, arr);
+        }
+      });
+    });
+
+    const providersOrdered = (aiProviders.length ? aiProviders : Array.from(providersByKey.values()))
+      .filter((entry) => providersByKey.has(entry.provider))
+      .map((entry) => providersByKey.get(entry.provider));
+
+    const table = document.createElement('table');
+    table.className = 'body-s entitlements-table';
+
+    const colgroup = document.createElement('colgroup');
+    const colName = document.createElement('col');
+    colName.className = 'entitlements-table__cap-col';
+    const colKind = document.createElement('col');
+    colKind.className = 'entitlements-table__desc-col';
+    colgroup.append(colName, colKind);
+    tiers.forEach(() => {
+      const col = document.createElement('col');
+      col.className = 'entitlements-table__tier';
+      colgroup.appendChild(col);
+    });
+    const colId = document.createElement('col');
+    colId.className = 'entitlements-table__token-col';
+    colgroup.appendChild(colId);
+    table.appendChild(colgroup);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+
+    const nameHeader = document.createElement('th');
+    nameHeader.textContent = 'LLM / Model';
+    nameHeader.className = 'label-s';
+    headRow.appendChild(nameHeader);
+
+    const kindHeader = document.createElement('th');
+    kindHeader.textContent = 'Kind';
+    kindHeader.className = 'label-s';
+    headRow.appendChild(kindHeader);
+
+    tiers.forEach((tier) => {
+      const th = document.createElement('th');
+      th.className = 'entitlements-table__tier-head';
+      const label = document.createElement('span');
+      label.className = 'label-s entitlements-tier-label';
+      label.textContent = normalizeTierLabel(tier);
+      th.appendChild(label);
+      headRow.appendChild(th);
+    });
+
+    const idHeader = document.createElement('th');
+    idHeader.textContent = 'ID';
+    idHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(idHeader);
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    providersOrdered.forEach((provider) => {
+      if (!provider) return;
+
+      const providerRow = document.createElement('tr');
+      providerRow.className = 'entitlements-ai-row entitlements-ai-row--provider';
+
+      const providerName = document.createElement('td');
+      providerName.className = 'body-s entitlements-table__capability entitlements-ai-row__name';
+      providerName.textContent = provider.label || provider.provider;
+      providerRow.appendChild(providerName);
+
+      const providerKind = document.createElement('td');
+      providerKind.className = 'body-s entitlements-table__desc';
+      const defaultTiers = defaultProviderTiers.get(provider.provider) || [];
+      providerKind.textContent = defaultTiers.length
+        ? `Provider · Default for: ${defaultTiers.map(normalizeTierLabel).join(', ')}`
+        : 'Provider';
+      providerRow.appendChild(providerKind);
+
+      tiers.forEach((tier) => {
+        const tierEntry = aiAccessByTier?.[tier];
+        const tierProviders = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
+        const isAllowed = tierProviders.some((p) => p.provider === provider.provider);
+        providerRow.appendChild(
+          renderReadonlyToggleCell({
+            id: `ai_provider_${provider.provider}_${tier}`,
+            checked: isAllowed,
+            label: `${provider.label || provider.provider} ${normalizeTierLabel(tier)} allowed`,
+            title: isAllowed ? 'Allowed' : 'Not allowed',
+          }),
+        );
+      });
+
+      const providerId = document.createElement('td');
+      providerId.className = 'body-s entitlements-table__token';
+      providerId.textContent = provider.provider;
+      providerRow.appendChild(providerId);
+
+      tbody.appendChild(providerRow);
+
+      const models = Array.from(provider.models.entries())
+        .map(([model, label]) => ({ model, label }))
+        .sort((a, b) => String(a.label).localeCompare(String(b.label)));
+
+      models.forEach((model) => {
+        const modelRow = document.createElement('tr');
+        modelRow.className = 'entitlements-ai-row entitlements-ai-row--model';
+
+        const modelName = document.createElement('td');
+        modelName.className = 'body-s entitlements-table__capability entitlements-ai-row__name entitlements-ai-row__name--model';
+        modelName.textContent = model.label || model.model;
+        modelRow.appendChild(modelName);
+
+        const modelKind = document.createElement('td');
+        modelKind.className = 'body-s entitlements-table__desc';
+        const defaultKey = `${provider.provider}::${model.model}`;
+        const defaultTiersForModel = defaultModelTiers.get(defaultKey) || [];
+        modelKind.textContent = defaultTiersForModel.length
+          ? `Model · Default for: ${defaultTiersForModel.map(normalizeTierLabel).join(', ')}`
+          : 'Model';
+        modelRow.appendChild(modelKind);
+
+        tiers.forEach((tier) => {
+          const tierEntry = aiAccessByTier?.[tier];
+          const tierProviders = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
+          const providerEntry = tierProviders.find((p) => p.provider === provider.provider);
+          const allowedModels = Array.isArray(providerEntry?.models) ? providerEntry.models : [];
+          const isAllowed = allowedModels.some((m) => m.model === model.model);
+          modelRow.appendChild(
+            renderReadonlyToggleCell({
+              id: `ai_model_${provider.provider}_${model.model}_${tier}`,
+              checked: isAllowed,
+              label: `${model.label || model.model} ${normalizeTierLabel(tier)} allowed`,
+              title: isAllowed ? (providerEntry?.defaultModel === model.model ? 'Allowed (default)' : 'Allowed') : 'Not allowed',
+            }),
+          );
+        });
+
+        const modelId = document.createElement('td');
+        modelId.className = 'body-s entitlements-table__token';
+        modelId.textContent = model.model;
+        modelRow.appendChild(modelId);
+
+        tbody.appendChild(modelRow);
+      });
+    });
+
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return section;
+  }
+
+  function render() {
+    if (!root) return;
+    root.innerHTML = '';
+
+    if (!meta || Object.keys(meta).length === 0) {
+      const warn = document.createElement('p');
+      warn.className = 'body-s';
+      warn.textContent = 'Missing entitlement metadata (CAPABILITY_META). Some labels/descriptions may be empty.';
+      root.appendChild(warn);
+    }
+
+    renderToolbar(root);
+
+    if (!state.matrix) {
+      const loading = document.createElement('p');
+      loading.className = 'body-s';
+      loading.textContent = 'Loading entitlements…';
+      root.appendChild(loading);
+      return;
+    }
+
+    const matrix = state.matrix;
+    const tiers = Array.isArray(matrix.tiers) ? [...matrix.tiers] : [];
+    const preferredTierOrder = ['free', 'tier1', 'tier2', 'tier3', 'minibob', 'devstudio'];
+    tiers.sort((a, b) => {
+      const ia = preferredTierOrder.indexOf(String(a).toLowerCase());
+      const ib = preferredTierOrder.indexOf(String(b).toLowerCase());
+      const ra = ia === -1 ? 999 : ia;
+      const rb = ib === -1 ? 999 : ib;
+      if (ra !== rb) return ra - rb;
+      return String(a).localeCompare(String(b));
+    });
+    const groups = { flag: [], cap: [], budget: [] };
     Object.entries(matrix.capabilities).forEach(([key, cap]) => {
       groups[cap.kind]?.push({ key, cap });
     });
 
-    const renderTable = (title, entries) => {
-      const section = document.createElement('section');
-      section.className = 'devstudio-page-section entitlements-section';
-
-      const heading = document.createElement('h2');
-      heading.className = 'heading-3';
-      heading.textContent = title;
-      section.appendChild(heading);
-
-      const table = document.createElement('table');
-      table.className = 'body-s entitlements-table';
-
-      const colgroup = document.createElement('colgroup');
-      const colCapability = document.createElement('col');
-      colCapability.className = 'entitlements-table__cap-col';
-      const colDesc = document.createElement('col');
-      colDesc.className = 'entitlements-table__desc-col';
-      colgroup.append(colCapability, colDesc);
-      tiers.forEach(() => {
-        const col = document.createElement('col');
-        col.className = 'entitlements-table__tier';
-        colgroup.appendChild(col);
+    const sortEntries = (entries) => {
+      entries.sort((a, b) => {
+        const ma = meta[a.key] || { label: '', description: '' };
+        const mb = meta[b.key] || { label: '', description: '' };
+        const la = String(ma.label || '').trim();
+        const lb = String(mb.label || '').trim();
+        if (la && lb && la !== lb) return la.localeCompare(lb);
+        return String(a.key).localeCompare(String(b.key));
       });
-      const colToken = document.createElement('col');
-      colToken.className = 'entitlements-table__token-col';
-      colgroup.appendChild(colToken);
-      table.appendChild(colgroup);
-
-      const thead = document.createElement('thead');
-      const headRow = document.createElement('tr');
-
-      const capHeader = document.createElement('th');
-      capHeader.textContent = 'Capability';
-      capHeader.className = 'label-s';
-      headRow.appendChild(capHeader);
-
-      const descHeader = document.createElement('th');
-      descHeader.textContent = 'Description';
-      descHeader.className = 'label-s';
-      headRow.appendChild(descHeader);
-
-      tiers.forEach((tier) => {
-        const th = document.createElement('th');
-        th.textContent = tier.replace(/\b\w/g, (c) => c.toUpperCase());
-        th.className = 'label-s';
-        headRow.appendChild(th);
-      });
-
-      const tokenHeader = document.createElement('th');
-      tokenHeader.textContent = 'Token';
-      tokenHeader.className = 'label-s entitlements-table__token-head';
-      headRow.appendChild(tokenHeader);
-
-      thead.appendChild(headRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      entries.forEach(({ key, cap }) => {
-        const row = document.createElement('tr');
-
-        const metaEntry = meta[key] || { label: key, description: '' };
-
-        const nameCell = document.createElement('td');
-        nameCell.textContent = metaEntry.label || key;
-        nameCell.className = 'body-s entitlements-table__capability';
-        row.appendChild(nameCell);
-
-        const descCell = document.createElement('td');
-        descCell.textContent = metaEntry.description || '';
-        descCell.className = 'body-s entitlements-table__desc';
-        row.appendChild(descCell);
-
-        tiers.forEach((tier) => {
-          const valueCell = document.createElement('td');
-          const value = cap.values[tier];
-          let display = String(value);
-          if (cap.kind === 'flag') display = value ? '✓' : '✗';
-          if (value === null) display = '∞';
-          valueCell.textContent = display;
-          valueCell.className = 'body-s entitlements-table__value';
-          row.appendChild(valueCell);
-        });
-
-        const tokenCell = document.createElement('td');
-        tokenCell.textContent = key;
-        tokenCell.className = 'body-s entitlements-table__token';
-        row.appendChild(tokenCell);
-
-        tbody.appendChild(row);
-      });
-
-      table.appendChild(tbody);
-      section.appendChild(table);
-      return section;
+      return entries;
     };
 
-    root.appendChild(renderTable('Flags', groups.flag));
-    root.appendChild(renderTable('Caps', groups.cap));
-    root.appendChild(renderTable('Budgets', groups.budget));
+    root.appendChild(renderTable({ title: 'Flags', entries: groups.flag, tiers }));
+    root.appendChild(renderTable({ title: 'Caps', entries: sortEntries(groups.cap), tiers }));
+    root.appendChild(renderTable({ title: 'Budgets', entries: sortEntries(groups.budget), tiers }));
+
+    const aiSection = renderAiAccess({ tiers });
+    if (aiSection) root.appendChild(aiSection);
   }
+
+  if (!root) {
+    throw new Error('Entitlements root node not found');
+  }
+
+  render();
+  fetchMatrix()
+    .then((next) => {
+      setStatus({ matrix: next.matrix, matrixPath: next.path, lastError: null });
+    })
+    .catch((err) => {
+      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+    });
 </script>

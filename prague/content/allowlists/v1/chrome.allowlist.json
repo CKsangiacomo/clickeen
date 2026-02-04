@@ -45,6 +45,14 @@
       "type": "string"
     },
     {
+      "path": "strings.localeShowcase.title",
+      "type": "string"
+    },
+    {
+      "path": "strings.localeShowcase.subtitle",
+      "type": "string"
+    },
+    {
       "path": "strings.share.share",
       "type": "string"
     },

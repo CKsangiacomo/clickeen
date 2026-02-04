@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQの例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ホテル、レストラン、ツアー運営会社はClickeenを利用して、29言語で海外のお客様に即時対応しています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ホテル、レストラン、ツアーオペレーターなどのFAQ例"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "OmbraにあなたのWebサイトURLを渡すだけ。ビジネスに合わせてパーソナライズされたFAQを29言語で即座に作成。翻訳者は不要です。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "バルセロナのホテル：50以上の国からの宿泊客が15言語で「チェックイン時間は？」と質問"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Ombraにホテルのウェブサイトを渡すだけ。あなたの施設に合わせたFAQを29言語で即座に作成。フロントへの問い合わせを60%削減し、宿泊客満足度スコアを向上させます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "パリのレストラン：観光客は食事制限に関する質問をフランス語、英語、スペイン語、中国語、日本語でします"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "メニューのFAQを29言語で—即時に。翻訳者も手作業も不要。回転率を向上させ、スタッフへの割り込みを減らします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "トスカーナのAirbnbホスト向け：チェックイン手順、WiFiパスワード、現地のおすすめをゲストの言語で"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "OmbraにリスティングURLを渡すだけ。ハウスルールを29言語に即時対応。海外ゲストから5つ星レビュー。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "海外のお客様は翻訳を待ってはくれません"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "ローマのホテルは、ドイツ人旅行者がチェックイン情報を見つけられないと予約を失います。東京のレストランは、英語話者が営業時間を見つけられないと予約を取りこぼします。相手の言語で答えられない質問はすべて、失われた顧客につながります。Ombraがこれを解決します：ウェブサイトURL → 29言語対応のパーソナライズされたFAQを、瞬時に生成。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "タイのツアーオペレーター：海外旅行者向けの予約・安全・旅程に関するFAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Ombraにあなたのツアーサイトを渡すだけ。29言語のFAQを即時提供。メールサポートを70%削減し、海外市場からのコンバージョンを向上させます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "ローマの博物館：世界中の来館者向け展示情報、チケット、開館時間"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "29言語で来館者のFAQを即時提供。来館者体験を向上させ、インフォメーションデスクへの問い合わせを50%削減。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "国際的な混乱から、即座の明快さへ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "ホスピタリティ業界がClickeenを活用する方法"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "OmbraにあなたのウェブサイトURLを渡す"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "あなたのビジネスに合わせたFAQを29言語で—即座に"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "埋め込んで、海外からの問い合わせが減るのを確認"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AIがビジネスの文脈—所在地、サービス、ポリシー—を読み取ります。あなた固有のニーズを自動で理解します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "翻訳者は不要。手作業も不要。コンテンツはあなたのビジネスに合わせて最適化され、同時に世界中ですぐに利用可能になります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3行のスクリプト。どこでも動作。ゲスト、観光客、旅行者は、尋ねる前に自分の言語で答えを得られます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "FAQを29言語で—すぐに提供"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "OmbraにあなたのWebサイトURLを教えてください。ビジネスに合わせてパーソナライズされ、世界中で利用可能。翻訳者は不要です。"
+    }
+  ],
+  "v": 1
+}

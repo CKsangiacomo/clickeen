@@ -40,7 +40,7 @@ if (geoMarket) {
   return Astro.redirect(`/${geoMarket.key}/${geoMarket.defaultLocale}/${Astro.url.search}`, 302);
 }
 
-const defaultMarket = getPragueMarket('uk') ?? PRAGUE_MARKETS.markets[0] ?? null;
+const defaultMarket = getPragueMarket('us') ?? PRAGUE_MARKETS.markets[0] ?? null;
 if (!defaultMarket) {
   throw new Error('[prague] No markets configured (expected at least one entry in config/markets.json)');
 }

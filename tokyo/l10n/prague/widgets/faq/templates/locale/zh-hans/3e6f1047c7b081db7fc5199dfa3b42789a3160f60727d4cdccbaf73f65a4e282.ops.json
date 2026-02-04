@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "常见问题模板 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "从令人惊艳的常见问题设计中选择，让人眼前一亮并促使访客转化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "你的常见问题解答。按你的方式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "默认就很美观。设计上独一无二，属于你。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "需要时大胆出击"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "玻璃拟态、液态玻璃、新拟物风——在浅色与深色模式下都引领潮流的视觉效果。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "随心优雅"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "极简、清爽、现代。经久不衰的风格，始终符合当下审美。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "从一个设计开始，然后把它变成你的。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "立刻获得美感：紧跟潮流的设计或经久不衰的经典。然后无限制地自定义——按角设置圆角、按边设置阴影、按角色设置排版，以及响应式断点。一个最终成为你标志的模板。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常见问题"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "帮助访客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "设计自由，内置其中。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "从布局到饰面再到字体——轻松自如的自定义体验。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "布局，按你的方式"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "外观控制无上限"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "排版精度"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "多种布局系统，而非单一一种。按断点设置结构。桌面端/移动端内边距与间距彼此独立。精确控制列、堆叠、对齐与重排——分毫不差。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "每个角的圆角半径。可自定义颜色的边框。外阴影与内阴影（可联动或按边独立）。渐变、图片或视频背景。掌控所有视觉细节。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "六种明确角色（标题、正文、问题、答案、按钮、分区）。从 17 款 Google Fonts 中选择。字重、样式、字号——均可按角色自定义。动态比例缩放。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "FAQ 小组件的三种布局引擎"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "手风琴用于逐步展开。列表用于简洁。卡片用于视觉层级。网格或瀑布流。响应式列。对间距与内边距进行精细控制。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "外观控制无极限"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "逐角圆角半径。可自定义颜色的边框。外阴影与内阴影（可联动或按边分别独立）。渐变、图片或视频背景。完全掌控视觉呈现。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "排版精准控制"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "六种明确角色（标题、正文、问题、回答、按钮、分区）。可从 17 款 Google Fonts 中选择。字重、样式、字号——均可按角色自定义。动态缩放。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "深色模式：精致且现代"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "现代界面在黑暗中更显出彩。高端质感与前沿美学兼具。每个模板均包含。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "桌面与移动端，完美适配"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "你的常见问题（FAQ）小组件可响应每个断点。不同设备可设置不同的列数、内边距与间距。统一的设计语言，无限的视口尺寸。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "从模板到完美匹配"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "如何构建你的常见问题小组件"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "选择一个设计模板"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "自定义布局与外观"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "优化排版与响应式表现"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "潮流、经典或极简。支持浅色与深色模式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "手风琴、列表或卡片。可按角设置圆角、按边设置阴影，以及渐变与边框。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "六种字体角色，17 款 Google Fonts。桌面与移动端都很完美。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "创建免费的常见问题（FAQ）小组件"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "从设计模板开始或从零构建。完全创意掌控。"
+    }
+  ],
+  "v": 1
+}

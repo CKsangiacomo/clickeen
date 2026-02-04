@@ -69,7 +69,13 @@ function isPlainObject(value) {
 
 function normalizeLocales(raw) {
   if (!Array.isArray(raw)) throw new Error(`[prague-l10n] Invalid locales file: ${LOCALES_PATH}`);
-  const locales = raw.map((v) => normalizeLocaleToken(v)).filter((v) => v);
+  const locales = raw
+    .map((entry) => {
+      if (typeof entry === 'string') return normalizeLocaleToken(entry);
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return normalizeLocaleToken(entry.code);
+      return null;
+    })
+    .filter((v) => v);
   if (!locales.includes('en')) {
     throw new Error('[prague-l10n] locales.json must include "en"');
   }

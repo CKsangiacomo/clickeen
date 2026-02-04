@@ -17,11 +17,17 @@ export function resolveUserOps(row: { user_ops?: Array<{ op: 'set'; path: string
 
 export function normalizeSupportedLocales(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
-    throw new Error('[ParisWorker] config/locales.json must be an array of locale strings');
+    throw new Error('[ParisWorker] config/locales.json must be an array of locale entries');
   }
   const locales = raw
-    .map((value) => (typeof value === 'string' ? value.trim().toLowerCase() : ''))
-    .filter(Boolean);
+    .map((entry) => {
+      if (typeof entry === 'string') return normalizeLocaleToken(entry);
+      if (entry && typeof entry === 'object' && typeof (entry as any).code === 'string') {
+        return normalizeLocaleToken((entry as any).code);
+      }
+      return null;
+    })
+    .filter((value): value is string => Boolean(value));
   const unique = Array.from(new Set(locales));
   if (unique.length === 0) {
     throw new Error('[ParisWorker] config/locales.json must include at least one locale');

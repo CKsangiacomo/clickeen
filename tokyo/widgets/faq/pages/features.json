@@ -5,16 +5,118 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Everything you need to ship a polished FAQ widget.",
-        "title": "FAQ Features - Clickeen"
+        "description": "Everything you need to ship AI-powered FAQs that work globally and grow virally.",
+        "title": "FAQ features - Clickeen"
       }
     },
     {
       "id": "hero",
       "type": "hero",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
       "copy": {
-        "headline": "FAQ Features",
-        "subheadline": "Everything you need to ship a fast, polished FAQ."
+        "headline": "Why the FAQ widget beats Elfsight, Typeform, and custom-built",
+        "subheadline": "Built from scratch for AI. Works globally. Grows virally. One FAQ, infinite possibilities."
+      }
+    },
+    {
+      "id": "split-ai-editing",
+      "type": "split",
+      "layout": "visual-left",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "AI editing: describe, done",
+        "subheadline": "Tell it what you want in plain English. 'Make the questions more casual' or 'add a section about pricing.' AI understands and executes instantly."
+      }
+    },
+    {
+      "id": "split-global",
+      "type": "split",
+      "layout": "visual-right",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Global instant: any language, now",
+        "subheadline": "Geography is a parameter, not a project. Add Spanish, Japanese, or Arabic with one click. No manual translation, no delays."
+      }
+    },
+    {
+      "id": "split-composable",
+      "type": "split",
+      "layout": "visual-left",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Composable everywhere: one FAQ, infinite contexts",
+        "subheadline": "Same FAQ works in website, email, landing pages, ads. One source, infinite possibilities."
+      }
+    },
+    {
+      "id": "steps-differentiators",
+      "type": "steps",
+      "copy": {
+        "title": "Why Clickeen changes everything",
+        "items": [
+          {
+            "title": "Instant personalized localization",
+            "body": "Website URL → personalized content in 29 languages instantly. No manual translation, no translator costs. AI understands your business context."
+          },
+          {
+            "title": "Templates or pixel-perfect custom",
+            "body": "Start with a curated template OR define everything yourself—your choice, total freedom. No compromises, no limitations."
+          },
+          {
+            "title": "Composable architecture",
+            "body": "One FAQ works everywhere: website, email, landing pages, ads. Same content, infinite contexts. No rebuilding for each channel."
+          }
+        ]
+      }
+    },
+    {
+      "id": "big-bang-ecosystem",
+      "type": "big-bang",
+      "copy": {
+        "headline": "Built for AI, operated by AI",
+        "body": "Clickeen isn't just another FAQ builder—it's the first product designed for AI operation from day one. While competitors retrofit AI features, we built an architecture that AI agents can understand, modify, and optimize autonomously."
+      }
+    },
+    {
+      "id": "steps-ecosystem",
+      "type": "steps",
+      "copy": {
+        "title": "How Clickeen's AI ecosystem works",
+        "subhead": "A complete platform that gets smarter with every interaction.",
+        "items": [
+          {
+            "title": "AI understands your intent",
+            "body": "Describe changes naturally. 'Make it more professional' or 'add urgency to the CTA.' AI executes perfectly."
+          },
+          {
+            "title": "Global operation by default",
+            "body": "AI handles localization, support, and marketing across all markets simultaneously."
+          },
+          {
+            "title": "Continuous learning and improvement",
+            "body": "Every user interaction teaches the AI system, making all FAQs smarter over time."
+          },
+          {
+            "title": "Viral distribution automation",
+            "body": "Free FAQs become marketing channels that automatically drive acquisition."
+          }
+        ]
+      }
+    },
+    {
+      "id": "cta-features",
+      "type": "cta-bottom-block",
+      "copy": {
+        "headline": "Experience the future of FAQs",
+        "subheadline": "The platform that gets smarter with every interaction. Built for the AI era."
       }
     }
   ]

@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Esempi di FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Scopri come aziende reali utilizzano le FAQ per risolvere problemi e concludere più vendite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ che risolvono problemi aziendali reali"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dagli studi dentistici alle prenotazioni per DJ, scopri come aziende come la tua trasformano le domande in clienti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Sanità: riduci le mancate presentazioni del 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "I dentisti rispondono alle domande più comuni su procedure, assicurazione e programmazione degli appuntamenti—prima ancora che i pazienti chiamino."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "Ecommerce: gestisci i resi all’istante"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Politiche di spedizione, guide alle taglie, finestre di reso: rispondi alle domande che evitano l’abbandono del carrello."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: trasforma le prove in clienti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Domande sulle funzionalità, dubbi sui prezzi, perplessità sulle integrazioni: affronta le obiezioni prima che diventino opportunità perse."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Ogni settore ha opportunità per le FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Le domande sono l’assassino silenzioso delle conversioni. Che tu stia prenotando appuntamenti, gestendo resi o spiegando funzionalità, le domande senza risposta significano affari persi. Le FAQ di Clickeen funzionano ovunque, parlando istantaneamente la lingua di ogni cliente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Servizi creativi: ottimizza le richieste di prenotazione"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ, fotografi e consulenti rispondono a domande su prezzi, disponibilità e processo 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Dalle domande ai clienti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Implementare FAQ che portano davvero risultati segue un processo collaudato."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Individua le tue principali categorie di domande"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Scegli lo stile di FAQ giusto per il tuo pubblico"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Incorpora e ottimizza in base ai dati"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analizza ticket di assistenza, chiamate di vendita e log della chat per trovare le domande poste più spesso."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Fisarmonica per risposte dettagliate, schede per informazioni consultabili a colpo d’occhio, elenchi per Q&A diretti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Monitora quali domande vengono cliccate di più e affina le risposte in base a ciò che genera conversioni."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Trova la soluzione FAQ per il tuo settore"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Template progettati specificamente per aziende come la tua, con un'IA che si adatta alle tue esigenze."
+    }
+  ],
+  "v": 1
+}

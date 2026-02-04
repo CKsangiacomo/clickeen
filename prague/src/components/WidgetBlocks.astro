@@ -4,18 +4,18 @@ import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
 import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
-import Outcomes from '../blocks/outcomes/outcomes.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
 import { resolvePragueHref } from '../lib/links';
+import { chooseShowcaseTiles, localeLabel, resolveTokyoInstanceLocales, sortLocaleOptions } from '../lib/instanceL10n';
 
 type Block = {
   id: string;
   type: string;
   copy: Record<string, any>;
-  visual?: boolean;
+  visual?: { image?: string };
   align?: string;
   curatedRef?: { publicId?: string; embedMode?: string };
 };
@@ -34,8 +34,26 @@ const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
 const showcasePublicId =
   blocks.find((b) => b && b.curatedRef && typeof b.curatedRef.publicId === 'string')?.curatedRef?.publicId ??
   `wgt_main_${widget}`;
-const createFreeLabel = await pragueT(locale, 'prague.cta.createFree');
+
+// Helper to title-case widget name (faq -> FAQ, countdown -> Countdown)
+const titleCaseWidget = (name: string): string => {
+  return name
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+const widgetDisplayName = titleCaseWidget(widget);
+const createFreeLabel = `Create a free ${widgetDisplayName} widget`;
 const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
+const showcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
+const showcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
+
+const instanceLocalesRaw = await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null);
+const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : ['en', 'es', 'ja'];
+const showcaseTiles = chooseShowcaseTiles(instanceLocales);
+const showcaseOptions = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
+const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
 const heroPrimaryCta = {
   label: createFreeLabel,
   href: hasMinibob ? '#minibob' : `/${market}/${locale}/create`,
@@ -110,9 +128,17 @@ const heroSecondaryCta =
     }
     case 'steps': {
       const copy = block.copy ?? {};
-      return <Steps title={copy.title as string} subhead={copy.subhead as string} steps={(copy.items ?? []) as { title: string; body: string }[]} />;
+      return (
+        <Steps
+          widget={widget}
+          title={copy.title as string}
+          subhead={copy.subhead as string}
+          steps={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          visual={block.visual}
+        />
+      );
     }
-    case 'cta': {
+    case 'cta-bottom-block': {
       const copy = block.copy ?? {};
       return (
         <Cta
@@ -127,13 +153,15 @@ const heroSecondaryCta =
       return (
         <>
           <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />
-          <LocaleShowcase publicId={showcasePublicId} />
+          <LocaleShowcase
+            publicId={showcasePublicId}
+            title={showcaseTitle}
+            subtitle={showcaseSubtitle}
+            tiles={showcaseTileEntries}
+            options={showcaseOptions}
+          />
         </>
       );
-    }
-    case 'outcomes': {
-      const copy = block.copy ?? {};
-      return <Outcomes title={copy.title as string} items={(copy.items ?? []) as { title: string; body: string; eyebrow?: string }[]} />;
     }
     case 'navmeta':
     case 'page-meta':

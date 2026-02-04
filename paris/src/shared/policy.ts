@@ -26,15 +26,3 @@ export function resolveEditorPolicyFromRequest(req: Request, workspace: Workspac
   const policy = resolvePolicy({ profile, role });
   return { ok: true as const, policy, profile };
 }
-
-export function resolveWebsiteDepthCap(policy: Policy): number {
-  const depth = policy?.limits?.personalization?.websiteDepth ?? 1;
-  if (typeof depth !== 'number' || !Number.isFinite(depth) || depth < 1) return 1;
-  return Math.min(Math.max(1, Math.floor(depth)), 5);
-}
-
-export function isFlagEnabled(policy: Policy, key: string): boolean {
-  const flags = policy?.flags;
-  if (!flags || typeof flags !== 'object') return false;
-  return Boolean((flags as Record<string, unknown>)[key]);
-}

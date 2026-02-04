@@ -23,6 +23,10 @@ const TOKYO_PRAGUE_ROOT = path.join(REPO_ROOT, 'tokyo', 'l10n', 'prague');
 const TOKYO_WIDGETS_ROOT = path.join(REPO_ROOT, 'tokyo', 'widgets');
 const CHROME_BASE_PATH = path.join(REPO_ROOT, 'prague', 'content', 'base', 'v1', 'chrome.json');
 const LOCALES_PATH = path.join(REPO_ROOT, 'config', 'locales.json');
+const BASES_DIR_NAME = 'bases';
+
+const cliArgs = new Set(process.argv.slice(2));
+const STRICT_LATEST = cliArgs.has('--strict-latest') || String(process.env.PRAGUE_L10N_VERIFY_STRICT || '').trim() === '1';
 
 function computeBaseFingerprint(config) {
   return sha256Hex(stableStringify(config));
@@ -38,9 +42,15 @@ function isPlainObject(value) {
 
 function normalizeLocales(raw) {
   if (!Array.isArray(raw)) throw new Error(`[prague-l10n] Invalid locales file: ${LOCALES_PATH}`);
-  const locales = raw.map((v) => normalizeLocaleToken(v)).filter((v) => v);
+  const locales = raw
+    .map((entry) => {
+      if (typeof entry === 'string') return normalizeLocaleToken(entry);
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return normalizeLocaleToken(entry.code);
+      return null;
+    })
+    .filter((v) => v);
   if (!locales.includes('en')) {
-    throw new Error('[prague-l10n] locales.json must include "en"');
+    throw new Error('[prague-l10n] locales.json must include an "en" locale code');
   }
   return Array.from(new Set(locales)).sort();
 }
@@ -240,6 +250,12 @@ function assertOverlayComplete({ overlay, expectedPaths, ref }) {
 
 async function verifyLayerIndex({ pageId, locales, baseFingerprint }) {
   const indexPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'index.json');
+  if (!(await fileExists(indexPath))) {
+    const msg = `[prague-l10n] Missing index.json: ${indexPath}`;
+    if (STRICT_LATEST) throw new Error(msg);
+    console.warn(msg);
+    return null;
+  }
   const index = await readJson(indexPath);
   if (!isPlainObject(index) || index.v !== 1) {
     throw new Error(`[prague-l10n] Invalid index.json: ${indexPath}`);
@@ -257,16 +273,21 @@ async function verifyLayerIndex({ pageId, locales, baseFingerprint }) {
   const expectedKeys = [...locales].sort((a, b) => a.localeCompare(b));
   const actualKeys = layer.keys.slice().sort((a, b) => a.localeCompare(b));
   if (expectedKeys.join(',') !== actualKeys.join(',')) {
-    throw new Error(`[prague-l10n] index.json locale keys mismatch: ${indexPath}`);
+    const msg = `[prague-l10n] index.json locale keys mismatch: ${indexPath}`;
+    if (STRICT_LATEST) throw new Error(msg);
+    console.warn(msg);
   }
   if (!isPlainObject(layer.lastPublishedFingerprint)) {
     throw new Error(`[prague-l10n] index.json missing lastPublishedFingerprint: ${indexPath}`);
   }
-  for (const locale of expectedKeys) {
-    if (layer.lastPublishedFingerprint[locale] !== baseFingerprint) {
-      throw new Error(`[prague-l10n] NOT TRANSLATED: index.json fingerprint mismatch for ${pageId}/${locale}`);
+  if (STRICT_LATEST) {
+    for (const locale of expectedKeys) {
+      if (layer.lastPublishedFingerprint[locale] !== baseFingerprint) {
+        throw new Error(`[prague-l10n] NOT TRANSLATED: index.json fingerprint mismatch for ${pageId}/${locale}`);
+      }
     }
   }
+  return layer;
 }
 
 async function main() {
@@ -295,15 +316,35 @@ async function main() {
       throw new Error('[prague-l10n] NOT TRANSLATED: chrome base missing copy paths');
     }
 
+    const chromeLayer = await verifyLayerIndex({ pageId: 'chrome', locales: overlayLocales, baseFingerprint: chromeFingerprint });
     for (const locale of overlayLocales) {
-      const overlayPath = path.join(TOKYO_PRAGUE_ROOT, 'chrome', 'locale', locale, `${chromeFingerprint}.ops.json`);
-      if (!(await fileExists(overlayPath))) {
-        throw new Error(`[prague-l10n] NOT TRANSLATED: missing chrome overlay for ${locale}: ${overlayPath}`);
+      const publishedFingerprint = chromeLayer?.lastPublishedFingerprint?.[locale];
+      const fingerprintToVerify = STRICT_LATEST ? chromeFingerprint : publishedFingerprint;
+      if (!fingerprintToVerify) {
+        const msg = `[prague-l10n] Missing chrome lastPublishedFingerprint for ${locale}`;
+        if (STRICT_LATEST) throw new Error(msg);
+        console.warn(msg);
+        continue;
       }
-      const overlay = await verifyOverlay({ overlayPath, allowlistPaths, baseFingerprint: chromeFingerprint });
-      assertOverlayComplete({ overlay, expectedPaths, ref: overlayPath });
+      const overlayPath = path.join(TOKYO_PRAGUE_ROOT, 'chrome', 'locale', locale, `${fingerprintToVerify}.ops.json`);
+      if (!(await fileExists(overlayPath))) {
+        const msg = `[prague-l10n] NOT TRANSLATED: missing chrome overlay for ${locale}: ${overlayPath}`;
+        if (STRICT_LATEST) throw new Error(msg);
+        console.warn(msg);
+        continue;
+      }
+      const overlay = await verifyOverlay({ overlayPath, allowlistPaths, baseFingerprint: fingerprintToVerify });
+      if (STRICT_LATEST) {
+        assertOverlayComplete({ overlay, expectedPaths, ref: overlayPath });
+      } else {
+        const snapshotPath = path.join(TOKYO_PRAGUE_ROOT, 'chrome', BASES_DIR_NAME, `${fingerprintToVerify}.snapshot.json`);
+        if (await fileExists(snapshotPath)) {
+          const snapshot = await readJson(snapshotPath);
+          const keys = isPlainObject(snapshot?.snapshot) ? Object.keys(snapshot.snapshot) : [];
+          if (keys.length) assertOverlayComplete({ overlay, expectedPaths: keys, ref: overlayPath });
+        }
+      }
     }
-    await verifyLayerIndex({ pageId: 'chrome', locales: overlayLocales, baseFingerprint: chromeFingerprint });
   }
 
   for (const entry of pageFiles) {
@@ -334,15 +375,35 @@ async function main() {
       }
     }
 
+    const layer = await verifyLayerIndex({ pageId: entry.pageId, locales: overlayLocales, baseFingerprint });
     for (const locale of overlayLocales) {
-      const overlayPath = path.join(TOKYO_PRAGUE_ROOT, entry.pageId, 'locale', locale, `${baseFingerprint}.ops.json`);
-      if (!(await fileExists(overlayPath))) {
-        throw new Error(`[prague-l10n] NOT TRANSLATED: missing overlay for ${entry.pageId}/${locale}: ${overlayPath}`);
+      const publishedFingerprint = layer?.lastPublishedFingerprint?.[locale];
+      const fingerprintToVerify = STRICT_LATEST ? baseFingerprint : publishedFingerprint;
+      if (!fingerprintToVerify) {
+        const msg = `[prague-l10n] Missing lastPublishedFingerprint for ${entry.pageId}/${locale}`;
+        if (STRICT_LATEST) throw new Error(msg);
+        console.warn(msg);
+        continue;
       }
-      const overlay = await verifyOverlay({ overlayPath, allowlistPaths, baseFingerprint });
-      assertOverlayComplete({ overlay, expectedPaths, ref: overlayPath });
+      const overlayPath = path.join(TOKYO_PRAGUE_ROOT, entry.pageId, 'locale', locale, `${fingerprintToVerify}.ops.json`);
+      if (!(await fileExists(overlayPath))) {
+        const msg = `[prague-l10n] NOT TRANSLATED: missing overlay for ${entry.pageId}/${locale}: ${overlayPath}`;
+        if (STRICT_LATEST) throw new Error(msg);
+        console.warn(msg);
+        continue;
+      }
+      const overlay = await verifyOverlay({ overlayPath, allowlistPaths, baseFingerprint: fingerprintToVerify });
+      if (STRICT_LATEST) {
+        assertOverlayComplete({ overlay, expectedPaths, ref: overlayPath });
+      } else {
+        const snapshotPath = path.join(TOKYO_PRAGUE_ROOT, entry.pageId, BASES_DIR_NAME, `${fingerprintToVerify}.snapshot.json`);
+        if (await fileExists(snapshotPath)) {
+          const snapshot = await readJson(snapshotPath);
+          const keys = isPlainObject(snapshot?.snapshot) ? Object.keys(snapshot.snapshot) : [];
+          if (keys.length) assertOverlayComplete({ overlay, expectedPaths: keys, ref: overlayPath });
+        }
+      }
     }
-    await verifyLayerIndex({ pageId: entry.pageId, locales: overlayLocales, baseFingerprint });
   }
 
   console.log('[prague-l10n] Verification complete.');

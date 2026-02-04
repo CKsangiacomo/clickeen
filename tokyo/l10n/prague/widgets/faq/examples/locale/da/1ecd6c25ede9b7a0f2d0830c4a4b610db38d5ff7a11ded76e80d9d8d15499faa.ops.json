@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-eksempler - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Se, hvordan rigtige virksomheder bruger FAQ'er til at løse problemer og lukke flere aftaler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ofte stillede spørgsmål, der løser reelle forretningsproblemer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Fra tandlægeklinikker til DJ-bookinger: Se, hvordan virksomheder som din forvandler spørgsmål til kunder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Sundhedssektoren: Reducér udeblivelser med 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Tandlæger besvarer almindelige spørgsmål om behandlinger, forsikring og tidsbestilling—før patienterne overhovedet ringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-handel: Håndter returneringer med det samme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Forsendelsespolitikker, størrelsesguides, returfrister—besvar de spørgsmål, der forhindrer, at kunder opgiver kurven."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Konvertér prøveperioder til kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Spørgsmål om funktioner, tvivl om prissætning, bekymringer om integration—imødegå indvendinger, før de bliver til tabte muligheder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Alle brancher har FAQ-muligheder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Spørgsmål er den stille dræber af konverteringer. Uanset om du booker aftaler, håndterer returneringer eller forklarer funktioner, betyder ubesvarede spørgsmål tabt forretning. Clickeens FAQ’er virker overalt og taler øjeblikkeligt hvert kundesprog."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Kreative tjenester: Strømlin bookingforespørgsler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ's, fotografer og konsulenter besvarer spørgsmål om priser, tilgængelighed og proces døgnet rundt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Fra spørgsmål til kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "At implementere FAQ'er, der faktisk skaber resultater, følger en gennemprøvet proces."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identificér dine største spørgsmålskategorier"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Vælg den rette FAQ-stil til din målgruppe"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Indlejring og optimering baseret på data"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analyser supporttickets, salgssamtaler og chatlogs for at finde de spørgsmål, der stilles oftest."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Accordion til detaljerede svar, kort til info, der er nem at skimme, lister til ligetil Q&A."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Overvåg, hvilke spørgsmål der bliver klikket mest på, og finjustér dine svar ud fra det, der skaber konverteringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Find din branches FAQ-løsning"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Skabeloner designet specifikt til virksomheder som din, med AI, der tilpasser sig dine behov."
+    }
+  ],
+  "v": 1
+}

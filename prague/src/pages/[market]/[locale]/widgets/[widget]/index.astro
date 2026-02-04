@@ -4,7 +4,6 @@ import Nav from '../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../blocks/site/footer.astro';
 import WidgetBlocks from '../../../../../components/WidgetBlocks.astro';
 import { loadRequiredWidgetPageJsonForLocaleWithOverlayMeta } from '../../../../../lib/markdown';
-import { pragueT } from '../../../../../lib/i18n';
 import { getPragueCanonicalOverlayContext } from '../../../../../lib/requestContext';
 import { getPragueMarket, toMarketHreflang } from '../../../../../lib/markets';
 import { isPragueOverlayFailureError, type PragueOverlayMeta } from '../../../../../lib/pragueL10n';
@@ -53,6 +52,14 @@ let overlayError: string | null = null;
 
 const englishHref = `/${marketConfig.key}/en/widgets/${encodeURIComponent(widgetKey)}/`;
 
+// Helper to title-case widget name (faq -> FAQ, countdown -> Countdown)
+const titleCaseWidget = (name: string): string => {
+  return name
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 try {
   if (!marketConfig) {
     throw new Error('[prague] Unknown market.');
@@ -75,7 +82,8 @@ try {
   if (!pageTitle || !pageDescription) {
     throw new Error(`[prague] Invalid tokyo/widgets/${widgetKey}/pages/overview.json (page-meta.copy.title/description required)`);
   }
-  createFreeLabel = await pragueT(localeKey, 'prague.cta.createFree');
+  const widgetDisplayName = titleCaseWidget(widgetKey);
+  createFreeLabel = `Create a free ${widgetDisplayName} widget`;
 } catch (err) {
   if (!isPragueOverlayFailureError(err)) throw err;
   overlayMeta = { overlayStatus: err.overlayStatus, overlayLocale: err.overlayLocale };

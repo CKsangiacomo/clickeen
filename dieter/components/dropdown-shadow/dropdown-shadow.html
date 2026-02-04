@@ -1,4 +1,9 @@
-<div class="diet-dropdown-shadow diet-popover-host" data-size="{{size}}" data-state="closed">
+<div
+  class="diet-dropdown-shadow diet-popover-host"
+  data-size="{{size}}"
+  data-state="closed"
+  {{#if axis}}data-axis="{{axis}}"{{/if}}
+>
   <input
     id="{{id}}"
     type="hidden"
@@ -176,21 +181,10 @@
             </label>
           </div>
 
-          <div class="diet-toggle diet-toggle--block" data-size="sm">
-            <span class="diet-toggle__label label-s" id="{{id}}-inset-label">Inset</span>
-            <input
-              id="{{id}}-inset"
-              class="diet-toggle__input sr-only diet-dropdown-shadow__inset"
-              type="checkbox"
-              role="switch"
-              aria-labelledby="{{id}}-inset-label"
-            />
-            <label class="diet-toggle__switch" for="{{id}}-inset" aria-hidden="true">
-              <span class="diet-toggle__knob"></span>
-            </label>
-          </div>
-
-          <div class="diet-slider diet-slider--block" data-size="md">
+          <div
+            class="diet-slider diet-slider--block diet-dropdown-shadow__axis-control diet-dropdown-shadow__axis-control--x"
+            data-size="md"
+          >
             <label class="diet-slider__label label-s" for="{{id}}-x">X</label>
             <input
               id="{{id}}-x"
@@ -204,7 +198,10 @@
             />
           </div>
 
-          <div class="diet-slider diet-slider--block" data-size="md">
+          <div
+            class="diet-slider diet-slider--block diet-dropdown-shadow__axis-control diet-dropdown-shadow__axis-control--y"
+            data-size="md"
+          >
             <label class="diet-slider__label label-s" for="{{id}}-y">Y</label>
             <input
               id="{{id}}-y"

@@ -100,6 +100,7 @@ tokyo/widgets/{widget}/
 ```
 tokyo/l10n/instances/<publicId>/
 ├── index.json
+├── bases/<baseFingerprint>.snapshot.json
 ├── locale/<locale>/<baseFingerprint>.ops.json
 ├── geo/<geo>/<baseFingerprint>.ops.json
 ├── industry/<industry>/<baseFingerprint>.ops.json
@@ -130,7 +131,10 @@ tokyo/l10n/instances/<publicId>/
 ```
 
 **Key properties:**
-- `baseFingerprint`: Must match the current base config fingerprint (prevents stale overlays)
+- `baseFingerprint`: The allowlist-scoped base fingerprint the overlay ops were generated from (sha256)
+- Fresh vs stale:
+  - **fresh:** `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`
+  - **stale:** fingerprint mismatch; runtime may still apply the last published overlay **selectively** when safe (never clobbering user edits) while async generation catches up
 - Allowlist contract lives in `tokyo/widgets/{widget}/localization.json` and `layers/*.allowlist.json` (validated at publish time)
 - `ops`: Array of JSONPatch-style operations (currently only "set" supported)
 
@@ -147,7 +151,7 @@ tokyo/l10n/instances/<publicId>/
 ```typescript
 interface RequestContext {
   // Core dimensions
-  locale: string;              // "fr", "es", "ja", etc. (from Accept-Language or URL)
+  locale: string;              // BCP47-ish locale token ("fr", "fr-ca", "zh-hans") (resolved/effective)
   geo: string;                 // "us", "eu", "apac" (from IP lookup)
   device: string;              // "mobile", "desktop", "tablet" (from User-Agent)
 
@@ -184,24 +188,31 @@ async function resolveContext(request: Request): Promise<RequestContext> {
 }
 
 function resolveLocale(request: Request): string {
-  // 1. URL param (?lang=fr) - highest priority
-  const urlLang = new URL(request.url).searchParams.get('lang');
-  if (urlLang) return urlLang;
+  // 1) URL param (?locale=fr-ca) - highest priority
+  const urlLocale = new URL(request.url).searchParams.get('locale')?.trim();
+  if (urlLocale) return canonicalizeSupportedLocale(urlLocale);
 
-  // 2. Cookie (preferred_lang)
-  const cookieLang = request.headers.get('Cookie')?.match(/preferred_lang=([^;]+)/)?.[1];
-  if (cookieLang) return cookieLang;
+  // 2) Cookie (ck_locale)
+  const cookieLocale = request.headers.get('Cookie')?.match(/ck_locale=([^;]+)/)?.[1];
+  if (cookieLocale) return canonicalizeSupportedLocale(cookieLocale);
 
-  // 3. Accept-Language header
+  // 3) Accept-Language header (quality-aware; preserve script/region when supported)
   const acceptLang = request.headers.get('Accept-Language');
   if (acceptLang) {
-    const primary = acceptLang.split(',')[0].split('-')[0]; // "fr-FR" → "fr"
-    return primary;
+    const candidates = parseAcceptLanguage(acceptLang); // ["fr-FR", "fr", "en-US", "en", ...]
+    for (const candidate of candidates) {
+      const resolved = tryResolveSupportedLocale(candidate);
+      if (resolved) return resolved;
+    }
   }
 
-  // 4. Fallback
+  // 4) Deterministic fallback (Phase 1): base locale
   return 'en';
 }
+
+// canonicalizeSupportedLocale: lowercases, normalizes separators, and validates against config/locales.json.
+// tryResolveSupportedLocale: resolves an exact supported locale when possible, otherwise falls back within the same language
+// (and may use geoTargets for same-language variant selection). It must never switch language families.
 
 function resolveGeo(request: Request): string {
   // Cloudflare provides this automatically
@@ -242,7 +253,7 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 ### 3.5 Layer Keys + Selection Contract
 
 **LayerKey rules (canonicalized):**
-- locale: BCP47 (en, fr-CA)
+- locale: BCP47-ish (en, fr-ca, zh-hans)
 - geo: ISO-3166 (US, DE) or explicit market groupings
 - industry: slug enum (dentist, restaurant)
 - experiment: exp_<id>:<variant>
@@ -257,7 +268,7 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 - user: apply locale-specific user overlay first; if absent, apply global fallback
 
 **GeoTargets semantics:**
-- geoTargets (if present) only drive locale selection (fr vs fr-CA), not geo overrides.
+- geoTargets (if present) only drive **same-language** locale variant selection (e.g. `fr` → `fr-ca`) when the request locale is ambiguous; they must never override an explicit locale or switch language families.
 - Geo-specific overrides live in the geo layer.
 
 ---
@@ -280,7 +291,8 @@ async function resolveAccount(request: Request): Promise<string | undefined> {
 
 **Index semantics:**
 - `index.json` may include `lastPublishedFingerprint` to reduce 404 misses.
-- Runtime never applies an overlay if `overlay.baseFingerprint` mismatches the current base.
+- Runtime prefers **fresh** overlays whose `overlay.baseFingerprint` matches the current base fingerprint.
+- Runtime may apply a **stale** locale overlay selectively when safe (requires a published base snapshot for the stale fingerprint). Other layers skip stale overlays by default.
 
 **Composition algorithm:**
 ```typescript
@@ -307,9 +319,16 @@ function composeVariant(
   for (const overlay of layers) {
     if (!overlay) continue;
 
-    // Validate fingerprint
+    // Fingerprint guard: fresh vs safe stale
     if (overlay.baseFingerprint !== baseFingerprint) {
-      console.warn(`Overlay fingerprint mismatch for ${overlay.layer}:${overlay.layerKey} - skipping`);
+      // Phase 1: safe-stale apply is only supported for locale overlays (instances).
+      if (overlay.layer === 'locale') {
+        const baseSnapshot = overlays.bases?.get(overlay.baseFingerprint);
+        if (baseSnapshot) {
+          const safeOps = filterSafeStaleOps(overlay.ops, baseConfig, baseSnapshot);
+          result = applyOps(result, safeOps);
+        }
+      }
       continue;
     }
 
@@ -332,6 +351,10 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
   return result;
 }
+
+// Stale-safe apply rule:
+// - For each `{ op: "set", path, value }`, only apply when `getValueAtPath(baseConfig, path)` equals the published
+//   base snapshot value for that path (prevents clobbering manual/base edits made after the overlay was generated).
 ```
 
 ---
@@ -359,7 +382,7 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
 **Enforcement:**
 - Paris/San Francisco validate ops against the allowlist at publish/generation time.
-- Runtime only enforces the `baseFingerprint` staleness guard and prohibited path segments.
+- Runtime enforces the staleness guard (fresh fingerprint match; plus safe stale apply where supported) and prohibited path segments.
 
 ---
 

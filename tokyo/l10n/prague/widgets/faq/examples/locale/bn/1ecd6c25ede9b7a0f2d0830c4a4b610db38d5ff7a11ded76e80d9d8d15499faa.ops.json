@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উদাহরণসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দেখুন, বাস্তব ব্যবসাগুলো কীভাবে সমস্যা সমাধান করতে এবং আরও বেশি ডিল সম্পন্ন করতে FAQ ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "বাস্তব ব্যবসায়িক সমস্যার সমাধান করে এমন FAQs"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ডেন্টিস্ট চেম্বার থেকে DJ বুকিং পর্যন্ত—আপনার মতো কোম্পানিগুলো কীভাবে প্রশ্নকে গ্রাহকে রূপান্তর করে তা দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "স্বাস্থ্যসেবা: অনুপস্থিতি ৪০% কমান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "দাঁতের চিকিৎসকেরা প্রক্রিয়া, বীমা এবং অ্যাপয়েন্টমেন্ট নির্ধারণ নিয়ে সাধারণ প্রশ্নগুলোর উত্তর দেন—রোগীরা ফোন করার আগেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "ইকমার্স: তাৎক্ষণিকভাবে রিটার্ন পরিচালনা করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "শিপিং নীতিমালা, সাইজ গাইড, রিটার্নের সময়সীমা—কার্ট পরিত্যাগ রোধ করে এমন প্রশ্নগুলোর উত্তর দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: ট্রায়ালকে গ্রাহকে রূপান্তর করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "ফিচার সম্পর্কিত প্রশ্ন, মূল্য নির্ধারণ নিয়ে দ্বিধা, ইন্টিগ্রেশন নিয়ে উদ্বেগ—আপত্তিগুলো হারানো সুযোগে পরিণত হওয়ার আগেই সমাধান করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "প্রতিটি শিল্পক্ষেত্রেই FAQ-এর সুযোগ রয়েছে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "প্রশ্নগুলো হলো কনভার্সনের নীরব ঘাতক। আপনি অ্যাপয়েন্টমেন্ট বুকিং করুন, রিটার্ন প্রক্রিয়াকরণ করুন, বা ফিচার ব্যাখ্যা করুন—অউত্তরিত প্রশ্ন মানে ব্যবসা হারানো। Clickeen-এর FAQs সর্বত্র কাজ করে, প্রতিটি গ্রাহকের ভাষায় তাৎক্ষণিকভাবে কথা বলে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "সৃজনশীল সেবা: বুকিং অনুসন্ধান সহজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "ডিজে, ফটোগ্রাফার এবং পরামর্শকরা ২৪/৭ মূল্য, প্রাপ্যতা এবং প্রক্রিয়া সম্পর্কিত প্রশ্নের উত্তর দেন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "প্রশ্ন থেকে গ্রাহক পর্যন্ত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "বাস্তবে ফল দেয় এমন FAQ বাস্তবায়ন একটি প্রমাণিত প্রক্রিয়া অনুসরণ করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "আপনার সবচেয়ে বড় প্রশ্নের বিভাগগুলো চিহ্নিত করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "আপনার শ্রোতার জন্য সঠিক FAQ স্টাইল বেছে নিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "ডেটার ভিত্তিতে এম্বেড করুন এবং অপ্টিমাইজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্নগুলো খুঁজে বের করতে সাপোর্ট টিকিট, সেলস কল এবং চ্যাট লগ বিশ্লেষণ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "বিস্তারিত উত্তরের জন্য অ্যাকর্ডিয়ন, দ্রুত স্ক্যানযোগ্য তথ্যের জন্য কার্ড, সরল Q&A-এর জন্য তালিকা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "কোন প্রশ্নগুলোতে সবচেয়ে বেশি ক্লিক হয় তা নজরদারি করুন এবং যা কনভার্সন বাড়ায় তার ভিত্তিতে আপনার উত্তরগুলো পরিমার্জন করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "আপনার শিল্পের FAQ সমাধান খুঁজুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "আপনার মতো ব্যবসার জন্য বিশেষভাবে তৈরি টেমপ্লেট, যেখানে AI আপনার প্রয়োজন অনুযায়ী মানিয়ে নেয়।"
+    }
+  ],
+  "v": 1
+}

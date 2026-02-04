@@ -35,6 +35,14 @@ export type PragueOverlay = {
   ops: Array<{ op: 'set'; path: string; value: string }>;
 };
 
+type PragueBaseSnapshot = {
+  v: 1;
+  pageId: string;
+  baseFingerprint: string;
+  baseUpdatedAt?: string | null;
+  snapshot: Record<string, string>;
+};
+
 type LayerIndexEntry = {
   keys: string[];
   lastPublishedFingerprint?: Record<string, string>;
@@ -85,7 +93,11 @@ async function loadLocales(): Promise<string[]> {
     throw new Error('[prague] Invalid locales file: config/locales.json');
   }
   const locales = localesJson
-    .map((value) => normalizeLocaleToken(value))
+    .map((entry: any) => {
+      if (typeof entry === 'string') return normalizeLocaleToken(entry);
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return normalizeLocaleToken(entry.code);
+      return null;
+    })
     .filter((value): value is string => Boolean(value));
   if (!locales.includes('en')) {
     throw new Error('[prague] locales.json must include "en"');
@@ -125,12 +137,6 @@ function readEnvStrictFlag(): string | undefined {
   return readEnv('PRAGUE_L10N_STRICT') || readEnv('PUBLIC_PRAGUE_L10N_STRICT');
 }
 
-function isDevOrTest(): boolean {
-  if (import.meta.env.DEV) return true;
-  const nodeEnv = String(readEnv('NODE_ENV') || '').trim();
-  return nodeEnv === 'development' || nodeEnv === 'test';
-}
-
 function getTokyoBaseUrl(): string {
   const raw = String(readEnvTokyoUrl() || '').trim();
   if (!raw) {
@@ -142,11 +148,25 @@ function getTokyoBaseUrl(): string {
 function isDevStrict(): boolean {
   const strict = readEnvStrictFlag();
   if (strict === '1') return true;
-  return isDevOrTest();
+  return false;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getAtPath(obj: unknown, pathStr: string): unknown {
+  const parts = String(pathStr || '')
+    .split('.')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  let current: any = obj;
+  for (const part of parts) {
+    if (current == null) return undefined;
+    const key: any = isIndex(part) ? Number(part) : part;
+    current = current?.[key];
+  }
+  return current;
 }
 
 function normalizePath(pathStr: string): string {
@@ -231,6 +251,27 @@ async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
   return json;
 }
 
+async function fetchBaseSnapshot(args: { pageId: string; baseFingerprint: string }): Promise<Record<string, string> | null> {
+  if (!args.baseFingerprint) return null;
+  const baseUrl = getTokyoBaseUrl();
+  const prefix = getTokyoL10nPrefix();
+  const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/bases/${encodeURIComponent(
+    args.baseFingerprint,
+  )}.snapshot.json`;
+  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as PragueBaseSnapshot | null;
+  if (!json || typeof json !== 'object' || json.v !== 1) return null;
+  if (!json.snapshot || typeof json.snapshot !== 'object' || Array.isArray(json.snapshot)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(json.snapshot)) {
+    if (typeof value !== 'string') continue;
+    out[String(key)] = value;
+  }
+  return out;
+}
+
 function normalizeCountryCode(raw?: string | null): string | null {
   const value = String(raw || '').trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(value)) return null;
@@ -248,16 +289,21 @@ function normalizeGeoCountries(raw: unknown): string[] | null {
 
 function resolveLocaleFromIndex(args: { entry: LayerIndexEntry; locale: string; country?: string | null }): string | null {
   if (!args.entry.keys.length) return null;
-  const supported = new Set(
-    args.entry.keys.map((entry) => normalizeLocaleToken(entry)).filter((value): value is string => Boolean(value)),
-  );
+  const supportedList = args.entry.keys
+    .map((entry) => normalizeLocaleToken(entry))
+    .filter((value): value is string => Boolean(value));
+  const supported = new Set(supportedList);
+
+  const requestedLocale = normalizeLocaleToken(args.locale);
+  if (!requestedLocale) return null;
+  const baseLocale = requestedLocale.split('-')[0] || '';
+  if (!baseLocale) return null;
 
   const country = normalizeCountryCode(args.country);
   if (country && GEO_TARGETS_SEMANTICS === 'locale-selection-only') {
     const geoTargets = args.entry.geoTargets ?? {};
-    for (const localeKey of args.entry.keys) {
-      const locale = normalizeLocaleToken(localeKey);
-      if (!locale) continue;
+    const candidates = supportedList.filter((locale) => locale === baseLocale || locale.startsWith(`${baseLocale}-`));
+    for (const locale of candidates) {
       const geoCountries = normalizeGeoCountries(geoTargets[locale]);
       if (geoCountries && geoCountries.includes(country)) {
         return locale;
@@ -265,7 +311,7 @@ function resolveLocaleFromIndex(args: { entry: LayerIndexEntry; locale: string; 
     }
   }
 
-  const candidates = localeCandidates(args.locale, supported);
+  const candidates = localeCandidates(requestedLocale, supported);
   if (candidates.length) return candidates[0]!;
   return null;
 }
@@ -447,6 +493,29 @@ async function fetchOverlay(args: {
   return json;
 }
 
+function filterStaleOps(args: {
+  base: Record<string, unknown>;
+  overlay: PragueOverlay;
+  snapshot: Record<string, string>;
+}): PragueOverlay['ops'] {
+  const out: PragueOverlay['ops'] = [];
+  for (const op of args.overlay.ops) {
+    if (!op || typeof op !== 'object') continue;
+    if (op.op !== 'set') continue;
+    if (typeof op.path !== 'string' || !op.path.trim()) continue;
+    if (typeof op.value !== 'string') continue;
+    const normalized = normalizePath(op.path);
+    if (!normalized) continue;
+    const snapshotValue = args.snapshot[normalized];
+    if (typeof snapshotValue !== 'string') continue;
+    const baseValue = getAtPath(args.base, normalized);
+    if (typeof baseValue !== 'string') continue;
+    if (baseValue !== snapshotValue) continue;
+    out.push({ op: 'set', path: normalized, value: op.value });
+  }
+  return out;
+}
+
 async function applyPragueLayeredOverlaysWithMeta(args: {
   pageId: string;
   locale: string;
@@ -520,23 +589,25 @@ async function applyPragueLayeredOverlaysWithMeta(args: {
     cappedTargets.map(async (target) => {
       const entry = index.layers[target.layer];
       const expected = entry?.lastPublishedFingerprint?.[target.key];
-      if (expected && expected !== baseFingerprint) {
-        return { target, overlay: null, stale: true };
-      }
+      const overlayFingerprint = expected && expected !== baseFingerprint ? expected : baseFingerprint;
       const overlay = await fetchOverlay({
         pageId: args.pageId,
         layer: target.layer,
         layerKey: target.key,
-        baseFingerprint,
+        baseFingerprint: overlayFingerprint,
       });
-      if (!overlay) return { target, overlay: null, stale: false };
-      if (overlay.baseFingerprint && overlay.baseFingerprint !== baseFingerprint) {
-        return { target, overlay: null, stale: true };
+      if (!overlay) return { target, overlay: null, stale: Boolean(expected && expected !== baseFingerprint), fingerprint: overlayFingerprint, snapshot: null };
+      if (overlay.baseFingerprint && overlay.baseFingerprint !== overlayFingerprint) {
+        return { target, overlay: null, stale: true, fingerprint: overlayFingerprint, snapshot: null };
       }
       if (!overlay.baseFingerprint) {
-        return { target, overlay: null, stale: true };
+        return { target, overlay: null, stale: true, fingerprint: overlayFingerprint, snapshot: null };
       }
-      return { target, overlay, stale: false };
+      if (overlayFingerprint !== baseFingerprint) {
+        const snapshot = await fetchBaseSnapshot({ pageId: args.pageId, baseFingerprint: overlayFingerprint }).catch(() => null);
+        return { target, overlay, stale: true, fingerprint: overlayFingerprint, snapshot };
+      }
+      return { target, overlay, stale: false, fingerprint: overlayFingerprint, snapshot: null };
     }),
   );
 
@@ -568,9 +639,13 @@ async function applyPragueLayeredOverlaysWithMeta(args: {
       }
       continue;
     }
-    const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as PragueOverlay['ops'];
+    const ops = result.stale
+      ? result.snapshot
+        ? filterStaleOps({ base: args.base, overlay: result.overlay, snapshot: result.snapshot })
+        : []
+      : (result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as PragueOverlay['ops']);
     localized = applySetOps(localized, ops);
-    applied = true;
+    applied = applied || ops.length > 0;
   }
 
   const overlayStatus: PragueOverlayStatus = anyStale ? 'stale' : anyMissing ? 'missing' : applied ? 'applied' : 'missing';

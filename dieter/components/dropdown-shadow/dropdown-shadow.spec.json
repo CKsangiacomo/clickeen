@@ -7,6 +7,7 @@
     "label": { "optional": true },
     "headerLabel": { "optional": true },
     "headerIcon": { "optional": true },
+    "axis": { "enum": ["x", "y", "both"], "optional": true, "default": "both" },
     "placeholder": { "optional": true, "default": "Select a shadow" },
     "value": { "optional": true }
   },
@@ -38,4 +39,3 @@
     }
   ]
 }
-

@@ -5,16 +5,192 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Explore FAQ templates and start from a proven layout.",
-        "title": "FAQ Templates - Clickeen"
+        "description": "Choose from stunning FAQ designs that turn heads and convert visitors.",
+        "title": "FAQ templates - Clickeen"
       }
     },
     {
       "id": "hero",
       "type": "hero",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
       "copy": {
-        "headline": "FAQ Templates",
-        "subheadline": "Start from a proven layout -- then tailor it to your brand."
+        "headline": "Your FAQ. Your way.",
+        "subheadline": "Beautiful by default. Unmistakably yours by design."
+      }
+    },
+    {
+      "id": "split-2026-trends",
+      "type": "split",
+      "layout": "visual-left",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Bold when you need it",
+        "subheadline": "Glassmorphism, liquid glass, neumorphism—trend-forward looks in light and dark."
+      }
+    },
+    {
+      "id": "split-evergreen-styles",
+      "type": "split",
+      "layout": "visual-right",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Elegant when you want it",
+        "subheadline": "Minimal, clean, and modern. Timeless styles that always feel current."
+      }
+    },
+    {
+      "id": "big-bang-freedom",
+      "type": "big-bang",
+      "copy": {
+        "headline": "Start with a design. Then make it yours.",
+        "body": "Get the aesthetic instantly. Trending designs or evergreen classics. Then customize without limits—per-corner radius, per-side shadows, per-role typography, and responsive breakpoints. A template that becomes your signature."
+      }
+    },
+    {
+      "id": "navmeta",
+      "type": "navmeta",
+      "copy": {
+        "description": "Help visitors find answers fast.",
+        "title": "FAQ"
+      }
+    },
+    {
+      "id": "steps-customization",
+      "type": "steps",
+      "copy": {
+        "title": "Design freedom, built in.",
+        "subhead": "From layouts to finishes to fonts—customization that feels effortless.",
+        "items": [
+          {
+            "title": "Layouts, your way",
+            "body": "Many layout systems, not one. Per-breakpoint structure. Independent desktop/mobile padding and spacing. Control columns, stacking, alignment, and reflow—exactly.",
+            "iconEnabled": true,
+            "iconName": "circle.grid.2x2",
+            "backgroundEnabled": true,
+            "backgroundPath": "BgrCard01.jpg",
+            "imageEnabled": true,
+            "imagePath": "layout.png",
+            "imageLayout": "bleed"
+          },
+          {
+            "title": "Appearance control without limits",
+            "body": "Per-corner radius. Borders with custom colors. Shadows outside and inside (linked or independent per-side). Gradient, image, or video backgrounds. Total visual authority.",
+            "iconEnabled": true,
+            "iconName": "app.translucent",
+            "backgroundEnabled": true,
+            "backgroundPath": "BgrCard02.jpg",
+            "imageEnabled": true,
+            "imagePath": "appearance.png",
+            "imageLayout": "bleed"
+          },
+          {
+            "title": "Typography precision",
+            "body": "Six distinct roles (headline, body, question, answer, button, section). Choose from 17 Google Fonts. Weight, style, size—all customizable per role. Dynamic scales.",
+            "iconEnabled": true,
+            "iconName": "character.circle",
+            "backgroundEnabled": true,
+            "backgroundPath": "BgrCard03.jpg",
+            "imageEnabled": true,
+            "imagePath": "typography.png",
+            "imageLayout": "bleed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "split-layouts",
+      "type": "split",
+      "layout": "visual-right",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Three layout engines for your FAQ widget",
+        "subheadline": "Accordion for progressive reveal. List for simplicity. Cards for visual hierarchy. Grid or masonry. Responsive columns. Granular control over gaps and padding."
+      }
+    },
+    {
+      "id": "split-appearance",
+      "type": "split",
+      "layout": "visual-left",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Appearance control without limits",
+        "subheadline": "Per-corner radius. Borders with custom colors. Shadows outside and inside (linked or independent per-side). Gradient, image, or video backgrounds. Total visual authority."
+      }
+    },
+    {
+      "id": "split-typography",
+      "type": "split",
+      "layout": "visual-right",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Typography precision",
+        "subheadline": "Six distinct roles (headline, body, question, answer, button, section). Choose from 17 Google Fonts. Weight, style, size—all customizable per role. Dynamic scales."
+      }
+    },
+    {
+      "id": "split-dark",
+      "type": "split",
+      "layout": "visual-left",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Dark mode: sophisticated and modern",
+        "subheadline": "Modern interfaces thrive in darkness. Premium feel with cutting-edge aesthetics. Included with every template."
+      }
+    },
+    {
+      "id": "split-responsive",
+      "type": "split",
+      "layout": "visual-right",
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      },
+      "copy": {
+        "headline": "Desktop and mobile, perfectly tuned",
+        "subheadline": "Your FAQ widget responds to every breakpoint. Different column counts, padding, spacing per device. One design language, infinite viewports."
+      }
+    },
+    {
+      "id": "steps-workflow",
+      "type": "steps",
+      "copy": {
+        "title": "From template to perfect fit",
+        "subhead": "How to build your FAQ widget",
+        "items": [
+          {
+            "title": "Choose a design template",
+            "body": "Trending, classic, or minimal. Light and dark modes."
+          },
+          {
+            "title": "Customize layouts and appearance",
+            "body": "Accordion, list, or cards. Per-corner radius, per-side shadows, gradients, borders."
+          },
+          {
+            "title": "Refine typography and responsiveness",
+            "body": "Six font roles, 17 Google Fonts. Perfect on desktop and mobile."
+          }
+        ]
+      }
+    },
+    {
+      "id": "cta-templates",
+      "type": "cta-bottom-block",
+      "copy": {
+        "headline": "Create a free FAQ widget",
+        "subheadline": "Start with a design template or build from scratch. Total creative control."
       }
     }
   ]

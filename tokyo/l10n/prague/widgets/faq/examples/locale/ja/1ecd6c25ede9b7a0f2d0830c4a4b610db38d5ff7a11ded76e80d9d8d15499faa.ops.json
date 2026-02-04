@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQの例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "実際の企業がFAQを活用して課題を解決し、より多くの成約につなげる方法をご覧ください。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "実際のビジネス課題を解決するFAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "歯科医院からDJのブッキングまで。あなたと同じような企業が、質問を顧客に変えている方法をご覧ください。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "医療：無断キャンセルを40%削減"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "歯科医が処置、保険、予約に関するよくある質問に、患者が電話をかける前に回答します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "ECサイト：返品を即時に対応"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "配送ポリシー、サイズガイド、返品期限——カゴ落ちを防ぐための疑問に答えます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS：トライアルを顧客に転換"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "機能に関する質問、料金への不安、連携への懸念——反論が失注の機会になる前に解消しましょう。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "あらゆる業界にFAQの機会があります"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "質問はコンバージョンを静かに蝕む要因です。予約の受付、返品処理、機能の説明など、どんな場面でも、疑問が解消されないままではビジネスを逃してしまいます。ClickeenのFAQはどこでも機能し、あらゆる顧客の言語で瞬時に伝えます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "クリエイティブサービス：予約に関する問い合わせを効率化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ、フォトグラファー、コンサルタントが、料金、空き状況、進め方に関する質問に24時間365日対応します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "質問を顧客へと変える"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "実際に成果につながるFAQの実装には、実証されたプロセスがあります。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "主要な質問カテゴリを特定する"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "オーディエンスに合ったFAQスタイルを選ぶ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "埋め込み、データに基づいて最適化する"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "サポートチケット、営業通話、チャットログを分析し、最も頻繁に尋ねられている質問を見つけます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "詳細な回答にはアコーディオン、ざっと確認できる情報にはカード、シンプルなQ&Aにはリストが適しています。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "どの質問が最もクリックされているかを監視し、コンバージョンにつながる要因に基づいて回答を改善します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "業界に最適なFAQソリューションを見つける"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "あなたのような企業のために特別に設計されたテンプレート。ニーズに合わせて適応するAIを搭載。"
+    }
+  ],
+  "v": 1
+}

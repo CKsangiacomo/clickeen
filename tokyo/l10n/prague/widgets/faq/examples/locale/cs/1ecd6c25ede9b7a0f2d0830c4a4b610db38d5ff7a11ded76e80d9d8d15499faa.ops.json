@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Příklady FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Podívejte se, jak skutečné firmy využívají FAQ k řešení problémů a uzavírání více obchodů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Časté dotazy, které řeší skutečné obchodní problémy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Od zubních ordinací po rezervace DJů – podívejte se, jak firmy jako ta vaše proměňují otázky v zákazníky."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Zdravotnictví: snižte počet nedostavených pacientů o 40 %"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Zubní lékaři odpovídají na běžné otázky ohledně zákroků, pojištění a objednávání—ještě předtím, než pacienti vůbec zavolají."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-commerce: Vyřizujte vrácení okamžitě"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Zásady dopravy, průvodci velikostmi, lhůty pro vrácení — odpovídejte na otázky, které brání opuštění košíku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Proměňte zkušební verze v zákazníky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Dotazy k funkcím, pochybnosti o cenách, obavy z integrace — řešte námitky dřív, než se z nich stanou promarněné příležitosti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Každé odvětví má příležitosti pro FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Otázky jsou tichým zabijákem konverzí. Ať už rezervujete schůzky, zpracováváte vrácení zboží nebo vysvětlujete funkce, nezodpovězené otázky znamenají ztracený byznys. FAQ od Clickeen fungují všude a okamžitě promlouvají jazykem každého zákazníka."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Kreativní služby: zjednodušte poptávky na rezervace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJové, fotografové a konzultanti odpovídají na otázky ohledně cen, dostupnosti a postupu 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Od dotazů k zákazníkům"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Implementace FAQ, která skutečně přinášejí výsledky, se řídí ověřeným postupem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifikujte největší kategorie dotazů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Zvolte správný styl FAQ pro své publikum"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Vložte je na web a optimalizujte na základě dat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analyzujte požadavky na podporu, prodejní hovory a záznamy z chatu, abyste našli nejčastěji kladené otázky."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Akordeon pro podrobné odpovědi, karty pro rychlé skenování informací, seznamy pro přímočaré Q&A."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Sledujte, na které otázky se nejvíce kliká, a upravujte odpovědi podle toho, co zvyšuje konverze."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Najděte FAQ řešení pro vaše odvětví"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Šablony navržené speciálně pro firmy jako je ta vaše, s AI, která se přizpůsobí vašim potřebám."
+    }
+  ],
+  "v": 1
+}

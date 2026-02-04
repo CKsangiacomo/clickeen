@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funcionalidades de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tudo o que precisa para lançar FAQs com IA que funcionam globalmente e crescem de forma viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Por que o widget de FAQ supera o Elfsight, o TypeForm e as soluções personalizadas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Criado de raiz para IA. Funciona globalmente. Cresce viralmente. Um FAQ, infinitas possibilidades."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Edição por IA: Descreva, feito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Diga-lhe o que quer em linguagem simples. “Torna as perguntas mais informais” ou “Adiciona uma secção sobre preços.” A IA entende e executa instantaneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Instantâneo global: qualquer idioma, agora"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "A geografia é um parâmetro, não um projeto. Adicione espanhol, japonês ou árabe com um clique. Sem tradução manual, sem atrasos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Componível em qualquer lugar: Um FAQ, infinitos contextos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "O mesmo FAQ funciona no website, no e-mail, em landing pages e em anúncios. Uma fonte, infinitas possibilidades."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Por que a Clickeen muda tudo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Localização personalizada instantânea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Modelos OU personalizado com precisão pixel-perfect"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Arquitetura componível"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL do site → conteúdo personalizado em 29 idiomas instantaneamente. Sem tradução manual, sem custos com tradutores. A IA entende o contexto do seu negócio."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Comece com um modelo selecionado OU defina tudo você mesmo — a escolha é sua, liberdade total. Sem compromissos, sem limitações."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Um único FAQ funciona em todo lugar: site, e-mail, landing pages, anúncios. O mesmo conteúdo, infinitos contextos. Sem reconstruir para cada canal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Construído para IA, operado por IA"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "O Clickeen não é apenas mais um criador de FAQs — é o primeiro produto concebido para operação por IA desde o primeiro dia. Enquanto os concorrentes adaptam funcionalidades de IA, nós construímos uma arquitetura que os agentes de IA conseguem compreender, modificar e otimizar de forma autónoma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Como funciona o ecossistema de IA da Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Uma plataforma completa que fica mais inteligente a cada interação."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "A IA compreende a sua intenção"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Operação global por padrão"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Aprendizagem e melhoria contínuas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automação da distribuição viral"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Descreva as alterações naturalmente. \"Torne-o mais profissional\" ou \"Adicione urgência ao CTA\". A IA executa na perfeição."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "A IA trata da localização, do suporte e do marketing em todos os mercados simultaneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Cada interação do utilizador ensina o sistema de IA, tornando todas as FAQs mais inteligentes ao longo do tempo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "As FAQs gratuitas tornam-se canais de marketing que impulsionam automaticamente a aquisição."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Experimente o futuro das FAQs"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "A plataforma que fica mais inteligente a cada interação. Feita para a era da IA."
+    }
+  ],
+  "v": 1
+}

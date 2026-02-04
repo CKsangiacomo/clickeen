@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "17e311c289a11d4f6ae90843eb3b6c00808a6b664e79814428552bc207764f5f",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "カウントダウンテンプレート - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "カウントダウンウィジェット用のテンプレートを閲覧できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "カウントダウンテンプレート"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "一般的なカウントダウンの用途に対応した、すぐに使えるレイアウト。"
+    }
+  ],
+  "v": 1
+}

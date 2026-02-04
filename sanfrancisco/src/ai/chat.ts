@@ -11,6 +11,8 @@ import { resolveModelSelection } from './modelRouter';
 import { callDeepseekChat } from '../providers/deepseek';
 import { callOpenAiChat } from '../providers/openai';
 import { callAnthropicChat } from '../providers/anthropic';
+import { callGroqChat } from '../providers/groq';
+import { callAmazonBedrockChat } from '../providers/amazon';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
@@ -19,6 +21,10 @@ type BudgetState = { requests: number; costUsd: number };
 
 const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = {
   deepseek: { promptUsdPer1M: 0.14, completionUsdPer1M: 0.28 },
+  openai: { promptUsdPer1M: 2.5, completionUsdPer1M: 10 },
+  anthropic: { promptUsdPer1M: 3, completionUsdPer1M: 15 },
+  groq: { promptUsdPer1M: 0.59, completionUsdPer1M: 0.79 },
+  amazon: { promptUsdPer1M: 0.8, completionUsdPer1M: 3.2 },
 };
 
 const budgetCache = new Map<string, BudgetState>();
@@ -142,6 +148,24 @@ export async function callChatCompletion(args: {
     result = await callOpenAiChat({
       env: args.env,
       model: selection.model,
+      messages: args.messages,
+      temperature,
+      maxTokens,
+      timeoutMs,
+    });
+  } else if (selection.provider === 'groq') {
+    result = await callGroqChat({
+      env: args.env,
+      model: selection.model,
+      messages: args.messages,
+      temperature,
+      maxTokens,
+      timeoutMs,
+    });
+  } else if (selection.provider === 'amazon') {
+    result = await callAmazonBedrockChat({
+      env: args.env,
+      modelId: selection.model,
       messages: args.messages,
       temperature,
       maxTokens,

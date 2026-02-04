@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-sjablonen - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kies uit prachtige FAQ-ontwerpen die opvallen en bezoekers converteren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Jouw FAQ. Op jouw manier."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Standaard prachtig. Onmiskenbaar van jou door het ontwerp."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Gedurfd wanneer je het nodig hebt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—trendgerichte looks in lichte en donkere varianten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegant wanneer je het wilt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalistisch, strak en modern. Tijdloze stijlen die altijd actueel aanvoelen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Begin met een ontwerp. Maak het daarna helemaal van jou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Krijg direct de juiste uitstraling. Trendy designs of tijdloze klassiekers. Pas het vervolgens zonder grenzen aan—hoekradius per hoek, schaduwen per zijde, typografie per rol en responsieve breakpoints. Een template dat jouw signatuur wordt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Help bezoekers snel antwoorden te vinden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Ontwerpvrijheid, ingebouwd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Van layouts tot afwerkingen tot lettertypes—maatwerk dat moeiteloos aanvoelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Layouts, op jouw manier"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Uiterlijkcontrole zonder grenzen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Typografische precisie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Veel layouts, niet één. Structuur per breakpoint. Onafhankelijke desktop-/mobiele padding en spacing. Beheer kolommen, stapeling, uitlijning en reflow—precies."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Radius per hoek. Randen met aangepaste kleuren. Schaduwen buiten en binnen (gekoppeld of per zijde onafhankelijk). Verloop-, afbeeldings- of videobackgrounds. Volledige visuele controle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Zes afzonderlijke rollen (kop, body, vraag, antwoord, knop, sectie). Kies uit 17 Google Fonts. Gewicht, stijl, grootte—alles per rol aanpasbaar. Dynamische schalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Drie layout-engines voor je FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion voor stapsgewijs onthullen. Lijst voor eenvoud. Kaarten voor visuele hiërarchie. Raster of masonry. Responsieve kolommen. Fijnmazige controle over tussenruimtes en padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Uiterlijkbeheer zonder beperkingen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Radius per hoek. Randen met aangepaste kleuren. Schaduwen buiten en binnen (gekoppeld of onafhankelijk per zijde). Verlopen, afbeelding- of videogrond achtergronden. Volledige visuele controle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografische precisie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Zes afzonderlijke rollen (kop, bodytekst, vraag, antwoord, knop, sectie). Kies uit 17 Google Fonts. Gewicht, stijl, grootte—alles per rol aanpasbaar. Dynamische schalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Donkere modus: verfijnd en modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Moderne interfaces gedijen in het donker. Een premium uitstraling met toonaangevende esthetiek. Inbegrepen bij elk template."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop en mobiel, perfect afgestemd"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Je FAQ-widget past zich aan elke breakpoint aan. Verschillende aantallen kolommen, padding en tussenruimte per apparaat. Eén ontwerptaal, oneindig veel viewports."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Van sjabloon naar perfecte pasvorm"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Zo bouw je je FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Kies een ontwerpsjabloon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Pas lay-outs en uitstraling aan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Verfijn typografie en responsiviteit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trending, klassiek of minimal. Lichte en donkere modus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Accordion, lijst of kaarten. Radius per hoek, schaduwen per zijde, verlopen, randen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Zes lettertyperollen, 17 Google Fonts. Perfect op desktop en mobiel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Maak een gratis FAQ-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Begin met een ontwerpsjabloon of bouw vanaf nul. Volledige creatieve controle."
+    }
+  ],
+  "v": 1
+}

@@ -5,12 +5,13 @@ import {
   resolveAiPolicyCapsule,
   isPolicyEntitled,
 } from '@clickeen/ck-policy';
-import type { Policy, PolicyProfile } from '@clickeen/ck-policy';
+import type { BudgetKey, Policy, PolicyProfile } from '@clickeen/ck-policy';
 import type { AIGrant, Env, WorkspaceRow } from '../../shared/types';
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { asTrimmedString, isRecord, isUuid } from '../../shared/validation';
+import { consumeBudget } from '../../shared/budgets';
 import { requireWorkspace } from '../../shared/workspaces';
 
 const OUTCOME_EVENTS = new Set([
@@ -280,6 +281,10 @@ function resolveAiSubjectPolicy(args: {
   return { policy, profile: tier };
 }
 
+function isBudgetEntitlementKey(policy: Policy, key: string): key is BudgetKey {
+  return key in policy.budgets;
+}
+
 export async function issueAiGrant(args: {
   env: Env;
   agentId: string;
@@ -321,6 +326,21 @@ export async function issueAiGrant(args: {
         ok: false,
         response: ckError({ kind: 'DENY', reasonKey: 'coreui.upsell.reason.flagBlocked', upsell: 'UP', detail: denied }, 403),
       };
+    }
+  }
+
+  if (subject === 'workspace' && workspace?.id && entry.requiredEntitlements?.length) {
+    const scope = { kind: 'workspace' as const, workspaceId: workspace.id };
+    for (const key of entry.requiredEntitlements) {
+      if (!isBudgetEntitlementKey(policy, key)) continue;
+      const max = policy.budgets[key]?.max ?? null;
+      const consumed = await consumeBudget({ env: args.env, scope, budgetKey: key, max, amount: 1 });
+      if (!consumed.ok) {
+        return {
+          ok: false,
+          response: ckError({ kind: 'DENY', reasonKey: consumed.reasonKey, upsell: 'UP', detail: consumed.detail }, 403),
+        };
+      }
     }
   }
 
@@ -535,6 +555,28 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
     widgetType,
     sessionKey: verified.sessionKey,
   });
+
+  const minibobPolicy = resolvePolicy({ profile: 'minibob', role: 'editor' });
+  const minibobTurnsMax = minibobPolicy.budgets['budget.copilot.turns']?.max ?? null;
+  const turn = await consumeBudget({
+    env,
+    scope: { kind: 'minibob', sessionKey: verified.sessionKey },
+    budgetKey: 'budget.copilot.turns',
+    max: minibobTurnsMax,
+    amount: 1,
+  });
+  if (!turn.ok) {
+    logMinibobMintDecision({
+      stage: rateLimit.stage,
+      mode: rateLimit.mode,
+      decision: 'deny',
+      reason: 'budget_exceeded',
+      sessionId,
+      widgetType,
+      sessionKey: verified.sessionKey,
+    });
+    return json({ error: { kind: 'DENY', reasonKey: turn.reasonKey, upsell: 'UP', detail: turn.detail } }, { status: 403 });
+  }
 
   const minibobBudgets =
     stage === 'local'

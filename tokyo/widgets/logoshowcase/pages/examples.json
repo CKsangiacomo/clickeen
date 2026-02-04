@@ -6,14 +6,14 @@
       "type": "page-meta",
       "copy": {
         "description": "See common logo showcase placements and use cases.",
-        "title": "Logo Showcase Examples - Clickeen"
+        "title": "Logo showcase examples - Clickeen"
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Logo Showcase Examples",
+        "headline": "Logo showcase examples",
         "subheadline": "See common placements and use cases."
       }
     }

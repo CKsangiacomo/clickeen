@@ -220,6 +220,15 @@ async function getAiGrant(args: {
     const grantText = await grantRes.text().catch(() => '');
     const grantPayload = safeJsonParse(grantText) as any;
     if (!grantRes.ok) {
+      const denyReasonKey = asTrimmedString(grantPayload?.error?.reasonKey);
+      if (grantPayload?.error?.kind === 'DENY' && denyReasonKey) {
+        return {
+          ok: false as const,
+          error: 'AI_UPSELL' as const,
+          message: denyReasonKey,
+          detail: asTrimmedString(grantPayload?.error?.detail) || undefined,
+        };
+      }
       let message =
         typeof grantPayload?.message === 'string'
           ? grantPayload.message
@@ -262,6 +271,15 @@ async function getAiGrant(args: {
   const text = await res.text().catch(() => '');
   const payload = safeJsonParse(text) as any;
   if (!res.ok) {
+    const denyReasonKey = asTrimmedString(payload?.error?.reasonKey);
+    if (payload?.error?.kind === 'DENY' && denyReasonKey) {
+      return {
+        ok: false as const,
+        error: 'AI_UPSELL' as const,
+        message: denyReasonKey,
+        detail: asTrimmedString(payload?.error?.detail) || undefined,
+      };
+    }
     let message =
       typeof payload?.message === 'string'
         ? payload.message
@@ -343,6 +361,8 @@ export async function POST(req: Request) {
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
     const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
     const subject = asTrimmedString(body?.subject) || undefined;
+    const provider = asTrimmedString(body?.provider) || undefined;
+    const model = asTrimmedString(body?.model) || undefined;
     const currentConfig = body?.currentConfig;
     const controls = body?.controls;
 
@@ -363,10 +383,19 @@ export async function POST(req: Request) {
       instancePublicId,
       workspaceId,
       subject,
+      provider,
+      model,
       // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.
       budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
     });
     if (!grantRes.ok) {
+      if (grantRes.error === 'AI_UPSELL') {
+        const isMinibob = subject === 'minibob';
+        const action = isMinibob ? ('signup' as const) : ('upgrade' as const);
+        const ctaText = isMinibob ? 'Create a free account to continue' : 'Upgrade to continue';
+        const message = isMinibob ? 'Copilot limit reached. Create a free account to continue.' : 'Copilot limit reached. Upgrade to continue.';
+        return NextResponse.json({ message, cta: { text: ctaText, action }, reasonKey: grantRes.message, detail: grantRes.detail }, { status: 200 });
+      }
       return NextResponse.json(
         { message: grantRes.message || 'Copilot is temporarily unavailable. Please try again.' },
         { status: 200 },

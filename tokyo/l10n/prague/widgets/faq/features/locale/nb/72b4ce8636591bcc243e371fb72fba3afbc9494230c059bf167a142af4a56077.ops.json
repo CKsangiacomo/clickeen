@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-funksjoner – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alt du trenger for å levere AI-drevne ofte stilte spørsmål som fungerer globalt og vokser viralt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Hvorfor FAQ-widgeten slår Elfsight, TypeForm og egenutviklede løsninger"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Bygget fra bunnen av for KI. Fungerer globalt. Vokser viralt. Én FAQ, uendelige muligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-redigering: Beskriv, ferdig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Fortell hva du vil ha i vanlig norsk. «Gjør spørsmålene mer uformelle» eller «Legg til en seksjon om priser». AI forstår og utfører umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globalt øyeblikkelig: Alle språk, nå"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografi er en parameter, ikke et prosjekt. Legg til spansk, japansk eller arabisk med ett klikk. Ingen manuell oversettelse, ingen forsinkelser."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Komponerbar overalt: Én FAQ, uendelige kontekster"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Samme FAQ fungerer på nettstedet, i e-post, på landingssider og i annonser. Én kilde, uendelige muligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Hvorfor Clickeen endrer alt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Umiddelbar personlig tilpasset lokalisering"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Maler ELLER pikselperfekt tilpasset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponerbar arkitektur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Nettsteds-URL → personlig tilpasset innhold på 29 språk umiddelbart. Ingen manuell oversettelse, ingen kostnader til oversettere. AI forstår forretningskonteksten din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Start med en kuratert mal ELLER definer alt selv—du velger, full frihet. Ingen kompromisser, ingen begrensninger."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Én FAQ fungerer overalt: nettsted, e-post, landingssider, annonser. Samme innhold, uendelige kontekster. Ingen ombygging for hver kanal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Bygget for AI, drevet av AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen er ikke bare nok en FAQ-bygger – det er det første produktet som er designet for AI-drift fra dag én. Mens konkurrenter ettermonterer AI-funksjoner, har vi bygget en arkitektur som AI-agenter kan forstå, endre og optimalisere autonomt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Slik fungerer Clickeens AI-økosystem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "En komplett plattform som blir smartere med hver interaksjon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI forstår intensjonen din"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Global drift som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Kontinuerlig læring og forbedring"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisering av viral distribusjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beskriv endringer naturlig. «Gjør det mer profesjonelt» eller «Legg til mer hastverk i CTA-en». AI utfører det perfekt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI håndterer lokalisering, support og markedsføring på tvers av alle markeder samtidig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Hver brukerinteraksjon lærer opp AI-systemet, slik at alle vanlige spørsmål blir smartere over tid."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Gratis FAQ-er blir markedsføringskanaler som automatisk driver kundetilvekst."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Opplev fremtiden for vanlige spørsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Plattformen som blir smartere for hver interaksjon. Bygget for AI-æraen."
+    }
+  ],
+  "v": 1
+}

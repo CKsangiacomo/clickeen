@@ -66,6 +66,7 @@ Core columns:
 
 Notes:
 - Overlay files served by Tokyo are materialized from `ops + user_ops` (user_ops applied last for layer=user).
+- `base_fingerprint` is used by Venice to classify overlays as fresh vs stale; stale locale overlays may be applied selectively when safe (best-available overlays; see `documentation/capabilities/localization.md`).
 - Instance identity remains locale-free; overlays are keyed by `(public_id, layer, layer_key)`.
 - Uniqueness is enforced per `(public_id, layer, layer_key)`; history lives in R2 + version ledger.
 
@@ -77,7 +78,7 @@ Core columns:
 - `tier` (text) — `free` | `tier1` | `tier2` | `tier3`
 - `name` (text)
 - `slug` (text) — URL-safe workspace slug
-- `website_url` (text, nullable) — workspace setting used by Copilot; gated by `context.websiteUrl.enabled` where it is surfaced/consumed
+- `website_url` (text, nullable) — workspace setting used by Copilot/personalization context (action-gated; not tier-flagged)
 - `l10n_locales` (jsonb, nullable) — workspace-selected locales for auto-translate
 
 ### `workspace_members`

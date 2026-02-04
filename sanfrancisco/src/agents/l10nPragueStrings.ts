@@ -31,7 +31,7 @@ const POLICY_VERSION = 'l10n.ops.v1';
 const MAX_ITEMS = 250;
 const MAX_INPUT_CHARS = 12000;
 const MAX_TOKENS = 900;
-const TIMEOUT_MS = 20_000;
+const TIMEOUT_MS = 60_000;
 
 export function isPragueStringsJob(value: unknown): value is PragueStringsJob {
   if (!isRecord(value)) return false;

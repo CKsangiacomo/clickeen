@@ -4,6 +4,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 type Env = {
   TOKYO_DEV_JWT: string;
   TOKYO_R2: R2Bucket;
+  USAGE_KV?: KVNamespace;
   L10N_PUBLISH_QUEUE?: Queue<L10nPublishQueueJob>;
   RENDER_SNAPSHOT_QUEUE?: Queue<RenderSnapshotQueueJob>;
   VENICE_BASE_URL?: string;
@@ -142,6 +143,13 @@ type L10nOverlay = {
   ops: Array<{ op: 'set'; path: string; value: unknown }>;
 };
 
+type L10nBaseSnapshot = {
+  v: 1;
+  publicId: string;
+  baseFingerprint: string;
+  snapshot: Record<string, string>;
+};
+
 type LayerIndexEntry = {
   keys: string[];
   lastPublishedFingerprint?: Record<string, string>;
@@ -191,6 +199,12 @@ type InstanceOverlayRow = {
   workspace_id?: string | null;
 };
 
+type BaseSnapshotRow = {
+  public_id: string;
+  base_fingerprint: string;
+  snapshot: Record<string, unknown>;
+};
+
 type L10nPublishStateRow = {
   public_id: string;
   locale?: string | null;
@@ -238,7 +252,7 @@ function normalizeWidgetType(raw: string): string | null {
   return value;
 }
 
-function normalizeLocale(raw: string): string | null {
+function normalizeLocale(raw: unknown): string | null {
   return normalizeLocaleToken(raw);
 }
 
@@ -451,6 +465,80 @@ async function publishLayerOverlayArtifacts(
   return outName;
 }
 
+async function loadL10nBaseSnapshot(
+  env: Env,
+  publicId: string,
+  baseFingerprintRaw: string | null | undefined,
+): Promise<Record<string, string> | null> {
+  const baseFingerprint = normalizeSha256Hex(baseFingerprintRaw);
+  if (!baseFingerprint) return null;
+
+  const params = new URLSearchParams({
+    select: 'public_id,base_fingerprint,snapshot',
+    public_id: `eq.${publicId}`,
+    base_fingerprint: `eq.${baseFingerprint}`,
+    limit: '1',
+  });
+
+  const res = await supabaseFetch(env, `/rest/v1/l10n_base_snapshots?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase base snapshot read failed (${res.status}) ${text}`.trim());
+  }
+
+  const rows = (await res.json().catch(() => [])) as BaseSnapshotRow[];
+  const row = rows?.[0];
+  if (!row) return null;
+  if (row.public_id !== publicId) return null;
+  if (normalizeSha256Hex(row.base_fingerprint) !== baseFingerprint) return null;
+  if (!row.snapshot || typeof row.snapshot !== 'object' || Array.isArray(row.snapshot)) return null;
+
+  const snapshot: Record<string, string> = {};
+  for (const [key, value] of Object.entries(row.snapshot)) {
+    if (typeof value !== 'string') continue;
+    snapshot[String(key)] = value;
+  }
+  return snapshot;
+}
+
+async function publishBaseSnapshotArtifact(
+  env: Env,
+  publicId: string,
+  baseFingerprintRaw: string | null | undefined,
+  snapshot: Record<string, string>,
+): Promise<void> {
+  const baseFingerprint = normalizeSha256Hex(baseFingerprintRaw);
+  if (!baseFingerprint) return;
+
+  const payload: L10nBaseSnapshot = { v: 1, publicId, baseFingerprint, snapshot };
+  const stable = prettyStableJson(payload);
+
+  const httpBase = resolveL10nHttpBase(env);
+  if (httpBase) {
+    const res = await fetch(
+      `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/bases/${encodeURIComponent(baseFingerprint)}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: stable,
+      },
+    );
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`[tokyo] HTTP base snapshot publish failed (${res.status}): ${detail}`.trim());
+    }
+    return;
+  }
+
+  const key = `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
+  await env.TOKYO_R2.put(key, stable, {
+    httpMetadata: {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: 'public, max-age=31536000, immutable',
+    },
+  });
+}
+
 async function loadInstanceOverlayRow(
   env: Env,
   publicId: string,
@@ -646,6 +734,18 @@ async function publishLayerRow(
     throw new Error(`[tokyo] Invalid overlay row: ${detail}`);
   }
   await publishLayerOverlayArtifacts(env, publicId, layer, layerKey, overlay);
+
+  if (layer === 'locale' || layer === 'user') {
+    try {
+      const baseSnapshot = await loadL10nBaseSnapshot(env, publicId, overlay.baseFingerprint);
+      if (baseSnapshot) {
+        await publishBaseSnapshotArtifact(env, publicId, overlay.baseFingerprint, baseSnapshot);
+      }
+    } catch (err) {
+      console.warn('[tokyo] Failed to publish l10n base snapshot', err);
+    }
+  }
+
   return {
     publicId,
     layer,
@@ -799,6 +899,59 @@ async function listDirtyPublishStates(env: Env, limit = 200): Promise<L10nPublis
 
 const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
 const DEFAULT_L10N_VERSION_LIMIT = 1;
+const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
+const UPLOADS_COUNT_BUDGET_KEY = 'budget.uploads.count';
+const DEFAULT_UPLOAD_SIZE_MAX_BYTES = 5 * 1024 * 1024;
+const DEFAULT_UPLOADS_COUNT_MAX = 5;
+const UPLOADS_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
+const DEFAULT_UPLOADS_BYTES_MAX = DEFAULT_UPLOAD_SIZE_MAX_BYTES * DEFAULT_UPLOADS_COUNT_MAX;
+
+function getUtcPeriodKey(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
+async function readKvCounter(kv: KVNamespace, key: string): Promise<number> {
+  const raw = await kv.get(key);
+  const value = raw ? Number(raw) : 0;
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+async function consumeWorkspaceBudget(args: {
+  env: Env;
+  workspaceId: string;
+  budgetKey: string;
+  max: number | null;
+  amount?: number;
+}): Promise<
+  | { ok: true; used: number; nextUsed: number }
+  | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string }
+> {
+  const amount = typeof args.amount === 'number' ? args.amount : 1;
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('[tokyo] consumeWorkspaceBudget amount must be positive');
+  if (args.max == null) return { ok: true, used: 0, nextUsed: amount };
+  const max = Math.max(0, Math.floor(args.max));
+  const kv = args.env.USAGE_KV;
+  if (!kv) return { ok: true, used: 0, nextUsed: amount };
+
+  const periodKey = getUtcPeriodKey(new Date());
+  const counterKey = `usage.budget.v1.${args.budgetKey}.${periodKey}.ws:${args.workspaceId}`;
+  const used = await readKvCounter(kv, counterKey);
+  const nextUsed = used + amount;
+  if (nextUsed > max) {
+    return {
+      ok: false,
+      used,
+      max,
+      reasonKey: 'coreui.upsell.reason.budgetExceeded',
+      detail: `${args.budgetKey} budget exceeded (max=${max})`,
+    };
+  }
+
+  await kv.put(counterKey, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
+  return { ok: true, used, nextUsed };
+}
 
 function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
@@ -812,6 +965,48 @@ function resolveL10nVersionLimit(tier: string | null): number | null {
   if (value == null) return null;
   if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_L10N_VERSION_LIMIT;
   return Math.max(1, Math.floor(value));
+}
+
+function resolveUploadSizeLimitBytes(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[UPLOAD_SIZE_CAP_KEY];
+  if (!entry || entry.kind !== 'cap') return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return DEFAULT_UPLOAD_SIZE_MAX_BYTES;
+  return Math.max(1, Math.floor(value));
+}
+
+function resolveUploadsCountBudgetMax(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[UPLOADS_COUNT_BUDGET_KEY];
+  if (!entry || entry.kind !== 'budget') return DEFAULT_UPLOADS_COUNT_MAX;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_UPLOADS_COUNT_MAX;
+  return Math.floor(value);
+}
+
+function resolveUploadsBytesBudgetMax(tier: string | null): number | null {
+  const matrix = getEntitlementsMatrix();
+  const entry = matrix.capabilities[UPLOADS_BYTES_BUDGET_KEY];
+  if (!entry || entry.kind !== 'budget') return DEFAULT_UPLOADS_BYTES_MAX;
+  const fallback = 'free' as keyof typeof entry.values;
+  const profile = (matrix.tiers.includes(tier as typeof matrix.tiers[number])
+    ? (tier as typeof matrix.tiers[number])
+    : fallback) as keyof typeof entry.values;
+  const value = entry.values[profile];
+  if (value == null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return DEFAULT_UPLOADS_BYTES_MAX;
+  return Math.floor(value);
 }
 
 async function loadWorkspaceTier(env: Env, workspaceId: string): Promise<string | null> {
@@ -944,6 +1139,8 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
   }
 
+  const tier = await loadWorkspaceTier(env, workspaceId).catch(() => null);
+
   const variant = (req.headers.get('x-variant') || '').trim() || 'original';
   if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
@@ -953,9 +1150,50 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
 
+  const maxBytes = resolveUploadSizeLimitBytes(tier);
+  const contentLengthRaw = (req.headers.get('content-length') || '').trim();
+  const contentLength = contentLengthRaw ? Number.parseInt(contentLengthRaw, 10) : NaN;
+  if (maxBytes != null && Number.isFinite(contentLength) && contentLength > maxBytes) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
+      { status: 413 },
+    );
+  }
+
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
+  }
+  if (maxBytes != null && body.byteLength > maxBytes) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.capReached', upsell: 'UP', detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}` } },
+      { status: 413 },
+    );
+  }
+
+  const uploadsMax = resolveUploadsCountBudgetMax(tier);
+  const uploadsBytesMax = resolveUploadsBytesBudgetMax(tier);
+
+  const bytesBudget = await consumeWorkspaceBudget({
+    env,
+    workspaceId,
+    budgetKey: UPLOADS_BYTES_BUDGET_KEY,
+    max: uploadsBytesMax,
+    amount: body.byteLength,
+  });
+  if (!bytesBudget.ok) {
+    return json({ error: { kind: 'DENY', reasonKey: bytesBudget.reasonKey, upsell: 'UP', detail: bytesBudget.detail } }, { status: 403 });
+  }
+
+  const uploadBudget = await consumeWorkspaceBudget({
+    env,
+    workspaceId,
+    budgetKey: UPLOADS_COUNT_BUDGET_KEY,
+    max: uploadsMax,
+    amount: 1,
+  });
+  if (!uploadBudget.ok) {
+    return json({ error: { kind: 'DENY', reasonKey: uploadBudget.reasonKey, upsell: 'UP', detail: uploadBudget.detail } }, { status: 403 });
   }
 
   const assetId = crypto.randomUUID();
@@ -1162,7 +1400,7 @@ async function fetchVeniceBytes(
   env: Env,
   pathnameWithQuery: string,
   opts?: { headers?: Record<string, string> },
-): Promise<{ bytes: ArrayBuffer; contentType: string | null }> {
+): Promise<{ bytes: ArrayBuffer; contentType: string | null; effectiveLocale: string | null; l10nStatus: string | null }> {
   const base = resolveVeniceBase(env);
   const headers: Record<string, string> = {
     'X-Request-ID': crypto.randomUUID(),
@@ -1179,7 +1417,9 @@ async function fetchVeniceBytes(
   }
   const bytes = await res.arrayBuffer();
   const contentType = res.headers.get('content-type');
-  return { bytes, contentType };
+  const effectiveLocale = res.headers.get('x-ck-l10n-effective-locale') ?? res.headers.get('X-Ck-L10n-Effective-Locale');
+  const l10nStatus = res.headers.get('x-ck-l10n-status') ?? res.headers.get('X-Ck-L10n-Status');
+  return { bytes, contentType, effectiveLocale: effectiveLocale ? effectiveLocale.trim() : null, l10nStatus: l10nStatus ? l10nStatus.trim() : null };
 }
 
 async function putImmutableRenderArtifact(args: {
@@ -1222,6 +1462,11 @@ async function generateRenderSnapshots(args: {
       headers: bypassHeaders,
       },
     );
+    const effectiveLocale = normalizeLocale(e.effectiveLocale);
+    if (locale !== 'en' && effectiveLocale !== locale) {
+      delete nextCurrent[locale];
+      continue;
+    }
     const r = await fetchVeniceBytes(
       env,
       `/r/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(locale)}${enforcementQuery}`,

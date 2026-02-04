@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "1402da709a7660c213d7e0f97fe20472d192bbaaaa572c0ed23f7b074064a626",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Шаблони вітрини логотипів - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Почніть із відшліфованого макета та налаштуйте свою вітрину логотипів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Шаблони демонстрації логотипів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Почніть із відшліфованого макета — а потім зробіть його своїм."
+    }
+  ],
+  "v": 1
+}
