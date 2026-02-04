@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { tokyoFetch } from '@venice/lib/tokyo';
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { parisFetch } from '@venice/lib/paris';
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request, ctx: { params: Promise<{ publicId: string }> }) {

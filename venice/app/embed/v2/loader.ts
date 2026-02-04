@@ -810,7 +810,7 @@ const script = `(() => {
 })();
 `;
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 
 export function GET() {
   return new Response(script, {

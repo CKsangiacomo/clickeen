@@ -6,7 +6,7 @@ import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { escapeHtml } from '@venice/lib/html';
 import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 interface InstanceResponse {
@@ -104,7 +104,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   if (embedToken) forwardHeaders['X-Embed-Token'] = embedToken;
 
   let snapshotReason: string | null = null;
-  if (!ts && !auth && !embedToken && !bypassSnapshot) {
+  const snapshotCacheControl = ts ? 'no-store' : CACHE_PUBLISHED;
+  if (!auth && !embedToken && !bypassSnapshot) {
     let snapshotLocale = locale;
     let snapshot = await loadRenderSnapshot({ publicId, locale: snapshotLocale, variant: 'e' });
     if (!snapshot.ok && snapshot.reason === 'LOCALE_MISSING' && snapshotLocale !== 'en') {
@@ -116,7 +117,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
       if (ifNoneMatch && ifNoneMatch === etag) {
         headers['ETag'] = etag;
-        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
         return new NextResponse(null, { status: 304, headers });
@@ -127,6 +128,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: snapshotLocale });
         if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
         html = patched.html;
+        html = rewriteWidgetCdnUrls(html, getTokyoBase());
         headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
         headers['X-Ck-L10n-Resolved-Locale'] = snapshotLocale;
         headers['X-Ck-L10n-Effective-Locale'] = patched.effectiveLocale;
@@ -140,7 +142,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
       if (!snapshotReason && nonce) {
         headers['ETag'] = etag;
-        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
 
@@ -151,8 +153,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       }
     }
     if (!snapshot.ok && !snapshotReason) snapshotReason = snapshot.reason;
-  } else if (ts) {
-    snapshotReason = 'SKIP_TS';
   } else if (auth || embedToken) {
     snapshotReason = 'SKIP_AUTH';
   } else if (bypassSnapshot) {
@@ -353,6 +353,7 @@ async function renderInstancePage({
   if (ts) {
     widgetHtml = appendCacheBustParam(widgetHtml, ts);
   }
+  widgetHtml = rewriteWidgetCdnUrls(widgetHtml, tokyoBase);
 
   const bodyHtml = extractBodyHtml(widgetHtml);
   const title = extractTitle(widgetHtml) ?? `${widgetType} widget`;
@@ -409,7 +410,7 @@ async function renderInstancePage({
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(title)}</title>
-    <base href="/widgets/${escapeHtml(widgetType)}/" />
+    <base href="${escapeHtml(tokyoBase)}/widgets/${escapeHtml(widgetType)}/" />
     ${stylesheetLinks}
     <style nonce="${escapeHtml(nonce)}">html,body{margin:0;padding:0;background:transparent}</style>
     ${enforcementStyle}
@@ -523,6 +524,24 @@ function appendCacheBustParam(widgetHtml: string, ts: string): string {
   });
 }
 
+function rewriteWidgetCdnUrls(widgetHtml: string, tokyoBase: string): string {
+  const base = tokyoBase.replace(/\/$/, '');
+  return (
+    widgetHtml
+      // Move asset fetches to Tokyo (CDN), not Venice origin.
+      .replace(/\b(href|src)=(["'])\/(dieter|widgets)\/([^"'?#]+(?:\?[^"']*)?)\2/g, (_match, attr, quote, kind, rest) => {
+        return `${attr}=${quote}${base}/${kind}/${rest}${quote}`;
+      })
+      .replace(/url\(\s*(["']?)\/dieter\/([^"'?#)]+(?:\?[^"')]+)?)\1\s*\)/g, (_match, quote, rest) => {
+        const q = quote || '';
+        return `url(${q}${base}/dieter/${rest}${q})`;
+      })
+      .replace(/<base\b([^>]*?)\bhref=(["'])\/widgets\/([^"']*)\2([^>]*)>/gi, (_match, before, quote, rest, after) => {
+        return `<base${before}href=${quote}${base}/widgets/${rest}${quote}${after}>`;
+      })
+  );
+}
+
 function renderErrorPage({
   publicId,
   status,
@@ -562,11 +581,11 @@ function renderErrorPage({
 function buildCsp(nonce: string, { parisOrigin, tokyoOrigin }: { parisOrigin: string; tokyoOrigin: string }) {
   return [
     "default-src 'none'",
-    `script-src 'self' 'nonce-${nonce}'`,
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    `script-src 'self' 'nonce-${nonce}' ${escapeHtml(tokyoOrigin)}`,
+    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com ${escapeHtml(tokyoOrigin)}`,
     `img-src 'self' data: https: ${escapeHtml(tokyoOrigin)}`,
     "font-src https://fonts.gstatic.com data:",
-    `connect-src 'self' ${escapeHtml(parisOrigin)}`,
+    `connect-src 'self' ${escapeHtml(parisOrigin)} ${escapeHtml(tokyoOrigin)}`,
     "frame-ancestors *",
     "form-action 'self'",
   ].join('; ');

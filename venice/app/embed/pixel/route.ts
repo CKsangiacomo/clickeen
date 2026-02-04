@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { parisFetch } from '@venice/lib/paris';
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 async function signUsageEvent(args: { publicId: string; tier: string }): Promise<string | null> {

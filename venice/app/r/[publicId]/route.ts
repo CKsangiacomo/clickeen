@@ -6,7 +6,7 @@ import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { generateExcerptHtml, generateSchemaJsonLd } from '@venice/lib/schema';
 import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
 
-export const runtime = process.env.NODE_ENV === 'development' ? 'nodejs' : 'edge';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 interface InstanceResponse {
@@ -131,7 +131,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const embedToken = req.headers.get('x-embed-token') ?? req.headers.get('X-Embed-Token');
   let snapshotReason: string | null = null;
 
-  if (!ts && !auth && !embedToken && !bypassSnapshot) {
+  const snapshotCacheControl = ts ? 'no-store' : CACHE_PUBLISHED;
+  if (!auth && !embedToken && !bypassSnapshot) {
     let snapshotLocale = locale;
     let snapshot = await loadRenderSnapshot({
       publicId,
@@ -151,7 +152,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       const ifNoneMatch = req.headers.get('if-none-match') ?? req.headers.get('If-None-Match');
       if (ifNoneMatch && ifNoneMatch === etag) {
         headers['ETag'] = etag;
-        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
         return new NextResponse(null, { status: 304, headers });
@@ -172,7 +173,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           headers['X-Ck-L10n-Effective-Locale'] = resolvedLocale;
           headers['X-Ck-L10n-Status'] = resolvedLocale === 'en' ? 'base' : 'fresh';
           headers['ETag'] = etag;
-          headers['Cache-Control'] = CACHE_PUBLISHED;
+          headers['Cache-Control'] = snapshotCacheControl;
           headers['Vary'] = 'Authorization, X-Embed-Token';
           headers['X-Venice-Render-Mode'] = 'snapshot';
           return new NextResponse(body, { status: 200, headers });
@@ -185,7 +186,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         headers['X-Ck-L10n-Effective-Locale'] = snapshotLocale;
         headers['X-Ck-L10n-Status'] = snapshotLocale === 'en' ? 'base' : 'fresh';
         headers['ETag'] = etag;
-        headers['Cache-Control'] = CACHE_PUBLISHED;
+        headers['Cache-Control'] = snapshotCacheControl;
         headers['Vary'] = 'Authorization, X-Embed-Token';
         headers['X-Venice-Render-Mode'] = 'snapshot';
         return new NextResponse(raw, { status: 200, headers });
@@ -194,8 +195,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
       // Fall through to dynamic rendering if snapshot payload is invalid.
     }
     if (!snapshot.ok && !snapshotReason) snapshotReason = snapshot.reason;
-  } else if (ts) {
-    snapshotReason = 'SKIP_TS';
   } else if (auth || embedToken) {
     snapshotReason = 'SKIP_AUTH';
   } else if (bypassSnapshot) {
