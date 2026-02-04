@@ -42,6 +42,12 @@ function parseCookies(header: string | null): ParsedCookies {
   }, {});
 }
 
+function redirectWithHeaders(path: string, status = 302): Response {
+  const headers = new Headers(Astro.response.headers);
+  headers.set('Location', path);
+  return new Response(null, { status, headers });
+}
+
 const cookies = parseCookies(Astro.request.headers.get('cookie'));
 
 const protocol = Astro.url.protocol;
@@ -55,7 +61,7 @@ if (reset === '1' || reset === 'true') {
   Astro.response.headers.set('X-Prague-Market-Source', 'reset');
   const nextUrl = new URL(Astro.url.toString());
   nextUrl.searchParams.delete('reset');
-  return Astro.redirect(`${nextUrl.pathname}${nextUrl.search}`, 302);
+  return redirectWithHeaders(`${nextUrl.pathname}${nextUrl.search}`, 302);
 }
 
 const queryMarket = String(Astro.url.searchParams.get('market') || Astro.url.searchParams.get('ck_market') || '')
@@ -78,7 +84,7 @@ if (queryMarketConfig) {
   Astro.response.headers.set('X-Prague-Market-Source', 'query');
   Astro.response.headers.set('X-Prague-Market', queryMarketConfig.key);
   Astro.response.headers.set('X-Prague-Locale', nextLocale);
-  return Astro.redirect(`/${queryMarketConfig.key}/${nextLocale}/${Astro.url.search}`, 302);
+  return redirectWithHeaders(`/${queryMarketConfig.key}/${nextLocale}/${Astro.url.search}`, 302);
 }
 
 const cookieMarket = String(cookies[COOKIE_MARKET] || '').trim().toLowerCase();
@@ -89,7 +95,7 @@ const cookieMarketConfig = cookieMarket ? getPragueMarket(cookieMarket) : null;
 if (cookiePrefLocked && cookieMarketConfig) {
   Astro.response.headers.set('X-Prague-Market-Source', 'cookie_pref');
   Astro.response.headers.set('X-Prague-Market', cookieMarketConfig.key);
-  return Astro.redirect(
+  return redirectWithHeaders(
     `/${cookieMarketConfig.key}/${
       cookieLocale && isValidLocaleForMarket({ market: cookieMarketConfig.key, locale: cookieLocale })
         ? cookieLocale
@@ -114,7 +120,7 @@ if (geoMarket) {
   Astro.response.headers.set('X-Prague-Market-Source', 'geo');
   Astro.response.headers.set('X-Prague-Market', geoMarket.key);
   Astro.response.headers.set('X-Prague-Locale', geoMarket.defaultLocale);
-  return Astro.redirect(`/${geoMarket.key}/${geoMarket.defaultLocale}/${Astro.url.search}`, 302);
+  return redirectWithHeaders(`/${geoMarket.key}/${geoMarket.defaultLocale}/${Astro.url.search}`, 302);
 }
 
 const defaultMarket = getPragueMarket('us') ?? PRAGUE_MARKETS.markets[0] ?? null;
@@ -124,5 +130,5 @@ if (!defaultMarket) {
 Astro.response.headers.set('X-Prague-Market-Source', 'default');
 Astro.response.headers.set('X-Prague-Market', defaultMarket.key);
 Astro.response.headers.set('X-Prague-Locale', defaultMarket.defaultLocale);
-return Astro.redirect(`/${defaultMarket.key}/${defaultMarket.defaultLocale}/${Astro.url.search}`, 302);
+return redirectWithHeaders(`/${defaultMarket.key}/${defaultMarket.defaultLocale}/${Astro.url.search}`, 302);
 ---
