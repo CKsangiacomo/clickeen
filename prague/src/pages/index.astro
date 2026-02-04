@@ -5,6 +5,10 @@ import { getPragueMarket, isValidLocaleForMarket, PRAGUE_MARKETS, resolveMarketF
 
 type ParsedCookies = Record<string, string>;
 
+const COOKIE_MARKET = 'ck_market';
+const COOKIE_LOCALE = 'ck_locale';
+const COOKIE_PREF_LOCK = 'ck_market_pref';
+
 function buildSetCookie(args: { name: string; value: string; secure: boolean }): string {
   const parts = [
     `${args.name}=${encodeURIComponent(args.value)}`,
@@ -45,8 +49,9 @@ const secureCookie = protocol === 'https:';
 
 const reset = Astro.url.searchParams.get('reset');
 if (reset === '1' || reset === 'true') {
-  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: 'ck_market', secure: secureCookie }));
-  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: 'ck_locale', secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_MARKET, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_LOCALE, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_PREF_LOCK, secure: secureCookie }));
   Astro.response.headers.set('X-Prague-Market-Source', 'reset');
   const nextUrl = new URL(Astro.url.toString());
   nextUrl.searchParams.delete('reset');
@@ -66,20 +71,23 @@ if (queryMarketConfig) {
       ? queryLocale
       : queryMarketConfig.defaultLocale;
 
-  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: queryMarketConfig.key, secure: secureCookie }));
-  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: nextLocale, secure: secureCookie }));
+  // Explicit user override: persist as a preference.
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: COOKIE_MARKET, value: queryMarketConfig.key, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: COOKIE_LOCALE, value: nextLocale, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: COOKIE_PREF_LOCK, value: '1', secure: secureCookie }));
   Astro.response.headers.set('X-Prague-Market-Source', 'query');
   Astro.response.headers.set('X-Prague-Market', queryMarketConfig.key);
   Astro.response.headers.set('X-Prague-Locale', nextLocale);
   return Astro.redirect(`/${queryMarketConfig.key}/${nextLocale}/${Astro.url.search}`, 302);
 }
 
-const cookieMarket = String(cookies.ck_market || '').trim().toLowerCase();
-const cookieLocale = String(cookies.ck_locale || '').trim().toLowerCase();
+const cookieMarket = String(cookies[COOKIE_MARKET] || '').trim().toLowerCase();
+const cookieLocale = String(cookies[COOKIE_LOCALE] || '').trim().toLowerCase();
+const cookiePrefLocked = String(cookies[COOKIE_PREF_LOCK] || '').trim() === '1';
 
 const cookieMarketConfig = cookieMarket ? getPragueMarket(cookieMarket) : null;
-if (cookieMarketConfig) {
-  Astro.response.headers.set('X-Prague-Market-Source', 'cookie');
+if (cookiePrefLocked && cookieMarketConfig) {
+  Astro.response.headers.set('X-Prague-Market-Source', 'cookie_pref');
   Astro.response.headers.set('X-Prague-Market', cookieMarketConfig.key);
   return Astro.redirect(
     `/${cookieMarketConfig.key}/${
@@ -91,11 +99,18 @@ if (cookieMarketConfig) {
   );
 }
 
+// Legacy behavior set cookies for geo/default redirects, which made markets "sticky" without an explicit user choice.
+// If we find such cookies without the preference lock, clear them so geo/default can behave correctly.
+if (!cookiePrefLocked && (cookieMarket || cookieLocale)) {
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_MARKET, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_LOCALE, secure: secureCookie }));
+  Astro.response.headers.append('Set-Cookie', buildClearCookie({ name: COOKIE_PREF_LOCK, secure: secureCookie }));
+  Astro.response.headers.set('X-Prague-Market-Source', 'legacy_cookie_cleared');
+}
+
 const country = Astro.request.headers.get('cf-ipcountry');
 const geoMarket = resolveMarketFromCountry(country);
 if (geoMarket) {
-  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: geoMarket.key, secure: secureCookie }));
-  Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: geoMarket.defaultLocale, secure: secureCookie }));
   Astro.response.headers.set('X-Prague-Market-Source', 'geo');
   Astro.response.headers.set('X-Prague-Market', geoMarket.key);
   Astro.response.headers.set('X-Prague-Locale', geoMarket.defaultLocale);
@@ -106,8 +121,6 @@ const defaultMarket = getPragueMarket('us') ?? PRAGUE_MARKETS.markets[0] ?? null
 if (!defaultMarket) {
   throw new Error('[prague] No markets configured (expected at least one entry in config/markets.json)');
 }
-Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_market', value: defaultMarket.key, secure: secureCookie }));
-Astro.response.headers.append('Set-Cookie', buildSetCookie({ name: 'ck_locale', value: defaultMarket.defaultLocale, secure: secureCookie }));
 Astro.response.headers.set('X-Prague-Market-Source', 'default');
 Astro.response.headers.set('X-Prague-Market', defaultMarket.key);
 Astro.response.headers.set('X-Prague-Locale', defaultMarket.defaultLocale);
