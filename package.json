@@ -41,6 +41,7 @@
     "prague:localize": "node scripts/prague-l10n/translate.mjs",
     "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
+    "prague:l10n:status": "node scripts/prague-l10n/status.mjs",
     "prague:l10n:watch": "node scripts/prague-l10n/watch.mjs",
     "prague:strings:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:strings:compile": "node scripts/prague-l10n/verify.mjs",

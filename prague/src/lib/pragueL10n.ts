@@ -242,7 +242,12 @@ async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
   const baseUrl = getTokyoBaseUrl();
   const prefix = getTokyoL10nPrefix();
   const path = `${prefix}/prague/${encodePathSegments(pageId)}/index.json`;
-  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  } catch {
+    return null;
+  }
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const json = (await res.json().catch(() => null)) as LayerIndex | null;
@@ -258,7 +263,12 @@ async function fetchBaseSnapshot(args: { pageId: string; baseFingerprint: string
   const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/bases/${encodeURIComponent(
     args.baseFingerprint,
   )}.snapshot.json`;
-  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  } catch {
+    return null;
+  }
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const json = (await res.json().catch(() => null)) as PragueBaseSnapshot | null;
@@ -485,7 +495,12 @@ async function fetchOverlay(args: {
   const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
     args.layerKey
   )}/${encodeURIComponent(args.baseFingerprint)}.ops.json`;
-  const res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
+  } catch {
+    return null;
+  }
   if (res.status === 404) return null;
   if (!res.ok) return null;
   const json = (await res.json().catch(() => null)) as PragueOverlay | null;
