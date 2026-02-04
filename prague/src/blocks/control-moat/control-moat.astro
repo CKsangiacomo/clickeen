@@ -1,0 +1,33 @@
+---
+import Steps from '../steps/steps.astro';
+
+type StepItem = {
+  title: string;
+  body: string;
+  iconEnabled?: boolean;
+  iconName?: string;
+  icon?: string;
+  backgroundEnabled?: boolean;
+  backgroundPath?: string;
+  background?: string;
+  imageEnabled?: boolean;
+  imagePath?: string;
+  image?: string;
+  imageAlt?: string;
+  imageLayout?: 'inset' | 'bleed';
+  imageFit?: 'cover' | 'contain';
+  imagePositionY?: 'top' | 'center' | 'bottom';
+};
+
+type Props = {
+  widget: string;
+  title: string;
+  subhead?: string;
+  items: StepItem[];
+  visual?: { image?: string };
+};
+
+const { widget, title, subhead, items, visual } = Astro.props as Props;
+---
+
+<Steps widget={widget} title={title} subhead={subhead} steps={items} visual={visual} />

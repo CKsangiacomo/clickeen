@@ -39,7 +39,13 @@ const {
               </select>
               <span aria-hidden="true" class="selector-icon icon icon-chevrondown"></span>
             </form>
-            <InstanceEmbed publicId={publicId} locale={item.code} localeOverride={item.code} title={`${item.label} preview`} />
+            <InstanceEmbed
+              publicId={publicId}
+              locale={item.code}
+              localeOverride={item.code}
+              title={`${item.label} preview`}
+              showShareChrome={false}
+            />
           </div>
         ))}
       </div>

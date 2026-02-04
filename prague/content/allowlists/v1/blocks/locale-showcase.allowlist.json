@@ -1,0 +1,13 @@
+{
+  "paths": [
+    {
+      "path": "copy.title",
+      "type": "string"
+    },
+    {
+      "path": "copy.subtitle",
+      "type": "string"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,9 @@
+{
+  "paths": [
+    { "path": "copy.title", "type": "string" },
+    { "path": "copy.subhead", "type": "string" },
+    { "path": "copy.items.*.title", "type": "string" },
+    { "path": "copy.items.*.body", "type": "string" }
+  ],
+  "v": 1
+}

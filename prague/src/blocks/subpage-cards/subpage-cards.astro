@@ -1,0 +1,177 @@
+---
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import DieterIcon from '../../components/DieterIcon.astro';
+import { resolvePragueHref } from '../../lib/links';
+
+type CardCopy = { title: string; body: string };
+
+type LinkItem = {
+  page: 'templates' | 'examples' | 'features';
+  iconName?: string;
+};
+
+type Props = {
+  widget: string;
+  market: string;
+  locale: string;
+  title: string;
+  subhead?: string;
+  items: CardCopy[];
+  links: LinkItem[];
+};
+
+const { widget, market, locale, title, subhead, items, links } = Astro.props as Props;
+
+const headerPrimitives = assertPrimitives(
+  [
+    { type: 'heading', level: 3, content: title, className: 'display-3 ck-m0' },
+    ...(subhead
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subhead,
+            className: 'body-website ck-m0 ck-text-subtle ck-subpageCards__subhead',
+          } as const,
+        ]
+      : []),
+  ],
+  'subpage-cards.header',
+);
+
+function pageHref(page: LinkItem['page']): string {
+  return resolvePragueHref({ href: `/widgets/{widget}/${page}`, market, locale, widget });
+}
+
+function pageLabel(page: LinkItem['page']): string {
+  if (page === 'templates') return 'Templates';
+  if (page === 'examples') return 'Examples';
+  return 'Features';
+}
+---
+
+<section class="ck-canvas ck-subpageCards">
+  <div class="ck-inline ck-stack">
+    <header class="ck-subpageCards__header ck-stack ck-gap-tight">
+      <PrimitiveRenderer primitives={headerPrimitives} />
+    </header>
+
+    <div class="ck-row ck-subpageCards__row" aria-label={title}>
+      {items.map((card, i) => {
+        const link = links?.[i];
+        const page = link?.page ?? (i === 0 ? 'templates' : i === 1 ? 'examples' : 'features');
+        const href = pageHref(page);
+        const iconName = typeof link?.iconName === 'string' ? link.iconName.trim() : '';
+
+        return (
+          <a class="ck-subpageCards__tile" href={href} aria-label={pageLabel(page)}>
+            {iconName ? (
+              <div class="ck-subpageCards__icon" aria-hidden="true">
+                <DieterIcon name={iconName} size={40} />
+              </div>
+            ) : null}
+
+            <PrimitiveRenderer
+              primitives={assertPrimitives(
+                [
+                  { type: 'heading', level: 2, content: card.title, className: 'heading-2 ck-m0' },
+                  {
+                    type: 'text',
+                    variant: 'body',
+                    content: card.body,
+                    className: 'body-l ck-m0 ck-text-subtle',
+                  },
+                ],
+                `subpage-cards.items[${i}]`,
+              )}
+            />
+
+            <div class="ck-subpageCards__hint" aria-hidden="true">
+              <span class="label-m">Explore</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-subpageCards {
+    background: var(--color-system-white);
+  }
+
+  .ck-subpageCards__header {
+    max-width: 880px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .ck-subpageCards__subhead {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .ck-subpageCards__row {
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-top: var(--space-8);
+  }
+
+  .ck-subpageCards__tile {
+    flex: 1 1 0;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: calc(var(--space-6) + var(--space-4));
+
+    background-color: var(--color-system-gray-5-step5);
+    border-radius: var(--control-radius-4xl);
+    overflow: hidden;
+
+    text-decoration: none;
+    color: inherit;
+
+    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
+    transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  }
+
+  .ck-subpageCards__tile:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--color-system-black), transparent 84%);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .ck-subpageCards__tile:focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--color-system-black), transparent 78%);
+    outline-offset: 3px;
+  }
+
+  .ck-subpageCards__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    color: var(--color-system-gray);
+    margin-bottom: var(--space-5);
+  }
+
+  .ck-subpageCards__hint {
+    margin-top: auto;
+    padding-top: var(--space-4);
+    color: var(--color-system-gray);
+  }
+
+  @media (max-width: 900px) {
+    .ck-subpageCards__row {
+      gap: var(--space-6);
+    }
+
+    .ck-subpageCards__tile {
+      min-width: 220px;
+    }
+  }
+</style>

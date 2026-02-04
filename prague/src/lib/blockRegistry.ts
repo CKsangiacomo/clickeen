@@ -2,9 +2,14 @@ import { assertSplitLayout } from '@clickeen/composition';
 import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
 import Hero from '../blocks/hero/hero.astro';
+import ControlMoat from '../blocks/control-moat/control-moat.astro';
+import GlobalMoat from '../blocks/global-moat/global-moat.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
+import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
+import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
+import SubpageCards from '../blocks/subpage-cards/subpage-cards.astro';
 
 type StringType = 'string' | 'array';
 type RequiredString = { key: string; type: StringType };
@@ -14,8 +19,13 @@ export type BlockType =
   | 'hero'
   | 'split'
   | 'steps'
+  | 'subpage-cards'
+  | 'control-moat'
+  | 'global-moat'
+  | 'platform-strip'
   | 'cta-bottom-block'
   | 'minibob'
+  | 'locale-showcase'
   | 'navmeta'
   | 'page-meta';
 
@@ -64,6 +74,42 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
     ],
     meta: ['visual'],
   },
+  'subpage-cards': {
+    type: 'subpage-cards',
+    component: SubpageCards,
+    required: [
+      { key: 'title', type: 'string' },
+      { key: 'items', type: 'array' },
+    ],
+    meta: ['links'],
+  },
+  'control-moat': {
+    type: 'control-moat',
+    component: ControlMoat,
+    required: [
+      { key: 'title', type: 'string' },
+      { key: 'items', type: 'array' },
+    ],
+    meta: ['visual'],
+  },
+  'global-moat': {
+    type: 'global-moat',
+    component: GlobalMoat,
+    required: [
+      { key: 'title', type: 'string' },
+      { key: 'items', type: 'array' },
+    ],
+    meta: ['visual'],
+  },
+  'platform-strip': {
+    type: 'platform-strip',
+    component: PlatformStrip,
+    required: [
+      { key: 'title', type: 'string' },
+      { key: 'items', type: 'array' },
+    ],
+    meta: ['visual'],
+  },
   'cta-bottom-block': {
     type: 'cta-bottom-block',
     component: Cta,
@@ -81,6 +127,15 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'subhead', type: 'string' },
     ],
     meta: ['copy'],
+  },
+  'locale-showcase': {
+    type: 'locale-showcase',
+    component: LocaleShowcase,
+    required: [
+      { key: 'title', type: 'string' },
+      { key: 'subtitle', type: 'string' },
+    ],
+    meta: ['curatedRef'],
   },
   navmeta: {
     type: 'navmeta',
@@ -138,6 +193,35 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
   if (contract.meta.includes('layout') && (block as any).layout != null) {
     assertSplitLayout((block as any).layout, `${pagePath}:${type}.layout`);
   }
+
+  if (contract.meta.includes('links') && (block as any).links != null) {
+    const links = (block as any).links;
+    if (!Array.isArray(links)) {
+      throw new Error(`[prague] ${pagePath}: block "${type}" links must be an array`);
+    }
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      if (!link || typeof link !== 'object' || Array.isArray(link)) {
+        throw new Error(`[prague] ${pagePath}: block "${type}" links[${i}] must be an object`);
+      }
+
+      const page = (link as any).page;
+      if (typeof page !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${type}" links[${i}].page must be a string`);
+      }
+      const value = page.trim();
+      if (value !== 'templates' && value !== 'examples' && value !== 'features') {
+        throw new Error(
+          `[prague] ${pagePath}: block "${type}" links[${i}].page must be "templates", "examples", or "features"`,
+        );
+      }
+
+      const iconName = (link as any).iconName;
+      if (iconName != null && typeof iconName !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${type}" links[${i}].iconName must be a string`);
+      }
+    }
+  }
 }
 
 export function validateBlockStrings(args: { blockType: string; strings: Record<string, unknown>; pagePath: string; blockId: string }) {
@@ -153,7 +237,28 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
     }
   }
 
-  if (blockType === 'steps') {
+  if (blockType === 'subpage-cards') {
+    const items = (strings as any).items;
+    if (!Array.isArray(items)) {
+      throw new Error(`[prague] ${pagePath}: block "${blockId}" missing array "items"`);
+    }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}] must be an object`);
+      }
+      const title = (item as any).title;
+      const body = (item as any).body;
+      if (typeof title !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].title must be a string`);
+      }
+      if (typeof body !== 'string') {
+        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].body must be a string`);
+      }
+    }
+  }
+
+  if (blockType === 'steps' || blockType === 'control-moat' || blockType === 'global-moat' || blockType === 'platform-strip') {
     const items = (strings as any).items;
     if (!Array.isArray(items)) {
       throw new Error(`[prague] ${pagePath}: block "${blockId}" missing array "items"`);

@@ -1,11 +1,15 @@
 ---
 import Cta from '../blocks/cta/cta.astro';
 import BigBang from '../blocks/big-bang/big-bang.astro';
+import ControlMoat from '../blocks/control-moat/control-moat.astro';
+import GlobalMoat from '../blocks/global-moat/global-moat.astro';
 import Hero from '../blocks/hero/hero.astro';
 import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
+import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
+import SubpageCards from '../blocks/subpage-cards/subpage-cards.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
 import { resolvePragueHref } from '../lib/links';
@@ -16,6 +20,7 @@ type Block = {
   type: string;
   copy: Record<string, any>;
   visual?: { image?: string };
+  links?: any;
   align?: string;
   curatedRef?: { publicId?: string; embedMode?: string };
 };
@@ -31,7 +36,12 @@ type Props = {
 const { blocks, widget, market, locale, activeSubpage = 'overview' } = Astro.props;
 const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
 const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
+const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
+const explicitShowcasePublicId =
+  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.curatedRef?.publicId === 'string')?.curatedRef?.publicId ??
+  null;
 const showcasePublicId =
+  explicitShowcasePublicId ??
   blocks.find((b) => b && b.curatedRef && typeof b.curatedRef.publicId === 'string')?.curatedRef?.publicId ??
   `wgt_main_${widget}`;
 
@@ -46,14 +56,14 @@ const titleCaseWidget = (name: string): string => {
 const widgetDisplayName = titleCaseWidget(widget);
 const createFreeLabel = `Create a free ${widgetDisplayName} widget`;
 const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
-const showcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
-const showcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
+const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
+const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
 
 const instanceLocalesRaw = await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null);
 const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : ['en', 'es', 'ja'];
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
-const showcaseOptions = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
 const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
+const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
 const heroPrimaryCta = {
   label: createFreeLabel,
   href: hasMinibob ? '#minibob' : `/${market}/${locale}/create`,
@@ -138,6 +148,57 @@ const heroSecondaryCta =
         />
       );
     }
+    case 'subpage-cards': {
+      const copy = block.copy ?? {};
+      const links = Array.isArray((block as any).links) ? ((block as any).links as any[]) : [];
+      return (
+        <SubpageCards
+          widget={widget}
+          market={market}
+          locale={locale}
+          title={String(copy.title ?? '')}
+          subhead={typeof copy.subhead === 'string' ? copy.subhead : undefined}
+          items={(copy.items ?? []) as { title: string; body: string }[]}
+          links={links as { page: 'templates' | 'examples' | 'features'; iconName?: string }[]}
+        />
+      );
+    }
+    case 'control-moat': {
+      const copy = block.copy ?? {};
+      return (
+        <ControlMoat
+          widget={widget}
+          title={copy.title as string}
+          subhead={copy.subhead as string}
+          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          visual={block.visual}
+        />
+      );
+    }
+    case 'global-moat': {
+      const copy = block.copy ?? {};
+      return (
+        <GlobalMoat
+          widget={widget}
+          title={copy.title as string}
+          subhead={copy.subhead as string}
+          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          visual={block.visual}
+        />
+      );
+    }
+    case 'platform-strip': {
+      const copy = block.copy ?? {};
+      return (
+        <PlatformStrip
+          widget={widget}
+          title={copy.title as string}
+          subhead={copy.subhead as string}
+          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          visual={block.visual}
+        />
+      );
+    }
     case 'cta-bottom-block': {
       const copy = block.copy ?? {};
       return (
@@ -153,14 +214,31 @@ const heroSecondaryCta =
       return (
         <>
           <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />
-          <LocaleShowcase
-            publicId={showcasePublicId}
-            title={showcaseTitle}
-            subtitle={showcaseSubtitle}
-            tiles={showcaseTileEntries}
-            options={showcaseOptions}
-          />
+          {!hasExplicitLocaleShowcase ? (
+            <LocaleShowcase
+              publicId={showcasePublicId}
+              title={defaultShowcaseTitle}
+              subtitle={defaultShowcaseSubtitle}
+              tiles={showcaseTileEntries}
+              options={showcaseOptionEntries}
+            />
+          ) : null}
         </>
+      );
+    }
+    case 'locale-showcase': {
+      const copy = block.copy ?? {};
+      const title = typeof copy.title === 'string' && copy.title.trim() ? String(copy.title) : defaultShowcaseTitle;
+      const subtitle =
+        typeof copy.subtitle === 'string' && copy.subtitle.trim() ? String(copy.subtitle) : defaultShowcaseSubtitle;
+      return (
+        <LocaleShowcase
+          publicId={showcasePublicId}
+          title={title}
+          subtitle={subtitle}
+          tiles={showcaseTileEntries}
+          options={showcaseOptionEntries}
+        />
       );
     }
     case 'navmeta':

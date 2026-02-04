@@ -8,10 +8,13 @@ type Props = {
   title?: string;
   loading?: 'lazy' | 'eager';
   embedMode?: 'iframe' | 'indexable';
+  showShareChrome?: boolean;
 };
 
 const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
   Astro.props;
+
+const showShareChrome = (Astro.props as Props).showShareChrome !== false;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 
@@ -103,108 +106,112 @@ const brandSvgs = {
         />
       )}
 
-      {/* Toast is anchored to the creative (not the fading topbar). */}
-      <div class="ck-share__toast" role="status" aria-live="polite"></div>
+      {showShareChrome ? (
+        <>
+          {/* Toast is anchored to the creative (not the fading topbar). */}
+          <div class="ck-share__toast" role="status" aria-live="polite"></div>
 
-      {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
-      <div class="ck-instanceEmbed__topbar">
-        <details class="ck-share">
-          <summary class="diet-btn-is ck-share__btn">
-            <span class="diet-btn-is__icon" aria-hidden="true">
-              <Icon name="share" size={18} />
-            </span>
-            <span class="diet-btn-is__label label-s">Share</span>
-          </summary>
+          {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
+          <div class="ck-instanceEmbed__topbar">
+            <details class="ck-share">
+              <summary class="diet-btn-is ck-share__btn">
+                <span class="diet-btn-is__icon" aria-hidden="true">
+                  <Icon name="share" size={18} />
+                </span>
+                <span class="diet-btn-is__label label-s">Share</span>
+              </summary>
 
-          <div class="ck-share__menu" role="menu" aria-label="Share options">
-            <div class="ck-share__sectionTitle eyebrow heading-5">Send this widget template as message</div>
-            <div class="ck-share__grid">
-              <button type="button" class="ck-shareCard" data-action="copy">
-                <span class="ck-shareCard__icon" aria-hidden="true">
-                  <Icon name="copy" size={18} />
-                </span>
-                <span class="ck-shareCard__label body-s">Copy link</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="sms">
-                <span class="ck-shareCard__icon" aria-hidden="true">
-                  <Icon name="sms" size={18} />
-                </span>
-                <span class="ck-shareCard__label body-s">SMS</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="email">
-                <span class="ck-shareCard__icon" aria-hidden="true">
-                  <Icon name="email" size={18} />
-                </span>
-                <span class="ck-shareCard__label body-s">Email</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="whatsapp">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="whatsapp" size={18} /></span>
-                <span class="ck-shareCard__label body-s">WhatsApp</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="telegram">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="telegram" size={18} /></span>
-                <span class="ck-shareCard__label body-s">Telegram</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="signal">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.signal} />
-                <span class="ck-shareCard__label body-s">Signal</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="messenger">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.messenger} />
-                <span class="ck-shareCard__label body-s">Messenger</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="wechat">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.wechat} />
-                <span class="ck-shareCard__label body-s">WeChat</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="line">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.line} />
-                <span class="ck-shareCard__label body-s">LINE</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="slack">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.slack} />
-                <span class="ck-shareCard__label body-s">Slack</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="teams">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.teams} />
-                <span class="ck-shareCard__label body-s">Teams</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="discord">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.discord} />
-                <span class="ck-shareCard__label body-s">Discord</span>
-              </button>
-            </div>
+              <div class="ck-share__menu" role="menu" aria-label="Share options">
+                <div class="ck-share__sectionTitle eyebrow heading-5">Send this widget template as message</div>
+                <div class="ck-share__grid">
+                  <button type="button" class="ck-shareCard" data-action="copy">
+                    <span class="ck-shareCard__icon" aria-hidden="true">
+                      <Icon name="copy" size={18} />
+                    </span>
+                    <span class="ck-shareCard__label body-s">Copy link</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="sms">
+                    <span class="ck-shareCard__icon" aria-hidden="true">
+                      <Icon name="sms" size={18} />
+                    </span>
+                    <span class="ck-shareCard__label body-s">SMS</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="email">
+                    <span class="ck-shareCard__icon" aria-hidden="true">
+                      <Icon name="email" size={18} />
+                    </span>
+                    <span class="ck-shareCard__label body-s">Email</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="whatsapp">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="whatsapp" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">WhatsApp</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="telegram">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="telegram" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">Telegram</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="signal">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.signal} />
+                    <span class="ck-shareCard__label body-s">Signal</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="messenger">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.messenger} />
+                    <span class="ck-shareCard__label body-s">Messenger</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="wechat">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.wechat} />
+                    <span class="ck-shareCard__label body-s">WeChat</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="line">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.line} />
+                    <span class="ck-shareCard__label body-s">LINE</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="slack">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.slack} />
+                    <span class="ck-shareCard__label body-s">Slack</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="teams">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.teams} />
+                    <span class="ck-shareCard__label body-s">Teams</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="discord">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.discord} />
+                    <span class="ck-shareCard__label body-s">Discord</span>
+                  </button>
+                </div>
 
-            <div class="ck-share__sectionTitle eyebrow heading-5">Share this widget template on social</div>
-            <div class="ck-share__grid">
-              <button type="button" class="ck-shareCard" data-action="x">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="x" size={18} /></span>
-                <span class="ck-shareCard__label body-s">X</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="linkedin">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="linkedin" size={18} /></span>
-                <span class="ck-shareCard__label body-s">LinkedIn</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="facebook">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="facebook" size={18} /></span>
-                <span class="ck-shareCard__label body-s">Facebook</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="reddit">
-                <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="reddit" size={18} /></span>
-                <span class="ck-shareCard__label body-s">Reddit</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="instagram">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.instagram} />
-                <span class="ck-shareCard__label body-s">Instagram</span>
-              </button>
-              <button type="button" class="ck-shareCard" data-action="tiktok">
-                <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.tiktok} />
-                <span class="ck-shareCard__label body-s">TikTok</span>
-              </button>
-            </div>
+                <div class="ck-share__sectionTitle eyebrow heading-5">Share this widget template on social</div>
+                <div class="ck-share__grid">
+                  <button type="button" class="ck-shareCard" data-action="x">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="x" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">X</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="linkedin">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="linkedin" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">LinkedIn</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="facebook">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="facebook" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">Facebook</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="reddit">
+                    <span class="ck-shareCard__icon" aria-hidden="true"><Icon name="reddit" size={18} /></span>
+                    <span class="ck-shareCard__label body-s">Reddit</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="instagram">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.instagram} />
+                    <span class="ck-shareCard__label body-s">Instagram</span>
+                  </button>
+                  <button type="button" class="ck-shareCard" data-action="tiktok">
+                    <span class="ck-shareCard__icon ck-shareCard__icon--brand" aria-hidden="true" set:html={brandSvgs.tiktok} />
+                    <span class="ck-shareCard__label body-s">TikTok</span>
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
-        </details>
-      </div>
+        </>
+      ) : null}
     </>
   ) : (
     <div class="ck-media ck-instanceEmbed__stub">
