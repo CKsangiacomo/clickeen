@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d41d4a0b02cdb929a2ec512341c9b767ed0bf338a58a7fcee2272de063044077",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Functies van het logo-overzicht - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Snel, flexibel en ontworpen om er overal geweldig uit te zien."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Functies van logoweergave"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Snel, flexibel en ontworpen om er overal geweldig uit te zien."
+    }
+  ],
+  "v": 1
+}

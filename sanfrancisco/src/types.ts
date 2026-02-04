@@ -113,6 +113,15 @@ export type Env = {
   OPENAI_MODEL?: string;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
+  GROQ_API_KEY?: string;
+  GROQ_BASE_URL?: string;
+  GROQ_MODEL?: string;
+  AMAZON_BEDROCK_ACCESS_KEY_ID?: string;
+  AMAZON_BEDROCK_SECRET_ACCESS_KEY?: string;
+  AMAZON_BEDROCK_SESSION_TOKEN?: string;
+  AMAZON_BEDROCK_REGION?: string;
+  AMAZON_BEDROCK_ENDPOINT?: string;
+  AMAZON_BEDROCK_MODEL_ID?: string;
   PITCH_SERVICE_KEY?: string;
   PITCH_MODEL?: string;
   SF_KV: KVNamespace;

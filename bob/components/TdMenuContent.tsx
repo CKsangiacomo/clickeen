@@ -987,10 +987,15 @@ export function TdMenuContent({
       const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
       const presetOps = new Map<string, WidgetOp>();
       const themeScopePrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
+      const insideShadowLinkedOverrides = new Map<string, boolean>();
 
       for (const op of ops) {
         if (op.op === 'set' && typeof op.path === 'string' && presetByPath.has(op.path)) {
           presetOps.set(op.path, op);
+        }
+        if (op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'boolean') {
+          const insideShadowLinkMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
+          if (insideShadowLinkMatch) insideShadowLinkedOverrides.set(insideShadowLinkMatch[1], op.value);
         }
       }
 
@@ -1095,6 +1100,78 @@ export function TdMenuContent({
             continue;
           }
 
+          const insideShadowLinkMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
+          if (insideShadowLinkMatch) {
+            const nextLinked = op.value;
+            const base = insideShadowLinkMatch[1];
+            const allPath = `${base}.insideShadow.all`;
+            const topPath = `${base}.insideShadow.top`;
+            const rightPath = `${base}.insideShadow.right`;
+            const bottomPath = `${base}.insideShadow.bottom`;
+            const leftPath = `${base}.insideShadow.left`;
+
+            const allValue = getAt<unknown>(instanceData, allPath);
+            const topValue = getAt<unknown>(instanceData, topPath);
+            const rightValue = getAt<unknown>(instanceData, rightPath);
+            const bottomValue = getAt<unknown>(instanceData, bottomPath);
+            const leftValue = getAt<unknown>(instanceData, leftPath);
+
+            const pickAxis = (value: unknown, axisKey: 'x' | 'y'): number | null => {
+              if (!isPlainRecord(value)) return null;
+              return coerceFiniteNumber((value as Record<string, unknown>)[axisKey]);
+            };
+
+            const makeShadowFrom = (sourceShadow: Record<string, unknown>) => () => ({ ...sourceShadow });
+
+            if (!nextLinked) {
+              if (!isPlainRecord(allValue)) {
+                expanded.push(op);
+                continue;
+              }
+
+              const makeShadow = makeShadowFrom(allValue as Record<string, unknown>);
+              expanded.push(
+                setOp(op.path, nextLinked),
+                setOp(topPath, makeShadow()),
+                setOp(rightPath, makeShadow()),
+                setOp(bottomPath, makeShadow()),
+                setOp(leftPath, makeShadow()),
+              );
+              continue;
+            }
+
+            const baseShadowRaw =
+              (isPlainRecord(topValue) ? topValue : null) ??
+              (isPlainRecord(allValue) ? allValue : null) ??
+              (isPlainRecord(leftValue) ? leftValue : null) ??
+              (isPlainRecord(rightValue) ? rightValue : null) ??
+              (isPlainRecord(bottomValue) ? bottomValue : null);
+
+            if (!baseShadowRaw) {
+              expanded.push(op);
+              continue;
+            }
+
+            const baseShadow = baseShadowRaw as Record<string, unknown>;
+            const mergedShadow: Record<string, unknown> = { ...baseShadow };
+            const xFromSides = pickAxis(leftValue, 'x') ?? pickAxis(rightValue, 'x');
+            const yFromSides = pickAxis(topValue, 'y') ?? pickAxis(bottomValue, 'y');
+            if (xFromSides != null) mergedShadow.x = xFromSides;
+            if (yFromSides != null) mergedShadow.y = yFromSides;
+
+            const makeShadow = makeShadowFrom(mergedShadow);
+
+            expanded.push(
+              setOp(op.path, nextLinked),
+              setOp(allPath, makeShadow()),
+              setOp(topPath, makeShadow()),
+              setOp(rightPath, makeShadow()),
+              setOp(bottomPath, makeShadow()),
+              setOp(leftPath, makeShadow()),
+            );
+            continue;
+          }
+
           const v2PaddingMatch = op.path.match(/^(pod|stage)\.padding\.(desktop|mobile)\.linked$/);
           if (v2PaddingMatch) {
             const nextLinked = op.value;
@@ -1179,6 +1256,27 @@ export function TdMenuContent({
               setOp(`${base}.right`, n),
               setOp(`${base}.bottom`, n),
               setOp(`${base}.left`, n),
+            );
+            continue;
+          }
+        }
+
+        const insideShadowAllMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.all$/);
+        if (insideShadowAllMatch) {
+          const base = insideShadowAllMatch[1];
+          const linkedOverride = insideShadowLinkedOverrides.get(base);
+          const linkedValue =
+            linkedOverride != null ? linkedOverride : getAt<unknown>(instanceData, `${base}.insideShadow.linked`);
+          const linked = linkedValue !== false;
+          if (linked && isPlainRecord(op.value)) {
+            const sourceShadow = op.value as Record<string, unknown>;
+            const makeShadow = () => ({ ...sourceShadow });
+            expanded.push(
+              setOp(op.path, makeShadow()),
+              setOp(`${base}.insideShadow.top`, makeShadow()),
+              setOp(`${base}.insideShadow.right`, makeShadow()),
+              setOp(`${base}.insideShadow.bottom`, makeShadow()),
+              setOp(`${base}.insideShadow.left`, makeShadow()),
             );
             continue;
           }
@@ -1380,6 +1478,37 @@ export function TdMenuContent({
             setOp(rightPath, n),
             setOp(bottomPath, n),
             setOp(leftPath, n),
+          ];
+          applyOps(ops);
+          return;
+        }
+        const insideShadowLinkMatch = path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
+        if (insideShadowLinkMatch) {
+          const nextLinked = target.checked;
+          const base = insideShadowLinkMatch[1];
+          const allPath = `${base}.insideShadow.all`;
+          const topPath = `${base}.insideShadow.top`;
+          const rightPath = `${base}.insideShadow.right`;
+          const bottomPath = `${base}.insideShadow.bottom`;
+          const leftPath = `${base}.insideShadow.left`;
+
+          const allValue = getAt<unknown>(instanceData, allPath);
+          const topValue = getAt<unknown>(instanceData, topPath);
+          const source = nextLinked ? topValue : allValue;
+          if (!isPlainRecord(source)) {
+            applySet(path, nextLinked);
+            return;
+          }
+
+          const sourceShadow = source as Record<string, unknown>;
+          const makeShadow = () => ({ ...sourceShadow });
+          const ops: WidgetOp[] = [
+            setOp(path, nextLinked),
+            ...(nextLinked ? [setOp(allPath, makeShadow())] : []),
+            setOp(topPath, makeShadow()),
+            setOp(rightPath, makeShadow()),
+            setOp(bottomPath, makeShadow()),
+            setOp(leftPath, makeShadow()),
           ];
           applyOps(ops);
           return;

@@ -27,12 +27,33 @@ Legacy layout fields are ignored by runtime (use Stage/Pod layout controls inste
 - `appearance.textColor`: fill object (type: color)
 - `appearance.itemBackground`: fill object (type: color | gradient)
 - `appearance.cardwrapper.border`: object (enabled, width, color)
-- `appearance.cardwrapper.shadow`: object (enabled, inset, x, y, blur, spread, color, alpha)
+- `appearance.cardwrapper.shadow`: object (enabled, inset=false, x, y, blur, spread, color, alpha) — outside shadow channel
+- `appearance.cardwrapper.insideShadow.linked`: boolean
+- `appearance.cardwrapper.insideShadow.all`: shadow object (enabled, inset=true, x, y, blur, spread, color, alpha) — inside shadow (linked)
+- `appearance.cardwrapper.insideShadow.top|right|bottom|left`: shadow object — inside shadow (unlinked)
 - `appearance.cardwrapper.radiusLinked`: boolean
 - `appearance.cardwrapper.radius`: none | 2xl | 4xl | 6xl | 10xl
 - `appearance.cardwrapper.radiusTL|TR|BR|BL`: none | 2xl | 4xl | 6xl | 10xl
 - `appearance.podBorder`: object (enabled, width, color)
 - `appearance.separator`: string (: | / | -)
+
+## Stage/Pod
+- `stage.background`: fill object (type: color | gradient | image | video)
+- `stage.shadow`: shadow object (enabled, inset=false, x, y, blur, spread, color, alpha) — outside shadow channel
+- `stage.insideShadow.linked`: boolean
+- `stage.insideShadow.all`: shadow object (enabled, inset=true, x, y, blur, spread, color, alpha) — stage inside shadow (linked)
+- `stage.insideShadow.top|right|bottom|left`: shadow object — stage inside shadow (unlinked)
+- `stage.alignment`: left | center | right | top | bottom
+- `stage.padding.desktop|mobile`: padding box
+- `pod.background`: fill object (type: color | gradient | image | video)
+- `pod.shadow`: shadow object (enabled, inset=false, x, y, blur, spread, color, alpha) — outside shadow channel
+- `pod.insideShadow.linked`: boolean
+- `pod.insideShadow.all`: shadow object (enabled, inset=true, x, y, blur, spread, color, alpha) — pod inside shadow (linked)
+- `pod.insideShadow.top|right|bottom|left`: shadow object — pod inside shadow (unlinked)
+- `pod.padding.desktop|mobile`: padding box
+- `pod.radius*`: radius tokens
+- `pod.widthMode`: wrap | fixed | full
+- `pod.contentWidth`: number (px)
 
 ## Behavior
 - `behavior.showBacklink`: boolean

@@ -137,14 +137,13 @@ var Dieter = (() => {
     const svThumb = root.querySelector(".diet-dropdown-shadow__sv-thumb");
     const swatches = Array.from(root.querySelectorAll(".diet-dropdown-shadow__swatch"));
     const enabledInput = root.querySelector(".diet-dropdown-shadow__enabled");
-    const insetInput = root.querySelector(".diet-dropdown-shadow__inset");
     const xInput = root.querySelector(".diet-dropdown-shadow__x");
     const yInput = root.querySelector(".diet-dropdown-shadow__y");
     const blurInput = root.querySelector(".diet-dropdown-shadow__blur");
     const spreadInput = root.querySelector(".diet-dropdown-shadow__spread");
     const opacityInput = root.querySelector(".diet-dropdown-shadow__opacity");
     const previewBox = root.querySelector(".diet-dropdown-shadow__shadow-preview");
-    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !insetInput || !xInput || !yInput || !blurInput || !spreadInput || !opacityInput || !previewBox) {
+    if (!input || !hueInput || !hexField || !svCanvas || !svThumb || !enabledInput || !xInput || !yInput || !blurInput || !spreadInput || !opacityInput || !previewBox) {
       return null;
     }
     const nativeValue = captureNativeValue(input);
@@ -167,7 +166,6 @@ var Dieter = (() => {
       svThumb,
       swatches,
       enabledInput,
-      insetInput,
       xInput,
       yInput,
       blurInput,
@@ -204,10 +202,6 @@ var Dieter = (() => {
     installNativeColorPicker(state);
     state.enabledInput.addEventListener("input", () => {
       state.shadow.enabled = state.enabledInput.checked;
-      syncUI(state, { commit: true });
-    });
-    state.insetInput.addEventListener("input", () => {
-      state.shadow.inset = state.insetInput.checked;
       syncUI(state, { commit: true });
     });
     const onRange = (key, input) => () => {
@@ -321,7 +315,6 @@ var Dieter = (() => {
     state.svThumb.style.left = left;
     state.svThumb.style.top = top;
     state.enabledInput.checked = state.shadow.enabled;
-    state.insetInput.checked = state.shadow.inset;
     applyEnabledState(state);
     setRangeValue(state.xInput, state.shadow.x);
     setRangeValue(state.yInput, state.shadow.y);
@@ -358,7 +351,6 @@ var Dieter = (() => {
     const enabled = Boolean(state.shadow.enabled);
     state.root.dataset.shadowEnabled = enabled ? "true" : "false";
     const disabled = !enabled;
-    state.insetInput.disabled = disabled;
     state.xInput.disabled = disabled;
     state.yInput.disabled = disabled;
     state.blurInput.disabled = disabled;
@@ -416,14 +408,14 @@ var Dieter = (() => {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
     const obj = parsed;
     const enabled = typeof obj.enabled === "boolean" ? obj.enabled : null;
-    const inset = typeof obj.inset === "boolean" ? obj.inset : null;
+    const inset = typeof obj.inset === "boolean" ? obj.inset : false;
     const x = typeof obj.x === "number" && Number.isFinite(obj.x) ? obj.x : null;
     const y = typeof obj.y === "number" && Number.isFinite(obj.y) ? obj.y : null;
     const blur = typeof obj.blur === "number" && Number.isFinite(obj.blur) ? obj.blur : null;
     const spread = typeof obj.spread === "number" && Number.isFinite(obj.spread) ? obj.spread : null;
     const alpha = typeof obj.alpha === "number" && Number.isFinite(obj.alpha) ? obj.alpha : null;
     const color = typeof obj.color === "string" ? obj.color : null;
-    if (enabled == null || inset == null || x == null || y == null || blur == null || spread == null || alpha == null || color == null) {
+    if (enabled == null || x == null || y == null || blur == null || spread == null || alpha == null || color == null) {
       return null;
     }
     const hsv = parseColor(color, document.documentElement);

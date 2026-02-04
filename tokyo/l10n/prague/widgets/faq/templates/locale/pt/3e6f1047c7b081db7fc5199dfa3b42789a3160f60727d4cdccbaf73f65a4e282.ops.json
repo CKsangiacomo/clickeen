@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Modelos de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Escolha entre designs de FAQ impressionantes que chamam a atenção e convertem visitantes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "A sua FAQ. À sua maneira."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Bonita por padrão. Inconfundivelmente sua por design."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Arrojado quando você precisa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—visuais alinhados às tendências em claro e escuro."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegante quando você quiser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalista, clean e moderno. Estilos atemporais que parecem sempre atuais."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Comece com um design. Depois, torne-o seu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Obtenha a estética instantaneamente. Designs em tendência ou clássicos intemporais. Depois, personalize sem limites — raio por canto, sombras por lado, tipografia por função e breakpoints responsivos. Um template que se torna a sua assinatura."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ajude os visitantes a encontrar respostas rapidamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Liberdade de design, integrada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "De layouts a acabamentos e fontes — personalização que parece sem esforço."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Layouts, do seu jeito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Controlo de Aparência Sem Limites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Precisão Tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Muitos sistemas de layout, não apenas um. Estrutura por breakpoint. Preenchimento e espaçamento independentes para desktop/mobile. Controle colunas, empilhamento, alinhamento e reflow — com precisão."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Raio por canto. Bordas com cores personalizadas. Sombras externas e internas (ligadas ou independentes por lado). Fundos em gradiente, imagem ou vídeo. Autoridade visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Seis funções distintas (título, corpo, pergunta, resposta, botão, secção). Escolha entre 17 Google Fonts. Peso, estilo, tamanho — tudo personalizável por função. Escalas dinâmicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Três mecanismos de layout para o seu widget de FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Acordeão para revelação progressiva. Lista para simplicidade. Cartões para hierarquia visual. Grelha ou alvenaria. Colunas responsivas. Controlo granular sobre espaçamentos e preenchimento."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Controlo de aparência sem limites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Raio por canto. Bordas com cores personalizadas. Sombras externas e internas (ligadas ou independentes por lado). Fundos em gradiente, imagem ou vídeo. Total autoridade visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Precisão tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Seis funções distintas (título, corpo, pergunta, resposta, botão, secção). Escolha entre 17 Google Fonts. Peso, estilo, tamanho — tudo personalizável por função. Escalas dinâmicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Modo Escuro: Sofisticado e Moderno"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "As interfaces modernas prosperam na escuridão. Sensação premium com uma estética de ponta. Incluído em todos os templates."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop e Mobile, perfeitamente ajustado"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "O seu widget de FAQ adapta-se a todos os breakpoints. Diferentes contagens de colunas, padding e espaçamento por dispositivo. Uma linguagem de design, infinitos viewports."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Do modelo ao ajuste perfeito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Como criar o seu widget de FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Escolha um modelo de design"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Personalize layouts e aparência"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Aperfeiçoe a tipografia e a responsividade"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Em alta, clássico ou minimalista. Modos claro e escuro."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Acordeão, lista ou cartões. Raio por canto, sombras por lado, gradientes, bordas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Seis funções de fonte, 17 Google Fonts. Perfeito no desktop e no telemóvel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Crie um widget de FAQ gratuito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Comece com um modelo de design ou crie do zero. Controle criativo total."
+    }
+  ],
+  "v": 1
+}

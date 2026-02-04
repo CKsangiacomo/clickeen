@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "141ec2ccd3097d0a5ff351e4a42f00d8f6062b3462eb6166ff3a83a85f7d1b1c",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Priser for logo-utstilling – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Enkle priser for widgeten for logo-utstilling. Start gratis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Priser for logo-utstilling"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Start gratis. Oppgrader når du vil ha flere widgeter og ingen merkevarebygging."
+    }
+  ],
+  "v": 1
+}

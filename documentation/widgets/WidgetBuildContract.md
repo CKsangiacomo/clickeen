@@ -46,13 +46,15 @@ MUST NOT
 
 ### 2) Stage/Pod (required)
 MUST
-- `defaults.stage` includes: `background`, `alignment`, `canvas.mode`, `padding.desktop`, `padding.mobile`.
+- `defaults.stage` includes: `background`, `insideShadow`, `alignment`, `canvas.mode`, `padding.desktop`, `padding.mobile`.
 - Each padding object includes: `linked, all, top, right, bottom, left`.
-- `defaults.pod` includes: `background`, `padding.desktop`, `padding.mobile`, `widthMode`, `contentWidth`, radius fields (`radiusLinked`, `radius`, `radiusTL/TR/BR/BL`).
+- `defaults.pod` includes: `background`, `shadow` (outside), `insideShadow`, `padding.desktop`, `padding.mobile`, `widthMode`, `contentWidth`, radius fields (`radiusLinked`, `radius`, `radiusTL/TR/BR/BL`).
 - `widget.html` hierarchy:
   - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`.
 - `widget.client.js` calls `window.CKStagePod.applyStagePod(state.stage, state.pod, root)` on load and every update.
 - Appearance panel exposes `stage.background` and `pod.background` via dropdown-fill with explicit `fill-modes`.
+- Appearance panel exposes `stage.insideShadow.*` and `pod.insideShadow.*` (inside shadow) via dropdown-shadow.
+- Appearance panel exposes `pod.shadow` (outside shadow) via dropdown-shadow.
 
 MUST NOT
 - Reimplement Stage/Pod layout logic in widget CSS or JS.
@@ -61,15 +63,16 @@ MUST NOT
 ### 2.1) Global appearance surface rule (required)
 **Stage (canvas wrapper)**
 - ✅ Background fill (all fill types)
-- ❌ Border, ❌ Shadow, ❌ Radius
+- ✅ Inside shadow (**inset only**)
+- ❌ Border, ❌ Radius
 
 **Pod (container surface)**
 - ✅ Background fill (all fill types)
-- ✅ Border, ✅ Shadow, ✅ Radius
+- ✅ Border, ✅ Shadow (outside) + inside fade, ✅ Radius
 
 **Item (array item/card)**
 - ✅ Background fill (**color + gradient only**)
-- ✅ Border, ✅ Shadow, ✅ Radius
+- ✅ Border, ✅ Shadow (outside) + inside fade, ✅ Radius
 
 If a widget needs anything outside this rule, it must be explicitly required by the PRD.
 
@@ -80,12 +83,15 @@ If a widget exposes `appearance.cardwrapper.*` controls (border/shadow/radius fo
   - `--ck-cardwrapper-border-width`
   - `--ck-cardwrapper-border-color`
   - `--ck-cardwrapper-shadow`
+  - `--ck-cardwrapper-inside-fade`
   - `--ck-cardwrapper-radius`
 
 MUST
 - Load `../shared/surface.js` in `widget.html` (before `widget.client.js`).
 - Apply card wrapper vars via `CKSurface.applyCardWrapper(...)` on every state update.
 - Reference only `--ck-cardwrapper-*` vars in `widget.css` for card wrapper styling.
+  - `--ck-cardwrapper-shadow` maps to `appearance.cardwrapper.shadow` (outside elevation only).
+  - `--ck-cardwrapper-inside-fade` maps to `appearance.cardwrapper.insideShadow.*` (inside fade channel).
 
 MUST NOT
 - Reimplement border/shadow/radius math per widget (use `CKSurface`).
@@ -142,6 +148,9 @@ MUST
     - `.ck-headerLayout__body` (direct child; holds widget-specific content)
 - Localize `header.title`, `header.subtitleHtml`, and `cta.label` in `localization.json`.
 - Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
+- Mobile baseline (executed):
+  - At widths `<= 900px`, header placements `left|right` collapse to a vertical stack (`top` semantics).
+  - At widths `<= 900px`, `header.ctaPlacement="right"` renders as CTA-below to prevent broken layouts with long titles/translations.
 - Note on CTA sizing presets:
   - In Bob, `appearance.ctaSizePreset` and `appearance.ctaIconSizePreset` are **preset selectors** (editor convenience). Selecting a preset expands into concrete state writes (typography button size + CTA padding/icon size). If any of the target values are edited manually, Bob resets the preset selector to `custom`.
 

@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget odliczania - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Zbuduj poczucie pilności dzięki konfigurowalnym timerom odliczania. Wprowadzaj na rynek, sprzedawaj i ogłaszaj z pewnością."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget timera odliczania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Stwórz poczucie pilności i zachęć do działania dzięki szybkim, elastycznym odliczaniom."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Odliczanie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Dodaj poczucie pilności dzięki elastycznym timerom."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Wypróbuj na żywo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Edytuj instancję demo w minibob. Opublikuj, gdy będziesz gotowy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget odliczania czasu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Twórz poczucie pilności i skłaniaj do działania dzięki konfigurowalnym licznikom odliczania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Elastyczne tryby timera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Liczniki oparte na dacie, osobiste lub liczbowe — na każdą okazję."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Zamień uwagę w działanie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Korzystaj z timerów dopasowanych do premier, wyprzedaży, wydarzeń i celów osobistych. Ustaw raz i pozwól mu działać wszędzie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Łatwa personalizacja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Dostosuj wygląd, układ i działania, aby pasowały do Twojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Startuj szybciej z odliczaniem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Od konfiguracji do publikacji w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Wybierz licznik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Dopasuj do swojej marki"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikuj i lokalizuj"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Wybierz licznik daty, evergreen lub licznik liczbowy dopasowany do Twojego zastosowania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Dostosuj kolory, etykiety i układ, aby pasowały do każdej strony."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Uruchom szybko i docieraj do odbiorców na całym świecie dzięki wbudowanej lokalizacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Zwiększ konwersje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Zachęć do natychmiastowego działania dzięki ofertom ograniczonym czasowo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Zoptymalizowane pod SEO i GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Wbudowana obsługa schematu i lokalizacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Zbuduj poczucie pilności, zwiększ sprzedaż"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Zaawansowane timery odliczania, które zamieniają odwiedzających w klientów."
+    }
+  ],
+  "v": 1
+}

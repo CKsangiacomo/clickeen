@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS Örnekleri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Gerçek işletmelerin sorunları çözmek ve daha fazla anlaşma kapatmak için SSS'leri nasıl kullandığını görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Gerçek iş sorunlarını çözen SSS'ler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dişçi muayenehanelerinden DJ rezervasyonlarına kadar, sizin gibi şirketlerin soruları nasıl müşteriye dönüştürdüğünü görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Sağlık hizmetleri: Gelmeme oranını %40 azaltın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Diş hekimleri, hastalar daha aramadan önce işlemler, sigorta ve randevu planlamasıyla ilgili yaygın soruları yanıtlar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-ticaret: İadeleri anında yönetin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Kargo politikaları, beden rehberleri, iade süreleri—sepet terkini önleyen soruları yanıtlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Denemeleri müşterilere dönüştürün"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Özellik soruları, fiyatlandırma şüpheleri, entegrasyon endişeleri—itirazlar kayıp fırsatlara dönüşmeden önce ele alın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Her sektörün SSS fırsatları vardır"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Sorular, dönüşümlerin sessiz katilidir. İster randevu alıyor, ister iadeleri işliyor ya da özellikleri açıklıyor olun; yanıtsız sorular iş kaybı demektir. Clickeen’in SSS’leri her yerde çalışır ve her müşterinin dilini anında konuşur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Yaratıcı Hizmetler: Rezervasyon taleplerini kolaylaştırın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ’ler, fotoğrafçılar ve danışmanlar; fiyatlandırma, müsaitlik ve süreçle ilgili soruları 7/24 yanıtlar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Sorulardan müşterilere"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Gerçekten sonuç getiren SSS’leri hayata geçirmek, kanıtlanmış bir süreci izler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "En büyük soru kategorilerinizi belirleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Hedef kitleniz için doğru SSS stilini seçin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Gömün ve veriye göre optimize edin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "En sık sorulan soruları bulmak için destek taleplerini, satış görüşmelerini ve sohbet kayıtlarını analiz edin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Detaylı yanıtlar için akordeon, taranabilir bilgi için kartlar, doğrudan Soru-Cevap’lar için listeler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Hangi soruların en çok tıklandığını izleyin ve dönüşüm getirenlere göre yanıtlarınızı iyileştirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Sektörünüz için SSS çözümünü bulun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Sizin gibi işletmeler için özel olarak tasarlanmış şablonlar; ihtiyaçlarınıza uyum sağlayan yapay zeka ile."
+    }
+  ],
+  "v": 1
+}

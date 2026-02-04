@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Contoh FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Lihat bagaimana bisnis nyata menggunakan FAQ untuk memecahkan masalah dan menutup lebih banyak kesepakatan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ yang menyelesaikan masalah bisnis nyata"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dari praktik dokter gigi hingga pemesanan DJ, lihat bagaimana perusahaan seperti milik Anda mengubah pertanyaan menjadi pelanggan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Layanan kesehatan: Kurangi ketidakhadiran hingga 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Dokter gigi menjawab pertanyaan umum tentang prosedur, asuransi, dan penjadwalan—sebelum pasien menelepon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "Ecommerce: Tangani pengembalian secara instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Kebijakan pengiriman, panduan ukuran, jangka waktu pengembalian—jawab pertanyaan yang mencegah pelanggan meninggalkan keranjang belanja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Ubah uji coba menjadi pelanggan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Pertanyaan tentang fitur, keraguan soal harga, kekhawatiran integrasi—atasi keberatan sebelum menjadi peluang yang hilang."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Setiap industri punya peluang FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Pertanyaan adalah pembunuh senyap konversi. Baik Anda menjadwalkan janji temu, memproses pengembalian, atau menjelaskan fitur, pertanyaan yang tidak terjawab berarti bisnis yang hilang. FAQ Clickeen bekerja di mana saja, berbicara dalam bahasa setiap pelanggan secara instan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Layanan Kreatif: Sederhanakan pertanyaan pemesanan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ, fotografer, dan konsultan menjawab pertanyaan tentang harga, ketersediaan, dan proses 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Dari pertanyaan menjadi pelanggan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Menerapkan FAQ yang benar-benar mendorong hasil mengikuti proses yang telah terbukti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifikasi kategori pertanyaan terbesar Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Pilih gaya FAQ yang tepat untuk audiens Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Sematkan dan optimalkan berdasarkan data"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analisis tiket dukungan, panggilan penjualan, dan log chat untuk menemukan pertanyaan yang paling sering diajukan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Accordion untuk jawaban detail, kartu untuk info yang mudah dipindai, daftar untuk tanya jawab yang lugas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Pantau pertanyaan mana yang paling banyak diklik dan sempurnakan jawaban Anda berdasarkan apa yang mendorong konversi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Temukan solusi FAQ untuk industri Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Templat yang dirancang khusus untuk bisnis seperti Anda, dengan AI yang beradaptasi dengan kebutuhan Anda."
+    }
+  ],
+  "v": 1
+}

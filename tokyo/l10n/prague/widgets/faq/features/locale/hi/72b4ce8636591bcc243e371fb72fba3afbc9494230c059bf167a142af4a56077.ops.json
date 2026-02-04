@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ विशेषताएँ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "AI-संचालित FAQs को वैश्विक रूप से प्रभावी ढंग से लॉन्च करने और वायरल रूप से बढ़ाने के लिए आपको जो कुछ भी चाहिए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ Widget क्यों Elfsight, TypeForm और कस्टम-बिल्ट से बेहतर है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI के लिए शुरू से बनाया गया। दुनिया भर में काम करता है। वायरल तरीके से बढ़ता है। एक FAQ, अनंत संभावनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI संपादन: बताइए, हो गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "साधारण भाषा में बताइए कि आपको क्या चाहिए। 'प्रश्नों को और कैज़ुअल बनाओ' या 'कीमतों के बारे में एक सेक्शन जोड़ो।' AI समझता है और तुरंत लागू कर देता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "वैश्विक त्वरित: कोई भी भाषा, अभी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "भूगोल एक पैरामीटर है, प्रोजेक्ट नहीं। एक क्लिक में स्पैनिश, जापानी या अरबी जोड़ें। कोई मैनुअल अनुवाद नहीं, कोई देरी नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "हर जगह कंपोज़ेबल: एक FAQ, अनंत संदर्भ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "वही FAQ वेबसाइट, ईमेल, लैंडिंग पेज और विज्ञापनों में काम करता है। एक स्रोत, अनंत संभावनाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeen सब कुछ कैसे बदल देता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "तुरंत व्यक्तिगत लोकलाइज़ेशन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "टेम्प्लेट या पिक्सेल-परफेक्ट कस्टम"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "कम्पोज़ेबल आर्किटेक्चर"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "वेबसाइट URL → 29 भाषाओं में तुरंत व्यक्तिगत सामग्री। कोई मैनुअल अनुवाद नहीं, कोई अनुवादक लागत नहीं। AI आपके व्यवसाय के संदर्भ को समझता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "क्यूरेटेड टेम्प्लेट से शुरू करें या सब कुछ खुद परिभाषित करें—आपकी पसंद, पूरी आज़ादी। कोई समझौता नहीं, कोई सीमाएँ नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "एक FAQ हर जगह काम करता है: वेबसाइट, ईमेल, लैंडिंग पेज, विज्ञापन। वही सामग्री, अनंत संदर्भ। हर चैनल के लिए दोबारा बनाने की जरूरत नहीं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI के लिए बनाया गया, AI द्वारा संचालित"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen सिर्फ़ एक और FAQ बिल्डर नहीं है—यह पहला उत्पाद है जिसे पहले दिन से ही AI संचालन के लिए डिज़ाइन किया गया है। जहाँ प्रतिस्पर्धी AI फ़ीचर्स बाद में जोड़ते हैं, वहीं हमने ऐसी आर्किटेक्चर बनाई है जिसे AI एजेंट्स स्वायत्त रूप से समझ, संशोधित और अनुकूलित कर सकें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen का AI इकोसिस्टम कैसे काम करता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "एक संपूर्ण प्लेटफ़ॉर्म जो हर इंटरैक्शन के साथ और अधिक स्मार्ट होता जाता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI आपकी मंशा को समझता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "डिफ़ॉल्ट रूप से वैश्विक संचालन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "लगातार सीखना और सुधार"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "वायरल वितरण स्वचालन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "परिवर्तनों का स्वाभाविक रूप से वर्णन करें। 'इसे अधिक प्रोफ़ेशनल बनाएं' या 'CTA में तात्कालिकता जोड़ें।' AI इसे पूरी तरह निष्पादित करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI सभी बाज़ारों में एक साथ स्थानीयकरण, सपोर्ट और मार्केटिंग संभालता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "हर यूज़र इंटरैक्शन AI सिस्टम को सिखाता है, जिससे समय के साथ सभी FAQs और भी स्मार्ट बनते जाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "मुफ़्त FAQs मार्केटिंग चैनल बन जाते हैं जो अपने आप अधिग्रहण को बढ़ाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "अक्सर पूछे जाने वाले प्रश्नों (FAQs) के भविष्य का अनुभव करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "वह प्लेटफ़ॉर्म जो हर इंटरैक्शन के साथ और अधिक स्मार्ट होता जाता है। AI युग के लिए बनाया गया।"
+    }
+  ],
+  "v": 1
+}

@@ -5,15 +5,15 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "title": "Countdown Features - Clickeen",
-        "description": "Explore the features of the Countdown widget."
+        "title": "Countdown features - Clickeen",
+        "description": "Explore the features of the countdown widget."
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Countdown Features",
+        "headline": "Countdown features",
         "subheadline": "Everything you need to create urgency and drive action."
       }
     }

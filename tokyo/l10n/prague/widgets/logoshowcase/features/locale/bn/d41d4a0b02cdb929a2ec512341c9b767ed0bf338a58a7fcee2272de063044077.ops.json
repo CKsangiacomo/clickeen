@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d41d4a0b02cdb929a2ec512341c9b767ed0bf338a58a7fcee2272de063044077",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "লোগো শোকেস বৈশিষ্ট্যসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দ্রুত, নমনীয়, এবং সর্বত্র দারুণ দেখানোর জন্য ডিজাইন করা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "লোগো প্রদর্শনীর বৈশিষ্ট্যসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "দ্রুত, নমনীয়, এবং সর্বত্র দারুণ দেখানোর জন্য নকশা করা।"
+    }
+  ],
+  "v": 1
+}

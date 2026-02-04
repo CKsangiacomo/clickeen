@@ -5,6 +5,10 @@ import { isCuratedPublicId, normalizeLocaleToken } from '../lib/l10n/instance';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { can } from '@clickeen/ck-policy';
+import localesJson from '../../config/locales.json';
+import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
+
+const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
 type LocalizationControlsProps = {
   mode?: 'translate' | 'settings';
@@ -185,10 +189,13 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   }, [availableLocales, activeLocale, baseLocale, showSelector]);
 
   const localeOptions = useMemo(() => {
-    return selectLocales.map((code) => ({
-      value: code,
-      label: code === baseLocale ? `Base (${code})` : code,
-    }));
+    const uiLocale = 'en';
+    return selectLocales.map((code) => {
+      const normalized = normalizeLocaleToken(code) ?? code;
+      const languageLabel = resolveLocaleLabel({ locales: CANONICAL_LOCALES, uiLocale, targetLocale: normalized });
+      const label = normalized === baseLocale ? `Base — ${languageLabel} (${normalized})` : `${languageLabel} (${normalized})`;
+      return { value: normalized, label };
+    });
   }, [selectLocales, baseLocale]);
   const localeOptionsKey = useMemo(() => localeOptions.map((option) => option.value).join('|'), [localeOptions]);
 

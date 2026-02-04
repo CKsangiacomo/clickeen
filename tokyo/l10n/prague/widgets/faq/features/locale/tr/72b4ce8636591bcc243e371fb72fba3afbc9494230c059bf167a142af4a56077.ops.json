@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS Özellikleri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Küresel ölçekte çalışan ve viral olarak büyüyen yapay zekâ destekli SSS'leri yayımlamak için ihtiyacınız olan her şey."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "SSS Widget’ı Neden Elfsight, TypeForm ve Özel Yapıma Göre Daha İyi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Yapay zekâ için sıfırdan geliştirildi. Küresel ölçekte çalışır. Viral olarak büyür. Tek bir SSS, sonsuz olasılık."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Yapay zekâ ile düzenleme: Anlatın, tamam"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "İstediğinizi sade bir dille söyleyin. 'Soruları daha samimi yap' ya da 'Fiyatlandırma hakkında bir bölüm ekle.' Yapay zekâ anlar ve anında uygular."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Küresel anında: Her dil, şimdi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Coğrafya bir proje değil, bir parametre. Tek tıkla İspanyolca, Japonca veya Arapça ekleyin. Manuel çeviri yok, gecikme yok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Her yerde birleştirilebilir: Tek bir SSS, sonsuz bağlam"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Aynı SSS web sitesinde, e-postada, açılış sayfalarında, reklamlarda çalışır. Tek kaynak, sonsuz olasılık."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeen neden her şeyi değiştiriyor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Anında Kişiselleştirilmiş Yerelleştirme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Şablonlar VEYA Piksel Hassasiyetinde Özel Tasarım"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Birleştirilebilir Mimari"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Web sitesi URL’si → 29 dilde anında kişiselleştirilmiş içerik. Manuel çeviri yok, çevirmen maliyeti yok. Yapay zekâ iş bağlamınızı anlar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Özenle seçilmiş bir şablonla başlayın VEYA her şeyi kendiniz tanımlayın—seçim sizin, tam özgürlük. Taviz yok, kısıtlama yok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Tek bir SSS her yerde çalışır: web sitesi, e-posta, açılış sayfaları, reklamlar. Aynı içerik, sonsuz bağlam. Her kanal için yeniden oluşturma yok."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Yapay zeka için geliştirildi, yapay zeka tarafından işletiliyor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen yalnızca bir başka SSS oluşturucu değil—ilk günden itibaren yapay zeka tarafından işletilmek üzere tasarlanmış ilk üründür. Rakipler yapay zeka özelliklerini sonradan eklerken, biz yapay zeka ajanlarının anlayabileceği, değiştirebileceği ve otonom olarak optimize edebileceği bir mimari geliştirdik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen'in yapay zekâ ekosistemi nasıl çalışır"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Her etkileşimle daha da akıllanan eksiksiz bir platform."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Yapay zekâ niyetinizi anlar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Varsayılan olarak global operasyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Sürekli öğrenme ve iyileştirme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Viral dağıtım otomasyonu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Değişiklikleri doğal bir şekilde tarif edin. \"Daha profesyonel yap\" veya \"CTA'ya aciliyet ekle.\" Yapay zekâ kusursuz şekilde uygular."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Yapay zekâ tüm pazarlarda aynı anda yerelleştirme, destek ve pazarlamayı yönetir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Her kullanıcı etkileşimi yapay zekâ sistemini eğitir ve zamanla tüm SSS'leri daha akıllı hâle getirir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Ücretsiz SSS'ler, edinimi otomatik olarak artıran pazarlama kanallarına dönüşür."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "SSS’lerin geleceğini deneyimleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Her etkileşimle daha da akıllanan platform. Yapay zekâ çağı için geliştirildi."
+    }
+  ],
+  "v": 1
+}

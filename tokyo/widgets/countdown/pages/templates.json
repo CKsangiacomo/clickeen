@@ -5,15 +5,15 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "title": "Countdown Templates - Clickeen",
-        "description": "Browse templates for the Countdown widget."
+        "title": "Countdown templates - Clickeen",
+        "description": "Browse templates for the countdown widget."
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Countdown Templates",
+        "headline": "Countdown templates",
         "subheadline": "Ready-made layouts for common countdown use cases."
       }
     }

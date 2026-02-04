@@ -66,7 +66,6 @@ export function buildStagePodLayoutPanelFields(): string[] {
 
 export function buildStagePodCornerAppearanceFields(): string[] {
   return [
-    "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod shadow' value='{{pod.shadow}}' />",
     "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='true' />",
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='${radiusOptions}' />`,
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,

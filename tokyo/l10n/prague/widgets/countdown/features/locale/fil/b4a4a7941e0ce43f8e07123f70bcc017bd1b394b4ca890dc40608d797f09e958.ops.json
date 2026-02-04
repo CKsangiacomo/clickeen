@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "b4a4a7941e0ce43f8e07123f70bcc017bd1b394b4ca890dc40608d797f09e958",
+  "baseUpdatedAt": "2026-02-04T05:36:55.805Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga tampok ng countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tuklasin ang mga tampok ng countdown widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga feature ng countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Lahat ng kailangan mo para lumikha ng pagkaapurahan at mag-udyok ng aksyon."
+    }
+  ],
+  "v": 1
+}

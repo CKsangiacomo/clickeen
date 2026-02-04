@@ -77,6 +77,7 @@ If any system along this path "corrects" or "defaults" the value, the user's int
 - The widget files define everything; orchestrators pass data through unchanged
 
 Note: request parameters (like `locale`) may have a deterministic default (Phase 1: `en`) when omitted. This is not identity and must not create DB fan-out.
+Note: localization overlays are **not** “fallbacks for config.” The base config is always complete and renderable; locale overlays are applied **best-available** (base/fresh/stale) and must never break runtime or lie about the rendered locale.
 
 ### Why No Fallbacks
 
@@ -155,7 +156,7 @@ Bob, Paris, Venice, and Michael are **orchestrators**. They move data between sy
 
 - Validate widget data beyond basic JSON structure
 - Apply default values
-- Transform or "fix" data
+- "Heal" or mutate stored configs (beyond deterministic overlay composition)
 - Know widget-specific logic
 - Generate widget HTML/CSS/JS
 

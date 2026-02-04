@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "قوالب الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "اختر من بين تصاميم أسئلة شائعة مذهلة تلفت الأنظار وتحول الزوار إلى عملاء."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أسئلتك الشائعة. على طريقتك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "جميلة افتراضيًا. وبهوية لا تُخطئها العين بتصميمها."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "جريء عندما تحتاج إليه"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "زجاجية التصميم (Glassmorphism)، الزجاج السائل، نيومورفيزم—إطلالات مواكبة للاتجاهات في الوضعين الفاتح والداكن."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "أنيق عندما تريده"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "بسيط، نظيف، وعصري. أساليب خالدة تبدو دائمًا مواكبة للوقت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "ابدأ بتصميم. ثم اجعله لك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "احصل على الجمالية فورًا. تصاميم رائجة أو كلاسيكيات خالدة. ثم خصّص بلا حدود—نصف قطر لكل زاوية، وظلال لكل جانب، وطباعة لكل دور، ونقاط توقف متجاوبة. قالب يصبح بصمتك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ساعد الزوار في العثور على الإجابات بسرعة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "حرية التصميم، مدمجة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "من التخطيطات إلى التشطيبات إلى الخطوط—تخصيص يبدو بلا مجهود."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "التخطيطات، بطريقتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "تحكم في المظهر بلا حدود"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "دقة الطباعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "أنظمة تخطيط عديدة، لا نظام واحد. بنية لكل نقطة توقف. حشوات ومسافات مستقلة لسطح المكتب/الجوال. تحكم بالأعمدة، والتكديس، والمحاذاة، وإعادة التدفق—بدقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "نصف قطر لكل زاوية. حدود بألوان مخصصة. ظلال خارجية وداخلية (مرتبطة أو مستقلة لكل جانب). خلفيات متدرجة أو صورية أو فيديو. سلطة بصرية كاملة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "ستة أدوار مميزة (عنوان رئيسي، نص، سؤال، إجابة، زر، قسم). اختر من بين 17 خطًا من Google Fonts. الوزن والنمط والحجم—كلها قابلة للتخصيص لكل دور. مقاييس ديناميكية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "ثلاثة محركات تخطيط لويدجت الأسئلة الشائعة لديك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "أكورديون للكشف التدريجي. قائمة للبساطة. بطاقات للتسلسل الهرمي البصري. شبكة أو تخطيط ماسونري. أعمدة متجاوبة. تحكم دقيق في الفواصل والحشوات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "تحكّم بالمظهر بلا حدود"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "نصف قطر لكل زاوية. حدود بألوان مخصّصة. ظلال خارجية وداخلية (مرتبطة أو مستقلة لكل جانب). خلفيات بتدرّج لوني أو صورة أو فيديو. سيطرة بصرية كاملة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "دقة الطباعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "ستة أدوار مميزة (العنوان الرئيسي، النص الأساسي، السؤال، الإجابة، الزر، القسم). اختر من بين 17 خطًا من خطوط Google. الوزن، النمط، الحجم—كلها قابلة للتخصيص لكل دور. مقاييس ديناميكية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "الوضع الداكن: راقٍ وعصري"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "تزدهر الواجهات الحديثة في الظلام. إحساس فاخر مع جمالية متقدمة. مُضمَّن مع كل قالب."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "سطح المكتب والجوال، مضبوطان بإتقان"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "أداة الأسئلة الشائعة لديك تتجاوب مع كل نقطة توقف. عدد أعمدة مختلف، وحشوات، وتباعد لكل جهاز. لغة تصميم واحدة، ونوافذ عرض لا نهائية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "من القالب إلى الملاءمة المثالية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "كيفية إنشاء أداة الأسئلة الشائعة (FAQ) الخاصة بك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "اختر قالب تصميم"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "خصّص التخطيطات والمظهر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "حسّن أسلوب الخطوط والتجاوب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "رائج، كلاسيكي، أو بسيط. وضعا فاتح وداكن."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "أكورديون، قائمة، أو بطاقات. نصف قطر لكل زاوية، ظلال لكل جانب، تدرجات، حدود."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "ستة أدوار للخطوط، و17 خطًا من Google Fonts. مثالي على سطح المكتب والجوال."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "أنشئ ويدجت أسئلة شائعة مجانيًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "ابدأ باستخدام قالب تصميم أو أنشئه من الصفر. تحكّم إبداعي كامل."
+    }
+  ],
+  "v": 1
+}

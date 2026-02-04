@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Template FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Pilih dari desain FAQ yang memukau yang menarik perhatian dan mengonversi pengunjung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ Anda. Sesuai cara Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Indah secara default. Tak salah lagi milik Anda melalui desain."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Berani saat Anda membutuhkannya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—tampilan yang mengikuti tren dalam mode terang dan gelap."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegan saat Anda menginginkannya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalis, bersih, dan modern. Gaya yang tak lekang oleh waktu dan selalu terasa актуал."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Mulai Dengan Desain. Lalu Jadikan Milik Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Dapatkan estetika secara instan. Desain yang sedang tren atau klasik yang tak lekang waktu. Lalu kustomisasi tanpa batas—radius per sudut, bayangan per sisi, tipografi per peran, dan breakpoint responsif. Template yang menjadi ciri khas Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Bantu pengunjung menemukan jawaban dengan cepat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Kebebasan desain, sudah termasuk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Dari tata letak hingga finishing hingga font—kustomisasi yang terasa effortless."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Tata letak, sesuai caramu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Kontrol Tampilan Tanpa Batas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Presisi Tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Banyak sistem tata letak, bukan satu. Struktur per breakpoint. Padding dan spacing desktop/mobile yang independen. Atur kolom, stacking, alignment, dan reflow—secara presisi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Radius per sudut. Border dengan warna kustom. Shadow luar dan dalam (tertaut atau independen per sisi). Latar belakang gradasi, gambar, atau video. Kendali visual sepenuhnya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Enam peran berbeda (headline, body, question, answer, button, section). Pilih dari 17 Google Fonts. Ketebalan, gaya, ukuran—semua bisa dikustomisasi per peran. Skala dinamis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tiga Engine Tata Letak untuk Widget FAQ Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion untuk pengungkapan bertahap. Daftar untuk kesederhanaan. Kartu untuk hierarki visual. Grid atau masonry. Kolom responsif. Kontrol terperinci atas jarak antar elemen dan padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Kontrol Tampilan Tanpa Batas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Radius per sudut. Border dengan warna kustom. Bayangan luar dan dalam (tertaut atau independen per sisi). Latar belakang gradasi, gambar, atau video. Kendali visual sepenuhnya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Presisi Tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Enam peran berbeda (judul, isi, pertanyaan, jawaban, tombol, bagian). Pilih dari 17 Google Fonts. Ketebalan, gaya, ukuran—semuanya dapat disesuaikan per peran. Skala dinamis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Mode Gelap: Canggih dan Modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Antarmuka modern tampil optimal dalam kegelapan. Nuansa premium dengan estetika mutakhir. Termasuk dalam setiap template."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop dan Seluler, Disetel dengan Sempurna"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Widget FAQ Anda menyesuaikan diri dengan setiap breakpoint. Jumlah kolom, padding, dan jarak yang berbeda per perangkat. Satu bahasa desain, viewport tak terbatas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Dari template ke yang pas sempurna"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Cara membuat widget FAQ Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Pilih template desain"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Sesuaikan tata letak dan tampilan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Sempurnakan tipografi dan responsivitas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Sedang tren, klasik, atau minimal. Mode terang dan gelap."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Accordion, daftar, atau kartu. Radius per sudut, bayangan per sisi, gradien, border."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Enam peran font, 17 Google Fonts. Sempurna di desktop dan seluler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Buat widget FAQ gratis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Mulai dengan template desain atau buat dari nol. Kendali kreatif sepenuhnya."
+    }
+  ],
+  "v": 1
+}

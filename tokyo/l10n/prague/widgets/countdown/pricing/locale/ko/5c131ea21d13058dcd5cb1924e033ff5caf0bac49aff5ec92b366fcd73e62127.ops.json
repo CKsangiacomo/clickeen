@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "5c131ea21d13058dcd5cb1924e033ff5caf0bac49aff5ec92b366fcd73e62127",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "카운트다운 요금제 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "카운트다운 위젯의 요금제."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "카운트다운 요금제"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "모든 Clickeen 플랜에 포함됩니다."
+    }
+  ],
+  "v": 1
+}

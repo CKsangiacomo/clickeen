@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Vorlagen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Wählen Sie aus beeindruckenden FAQ-Designs, die ins Auge fallen und Besucher konvertieren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Deine FAQ. Auf deine Art."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Standardmäßig schön. Vom Design her unverkennbar deins."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Mutig, wenn du es brauchst"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, Liquid Glass, Neumorphism – trendige Looks in hell und dunkel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegant, wenn Sie es möchten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimal, klar und modern. Zeitlose Styles, die sich immer aktuell anfühlen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Starte mit einem Design. Dann mach es zu deinem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Hol dir den Look sofort. Trendige Designs oder zeitlose Klassiker. Und dann passe alles ohne Grenzen an—Eckenradius pro Ecke, Schatten pro Seite, Typografie pro Rolle und responsive Breakpoints. Eine Vorlage, die zu deiner Handschrift wird."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Helfen Sie Besuchern, schnell Antworten zu finden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Gestaltungsfreiheit – integriert."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Von Layouts über Oberflächen bis hin zu Schriftarten – Anpassung, die sich mühelos anfühlt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Layouts – ganz nach deinem Geschmack"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Designkontrolle ohne Grenzen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Typografie-Präzision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Viele Layout-Systeme, nicht nur eines. Struktur pro Breakpoint. Unabhängiges Padding und Spacing für Desktop/Mobile. Spalten, Stapelung, Ausrichtung und Reflow – exakt steuerbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Radius pro Ecke. Rahmen mit individuellen Farben. Schatten außen und innen (gekoppelt oder pro Seite unabhängig). Verläufe, Bild- oder Video-Hintergründe. Volle visuelle Kontrolle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Sechs klare Rollen (Überschrift, Fließtext, Frage, Antwort, Button, Abschnitt). Wähle aus 17 Google Fonts. Gewichtung, Stil, Größe – alles pro Rolle anpassbar. Dynamische Skalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Drei Layout-Engines für Ihr FAQ-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Akkordeon für schrittweises Einblenden. Liste für Einfachheit. Karten für visuelle Hierarchie. Raster oder Masonry. Responsive Spalten. Granulare Kontrolle über Abstände und Innenabstände."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Erscheinungsbild-Kontrolle ohne Grenzen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Radius pro Ecke. Rahmen mit individuellen Farben. Schatten außen und innen (verknüpft oder unabhängig pro Seite). Farbverlauf-, Bild- oder Video-Hintergründe. Vollständige visuelle Kontrolle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografische Präzision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Sechs unterschiedliche Rollen (Überschrift, Fließtext, Frage, Antwort, Button, Abschnitt). Wählen Sie aus 17 Google Fonts. Stärke, Stil, Größe – alles pro Rolle anpassbar. Dynamische Skalierungen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Dark Mode: Raffiniert und modern"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Moderne Benutzeroberflächen entfalten ihre Wirkung in der Dunkelheit. Premium-Feeling mit hochmoderner Ästhetik. In jeder Vorlage enthalten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop und Mobil, perfekt abgestimmt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Dein FAQ-Widget reagiert auf jeden Breakpoint. Unterschiedliche Spaltenanzahlen, Padding und Abstände je Gerät. Eine Designsprache, unendliche Viewports."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Von der Vorlage zur perfekten Passform"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "So erstellen Sie Ihr FAQ-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Wählen Sie eine Designvorlage"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Layouts und Erscheinungsbild anpassen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Typografie und Responsivität optimieren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trendig, klassisch oder minimal. Helle und dunkle Modi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Akkordeon, Liste oder Karten. Radius pro Ecke, Schatten pro Seite, Verläufe, Rahmen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Sechs Schriftrollen, 17 Google Fonts. Perfekt auf Desktop und Mobilgerät."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Erstellen Sie ein kostenloses FAQ-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Starten Sie mit einer Designvorlage oder erstellen Sie es von Grund auf neu. Vollständige kreative Kontrolle."
+    }
+  ],
+  "v": 1
+}

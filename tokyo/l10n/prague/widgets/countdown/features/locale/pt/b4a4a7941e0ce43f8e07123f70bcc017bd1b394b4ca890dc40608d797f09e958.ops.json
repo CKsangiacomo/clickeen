@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "b4a4a7941e0ce43f8e07123f70bcc017bd1b394b4ca890dc40608d797f09e958",
+  "baseUpdatedAt": "2026-02-04T05:36:55.805Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funcionalidades da contagem regressiva - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Explore as funcionalidades do widget de contagem regressiva."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Funcionalidades do contador regressivo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tudo o que precisa para criar urgência e impulsionar a ação."
+    }
+  ],
+  "v": 1
+}

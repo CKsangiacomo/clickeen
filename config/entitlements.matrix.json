@@ -86,6 +86,17 @@
         "tier3": null
       }
     },
+    "budget.uploads.bytes": {
+      "kind": "budget",
+      "values": {
+        "devstudio": null,
+        "minibob": 0,
+        "free": 31457280,
+        "tier1": 314572800,
+        "tier2": 4194304000,
+        "tier3": null
+      }
+    },
     "budget.personalization.runs": {
       "kind": "budget",
       "values": {
@@ -149,6 +160,17 @@
         "free": 1,
         "tier1": 1,
         "tier2": 5,
+        "tier3": null
+      }
+    },
+    "widgets.types.max": {
+      "kind": "cap",
+      "values": {
+        "devstudio": null,
+        "minibob": 1,
+        "free": 1,
+        "tier1": 1,
+        "tier2": 3,
         "tier3": null
       }
     },

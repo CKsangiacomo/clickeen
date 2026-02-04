@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga Template ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Pumili mula sa kahanga-hangang mga disenyo ng FAQ na nakakaakit ng pansin at nagko-convert ng mga bisita."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ang FAQ mo. Sa paraan mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Maganda na agad. Tunay na sa iyo ayon sa disenyo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Matapang kapag kailangan mo ito"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism—mga look na nangunguna sa uso sa light at dark."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegante kapag gusto mo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimal, malinis, at moderno. Mga istilong walang kupas na laging napapanahon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Magsimula sa isang Disenyo. Pagkatapos, gawin itong ikaw."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Makamit agad ang estetika. Mga trending na disenyo o mga klasikong hindi naluluma. Pagkatapos, i-customize nang walang hangganan—radius sa bawat kanto, anino sa bawat gilid, typography ayon sa bawat role, at mga responsive breakpoint. Isang template na nagiging iyong pirma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Tulungan ang mga bisita na makahanap ng mga sagot nang mabilis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Kalayaang magdisenyo, built-in."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "Mula sa mga layout hanggang sa mga finish at font—pag-customize na parang effortless."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Mga layout, sa paraan mo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Kontrol sa Itsura Nang Walang Limitasyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Eksaktong Typography"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Maraming layout system, hindi iisa. Istruktura kada breakpoint. Hiwalay na desktop/mobile padding at spacing. Kontrolin ang mga column, stacking, alignment, at reflow—eksakto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Radius kada kanto. Mga border na may custom na kulay. Mga anino sa labas at loob (magkakaugnay o hiwalay kada side). Gradient, larawan, o video na background. Ganap na kontrol sa biswal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Anim na natatanging role (headline, body, question, answer, button, section). Pumili mula sa 17 Google Fonts. Timbang, estilo, laki—lahat nako-customize kada role. Dynamic na mga scale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tatlong Layout Engine para sa Iyong FAQ Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Accordion para sa unti-unting pagpapakita. Listahan para sa kasimplehan. Cards para sa biswal na herarkiya. Grid o masonry. Tumutugong mga column. Detalyadong kontrol sa mga gap at padding."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Walang Hanggang Pagkontrol sa Itsura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Radius kada sulok. Mga border na may custom na kulay. Mga anino sa labas at sa loob (magkakaugnay o hiwalay kada gilid). Gradient, larawan, o video na mga background. Ganap na kontrol sa biswal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Katumpakan sa Tipograpiya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Anim na magkakaibang tungkulin (headline, body, question, answer, button, section). Pumili mula sa 17 Google Fonts. Timbang, estilo, laki—lahat nae-edit ayon sa bawat tungkulin. Dinamikong mga scale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Dark Mode: Sopistikado at Moderno"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Umuunlad ang mga modernong interface sa dilim. Premium ang dating na may makabagong estetika. Kasama sa bawat template."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Desktop at Mobile, Perpektong Nakatono"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Tumutugon ang iyong FAQ widget sa bawat breakpoint. Magkakaibang bilang ng mga column, padding, at spacing kada device. Isang wika ng disenyo, walang hanggang mga viewport."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "Mula sa template hanggang sa perpektong akma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Paano buuin ang iyong FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Pumili ng template ng disenyo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "I-customize ang mga layout at hitsura"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Pinuhin ang typography at pagiging responsive"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Trending, classic, o minimal. Light at dark modes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Accordion, listahan, o mga card. Radius sa bawat sulok, anino sa bawat gilid, gradients, mga border."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Anim na font role, 17 Google Fonts. Perpekto sa desktop at mobile."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Gumawa ng libreng FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Magsimula gamit ang template ng disenyo o bumuo mula sa simula. Buong kontrol sa pagkamalikhain."
+    }
+  ],
+  "v": 1
+}

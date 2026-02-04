@@ -19,6 +19,7 @@ body {
 .stage {
   width: 100%;
   background: var(--stage-bg, transparent);
+  box-shadow: var(--stage-shadow, none);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -275,7 +276,7 @@ body {
   padding: var(--space-4);
   border-radius: var(--ck-cardwrapper-radius);
   border: var(--ck-cardwrapper-border-width) solid var(--ck-cardwrapper-border-color);
-  background: var(--ls-item-bg);
+  background: var(--ck-cardwrapper-inside-fade, none), var(--ls-item-bg);
   box-shadow: var(--ck-cardwrapper-shadow);
   overflow: hidden;
   text-decoration: none;

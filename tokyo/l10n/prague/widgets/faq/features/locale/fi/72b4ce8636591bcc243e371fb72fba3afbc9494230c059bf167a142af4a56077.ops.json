@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-ominaisuudet – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kaikki mitä tarvitset toimivien, tekoälypohjaisten UKK:iden julkaisemiseen maailmanlaajuisesti ja viraalisti kasvamiseen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Miksi FAQ-widget päihittää Elfsightin, TypeFormin ja räätälöidyt ratkaisut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Rakennettu alusta asti tekoälylle. Toimii maailmanlaajuisesti. Kasvaa viraalisti. Yksi FAQ, rajattomat mahdollisuudet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Tekoälymuokkaus: Kuvaile, valmista"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Kerro mitä haluat selkeällä englannilla. ”Tee kysymyksistä rennompia” tai ”Lisää osio hinnoittelusta.” Tekoäly ymmärtää ja toteuttaa välittömästi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Globaali välittömästi: mikä tahansa kieli, heti nyt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Maantiede on parametri, ei projekti. Lisää espanja, japani tai arabia yhdellä klikkauksella. Ei manuaalista käännöstyötä, ei viivästyksiä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Koostettavuus kaikkialla: yksi FAQ, rajattomasti konteksteja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Sama FAQ toimii verkkosivustolla, sähköpostissa, laskeutumissivuilla ja mainoksissa. Yksi lähde, loputtomasti mahdollisuuksia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Miksi Clickeen muuttaa kaiken"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Välitön personoitu lokalisointi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mallipohjat TAI pikselintarkka räätälöinti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponoitava arkkitehtuuri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Verkkosivuston URL → personoitu sisältö 29 kielellä välittömästi. Ei manuaalista käännöstyötä, ei kääntäjäkustannuksia. Tekoäly ymmärtää liiketoimintasi kontekstin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Aloita huolellisesti kuratoidulla mallipohjalla TAI määritä kaikki itse—valinta on sinun, täysi vapaus. Ei kompromisseja, ei rajoituksia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Yksi UKK toimii kaikkialla: verkkosivustolla, sähköpostissa, laskeutumissivuilla, mainoksissa. Sama sisältö, loputtomasti konteksteja. Ei tarvitse rakentaa uudelleen jokaista kanavaa varten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Rakennettu tekoälyä varten, tekoälyn operoima"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ei ole vain yksi FAQ-rakentaja muiden joukossa – se on ensimmäinen tuote, joka on suunniteltu tekoälyn operointia varten alusta alkaen. Siinä missä kilpailijat lisäävät tekoälyominaisuuksia jälkikäteen, me rakensimme arkkitehtuurin, jota tekoälyagentit voivat ymmärtää, muokata ja optimoida itsenäisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Miten Clickeenin tekoälyekosysteemi toimii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Täydellinen alusta, joka fiksuuntuu jokaisen vuorovaikutuksen myötä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "Tekoäly ymmärtää tarkoituksesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globaali toiminta oletuksena"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Jatkuva oppiminen ja parantaminen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Viraalisen jakelun automaatio"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Kuvaile muutokset luonnollisesti. ”Tee siitä ammattimaisempi” tai ”Lisää toimintakehotukseen kiireellisyyttä.” Tekoäly toteuttaa sen täydellisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Tekoäly hoitaa lokalisoinnin, tuen ja markkinoinnin kaikilla markkinoilla samanaikaisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Jokainen käyttäjän vuorovaikutus opettaa tekoälyjärjestelmää, jolloin kaikki UKK:t muuttuvat ajan myötä fiksummiksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Ilmaiset UKK:t muuttuvat markkinointikanaviksi, jotka lisäävät hankintaa automaattisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Koe UKK:iden tulevaisuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Alusta, joka älykkääntyy jokaisen vuorovaikutuksen myötä. Rakennettu tekoälyn aikakaudelle."
+    }
+  ],
+  "v": 1
+}

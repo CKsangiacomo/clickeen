@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Příklady FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotely, restaurace a cestovní kanceláře používají Clickeen k okamžitému obsloužení mezinárodních zákazníků ve 29 jazycích."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Příklady FAQ pro hotely, restaurace, cestovní kanceláře a další"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dejte Ombře URL svého webu. Získejte FAQ přizpůsobené vašemu podnikání v 29 jazycích—okamžitě. Překladatel není potřeba."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotely v Barceloně: Hosté z více než 50 zemí se ptají „Čas check-inu?“ v 15 jazycích"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Dejte Ombře web vašeho hotelu. FAQ personalizované pro vaše ubytování v 29 jazycích — okamžitě. Snižte počet dotazů na recepci o 60 %, zlepšete skóre spokojenosti hostů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restaurace v Paříži: turisté se ptají na dietní otázky francouzsky, anglicky, španělsky, čínsky, japonsky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "FAQ k vašemu menu v 29 jazycích — okamžitě. Bez překladatele, bez ruční práce. Zvyšte obrátkovost stolů, omezte vyrušování obsluhy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Hostitelé Airbnb v Toskánsku: pokyny k check-inu, heslo k Wi‑Fi, místní tipy v jazyce vašeho hosta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Dejte Ombře URL vaší nabídky. Domovní pravidla v 29 jazycích okamžitě. Pětihvězdičkové recenze od mezinárodních hostů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Mezinárodní zákazníci na překlady nečekají"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Hotel v Římě přichází o rezervace, když němečtí turisté nemohou najít informace k check-inu. Restaurace v Tokiu přichází o rezervace, když anglicky mluvící hosté nemohou najít otevírací dobu. Každá nezodpovězená otázka v jejich jazyce je ztracený zákazník. Ombra to řeší: URL webu → personalizované FAQ ve 29 jazycích, okamžitě."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Tour operátoři v Thajsku: Nejčastější dotazy k rezervaci, bezpečnosti a itineráři pro mezinárodní cestovatele"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Dejte Ombře svůj web zájezdů. FAQ v 29 jazycích okamžitě. Snižte e-mailovou podporu o 70 % a zvyšte konverze z mezinárodních trhů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Muzea v Římě: informace o výstavách, vstupenky, otevírací doba pro návštěvníky z celého světa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "FAQ pro návštěvníky v 29 jazycích – okamžitě. Zlepšete zážitek návštěvníků a snižte počet dotazů na informačním pultu o 50 %."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Od mezinárodního zmatku k okamžité srozumitelnosti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Jak podniky v pohostinství používají Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Dejte Ombře URL vašeho webu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ přizpůsobené vašemu podnikání v 29 jazycích — okamžitě"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Vložte a sledujte, jak ubývá dotazů ze zahraničí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI si přečte kontext vašeho podnikání — lokalitu, služby, pravidla. Automaticky porozumí vašim konkrétním potřebám."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Bez překladatele. Bez ruční práce. Obsah přizpůsobený vašemu podnikání A dostupný globálně, ihned."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Skript na 3 řádky. Funguje kdekoliv. Hosté, turisté i cestovatelé dostanou odpovědi ve svém jazyce dřív, než se zeptají."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Získejte své FAQ v 29 jazycích — okamžitě"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Dejte Ombře URL svého webu. Přizpůsobené vašemu podnikání, dostupné po celém světě. Překladatele nepotřebujete."
+    }
+  ],
+  "v": 1
+}

@@ -26,6 +26,59 @@
         "spread": 0,
         "enabled": false
       },
+      "insideShadow": {
+        "linked": true,
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 24,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
       "padding": {
         "mobile": {
           "all": 28,
@@ -66,6 +119,69 @@
         "mode": "viewport",
         "width": 0,
         "height": 0
+      },
+      "insideShadow": {
+        "linked": true,
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 24,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
+      "shadow": {
+        "x": 0,
+        "y": 8,
+        "blur": 24,
+        "alpha": 18,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
       },
       "padding": {
         "mobile": {
@@ -221,6 +337,59 @@
           "inset": false,
           "spread": 0,
           "enabled": true
+        },
+        "insideShadow": {
+          "linked": true,
+          "all": {
+            "x": 0,
+            "y": 0,
+            "blur": 24,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": 0,
+            "enabled": false
+          },
+          "top": {
+            "x": 0,
+            "y": 12,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "right": {
+            "x": -12,
+            "y": 0,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "bottom": {
+            "x": 0,
+            "y": -12,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          },
+          "left": {
+            "x": 12,
+            "y": 0,
+            "blur": 16,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": true,
+            "spread": -12,
+            "enabled": false
+          }
         },
         "radiusBL": "2xl",
         "radiusBR": "2xl",
@@ -405,12 +574,32 @@
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBR' label='Q&A card bottom-right radius' label-key='faq.labels.itemBottomRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBR}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
     "    <tooldrawer-field-appearance-card group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.border}}' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Q&A card shadow' label-key='faq.labels.itemShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Q&A card outside shadow' label-key='faq.labels.itemOutsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
+    "    <tooldrawer-field-appearance-card group-label='' type='toggle' size='md' path='appearance.cardwrapper.insideShadow.linked' label='Link Q&A card inside shadows' label-key='faq.labels.linkItemInsideShadows' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.linked}}' default='true' />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.insideShadow.all' label='Q&A card inside shadow' label-key='faq.labels.itemInsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.all}}' show-if=\"appearance.cardwrapper.insideShadow.linked == true\" />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.top' label='Q&A card inside shadow (top)' label-key='faq.labels.itemInsideShadowTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.top}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.right' label='Q&A card inside shadow (right)' label-key='faq.labels.itemInsideShadowRight' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.right}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='y' size='md' path='appearance.cardwrapper.insideShadow.bottom' label='Q&A card inside shadow (bottom)' label-key='faq.labels.itemInsideShadowBottom' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.bottom}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' axis='x' size='md' path='appearance.cardwrapper.insideShadow.left' label='Q&A card inside shadow (left)' label-key='faq.labels.itemInsideShadowLeft' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.insideShadow.left}}' show-if=\"appearance.cardwrapper.insideShadow.linked == false\" />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='Stage/Pod'>",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='stage.insideShadow.linked' label='Link stage inside shadows' value='{{stage.insideShadow.linked}}' default='true' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.insideShadow.all' label='Stage inside shadow' value='{{stage.insideShadow.all}}' show-if=\"stage.insideShadow.linked == true\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.top' label='Stage inside shadow (top)' value='{{stage.insideShadow.top}}' show-if=\"stage.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.right' label='Stage inside shadow (right)' value='{{stage.insideShadow.right}}' show-if=\"stage.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.bottom' label='Stage inside shadow (bottom)' value='{{stage.insideShadow.bottom}}' show-if=\"stage.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.left' label='Stage inside shadow (left)' value='{{stage.insideShadow.left}}' show-if=\"stage.insideShadow.linked == false\" />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
     "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='pod.insideShadow.linked' label='Link pod inside shadows' value='{{pod.insideShadow.linked}}' default='true' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.insideShadow.all' label='Pod inside shadow' value='{{pod.insideShadow.all}}' show-if=\"pod.insideShadow.linked == true\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.top' label='Pod inside shadow (top)' value='{{pod.insideShadow.top}}' show-if=\"pod.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.right' label='Pod inside shadow (right)' value='{{pod.insideShadow.right}}' show-if=\"pod.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.bottom' label='Pod inside shadow (bottom)' value='{{pod.insideShadow.bottom}}' show-if=\"pod.insideShadow.linked == false\" />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.left' label='Pod inside shadow (left)' value='{{pod.insideShadow.left}}' show-if=\"pod.insideShadow.linked == false\" />",
     "  </tooldrawer-cluster>",
     "</bob-panel>",
     "<bob-panel id='settings'>",

@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga Halimbawa ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tingnan kung paano ginagamit ng mga tunay na negosyo ang mga FAQ para lutasin ang mga problema at makapagsara ng mas maraming deal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga FAQ na lumulutas ng totoong problema sa negosyo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mula sa mga klinika ng dentista hanggang sa pag-book ng DJ, tingnan kung paano ginagawang mga customer ng mga kumpanyang tulad ng sa iyo ang mga tanong."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Pangangalagang pangkalusugan: Bawasan ang mga hindi pagdalo ng 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Sinasagot ng mga dentista ang mga karaniwang tanong tungkol sa mga pamamaraan, insurance, at pag-iiskedyul—bago pa man tumawag ang mga pasyente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "Ecommerce: Iproseso kaagad ang mga return"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Mga patakaran sa pagpapadala, mga gabay sa sukat, panahon ng pagbabalik—sagutin ang mga tanong na pumipigil sa pag-abandona ng cart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Gawing mga customer ang mga trial"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Mga tanong tungkol sa feature, pagdududa sa presyo, alalahanin sa integration—sagutin ang mga pagtutol bago pa maging mga nawalang oportunidad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "May mga oportunidad sa FAQ ang bawat industriya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Ang mga tanong ang tahimik na pumapatay sa mga conversion. Mapa pagbu-book ng appointment, pagproseso ng mga return, o pagpapaliwanag ng mga feature, ang mga tanong na hindi nasasagot ay nangangahulugang nawawalang negosyo. Gumagana ang mga FAQ ng Clickeen saanman, agad na nagsasalita sa wika ng bawat customer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Mga Creative Service: Pasimplehin ang mga inquiry sa booking"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "Ang mga DJ, photographer, at consultant ay sumasagot sa mga tanong tungkol sa presyo, availability, at proseso 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Mula sa mga tanong tungo sa mga customer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Ang pagpapatupad ng mga FAQ na talagang nagdudulot ng resulta ay sumusunod sa isang subok na proseso."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Tukuyin ang pinakamalalaking kategorya ng iyong mga tanong"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Piliin ang tamang istilo ng FAQ para sa iyong audience"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "I-embed at i-optimize batay sa data"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Suriin ang mga support ticket, sales call, at chat log para mahanap ang mga tanong na pinakamadalas itanong."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Accordion para sa detalyadong sagot, cards para sa madaling ma-scan na impormasyon, lists para sa mga tuwirang Q&A."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Subaybayan kung aling mga tanong ang pinaka-naiki-click at pinuhin ang iyong mga sagot batay sa kung ano ang nagtutulak ng conversions."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Hanapin ang solusyon sa FAQ para sa industriya mo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Mga template na sadyang idinisenyo para sa mga negosyong katulad ng sa iyo, na may AI na umaangkop sa iyong mga pangangailangan."
+    }
+  ],
+  "v": 1
+}

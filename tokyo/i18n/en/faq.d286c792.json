@@ -1,0 +1,28 @@
+{
+  "faq.actions.addItem": "Add {item}",
+  "faq.item": {
+    "one": "Q&A card",
+    "other": "Q&A cards"
+  },
+  "faq.labels.itemBackground": "{item} background",
+  "faq.labels.itemBorder": "{item} border",
+  "faq.labels.itemBottomLeftRadius": "{item} bottom-left radius",
+  "faq.labels.itemBottomRightRadius": "{item} bottom-right radius",
+  "faq.labels.itemInsideShadow": "{item} inside shadow",
+  "faq.labels.itemInsideShadowBottom": "{item} inside shadow (bottom)",
+  "faq.labels.itemInsideShadowLeft": "{item} inside shadow (left)",
+  "faq.labels.itemInsideShadowRight": "{item} inside shadow (right)",
+  "faq.labels.itemInsideShadowTop": "{item} inside shadow (top)",
+  "faq.labels.itemOutsideShadow": "{item} outside shadow",
+  "faq.labels.itemPadding": "{item} padding (px)",
+  "faq.labels.itemPaddingBottom": "{item} bottom padding (px)",
+  "faq.labels.itemPaddingLeft": "{item} left padding (px)",
+  "faq.labels.itemPaddingRight": "{item} right padding (px)",
+  "faq.labels.itemPaddingTop": "{item} top padding (px)",
+  "faq.labels.itemShadow": "{item} shadow",
+  "faq.labels.itemTopLeftRadius": "{item} top-left radius",
+  "faq.labels.itemTopRightRadius": "{item} top-right radius",
+  "faq.labels.linkItemCorners": "Link {item} corners",
+  "faq.labels.linkItemInsideShadows": "Link {item} inside shadows",
+  "faq.labels.linkItemPadding": "Link {item} padding"
+}

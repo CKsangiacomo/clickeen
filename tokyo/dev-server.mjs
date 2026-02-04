@@ -613,6 +613,60 @@ const server = http.createServer((req, res) => {
         return;
       }
 
+      const baseSnapshotMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/);
+      if (baseSnapshotMatch) {
+        const publicId = normalizePublicId(decodeURIComponent(baseSnapshotMatch[1]));
+        const baseFingerprint = String(decodeURIComponent(baseSnapshotMatch[2]) || '').trim().toLowerCase();
+        if (!publicId || !/^[a-f0-9]{64}$/i.test(baseFingerprint)) {
+          sendJson(res, 422, { error: 'INVALID_BASE_SNAPSHOT_PATH' });
+          return;
+        }
+
+        let payload;
+        try {
+          const body = await readRequestBody(req);
+          payload = JSON.parse(body.toString('utf8'));
+        } catch (err) {
+          sendJson(res, 422, { error: 'INVALID_JSON' });
+          return;
+        }
+
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+          sendJson(res, 422, { error: 'INVALID_PAYLOAD' });
+          return;
+        }
+        if (payload.v !== 1) {
+          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.v must be 1' });
+          return;
+        }
+        if (payload.publicId && String(payload.publicId) !== publicId) {
+          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.publicId mismatch' });
+          return;
+        }
+        if (payload.baseFingerprint && String(payload.baseFingerprint).toLowerCase() !== baseFingerprint) {
+          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.baseFingerprint mismatch' });
+          return;
+        }
+        if (!payload.snapshot || typeof payload.snapshot !== 'object' || Array.isArray(payload.snapshot)) {
+          sendJson(res, 422, { error: 'INVALID_SNAPSHOT', detail: 'snapshot.snapshot must be an object' });
+          return;
+        }
+
+        const snapshot = {};
+        for (const [key, value] of Object.entries(payload.snapshot)) {
+          if (typeof value !== 'string') continue;
+          snapshot[String(key)] = value;
+        }
+
+        const stable = prettyStableJson({ v: 1, publicId, baseFingerprint, snapshot });
+        const outName = `${baseFingerprint}.snapshot.json`;
+        const outDir = path.join(baseDir, 'l10n', 'instances', publicId, 'bases');
+        ensureDir(outDir);
+        fs.writeFileSync(path.join(outDir, outName), stable, 'utf8');
+        sendJson(res, 200, { publicId, baseFingerprint, file: outName });
+        return;
+      }
+
       const match = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
       if (!match) {
         sendJson(res, 404, { error: 'NOT_FOUND' });

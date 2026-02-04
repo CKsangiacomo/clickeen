@@ -20,6 +20,7 @@ body {
 .stage {
   width: 100%;
   background: var(--stage-bg, transparent);
+  box-shadow: var(--stage-shadow, none);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -132,9 +133,10 @@ body {
 }
 
 .ck-faq__item {
+  position: relative;
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-lg));
   border: var(--ck-cardwrapper-border-width) solid var(--ck-cardwrapper-border-color);
-  background: var(--faq-item-bg, var(--color-system-gray-6-step5));
+  background: var(--ck-cardwrapper-inside-fade, none), var(--faq-item-bg, var(--color-system-gray-6-step5));
   box-shadow: var(--ck-cardwrapper-shadow);
   overflow: hidden;
   padding: var(--faq-item-pad-top, var(--space-3)) var(--faq-item-pad-right, var(--space-4))

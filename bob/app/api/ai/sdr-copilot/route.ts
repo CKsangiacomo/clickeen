@@ -361,6 +361,8 @@ export async function POST(req: Request) {
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
     const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
     const subject = asTrimmedString(body?.subject) || undefined;
+    const provider = asTrimmedString(body?.provider) || undefined;
+    const model = asTrimmedString(body?.model) || undefined;
     const currentConfig = body?.currentConfig;
     const controls = body?.controls;
 
@@ -381,6 +383,8 @@ export async function POST(req: Request) {
       instancePublicId,
       workspaceId,
       subject,
+      provider,
+      model,
       // Website-based content edits may require a single-page fetch + an LLM call. Keep this generous in local dev.
       budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
     });

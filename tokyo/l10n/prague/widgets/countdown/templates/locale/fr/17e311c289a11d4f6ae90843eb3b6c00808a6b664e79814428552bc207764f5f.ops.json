@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "17e311c289a11d4f6ae90843eb3b6c00808a6b664e79814428552bc207764f5f",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Modèles de compte à rebours - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Parcourez les modèles pour le widget de compte à rebours."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Modèles de compte à rebours"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mises en page prêtes à l’emploi pour les cas d’utilisation courants du compte à rebours."
+    }
+  ],
+  "v": 1
+}

@@ -27,7 +27,11 @@ function readCanonicalLocales() {
     throw new Error(`[i18n] Invalid canonical locales file (expected array): ${canonicalLocalesPath}`);
   }
   const locales = parsed
-    .map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : ''))
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim().toLowerCase();
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return entry.code.trim().toLowerCase();
+      return '';
+    })
     .filter(Boolean);
   if (!locales.includes('en')) {
     throw new Error(`[i18n] Canonical locales must include "en": ${canonicalLocalesPath}`);

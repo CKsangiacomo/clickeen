@@ -1,0 +1,28 @@
+---
+type Props = {
+  name: string;
+  size?: number;
+  title?: string;
+};
+
+const { name, size = 44, title } = Astro.props;
+const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
+
+if (!TOKYO_URL) {
+  throw new Error('[DieterIcon] PUBLIC_TOKYO_URL is required');
+}
+
+const iconUrl = `${TOKYO_URL.replace(/\/$/, '')}/dieter/icons/svg/${name}.svg`;
+const ariaHidden = title ? undefined : 'true';
+const role = title ? 'img' : 'presentation';
+---
+
+<img
+  src={iconUrl}
+  width={size}
+  height={size}
+  aria-hidden={ariaHidden}
+  role={role}
+  alt={title || ''}
+  style="display: inline-block; color: currentColor;"
+/>

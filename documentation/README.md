@@ -152,6 +152,8 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/{capability}.md`
 - **Prague strings localization pipeline**
   - Update `documentation/capabilities/localization.md` + `documentation/services/prague/*.md`
+- **Instance l10n / locale resolution**
+  - Update `documentation/capabilities/localization.md` + `documentation/services/venice.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
 
 ---
 

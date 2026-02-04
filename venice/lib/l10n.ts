@@ -1,4 +1,4 @@
-import type { AllowlistEntry } from '@clickeen/l10n';
+import type { AllowlistEntry, CkL10nStatus } from '@clickeen/l10n';
 import {
   computeL10nFingerprint,
   GEO_TARGETS_SEMANTICS,
@@ -17,6 +17,13 @@ export type InstanceOverlay = {
   baseUpdatedAt?: string | null;
   baseFingerprint?: string | null;
   ops: LocalizationOp[];
+};
+
+type InstanceBaseSnapshot = {
+  v: 1;
+  publicId: string;
+  baseFingerprint: string;
+  snapshot: Record<string, string>;
 };
 
 type LayerIndexEntry = {
@@ -188,6 +195,28 @@ async function fetchLayerIndex(publicId: string): Promise<LayerIndex | null> {
   return json;
 }
 
+async function fetchBaseSnapshot(publicId: string, baseFingerprint: string): Promise<Record<string, string> | null> {
+  if (!baseFingerprint) return null;
+  const res = await tokyoFetch(
+    `/l10n/instances/${encodeURIComponent(publicId)}/bases/${encodeURIComponent(baseFingerprint)}.snapshot.json`,
+    { method: 'GET' },
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => null)) as InstanceBaseSnapshot | null;
+  if (!json || typeof json !== 'object' || json.v !== 1) return null;
+  if (json.publicId && json.publicId !== publicId) return null;
+  if (json.baseFingerprint !== baseFingerprint) return null;
+  if (!json.snapshot || typeof json.snapshot !== 'object' || Array.isArray(json.snapshot)) return null;
+
+  const snapshot: Record<string, string> = {};
+  for (const [key, value] of Object.entries(json.snapshot)) {
+    if (typeof value !== 'string') continue;
+    snapshot[String(key)] = value;
+  }
+  return snapshot;
+}
+
 function normalizeCountryCode(raw?: string | null): string | null {
   const value = String(raw || '').trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(value)) return null;
@@ -209,16 +238,27 @@ function resolveLocaleFromIndex(args: {
   country?: string | null;
 }): string | null {
   if (!args.entry.keys.length) return null;
-  const supported = new Set(
-    args.entry.keys.map((entry) => normalizeLocaleToken(entry)).filter((value): value is string => Boolean(value)),
-  );
+  const supportedList = args.entry.keys
+    .map((entry) => normalizeLocaleToken(entry))
+    .filter((value): value is string => Boolean(value));
+  const supported = new Set(supportedList);
+
+  const requestedLocale = normalizeLocaleToken(args.locale);
+  if (!requestedLocale) {
+    if (supported.has('en')) return 'en';
+    return supportedList[0] ?? null;
+  }
+  const baseLocale = requestedLocale.split('-')[0] || '';
+  if (!baseLocale) {
+    if (supported.has('en')) return 'en';
+    return supportedList[0] ?? null;
+  }
 
   const country = normalizeCountryCode(args.country);
   if (country && GEO_TARGETS_SEMANTICS === 'locale-selection-only') {
     const geoTargets = args.entry.geoTargets ?? {};
-    for (const localeKey of args.entry.keys) {
-      const locale = normalizeLocaleToken(localeKey);
-      if (!locale) continue;
+    const candidates = supportedList.filter((locale) => locale === baseLocale || locale.startsWith(`${baseLocale}-`));
+    for (const locale of candidates) {
       const geoCountries = normalizeGeoCountries(geoTargets[locale]);
       if (geoCountries && geoCountries.includes(country)) {
         return locale;
@@ -226,13 +266,11 @@ function resolveLocaleFromIndex(args: {
     }
   }
 
-  const preferredCandidates = localeCandidates(args.locale, supported);
+  const preferredCandidates = localeCandidates(requestedLocale, supported);
   if (preferredCandidates.length) return preferredCandidates[0]!;
 
   if (supported.has('en')) return 'en';
-  return args.entry.keys
-    .map((entry) => normalizeLocaleToken(entry))
-    .find((value): value is string => Boolean(value)) ?? null;
+  return supportedList[0] ?? null;
 }
 
 function sortExperimentKeys(keys: string[]): string[] {
@@ -268,17 +306,20 @@ function resolveLayerTargets(args: {
   locale: string;
   country?: string | null;
   layerContext?: LayerContext;
-}): { targets: LayerTarget[]; missingRequired: string[] } {
+}): { targets: LayerTarget[]; missingRequired: string[]; localeKey: string | null } {
   const targets: LayerTarget[] = [];
   const missingRequired: string[] = [];
   const layers = args.index?.layers ?? {};
 
-  const localeKey = normalizeLayerKey('locale', args.locale);
-  if (localeKey && localeKey !== 'en') {
-    const entry = layers.locale;
-    if (!entry || !entry.keys.includes(localeKey)) {
+  const normalizedLocale = normalizeLocaleToken(args.locale) ?? 'en';
+  const localeEntry = layers.locale;
+  const localeKey = localeEntry ? resolveLocaleFromIndex({ entry: localeEntry, locale: args.locale, country: args.country }) : null;
+  if (normalizedLocale !== 'en') {
+    if (!localeKey) {
+      missingRequired.push(`locale:${normalizedLocale}`);
+    } else if (!localeEntry || !localeEntry.keys.includes(localeKey)) {
       missingRequired.push(`locale:${localeKey}`);
-    } else {
+    } else if (localeKey !== 'en') {
       targets.push({ layer: 'locale', key: localeKey, required: true });
     }
   }
@@ -335,7 +376,8 @@ function resolveLayerTargets(args: {
 
   const userEntry = layers.user;
   if (userEntry && userEntry.keys.length) {
-    const fallbackCandidates = USER_FALLBACK_ORDER.map((mode) => (mode === 'locale' ? args.locale : 'global'));
+    const localeFallback = localeKey ?? normalizeLocaleToken(args.locale);
+    const fallbackCandidates = USER_FALLBACK_ORDER.map((mode) => (mode === 'locale' ? localeFallback : 'global'));
     for (const candidate of fallbackCandidates) {
       const key = normalizeLayerKey('user', candidate);
       if (key && userEntry.keys.includes(key)) {
@@ -349,7 +391,7 @@ function resolveLayerTargets(args: {
     targets.filter((target) => target.layer === layer),
   );
 
-  return { targets: orderedTargets, missingRequired };
+  return { targets: orderedTargets, missingRequired, localeKey };
 }
 
 export async function resolveTokyoLocale(args: {
@@ -367,6 +409,207 @@ export async function resolveTokyoLocale(args: {
   return resolveLocaleFromIndex({ entry: index.layers.locale, locale: normalized, country: args.country }) ?? normalized;
 }
 
+function getAt(obj: unknown, path: string): unknown {
+  const parts = String(path || '')
+    .split('.')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (!parts.length) return undefined;
+
+  let current: any = obj;
+  for (const part of parts) {
+    if (current == null) return undefined;
+    if (Array.isArray(current) && isIndex(part)) {
+      current = current[Number(part)];
+      continue;
+    }
+    if (typeof current !== 'object') return undefined;
+    current = (current as any)[part];
+  }
+
+  return current;
+}
+
+function applySafeStaleOps(args: {
+  current: Record<string, unknown>;
+  baseForComparison: Record<string, unknown>;
+  ops: LocalizationOp[];
+  baseSnapshot: Record<string, string>;
+}): { next: Record<string, unknown>; appliedCount: number } {
+  let working: unknown = args.current;
+  let appliedCount = 0;
+
+  for (const op of args.ops) {
+    if (!op || typeof op !== 'object') continue;
+    if (op.op !== 'set') continue;
+    if (typeof op.path !== 'string' || !op.path.trim()) continue;
+    if (hasProhibitedSegment(op.path)) continue;
+    if (op.value === undefined) continue;
+
+    const baseValue = args.baseSnapshot[op.path];
+    if (typeof baseValue !== 'string') continue;
+    const currentValue = getAt(args.baseForComparison, op.path);
+    if (typeof currentValue !== 'string') continue;
+    if (currentValue !== baseValue) continue;
+
+    working = setAt(working, op.path, op.value);
+    appliedCount += 1;
+  }
+
+  return {
+    next: working && typeof working === 'object' && !Array.isArray(working) ? (working as Record<string, unknown>) : args.current,
+    appliedCount,
+  };
+}
+
+export type TokyoInstanceL10nMeta = {
+  requestedLocale: string;
+  resolvedLocale: string;
+  effectiveLocale: string;
+  status: CkL10nStatus;
+};
+
+export async function applyTokyoInstanceOverlayWithMeta(args: {
+  publicId: string;
+  locale: string;
+  country?: string | null;
+  widgetType: string;
+  baseUpdatedAt?: string | null;
+  baseFingerprint?: string | null;
+  config: Record<string, unknown>;
+  layerContext?: LayerContext;
+  explicitLocale?: boolean;
+}): Promise<{ config: Record<string, unknown>; meta: TokyoInstanceL10nMeta }> {
+  const requestedLocale = normalizeLocaleToken(args.locale) ?? 'en';
+
+  const widgetType = String(args.widgetType || '').trim();
+  if (!widgetType) {
+    return {
+      config: args.config,
+      meta: { requestedLocale, resolvedLocale: requestedLocale, effectiveLocale: 'en', status: 'base' },
+    };
+  }
+
+  const allowlist = await loadLocalizationAllowlist(widgetType).catch(() => null);
+  if (!allowlist) {
+    return {
+      config: args.config,
+      meta: { requestedLocale, resolvedLocale: requestedLocale, effectiveLocale: 'en', status: 'base' },
+    };
+  }
+
+  const baseFingerprint = args.baseFingerprint ?? (await computeL10nFingerprint(args.config, allowlist));
+  const explicitLocale = args.explicitLocale === true;
+
+  if (explicitLocale) {
+    const overlays = await Promise.all([
+      fetchOverlay(args.publicId, 'locale', requestedLocale, baseFingerprint),
+      fetchOverlay(args.publicId, 'user', requestedLocale, baseFingerprint),
+    ]);
+    let localized = args.config;
+    let applied = false;
+    for (const overlay of overlays) {
+      if (!overlay) continue;
+      if (!overlay.baseFingerprint || overlay.baseFingerprint !== baseFingerprint) continue;
+      const ops = overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
+      if (ops.length) applied = true;
+      localized = applySetOps(localized, ops);
+    }
+    const effectiveLocale = applied ? requestedLocale : 'en';
+    return {
+      config: localized,
+      meta: {
+        requestedLocale,
+        resolvedLocale: requestedLocale,
+        effectiveLocale,
+        status: applied && requestedLocale !== 'en' ? 'fresh' : 'base',
+      },
+    };
+  }
+
+  const index = await fetchLayerIndex(args.publicId).catch(() => null);
+  const { targets, missingRequired, localeKey } = resolveLayerTargets({
+    index,
+    locale: requestedLocale,
+    country: args.country,
+    layerContext: args.layerContext,
+  });
+
+  const resolvedLocale = localeKey ?? requestedLocale;
+
+  if (!targets.length || missingRequired.length) {
+    const effectiveLocale = 'en';
+    return {
+      config: args.config,
+      meta: { requestedLocale, resolvedLocale, effectiveLocale, status: 'base' },
+    };
+  }
+
+  const cappedTargets = targets.slice(0, MAX_LAYER_APPLICATIONS);
+  const baseForComparison = args.config;
+  const snapshotCache = new Map<string, Record<string, string> | null>();
+
+  const overlayResults = await Promise.all(
+    cappedTargets.map(async (target) => {
+      const entry = index?.layers?.[target.layer];
+      const publishedFingerprint = entry?.lastPublishedFingerprint?.[target.key];
+
+      if (publishedFingerprint && publishedFingerprint !== baseFingerprint) {
+        const overlay = await fetchOverlay(args.publicId, target.layer, target.key, publishedFingerprint);
+        return { target, overlay, mode: 'stale' as const, overlayFingerprint: publishedFingerprint };
+      }
+
+      const overlay = await fetchOverlay(args.publicId, target.layer, target.key, baseFingerprint);
+      return { target, overlay, mode: 'fresh' as const, overlayFingerprint: baseFingerprint };
+    }),
+  );
+
+  let localized = args.config;
+  let anyL10nApplied = false;
+  let anyStaleApplied = false;
+
+  for (const result of overlayResults) {
+    if (!result.overlay) continue;
+
+    const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
+    if (!ops.length) continue;
+
+    if (result.mode === 'fresh') {
+      localized = applySetOps(localized, ops);
+      if (result.target.layer === 'locale' || result.target.layer === 'user') {
+        anyL10nApplied = true;
+      }
+      continue;
+    }
+
+    const fingerprint = result.overlayFingerprint;
+    if (!fingerprint) continue;
+
+    let baseSnapshot = snapshotCache.get(fingerprint) ?? null;
+    if (!snapshotCache.has(fingerprint)) {
+      baseSnapshot = await fetchBaseSnapshot(args.publicId, fingerprint).catch(() => null);
+      snapshotCache.set(fingerprint, baseSnapshot);
+    }
+    if (!baseSnapshot) continue;
+
+    const applied = applySafeStaleOps({ current: localized, baseForComparison, ops, baseSnapshot });
+    localized = applied.next;
+    if (applied.appliedCount > 0 && (result.target.layer === 'locale' || result.target.layer === 'user')) {
+      anyL10nApplied = true;
+      anyStaleApplied = true;
+    }
+  }
+
+  const status: CkL10nStatus =
+    resolvedLocale === 'en' ? 'base' : anyL10nApplied ? (anyStaleApplied ? 'stale' : 'fresh') : 'base';
+  const effectiveLocale = status === 'base' ? 'en' : resolvedLocale;
+
+  return {
+    config: localized,
+    meta: { requestedLocale, resolvedLocale, effectiveLocale, status },
+  };
+}
+
 export async function applyTokyoInstanceOverlay(args: {
   publicId: string;
   locale: string;
@@ -378,83 +621,6 @@ export async function applyTokyoInstanceOverlay(args: {
   layerContext?: LayerContext;
   explicitLocale?: boolean;
 }): Promise<Record<string, unknown>> {
-  const locale = normalizeLocaleToken(args.locale);
-  if (!locale) return args.config;
-
-  const widgetType = String(args.widgetType || '').trim();
-  if (!widgetType) {
-    return args.config;
-  }
-
-  const allowlist = await loadLocalizationAllowlist(widgetType).catch(() => null);
-  if (!allowlist) {
-    return args.config;
-  }
-
-  const baseFingerprint = args.baseFingerprint ?? (await computeL10nFingerprint(args.config, allowlist));
-  const explicitLocale = args.explicitLocale === true;
-
-  if (explicitLocale) {
-    const overlays = await Promise.all([
-      fetchOverlay(args.publicId, 'locale', locale, baseFingerprint),
-      fetchOverlay(args.publicId, 'user', locale, baseFingerprint),
-    ]);
-    let localized = args.config;
-    for (const overlay of overlays) {
-      if (!overlay) continue;
-      if (!overlay.baseFingerprint || overlay.baseFingerprint !== baseFingerprint) continue;
-      const ops = overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
-      localized = applySetOps(localized, ops);
-    }
-    return localized;
-  }
-
-  const index = await fetchLayerIndex(args.publicId).catch(() => null);
-
-  if (!index) {
-    return args.config;
-  }
-
-  const { targets, missingRequired } = resolveLayerTargets({
-    index,
-    locale,
-    country: args.country,
-    layerContext: args.layerContext,
-  });
-
-  if (missingRequired.length) {
-    return args.config;
-  }
-
-  if (!targets.length) return args.config;
-  const cappedTargets = targets.slice(0, MAX_LAYER_APPLICATIONS);
-  const overlayResults = await Promise.all(
-    cappedTargets.map(async (target) => {
-      const entry = index.layers[target.layer];
-      const expected = entry?.lastPublishedFingerprint?.[target.key];
-      if (expected && expected !== baseFingerprint) {
-        return { target, overlay: null, stale: true };
-      }
-      const overlay = await fetchOverlay(args.publicId, target.layer, target.key, baseFingerprint);
-      if (!overlay) return { target, overlay: null, stale: false };
-      if (overlay.baseFingerprint && overlay.baseFingerprint !== baseFingerprint) {
-        return { target, overlay: null, stale: true };
-      }
-      if (!overlay.baseFingerprint) {
-        return { target, overlay: null, stale: true };
-      }
-      return { target, overlay, stale: false };
-    }),
-  );
-
-  let localized = args.config;
-  for (const result of overlayResults) {
-    if (!result.overlay) {
-      continue;
-    }
-    const ops = result.overlay.ops.filter((o) => o && typeof o === 'object' && o.op === 'set') as LocalizationOp[];
-    localized = applySetOps(localized, ops);
-  }
-
-  return localized;
+  const result = await applyTokyoInstanceOverlayWithMeta(args);
+  return result.config;
 }

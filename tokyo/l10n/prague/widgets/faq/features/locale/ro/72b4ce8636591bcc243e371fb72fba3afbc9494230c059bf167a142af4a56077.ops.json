@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funcții FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tot ce ai nevoie pentru a livra întrebări frecvente bazate pe AI, care funcționează la nivel global și cresc viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "De ce widgetul FAQ depășește Elfsight, TypeForm și soluțiile dezvoltate la comandă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Creat de la zero pentru AI. Funcționează la nivel global. Crește viral. Un FAQ, posibilități infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Editare AI: Descrie, gata"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Spune-i ce vrei, în limbaj simplu. „Fă întrebările mai relaxate” sau „Adaugă o secțiune despre prețuri.” AI înțelege și execută instant."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Instant global: orice limbă, acum"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografia este un parametru, nu un proiect. Adaugă spaniola, japoneza sau araba cu un singur click. Fără traducere manuală, fără întârzieri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Compozabil peste tot: un FAQ, contexte infinite"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Același FAQ funcționează pe site, în e-mail, pe pagini de destinație, în reclame. O singură sursă, posibilități infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "De ce Clickeen schimbă totul"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Localizare personalizată instant"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Șabloane SAU personalizare pixel-perfect"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Arhitectură componibilă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL-ul site-ului → conținut personalizat în 29 de limbi, instant. Fără traducere manuală, fără costuri cu traducători. AI înțelege contextul afacerii tale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Începe cu un șablon selectat cu grijă SAU definește totul singur/singură — alegerea ta, libertate totală. Fără compromisuri, fără limitări."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Un singur FAQ funcționează peste tot: site, email, pagini de destinație, reclame. Același conținut, contexte infinite. Fără reconstrucție pentru fiecare canal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Creat pentru AI, operat de AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen nu este doar încă un creator de întrebări frecvente — este primul produs conceput pentru a fi operat de AI încă din prima zi. În timp ce concurenții adaptează ulterior funcții de AI, noi am construit o arhitectură pe care agenții AI o pot înțelege, modifica și optimiza autonom."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Cum funcționează ecosistemul AI Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "O platformă completă care devine mai inteligentă cu fiecare interacțiune."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI îți înțelege intenția"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Operare globală, implicit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Învățare și îmbunătățire continuă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatizare pentru distribuție virală"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Descrie schimbările în mod natural. „Fă-l mai profesional” sau „Adaugă un sentiment de urgență în CTA.” AI execută perfect."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI gestionează localizarea, suportul și marketingul pe toate piețele simultan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Fiecare interacțiune a utilizatorilor instruiește sistemul AI, făcând toate FAQ-urile mai inteligente în timp."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "FAQ-urile gratuite devin canale de marketing care stimulează automat achiziția."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Experimentează viitorul secțiunilor de Întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Platforma care devine mai inteligentă cu fiecare interacțiune. Creată pentru era AI."
+    }
+  ],
+  "v": 1
+}

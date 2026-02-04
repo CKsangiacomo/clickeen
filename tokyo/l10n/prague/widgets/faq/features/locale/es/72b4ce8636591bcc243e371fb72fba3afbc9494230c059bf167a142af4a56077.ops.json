@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funciones de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Todo lo que necesitas para lanzar preguntas frecuentes impulsadas por IA que funcionen a nivel global y crezcan de forma viral."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Por qué el widget de FAQ supera a Elfsight, TypeForm y las soluciones a medida"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Creado desde cero para la IA. Funciona a nivel global. Crece de forma viral. Un FAQ, infinitas posibilidades."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Edición con IA: Describe y listo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Dile lo que quieres en español claro. «Haz que las preguntas sean más informales» o «Añade una sección sobre precios». La IA lo entiende y lo ejecuta al instante."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Global al instante: cualquier idioma, ahora"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "La geografía es un parámetro, no un proyecto. Añade español, japonés o árabe con un clic. Sin traducción manual, sin retrasos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Componible en todas partes: un FAQ, infinitos contextos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "El mismo FAQ funciona en el sitio web, email, landing pages y anuncios. Una fuente, infinitas posibilidades."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Por qué Clickeen lo cambia todo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Localización personalizada al instante"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Plantillas O personalización pixel-perfect"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Arquitectura componible"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL del sitio web → contenido personalizado en 29 idiomas al instante. Sin traducción manual, sin costes de traductores. La IA entiende el contexto de tu negocio."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Empieza con una plantilla curada O define todo tú mismo: tu elección, libertad total. Sin compromisos, sin limitaciones."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Unas FAQ sirven en todas partes: sitio web, email, páginas de destino, anuncios. El mismo contenido, infinitos contextos. Sin reconstruir para cada canal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Creado para la IA, gestionado por la IA"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen no es solo otro creador de FAQ: es el primer producto diseñado para operar con IA desde el primer día. Mientras la competencia adapta funciones de IA, nosotros construimos una arquitectura que los agentes de IA pueden entender, modificar y optimizar de forma autónoma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Cómo funciona el ecosistema de IA de Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Una plataforma completa que se vuelve más inteligente con cada interacción."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "La IA entiende tu intención"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Operación global por defecto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Aprendizaje y mejora continuos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatización de distribución viral"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Describe los cambios de forma natural. \"Hazlo más profesional\" o \"Añade urgencia al CTA\". La IA lo ejecuta a la perfección."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "La IA gestiona la localización, el soporte y el marketing en todos los mercados simultáneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Cada interacción del usuario enseña al sistema de IA, haciendo que todas las FAQs sean más inteligentes con el tiempo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Las FAQs gratuitas se convierten en canales de marketing que impulsan la adquisición automáticamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Experimenta el futuro de las preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "La plataforma que se vuelve más inteligente con cada interacción. Diseñada para la era de la IA."
+    }
+  ],
+  "v": 1
+}

@@ -4,7 +4,7 @@ import { parisJson } from '@venice/lib/paris';
 import { tokyoFetch } from '@venice/lib/tokyo';
 import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { generateExcerptHtml, generateSchemaJsonLd } from '@venice/lib/schema';
-import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -112,7 +112,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
   const resetAt = (url.searchParams.get('resetAt') || '').trim();
   const isFrozenRequest = bypassSnapshot && enforcement === 'frozen' && frozenAt && resetAt;
-  const effectiveLocale = isFrozenRequest ? 'en' : locale;
   const enforcementPayload = isFrozenRequest
     ? {
         mode: 'frozen' as const,
@@ -168,6 +167,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           parsed.device = device;
           parsed.locale = resolvedLocale;
           const body = JSON.stringify(parsed);
+          headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
+          headers['X-Ck-L10n-Resolved-Locale'] = resolvedLocale;
+          headers['X-Ck-L10n-Effective-Locale'] = resolvedLocale;
+          headers['X-Ck-L10n-Status'] = resolvedLocale === 'en' ? 'base' : 'fresh';
           headers['ETag'] = etag;
           headers['Cache-Control'] = CACHE_PUBLISHED;
           headers['Vary'] = 'Authorization, X-Embed-Token';
@@ -177,6 +180,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
           snapshotReason = 'SNAPSHOT_INVALID';
         }
       } else {
+        headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Resolved-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Effective-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Status'] = snapshotLocale === 'en' ? 'base' : 'fresh';
         headers['ETag'] = etag;
         headers['Cache-Control'] = CACHE_PUBLISHED;
         headers['Vary'] = 'Authorization, X-Embed-Token';
@@ -256,17 +263,27 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(JSON.stringify({ error: 'MISSING_WIDGET_TYPE' }), { status: 500, headers });
   }
 
-  const localizedState = isFrozenRequest
-    ? instance.config
-    : await applyTokyoInstanceOverlay({
+  const overlayResult = isFrozenRequest
+    ? {
+        config: instance.config,
+        meta: { requestedLocale: locale, resolvedLocale: locale, effectiveLocale: 'en', status: 'base' as const },
+      }
+    : await applyTokyoInstanceOverlayWithMeta({
         publicId: instance.publicId,
-        locale: effectiveLocale,
+        locale,
         country,
         baseUpdatedAt: instance.updatedAt ?? null,
         widgetType,
         config: instance.config,
-        explicitLocale: true,
       });
+
+  headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;
+  headers['X-Ck-L10n-Resolved-Locale'] = overlayResult.meta.resolvedLocale;
+  headers['X-Ck-L10n-Effective-Locale'] = overlayResult.meta.effectiveLocale;
+  headers['X-Ck-L10n-Status'] = overlayResult.meta.status;
+
+  const localizedState = overlayResult.config;
+  const effectiveLocale = overlayResult.meta.effectiveLocale;
 
   const canRemoveBranding = instance.policy?.flags?.['branding.remove'] === true;
   if (!canRemoveBranding) {

@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 기능 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "전 세계에서 작동하고 바이럴로 성장하는 AI 기반 FAQ를 출시하는 데 필요한 모든 것."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 위젯이 Elfsight, TypeForm, 그리고 맞춤 개발보다 뛰어난 이유"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI를 위해 처음부터 설계했습니다. 전 세계에서 작동합니다. 바이럴하게 성장합니다. 하나의 FAQ, 무한한 가능성."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI 편집: 설명하면 끝"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "원하는 걸 평범한 말로 알려주세요. “질문을 더 캐주얼하게 해줘” 또는 “가격에 대한 섹션을 추가해줘.” AI가 이해하고 즉시 실행합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "글로벌 즉시 지원: 어떤 언어든, 지금"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "지리는 프로젝트가 아니라 매개변수입니다. 클릭 한 번으로 스페인어, 일본어, 아랍어를 추가하세요. 수동 번역도, 지연도 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "어디서나 조합 가능: 하나의 FAQ, 무한한 맥락"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "같은 FAQ가 웹사이트, 이메일, 랜딩 페이지, 광고에서 작동합니다. 하나의 소스, 무한한 가능성."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Clickeen이 모든 것을 바꾸는 이유"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "즉시 개인화된 로컬라이제이션"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "템플릿 또는 픽셀 퍼펙트 커스텀"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "조합형 아키텍처"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "웹사이트 URL → 29개 언어로 개인화된 콘텐츠가 즉시 생성됩니다. 수동 번역도, 번역가 비용도 없습니다. AI가 비즈니스 맥락을 이해합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "엄선된 템플릿으로 시작하거나 모든 것을 직접 정의하세요—선택은 당신에게, 완전한 자유. 타협도, 제약도 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "하나의 FAQ로 어디서든 작동합니다: 웹사이트, 이메일, 랜딩 페이지, 광고. 같은 콘텐츠, 무한한 맥락. 채널마다 다시 만들 필요가 없습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI를 위해 설계되고, AI로 운영됩니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen은 단순한 FAQ 빌더가 아닙니다. 출시 첫날부터 AI 운영을 위해 설계된 최초의 제품입니다. 경쟁사들이 기존 제품에 AI 기능을 덧붙이는 동안, 우리는 AI 에이전트가 자율적으로 이해하고 수정하며 최적화할 수 있는 아키텍처를 구축했습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen의 AI 생태계가 작동하는 방식"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "상호작용할 때마다 더 똑똑해지는 완전한 플랫폼."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI가 의도를 이해합니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "기본값으로 글로벌 운영"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "지속적인 학습과 개선"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "바이럴 배포 자동화"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "변경 사항을 자연스럽게 설명하세요. “더 전문적으로 만들어줘” 또는 “CTA에 긴급함을 더해줘.” AI가 완벽하게 실행합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI가 모든 시장에서 현지화, 지원, 마케팅을 동시에 처리합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "모든 사용자 상호작용이 AI 시스템을 학습시켜 시간이 지날수록 모든 FAQ가 더 똑똑해집니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "무료 FAQ가 자동으로 고객 획득을 이끄는 마케팅 채널이 됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQ의 미래를 경험하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "상호작용할 때마다 더 똑똑해지는 플랫폼. AI 시대를 위해 설계되었습니다."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemples de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Découvrez comment de vraies entreprises utilisent les FAQ pour résoudre des problèmes et conclure davantage d'affaires."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ qui résolvent de vrais problèmes métiers"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Des cabinets dentaires aux réservations de DJ, découvrez comment des entreprises comme la vôtre transforment les questions en clients."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Santé : réduisez les absences de 40 %"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Des dentistes répondent aux questions courantes sur les procédures, l’assurance et la prise de rendez-vous — avant même que les patients n’appellent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-commerce : Gérez les retours instantanément"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Politiques d’expédition, guides des tailles, délais de retour — répondez aux questions qui évitent l’abandon de panier."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS : Convertissez les essais en clients"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Questions sur les fonctionnalités, doutes sur les prix, préoccupations d’intégration — répondez aux objections avant qu’elles ne se transforment en opportunités perdues."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Chaque secteur a des opportunités de FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Les questions sont le tueur silencieux des conversions. Que vous preniez des rendez-vous, gériez des retours ou expliquiez des fonctionnalités, les questions sans réponse signifient des affaires perdues. Les FAQ de Clickeen fonctionnent partout, en parlant instantanément la langue de chaque client."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Services créatifs : rationalisez les demandes de réservation"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "Les DJs, photographes et consultants répondent 24h/24 et 7j/7 aux questions sur les tarifs, les disponibilités et le déroulement."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Des questions aux clients"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Mettre en place des FAQ qui génèrent réellement des résultats suit un processus éprouvé."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifiez vos principales catégories de questions"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Choisissez le bon format de FAQ pour votre audience"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Intégrez-les et optimisez à partir des données"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analysez les tickets de support, les appels de vente et les journaux de chat pour repérer les questions les plus fréquemment posées."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Accordéon pour des réponses détaillées, cartes pour des infos faciles à parcourir, listes pour des Q&R simples."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Surveillez les questions sur lesquelles on clique le plus et affinez vos réponses en fonction de ce qui génère des conversions."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Trouvez la solution FAQ pour votre secteur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Des modèles conçus spécialement pour des entreprises comme la vôtre, avec une IA qui s’adapte à vos besoins."
+    }
+  ],
+  "v": 1
+}

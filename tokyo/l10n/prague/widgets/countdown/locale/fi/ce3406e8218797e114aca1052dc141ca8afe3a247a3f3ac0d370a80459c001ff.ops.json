@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Laskuri-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Luo kiireellisyyden tuntua mukautettavilla lähtölaskenta-ajastimilla. Julkaise, myy ja tee ilmoituksia luottavaisin mielin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Lähtölaskenta-ajastinwidget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Luo kiireen tuntua ja kannusta toimintaan nopeilla ja joustavilla lähtölaskennoilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Lähtölaskenta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Luo kiireellisyyden tuntua joustavilla ajastimilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Kokeile sitä livenä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Muokkaa demoesiintymää minibobissa. Julkaise, kun olet valmis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Lähtölaskenta-ajastin-widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Luo kiireellisyyden tuntua ja ohjaa toimintaan muokattavien lähtölaskenta-ajastimien avulla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Joustavat ajastintilat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Päivämäärään perustuvat, henkilökohtaiset tai numerolaskurit mihin tahansa tilanteeseen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Muuta huomio toiminnaksi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Käytä ajastimia, jotka sopivat lanseerauksiin, alennusmyynteihin, tapahtumiin ja henkilökohtaisiin tavoitteisiin. Aseta se kerran ja anna sen toimia kaikkialla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Helppo mukauttaminen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Mukauta ulkoasua, asettelua ja toimintoja brändiisi sopiviksi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Lanseeraa nopeammin lähtölaskennoilla"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Asetuksesta julkaisuun minuuteissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Valitse ajastimesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Sovita brändiisi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Julkaise ja lokalisoi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Valitse käyttötarkoitukseesi päivämäärä-, evergreen- tai numerolaskurit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Mukauta värit, otsikot ja asettelu sopimaan mille tahansa sivustolle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Avaa nopeasti ja tavoita yleisöjä maailmanlaajuisesti sisäänrakennetun lokalisoinnin avulla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Lisää konversioita"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Kannusta toimimaan heti ajallisesti rajoitetuilla tarjouksilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO- ja GEO-optimoitu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Sisäänrakennettu skeema- ja lokalisaatiotuki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Luo kiireen tuntua, kasvata myyntiä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Tehokkaat lähtölaskurit, jotka muuttavat kävijät asiakkaiksi."
+    }
+  ],
+  "v": 1
+}

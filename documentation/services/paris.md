@@ -141,6 +141,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
   - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
+  - Tokyo-worker materializes overlays into Tokyo and writes per-fingerprint base snapshots (`tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json`) so Venice can safely apply stale locale overlays while async generation catches up.
   - Local dev: when `ENV_STAGE=local` and `TOKYO_WORKER_BASE_URL` are set, Paris also POSTs to tokyo-worker `/l10n/publish` to materialize overlays into `tokyo/l10n/**`.
 - Prague website strings use page JSON base copy plus Tokyo-hosted overlays (`tokyo/widgets/*/pages/*.json` + `tokyo/l10n/prague/**`) and do not go through Paris. Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 

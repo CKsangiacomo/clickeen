@@ -6,14 +6,14 @@
       "type": "page-meta",
       "copy": {
         "description": "Simple pricing for the logo showcase widget. Start free.",
-        "title": "Logo Showcase Pricing - Clickeen"
+        "title": "Logo showcase pricing - Clickeen"
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Logo Showcase Pricing",
+        "headline": "Logo showcase pricing",
         "subheadline": "Start free. Upgrade when you want more widgets and no branding."
       }
     }

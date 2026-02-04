@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 예시 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "실제 기업이 FAQ를 활용해 문제를 해결하고 더 많은 거래를 성사시키는 방법을 확인하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "실제 비즈니스 문제를 해결하는 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "치과부터 DJ 섭외까지, 귀사와 같은 기업들이 질문을 고객으로 전환하는 방법을 확인하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "헬스케어: 노쇼를 40% 줄이세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "치과의사가 시술, 보험, 예약에 대한 일반적인 질문에 환자가 전화를 걸기 전에 답변합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "이커머스: 반품을 즉시 처리하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "배송 정책, 사이즈 가이드, 반품 기간—장바구니 이탈을 막는 질문에 답하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: 체험 사용자를 고객으로 전환"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "기능 관련 질문, 가격에 대한 의문, 통합에 대한 우려—기회를 놓치기 전에 반론을 해소하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "모든 업계에는 FAQ 기회가 있습니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "질문은 전환율을 조용히 갉아먹는 주범입니다. 예약을 받든, 반품을 처리하든, 기능을 설명하든, 답변되지 않은 질문은 곧 비즈니스 손실로 이어집니다. Clickeen의 FAQ는 어디서나 작동하며, 모든 고객의 언어로 즉시 소통합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "크리에이티브 서비스: 예약 문의 간소화"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ, 사진작가, 컨설턴트가 가격, 가능 일정, 진행 과정 관련 질문에 24시간 365일 답변합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "질문에서 고객으로"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "실제로 성과를 내는 FAQ를 구현하는 데는 검증된 프로세스가 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "가장 큰 질문 카테고리 파악하기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "대상에게 맞는 FAQ 스타일 선택하기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "삽입하고 데이터를 기반으로 최적화하기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "지원 티켓, 영업 통화, 채팅 로그를 분석해 가장 자주 묻는 질문을 찾아보세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "자세한 답변에는 아코디언, 훑어보기 좋은 정보에는 카드, 간단한 Q&A에는 목록을 사용하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "어떤 질문이 가장 많이 클릭되는지 모니터링하고, 전환을 이끄는 요소를 바탕으로 답변을 개선하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "업종에 맞는 FAQ 솔루션을 찾아보세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "귀사와 같은 비즈니스를 위해 특별히 설계된 템플릿과, 요구에 맞게 적응하는 AI를 제공합니다."
+    }
+  ],
+  "v": 1
+}

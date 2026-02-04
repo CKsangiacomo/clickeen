@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "141ec2ccd3097d0a5ff351e4a42f00d8f6062b3462eb6166ff3a83a85f7d1b1c",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo 展示定价 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Logo 展示小组件的简单定价。免费开始。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo 展示定价"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "免费开始。需要更多小组件并去除品牌标识时再升级。"
+    }
+  ],
+  "v": 1
+}

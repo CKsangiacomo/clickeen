@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "b4a4a7941e0ce43f8e07123f70bcc017bd1b394b4ca890dc40608d797f09e958",
+  "baseUpdatedAt": "2026-02-04T05:36:55.805Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Visszaszámláló funkciók – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Fedezze fel a visszaszámláló widget funkcióit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Visszaszámláló funkciók"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Minden, amire szükséged van ahhoz, hogy sürgősséget kelts és cselekvésre ösztönözz."
+    }
+  ],
+  "v": 1
+}

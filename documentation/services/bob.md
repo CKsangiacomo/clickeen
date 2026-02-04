@@ -336,7 +336,7 @@ Compiled Dieter stencils can emit:
 - `data-i18n-params="{'item':{'$t':'faq.item','count':1}}"` (JSON string)
 
 At runtime, Bob:
-- Resolves locale (`?locale=`, `ck_locale` cookie, then `navigator.language`, then `en`)
+- Resolves locale (`?locale=`, `ck_locale` cookie, then primary language from `navigator.language` (`fr-FR` → `fr`), then `en`)
 - Loads `coreui` + current widget bundle
 - Replaces text content for elements with `[data-i18n-key]`
 

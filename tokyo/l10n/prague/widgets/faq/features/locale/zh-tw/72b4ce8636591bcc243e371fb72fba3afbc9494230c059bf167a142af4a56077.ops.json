@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "常見問題功能 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "你所需的一切，協助你推出可在全球運作、並透過病毒式擴散成長的 AI 驅動常見問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "為什麼 FAQ 小工具勝過 Elfsight、TypeForm 和客製開發"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "從零打造，專為 AI 而生。全球可用。病毒式成長。一個 FAQ，無限可能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI 編輯：描述一下，就完成"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "用簡單的中文告訴它你想要什麼。「把問題改得更口語」或「新增一段關於價格的內容。」AI 會理解並立即執行。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "全球即時：任何語言，立即上線"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "地理範圍只是參數，不是專案。只要一鍵就能新增西班牙語、日語或阿拉伯語。無需手動翻譯，不再延誤。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "隨處可組合：一套 FAQ，無限情境"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "同一套 FAQ 可用於網站、電子郵件、著陸頁、廣告。一個來源，無限可能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "為什麼 Clickeen 改變一切"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "即時個人化在地化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "模板或像素級完美客製"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "可組合式架構"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "網站 URL → 立即產出 29 種語言的個人化內容。無需手動翻譯、無翻譯人員成本。AI 能理解你的商業脈絡。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "從精選模板開始，或由你自行定義一切——由你選擇，完全自由。無妥協、無限制。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "一份 FAQ 到處適用：網站、電子郵件、著陸頁、廣告。相同內容，無限情境。每個渠道都不必重建。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "為 AI 打造，由 AI 營運"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen 不只是另一個 FAQ 建置工具——它是第一個從第一天起就為 AI 營運而設計的產品。當競爭對手還在加裝 AI 功能時，我們打造的是一套 AI 代理能夠理解、修改並自主最佳化的架構。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen 的 AI 生態系如何運作"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "一個完整的平台，隨著每次互動而變得更智慧。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI 理解你的意圖"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "預設即為全球化運作"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "持續學習與改進"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "病毒式分發自動化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "用自然語言描述變更。「讓它更專業」或「在 CTA 加入緊迫感。」AI 會完美執行。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI 同步處理所有市場的在地化、客服支援與行銷。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "每一次使用者互動都會教會 AI 系統，讓所有 FAQ 隨時間變得更聰明。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "免費的 FAQ 會成為行銷管道，自動帶動獲客。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "體驗 FAQ 的未來"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "每一次互動都能變得更聰明的平台。為 AI 時代而打造。"
+    }
+  ],
+  "v": 1
+}

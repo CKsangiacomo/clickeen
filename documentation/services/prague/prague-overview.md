@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-02-02
+Last updated: 2026-02-04
 
 ---
 
@@ -30,13 +30,13 @@ Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no l
 ## 1) Routes (shipped)
 
 Prague’s canonical URL identity is `/{market}/{locale}/...`:
-- `market` is allowlisted and configured in `config/markets.json` (e.g. `uk`, `it`, `ca`)
+- `market` is allowlisted and configured in `config/markets.json` (e.g. `us`, `uk`, `it`, `ca`)
 - `locale` is a supported locale token (from `config/locales.json`, further constrained per-market by `config/markets.json`)
 
 Root `/` is a non-canonical entry surface:
 - if a valid cookie market exists, it 302s to `/{market}/{locale}/`
 - else if IP geo maps to a market, it 302s to `/{market}/{defaultLocale}/`
-- else it 302s to the default canonical (v0.2: `/uk/en/`) — **no picker UI**
+- else it 302s to the default canonical (v0.2: `/us/en/`) — **no picker UI**
 
 ### 1.1 Widget directory
 
@@ -58,6 +58,33 @@ This route is strict: it throws at build time if `overview.json` is missing requ
 Current repo behavior:
 - these pages render blocks from JSON like overview; in this snapshot many subpages are intentionally minimal (typically `page-meta` + `hero`) until richer stacks are authored
 - source: `tokyo/widgets/{widget}/pages/{templates|examples|features|pricing}.json`
+
+---
+
+## 1.4 Authoring Prague blocks (AI checklist)
+
+Prague widget pages are rendered from **block JSON** in Tokyo and localized via **Tokyo overlays**. When you add or edit blocks, keep these four filesystems in lockstep:
+
+1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
+2) **Allowlist** (l10n contract): `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
+3) **Base copy** (EN source): `tokyo/widgets/{widget}/pages/{overview|templates|examples|features|pricing}.json`
+4) **Overlays** (generated): `tokyo/l10n/prague/**`
+
+### Add a new block type
+
+- Add the renderer: `prague/src/blocks/{blockType}/{blockType}.astro`
+- Register it: `prague/src/lib/blockRegistry.ts`
+- Add its allowlist: `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
+- Use it in a page JSON: `tokyo/widgets/{widget}/pages/*.json` (ensure each block has `{ id, type, copy: {...} }`)
+- Validate contracts locally:
+  - `node scripts/prague-l10n/verify.mjs` (best-available; warns instead of blocking)
+  - `node scripts/prague-sync.mjs --strict-latest` (forces latest overlays, translates if needed)
+
+### Edit an existing block
+
+- Keep `id` stable: overlay ops are keyed by `blocks.{id}.…`
+- If you change `copy` shape (add/remove/rename fields), update the allowlist in the same change.
+- Prefer adding a new block `type` over mutating semantics of an existing one.
 
 ---
 

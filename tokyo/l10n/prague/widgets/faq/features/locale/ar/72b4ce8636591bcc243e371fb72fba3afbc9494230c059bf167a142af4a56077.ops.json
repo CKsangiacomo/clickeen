@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ميزات الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "كل ما تحتاجه لإطلاق أسئلة شائعة مدعومة بالذكاء الاصطناعي تعمل عالميًا وتنمو بشكل فيروسي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "لماذا تتفوّق أداة الأسئلة الشائعة (FAQ Widget) على Elfsight وTypeForm والحلول المبنية خصيصًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "مبنية من الصفر للذكاء الاصطناعي. تعمل عالميًا. تنمو بشكل فيروسي. أسئلة شائعة واحدة، إمكانيات لا نهائية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "تحرير بالذكاء الاصطناعي: صف ما تريد، وتمّ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "أخبره بما تريد بلغة بسيطة. \"اجعل الأسئلة أكثر عفوية\" أو \"أضف قسمًا عن التسعير.\" يفهم الذكاء الاصطناعي وينفّذ فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "فوري عالمي: أي لغة، الآن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "الجغرافيا مُعامل، وليست مشروعًا. أضف الإسبانية أو اليابانية أو العربية بنقرة واحدة. دون ترجمة يدوية، ودون تأخير."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "قابل للتركيب في كل مكان: قسم أسئلة شائعة واحد، سياقات لا نهائية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "نفس قسم الأسئلة الشائعة يعمل على الموقع الإلكتروني والبريد الإلكتروني وصفحات الهبوط والإعلانات. مصدر واحد، إمكانيات لا نهائية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "لماذا تغيّر Clickeen كل شيء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "توطين شخصي فوري"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "قوالب أو تخصيص مطابق للبكسل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "بنية قابلة للتركيب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "رابط الموقع → محتوى مخصّص بـ 29 لغة فوراً. لا ترجمة يدوية، ولا تكاليف للمترجمين. يفهم الذكاء الاصطناعي سياق عملك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "ابدأ بقالب مُنتقى أو حدّد كل شيء بنفسك—الخيار لك، حرية كاملة. بلا تنازلات، بلا قيود."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "أسئلة شائعة واحدة تعمل في كل مكان: الموقع، البريد الإلكتروني، صفحات الهبوط، الإعلانات. نفس المحتوى، سياقات لا نهائية. بلا إعادة بناء لكل قناة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "مصمم للذكاء الاصطناعي ويُدار بالذكاء الاصطناعي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ليست مجرد أداة أخرى لإنشاء الأسئلة الشائعة — بل هي أول منتج صُمم ليُدار بالذكاء الاصطناعي منذ اليوم الأول. بينما يقوم المنافسون بإضافة ميزات الذكاء الاصطناعي لاحقًا، بنينا بنيةً يمكن لوكلاء الذكاء الاصطناعي فهمها وتعديلها وتحسينها بشكل مستقل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "كيف يعمل نظام Clickeen البيئي للذكاء الاصطناعي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "منصة متكاملة تصبح أذكى مع كل تفاعل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "يفهم الذكاء الاصطناعي نيتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "تشغيل عالمي افتراضيًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "تعلم وتحسين مستمران"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "أتمتة التوزيع الفيروسي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "صِف التغييرات بشكل طبيعي. «اجعله أكثر احترافية» أو «أضف إحساسًا بالإلحاح إلى CTA». ينفّذ الذكاء الاصطناعي ذلك بإتقان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "يتولى الذكاء الاصطناعي التوطين والدعم والتسويق عبر جميع الأسواق في الوقت نفسه."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "كل تفاعل للمستخدم يعلّم نظام الذكاء الاصطناعي، مما يجعل جميع الأسئلة الشائعة أكثر ذكاءً بمرور الوقت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "تتحول الأسئلة الشائعة المجانية إلى قنوات تسويق تدفع الاكتساب تلقائيًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "اختبر مستقبل الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "المنصة التي تزداد ذكاءً مع كل تفاعل. مصممة لعصر الذكاء الاصطناعي."
+    }
+  ],
+  "v": 1
+}

@@ -146,10 +146,16 @@ async function main() {
   }
 
   const localesRaw = await readJson(LOCALES_PATH);
-  if (!Array.isArray(localesRaw) || localesRaw.some((l) => typeof l !== 'string' || !l.trim())) {
-    throw new Error('[l10n] Invalid config/locales.json (expected string array)');
+  if (!Array.isArray(localesRaw)) {
+    throw new Error('[l10n] Invalid config/locales.json (expected array)');
   }
-  const targetLocales = localesRaw.map((l) => l.trim().toLowerCase());
+  const targetLocales = localesRaw
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim().toLowerCase();
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return entry.code.trim().toLowerCase();
+      return '';
+    })
+    .filter(Boolean);
 
   const publicIds = (await fs.readdir(INSTANCES_ROOT, { withFileTypes: true }))
     .filter((d) => d.isDirectory() && !d.name.startsWith('.'))
@@ -228,4 +234,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

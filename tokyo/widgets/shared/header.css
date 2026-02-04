@@ -192,3 +192,36 @@
 .ck-header__cta[hidden] {
   display: none !important;
 }
+
+@media (max-width: 900px) {
+  .ck-headerLayout[data-has-header='true'][data-header-placement='left'],
+  .ck-headerLayout[data-has-header='true'][data-header-placement='right'] {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'header'
+      'body';
+    align-items: stretch;
+  }
+
+  .ck-header__cta {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .ck-header[data-cta-placement='right'] {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .ck-header[data-cta-placement='right'] > .ck-header__cta {
+    justify-self: start;
+  }
+
+  .ck-header[data-align='center'][data-cta-placement='right'] > .ck-header__cta {
+    justify-self: center;
+  }
+
+  .ck-header[data-align='right'][data-cta-placement='right'] > .ck-header__cta {
+    justify-self: end;
+  }
+}

@@ -50,6 +50,34 @@ async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   await fs.writeFile(outPath, prettyStableJson(index));
 }
 
+async function writeBaseSnapshot(args: {
+  pageId: string;
+  baseFingerprint: string;
+  baseUpdatedAt: string | null;
+  snapshot: Record<string, string>;
+}) {
+  if (!args.pageId || !args.baseFingerprint) return;
+  const outDir = path.join(TOKYO_PRAGUE_ROOT, args.pageId, 'bases');
+  await ensureDir(outDir);
+  const outPath = path.join(outDir, `${args.baseFingerprint}.snapshot.json`);
+  await fs.writeFile(outPath, prettyStableJson({ v: 1, pageId: args.pageId, baseFingerprint: args.baseFingerprint, baseUpdatedAt: args.baseUpdatedAt ?? null, snapshot: args.snapshot }));
+}
+
+async function loadLayerIndex(pageId: string) {
+  const indexPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'index.json');
+  if (!(await fileExists(indexPath))) return null;
+  const index = await readJson(indexPath).catch(() => null);
+  if (!index || typeof index !== 'object' || index.v !== 1) return null;
+  if (!index.layers || typeof index.layers !== 'object') return null;
+  const localeLayer = index.layers.locale;
+  if (!localeLayer || typeof localeLayer !== 'object') return null;
+  const lastPublishedFingerprint =
+    localeLayer.lastPublishedFingerprint && typeof localeLayer.lastPublishedFingerprint === 'object' && !Array.isArray(localeLayer.lastPublishedFingerprint)
+      ? localeLayer.lastPublishedFingerprint
+      : null;
+  return { lastPublishedFingerprint };
+}
+
 function getSfBaseUrl() {
   if (cachedSfBaseUrl) return cachedSfBaseUrl;
   const raw = String(process.env.SANFRANCISCO_BASE_URL || 'http://localhost:3002').trim();
@@ -185,9 +213,15 @@ async function loadLocales() {
 
 function normalizeLocales(raw) {
   if (!Array.isArray(raw)) throw new Error(`[prague-l10n] Invalid locales file: ${LOCALES_PATH}`);
-  const locales = raw.map((v) => normalizeLocaleToken(v)).filter((v) => v);
+  const locales = raw
+    .map((entry) => {
+      if (typeof entry === 'string') return normalizeLocaleToken(entry);
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return normalizeLocaleToken(entry.code);
+      return null;
+    })
+    .filter((v) => v);
   if (!locales.includes('en')) {
-    throw new Error('[prague-l10n] locales.json must include "en"');
+    throw new Error('[prague-l10n] locales.json must include an "en" locale code');
   }
   return Array.from(new Set(locales)).sort();
 }
@@ -318,6 +352,7 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
 
   const blockItems = new Map();
   const expectedPaths = new Set();
+  const baseSnapshot: Record<string, string> = {};
   for (const [blockId, blockType] of blockTypeMap.entries()) {
     const allowlistPath = path.join(ALLOWLIST_ROOT, 'blocks', `${blockType}.allowlist.json`);
     if (!(await fileExists(allowlistPath))) {
@@ -334,9 +369,15 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     }
     blockItems.set(blockId, { items, blockType, allowlistVersion: allowlist.v });
     for (const item of items) {
-      expectedPaths.add(`blocks.${blockId}.${item.path}`);
+      const fullPath = normalizeOpPath(`blocks.${blockId}.${item.path}`);
+      expectedPaths.add(fullPath);
+      if (typeof item.value === 'string') {
+        baseSnapshot[fullPath] = item.value;
+      }
     }
   }
+
+  await writeBaseSnapshot({ pageId, baseFingerprint, baseUpdatedAt, snapshot: baseSnapshot });
 
   const missingLocales = [];
   const overlaysByLocale = new Map();
@@ -374,8 +415,86 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     return;
   }
 
+  const prevIndex = await loadLayerIndex(pageId);
+  const previousByLocale = new Map();
+  for (const locale of missingLocales) {
+    const prevFingerprintRaw = prevIndex?.lastPublishedFingerprint ? prevIndex.lastPublishedFingerprint[locale] : null;
+    const prevFingerprint = typeof prevFingerprintRaw === 'string' ? prevFingerprintRaw.trim() : '';
+    if (!prevFingerprint || prevFingerprint === baseFingerprint) {
+      previousByLocale.set(locale, null);
+      continue;
+    }
+
+    const prevOverlayPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'locale', locale, `${prevFingerprint}.ops.json`);
+    const prevSnapshotPath = path.join(TOKYO_PRAGUE_ROOT, pageId, 'bases', `${prevFingerprint}.snapshot.json`);
+    if (!(await fileExists(prevOverlayPath)) || !(await fileExists(prevSnapshotPath))) {
+      previousByLocale.set(locale, null);
+      continue;
+    }
+
+    const overlay = await readJson(prevOverlayPath).catch(() => null);
+    const snapshotFile = await readJson(prevSnapshotPath).catch(() => null);
+    const ops = Array.isArray(overlay?.ops) ? overlay.ops : null;
+    const snapshot =
+      snapshotFile && typeof snapshotFile === 'object' && snapshotFile.v === 1 && snapshotFile.snapshot && typeof snapshotFile.snapshot === 'object' && !Array.isArray(snapshotFile.snapshot)
+        ? snapshotFile.snapshot
+        : null;
+    if (!ops || !snapshot) {
+      previousByLocale.set(locale, null);
+      continue;
+    }
+
+    const prevOpsByPath = new Map();
+    for (const op of ops) {
+      if (!op || typeof op !== 'object') continue;
+      if (op.op !== 'set') continue;
+      const p = typeof op.path === 'string' ? normalizeOpPath(op.path) : '';
+      if (!p || hasProhibitedSegment(p)) continue;
+      const v = typeof op.value === 'string' ? op.value : null;
+      if (v == null) continue;
+      prevOpsByPath.set(p, v);
+    }
+
+    const prevSnapshot = {};
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (typeof value !== 'string') continue;
+      prevSnapshot[normalizeOpPath(key)] = value;
+    }
+
+    previousByLocale.set(locale, { prevFingerprint, prevOpsByPath, prevSnapshot });
+  }
+
   for (const [blockId, meta] of blockItems.entries()) {
+    const fullItems = meta.items.map((item) => ({
+      ...item,
+      fullPath: normalizeOpPath(`blocks.${blockId}.${item.path}`),
+    }));
+
     for (const locale of missingLocales) {
+      const prev = previousByLocale.get(locale) ?? null;
+
+      const carry = new Map();
+      const toTranslate = [];
+      for (const item of fullItems) {
+        const fullPath = item.fullPath;
+        if (!fullPath) continue;
+        const currentBase = baseSnapshot[fullPath];
+
+        if (prev && typeof currentBase === 'string') {
+          const prevBase = prev.prevSnapshot[fullPath];
+          const unchanged = typeof prevBase === 'string' && prevBase === currentBase;
+          if (unchanged) {
+            const prevValue = prev.prevOpsByPath.get(fullPath);
+            if (typeof prevValue === 'string' && prevValue.trim()) {
+              carry.set(item.path, prevValue);
+              continue;
+            }
+          }
+        }
+
+        toTranslate.push({ path: item.path, type: item.type, value: item.value });
+      }
+
       const job = {
         v: 1,
         surface: 'prague',
@@ -387,12 +506,28 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
         baseUpdatedAt,
         allowlistVersion: meta.allowlistVersion,
       };
-      const translated = await translateWithSanFrancisco({ job, items: meta.items });
-      const ops = translated.map((item) => ({
-        op: 'set',
-        path: `blocks.${blockId}.${item.path}`,
-        value: item.value,
-      }));
+      const total = fullItems.length;
+      const changed = toTranslate.length;
+      console.log(`[prague-l10n] ${pageId} ${locale}: translating ${changed}/${total} item(s) for ${meta.blockType}`);
+
+      const translated = changed ? await translateWithSanFrancisco({ job, items: toTranslate }) : [];
+      const translatedByPath = new Map();
+      for (const item of translated) {
+        if (typeof item?.path === 'string' && typeof item?.value === 'string') {
+          translatedByPath.set(item.path, item.value);
+        }
+      }
+
+      const ops = [];
+      for (const item of fullItems) {
+        const value = carry.has(item.path) ? carry.get(item.path) : translatedByPath.get(item.path);
+        if (typeof value !== 'string') continue;
+        ops.push({
+          op: 'set',
+          path: `blocks.${blockId}.${item.path}`,
+          value,
+        });
+      }
       overlaysByLocale.get(locale).push(...ops);
     }
   }
@@ -431,6 +566,15 @@ async function main() {
     const chromeStat = await fs.stat(CHROME_BASE_PATH);
     const chromeUpdatedAt = chromeStat.mtime.toISOString();
     const chromeFingerprint = computeBaseFingerprint(chromeBase);
+    const chromeAllowlist = await loadAllowlist(path.join(ALLOWLIST_ROOT, 'chrome.allowlist.json'));
+    const chromeItems = collectTranslatableEntries(chromeBase, chromeAllowlist.entries);
+    const chromeSnapshot: Record<string, string> = {};
+    for (const item of chromeItems) {
+      if (typeof item?.path === 'string' && typeof item?.value === 'string') {
+        chromeSnapshot[item.path] = item.value;
+      }
+    }
+    await writeBaseSnapshot({ pageId: 'chrome', baseFingerprint: chromeFingerprint, baseUpdatedAt: chromeUpdatedAt, snapshot: chromeSnapshot });
     await translateChrome({ base: chromeBase, baseFingerprint: chromeFingerprint, baseUpdatedAt: chromeUpdatedAt, locales });
   }
 

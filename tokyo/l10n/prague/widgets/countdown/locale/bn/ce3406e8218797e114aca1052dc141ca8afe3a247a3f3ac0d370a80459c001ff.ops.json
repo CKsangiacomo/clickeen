@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "কাউন্টডাউন উইজেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "কাস্টমাইজযোগ্য কাউন্টডাউন টাইমার দিয়ে জরুরিতার অনুভূতি তৈরি করুন। আত্মবিশ্বাসের সাথে লঞ্চ, বিক্রি এবং ঘোষণা করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "কাউন্টডাউন টাইমার উইজেট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "দ্রুত ও নমনীয় কাউন্টডাউনের মাধ্যমে তাড়না তৈরি করুন এবং পদক্ষেপ নিতে উৎসাহ দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "কাউন্টডাউন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "নমনীয় টাইমার দিয়ে তাড়াহুড়ো তৈরি করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "লাইভে চেষ্টা করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "minibob-এ একটি ডেমো ইনস্ট্যান্স সম্পাদনা করুন। প্রস্তুত হলে প্রকাশ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "কাউন্টডাউন টাইমার উইজেট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "কাস্টমাইজযোগ্য কাউন্টডাউন টাইমারের মাধ্যমে তাড়না তৈরি করুন এবং পদক্ষেপ নিতে উৎসাহিত করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "নমনীয় টাইমার মোড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "তারিখভিত্তিক, ব্যক্তিগত, বা সংখ্যাভিত্তিক কাউন্টার যেকোনো পরিস্থিতির জন্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "মনোযোগকে কাজে রূপান্তর করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "লঞ্চ, সেল, ইভেন্ট এবং ব্যক্তিগত লক্ষ্যগুলোর সাথে মানানসই টাইমার ব্যবহার করুন। একবার সেট করুন, আর সেটি সর্বত্র চলতে দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "সহজ কাস্টমাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "আপনার ব্র্যান্ডের সঙ্গে মানানসই করতে চেহারা, লেআউট এবং অ্যাকশন সমন্বয় করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "কাউন্টডাউন দিয়ে দ্রুত লঞ্চ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "সেটআপ থেকে প্রকাশ—মিনিটেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "আপনার টাইমার বেছে নিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "আপনার ব্র্যান্ডের সঙ্গে মিল রাখুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "প্রকাশ করুন এবং লোকালাইজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "আপনার ব্যবহারের জন্য তারিখ, এভারগ্রিন বা সংখ্যা-ভিত্তিক কাউন্টার বেছে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "যে কোনো সাইটের সঙ্গে মানানসই করতে রঙ, লেবেল এবং লেআউট কাস্টমাইজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "দ্রুত লাইভ করুন এবং বিল্ট-ইন লোকালাইজেশনের মাধ্যমে বিশ্বব্যাপী দর্শকদের কাছে পৌঁছান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "কনভার্সন বাড়ান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "সময়-সীমাবদ্ধ অফারের মাধ্যমে তাৎক্ষণিক পদক্ষেপ নিতে উৎসাহিত করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO এবং GEO অপ্টিমাইজড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "বিল্ট-ইন স্কিমা এবং লোকালাইজেশন সাপোর্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "জরুরিতা তৈরি করুন, বিক্রি বাড়ান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "শক্তিশালী কাউন্টডাউন টাইমার যা ভিজিটরদের গ্রাহকে রূপান্তর করে।"
+    }
+  ],
+  "v": 1
+}

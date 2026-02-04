@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أداة العد التنازلي - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "اصنع إحساسًا بالإلحاح باستخدام مؤقتات عدّ تنازلي قابلة للتخصيص. أطلق، وبِع، وأعلن بثقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أداة مؤقت العدّ التنازلي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "أنشئ إحساسًا بالإلحاح وحرّك اتخاذ الإجراء باستخدام عدّادات تنازلية سريعة ومرنة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "العدّ التنازلي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "أضِف الإلحاح باستخدام مؤقّتات مرنة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "جرّبه مباشرة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "حرّر نسخة تجريبية في minibob. انشر عندما تكون جاهزًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "ودجت مؤقّت العدّ التنازلي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "أنشئ إحساسًا بالإلحاح وادفع إلى اتخاذ إجراء باستخدام مؤقّتات عدّ تنازلي قابلة للتخصيص."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "أوضاع مؤقّت مرنة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "عدادات تعتمد على التاريخ أو شخصية أو رقمية لأي سيناريو."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "حوّل الانتباه إلى فعل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "استخدم مؤقتات تناسب الإطلاقات، والتخفيضات، والفعاليات، والأهداف الشخصية. اضبطه مرة واحدة ودعه يعمل في كل مكان."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "تخصيص سهل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "اضبط المظهر والتخطيط والإجراءات لتناسب علامتك التجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "أطلق أسرع باستخدام العدّادات التنازلية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "من الإعداد إلى النشر خلال دقائق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "اختر المؤقّت الخاص بك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "طابق علامتك التجارية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "انشر ووطّن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "اختر عدّادات التاريخ أو الدائمة أو العددية وفقًا لحالة استخدامك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "خصّص الألوان والتسميات والتخطيط ليتناسب مع أي موقع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "انطلق بسرعة واصل إلى جماهير عالمية بفضل التوطين المدمج."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "عزّز معدلات التحويل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "شجّع اتخاذ إجراء فوريًا من خلال عروض محدودة الوقت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "محسّن لمحركات البحث (SEO) وتحسين الظهور الجغرافي (GEO)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "مخططات Schema مدمجة ودعم للتوطين."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "اصنع شعورًا بالإلحاح، وادفع المبيعات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "مؤقتات عدٍّ تنازلي قوية تحوّل الزوار إلى عملاء."
+    }
+  ],
+  "v": 1
+}

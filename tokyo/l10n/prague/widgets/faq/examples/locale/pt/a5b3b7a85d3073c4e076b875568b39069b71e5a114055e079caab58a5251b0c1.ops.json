@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemplos de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hotéis, restaurantes e operadores turísticos usam a Clickeen para atender clientes internacionais em 29 idiomas instantaneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemplos de FAQ para hotéis, restaurantes, operadores turísticos e muito mais"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dê à Ombra o URL do seu site. Receba a sua FAQ personalizada para o seu negócio em 29 idiomas — instantaneamente. Não é necessário tradutor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hotéis em Barcelona: hóspedes de mais de 50 países perguntam “A que horas é o check-in?” em 15 idiomas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Dê à Ombra o website do seu hotel. FAQ personalizada para a sua propriedade em 29 idiomas — instantaneamente. Reduza as perguntas na receção em 60% e melhore as pontuações de satisfação dos hóspedes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restaurantes em Paris: Turistas fazem perguntas sobre dieta em francês, inglês, espanhol, chinês, japonês"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "As FAQs do seu menu em 29 idiomas — instantaneamente. Sem tradutor, sem trabalho manual. Melhore a rotatividade das mesas, reduza interrupções à equipa de sala."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Anfitriões do Airbnb na Toscana: instruções de check-in, palavra-passe do Wi-Fi, dicas locais no idioma do seu hóspede"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Dê à Ombra o URL do seu anúncio. Regras da casa em 29 idiomas instantaneamente. Avaliações de 5 estrelas de hóspedes internacionais."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Clientes internacionais não esperam por traduções"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Um hotel em Roma perde reservas quando turistas alemães não conseguem encontrar informações sobre o check-in. Um restaurante em Tóquio perde reservas quando falantes de inglês não conseguem encontrar o horário de funcionamento. Cada pergunta sem resposta no idioma deles é um cliente perdido. A Ombra resolve isso: URL do site → FAQ personalizada em 29 idiomas, instantaneamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Operadores turísticos na Tailândia: Perguntas frequentes sobre reservas, segurança e itinerários para viajantes internacionais"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Dê à Ombra o site da sua operadora. FAQ em 29 idiomas instantaneamente. Reduza o suporte por e-mail em 70% e aumente a conversão de mercados internacionais."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museus em Roma: informações sobre exposições, bilhetes e horários para visitantes de todo o mundo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "Perguntas frequentes dos visitantes em 29 idiomas — instantaneamente. Melhore a experiência do visitante e reduza as consultas no balcão de informações em 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Da confusão internacional à clareza instantânea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Como as empresas de hospitalidade usam a Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Dê à Ombra o URL do seu website"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ personalizada para o seu negócio em 29 idiomas — instantaneamente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Incorpore e veja as perguntas internacionais diminuírem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "A IA lê o contexto do seu negócio — localização, serviços, políticas. Compreende automaticamente as suas necessidades específicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Não é preciso tradutor. Sem trabalho manual. Conteúdo adaptado ao seu negócio E disponível globalmente, de imediato."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Script de 3 linhas. Funciona em qualquer lugar. Hóspedes, turistas e viajantes obtêm respostas na sua língua antes mesmo de perguntarem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Tenha a sua FAQ em 29 idiomas — instantaneamente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Forneça à Ombra o URL do seu site. Personalizado para o seu negócio, disponível globalmente. Não é necessário tradutor."
+    }
+  ],
+  "v": 1
+}

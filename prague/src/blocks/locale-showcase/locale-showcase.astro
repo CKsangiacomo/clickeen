@@ -3,20 +3,18 @@ import InstanceEmbed from '../../components/InstanceEmbed.astro';
 
 type Props = {
   publicId: string;
-  locales?: Array<{ code: string; label: string }>;
-  title?: string;
-  subtitle?: string;
+  title: string;
+  subtitle: string;
+  tiles: Array<{ code: string; label: string }>;
+  options: Array<{ code: string; label: string }>;
 };
 
 const {
   publicId,
-  locales = [
-    { code: 'en', label: 'English' },
-    { code: 'es', label: 'Español' },
-    { code: 'ja', label: '日本語' },
-  ],
-  title = 'Designed to speak every language',
-  subtitle = 'Same curated widget. Three locales. One codepath.',
+  title,
+  subtitle,
+  tiles,
+  options,
 } = Astro.props;
 ---
 
@@ -29,11 +27,11 @@ const {
       </div>
 
       <div class="ck-localeShowcase__grid" role="list">
-        {locales.map((item) => (
+        {tiles.map((item) => (
           <div class="ck-localeShowcase__tile" role="listitem">
             <form autocomplete="off" class="selector-element ck-localeShowcase__selector" aria-label="Select language">
               <select class="selector-dropdown" aria-label="Select language">
-                {locales.map((option) => (
+                {options.map((option) => (
                   <option value={option.code} selected={option.code === item.code}>
                     {option.label}
                   </option>

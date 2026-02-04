@@ -313,6 +313,7 @@ export async function buildContext(
     component === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
   if (component === 'dropdown-fill' && !headerLabel) headerLabel = 'Color fill';
   if (component === 'dropdown-shadow' && !headerLabel) headerLabel = 'Shadow';
+  const axis = attrs.axis || attrs['data-axis'] || (merged.axis as string) || '';
   const allowLinks =
     attrs.allowLinks ?? attrs['allow-links'] ?? (merged.allowLinks as string | undefined) ?? 'true';
 
@@ -411,6 +412,7 @@ export async function buildContext(
     maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
     grantUrl: component === 'dropdown-upload' ? grantUrl : undefined,
     resolveUrl: component === 'dropdown-upload' ? resolveUrl : undefined,
+    axis: component === 'dropdown-shadow' ? axis : undefined,
     indexToken,
     id,
     options,

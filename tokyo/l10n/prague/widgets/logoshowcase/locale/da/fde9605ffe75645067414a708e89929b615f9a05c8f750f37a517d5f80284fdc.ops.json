@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "fde9605ffe75645067414a708e89929b615f9a05c8f750f37a517d5f80284fdc",
+  "baseUpdatedAt": "2026-02-04T05:36:55.818Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo-fremvisningswidget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Fremhæv kundelogoer med en hurtig og fleksibel fremvisningswidget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo-fremvisning. Øjeblikkeligt socialt bevis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vis kundelogoer smukt -- opbyg tillid og øg konverteringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Logo-udstilling"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Vis logoer smukt. Skab tillid."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Sådan fungerer det"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Tilføj logoer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Arrangér"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Integrér"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Upload dine kundelogoer (SVG/PNG) på få sekunder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Vælg layout + afstand, så det passer til din hjemmeside."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Indsæt kodeudsnittet på enhver platform."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Opret din logo-fremvisning"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kom i gang gratis. Udgiv, når du er klar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Prøv det live"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Redigér en demoinstans i minibob. Udgiv, når du er klar."
+    }
+  ],
+  "v": 1
+}

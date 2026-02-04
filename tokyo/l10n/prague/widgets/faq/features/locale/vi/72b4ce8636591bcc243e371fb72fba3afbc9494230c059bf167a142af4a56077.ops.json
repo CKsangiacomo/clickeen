@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Tính năng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Mọi thứ bạn cần để triển khai FAQ được hỗ trợ bởi AI hoạt động trên toàn cầu và lan truyền mạnh mẽ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vì sao Widget FAQ vượt trội hơn Elfsight, TypeForm và giải pháp tự xây dựng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Được xây dựng từ đầu cho AI. Hoạt động toàn cầu. Lan truyền theo cấp số nhân. Một FAQ, vô hạn khả năng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "Chỉnh sửa bằng AI: Mô tả xong, làm xong"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Hãy nói bạn muốn gì bằng tiếng Việt đơn giản. “Hãy làm các câu hỏi thân mật hơn” hoặc “Thêm một phần về giá cả.” AI hiểu và thực hiện ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Tức thì trên toàn cầu: Bất kỳ ngôn ngữ nào, ngay bây giờ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Địa lý là một tham số, không phải một dự án. Thêm tiếng Tây Ban Nha, tiếng Nhật hoặc tiếng Ả Rập chỉ với một cú nhấp. Không cần dịch thủ công, không bị trì hoãn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Tổ hợp ở mọi nơi: Một FAQ, vô hạn ngữ cảnh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Cùng một FAQ hoạt động trên website, email, landing page, quảng cáo. Một nguồn, vô hạn khả năng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Vì sao Clickeen thay đổi mọi thứ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Bản địa hóa cá nhân hóa tức thì"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Mẫu HOẶC tùy chỉnh chuẩn từng pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Kiến trúc composable"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "URL website → nội dung cá nhân hóa bằng 29 ngôn ngữ ngay lập tức. Không dịch thủ công, không tốn chi phí dịch thuật. AI hiểu bối cảnh kinh doanh của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Bắt đầu với một mẫu được tuyển chọn HOẶC tự bạn định nghĩa mọi thứ—tùy bạn, tự do tuyệt đối. Không thỏa hiệp, không giới hạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Một FAQ dùng được ở mọi nơi: website, email, landing page, quảng cáo. Cùng một nội dung, vô hạn bối cảnh. Không cần làm lại cho từng kênh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Được xây dựng cho AI, vận hành bởi AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen không chỉ là một công cụ tạo FAQ khác—đây là sản phẩm đầu tiên được thiết kế để AI vận hành ngay từ ngày đầu. Trong khi các đối thủ gắn thêm các tính năng AI vào sản phẩm hiện có, chúng tôi đã xây dựng một kiến trúc mà các tác nhân AI có thể hiểu, chỉnh sửa và tự động tối ưu hóa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Hệ sinh thái AI của Clickeen hoạt động như thế nào"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Một nền tảng hoàn chỉnh, càng thông minh hơn sau mỗi lần tương tác."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI hiểu ý định của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Vận hành toàn cầu theo mặc định"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Học hỏi và cải thiện liên tục"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Tự động hóa phân phối lan truyền"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Mô tả thay đổi một cách tự nhiên. \"Làm cho chuyên nghiệp hơn\" hoặc \"Thêm tính cấp bách cho CTA.\" AI thực thi hoàn hảo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI xử lý bản địa hóa, hỗ trợ và marketing trên tất cả thị trường cùng lúc."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Mỗi lần người dùng tương tác đều giúp hệ thống AI học hỏi, khiến tất cả FAQ thông minh hơn theo thời gian."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "FAQ miễn phí trở thành các kênh marketing tự động thúc đẩy thu hút khách hàng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Trải nghiệm tương lai của mục Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Nền tảng ngày càng thông minh hơn sau mỗi lần tương tác. Được xây dựng cho kỷ nguyên AI."
+    }
+  ],
+  "v": 1
+}

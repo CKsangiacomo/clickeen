@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ ফিচারসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "AI-চালিত FAQ তৈরি, চালু ও বিশ্বজুড়ে কার্যকরভাবে পৌঁছে দিতে এবং ভাইরালভাবে বৃদ্ধি করতে আপনার যা কিছু দরকার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "কেন FAQ উইজেট Elfsight, TypeForm, এবং কাস্টম-বিল্টকে হার মানায়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI-এর জন্য একেবারে শুরু থেকে তৈরি। বিশ্বজুড়ে কাজ করে। ভাইরালভাবে বাড়ে। একটি FAQ, অসীম সম্ভাবনা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI সম্পাদনা: বর্ণনা করুন, হয়ে গেল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "সহজ ইংরেজিতে আপনি কী চান তা বলুন। 'প্রশ্নগুলো আরও অনানুষ্ঠানিক করুন' বা 'মূল্য নির্ধারণ সম্পর্কে একটি বিভাগ যোগ করুন।' AI বুঝে এবং সঙ্গে সঙ্গে কাজটি করে দেয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "গ্লোবাল ইনস্ট্যান্ট: যেকোনো ভাষা, এখনই"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "ভূগোল একটি প্যারামিটার, কোনো প্রজেক্ট নয়। এক ক্লিকে স্প্যানিশ, জাপানি বা আরবি যোগ করুন। কোনো ম্যানুয়াল অনুবাদ নেই, কোনো বিলম্ব নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "সর্বত্র কম্পোজেবল: একটি FAQ, অসীম প্রেক্ষাপট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "একই FAQ কাজ করে ওয়েবসাইট, ইমেইল, ল্যান্ডিং পেজ, বিজ্ঞাপনে। এক উৎস, অসীম সম্ভাবনা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "কেন Clickeen সবকিছু বদলে দেয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "তাৎক্ষণিক ব্যক্তিগতকৃত লোকালাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "টেমপ্লেট অথবা পিক্সেল-নিখুঁত কাস্টম"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "কম্পোজেবল আর্কিটেকচার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "ওয়েবসাইট URL → মুহূর্তেই ২৯টি ভাষায় ব্যক্তিগতকৃত কনটেন্ট। কোনো ম্যানুয়াল অনুবাদ নয়, অনুবাদকের খরচও নেই। AI আপনার ব্যবসার প্রেক্ষাপট বোঝে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "কিউরেটেড টেমপ্লেট দিয়ে শুরু করুন অথবা সবকিছু নিজেই নির্ধারণ করুন—আপনার পছন্দ, সম্পূর্ণ স্বাধীনতা। কোনো আপস নয়, কোনো সীমাবদ্ধতা নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "একটি FAQ সবখানেই কাজ করে: ওয়েবসাইট, ইমেল, ল্যান্ডিং পেজ, বিজ্ঞাপন। একই কনটেন্ট, অসীম প্রেক্ষাপট। প্রতিটি চ্যানেলের জন্য নতুন করে বানাতে হয় না।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "AI-এর জন্য তৈরি, AI দ্বারা পরিচালিত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen শুধু আরেকটি FAQ বিল্ডার নয়—এটি প্রথম পণ্য, যা প্রথম দিন থেকেই AI দ্বারা পরিচালনার জন্য ডিজাইন করা হয়েছে। প্রতিযোগীরা যেখানে পরে AI ফিচার যোগ করে, সেখানে আমরা এমন একটি আর্কিটেকচার তৈরি করেছি যা AI এজেন্টরা স্বয়ংক্রিয়ভাবে বুঝতে, পরিবর্তন করতে এবং অপ্টিমাইজ করতে পারে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen-এর AI ইকোসিস্টেম কীভাবে কাজ করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "একটি সম্পূর্ণ প্ল্যাটফর্ম যা প্রতিটি ইন্টারঅ্যাকশনের সাথে আরও স্মার্ট হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI আপনার উদ্দেশ্য বুঝতে পারে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "ডিফল্টভাবেই বৈশ্বিক অপারেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "ধারাবাহিক শেখা ও উন্নতি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "ভাইরাল ডিস্ট্রিবিউশন অটোমেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "পরিবর্তনগুলো স্বাভাবিকভাবে বর্ণনা করুন। 'এটাকে আরও পেশাদার করুন' বা 'CTA-তে জরুরিতার অনুভূতি যোগ করুন।' AI নিখুঁতভাবে বাস্তবায়ন করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI একই সঙ্গে সব বাজারে লোকালাইজেশন, সাপোর্ট এবং মার্কেটিং সামলায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "প্রতিটি ব্যবহারকারীর ইন্টারঅ্যাকশন AI সিস্টেমকে শেখায়, ফলে সময়ের সাথে সব FAQ আরও স্মার্ট হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "ফ্রি FAQ গুলো মার্কেটিং চ্যানেল হয়ে ওঠে যা স্বয়ংক্রিয়ভাবে ব্যবহারকারী অর্জন বাড়ায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "FAQ-এর ভবিষ্যৎ অভিজ্ঞতা নিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "প্রতিটি ইন্টারঅ্যাকশনের সঙ্গে আরও স্মার্ট হয় এমন একটি প্ল্যাটফর্ম। AI যুগের জন্য নির্মিত।"
+    }
+  ],
+  "v": 1
+}

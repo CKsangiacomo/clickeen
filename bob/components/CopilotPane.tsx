@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { labelAiModel, labelAiProvider, resolveAiAgent, resolveAiPolicyCapsule } from '@clickeen/ck-policy';
+import type { AiProvider } from '@clickeen/ck-policy';
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -78,6 +80,51 @@ function initialCopilotMessage(args: { widgetType: string; config: Record<string
   return `Hello! I see you have a ${label} widget. You can ask me to change the title, colors, layout, add or edit content, adjust fonts, or modify any other settings listed in the editable controls. What would you like to customize?`;
 }
 
+type RawAiSelection = { provider: string; model: string };
+type AiSelection = { provider: AiProvider; model: string };
+
+function clampAiSelection(
+  selection: RawAiSelection | null,
+  policy: ReturnType<typeof resolveAiPolicyCapsule>,
+): AiSelection {
+  const providerCandidate = selection?.provider ? String(selection.provider).trim() : '';
+  const modelCandidate = selection?.model ? String(selection.model).trim() : '';
+  const allowedProviders = policy.allowedProviders ?? [];
+  const provider = allowedProviders.includes(providerCandidate as AiProvider) ? (providerCandidate as AiProvider) : policy.defaultProvider;
+  const providerPolicy = policy.models?.[provider];
+  const defaultModel = providerPolicy?.defaultModel ?? '';
+  const allowedModels = providerPolicy?.allowed ?? [];
+  const model = allowedModels.includes(modelCandidate) ? modelCandidate : defaultModel;
+  return { provider, model };
+}
+
+function aiStorageKey(args: { workspaceId?: string | null; subject: string }): string {
+  const ws = typeof args.workspaceId === 'string' && args.workspaceId.trim() ? args.workspaceId.trim() : 'local';
+  return `ck:ai.settings.v1:${args.subject}:${ws}`;
+}
+
+function readStoredAiSelection(key: string): RawAiSelection | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as any;
+    const provider = typeof parsed?.provider === 'string' ? parsed.provider.trim() : '';
+    const model = typeof parsed?.model === 'string' ? parsed.model.trim() : '';
+    if (!provider) return null;
+    return { provider, model };
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredAiSelection(key: string, value: AiSelection) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ provider: value.provider, model: value.model }));
+  } catch {
+    // best-effort
+  }
+}
+
 export function CopilotPane() {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -90,6 +137,28 @@ export function CopilotPane() {
   const subject = policyProfile === 'devstudio' || policyProfile === 'minibob' ? policyProfile : 'workspace';
   const aiSubject = subject === 'workspace' && !workspaceId ? 'minibob' : subject;
   const isMinibob = aiSubject === 'minibob';
+
+  const aiPolicy = useMemo(() => {
+    const resolved = resolveAiAgent('sdr.widget.copilot.v1');
+    if (!resolved) return null;
+    return resolveAiPolicyCapsule({ entry: resolved.entry, policyProfile });
+  }, [policyProfile]);
+
+  const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
+  useEffect(() => {
+    if (!aiPolicy) return;
+    const key = aiStorageKey({ workspaceId, subject: aiSubject });
+    const stored = readStoredAiSelection(key);
+    const next = clampAiSelection(stored, aiPolicy);
+    setAiSelection(next);
+  }, [aiPolicy, workspaceId, aiSubject]);
+
+  const showAiSettings = useMemo(() => {
+    if (!aiPolicy || isMinibob || !aiSelection) return false;
+    if (aiPolicy.allowProviderChoice) return true;
+    const allowedModels = aiPolicy.models?.[aiSelection.provider]?.allowed ?? [];
+    return Boolean(aiPolicy.allowModelChoice && allowedModels.length > 1);
+  }, [aiPolicy, isMinibob, aiSelection]);
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -294,6 +363,7 @@ export function CopilotPane() {
     pushMessage({ role: 'user', text: prompt });
 
     try {
+      const selection = aiPolicy && !isMinibob ? clampAiSelection(aiSelection, aiPolicy) : null;
       const res = await fetch('/api/ai/sdr-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -306,6 +376,8 @@ export function CopilotPane() {
           instancePublicId,
           workspaceId,
           subject: aiSubject,
+          ...(selection?.provider ? { provider: selection.provider } : {}),
+          ...(selection?.model ? { model: selection.model } : {}),
         }),
       });
 
@@ -380,6 +452,84 @@ export function CopilotPane() {
       }}
       aria-label="Copilot"
     >
+      {showAiSettings && aiPolicy && aiSelection ? (
+        <div
+          style={{
+            padding: 'var(--space-3)',
+            paddingBottom: 'var(--space-2)',
+            borderBottom: '1px solid var(--color-system-gray-5)',
+            background: 'var(--color-system-white)',
+          }}
+        >
+          <div className="label-s label-muted" style={{ marginBottom: 'var(--space-2)' }}>
+            Copilot AI
+          </div>
+          <div style={{ display: 'grid', gap: 'var(--space-2)', gridTemplateColumns: '1fr 1fr' }}>
+            {aiPolicy.allowProviderChoice ? (
+              <div className="diet-textfield" data-size="md">
+                <label className="diet-textfield__control">
+                  <span className="diet-textfield__display-label label-s">Provider</span>
+                  <select
+                    className="diet-textfield__field body-s"
+                    value={aiSelection.provider}
+                    onChange={(event) => {
+                      const nextProvider = event.target.value;
+                      const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
+                      setAiSelection(clamped);
+                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject: aiSubject }), clamped);
+                    }}
+                  >
+                    {aiPolicy.allowedProviders.map((provider) => (
+                      <option key={provider} value={provider}>
+                        {labelAiProvider(provider)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : (
+              <div className="diet-textfield" data-size="md">
+                <label className="diet-textfield__control">
+                  <span className="diet-textfield__display-label label-s">Provider</span>
+                  <input className="diet-textfield__field body-s" value={labelAiProvider(aiSelection.provider)} readOnly />
+                </label>
+              </div>
+            )}
+
+            {aiPolicy.allowModelChoice && (aiPolicy.models?.[aiSelection.provider]?.allowed?.length ?? 0) > 1 ? (
+              <div className="diet-textfield" data-size="md">
+                <label className="diet-textfield__control">
+                  <span className="diet-textfield__display-label label-s">Model</span>
+                  <select
+                    className="diet-textfield__field body-s"
+                    value={aiSelection.model}
+                    onChange={(event) => {
+                      const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
+                      const clamped = clampAiSelection(next, aiPolicy);
+                      setAiSelection(clamped);
+                      writeStoredAiSelection(aiStorageKey({ workspaceId, subject: aiSubject }), clamped);
+                    }}
+                  >
+                    {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (
+                      <option key={model} value={model}>
+                        {labelAiModel(model)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : (
+              <div className="diet-textfield" data-size="md">
+                <label className="diet-textfield__control">
+                  <span className="diet-textfield__display-label label-s">Model</span>
+                  <input className="diet-textfield__field body-s" value={labelAiModel(aiSelection.model)} readOnly />
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       <div
         ref={listRef}
         style={{

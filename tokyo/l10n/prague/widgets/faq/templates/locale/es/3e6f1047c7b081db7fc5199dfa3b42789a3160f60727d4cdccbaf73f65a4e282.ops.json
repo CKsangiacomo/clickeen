@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Plantillas de preguntas frecuentes - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Elige entre diseños impresionantes de preguntas frecuentes que llaman la atención y convierten a los visitantes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Tus preguntas frecuentes. A tu manera."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Bonito de forma predeterminada. Inconfundiblemente tuyo por diseño."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "Audaz cuando lo necesitas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "Glassmorphism, liquid glass, neumorphism: estilos a la vanguardia, en claro y oscuro."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "Elegante cuando tú quieras"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "Minimalista, limpio y moderno. Estilos atemporales que siempre se sienten actuales."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "Empieza con un diseño. Luego hazlo tuyo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "Consigue la estética al instante. Diseños en tendencia o clásicos atemporales. Luego personaliza sin límites: radio por esquina, sombras por lado, tipografía por rol y puntos de quiebre responsivos. Una plantilla que se convierte en tu sello."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ayuda a los visitantes a encontrar respuestas rápidamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "Libertad de diseño, integrada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "De los diseños a los acabados y las fuentes: personalización que se siente sin esfuerzo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "Diseños, a tu manera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "Control de apariencia sin límites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "Precisión tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "Muchos sistemas de diseño, no uno. Estructura por breakpoint. Relleno y espaciado independientes para escritorio/móvil. Controla columnas, apilado, alineación y reflujo, con precisión."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "Radio por esquina. Bordes con colores personalizados. Sombras exteriores e interiores (vinculadas o independientes por lado). Fondos con degradado, imagen o video. Autoridad visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "Seis roles distintos (titular, cuerpo, pregunta, respuesta, botón, sección). Elige entre 17 Google Fonts. Grosor, estilo, tamaño: todo personalizable por rol. Escalas dinámicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Tres motores de diseño para tu widget de preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Acordeón para una revelación progresiva. Lista por simplicidad. Tarjetas para jerarquía visual. Cuadrícula o mampostería. Columnas responsivas. Control granular sobre los espacios y el relleno."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Control de apariencia sin límites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Radio por esquina. Bordes con colores personalizados. Sombras externas e internas (vinculadas o independientes por lado). Fondos con degradado, imagen o video. Autoridad visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Precisión tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Seis roles distintos (titular, cuerpo, pregunta, respuesta, botón, sección). Elige entre 17 fuentes de Google Fonts. Grosor, estilo, tamaño: todo personalizable por rol. Escalas dinámicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "Modo oscuro: sofisticado y moderno"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "Las interfaces modernas brillan en la oscuridad. Sensación premium con una estética vanguardista. Incluido con cada plantilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Escritorio y móvil, perfectamente ajustado"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Tu widget de preguntas frecuentes responde a cada punto de ruptura. Diferentes cantidades de columnas, relleno y espaciado por dispositivo. Un mismo lenguaje de diseño, infinitas vistas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "De plantilla a ajuste perfecto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "Cómo crear tu widget de preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "Elige una plantilla de diseño"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "Personaliza los diseños y la apariencia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "Ajusta la tipografía y la adaptabilidad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "Tendencia, clásico o minimalista. Modos claro y oscuro."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "Acordeón, lista o tarjetas. Radio por esquina, sombras por lado, degradados y bordes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "Seis roles tipográficos, 17 Google Fonts. Perfecto en escritorio y móvil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "Crea un widget de preguntas frecuentes gratis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "Empieza con una plantilla de diseño o crea desde cero. Control creativo total."
+    }
+  ],
+  "v": 1
+}

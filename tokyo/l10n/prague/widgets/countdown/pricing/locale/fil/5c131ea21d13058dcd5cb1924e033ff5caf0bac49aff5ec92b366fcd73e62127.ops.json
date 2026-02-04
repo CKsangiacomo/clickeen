@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "5c131ea21d13058dcd5cb1924e033ff5caf0bac49aff5ec92b366fcd73e62127",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Pagpepresyo ng Countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Pagpepresyo para sa countdown widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Pagpepresyo ng countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Kasama sa bawat plan ng Clickeen."
+    }
+  ],
+  "v": 1
+}

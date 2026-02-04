@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exempel på vanliga frågor - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Se hur riktiga företag använder vanliga frågor för att lösa problem och stänga fler affärer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Vanliga frågor som löser verkliga affärsproblem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Från tandläkarmottagningar till DJ-bokningar – se hur företag som ditt förvandlar frågor till kunder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Hälso- och sjukvård: Minska uteblivna besök med 40 %"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Tandläkare besvarar vanliga frågor om ingrepp, försäkring och tidsbokning – innan patienterna ens ringer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "E-handel: Hantera returer direkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Fraktpolicyer, storleksguider, returfönster – besvara frågorna som förhindrar att kunder överger varukorgen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Omvandla provperioder till kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Frågor om funktioner, funderingar kring prissättning, integrationsoro – bemöt invändningar innan de blir förlorade möjligheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Varje bransch har möjligheter med vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Frågor är den tysta mördaren av konverteringar. Oavsett om du bokar möten, hanterar returer eller förklarar funktioner innebär obesvarade frågor förlorade affärer. Clickeens vanliga frågor fungerar överallt och talar omedelbart varje kunds språk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Kreativa tjänster: Effektivisera bokningsförfrågningar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJs, fotografer och konsulter besvarar frågor om priser, tillgänglighet och process dygnet runt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Från frågor till kunder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Att implementera vanliga frågor som faktiskt ger resultat följer en beprövad process."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifiera dina största frågekategorier"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Välj rätt FAQ-stil för din målgrupp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Bädda in och optimera baserat på data"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analysera supportärenden, säljsamtal och chattloggar för att hitta de frågor som ställs oftast."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Dragspel för detaljerade svar, kort för skumläsbar information, listor för raka frågor och svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Följ vilka frågor som klickas mest och förbättra dina svar utifrån vad som driver konverteringar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Hitta den perfekta FAQ-lösningen för din bransch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Mallar utformade specifikt för företag som ditt, med AI som anpassar sig efter dina behov."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "17e311c289a11d4f6ae90843eb3b6c00808a6b664e79814428552bc207764f5f",
+  "baseUpdatedAt": "2026-02-04T05:36:55.808Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga template ng countdown - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Mag-browse ng mga template para sa countdown widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga template ng countdown"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mga handa nang layout para sa karaniwang paggamit ng countdown."
+    }
+  ],
+  "v": 1
+}

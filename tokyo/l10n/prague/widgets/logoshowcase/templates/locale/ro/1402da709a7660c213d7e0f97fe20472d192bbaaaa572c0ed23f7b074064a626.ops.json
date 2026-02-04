@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "1402da709a7660c213d7e0f97fe20472d192bbaaaa572c0ed23f7b074064a626",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Șabloane pentru vitrina de logo-uri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Pornește de la un aspect rafinat și personalizează-ți vitrina de logo-uri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Șabloane de prezentare a logo-urilor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Pornește de la un layout finisat — apoi personalizează-l."
+    }
+  ],
+  "v": 1
+}

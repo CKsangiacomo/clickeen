@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "常见问题功能 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "你需要的一切，用于发布可在全球运行并能病毒式增长的 AI 驱动常见问题。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "为什么 FAQ 小组件胜过 Elfsight、TypeForm 和自定义开发"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "从零打造，专为 AI 而生。全球可用。病毒式增长。一个 FAQ，无限可能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI 编辑：描述即可，立刻完成"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "用直白的语言告诉它你的需求。“让问题更随意一些”或“添加一个关于定价的章节”。AI 能理解并立即执行。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "全球即时：任何语言，立刻上线"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "地理范围只是一个参数，而不是一个项目。一键添加西班牙语、日语或阿拉伯语。无需人工翻译，无需等待。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "随处可组合：一套 FAQ，无限场景"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "同一套 FAQ 适用于网站、邮件、落地页和广告。一个来源，无限可能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "为什么 Clickeen 改变一切"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "即时个性化本地化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "模板或像素级定制"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "可组合架构"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "网站 URL → 立即生成 29 种语言的个性化内容。无需手动翻译，无需翻译人员成本。AI 能理解你的业务语境。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "从精选模板开始，或自己定义一切——由你选择，完全自由。不妥协，无限制。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "一个 FAQ 到处可用：网站、邮件、落地页、广告。同样内容，无限场景。无需为每个渠道重建。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "为 AI 而生，由 AI 驱动"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen 不只是另一款 FAQ 构建器——它是第一款从第一天起就为 AI 运营而设计的产品。当竞争对手为产品“补装”AI 功能时，我们打造的是一种架构，让 AI 代理能够理解、修改并自主优化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Clickeen 的 AI 生态系统如何运作"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "一个随着每次交互而变得更智能的完整平台。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI 理解你的意图"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "默认支持全球化运营"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "持续学习与改进"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "病毒式分发自动化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "用自然语言描述更改。“让它更专业”或“为 CTA 增加紧迫感”。AI 会完美执行。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI 可同时在所有市场处理本地化、支持与营销。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "每一次用户交互都会教会 AI 系统，让所有 FAQ 随时间推移变得更智能。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "免费的 FAQ 会成为营销渠道，自动推动获客。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "体验 FAQ 的未来"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "每次互动都能变得更智能的平台。为 AI 时代而打造。"
+    }
+  ],
+  "v": 1
+}

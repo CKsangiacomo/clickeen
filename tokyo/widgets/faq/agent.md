@@ -125,8 +125,8 @@ SEO/GEO (Settings panel):
 - `geo.enableDeepLinks` (boolean; enables `#` deep links for FAQ questions in accordion mode)
 
 Stage/Pod (layout spacing lives here; no widget-level padding):
-- `stage.background` (fill object), `stage.alignment`, `stage.padding*`
-- `pod.background` (fill object), `pod.shadow` (shadow object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
+- `stage.background` (fill object), `stage.shadow` (outside shadow channel), `stage.insideShadow.*` (inside shadow channel), `stage.alignment`, `stage.padding*`
+- `pod.background` (fill object), `pod.shadow` (outside shadow channel), `pod.insideShadow.*` (inside shadow channel), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
 
 ## Rendering Notes
 - Inline HTML is sanitized.
@@ -201,7 +201,11 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `appearance.ctaIconSizePreset` | Bob editor | editor | Selecting a preset expands to `appearance.ctaIconSize`; editing it resets to `custom` |
 | `appearance.ctaIconSize` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-icon-size` |
 | `stage.background` | `.stage` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
+| `stage.shadow` | `.stage` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` sets outside shadow in `--stage-shadow` |
+| `stage.insideShadow.*` | `.stage` | dom | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` applies inside shadows between background and pod |
 | `pod.background` | `.pod` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` |
+| `pod.shadow` | `.pod` | css-var | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` sets outside shadow in `--pod-shadow` |
+| `pod.insideShadow.*` | `.pod` | dom | `CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot)` applies inside shadows between background and content |
 | `typography.roles.title.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |
 | `typography.roles.body.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` sets `--typo-body-*` vars consumed by `.ck-header__subtitle` |
 | `typography.roles.section.color` | `[data-role="faq"]` | css-var | `CKTypography.applyTypography(state.typography, faqRoot, ...)` |

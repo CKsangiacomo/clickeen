@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Funktionen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alles, was Sie brauchen, um KI-gestützte FAQs zu veröffentlichen, die weltweit funktionieren und sich viral verbreiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Warum das FAQ-Widget Elfsight, TypeForm und individuelle Entwicklungen schlägt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Von Grund auf für KI entwickelt. Funktioniert weltweit. Wächst viral. Ein FAQ, unendliche Möglichkeiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "KI-Bearbeitung: Beschreiben, erledigt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Sag einfach in normalem Deutsch, was du willst. „Mach die Fragen lockerer“ oder „Füge einen Abschnitt zu Preisen hinzu.“ Die KI versteht das und setzt es sofort um."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Global sofort: Jede Sprache, jetzt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie ist ein Parameter, kein Projekt. Fügen Sie Spanisch, Japanisch oder Arabisch mit einem Klick hinzu. Keine manuelle Übersetzung, keine Verzögerungen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Überall komponierbar: Eine FAQ, unendlich viele Kontexte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Dieselbe FAQ funktioniert auf der Website, in E-Mails, auf Landingpages und in Anzeigen. Eine Quelle, unendliche Möglichkeiten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Warum Clickeen alles verändert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Sofortige personalisierte Lokalisierung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Templates ODER pixelgenau individuell"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Komponierbare Architektur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Website-URL → personalisierte Inhalte sofort in 29 Sprachen. Keine manuelle Übersetzung, keine Übersetzerkosten. KI versteht Ihren Geschäftskontext."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Starten Sie mit einer kuratierten Vorlage ODER definieren Sie alles selbst – Ihre Wahl, totale Freiheit. Keine Kompromisse, keine Einschränkungen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Eine FAQ funktioniert überall: Website, E-Mail, Landingpages, Anzeigen. Gleiche Inhalte, unendliche Kontexte. Kein Neuaufbau für jeden Kanal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Für KI gebaut, von KI betrieben"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen ist nicht nur ein weiterer FAQ-Builder – es ist das erste Produkt, das von Anfang an für den KI-Betrieb entwickelt wurde. Während Wettbewerber KI-Funktionen nachrüsten, haben wir eine Architektur entwickelt, die KI-Agenten autonom verstehen, anpassen und optimieren können."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Wie Clickeens KI-Ökosystem funktioniert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Eine vollständige Plattform, die mit jeder Interaktion intelligenter wird."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "KI versteht Ihre Absicht"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Globale Nutzung standardmäßig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Kontinuierliches Lernen und Verbesserung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisierung der viralen Verbreitung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beschreiben Sie Änderungen ganz natürlich. „Mach es professioneller“ oder „Füge dem CTA mehr Dringlichkeit hinzu.“ Die KI setzt es perfekt um."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "Die KI übernimmt Lokalisierung, Support und Marketing gleichzeitig in allen Märkten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Jede Nutzerinteraktion trainiert das KI-System, sodass alle FAQs mit der Zeit intelligenter werden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Kostenlose FAQs werden zu Marketingkanälen, die automatisch die Kundengewinnung vorantreiben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Erleben Sie die Zukunft der FAQs"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Die Plattform, die mit jeder Interaktion intelligenter wird. Entwickelt für die KI-Ära."
+    }
+  ],
+  "v": 1
+}

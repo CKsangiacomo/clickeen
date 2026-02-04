@@ -6,7 +6,13 @@ function normalizeCanonicalLocales(raw: unknown): string[] {
   if (!Array.isArray(raw)) {
     throw new Error(`[prague] Invalid canonical locales file (expected array): ${LOCALES_FILE_LABEL}`);
   }
-  const locales = raw.map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : '')).filter(Boolean);
+  const locales = raw
+    .map((entry: any) => {
+      if (typeof entry === 'string') return entry.trim().toLowerCase();
+      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return entry.code.trim().toLowerCase();
+      return '';
+    })
+    .filter(Boolean);
 
   if (!locales.includes('en')) {
     throw new Error(`[prague] Canonical locales must include "en": ${LOCALES_FILE_LABEL}`);

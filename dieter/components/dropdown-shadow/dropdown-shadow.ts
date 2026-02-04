@@ -26,7 +26,6 @@ type DropdownShadowState = {
   svThumb: HTMLElement;
   swatches: HTMLButtonElement[];
   enabledInput: HTMLInputElement;
-  insetInput: HTMLInputElement;
   xInput: HTMLInputElement;
   yInput: HTMLInputElement;
   blurInput: HTMLInputElement;
@@ -88,7 +87,6 @@ function createState(root: HTMLElement): DropdownShadowState | null {
   const svThumb = root.querySelector<HTMLElement>('.diet-dropdown-shadow__sv-thumb');
   const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>('.diet-dropdown-shadow__swatch'));
   const enabledInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__enabled');
-  const insetInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__inset');
   const xInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__x');
   const yInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__y');
   const blurInput = root.querySelector<HTMLInputElement>('.diet-dropdown-shadow__blur');
@@ -103,7 +101,6 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     !svCanvas ||
     !svThumb ||
     !enabledInput ||
-    !insetInput ||
     !xInput ||
     !yInput ||
     !blurInput ||
@@ -135,7 +132,6 @@ function createState(root: HTMLElement): DropdownShadowState | null {
     svThumb,
     swatches,
     enabledInput,
-    insetInput,
     xInput,
     yInput,
     blurInput,
@@ -178,10 +174,6 @@ function installHandlers(state: DropdownShadowState) {
 
   state.enabledInput.addEventListener('input', () => {
     state.shadow.enabled = state.enabledInput.checked;
-    syncUI(state, { commit: true });
-  });
-  state.insetInput.addEventListener('input', () => {
-    state.shadow.inset = state.insetInput.checked;
     syncUI(state, { commit: true });
   });
 
@@ -316,7 +308,6 @@ function syncUI(state: DropdownShadowState, opts: { commit: boolean }) {
   state.svThumb.style.top = top;
 
   state.enabledInput.checked = state.shadow.enabled;
-  state.insetInput.checked = state.shadow.inset;
   applyEnabledState(state);
 
   setRangeValue(state.xInput, state.shadow.x);
@@ -360,7 +351,6 @@ function applyEnabledState(state: DropdownShadowState): void {
   const enabled = Boolean(state.shadow.enabled);
   state.root.dataset.shadowEnabled = enabled ? 'true' : 'false';
   const disabled = !enabled;
-  state.insetInput.disabled = disabled;
   state.xInput.disabled = disabled;
   state.yInput.disabled = disabled;
   state.blurInput.disabled = disabled;
@@ -426,7 +416,7 @@ function parseShadowJson(raw: string): { shadow: ShadowValue; hsv: { h: number; 
 
   const obj = parsed as Record<string, unknown>;
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : null;
-  const inset = typeof obj.inset === 'boolean' ? obj.inset : null;
+  const inset = typeof obj.inset === 'boolean' ? obj.inset : false;
   const x = typeof obj.x === 'number' && Number.isFinite(obj.x) ? obj.x : null;
   const y = typeof obj.y === 'number' && Number.isFinite(obj.y) ? obj.y : null;
   const blur = typeof obj.blur === 'number' && Number.isFinite(obj.blur) ? obj.blur : null;
@@ -435,7 +425,6 @@ function parseShadowJson(raw: string): { shadow: ShadowValue; hsv: { h: number; 
   const color = typeof obj.color === 'string' ? obj.color : null;
   if (
     enabled == null ||
-    inset == null ||
     x == null ||
     y == null ||
     blur == null ||

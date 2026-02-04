@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "1402da709a7660c213d7e0f97fe20472d192bbaaaa572c0ed23f7b074064a626",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logo 展示模板 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "从精美的布局开始，自定义你的 Logo 展示。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logo 展示模板"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "从精致的布局开始——然后打造专属于你的风格。"
+    }
+  ],
+  "v": 1
+}

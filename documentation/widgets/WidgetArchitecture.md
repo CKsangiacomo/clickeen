@@ -11,8 +11,8 @@ Related:
 
 ## System invariants
 - Widget files in Tokyo are the source of truth.
-- Orchestrators pass data unchanged (Bob/Paris/Venice are dumb pipes).
-- Contract violations must fail visibly (no silent fallback).
+- Orchestrators avoid widget-specific logic; they may apply generic, contract-driven transforms (e.g. overlay composition, snapshot patching).
+- Base-config contract violations must fail visibly (no silent fallback). Localization overlays are best-available and must never break runtime or lie about locale.
 
 ---
 
@@ -76,8 +76,8 @@ tokyo/themes/themes.json -> Bob injects theme dropdown
 
 Embed flow (Venice):
 ```
-Browser -> Venice /e/{publicId} -> Venice loads instance (Paris) + widget files (Tokyo)
--> Venice injects window.CK_WIDGET.state -> widget.client.js applyState
+Browser -> Venice /e/{publicId}?locale=... -> Venice loads instance (Paris) + widget files (Tokyo) + optional l10n overlay (Tokyo)
+-> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
 ```
 
 postMessage payload (Bob -> preview):

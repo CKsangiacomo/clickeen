@@ -110,8 +110,8 @@ Behavior / Settings:
 - `seoGeo.enabled` (boolean)
 
 Stage/Pod (layout spacing lives here; no widget-level width/padding):
-- `stage.background` (fill object), `stage.alignment`, `stage.padding*`
-- `pod.background` (fill object), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
+- `stage.background` (fill object), `stage.shadow` (outside shadow channel), `stage.insideShadow.*` (inside shadow channel), `stage.alignment`, `stage.padding*`
+- `pod.background` (fill object), `pod.shadow` (outside shadow channel), `pod.insideShadow.*` (inside shadow channel), `pod.widthMode`, `pod.contentWidth`, `pod.padding*`, `pod.radius*`
 
 ## Rendering Notes
 - Breakpoint: widgets use a single breakpoint at `900px`.

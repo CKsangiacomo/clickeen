@@ -29,6 +29,7 @@ const isBackgroundChild = args.has('--background-child');
 const runTranslate = !args.has('--skip-translate');
 const runVerify = !args.has('--skip-verify');
 const runPublish = args.has('--publish') && !args.has('--skip-publish');
+const strictLatest = args.has('--strict-latest') || (runPublish && !args.has('--best-available'));
 const publishRemote = args.has('--remote');
 const publishLocal = args.has('--local');
 
@@ -151,14 +152,15 @@ async function main() {
   // Verify first and only translate when required.
   // Translation uses SanFrancisco and may be slow/costly, so we keep it demand-driven.
   if (runVerify) {
-    const initialVerify = run(process.execPath, [VERIFY_SCRIPT], { allowFail: true });
+    const verifyArgs = strictLatest ? [VERIFY_SCRIPT, '--strict-latest'] : [VERIFY_SCRIPT];
+    const initialVerify = run(process.execPath, verifyArgs, { allowFail: true });
     if (!initialVerify.ok) {
       if (!runTranslate) {
         console.error('[prague-sync] Prague l10n overlays missing or invalid. Re-run without --skip-translate to generate them.');
         process.exit(1);
       }
       run(process.execPath, [TRANSLATE_SCRIPT]);
-      run(process.execPath, [VERIFY_SCRIPT]);
+      run(process.execPath, verifyArgs);
     }
   } else if (runTranslate) {
     run(process.execPath, [TRANSLATE_SCRIPT]);

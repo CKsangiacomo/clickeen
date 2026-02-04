@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 示例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "了解真实企业如何使用 FAQ 解决问题并促成更多交易。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "解决真实业务问题的常见问题解答"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "从牙科诊所到 DJ 预订，看看像您这样的公司如何把提问变成客户。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "医疗保健：将爽约率降低 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "牙医在患者打电话之前，就解答有关治疗流程、保险和预约安排的常见问题。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "电商：即时处理退货"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "配送政策、尺码指南、退货期限——解答那些会导致放弃购物车的问题。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS：将试用用户转化为付费客户"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "功能疑问、定价顾虑、集成担忧——在异议变成流失机会之前先行化解。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "每个行业都有 FAQ 的机会"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "问题是转化率的无声杀手。无论你是在预约、处理退货，还是解释功能，未被解答的问题都意味着生意流失。Clickeen 的 FAQ 随处可用，能即时以每位客户的语言与他们沟通。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "创意服务：简化预订咨询"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ、摄影师和顾问可全天候 24/7 解答价格、档期和流程问题。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "从疑问到客户"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "实施真正带来成效的常见问题遵循一套经过验证的流程。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "识别最重要的问题类别"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "为受众选择合适的常见问题样式"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "嵌入并基于数据进行优化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "分析支持工单、销售通话和聊天记录，找出被问得最频繁的问题。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "手风琴适合详细回答，卡片适合可快速浏览的信息，列表适合直接的问答。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "监测哪些问题被点击最多，并根据推动转化的因素优化你的回答。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "找到适合您行业的常见问题解答（FAQ）解决方案"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "专为像您这样的企业设计的模板，配备可根据您的需求自适应的 AI。"
+    }
+  ],
+  "v": 1
+}

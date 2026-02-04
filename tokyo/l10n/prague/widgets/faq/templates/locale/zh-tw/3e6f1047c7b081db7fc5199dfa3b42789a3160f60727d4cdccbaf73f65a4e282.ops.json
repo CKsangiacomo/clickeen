@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "3e6f1047c7b081db7fc5199dfa3b42789a3160f60727d4cdccbaf73f65a4e282",
+  "baseUpdatedAt": "2026-02-04T05:27:21.891Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "常見問題範本 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "從令人驚豔的常見問題設計中挑選，吸引目光並將訪客轉化為客戶。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "你的常見問題。用你的方式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "預設就很美。設計上獨一無二，真正屬於你。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.headline",
+      "value": "需要時，就大膽出擊"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-2026-trends.copy.subheadline",
+      "value": "玻璃擬態、液態玻璃、新擬物風——在淺色與深色模式都走在趨勢前沿的視覺風格。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.headline",
+      "value": "優雅隨你所需"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-evergreen-styles.copy.subheadline",
+      "value": "極簡、俐落且現代。永恆風格，始終走在當下。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.headline",
+      "value": "從設計開始，然後做成你的風格。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-freedom.copy.body",
+      "value": "立即擁有理想美感。無論是流行設計或經典不敗款。接著無限自訂——每個角的圓角半徑、每一側的陰影、依角色設定字體樣式，以及響應式斷點。讓範本成為你的專屬標誌。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "幫助訪客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.title",
+      "value": "設計自由，與生俱來。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.subhead",
+      "value": "從版面到質感到字體——客製化就是這麼毫不費力。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.title",
+      "value": "版面，照你的方式"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.title",
+      "value": "外觀控制無上限"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.title",
+      "value": "字體排印的精準掌控"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.0.body",
+      "value": "不只一種，而是多種版面系統。依斷點調整結構。桌機/手機的內距與間距可各自獨立設定。精準控制欄位、堆疊、對齊與重排流動。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.1.body",
+      "value": "每個角落的圓角半徑可單獨調整。邊框可自訂顏色。外陰影與內陰影（可連動或各邊獨立）。支援漸層、圖片或影片背景。全面掌控視覺呈現。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-customization.copy.items.2.body",
+      "value": "六種明確角色（標題、內文、問題、回答、按鈕、區段）。可從 17 種 Google Fonts 中選擇。字重、樣式、尺寸——各角色皆可自訂。動態比例縮放。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "FAQ 小工具的三種版面引擎"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "手風琴式：逐步展開揭示內容。清單：簡潔明瞭。卡片：建立視覺層級。網格或瀑布流。響應式欄位。可細緻控制間距與內距。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "無限制的外觀控制"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "每個角落可獨立設定圓角半徑。可自訂顏色的邊框。外陰影與內陰影（可連動或每側獨立）。漸層、圖片或影片背景。全面掌握視覺呈現。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "字體排印精準度"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "六種明確角色（標題、內文、問題、答案、按鈕、區塊）。可從 17 種 Google Fonts 中選擇。字重、字體樣式、字級——皆可依角色自訂。動態比例縮放。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.headline",
+      "value": "深色模式：精緻且現代"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dark.copy.subheadline",
+      "value": "現代介面在黑暗中更出色。高級質感搭配前衛美學。每個範本皆包含。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "桌面與行動裝置，完美調校"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "你的常見問題（FAQ）小工具可因應每個斷點自適應。每種裝置皆可設定不同的欄數、內距與間距。同一套設計語言，無限種視窗尺寸。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.title",
+      "value": "從範本到完美貼合"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.subhead",
+      "value": "如何建立你的 FAQ 小工具"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.title",
+      "value": "選擇設計範本"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.title",
+      "value": "自訂版面與外觀"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.title",
+      "value": "微調字體排版與響應式呈現"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.0.body",
+      "value": "潮流、經典或極簡。支援亮色與暗色模式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.1.body",
+      "value": "手風琴、列表或卡片。可逐角設定圓角、逐邊設定陰影、漸層與邊框。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-workflow.copy.items.2.body",
+      "value": "六種字體角色、17 種 Google Fonts。在桌機與手機上都完美呈現。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.headline",
+      "value": "建立免費的 FAQ 小工具"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-templates.copy.subheadline",
+      "value": "從設計範本開始或從零打造。完全掌控創意。"
+    }
+  ],
+  "v": 1
+}

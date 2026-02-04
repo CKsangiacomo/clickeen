@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Приклади FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Подивіться, як реальні компанії використовують FAQ, щоб вирішувати проблеми та укладати більше угод."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Поширені запитання, що розв’язують реальні бізнес-проблеми"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Від стоматологічних кабінетів до бронювання DJ — подивіться, як компанії на кшталт вашої перетворюють запитання на клієнтів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Охорона здоров’я: зменште кількість неявок на 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Стоматологи відповідають на поширені запитання про процедури, страхування та запис на прийом — ще до того, як пацієнти зателефонують."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "Ecommerce: миттєво обробляйте повернення"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Політики доставки, розмірні сітки, строки повернення — відповідайте на запитання, що запобігають покинутим кошикам."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Перетворюйте пробні періоди на клієнтів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Запитання про функції, сумніви щодо цін, занепокоєння інтеграцією — знімайте заперечення ще до того, як вони стануть втраченими можливостями."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Кожна галузь має можливості для FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Запитання — це тихий вбивця конверсій. Чи то ви записуєте на прийом, обробляєте повернення або пояснюєте функції — запитання без відповіді означають втрачені продажі. FAQ від Clickeen працюють усюди, миттєво розмовляючи мовою кожного клієнта."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Креативні послуги: оптимізуйте запити на бронювання"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ, фотографи та консультанти відповідають на запитання про ціни, доступність і процес 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Від запитань до клієнтів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Впровадження FAQ, які справді дають результат, відбувається за перевіреним процесом."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Визначте найбільші категорії запитань"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Оберіть правильний формат FAQ для вашої аудиторії"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Вбудуйте та оптимізуйте на основі даних"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Проаналізуйте звернення до підтримки, дзвінки продажів і журнали чату, щоб знайти запитання, які ставлять найчастіше."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "«Акордеон» для детальних відповідей, картки для швидкого перегляду, списки для простих запитань і відповідей."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Відстежуйте, на які запитання клікають найчастіше, і вдосконалюйте відповіді на основі того, що підвищує конверсії."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Знайдіть FAQ-рішення для вашої галузі"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Шаблони, створені спеціально для бізнесів на кшталт вашого, з ШІ, який адаптується до ваших потреб."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d83b4036d7a0bcac6310d5bfd2bc0b96db54f71371b849cb5aac64713eabee8a",
+  "baseUpdatedAt": "2026-02-04T05:36:55.804Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemple de numărătoare inversă - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Exemple de cronometre cu numărătoare inversă pentru lansări, vânzări și evenimente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemple de numărătoare inversă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vezi cum folosesc echipele numărătorile inverse pentru lansări, reduceri și evenimente."
+    }
+  ],
+  "v": 1
+}

@@ -63,6 +63,11 @@
     return Math.min(max, Math.max(min, n));
   }
 
+  function forceInset(shadow, inset) {
+    if (!shadow || typeof shadow !== 'object' || Array.isArray(shadow)) return shadow;
+    return { ...shadow, inset };
+  }
+
   function computeShadowBoxShadow(shadow) {
     if (!shadow || typeof shadow !== 'object') return 'none';
     if (shadow.enabled !== true) return 'none';
@@ -76,6 +81,58 @@
     const alphaMix = 100 - alpha;
     const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
     return `${shadow.inset === true ? 'inset ' : ''}${x}px ${y}px ${blur}px ${spread}px ${mix}`;
+  }
+
+  function computeInsideFadeSizePx(side, shadow) {
+    if (!shadow || typeof shadow !== 'object') return 0;
+    const axis = side === 'left' || side === 'right' ? toNumber(shadow.x, 0) : toNumber(shadow.y, 0);
+    const blur = toNumber(shadow.blur, 0);
+    const spread = toNumber(shadow.spread, 0);
+    return clampNumber(Math.abs(axis) + blur + spread, 0, 400);
+  }
+
+  function computeInsideFadeLayer(side, shadow) {
+    if (!shadow || typeof shadow !== 'object') return null;
+    if (shadow.enabled !== true) return null;
+    const alpha = clampNumber(shadow.alpha, 0, 100);
+    if (alpha <= 0) return null;
+    const color = typeof shadow.color === 'string' && shadow.color.trim() ? shadow.color.trim() : '#000000';
+    const alphaMix = 100 - alpha;
+    const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
+    const sizePx = computeInsideFadeSizePx(side, shadow);
+    if (sizePx <= 0) return null;
+
+    if (side === 'left') {
+      return `linear-gradient(to right, ${mix}, transparent) left / ${sizePx}px 100% no-repeat`;
+    }
+    if (side === 'right') {
+      return `linear-gradient(to left, ${mix}, transparent) right / ${sizePx}px 100% no-repeat`;
+    }
+    if (side === 'top') {
+      return `linear-gradient(to bottom, ${mix}, transparent) top / 100% ${sizePx}px no-repeat`;
+    }
+    if (side === 'bottom') {
+      return `linear-gradient(to top, ${mix}, transparent) bottom / 100% ${sizePx}px no-repeat`;
+    }
+    return null;
+  }
+
+  function computeInsideFadeBackground(cfg) {
+    if (!cfg || typeof cfg !== 'object') return 'none';
+
+    const linked = cfg.linked !== false;
+    const resolved = linked
+      ? { top: cfg.all, right: cfg.all, bottom: cfg.all, left: cfg.all }
+      : { top: cfg.top, right: cfg.right, bottom: cfg.bottom, left: cfg.left };
+
+    const layers = [
+      computeInsideFadeLayer('top', resolved.top),
+      computeInsideFadeLayer('right', resolved.right),
+      computeInsideFadeLayer('bottom', resolved.bottom),
+      computeInsideFadeLayer('left', resolved.left),
+    ].filter(Boolean);
+
+    return layers.length ? layers.join(', ') : 'none';
   }
 
   function applyPaddingVars(el, key, pad) {
@@ -109,6 +166,38 @@
       return `url("${v}") center center / cover no-repeat, linear-gradient(var(--color-system-white), var(--color-system-white))`;
     }
     return v;
+  }
+
+  function ensureInsideShadowLayer(container) {
+    const existing = container.querySelector(':scope > .ck-inside-shadow-layer');
+    if (existing instanceof HTMLElement) return existing;
+    const layer = document.createElement('div');
+    layer.className = 'ck-inside-shadow-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.position = 'absolute';
+    layer.style.inset = '0';
+    layer.style.pointerEvents = 'none';
+    layer.style.borderRadius = 'inherit';
+    layer.style.zIndex = '1';
+    container.appendChild(layer);
+    return layer;
+  }
+
+  function applyInsideShadowLayer(container, shadow, opts) {
+    if (!(container instanceof HTMLElement)) return;
+    container.style.position = 'relative';
+    container.style.isolation = 'isolate';
+
+    const layer = ensureInsideShadowLayer(container);
+    const next = typeof shadow === 'string' && shadow.trim() ? shadow.trim() : 'none';
+    layer.style.background = next;
+    layer.hidden = next === 'none';
+
+    const contentEl = opts && opts.contentEl instanceof HTMLElement ? opts.contentEl : null;
+    if (contentEl) {
+      contentEl.style.position = 'relative';
+      contentEl.style.zIndex = '2';
+    }
   }
 
   function postResize(stageEl) {
@@ -152,10 +241,12 @@
       throw new Error('[CKStagePod] Missing .stage/.pod wrappers for scope');
     }
 
-    stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
     if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
       window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
     }
+    stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
+    stageEl.style.setProperty('--stage-shadow', computeShadowBoxShadow(forceInset(stageCfg.shadow, false)));
+    applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), { contentEl: podEl });
     const stagePads = resolvePaddingV2(stageCfg);
     applyPaddingVars(stageEl, 'stage-pad-desktop', stagePads.desktop);
     applyPaddingVars(stageEl, 'stage-pad-mobile', stagePads.mobile);
@@ -186,7 +277,8 @@
 
     const radii = resolveRadius(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
-    podEl.style.setProperty('--pod-shadow', computeShadowBoxShadow(podCfg.shadow));
+    podEl.style.setProperty('--pod-shadow', computeShadowBoxShadow(forceInset(podCfg.shadow, false)));
+    applyInsideShadowLayer(podEl, computeInsideFadeBackground(podCfg.insideShadow), { contentEl: scopeEl });
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);

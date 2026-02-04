@@ -5,7 +5,7 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "title": "Countdown Widget - Clickeen",
+        "title": "Countdown widget - Clickeen",
         "description": "Create urgency with customizable countdown timers. Launch, sell, and announce with confidence."
       }
     },
@@ -14,7 +14,7 @@
       "type": "hero",
       "visual": true,
       "copy": {
-        "headline": "Countdown Timer Widget",
+        "headline": "Countdown timer widget",
         "subheadline": "Create urgency and drive action with fast, flexible countdowns."
       }
     },
@@ -31,7 +31,7 @@
       "type": "minibob",
       "copy": {
         "heading": "Try it live",
-        "subhead": "Edit a demo instance in Minibob. Publish when you're ready."
+        "subhead": "Edit a demo instance in minibob. Publish when you're ready."
       }
     },
     {
@@ -39,7 +39,7 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Countdown Timer Widget",
+        "headline": "Countdown timer widget",
         "subheadline": "Create urgency and drive action with customizable countdown timers."
       }
     },
@@ -48,7 +48,7 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Flexible Timer Modes",
+        "headline": "Flexible timer modes",
         "subheadline": "Date-based, personal, or number counters for any scenario."
       }
     },
@@ -65,7 +65,7 @@
       "type": "split",
       "layout": "stacked",
       "copy": {
-        "headline": "Easy Customization",
+        "headline": "Easy customization",
         "subheadline": "Adjust appearance, layout, and actions to fit your brand."
       }
     },
@@ -96,7 +96,7 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Boost Conversions",
+        "headline": "Boost conversions",
         "subheadline": "Encourage immediate action with time-sensitive offers."
       }
     },
@@ -105,19 +105,19 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "SEO and GEO Optimized",
+        "headline": "SEO and GEO optimized",
         "subheadline": "Built-in schema and localization support."
       }
     },
     {
       "id": "cta",
-      "type": "cta",
+      "type": "cta-bottom-block",
       "copy": {
-        "headline": "Create Urgency, Drive Sales",
+        "headline": "Create urgency, drive sales",
         "subheadline": "Powerful countdown timers that convert visitors into customers."
       },
       "primaryCta": {
-        "label": "Get Started",
+        "label": "Get started",
         "href": "/signup"
       }
     }

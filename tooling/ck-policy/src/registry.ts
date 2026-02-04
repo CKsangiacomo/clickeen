@@ -11,12 +11,14 @@ export const CAPABILITY_KEYS = [
   'branding.remove',
   'budget.copilot.turns',
   'budget.uploads.count',
+  'budget.uploads.bytes',
   'budget.personalization.runs',
   'budget.personalization.website.crawls',
   'budget.snapshots.regens',
   'budget.l10n.publishes',
   'views.monthly.max',
   'instances.published.max',
+  'widgets.types.max',
   'uploads.size.max',
   'cap.group.items.small.max',
   'cap.group.items.medium.max',
@@ -36,6 +38,7 @@ export const CAP_KEYS = [
   'personalization.sources.website.depth.max',
   'views.monthly.max',
   'instances.published.max',
+  'widgets.types.max',
   'uploads.size.max',
   'cap.group.items.small.max',
   'cap.group.items.medium.max',
@@ -46,6 +49,7 @@ export type CapKey = (typeof CAP_KEYS)[number];
 export const BUDGET_KEYS = [
   'budget.copilot.turns',
   'budget.uploads.count',
+  'budget.uploads.bytes',
   'budget.personalization.runs',
   'budget.personalization.website.crawls',
   'budget.snapshots.regens',
@@ -89,6 +93,10 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
     label: 'Uploads',
     description: 'Monthly uploads budget (count).',
   },
+  'budget.uploads.bytes': {
+    label: 'Upload bytes',
+    description: 'Monthly uploads budget (bytes).',
+  },
   'budget.personalization.runs': {
     label: 'Personalization runs',
     description: 'Monthly personalization runs budget.',
@@ -112,6 +120,10 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
   'instances.published.max': {
     label: 'Published instances',
     description: 'Maximum published instances.',
+  },
+  'widgets.types.max': {
+    label: 'Widget types',
+    description: 'Maximum distinct widget types per workspace.',
   },
   'uploads.size.max': {
     label: 'Upload size max',

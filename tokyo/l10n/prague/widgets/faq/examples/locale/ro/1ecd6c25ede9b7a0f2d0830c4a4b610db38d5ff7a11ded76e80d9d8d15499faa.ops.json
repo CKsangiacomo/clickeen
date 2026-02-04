@@ -1,0 +1,127 @@
+{
+  "baseFingerprint": "1ecd6c25ede9b7a0f2d0830c4a4b610db38d5ff7a11ded76e80d9d8d15499faa",
+  "baseUpdatedAt": "2026-02-03T03:58:02.319Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemple de Întrebări frecvente - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vezi cum afacerile reale folosesc Întrebările frecvente pentru a rezolva probleme și a încheia mai multe vânzări."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Întrebări frecvente care rezolvă probleme reale de business"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "De la cabinete stomatologice la rezervări de DJ, vezi cum companii ca a ta transformă întrebările în clienți."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.headline",
+      "value": "Sănătate: Reduceți neprezentările cu 40%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-dentists.copy.subheadline",
+      "value": "Medicii stomatologi răspund la întrebări frecvente despre proceduri, asigurare și programări—înainte ca pacienții să sune."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.headline",
+      "value": "Ecommerce: Gestionează retururile instant"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ecommerce.copy.subheadline",
+      "value": "Politici de livrare, ghiduri de mărimi, perioade de retur—răspunde la întrebările care previn abandonarea coșului de cumpărături."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.headline",
+      "value": "SaaS: Transformă perioadele de probă în clienți"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-saas.copy.subheadline",
+      "value": "Întrebări despre funcționalități, îndoieli privind prețurile, preocupări legate de integrare — răspunde obiecțiilor înainte să devină oportunități pierdute."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.headline",
+      "value": "Fiecare industrie are oportunități pentru întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-industries.copy.body",
+      "value": "Întrebările sunt ucigașul tăcut al conversiilor. Fie că programezi întâlniri, procesezi retururi sau explici funcționalități, întrebările fără răspuns înseamnă afaceri pierdute. Întrebările frecvente Clickeen funcționează peste tot, vorbind instant în limba fiecărui client."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.headline",
+      "value": "Servicii creative: eficientizați solicitările de rezervare"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-djs.copy.subheadline",
+      "value": "DJ-ii, fotografii și consultanții răspund 24/7 la întrebări despre prețuri, disponibilitate și proces."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "De la întrebări la clienți"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Implementarea unor FAQ-uri care chiar generează rezultate urmează un proces dovedit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Identifică cele mai importante categorii de întrebări"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "Alege stilul potrivit de FAQ pentru publicul tău"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Integrează și optimizează pe baza datelor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "Analizează tichetele de suport, apelurile de vânzări și jurnalele de chat pentru a găsi întrebările adresate cel mai frecvent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Accordion pentru răspunsuri detaliate, carduri pentru informații ușor de parcurs, liste pentru întrebări și răspunsuri directe."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "Monitorizează care întrebări sunt accesate cel mai des și rafinează răspunsurile în funcție de ce generează conversii."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Găsește soluția de Întrebări frecvente potrivită pentru industria ta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Șabloane concepute special pentru afaceri ca a ta, cu IA care se adaptează nevoilor tale."
+    }
+  ],
+  "v": 1
+}

@@ -24,10 +24,81 @@ import {
 } from '@dieter/components';
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, getTypographySampleText } from './data/typography';
-import { CAPABILITY_META, getEntitlementsMatrix } from '@clickeen/ck-policy';
+import {
+  CAPABILITY_META,
+  labelAiModel,
+  listAiModelsForUi,
+  listAiProviderUi,
+  resolveAiDefaultProvider,
+  resolveAiProfile,
+  type AiProfile,
+  type AiProvider,
+  getEntitlementsMatrix,
+  type PolicyProfile,
+} from '@clickeen/ck-policy';
 
-window.__CK_ENTITLEMENTS__ = getEntitlementsMatrix();
+const entitlements = getEntitlementsMatrix();
+
+window.__CK_ENTITLEMENTS__ = entitlements;
 window.__CK_ENTITLEMENTS_META__ = CAPABILITY_META;
+
+const aiProviderUi = listAiProviderUi();
+const aiAccessByTier: Partial<
+  Record<
+    PolicyProfile,
+    {
+      policyProfile: PolicyProfile;
+      aiProfile: AiProfile;
+      defaultProvider: AiProvider;
+      defaultProviderLabel: string;
+      providers: Array<{
+        provider: AiProvider;
+        label: string;
+        defaultModel: string;
+        defaultModelLabel: string;
+        models: Array<{ model: string; label: string }>;
+      }>;
+    }
+  >
+> = {};
+
+const allProviders = aiProviderUi.map((entry) => entry.provider);
+
+for (const policyProfile of entitlements.tiers) {
+  const aiProfile = resolveAiProfile({ policyProfile, taskClass: 'copilot.widget.editor' });
+  const modelsByProvider = listAiModelsForUi({ profile: aiProfile, allowedProviders: allProviders }) as Partial<
+    Record<AiProvider, { defaultModel: string; models: Array<{ model: string; label: string }> }>
+  >;
+
+  const allowedProviders = aiProviderUi
+    .map((entry) => entry.provider)
+    .filter((provider) => Boolean(modelsByProvider?.[provider]));
+
+  const defaultProvider = resolveAiDefaultProvider(aiProfile, allowedProviders);
+  const providers = aiProviderUi
+    .filter((entry) => Boolean(modelsByProvider?.[entry.provider]))
+    .map((entry) => {
+      const providerData = modelsByProvider?.[entry.provider];
+      const defaultModel = providerData?.defaultModel ?? '';
+      return {
+        provider: entry.provider,
+        label: entry.label,
+        defaultModel,
+        defaultModelLabel: labelAiModel(defaultModel),
+        models: Array.isArray(providerData?.models) ? providerData.models : [],
+      };
+    });
+
+  aiAccessByTier[policyProfile] = {
+    policyProfile,
+    aiProfile,
+    defaultProvider,
+    defaultProviderLabel: providers.find((provider) => provider.provider === defaultProvider)?.label ?? defaultProvider,
+    providers,
+  };
+}
+
+window.__CK_AI_ACCESS__ = { providers: aiProviderUi, byTier: aiAccessByTier };
 
 const appRoot = document.getElementById('app');
 if (!appRoot) {

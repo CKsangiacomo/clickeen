@@ -74,7 +74,10 @@ Venice must **never** serve unpublished instances.
 3. Apply Tokyo `l10n` overlay (if present) from deterministic overlay paths:
    - Overlay must be set-only ops.
    - Overlay ops are already merged (agent ops + per-field user overrides).
-   - Overlay must include `baseFingerprint` and match `computeL10nFingerprint(instance.config, allowlist)` (stale guard).
+   - Overlay must include `baseFingerprint` (required).
+   - Venice applies **best-available** locale overlays:
+     - **fresh:** `overlay.baseFingerprint` matches the current base fingerprint → apply full overlay
+     - **stale:** fingerprint mismatch → may apply overlay ops selectively when safe using `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (otherwise treat as base)
    - The allowlist comes from `tokyo/widgets/{widgetType}/localization.json` (translatable paths only).
 4. Return HTML that:
    - sets `<base href="/widgets/{widgetType}/">` so relative asset links resolve under Venice
@@ -88,7 +91,9 @@ window.CK_WIDGET = {
   status: "published", // or "unpublished"
   theme: "light",      // or "dark"
   device: "desktop",   // or "mobile"
-  state: { /* instance config */ }
+  locale: "en",
+  state: { /* instance config */ },
+  enforcement: null,
 };
 ```
 
@@ -123,14 +128,22 @@ Response includes (as implemented today):
 
 **Dynamic fallback:** Venice forwards `Authorization` and `X-Embed-Token` headers to Paris and sets `Vary: Authorization, X-Embed-Token`. When snapshot is skipped/missing/invalid, Venice emits:
 - `X-Venice-Render-Mode: dynamic`
-- `X-Venice-Snapshot-Reason: <reason>` (e.g. `SKIP_TS`, `SKIP_AUTH`, `SKIP_BYPASS`, `MISS_INDEX`, `MISS_LOCALE`, `INVALID_JSON`)
+- `X-Venice-Snapshot-Reason: <reason>` (e.g. `SKIP_TS`, `SKIP_AUTH`, `SKIP_BYPASS`, `INDEX_NOT_FOUND`, `INDEX_INVALID`, `LOCALE_MISSING`, `ARTIFACT_NOT_FOUND`, `SNAPSHOT_INVALID`)
 
 **Meta-only mode (shipped):**
 - `GET /r/:publicId?meta=1` returns a minimal payload used by iframe++ SEO/GEO injection:
-  - `{ publicId, status, widgetType, locale, schemaJsonLd, excerptHtml }`
+  - `{ publicId, status, widgetType, locale, schemaJsonLd, excerptHtml }` (`locale` is `effectiveLocale`; headers provide requested/resolved/effective)
 
 **Locale resolution (shipped):**
-- Uses `?locale=<token>` when present; otherwise defaults to `en`.
+- `requestedLocale`: from `?locale=<token>` when present; otherwise defaults to `en`.
+- `resolvedLocale`: best-supported match for `requestedLocale` (e.g. `fr-ca` → `fr`). `geoTargets` are used only for same-language variant selection.
+- `effectiveLocale`: the locale actually applied to the response. If overlays cannot be applied, Venice falls back to base and sets `effectiveLocale=en` (no lying via HTML `lang` / `window.CK_WIDGET.locale`).
+
+**Localization response headers (shipped):**
+- `X-Ck-L10n-Requested-Locale`
+- `X-Ck-L10n-Resolved-Locale`
+- `X-Ck-L10n-Effective-Locale`
+- `X-Ck-L10n-Status` (`base | fresh | stale`)
 
 ### Tokyo Asset Proxy Routes (Shipped)
 
@@ -179,7 +192,7 @@ Attributes can live on the placeholder (recommended) or on the script tag (legac
 - `data-click-selector` (CSS selector, used when `data-trigger="click"`)
 - `data-force-shadow` (`true` to use `/r/:publicId` shadow render instead of iframe)
 - `data-ck-optimization` (`seo-geo` to enable iframe++ SEO/GEO injection: host JSON‑LD + excerpt; does not change UI mode)
-- `data-locale` (preferred locale override; otherwise uses `navigator.language`)
+- `data-locale` (requested locale override; otherwise uses `navigator.language`. Venice may return a different effective locale; see `X-Ck-L10n-*` headers.)
 - `data-ts` (preferred cache-bust token; appended to `/e` and `/r` requests)
 - `data-cache-bust` (`true` to add `?ts=` cache busting; legacy)
 - `data-theme` (`light` | `dark`)

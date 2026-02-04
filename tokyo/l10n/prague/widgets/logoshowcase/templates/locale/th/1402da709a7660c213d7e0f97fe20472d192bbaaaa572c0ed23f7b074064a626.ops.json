@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "1402da709a7660c213d7e0f97fe20472d192bbaaaa572c0ed23f7b074064a626",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "เทมเพลตแสดงโลโก้ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "เริ่มต้นจากเลย์เอาต์ที่ออกแบบอย่างประณีต แล้วปรับแต่งการแสดงโลโก้ของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "เทมเพลตโชว์เคสโลโก้"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "เริ่มต้นด้วยเลย์เอาต์ที่ออกแบบมาอย่างดี -- แล้วปรับให้เป็นสไตล์ของคุณเอง"
+    }
+  ],
+  "v": 1
+}

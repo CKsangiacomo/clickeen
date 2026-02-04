@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "141ec2ccd3097d0a5ff351e4a42f00d8f6062b3462eb6166ff3a83a85f7d1b1c",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "লোগো শোকেসের মূল্য নির্ধারণ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "লোগো শোকেস উইজেটের জন্য সহজ মূল্য নির্ধারণ। বিনামূল্যে শুরু করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "লোগো শোকেসের মূল্য নির্ধারণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "বিনামূল্যে শুরু করুন। আরও উইজেট এবং কোনো ব্র্যান্ডিং না চাইলে আপগ্রেড করুন।"
+    }
+  ],
+  "v": 1
+}

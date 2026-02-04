@@ -4,7 +4,7 @@ import { parisJson, getParisBase } from '@venice/lib/paris';
 import { tokyoFetch, getTokyoBase } from '@venice/lib/tokyo';
 import { loadRenderSnapshot } from '@venice/lib/render-snapshot';
 import { escapeHtml } from '@venice/lib/html';
-import { applyTokyoInstanceOverlay } from '@venice/lib/l10n';
+import { applyTokyoInstanceOverlayWithMeta } from '@venice/lib/l10n';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -127,6 +127,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
         const patched = patchSnapshotHtml(html, { theme, device, requestedLocale: snapshotLocale });
         if (!patched) throw new Error('SNAPSHOT_PATCH_FAILED');
         html = patched.html;
+        headers['X-Ck-L10n-Requested-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Resolved-Locale'] = snapshotLocale;
+        headers['X-Ck-L10n-Effective-Locale'] = patched.effectiveLocale;
+        headers['X-Ck-L10n-Status'] = patched.effectiveLocale === 'en' ? 'base' : 'fresh';
       } catch {
         snapshotReason = 'SNAPSHOT_INVALID';
       }
@@ -197,12 +201,34 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     return new NextResponse(html, { status: 404, headers });
   }
   const nonce = crypto.randomUUID();
+  const isFrozenRender = ts == null && Boolean(enforcementContext && enforcementContext.mode === 'frozen');
+  const widgetType = instance.widgetType ? String(instance.widgetType) : '';
+  const overlayResult =
+    isFrozenRender || !widgetType
+      ? {
+          config: instance.config,
+          meta: { requestedLocale: locale, resolvedLocale: locale, effectiveLocale: 'en', status: 'base' as const },
+        }
+      : await applyTokyoInstanceOverlayWithMeta({
+          publicId: instance.publicId,
+          locale,
+          country,
+          baseUpdatedAt: instance.updatedAt ?? null,
+          widgetType,
+          config: instance.config,
+        });
+
+  headers['X-Ck-L10n-Requested-Locale'] = overlayResult.meta.requestedLocale;
+  headers['X-Ck-L10n-Resolved-Locale'] = overlayResult.meta.resolvedLocale;
+  headers['X-Ck-L10n-Effective-Locale'] = overlayResult.meta.effectiveLocale;
+  headers['X-Ck-L10n-Status'] = overlayResult.meta.status;
+
   const responseHtml = await renderInstancePage({
     instance,
     theme,
     device,
-    locale,
-    country,
+    localizedState: overlayResult.config,
+    effectiveLocale: overlayResult.meta.effectiveLocale,
     nonce,
     ts,
     enforcement: enforcementContext,
@@ -295,8 +321,8 @@ async function renderInstancePage({
   instance,
   theme,
   device,
-  locale,
-  country,
+  localizedState,
+  effectiveLocale,
   nonce,
   ts,
   enforcement,
@@ -304,8 +330,8 @@ async function renderInstancePage({
   instance: InstanceResponse;
   theme: string;
   device: string;
-  locale: string;
-  country?: string | null;
+  localizedState: Record<string, unknown>;
+  effectiveLocale: string;
   nonce: string;
   ts: string | null;
   enforcement: null | { mode: 'frozen'; frozenAt: string; resetAt: string };
@@ -333,20 +359,6 @@ async function renderInstancePage({
   const stylesheetLinks = extractStylesheetLinks(widgetHtml);
 
   const isFrozenRequest = ts == null && Boolean(enforcement && enforcement.mode === 'frozen');
-
-  const effectiveLocale = isFrozenRequest ? 'en' : locale;
-
-  const localizedState = isFrozenRequest
-    ? instance.config
-    : await applyTokyoInstanceOverlay({
-        publicId: instance.publicId,
-        locale: effectiveLocale,
-        country,
-        baseUpdatedAt: instance.updatedAt ?? null,
-        widgetType,
-        config: instance.config,
-        explicitLocale: true,
-      });
 
   const behavior = (localizedState as any)?.behavior;
   if (behavior && typeof behavior === 'object' && !Array.isArray(behavior)) {

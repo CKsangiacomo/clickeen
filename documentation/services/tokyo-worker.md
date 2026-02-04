@@ -18,7 +18,7 @@
 - `POST /renders/instances/:publicId/snapshot` (dev auth; manually generate/delete render snapshot artifacts)
 
 ## Dependencies
-- Supabase (service role) for `widget_instance_overlays` + `l10n_publish_state`
+- Supabase (service role) for `widget_instance_overlays`, `l10n_publish_state`, `l10n_base_snapshots`
 - Tokyo R2 bucket for artifacts
 - Paris for queueing publish jobs
 - Venice for render snapshot generation (Tokyo-worker fetches Venice dynamic endpoints; Venice remains the only renderer)
@@ -33,6 +33,7 @@
 - Reads `widget_instance_overlays` from Supabase (layered).
 - Merges `ops + user_ops` for layer=user (user_ops applied last).
 - Writes `tokyo/l10n/instances/<publicId>/<layer>/<layerKey>/<baseFingerprint>.ops.json`.
+- Writes `tokyo/l10n/instances/<publicId>/bases/<baseFingerprint>.snapshot.json` (allowlist snapshot; used for safe stale apply).
 - Writes `tokyo/l10n/instances/<publicId>/index.json` with layer keys (hybrid index).
 - Marks publish state clean in `l10n_publish_state`.
 - Records versions in `l10n_overlay_versions` and prunes older versions per tier.
@@ -67,6 +68,7 @@ Generation:
   - `/r/:publicId?locale=<locale>`
   - `/r/:publicId?locale=<locale>&meta=1`
   - Requests include `X-Ck-Snapshot-Bypass: 1` so Venice **never** serves the old snapshot while generating the next snapshot.
+- Snapshot safety rule: Tokyo-worker only updates the per-locale snapshot entry when Venice returns `X-Ck-L10n-Effective-Locale` matching the requested locale; otherwise it removes that locale entry from `renders/.../index.json` to avoid wrong-language cached artifacts.
 
 ## Links
 - Tokyo: `documentation/services/tokyo.md`

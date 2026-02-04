@@ -5,15 +5,15 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "title": "Countdown Pricing - Clickeen",
-        "description": "Pricing for the Countdown widget."
+        "title": "Countdown pricing - Clickeen",
+        "description": "Pricing for the countdown widget."
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Countdown Pricing",
+        "headline": "Countdown pricing",
         "subheadline": "Included with every Clickeen plan."
       }
     }

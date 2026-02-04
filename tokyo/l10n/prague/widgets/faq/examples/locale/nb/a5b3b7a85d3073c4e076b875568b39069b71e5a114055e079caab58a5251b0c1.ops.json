@@ -1,0 +1,137 @@
+{
+  "baseFingerprint": "a5b3b7a85d3073c4e076b875568b39069b71e5a114055e079caab58a5251b0c1",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Eksempler på ofte stilte spørsmål – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Hoteller, restauranter og turoperatører bruker Clickeen for å betjene internasjonale kunder på 29 språk umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Eksempler på ofte stilte spørsmål for hoteller, restauranter, turoperatører og mer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Gi Ombra nettadressen til nettstedet ditt. Få en FAQ tilpasset virksomheten din på 29 språk – umiddelbart. Ingen oversetter nødvendig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.headline",
+      "value": "Hoteller i Barcelona: Gjester fra 50+ land spør «Når er innsjekk?» på 15 språk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-hotels.copy.subheadline",
+      "value": "Gi Ombra hotellnettstedet ditt. FAQ tilpasset eiendommen din på 29 språk – umiddelbart. Reduser henvendelser til resepsjonen med 60 %, forbedre gjestetilfredshetsscorer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.headline",
+      "value": "Restauranter i Paris: Turister stiller diettspørsmål på fransk, engelsk, spansk, kinesisk, japansk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-restaurants.copy.subheadline",
+      "value": "Meny-FAQ-ene dine på 29 språk – umiddelbart. Ingen oversetter, ingen manuelt arbeid. Forbedre bordomsetningen, reduser avbrytelser for servitørene."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.headline",
+      "value": "Airbnb-verter i Toscana: Innsjekkingsinstruksjoner, WiFi-passord, lokale tips på gjestens språk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-airbnb.copy.subheadline",
+      "value": "Gi Ombra annonse-URL-en din. Husregler på 29 språk med én gang. 5-stjerners anmeldelser fra internasjonale gjester."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.headline",
+      "value": "Internasjonale kunder venter ikke på oversettelser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-international.copy.body",
+      "value": "Et hotell i Roma mister bestillinger når tyske turister ikke finner innsjekkingsinformasjon. En restaurant i Tokyo mister reservasjoner når engelsktalende ikke finner åpningstider. Hvert ubesvart spørsmål på deres språk er en tapt kunde. Ombra løser dette: nettsteds-URL → personlig tilpasset FAQ på 29 språk, umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.headline",
+      "value": "Turoperatører i Thailand: Bestilling, sikkerhet og spørsmål og svar om reiseruter for internasjonale reisende"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-tours.copy.subheadline",
+      "value": "Gi Ombra nettstedet til turselskapet ditt. FAQ på 29 språk umiddelbart. Reduser e-postsupport med 70 % og øk konverteringen fra internasjonale markeder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.headline",
+      "value": "Museer i Roma: utstillingsinfo, billetter og åpningstider for besøkende fra hele verden"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-museums.copy.subheadline",
+      "value": "FAQ for besøkende på 29 språk – umiddelbart. Forbedre besøksopplevelsen og reduser henvendelser til informasjonsskranken med 50%."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.title",
+      "value": "Fra internasjonal forvirring til umiddelbar klarhet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.subhead",
+      "value": "Slik bruker virksomheter i hospitality-bransjen Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.title",
+      "value": "Gi Ombra nettadressen til nettstedet ditt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.title",
+      "value": "FAQ tilpasset din virksomhet på 29 språk – umiddelbart"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.title",
+      "value": "Bygg inn og se internasjonale henvendelser falle"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.0.body",
+      "value": "AI leser forretningskonteksten din – beliggenhet, tjenester, retningslinjer. Forstår dine spesifikke behov automatisk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.1.body",
+      "value": "Ingen oversetter nødvendig. Ingen manuelt arbeid. Innhold tilpasset virksomheten din OG tilgjengelig globalt, umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-implementation.copy.items.2.body",
+      "value": "3-linjers skript. Fungerer overalt. Gjester, turister og reisende får svar på sitt språk før de spør."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.headline",
+      "value": "Få FAQ-en din på 29 språk – umiddelbart"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-examples.copy.subheadline",
+      "value": "Gi Ombra nettstedsadressen din. Tilpasset virksomheten din, tilgjengelig globalt. Ingen oversetter nødvendig."
+    }
+  ],
+  "v": 1
+}

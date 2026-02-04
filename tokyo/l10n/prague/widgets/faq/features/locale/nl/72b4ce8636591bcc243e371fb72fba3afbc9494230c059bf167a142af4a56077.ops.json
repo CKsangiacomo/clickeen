@@ -1,0 +1,162 @@
+{
+  "baseFingerprint": "72b4ce8636591bcc243e371fb72fba3afbc9494230c059bf167a142af4a56077",
+  "baseUpdatedAt": "2026-02-04T03:19:32.408Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-functies - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Alles wat je nodig hebt om wereldwijd werkende, AI-aangedreven FAQ’s te lanceren en ze viraal te laten groeien."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Waarom FAQ Widget beter is dan Elfsight, TypeForm en maatwerk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vanaf nul gebouwd voor AI. Werkt wereldwijd. Groeit viraal. Één FAQ, oneindige mogelijkheden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.headline",
+      "value": "AI-bewerking: Beschrijf het, klaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai-editing.copy.subheadline",
+      "value": "Zeg in gewone taal wat je wilt. 'Maak de vragen wat informeler' of 'Voeg een sectie over prijzen toe.' AI begrijpt het en voert het meteen uit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Wereldwijd direct: elke taal, nu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Geografie is een parameter, geen project. Voeg Spaans, Japans of Arabisch met één klik toe. Geen handmatige vertaling, geen vertragingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Overal samenstelbaar: één FAQ, oneindig veel contexten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Dezelfde FAQ werkt op de website, in e-mails, landingspagina's en advertenties. Eén bron, oneindig veel mogelijkheden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.title",
+      "value": "Waarom Clickeen alles verandert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.title",
+      "value": "Direct gepersonaliseerde lokalisatie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.title",
+      "value": "Templates OF pixel-perfect maatwerk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.title",
+      "value": "Composabele architectuur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.0.body",
+      "value": "Website-URL → gepersonaliseerde content direct in 29 talen. Geen handmatige vertaling, geen vertaalkosten. AI begrijpt je bedrijfscontext."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.1.body",
+      "value": "Begin met een zorgvuldig samengesteld template OF bepaal alles zelf—jouw keuze, totale vrijheid. Geen compromissen, geen beperkingen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-differentiators.copy.items.2.body",
+      "value": "Eén FAQ werkt overal: website, e-mail, landingspagina’s, advertenties. Dezelfde content, oneindig veel contexten. Geen herbouw voor elk kanaal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.headline",
+      "value": "Gebouwd voor AI, beheerd door AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang-ecosystem.copy.body",
+      "value": "Clickeen is niet zomaar een andere FAQ-builder—het is het eerste product dat vanaf dag één is ontworpen voor AI-bediening. Terwijl concurrenten AI-functies achteraf toevoegen, hebben wij een architectuur gebouwd die AI-agents autonoom kunnen begrijpen, aanpassen en optimaliseren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.title",
+      "value": "Hoe het AI-ecosysteem van Clickeen werkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.subhead",
+      "value": "Een compleet platform dat met elke interactie slimmer wordt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.title",
+      "value": "AI begrijpt je intentie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.title",
+      "value": "Standaard wereldwijd inzetbaar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.title",
+      "value": "Continu leren en verbeteren"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.title",
+      "value": "Automatisering van virale distributie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.0.body",
+      "value": "Beschrijf wijzigingen op een natuurlijke manier. 'Maak het professioneler' of 'Voeg urgentie toe aan de CTA.' AI voert het perfect uit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.1.body",
+      "value": "AI regelt lokalisatie, support en marketing in alle markten tegelijk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.2.body",
+      "value": "Elke gebruikersinteractie leert het AI-systeem, waardoor alle FAQ's na verloop van tijd slimmer worden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-ecosystem.copy.items.3.body",
+      "value": "Gratis FAQ's worden marketingkanalen die automatisch acquisitie stimuleren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.headline",
+      "value": "Ervaar de toekomst van FAQ's"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta-features.copy.subheadline",
+      "value": "Het platform dat met elke interactie slimmer wordt. Gebouwd voor het AI-tijdperk."
+    }
+  ],
+  "v": 1
+}

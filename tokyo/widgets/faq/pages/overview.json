@@ -6,7 +6,7 @@
       "type": "page-meta",
       "copy": {
         "description": "Build a fast, beautiful FAQ widget. Customize, publish, and localize in minutes.",
-        "title": "FAQ Widget - Clickeen"
+        "title": "FAQ widget - Clickeen"
       }
     },
     {
@@ -17,8 +17,8 @@
         "publicId": "wgt_curated_faq.lightblurs.v01"
       },
       "copy": {
-        "headline": "FAQs Widget. Beautiful answers. Built to be fast.",
-        "subheadline": "Polished design, effortless updates, and SEO foundations--ready for any language, powered by AI."
+        "headline": "FAQ widget. Beautiful answers. Built to be fast.",
+        "subheadline": "Polished design, effortless updates, and SEO foundations—ready for any language, powered by AI."
       }
     },
     {
@@ -91,7 +91,7 @@
             "title": "Stop losing sales to unanswered questions"
           },
           {
-            "body": "Cut support volume by 40%+ when customers find answers instantly. No more Slack pings. No more \"quick question\" emails. No more context-switching hell. Your FAQ does the heavy lifting while you focus on work that actually matters.",
+            "body": "Cut support volume by 40%+ when customers find answers instantly. No more slack pings. No more \"quick question\" emails. No more context-switching hell. Your FAQ does the heavy lifting while you focus on work that actually matters.",
             "title": "Get your time back"
           },
           {
@@ -130,13 +130,13 @@
     },
     {
       "id": "cta",
-      "type": "cta",
+      "type": "cta-bottom-block",
       "copy": {
         "headline": "Connect with every customer, everywhere",
         "subheadline": "AI-powered FAQ that speaks their language and understands their needs."
       },
       "primaryCta": {
-        "label": "Get Started",
+        "label": "Get started",
         "href": "/signup"
       }
     }

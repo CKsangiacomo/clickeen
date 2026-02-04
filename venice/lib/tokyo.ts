@@ -18,6 +18,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isL10n = normalized.startsWith('/l10n/');
   const isL10nIndex = isL10n && normalized.endsWith('/index.json');
   const isL10nOverlay = isL10n && normalized.endsWith('.ops.json');
+  const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isWorkspaceAsset = normalized.startsWith('/workspace-assets/');
@@ -28,7 +29,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
 
-  if (isL10nOverlay || isWorkspaceAsset || isCuratedAsset || isRenderArtifact) {
+  if (isL10nOverlay || isL10nBaseSnapshot || isWorkspaceAsset || isCuratedAsset || isRenderArtifact) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {

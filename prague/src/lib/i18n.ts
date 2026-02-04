@@ -16,6 +16,8 @@ export type PragueI18nKey =
   | 'prague.tabs.pricing'
   | 'prague.cta.createFree'
   | 'prague.cta.seeTemplates'
+  | 'prague.localeShowcase.title'
+  | 'prague.localeShowcase.subtitle'
   | 'prague.common.comingSoon'
   | 'prague.creative.useThisWidgetOnYourWebsite'
   | 'prague.share.share'
