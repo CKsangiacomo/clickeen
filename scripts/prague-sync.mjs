@@ -153,14 +153,24 @@ async function main() {
   // Translation uses SanFrancisco and may be slow/costly, so we keep it demand-driven.
   if (runVerify) {
     const verifyArgs = strictLatest ? [VERIFY_SCRIPT, '--strict-latest'] : [VERIFY_SCRIPT];
+    const bestAvailableVerifyArgs = [VERIFY_SCRIPT];
     const initialVerify = run(process.execPath, verifyArgs, { allowFail: true });
     if (!initialVerify.ok) {
       if (!runTranslate) {
         console.error('[prague-sync] Prague l10n overlays missing or invalid. Re-run without --skip-translate to generate them.');
         process.exit(1);
       }
-      run(process.execPath, [TRANSLATE_SCRIPT]);
-      run(process.execPath, verifyArgs);
+      const translateRes = run(process.execPath, [TRANSLATE_SCRIPT], { allowFail: true });
+      if (!translateRes.ok) {
+        console.warn('[prague-sync] Translate failed; falling back to best-available overlays.');
+        const bestAvailableVerify = run(process.execPath, bestAvailableVerifyArgs, { allowFail: true });
+        if (!bestAvailableVerify.ok) {
+          console.error('[prague-sync] Best-available verification failed; refusing to publish overlays.');
+          process.exit(1);
+        }
+      } else {
+        run(process.execPath, verifyArgs);
+      }
     }
   } else if (runTranslate) {
     run(process.execPath, [TRANSLATE_SCRIPT]);
