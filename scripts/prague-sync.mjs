@@ -33,6 +33,19 @@ const strictLatest = args.has('--strict-latest') || (runPublish && !args.has('--
 const publishRemote = args.has('--remote');
 const publishLocal = args.has('--local');
 
+function parsePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const PUBLISH_CONCURRENCY = parsePositiveInt(
+  process.env.PRAGUE_SYNC_PUBLISH_CONCURRENCY,
+  process.env.CI ? 8 : 4,
+);
+const PUBLISH_TIMEOUT_MS = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_TIMEOUT_MS, 120_000);
+const PUBLISH_RETRIES = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_RETRIES, 2);
+const PUBLISH_PROGRESS_EVERY = parsePositiveInt(process.env.PRAGUE_SYNC_PUBLISH_PROGRESS_EVERY, 25);
+
 if (publishRemote && publishLocal) {
   console.error('[prague-sync] Use only one of --remote or --local.');
   process.exit(1);
@@ -77,30 +90,87 @@ function run(cmd, argsList, options = {}) {
   return { ok, status: result.status ?? 1 };
 }
 
-function runWrangler(argsList, options = {}) {
-  const spawnOptions = { cwd: TOKYO_WORKER_ROOT, ...options };
+function getWranglerInvocation(argsList) {
   if (WRANGLER_BIN === 'pnpm') {
-    const viaPnpm = run('pnpm', ['exec', 'wrangler', ...argsList], spawnOptions);
-    if (viaPnpm.ok) return;
-    console.error('[prague-sync] wrangler not available via pnpm exec. Install it in a workspace (paris/sanfrancisco/tokyo-worker) or add to root devDependencies.');
-    process.exit(1);
+    return { cmd: 'pnpm', args: ['exec', 'wrangler', ...argsList], cwd: TOKYO_WORKER_ROOT };
   }
-
   if (WRANGLER_BIN === 'npx') {
-    const viaNpx = run('npx', ['wrangler', ...argsList], spawnOptions);
-    if (viaNpx.ok) return;
-    console.error('[prague-sync] Missing wrangler. Install with: pnpm add -D wrangler');
-    process.exit(1);
+    return { cmd: 'npx', args: ['wrangler', ...argsList], cwd: TOKYO_WORKER_ROOT };
   }
+  return { cmd: WRANGLER_BIN, args: argsList, cwd: TOKYO_WORKER_ROOT };
+}
 
-  const direct = run(WRANGLER_BIN, argsList, spawnOptions);
-  if (direct.ok) return;
-  if (direct.notFound && WRANGLER_BIN === 'wrangler') {
-    const viaNpx = run('npx', ['wrangler', ...argsList], spawnOptions);
-    if (viaNpx.ok) return;
+function appendLimited(existing, chunk, limit) {
+  if (!chunk) return existing;
+  const next = existing + chunk;
+  if (next.length <= limit) return next;
+  return next.slice(next.length - limit);
+}
+
+function runWranglerAsync(argsList, options = {}) {
+  const { timeoutMs = PUBLISH_TIMEOUT_MS } = options;
+  const invocation = getWranglerInvocation(argsList);
+
+  return new Promise((resolve) => {
+    const child = spawn(invocation.cmd, invocation.args, {
+      cwd: invocation.cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    const outputLimit = 20_000;
+    let stdout = '';
+    let stderr = '';
+    child.stdout?.on('data', (chunk) => {
+      stdout = appendLimited(stdout, chunk.toString('utf8'), outputLimit);
+    });
+    child.stderr?.on('data', (chunk) => {
+      stderr = appendLimited(stderr, chunk.toString('utf8'), outputLimit);
+    });
+
+    let timedOut = false;
+    const timeout =
+      timeoutMs > 0
+        ? setTimeout(() => {
+            timedOut = true;
+            child.kill('SIGTERM');
+            setTimeout(() => child.kill('SIGKILL'), 5_000).unref();
+          }, timeoutMs).unref()
+        : null;
+
+    child.on('error', (err) => {
+      if (timeout) clearTimeout(timeout);
+      resolve({ ok: false, status: 1, error: err, timedOut, stdout, stderr });
+    });
+
+    child.on('close', (code) => {
+      if (timeout) clearTimeout(timeout);
+      resolve({ ok: code === 0, status: code ?? 1, timedOut, stdout, stderr });
+    });
+  });
+}
+
+async function uploadToR2({ objectPath, filePath, modeFlag }) {
+  const argsList = ['r2', 'object', 'put', objectPath, '--file', filePath, modeFlag];
+  const maxAttempts = PUBLISH_RETRIES + 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = await runWranglerAsync(argsList, { timeoutMs: PUBLISH_TIMEOUT_MS });
+    if (result.ok) return;
+
+    const hint = result.timedOut ? ` (timed out after ${PUBLISH_TIMEOUT_MS}ms)` : '';
+    console.warn(
+      `[prague-sync] Upload failed (${attempt}/${maxAttempts}) for "${objectPath}"${hint}.`,
+    );
+    if (result.stdout) console.warn(result.stdout.trim());
+    if (result.stderr) console.warn(result.stderr.trim());
+
+    if (attempt < maxAttempts) {
+      const backoffMs = 500 * attempt;
+      await new Promise((r) => setTimeout(r, backoffMs));
+    } else {
+      throw new Error(`[prague-sync] Failed to upload "${objectPath}" after ${maxAttempts} attempts.`);
+    }
   }
-  console.error('[prague-sync] Missing wrangler. Install with: pnpm add -D wrangler');
-  process.exit(1);
 }
 
 async function publishOverlays() {
@@ -119,14 +189,42 @@ async function publishOverlays() {
 
   const target = publishRemote ? 'remote' : 'local';
   console.log(`[prague-sync] Publishing Prague overlays to R2 (${target}). Bucket: "${R2_BUCKET}"`);
-  console.log(`[prague-sync] Uploading ${files.length} files to R2 bucket "${R2_BUCKET}"...`);
-  for (const filePath of files) {
+  console.log(
+    `[prague-sync] Uploading ${files.length} files (concurrency=${PUBLISH_CONCURRENCY}, timeout=${PUBLISH_TIMEOUT_MS}ms, retries=${PUBLISH_RETRIES})...`,
+  );
+
+  files.sort();
+  const modeFlag = publishRemote ? '--remote' : '--local';
+  const tasks = files.map((filePath) => {
     const relFromTokyo = path.relative(TOKYO_ROOT, filePath).replace(/\\/g, '/');
     const key = relFromTokyo; // e.g. l10n/prague/...
     const objectPath = `${R2_BUCKET}/${key}`;
-    const modeFlag = publishRemote ? '--remote' : '--local';
-    runWrangler(['r2', 'object', 'put', objectPath, '--file', filePath, modeFlag]);
+    return { objectPath, filePath, modeFlag };
+  });
+
+  const startedAt = Date.now();
+  const total = tasks.length;
+  const concurrency = Math.min(PUBLISH_CONCURRENCY, total);
+  let nextIndex = 0;
+  let done = 0;
+
+  async function worker() {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const index = nextIndex++;
+      const task = tasks[index];
+      if (!task) return;
+
+      await uploadToR2(task);
+      done++;
+      if (done === total || (PUBLISH_PROGRESS_EVERY > 0 && done % PUBLISH_PROGRESS_EVERY === 0)) {
+        const elapsedS = Math.round((Date.now() - startedAt) / 1000);
+        console.log(`[prague-sync] Uploaded ${done}/${total} files (${elapsedS}s).`);
+      }
+    }
   }
+
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
 }
 
 async function main() {
