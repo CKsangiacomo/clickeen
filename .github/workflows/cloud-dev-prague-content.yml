@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "tokyo/widgets/**/pages/*.json"
+      - "tokyo/l10n/prague/**"
       - "prague/content/**"
       - "config/locales.json"
       - "scripts/prague-sync.mjs"
