@@ -14,7 +14,6 @@ const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'l
   Astro.props;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
-const BUILD_ID = import.meta.env.PUBLIC_PRAGUE_BUILD_ID;
 
 // Extract widget type from any valid publicId format
 const widgetType = (() => {
@@ -44,7 +43,8 @@ const widgetType = (() => {
   // Fallback: Venice handles widget type internally
   return '';
 })();
-const tsToken = import.meta.env.DEV ? String(Date.now()) : BUILD_ID ? String(BUILD_ID) : '';
+// Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
+const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
 const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
 const loaderSrc = VENICE_URL ? `${VENICE_URL.replace(/\/+$/, '')}/embed/latest/loader.js` : null;

@@ -27,7 +27,9 @@ const widgetType = (() => {
   // For now, return empty string - Venice handles the widget type internally
   return '';
 })();
-const ts = import.meta.env.DEV ? `&ts=${Date.now()}` : '';
+// Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
+const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
+const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const iframeSrc = VENICE_URL
   ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?theme=light&device=desktop&locale=${encodeURIComponent(locale)}${ts}`
   : null;
