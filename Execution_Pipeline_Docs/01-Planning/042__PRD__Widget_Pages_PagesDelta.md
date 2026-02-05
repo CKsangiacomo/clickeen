@@ -53,8 +53,14 @@ Premium navigation tiles linking to Templates / Examples / Features.
 locale-showcase (block type: `locale-showcase`)
 Explicitly show “real languages” switching (this is a core platform moat).
 
+value props (block type: `steps`)
+3 item “why this widget” section (widget-specific benefits).
+
 showoff 1: proof embed
 split (block type: `split`, layout: `visual-right`)
+
+control moat (block type: `control-moat`)
+Design control + editor power (3 cards).
 
 showoff 2: proof embed
 split (block type: `split`, layout: `visual-left`)
@@ -64,12 +70,6 @@ Impact statement (why this widget matters + why now).
 
 showoff 3: proof embed (format variation)
 split (block type: `split`, layout: `stacked`)
-
-value props (block type: `steps`)
-3 item “why this widget” section (widget-specific benefits).
-
-control moat (block type: `control-moat`)
-Design control + editor power (3 cards).
 
 global moat (block type: `global-moat`)
 Global-by-default + localization moat (6 cards).

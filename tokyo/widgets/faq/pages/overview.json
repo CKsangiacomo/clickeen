@@ -82,50 +82,6 @@
       }
     },
     {
-      "id": "split-right",
-      "type": "split",
-      "layout": "visual-right",
-      "copy": {
-        "headline": "Split creative (right)",
-        "subheadline": "This is the right-visual variant, using the same curated instance as the hero."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      }
-    },
-    {
-      "id": "split-left",
-      "type": "split",
-      "layout": "visual-left",
-      "copy": {
-        "headline": "Split creative (left)",
-        "subheadline": "This is the left-visual variant, using the same curated instance as the hero."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      }
-    },
-    {
-      "id": "big-bang",
-      "type": "big-bang",
-      "copy": {
-        "body": "Drop in a beautifully designed FAQ that surfaces the right answer at the moment of doubt. Customers get unblocked instantly, objections dissolve before they turn into tickets, and you close more sales without adding more support. Customize once, embed anywhere, and let it work 24/7.",
-        "headline": "Watch questions answer themselves in real-time"
-      }
-    },
-    {
-      "id": "split-stacked",
-      "type": "split",
-      "layout": "stacked",
-      "copy": {
-        "headline": "Split creative (stacked)",
-        "subheadline": "This is the stacked variant, using the same curated instance as the hero."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      }
-    },
-    {
       "id": "steps",
       "type": "steps",
       "copy": {
@@ -148,28 +104,15 @@
       }
     },
     {
-      "id": "split-right-2",
+      "id": "split-right",
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Split creative (right)",
-        "subheadline": "This is the right-visual variant, using the same curated instance as the hero."
+        "headline": "Looks like it shipped with your product",
+        "subheadline": "Fine-tune spacing, surfaces, borders, and typography so the FAQ feels native—not embedded."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      }
-    },
-    {
-      "id": "split-left-2",
-      "type": "split",
-      "layout": "visual-left",
-      "copy": {
-        "headline": "SEO/GEO embed (indexable)",
-        "subheadline": "This embed runs in shadow mode to inject JSON-LD (FAQPage) into the host page for indexing."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01",
-        "embedMode": "indexable"
       }
     },
     {
@@ -192,6 +135,39 @@
             "body": "Role-based type styles that keep hierarchy clean. Headings, body, labels—tuned to your brand."
           }
         ]
+      }
+    },
+    {
+      "id": "split-left-2",
+      "type": "split",
+      "layout": "visual-left",
+      "copy": {
+        "headline": "SEO/GEO-ready (indexable embed)",
+        "subheadline": "Run an indexable mode that injects FAQPage JSON‑LD into the host page when you need search engines to pick it up."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01",
+        "embedMode": "indexable"
+      }
+    },
+    {
+      "id": "big-bang",
+      "type": "big-bang",
+      "copy": {
+        "body": "Drop in a beautifully designed FAQ that surfaces the right answer at the moment of doubt. Customers get unblocked instantly, objections dissolve before they turn into tickets, and you close more sales without adding more support. Customize once, embed anywhere, and let it work 24/7.",
+        "headline": "Watch questions answer themselves in real-time"
+      }
+    },
+    {
+      "id": "split-stacked",
+      "type": "split",
+      "layout": "stacked",
+      "copy": {
+        "headline": "Any layout—accordion, list, or cards",
+        "subheadline": "Switch layouts per breakpoint and control density so it stays clean on desktop and effortless on mobile."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {

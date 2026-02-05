@@ -1,0 +1,332 @@
+{
+  "baseFingerprint": "bc3d2e1063e61fa39aafdf48e28ed3b2e1462dc2674964754dac0438e5724051",
+  "baseUpdatedAt": "2026-02-05T00:32:28.118Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Stwórz szybki, piękny widget FAQ. Dostosuj, opublikuj i zlokalizuj w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ. Piękne odpowiedzi. Zbudowany, by działać szybko."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dopracowany design, łatwe aktualizacje i solidne podstawy SEO — gotowe na każdy język, wspierane przez AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomóż odwiedzającym szybko znaleźć odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Spraw, by było Twoje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Zaprojektuj swoje idealne FAQ tutaj. Zobacz zmiany natychmiast."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Odkryj, co jest możliwe"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Zacznij od szablonów, ucz się na przykładach, a potem przejdź do funkcji, gdy będziesz gotowy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Szablony"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Przykłady"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Funkcje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Wystartuj szybko z dopracowanymi punktami wyjścia, które dopasujesz do swojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Zobacz, jak wyglądają świetne FAQ w praktyce — i podkradaj wzorce, które konwertują."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Zrozum, co możesz kontrolować — od układów i stylu po lokalizację i SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Podejrzyj to w prawdziwych językach"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Przełączaj wersje językowe, aby zobaczyć, jak Twoje FAQ brzmi na różnych rynkach — bez przebudowy czegokolwiek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "FAQ, które naprawdę działają (żebyś nie musiał/a)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Twoi klienci mają pytania. Odpowiedz na nie raz, a nie sto razy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Przestań tracić sprzedaż przez brak odpowiedzi na pytania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Odzyskaj swój czas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Zamykaj więcej transakcji, gdy śpisz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Każde pytanie bez odpowiedzi to klient, który odchodzi. Odwiedzający wychodzą, gdy nie mogą znaleźć tego, czego potrzebują. Dobrze zaprojektowane FAQ zbija obiekcje, zanim w ogóle się pojawią — dzięki czemu klienci sami przekonują się do zakupu, nawet nie kontaktując się z Tobą."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Zmniejsz liczbę zgłoszeń do wsparcia o 40%+ gdy klienci od razu znajdują odpowiedzi. Koniec z pingami na Slacku. Koniec z mailami typu „szybkie pytanie”. Koniec z piekłem ciągłego przełączania kontekstu. Twoje FAQ wykonuje ciężką robotę, a Ty możesz skupić się na pracy, która naprawdę ma znaczenie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Dobre FAQ przewiduje wątpliwości i usuwa tarcie o 2 w nocy, gdy jesteś offline. Twoje odpowiedzi działają całą dobę. Klienci nie czekają na Ciebie — odblokowują się, ufają temu, co widzą, i klikają „kup” bez przerywania Twojego dnia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Wygląda, jakby było dostarczone razem z Twoim produktem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Dopasuj odstępy, powierzchnie, obramowania i typografię, aby FAQ sprawiało wrażenie natywnego — a nie osadzonego."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kontrola nad designem, co do piksela"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Dopasuj stronę i markę bez kompromisów."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Układy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Wygląd"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Wybierz strukturę dla każdego breakpointu — akordeon, lista lub karty. Kontroluj odstępy, gęstość i wyrównanie, aby całość wyglądała natywnie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Zaokrąglenia, obramowania, cienie i powierzchnie dopasowane do języka Twojego UI. Niech wygląda, jakby było dostarczone razem z Twoim produktem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Style typografii oparte na rolach, które utrzymują czytelną hierarchię. Nagłówki, treść, etykiety — dostrojone do Twojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Gotowe na SEO/GEO (indeksowalne osadzenie)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Włącz tryb indeksowalny, który wstrzykuje do strony hosta JSON‑LD typu FAQPage, gdy chcesz, aby wyszukiwarki to wychwyciły."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Zobacz, jak pytania same znajdują odpowiedzi w czasie rzeczywistym"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Dodaj pięknie zaprojektowane FAQ, które pokazuje właściwą odpowiedź w chwili zawahania. Klienci od razu ruszają dalej, obiekcje znikają, zanim zamienią się w zgłoszenia, a Ty domykasz więcej sprzedaży bez dokładania pracy supportu. Skonfiguruj raz, osadź gdziekolwiek i pozwól mu działać 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Dowolny układ — akordeon, lista lub karty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Przełączaj układy dla poszczególnych breakpointów i kontroluj gęstość, aby na desktopie było czytelnie, a na mobile — bez wysiłku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalnie z założenia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Jeden widget, każdy rynek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Natychmiastowa lokalizacja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Gotowe na RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Treści dopasowane do lokalizacji"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Podstawy SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Nadzór"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Wydajność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Wdrażaj nowe języki bez projektu tłumaczeniowego. Utrzymuj spójne doświadczenie wszędzie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Obsługuj języki pisane od prawej do lewej bez przeprojektowywania układów. Kierunkowość pozostaje poprawna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Dopasuj ton i sformułowania do odbiorców, nie tylko słowa. Treść brzmi naturalnie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Ustrukturyzowane treści, które można indeksować, gdy tego potrzebujesz. Spraw, by odpowiedzi były łatwe do znalezienia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Ścisłe kontrakty zapobiegają rozjeżdżaniu się treści. Zmiany są jawne, możliwe do audytu i powtarzalne."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Szybkie renderowanie i rozsądne ładowanie, dzięki czemu strona działa płynnie na różnych urządzeniach i sieciach."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Zbudowane jak platforma"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Szybkie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Niezawodne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dostępne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Lekkie osadzenia i leniwe ładowanie. Bez skakania układu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Deterministyczne kontrakty i bramki builda utrzymują bezpieczne wdrażanie w skali."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Czytelna hierarchia, przejrzysta typografia i wzorce interakcji działające w różnych metodach wprowadzania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Nawiąż kontakt z każdym klientem, wszędzie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ wspierane przez AI, które mówi ich językiem i rozumie ich potrzeby."
+    }
+  ],
+  "v": 1
+}

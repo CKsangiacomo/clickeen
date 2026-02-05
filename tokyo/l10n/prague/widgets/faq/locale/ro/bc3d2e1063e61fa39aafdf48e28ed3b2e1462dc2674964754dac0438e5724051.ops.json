@@ -1,0 +1,332 @@
+{
+  "baseFingerprint": "bc3d2e1063e61fa39aafdf48e28ed3b2e1462dc2674964754dac0438e5724051",
+  "baseUpdatedAt": "2026-02-05T00:32:28.118Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Creează un widget FAQ rapid și frumos. Personalizează, publică și localizează în câteva minute."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ. Răspunsuri frumoase. Creat pentru viteză."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Design rafinat, actualizări fără efort și baze SEO—pregătit pentru orice limbă, susținut de AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ajutați vizitatorii să găsească rapid răspunsuri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Fă-l al tău"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Proiectează-ți aici FAQ-ul perfect. Vezi schimbările instantaneu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "Explorează ce este posibil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "Începe cu șabloane, învață din exemple, apoi aprofundează funcționalitățile când ești pregătit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "Șabloane"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "Exemple"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "Funcționalități"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "Lansează rapid cu puncte de pornire rafinate pe care le poți adapta brandului tău."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "Vezi cum arată FAQ-urile excelente în lumea reală—și preia tiparele care convertesc."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "Înțelege ce poți controla, de la layout-uri și stilizare până la localizare și SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Previzualizează în limbi reale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Schimbă localele ca să vezi cum se citește FAQ-ul tău pe piețe diferite—fără să reconstruiești nimic."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Întrebări frecvente care chiar funcționează (ca să nu trebuiască tu)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Clienții tăi au întrebări. Răspunde-le o singură dată, nu de o sută de ori."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Nu mai pierde vânzări din cauza întrebărilor fără răspuns"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Recuperează-ți timpul"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Închide mai multe deal-uri cât timp dormi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Fiecare întrebare rămasă fără răspuns înseamnă un client care pleacă. Vizitatorii pleacă atunci când nu găsesc ceea ce au nevoie. Un FAQ bine conceput elimină obiecțiile înainte să se formeze—astfel clienții se conving singuri să cumpere fără să te contacteze."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Redu volumul solicitărilor către suport cu 40%+ atunci când clienții găsesc răspunsuri instant. Gata cu ping-urile pe Slack. Gata cu emailurile „o întrebare rapidă”. Gata cu iadul schimbării de context. FAQ-ul tău face treaba grea, în timp ce tu te concentrezi pe munca care contează cu adevărat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ-ul potrivit anticipează îndoiala și elimină fricțiunea la 2 dimineața, când ești offline. Răspunsurile tale funcționează non-stop. Clienții nu te așteaptă—își deblochează situația, au încredere în ceea ce văd și apasă „cumpără” fără să-ți întrerupă ziua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Pare că a venit împreună cu produsul tău"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Ajustează fin spațierea, suprafețele, marginile și tipografia, astfel încât FAQ-ul să pară nativ—nu încorporat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Control de design, până la nivel de pixel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Potrivește site-ul și brandul tău fără compromisuri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layout-uri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Aspect"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Alege structura pentru fiecare breakpoint—acordeon, listă sau carduri. Controlează spațierea, densitatea și alinierea ca să pară nativ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Raze, borduri, umbre și suprafețe care se potrivesc limbajului tău UI. Fă-l să arate ca și cum ar fi livrat odată cu produsul tău."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Stiluri tipografice bazate pe rol, care păstrează ierarhia clară. Titluri, text, etichete—ajustate la brandul tău."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Pregătit pentru SEO/GEO (embed indexabil)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Rulează un mod indexabil care injectează FAQPage JSON‑LD în pagina gazdă atunci când ai nevoie ca motoarele de căutare să-l preia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Privește cum întrebările își găsesc singure răspunsul în timp real"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Adaugă un FAQ cu design impecabil, care afișează răspunsul potrivit exact în momentul îndoielii. Clienții se deblochează instant, obiecțiile se dizolvă înainte să se transforme în tichete, iar tu închei mai multe vânzări fără să adaugi mai mult suport. Personalizezi o singură dată, îl încorporezi oriunde și îl lași să lucreze 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Orice layout—acordeon, listă sau carduri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Schimbă layout-urile în funcție de breakpoint și controlează densitatea, ca să rămână curat pe desktop și fără efort pe mobil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global, implicit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Un singur widget, fiecare piață."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Localizare instantanee"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Pregătit pentru RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Text adaptat localei"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "Baze SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "Guvernanță"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "Performanță"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Livrează în limbi noi fără un proiect de traducere. Păstrează experiența consecventă peste tot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Suportă limbile de la dreapta la stânga fără să redesenezi layout-urile. Direcționalitatea rămâne corectă."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Adaptează tonul și formulările pentru audiență, nu doar cuvintele. Conținutul se citește natural."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "Conținut structurat care poate fi indexat când ai nevoie. Fă răspunsurile ușor de descoperit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "Contractele stricte previn deviațiile. Schimbările sunt explicite, auditabile și repetabile."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "Randări rapide și încărcare inteligentă, astfel încât pagina să rămână fluidă pe toate dispozitivele și rețelele."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Construit ca o platformă"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rapid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Fiabil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Accesibil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Încorporări ușoare și încărcare leneșă. Fără salturi de layout."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Contracte deterministe și porți de build mențin livrarea sigură la scară."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Ierarhie clară, tipografie lizibilă și tipare de interacțiune care funcționează pe toate metodele de input."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Conectează-te cu fiecare client, oriunde"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "FAQ alimentat de AI care vorbește limba lor și le înțelege nevoile."
+    }
+  ],
+  "v": 1
+}

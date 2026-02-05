@@ -1,0 +1,332 @@
+{
+  "baseFingerprint": "bc3d2e1063e61fa39aafdf48e28ed3b2e1462dc2674964754dac0438e5724051",
+  "baseUpdatedAt": "2026-02-05T00:32:28.118Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "וידג'ט שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "בנו ווידג'ט שאלות נפוצות מהיר ויפה. התאימו אישית, פרסמו ולוקליזציה תוך דקות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "וידג'ט שאלות נפוצות. תשובות יפות. בנוי להיות מהיר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "עיצוב מלוטש, עדכונים ללא מאמץ ותשתיות SEO—מוכן לכל שפה, מופעל בידי AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "שאלות נפוצות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "עזרו למבקרים למצוא תשובות במהירות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "הפכו אותו לשלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "עצבו את ה-FAQ המושלם שלכם כאן. ראו את השינויים מייד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "גלו מה אפשרי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "התחילו עם תבניות, למדו מדוגמאות, ואז צללו לתכונות כשתהיו מוכנים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "תבניות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "דוגמאות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "תכונות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "השיקו מהר עם נקודות פתיחה מלוטשות שתוכלו להתאים למותג שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "ראו איך נראות שאלות נפוצות מעולות בשטח—ואמצו דפוסים שממירים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "הבינו על מה יש לכם שליטה—מפריסות ועיצוב ועד לוקליזציה ו-SEO."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "תצוגה מקדימה בשפות אמיתיות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "החליפו לוקאלים כדי לראות איך ה-FAQ שלכם נקרא בשווקים שונים—בלי לבנות מחדש שום דבר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "שאלות נפוצות שבאמת עובדות (כדי שלא תצטרכו)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "ללקוחות שלכם יש שאלות. תענו עליהן פעם אחת, לא מאה פעמים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "הפסיקו לאבד מכירות בגלל שאלות שלא נענו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "קבלו את הזמן שלכם בחזרה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "סגרו יותר עסקאות בזמן שאתם ישנים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "כל שאלה שנשארת בלי מענה היא לקוח שמתרחק. מבקרים עוזבים כשהם לא מוצאים את מה שהם צריכים. FAQ מתוכנן היטב מנטרל התנגדויות עוד לפני שהן נוצרות—כך שלקוחות משכנעים את עצמם לקנות בלי בכלל ליצור קשר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "צמצמו את נפח הפניות לתמיכה ב-40%+ כשלקוחות מוצאים תשובות מיד. בלי עוד פינגים ב-Slack. בלי עוד מיילים של \"שאלה קצרה\". בלי עוד גיהינום של החלפת הקשר. ה-FAQ שלכם עושה את העבודה הקשה בזמן שאתם מתמקדים בעבודה שבאמת חשובה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "FAQ נכון צופה ספק ומסיר חיכוך בשתיים בלילה כשאתם לא זמינים. התשובות שלכם עובדות מסביב לשעון. לקוחות לא מחכים לכם—הם מתגברים על החסם, סומכים על מה שהם רואים, ולוחצים \"קנה\" בלי להפריע ליום שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "נראה שזה הגיע יחד עם המוצר שלך"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "כוונן/י במדויק מרווחים, משטחים, גבולות וטיפוגרפיה כך שהשאלות הנפוצות ירגישו טבעיות—לא מוטמעות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "שליטה בעיצוב, עד לרמת הפיקסל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "התאימו לאתר ולמותג שלכם בלי פשרות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "פריסות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "מראה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "טיפוגרפיה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "בחרו מבנה לכל נקודת שבירה—אקורדיון, רשימה או כרטיסים. שלטו במרווחים, בצפיפות וביישור כדי שירגיש טבעי כחלק מהאתר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "פינות מעוגלות, גבולות, צללים ומשטחים שתואמים לשפת ה-UI שלכם. תנו לזה להיראות כאילו זה יצא יחד עם המוצר שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "סגנונות טקסט מבוססי תפקיד ששומרים על היררכיה נקייה. כותרות, טקסט גוף, תוויות—מותאם למותג שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "מוכן ל-SEO/GEO (הטמעה ניתנת לאינדוקס)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "הפעל/י מצב הניתן לאינדוקס שמזריק FAQPage JSON‑LD לדף המארח כשצריך שמנועי חיפוש יזהו זאת."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "צפו בשאלות מקבלות תשובות בזמן אמת"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "הטמיעו שאלות נפוצות (FAQ) בעיצוב יפהפה שמציג את התשובה הנכונה ברגע של ספק. הלקוחות משתחררים מהחסימה מיד, ההתנגדויות מתפוגגות לפני שהן הופכות לפניות תמיכה, ואתם סוגרים יותר מכירות בלי להוסיף עוד תמיכה. התאימו פעם אחת, הטמיעו בכל מקום, ותנו לזה לעבוד 24/7."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "כל פריסה—אקורדיון, רשימה או כרטיסים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "החלף/י פריסות לפי נקודת שבירה ושלט/י בצפיפות כדי שזה יישאר נקי בדסקטופ וקליל במובייל."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "גלובלי כברירת מחדל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "וידג'ט אחד, בכל שוק."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "לוקליזציה מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "מוכן ל-RTL"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "קופי מודע-לוקאל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "תשתיות SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "ממשל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "ביצועים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "השיקו בשפות חדשות בלי פרויקט תרגום. שמרו על חוויה עקבית בכל מקום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "תמכו בשפות מימין לשמאל בלי לעצב מחדש פריסות. כיווניות נשארת נכונה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "התאימו טון וניסוח לקהל, לא רק את המילים. התוכן נקרא טבעי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "תוכן מובנה שניתן לאינדוקס כשצריך. הפכו את התשובות לניתנות לגילוי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "חוזים קשיחים מונעים סטייה. השינויים מפורשים, ניתנים לביקורת, וניתנים לשחזור."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "רינדור מהיר וטעינה הגיונית כדי שהעמוד יישאר חלק בכל המכשירים והרשתות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "בנוי כמו פלטפורמה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "מהיר"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "אמין"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "נגיש"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "הטמעות קלות וטעינה עצלה. בלי קפיצות פריסה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "חוזים דטרמיניסטיים ושערי בנייה שומרים שההשקה תהיה בטוחה בקנה מידה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "היררכיה ברורה, טקסט קריא ודפוסי אינטראקציה שעובדים בכל שיטות הקלט."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "התחברו לכל לקוח, בכל מקום"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "שאלות נפוצות מבוססות בינה מלאכותית שמדברות בשפתם ומבינות את הצרכים שלהם."
+    }
+  ],
+  "v": 1
+}

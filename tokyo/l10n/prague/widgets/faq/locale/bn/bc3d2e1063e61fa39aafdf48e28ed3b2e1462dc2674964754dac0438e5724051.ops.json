@@ -1,0 +1,332 @@
+{
+  "baseFingerprint": "bc3d2e1063e61fa39aafdf48e28ed3b2e1462dc2674964754dac0438e5724051",
+  "baseUpdatedAt": "2026-02-05T00:32:28.118Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উইজেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "দ্রুত, সুন্দর একটি FAQ উইজেট তৈরি করুন। মিনিটের মধ্যে কাস্টমাইজ করুন, প্রকাশ করুন এবং লোকালাইজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ উইজেট। সুন্দর উত্তর। দ্রুততার জন্য তৈরি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "পরিপাটি ডিজাইন, সহজ আপডেট, এবং SEO ভিত্তি—যেকোনো ভাষার জন্য প্রস্তুত, AI দ্বারা চালিত।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ভিজিটরদের দ্রুত উত্তর খুঁজে পেতে সহায়তা করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "এটিকে আপনার করে তুলুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "এখানেই আপনার আদর্শ FAQ ডিজাইন করুন। পরিবর্তনগুলো সঙ্গে সঙ্গে দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.title",
+      "value": "কী কী সম্ভব তা দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.subhead",
+      "value": "টেমপ্লেট দিয়ে শুরু করুন, উদাহরণ থেকে শিখুন, তারপর প্রস্তুত হলে ফিচারগুলোতে ডুব দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.title",
+      "value": "টেমপ্লেট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.title",
+      "value": "উদাহরণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.title",
+      "value": "ফিচার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.0.body",
+      "value": "আপনার ব্র্যান্ড অনুযায়ী মানিয়ে নেওয়া যায় এমন পরিপাটি শুরুর পয়েন্ট দিয়ে দ্রুত লঞ্চ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.1.body",
+      "value": "বাস্তবে দারুণ FAQ কেমন দেখায় দেখুন—আর কনভার্ট করে এমন প্যাটার্নগুলো ধার নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.overview-subpages.copy.items.2.body",
+      "value": "লেআউট ও স্টাইলিং থেকে লোকালাইজেশন এবং SEO পর্যন্ত—আপনি কী কী নিয়ন্ত্রণ করতে পারেন তা বুঝুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "আসল ভাষায় প্রিভিউ দেখুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "লোকেল বদলে দেখুন বিভিন্ন বাজারে আপনার FAQ কীভাবে পড়ে—কিছুই পুনর্নির্মাণ না করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "যে FAQs সত্যিই কাজ করে (যাতে আপনাকে করতে না হয়)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "আপনার গ্রাহকদের প্রশ্ন আছে। একবার উত্তর দিন, শতবার নয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "উত্তরহীন প্রশ্নের কারণে বিক্রি হারানো বন্ধ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "আপনার সময় ফিরে পান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ঘুমের মধ্যেই আরও বেশি ডিল ক্লোজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "যে কোনো প্রশ্নের উত্তর না থাকলে একজন গ্রাহক সরে যায়। দর্শকরা চলে যায় যখন তারা যা দরকার তা খুঁজে পায় না। ভালোভাবে ডিজাইন করা একটি FAQ আপত্তি তৈরি হওয়ার আগেই তা দূর করে—ফলে গ্রাহকরা আপনার কাছে না গিয়েই নিজেকে কিনতে রাজি করায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "গ্রাহকরা সঙ্গে সঙ্গে উত্তর পেলে সাপোর্ট ভলিউম 40%+ কমান। আর স্ল্যাক পিং নয়। আর কোনো \"দ্রুত একটা প্রশ্ন\" ইমেইল নয়। আর কনটেক্সট-সুইচিংয়ের নরক নয়। আপনার FAQ ভারী কাজটা করে দেবে, আর আপনি মনোযোগ দেবেন সত্যিই গুরুত্বপূর্ণ কাজের দিকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "সঠিক FAQ সন্দেহ আগেভাগে বুঝে নেয় এবং আপনি অফলাইনে থাকলেও রাত ২টায় বাধা দূর করে। আপনার উত্তর ২৪/৭ কাজ করে। গ্রাহকরা আপনার জন্য অপেক্ষা করে না—তারা এগোতে পারে, যা দেখে তাতে ভরসা করে, এবং আপনার দিন ব্যাহত না করেই \"buy\" চাপ দেয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "দেখে মনে হচ্ছে এটি আপনার পণ্যের সঙ্গেই পাঠানো হয়েছিল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "স্পেসিং, সারফেস, বর্ডার এবং টাইপোগ্রাফি সূক্ষ্মভাবে ঠিক করুন, যাতে FAQটি এমবেড করা নয়—বরং নেটিভ মনে হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "পিক্সেল-পর্যন্ত ডিজাইন নিয়ন্ত্রণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "কোনো আপস ছাড়াই আপনার সাইট এবং ব্র্যান্ডের সাথে মিলিয়ে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "চেহারা"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "টাইপোগ্রাফি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "প্রতিটি ব্রেকপয়েন্ট অনুযায়ী স্ট্রাকচার বেছে নিন—অ্যাকর্ডিয়ন, লিস্ট, বা কার্ড। স্পেসিং, ডেনসিটি, এবং অ্যালাইনমেন্ট নিয়ন্ত্রণ করুন যাতে এটি নেটিভ মনে হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "আপনার UI ভাষার সাথে মানানসই রেডিয়াস, বর্ডার, শ্যাডো, এবং সারফেস। দেখাতে এমন করুন যেন এটা আপনার প্রোডাক্টের সাথেই এসেছে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "রোল-ভিত্তিক টাইপ স্টাইল যা হায়ারার্কি পরিষ্কার রাখে। হেডিং, বডি, লেবেল—আপনার ব্র্যান্ড অনুযায়ী টিউন করা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "SEO/GEO-প্রস্তুত (ইনডেক্সযোগ্য এমবেড)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "যখন সার্চ ইঞ্জিনে এটি ধরা দরকার, তখন এমন একটি ইনডেক্সযোগ্য মোড চালান যা হোস্ট পেজে FAQPage JSON‑LD ইনজেক্ট করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "রিয়েল-টাইমে দেখুন প্রশ্নগুলো কীভাবে নিজে থেকেই উত্তর পেয়ে যায়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "সুন্দরভাবে ডিজাইন করা একটি FAQ যোগ করুন, যা সংশয়ের মুহূর্তে সঠিক উত্তরটি সামনে এনে দেয়। গ্রাহকরা সঙ্গে সঙ্গে বাধামুক্ত হয়, আপত্তিগুলো টিকিট হওয়ার আগেই মিলিয়ে যায়, আর অতিরিক্ত সাপোর্ট না বাড়িয়েই আপনি আরও বেশি বিক্রি সম্পন্ন করেন। একবার কাস্টমাইজ করুন, যেকোনো জায়গায় এম্বেড করুন, আর ২৪/৭ এটি কাজ করতে দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "যেকোনো লেআউট—অ্যাকর্ডিয়ন, তালিকা, বা কার্ড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "প্রতি ব্রেকপয়েন্টে লেআউট বদলান এবং ডেনসিটি নিয়ন্ত্রণ করুন, যাতে ডেস্কটপে পরিষ্কার থাকে এবং মোবাইলে অনায়াস লাগে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "ডিফল্টভাবেই গ্লোবাল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "একটি উইজেট, প্রতিটি বাজারে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "তাৎক্ষণিক লোকালাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "RTL প্রস্তুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "লোকেল-সচেতন কপি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.title",
+      "value": "SEO ভিত্তি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.title",
+      "value": "গভর্ন্যান্স"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.title",
+      "value": "পারফরম্যান্স"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "ট্রান্সলেশন প্রজেক্ট ছাড়াই নতুন ভাষায় শিপ করুন। সর্বত্র অভিজ্ঞতাকে একরকম রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "লেআউট পুনরায় ডিজাইন না করেই ডান-থেকে-বাম ভাষা সাপোর্ট করুন। দিক-নির্দেশনা সঠিক থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "শুধু শব্দ নয়—দর্শকের জন্য টোন এবং বাক্যগঠন মানিয়ে নিন। কনটেন্ট স্বাভাবিকভাবে পড়ে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.3.body",
+      "value": "যখন দরকার হবে তখন ইনডেক্স করা যায় এমন স্ট্রাকচার্ড কনটেন্ট। উত্তরগুলোকে খুঁজে পাওয়া সহজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.4.body",
+      "value": "কঠোর কনট্রাক্ট ড্রিফট ঠেকায়। পরিবর্তনগুলো স্পষ্ট, অডিটযোগ্য, এবং পুনরাবৃত্তিযোগ্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.5.body",
+      "value": "দ্রুত রেন্ডার এবং যুক্তিসঙ্গত লোডিং, যাতে ডিভাইস ও নেটওয়ার্ক জুড়েই পেজ মসৃণ থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "প্ল্যাটফর্মের মতো করে তৈরি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "দ্রুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "নির্ভরযোগ্য"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "অ্যাক্সেসিবল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "লাইটওয়েট এমবেড এবং লেজি লোডিং। লেআউট জ্যাঙ্ক নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "ডিটারমিনিস্টিক কনট্রাক্ট এবং বিল্ড গেট স্কেলে শিপিংকে নিরাপদ রাখে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "পরিষ্কার হায়ারার্কি, পড়তে সহজ টাইপ, এবং এমন ইন্টারঅ্যাকশন প্যাটার্ন যা বিভিন্ন ইনপুট মেথডে কাজ করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "প্রতিটি গ্রাহকের সঙ্গে সংযোগ করুন, সর্বত্র"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "AI-চালিত FAQ যা তাদের ভাষায় কথা বলে এবং তাদের চাহিদা বোঝে।"
+    }
+  ],
+  "v": 1
+}
