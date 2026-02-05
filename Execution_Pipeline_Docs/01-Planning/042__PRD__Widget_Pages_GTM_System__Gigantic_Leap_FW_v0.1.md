@@ -31,7 +31,7 @@ We ship a **standardized widget-page framework** composed of:
 - A small number of **new blocks** to enable premium interactions (carousel, mobile showcase, feature explorer)
 - A content model + templates that can be stamped out per widget and per page type
 
-**Block budget (v0.1):**
+**Block budget:**
 - **Visual section blocks:** 12 total.
 - **Non-visual contract blocks:** `page-meta`, `navmeta` (these are validation-only “blocks”, not UI sections).
 
@@ -61,13 +61,9 @@ This is the “gigantic leap forward”: pages become a productized system, not 
 **Existing visual blocks (baseline library):**
 - `hero`, `big-bang`, `split`, `steps`, `minibob`, `cta-bottom-block` (6)
 
-**New visual blocks proposed in this PRD:**
-
-v0.1 “navigation + moats” blocks (adds 5; mostly reuse existing primitives):
-- `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`
-
-v0.2 “proof/interaction” blocks (adds 3; optional, only if needed):
-- `embed-carousel`, `mobile-showcase`, `feature-explorer`
+**New visual blocks proposed in this PRD (ship as one system):**
+- Navigation + moats: `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`
+- Proof + interaction: `embed-carousel`, `mobile-showcase`, `feature-explorer`
 
 ---
 
@@ -95,7 +91,7 @@ v0.2 “proof/interaction” blocks (adds 3; optional, only if needed):
 
 ---
 
-## 5) Non-goals (v0.1)
+## 5) Non-goals
 
 - No new CMS backend: pages remain JSON-driven.
 - No redesign of the entire Prague layout system.
@@ -122,27 +118,27 @@ These are *intent-based* page types that all widgets should implement.
 
 **Templates**
 - hero (templates promise)
-- curated embed gallery (v0.1: `split` curated embeds; v0.2: `embed-carousel`)
-- mobile proof (v0.1: `split` curated embed; v0.2: `mobile-showcase`)
+- desktop carousel (`embed-carousel`)
+- mobile proof (`mobile-showcase`)
 - splits showcasing named template styles (curated embeds)
 - big-bang
 - control moat
-- light/dark showcase (phase 2; can be split/toggle)
+- light/dark showcase (can be split/toggle)
 - cta-bottom-block (Install template)
 
 **Examples**
 - hero (ICP promise)
-- curated embed gallery (v0.1: `split` curated embeds; v0.2: `embed-carousel`)
+- desktop carousel (`embed-carousel`)
 - splits for primary ICPs
 - big-bang
-- mobile proof (v0.1: `split` curated embed; v0.2: `mobile-showcase`)
+- mobile proof (`mobile-showcase`)
 - global moat (tuned to ICP pains)
 - platform strip (ICP trust)
 - cta-bottom-block
 
 **Features**
 - hero (killer feature)
-- feature map (v0.1: `steps`/`split`; v0.2: `feature-explorer`)
+- feature explorer (`feature-explorer`)
 - deep-dive splits (curated embeds where relevant)
 - big-bang
 - control moat
@@ -150,7 +146,7 @@ These are *intent-based* page types that all widgets should implement.
 - platform strip (technical excellence)
 - cta-bottom-block
 
-### 6.2 New blocks to build (v0.1 scope)
+### 6.2 New blocks to build
 
 This section is intentionally “contract-level”. After this PRD is approved, engineering should be able to implement the blocks + validation + allowlists without inventing new fields.
 
@@ -174,9 +170,9 @@ If both are present, `curatedRef.publicId` wins.
 
 ---
 
-#### v0.1 blocks (ship first; minimal new surface area)
+#### Blocks (minimal new surface area; reuse primitives)
 
-The intent of v0.1 is to get the framework *working and scalable* with minimal new primitives:
+The intent is to keep the framework *working and scalable* with minimal new primitives:
 - Prefer **reusing existing blocks** (`steps`, `split`, `hero`, `minibob`) over inventing new UI for every section.
 - Keep new block types mostly as **semantic wrappers** so templates can be stamped out consistently across 100s of widgets.
 
@@ -257,7 +253,7 @@ Implementation note:
 
 ---
 
-#### v0.2 blocks (optional; only if we need more “wow”)
+---
 
 #### D) `embed-carousel`
 Purpose: premium “gallery” that cycles curated embeds (desktop).
@@ -374,7 +370,7 @@ Example:
 Purpose: map product capabilities to a browsable UI.
 - Left: category pills (Content/Layout/Appearance/Typography/Translation/Settings)
 - Right: grid of feature cards (icon + name + short description)
-- Category state in URL hash optional (phase 2)
+- Category state in URL hash is optional.
 
 **Contract (JSON)**
 
@@ -441,7 +437,7 @@ Example:
 We need a repeatable way to generate new widget pages:
 - Provide canonical `overview/templates/examples/features` page JSON templates
 - Each template includes the standard section ordering and minimal placeholder copy
-- Add a script (phase 2) to scaffold `tokyo/widgets/<widget>/pages/*.json` from templates
+- Add a script to scaffold `tokyo/widgets/<widget>/pages/*.json` from templates
 
 ---
 
@@ -459,12 +455,12 @@ We need a repeatable way to generate new widget pages:
   - Widget previews are served through Venice embed routes (snapshot-first)
   - Avoid production cache-busters (e.g. `ts=Date.now()`) except behind explicit dev/debug flags
 
-**Required engineering deliverables (v0.1):**
+**Required engineering deliverables:**
 - Add block type + contract to `prague/src/lib/blockRegistry.ts`
 - Add runtime renderer mapping in `prague/src/components/WidgetBlocks.astro`
 - Create allowlists:
-  - v0.1: `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`
-  - v0.2 (optional): `embed-carousel`, `mobile-showcase`, `feature-explorer`
+  - `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`
+  - `embed-carousel`, `mobile-showcase`, `feature-explorer`
 - Add one reference widget implementation across 4 pages in Tokyo (use an existing widget as the pilot)
 
 ### 7.2 UX requirements
@@ -514,19 +510,14 @@ We need a repeatable way to generate new widget pages:
 
 ## 9) Rollout Plan
 
-### Phase 0 (Now)
-- Lock the system spec (this PRD) and the page wireframes.
-
-### Phase 1 (v0.1)
-- Implement v0.1 blocks: `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`.
-- Add allowlists for new block types.
-- Ship one end-to-end widget as reference (FAQ or Countdown) across 4 pages.
-
-### Phase 2 (v0.2)
-- Add light/dark toggle showcase behavior.
-- Add scaffolding script for faster widget onboarding.
-- Implement v0.2 blocks only if needed: `embed-carousel`, `mobile-showcase`, `feature-explorer`.
-- Expand ICP/template catalogs.
+1) Lock the system spec (this PRD) and the deterministic wireframes (PagesDelta).
+2) Implement the full block system in Prague:
+   - `subpage-cards`, `locale-showcase`, `control-moat`, `global-moat`, `platform-strip`
+   - `embed-carousel`, `mobile-showcase`, `feature-explorer`
+3) Add allowlists for every new block type.
+4) Ship one end-to-end widget as reference (FAQ or Countdown) across 4 pages.
+5) Add the scaffolding script for faster widget onboarding.
+6) Expand ICP/template catalogs.
 
 ---
 
@@ -540,14 +531,12 @@ We need a repeatable way to generate new widget pages:
   - New blocks render correctly and are responsive
 
 **Block-level acceptance (must all be true):**
-- v0.1 blocks
-  - `subpage-cards`: 3 premium tiles; keyboard focus visible; correct links for `templates/examples/features`
-  - `locale-showcase`: can be explicitly placed; defaults don’t double-render; can hide share chrome
-  - `control-moat`/`global-moat`/`platform-strip`: consistent card grid; responsive and readable
-- v0.2 blocks (only if we ship them)
-  - `embed-carousel`: desktop shows 2 items; mobile 1; reduced-motion disables autoplay; keyboard reachable controls
-  - `mobile-showcase`: overflow behaves; captions optional
-  - `feature-explorer`: keyboard accessible category switching; deterministic default category
+- `subpage-cards`: 3 premium tiles; keyboard focus visible; correct links for `templates/examples/features`
+- `locale-showcase`: can be explicitly placed; defaults don’t double-render; can hide share chrome
+- `control-moat`/`global-moat`/`platform-strip`: consistent card grid; responsive and readable
+- `embed-carousel`: desktop shows 2 items; mobile 1; reduced-motion disables autoplay; keyboard reachable controls
+- `mobile-showcase`: overflow behaves; captions optional
+- `feature-explorer`: keyboard accessible category switching; deterministic default category
 
 ---
 
@@ -566,6 +555,6 @@ We need a repeatable way to generate new widget pages:
 - **Missing base snapshots**: stale overlays can’t apply safely without snapshots.
   - Mitigation: ensure `translate.mjs` writes base snapshots and `prague-sync` publishes them to R2 alongside overlays and indices.
 - **Overbuilding interaction**: carousel complexity can creep.
-  - Mitigation: keep v0.1 minimal (reuse `steps`/`split`); defer advanced controls to v0.2.
+  - Mitigation: keep motion light, state minimal, and behavior deterministic.
 - **Contract drift**: content authors may add fields not allowed.
   - Mitigation: strict validator is a feature; update allowlists/contracts deliberately.
