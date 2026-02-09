@@ -7,7 +7,7 @@ Runtime code + `supabase/migrations/` are operational truth; any mismatch here i
 **Purpose:** Phase-1 HTTP API (instances) + AI grant/outcome gateway + metering enforcement (usage is shipped; submissions are placeholders in this repo snapshot).
 **Owner:** Cloudflare Workers (`paris`).
 **Dependencies:** Michael (Postgres via Supabase REST), San Francisco (AI execution).
-**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
+**Shipped Endpoints (this repo snapshot):** `GET /api/healthz`, `GET /api/widgets` (widget catalog; dev auth), `GET /api/instances` (dev tooling), `GET /api/curated-instances` (curated listing), `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`, `GET/PUT/DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`, `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio|minibob|workspace`, `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio|minibob|workspace`, `POST /api/l10n/jobs/report`, `POST /api/instance` (internal create), `GET/PUT /api/instance/:publicId` (public, published-only unless dev auth), `GET/POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace`, `GET/PUT /api/workspaces/:workspaceId/locales`, `GET/POST /api/workspaces/:workspaceId/business-profile`, `POST /api/workspaces/:workspaceId/website-creative` (devstudio; local-only), `POST /api/ai/grant`, `POST /api/ai/minibob/session`, `POST /api/ai/minibob/grant`, `POST /api/ai/outcome`, `POST /api/personalization/preview`, `GET /api/personalization/preview/:jobId`, `POST /api/personalization/onboarding`, `GET /api/personalization/onboarding/:jobId`, `POST /api/usage` (metering; HMAC-signed), `POST /api/submit/:publicId` (501).
 **Database Tables (this repo snapshot):** `widgets`, `widget_instances`, `curated_widget_instances`, `workspaces`, `widget_instance_overlays`, `l10n_generate_state`, `l10n_base_snapshots`, `workspace_business_profiles`, `instance_enforcement_state`.
 **Key constraints:** instance config is stored verbatim (JSON object required); status is `published|unpublished`; all non-public endpoints are gated by `PARIS_DEV_JWT` (public `/api/instance/:publicId` is published-only unless dev auth is present).
 
@@ -96,6 +96,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `POST /api/workspaces/:workspaceId/instances?subject=devstudio|minibob|workspace` — Creates the instance in that workspace if missing; if the `publicId` already exists in the same workspace it returns the existing snapshot (idempotent). If the `publicId` exists in a *different* workspace, returns 409 `PUBLIC_ID_CONFLICT`.
 - `GET /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Loads an instance only if it belongs to `workspaceId` (404 if not found).
 - `PUT /api/workspaces/:workspaceId/instance/:publicId?subject=devstudio|minibob|workspace` — Updates an instance only if it belongs to `workspaceId` (404 if not found).
+- `POST /api/workspaces/:workspaceId/website-creative` — DevStudio-only local helper that ensures/opens a curated “website creative” instance for Prague blocks. Requires `subject=devstudio` and is **local-only** (`ENV_STAGE=local`).
 
 ### Curated vs user instance routing
 
@@ -118,7 +119,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
 - Flags are intentionally minimal (currently only `branding.remove` is tiered).
 
 ### Localization (l10n) (Layered, canonical)
-- Workspace locale selection lives in `workspaces.l10n_locales`.
+- Workspace **active locales** live in `workspaces.l10n_locales` (non‑EN; EN is implied).
 - Layered endpoints (workspace-scoped, `subject` required):
   - `GET /api/workspaces/:workspaceId/instances/:publicId/layers?subject=devstudio|minibob|workspace`
   - `GET /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`
@@ -126,18 +127,18 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
   - `DELETE /api/workspaces/:workspaceId/instances/:publicId/layers/:layer/:layerKey?subject=devstudio|minibob|workspace`
 - L10n status + reporting:
   - `GET /api/workspaces/:workspaceId/instances/:publicId/l10n/status?subject=devstudio|minibob|workspace`
+  - `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio|minibob|workspace` (curated-only; manually enqueue the workspace active locales set — endpoint name kept for compatibility)
   - `POST /api/l10n/jobs/report` (San Francisco → Paris job status updates)
 - Canonical store: `widget_instance_overlays` (layer + layer_key).
 - User overrides live in layer=user (layerKey=<locale>) with optional `global` fallback and are merged last at publish time.
 - Publish/update triggers:
-  - On instance create/update, Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
+  - On **user instance publish/update** (published status), Paris enqueues l10n jobs to `L10N_GENERATE_QUEUE`.
   - Paris mints a short-lived AI grant for `l10n.instance.v1` (10-minute TTL) and attaches `{ agentId, grant }` to each l10n job.
   - If enqueue/dispatch fails, the publish/update request fails (fail-fast to preserve overlay determinism).
   - Local dev: when `ENV_STAGE=local` and `SANFRANCISCO_BASE_URL` are set, Paris POSTs l10n jobs directly to San Francisco `/v1/l10n` (queue bypass).
-  - Curated instances → all supported locales.
-  - User instances → `workspaces.l10n_locales` (within cap).
-  - Paris persists job state in `l10n_generate_state` and retries `dirty/failed` rows via cron.
-  - Queued/running l10n states that are stale for 10+ minutes are re-queued on the next instance update/promote.
+  - Locale scope: workspace **active locales** from `workspaces.l10n_locales` (within cap) for **user** and **curated** instances; curated does not auto-enqueue and is expected to use manual tooling (`.../l10n/enqueue-selected`).
+  - Paris persists job state in `l10n_generate_state` and retries `dirty/failed` rows via cron (skips locales no longer active; marks them `superseded`).
+  - Queued/running l10n states that are stale for 10+ minutes may be re-queued on the next instance update/promote (user instances only).
   - Paris stores allowlist snapshots in `l10n_base_snapshots`, diffs `changed_paths` + `removed_paths`, and rebases user overrides to the new fingerprint.
   - `baseFingerprint` is required on overlay writes; `baseUpdatedAt` is metadata only.
   - Overlay writes enqueue `L10N_PUBLISH_QUEUE` (layer + layerKey).
@@ -176,6 +177,7 @@ Fallback (when custom domains aren’t configured yet): `{script}.workers.dev`
 Paris does **not** serve widget definitions. Widget definitions (“Widget JSON”) live in **Tokyo/CDN**.
 
 - Source in-repo: `tokyo/widgets/{widgetType}/spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md` plus contract files (`limits.json`, `localization.json`, `layers/*.allowlist.json`, `pages/*.json`)
+- Paris does expose a **dev-auth widget catalog** for tooling: `GET /api/widgets` → `{ widgets: [{ type, name }] }` (this is *metadata*, not the widget definition).
 - Bob compiles widget specs for the editor via `GET /api/widgets/[widgetname]/compiled` (Bob app, not Paris)
 - Venice embed rendering should load widget runtime assets from Tokyo; Venice currently fetches the instance snapshot from Paris via `/api/instance/:publicId?subject=venice` (public, published-only unless dev auth). Editor/dev tooling uses the workspace-scoped endpoints.
 
@@ -190,6 +192,7 @@ Current repo behavior:
 - **Auth (dev/local only):** requires `Authorization: Bearer ${PARIS_DEV_JWT}`.
 - **Agent registry:** only known `agentId`s are accepted (registry-backed, with alias support; canonical IDs returned).
 - **Policy context:** `subject` + `workspaceId` determine the policy profile (defaults to `minibob` when missing).
+- **Tiered Access (PRD 041):** Paris resolves `workspaces.tier` to an `AiProfile` (e.g., `free_low`, `paid_standard`, `paid_premium`) and stamps it into the grant.
 - **Budgets are derived from policy** and capped server-side (tokens/timeout/requests) to keep the edge path safe.
 - **AI policy capsule:** grants include `ai.profile` + `ai.allowedProviders` for SF enforcement.
 - `trace.envStage` is stamped from `ENV_STAGE` (used by San Francisco learning indexes).
@@ -208,7 +211,12 @@ Request:
 
 Response:
 ```json
-{ "grant": "v1....", "exp": 1735521234, "agentId": "sdr.widget.copilot.v1" }
+{ 
+  "grant": "v1....", 
+  "exp": 1735521234, 
+  "agentId": "sdr.widget.copilot.v1",
+  "ai": { "profile": "paid_premium", "allowedProviders": ["openai", "anthropic"] }
+}
 ```
 
 #### `POST /api/ai/minibob/session`
@@ -234,7 +242,7 @@ Current repo behavior:
 - **Session verification:** `sessionToken` signature + TTL are verified before minting.
 - **Budgets:** fixed clamps for Minibob (`maxTokens=420`, `timeoutMs=12000`, `maxRequests=2`).  
   Local dev exception: `timeoutMs=45000`, `maxTokens=650` to avoid local LLM timeouts.
-- **Rate limiting:** two KV counters (fingerprint/minute + session/hour).
+- **Rate limiting:** two KV counters (session/minute + session/hour). Per-IP abuse controls for the public session mint are handled at the edge (WAF/rate limits), since grant requests may be proxied through Bob.
 - **Throttle errors:**  
   - `coreui.errors.ai.minibob.rateLimited` (HTTP 429)  
   - `coreui.errors.ai.minibob.ratelimitUnavailable` (HTTP 503)

@@ -8,12 +8,14 @@
   --ck-text-muted: color-mix(in oklab, var(--color-system-black), transparent 56%);
   --ck-text-subtle: color-mix(in oklab, var(--color-system-black), transparent 45%);
   --ck-text-faint: color-mix(in oklab, var(--color-system-black), transparent 55%);
+  --ck-text-secondary: var(--color-system-black-secondary, #2C2C30);
 }
 
 /* Text tone helpers (do not set font). */
 .ck-text-muted { color: var(--ck-text-muted); }
 .ck-text-subtle { color: var(--ck-text-subtle); }
 .ck-text-faint { color: var(--ck-text-faint); }
+.ck-text-secondary { color: var(--ck-text-secondary); }
 
 /* Margin resets for headings/paragraphs (do not set font). */
 .ck-m0 { margin: 0 !important; }
@@ -28,5 +30,4 @@
 .ck-gap-tight { gap: var(--space-1); }
 .ck-gap-snug { gap: var(--space-3); }
 .ck-gap-loose { gap: var(--space-6); }
-
 

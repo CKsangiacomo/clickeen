@@ -24,7 +24,7 @@
 
 ## Canonical URLs (executed)
 
-- **Local**: `http://localhost:4000` (Tokyo dev server started by `scripts/dev-up.sh`)
+- **Local**: `http://localhost:4000` (Tokyo dev server started by `bash scripts/dev-up.sh`)
 - **Cloud-dev**: `https://tokyo.dev.clickeen.com` (Cloudflare dev)
 - **UAT / Limited GA / GA**: `https://tokyo.clickeen.com` (release stages share prod infra)
 

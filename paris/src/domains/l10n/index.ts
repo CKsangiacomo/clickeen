@@ -19,7 +19,6 @@ import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
 import { asTrimmedString, isRecord, isUuid } from '../../shared/validation';
 import {
-  SUPPORTED_LOCALES,
   hasLocaleSuffix,
   hasProhibitedSegment,
   loadWidgetLayerAllowlist,
@@ -43,7 +42,7 @@ import {
 } from '../../shared/instances';
 import { consumeBudget } from '../../shared/budgets';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
-import { requireWorkspace } from '../../shared/workspaces';
+import { loadWorkspaceById, requireWorkspace } from '../../shared/workspaces';
 import { loadInstanceByWorkspaceAndPublicId, resolveWidgetTypeForInstance } from '../instances';
 import { issueAiGrant } from '../ai';
 
@@ -650,15 +649,35 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
   const envStage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
   const nowIso = new Date().toISOString();
 
+  const workspaceLocaleCache = new Map<string, Set<string>>();
+  const resolveWorkspaceLocaleSet = async (workspaceId: string): Promise<Set<string> | null> => {
+    const cached = workspaceLocaleCache.get(workspaceId);
+    if (cached) return cached;
+    let workspace: WorkspaceRow | null = null;
+    try {
+      workspace = await loadWorkspaceById(env, workspaceId);
+    } catch {
+      return null;
+    }
+    if (!workspace) return null;
+    const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
+    if (!normalized.ok) return null;
+    const set = new Set<string>(normalized.locales);
+    workspaceLocaleCache.set(workspaceId, set);
+    return set;
+  };
+
   const jobs: L10nJob[] = [];
   const queuedRows: L10nGenerateStateRow[] = [];
   const failedRows: L10nGenerateStateRow[] = [];
+  const supersededRows: L10nGenerateStateRow[] = [];
 
   for (const row of rows) {
     const locale = row.layer_key;
     const widgetType = row.widget_type ?? null;
     const workspaceId = row.workspace_id ?? null;
     const attempts = (row.attempts ?? 0) + 1;
+    const kind = inferInstanceKindFromPublicId(row.public_id);
     if (!locale || !widgetType || !workspaceId) {
       const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
       failedRows.push({
@@ -672,7 +691,31 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
       continue;
     }
 
-    const kind = inferInstanceKindFromPublicId(row.public_id);
+    const selectedLocales = await resolveWorkspaceLocaleSet(workspaceId);
+    if (!selectedLocales) {
+      const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      failedRows.push({
+        ...row,
+        status: 'failed',
+        attempts,
+        next_attempt_at: nextAttemptAt,
+        last_attempt_at: nowIso,
+        last_error: 'workspace_locales_unavailable',
+      });
+      continue;
+    }
+
+    if (!selectedLocales.has(locale)) {
+      supersededRows.push({
+        ...row,
+        status: 'superseded',
+        next_attempt_at: null,
+        last_attempt_at: nowIso,
+        last_error: 'locale_not_selected',
+      });
+      continue;
+    }
+
     const grantSubject = kind === 'curated' ? 'devstudio' : 'workspace';
     const grantWorkspaceId = grantSubject === 'workspace' ? workspaceId : undefined;
     const issued = await issueAiGrant({
@@ -724,6 +767,9 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
 
   if (failedRows.length) {
     await upsertL10nGenerateStates(env, failedRows);
+  }
+  if (supersededRows.length) {
+    await upsertL10nGenerateStates(env, supersededRows);
   }
 
   if (!jobs.length) return { processed: rows.length, queued: 0, failed: failedRows.length };
@@ -800,6 +846,14 @@ function readWorkspaceLocales(workspace: WorkspaceRow): Response | { locales: st
     );
   }
   return { locales: normalized.locales };
+}
+
+function resolveWorkspaceActiveLocales(args: {
+  workspace: WorkspaceRow;
+}): Response | { locales: string[] } {
+  const configured = readWorkspaceLocales(args.workspace);
+  if (configured instanceof Response) return configured;
+  return configured;
 }
 
 function enforceL10nSelection(policy: Policy, locales: string[]) {
@@ -1403,16 +1457,11 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   const baseUpdatedAt = instance.updated_at ?? null;
   const kind = resolveInstanceKind(instance);
 
-  let locales: string[] = [];
-  if (kind === 'curated') {
-    locales = SUPPORTED_LOCALES;
-  } else {
-    const workspaceLocales = readWorkspaceLocales(workspace);
-    if (workspaceLocales instanceof Response) return workspaceLocales;
-    locales = workspaceLocales.locales;
-    const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
-    if (entitlementGate) return entitlementGate;
-  }
+  const workspaceLocales = resolveWorkspaceActiveLocales({ workspace });
+  if (workspaceLocales instanceof Response) return workspaceLocales;
+  const locales = workspaceLocales.locales;
+  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
+  if (entitlementGate) return entitlementGate;
 
   let stateMap = locales.length
     ? await loadL10nGenerateStates(env, publicId, 'locale', baseFingerprint)
@@ -1431,7 +1480,7 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
     overlayStale.add(key);
   });
 
-  if (locales.length && stateMap.size === 0 && overlayStale.size > 0) {
+  if (kind !== 'curated' && locales.length && stateMap.size === 0 && overlayStale.size > 0) {
     try {
       const enqueueResult = await enqueueL10nJobs({
         env,
@@ -1506,6 +1555,66 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   });
 }
 
+export async function handleWorkspaceInstanceL10nEnqueueSelected(req: Request, env: Env, workspaceId: string, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  const kind = resolveInstanceKind(instance);
+  if (kind !== 'curated') {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'Curated publicId required' }, 422);
+  }
+
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+
+  const workspaceLocales = resolveWorkspaceActiveLocales({ workspace });
+  if (workspaceLocales instanceof Response) return workspaceLocales;
+  const locales = workspaceLocales.locales;
+  const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
+  if (entitlementGate) return entitlementGate;
+
+  const baseUpdatedAt = instance.updated_at ?? null;
+  const enqueueResult = await enqueueL10nJobs({
+    env,
+    instance,
+    workspace,
+    widgetType,
+    baseUpdatedAt,
+    policy: policyResult.policy,
+    localesOverride: locales,
+    allowNoDiff: true,
+  });
+  if (!enqueueResult.ok) {
+    console.error('[ParisWorker] l10n enqueue failed (enqueue-selected)', enqueueResult.error);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.l10n.enqueueFailed',
+        detail: enqueueResult.error,
+      },
+      500,
+    );
+  }
+
+  return json({
+    ok: true,
+    publicId,
+    widgetType,
+    queued: enqueueResult.queued,
+    skipped: enqueueResult.skipped,
+  });
+}
+
 export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspaceId: string) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -1517,19 +1626,9 @@ export async function handleWorkspaceLocalesGet(req: Request, env: Env, workspac
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
 
-  const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-  if (!normalized.ok) {
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.workspace.locales.invalid',
-        detail: JSON.stringify(normalized.issues),
-      },
-      500
-    );
-  }
-
-  return json({ locales: normalized.locales });
+  const resolved = resolveWorkspaceActiveLocales({ workspace });
+  if (resolved instanceof Response) return resolved;
+  return json({ locales: resolved.locales });
 }
 
 export async function handleWorkspaceLocalesPut(req: Request, env: Env, workspaceId: string) {
@@ -1583,26 +1682,22 @@ export async function enqueueL10nJobs(args: {
   widgetType: string | null;
   baseUpdatedAt: string | null | undefined;
   policy: Policy;
+  localesOverride?: string[];
+  allowNoDiff?: boolean;
 }) {
   if (!args.widgetType) {
     return { ok: false as const, queued: 0, skipped: 0, error: 'coreui.errors.instance.widgetMissing' };
   }
 
   const kind = resolveInstanceKind(args.instance);
-  let locales: string[] = [];
-
-  if (kind === 'curated') {
-    locales = SUPPORTED_LOCALES;
-  } else {
-    const workspaceLocales = readWorkspaceLocales(args.workspace);
-    if (workspaceLocales instanceof Response) {
-      return { ok: false as const, queued: 0, skipped: 0, error: 'coreui.errors.workspace.locales.invalid' };
-    }
-    locales = workspaceLocales.locales;
-    const entitlementGate = enforceL10nSelection(args.policy, locales);
-    if (entitlementGate) {
-      return { ok: true as const, queued: 0, skipped: locales.length };
-    }
+  const workspaceLocales = readWorkspaceLocales(args.workspace);
+  if (workspaceLocales instanceof Response) {
+    return { ok: false as const, queued: 0, skipped: 0, error: 'coreui.errors.workspace.locales.invalid' };
+  }
+  const locales = args.localesOverride ?? workspaceLocales.locales;
+  const entitlementGate = enforceL10nSelection(args.policy, locales);
+  if (entitlementGate) {
+    return { ok: true as const, queued: 0, skipped: locales.length };
   }
 
   if (locales.length === 0) return { ok: true as const, queued: 0, skipped: 0 };
@@ -1645,6 +1740,10 @@ export async function enqueueL10nJobs(args: {
   }
 
   const allowlistPaths = localizationAllowlist.map((entry) => entry.path);
+  const diffIsEmpty = changedPaths.length === 0 && removedPaths.length === 0;
+  const translateWithoutDiff = Boolean(args.allowNoDiff) && diffIsEmpty;
+  const effectiveChangedPaths = translateWithoutDiff ? allowlistPaths : changedPaths;
+  const effectiveRemovedPaths = translateWithoutDiff ? [] : removedPaths;
   if (fingerprintChanged) {
     try {
       await rebaseUserOverlays({
@@ -1670,7 +1769,7 @@ export async function enqueueL10nJobs(args: {
     });
   }
 
-  if (changedPaths.length === 0 && removedPaths.length === 0) {
+  if (!translateWithoutDiff && diffIsEmpty) {
     return { ok: true as const, queued: 0, skipped: locales.length };
   }
 
@@ -1704,8 +1803,8 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: current?.last_attempt_at ?? null,
       last_error: null,
-      changed_paths: changedPaths,
-      removed_paths: removedPaths,
+      changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+      removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
     });
   });
 
@@ -1742,8 +1841,8 @@ export async function enqueueL10nJobs(args: {
       locale,
       baseFingerprint,
       baseUpdatedAt,
-      changedPaths,
-      removedPaths,
+      changedPaths: effectiveChangedPaths,
+      removedPaths: effectiveRemovedPaths,
       kind,
       workspaceId,
       envStage,
@@ -1785,8 +1884,8 @@ export async function enqueueL10nJobs(args: {
           next_attempt_at: nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
           last_error: detail,
-          changed_paths: current?.changed_paths ?? changedPaths,
-          removed_paths: current?.removed_paths ?? removedPaths,
+          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
@@ -1816,8 +1915,8 @@ export async function enqueueL10nJobs(args: {
           next_attempt_at: nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
           last_error: detail,
-          changed_paths: current?.changed_paths ?? changedPaths,
-          removed_paths: current?.removed_paths ?? removedPaths,
+          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
@@ -1843,8 +1942,8 @@ export async function enqueueL10nJobs(args: {
           next_attempt_at: nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
           last_error: 'L10N_GENERATE_QUEUE missing',
-          changed_paths: current?.changed_paths ?? changedPaths,
-          removed_paths: current?.removed_paths ?? removedPaths,
+          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
@@ -1873,8 +1972,8 @@ export async function enqueueL10nJobs(args: {
           next_attempt_at: nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
           last_error: detail,
-          changed_paths: current?.changed_paths ?? changedPaths,
-          removed_paths: current?.removed_paths ?? removedPaths,
+          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
@@ -1899,8 +1998,8 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: queuedAt,
       last_error: null,
-      changed_paths: current?.changed_paths ?? changedPaths,
-      removed_paths: current?.removed_paths ?? removedPaths,
+      changed_paths: current?.changed_paths ?? effectiveChangedPaths,
+      removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
     };
   });
   await upsertL10nGenerateStates(args.env, queuedRows);

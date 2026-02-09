@@ -1,0 +1,125 @@
+---
+import {
+  actionGroupFromLegacy,
+  actionGroupToPrimitives,
+  assertPrimitives,
+  assertSplitLayout,
+  type ActionGroup,
+} from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
+import Carousel from '../../components/Carousel.astro';
+
+type CarouselItem = {
+  curatedRef: {
+    publicId: string;
+    locale: string;
+    title?: string;
+    embedMode?: 'iframe' | 'indexable';
+  };
+};
+
+type Props = {
+  headline: string;
+  subheadline?: string;
+  primaryCta: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
+  actionGroup?: ActionGroup;
+  items: CarouselItem[];
+  layout: string;
+};
+
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, items, layout } = Astro.props;
+const resolvedLayout = assertSplitLayout(layout, 'split-carousel.layout');
+const isReverse = resolvedLayout === 'visual-left';
+// Stacked is not supported/recommended for carousel split, defaulting to side-by-side or stacking on mobile via CSS
+
+const resolvedActionGroup =
+  actionGroup ??
+  actionGroupFromLegacy(primaryCta, secondaryCta, {
+    layout: 'row',
+    className: 'ck-splitCarousel__ctaRow',
+    primaryClassName: 'ck-btn--lg label-l',
+    secondaryClassName: 'ck-btn--secondaryCta ck-btn--lg label-l',
+  });
+
+const headerPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 3,
+      content: headline,
+      className: 'display-3 ck-m0 ck-splitCarousel__title',
+    },
+    ...(subheadline
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subheadline,
+            className: 'body-website ck-m0 ck-splitCarousel__sub ck-text-secondary',
+          },
+        ]
+      : []),
+  ],
+  'split-carousel.header',
+);
+---
+
+<section class="ck-canvas ck-splitCarousel">
+  <div class="ck-inline">
+    <div
+      class={`ck-split ck-split--center ck-split--hero ck-splitCarousel__split${isReverse ? ' ck-splitCarousel__split--reverse' : ''}`}
+    >
+      <div class="ck-split__a">
+        <div class="ck-splitCarousel__content ck-stack ck-gap-loose">
+          <div class="ck-stack ck-gap-tight ck-splitCarousel__copy">
+            <PrimitiveRenderer primitives={headerPrimitives} />
+          </div>
+          {resolvedActionGroup ? (
+            <div class="ck-splitCarousel__cta">
+              <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div class="ck-split__b ck-splitCarousel__visual" aria-hidden="true">
+        <Carousel items={items} id={`carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-splitCarousel {
+    background: var(--color-system-white);
+  }
+
+  .ck-splitCarousel__split {
+    gap: var(--space-10);
+    align-items: center;
+  }
+
+  .ck-splitCarousel__split--reverse {
+    flex-direction: row-reverse;
+  }
+
+  .ck-splitCarousel__title {
+    margin: 0 !important;
+    letter-spacing: -0.02em;
+  }
+
+  .ck-splitCarousel__sub {
+    margin: 0 !important;
+  }
+
+  .ck-splitCarousel__ctaRow {
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 900px) {
+    .ck-splitCarousel__split { gap: var(--space-6); }
+    .ck-splitCarousel__split--reverse { flex-direction: column; }
+  }
+</style>

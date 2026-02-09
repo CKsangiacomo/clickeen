@@ -13,7 +13,7 @@ Cloudflare Worker API service (dev).
 - `PUT /api/workspaces/:workspaceId/instance/:publicId`
 - `GET /api/instance/:publicId`
 - `PUT /api/instance/:publicId`
-  - body supports: `{ config?: object, status?: 'published'|'unpublished' }`
+  - body supports: `{ config?: object, status?: 'published'|'unpublished' }` (curated is always `published`)
 
 ## Curated vs user instances
 

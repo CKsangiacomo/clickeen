@@ -199,6 +199,7 @@ type Comment = {
 | **Content** | Limited | Higher | ∞ | ∞ |
 | **SEO/GEO** | ❌ | ✅ | ✅ | ✅ |
 | **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ |
+| **AI Model Quality** | Basic (Fast) | Standard (Selectable) | Premium | Premium (SOTA) |
 | **Auto-translate** | ❌ | ❌ | ✅ (3 locales) | ✅ (∞) |
 | **Supernova** | ❌ | ❌ | ❌ | ✅ |
 | **Branding** | Required | Optional | None | None |

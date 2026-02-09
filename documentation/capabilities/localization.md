@@ -29,10 +29,12 @@ This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps cachi
 - **Curated**: Clickeen-owned instances used for Prague embeds and template pickers.
 - **User**: Workspace-owned instances created by users (often by cloning curated).
 
-Curated instances always localize to all supported locales. User instances localize only when entitled and selected.
+Curated + user instances localize within the workspace’s **active locales** (EN implied), bounded by tier entitlements and subject policy.
+- **User instances** auto-enqueue l10n on publish/update (for the active locales set).
+- **Curated instances** do **not** auto-enqueue; DevStudio tooling triggers l10n generation explicitly (still targeting the active locales set).
 
-### Entitlement + selection model
-Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace locale selection**.
+### Entitlement + active locales model
+Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace active locales**.
 
 - Entitlement keys:
   - `l10n.locales.max` (cap; total locales including EN)
@@ -44,7 +46,7 @@ Effective localization = **entitlements** ∩ **subject policy** ∩ **workspace
   - Tier1: EN + 3 user-selected locales (total = 4)
   - Tier2+: unlimited locales
   - DevStudio: uncapped
-- Workspace selection source: `workspaces.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
+- Workspace active locales source: `workspaces.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 
 ## Localization systems (runtime)
 
@@ -125,7 +127,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Pipeline**
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `PARIS_DEV_JWT`).
-- Provider: OpenAI for Prague strings; instance l10n agents use DeepSeek.
+- Provider: OpenAI for Prague strings (system-owned); instance l10n agents follow the **Tiered AI Profile** (DeepSeek for Free, OpenAI/Anthropic for Paid).
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/l10n/prague/**`.
 - `scripts/prague-l10n/verify.mjs` validates allowlists + overlay paths.
   - Default mode is **best-available**: it validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.

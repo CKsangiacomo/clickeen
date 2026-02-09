@@ -55,7 +55,7 @@ const POLICY_VERSION = 'l10n.ops.v1';
 const MAX_ITEMS = 200;
 const MAX_INPUT_CHARS = 12000;
 const MAX_TOKENS = 900;
-const TIMEOUT_MS = 20_000;
+const TIMEOUT_MS = 35_000;
 
 export function isL10nJob(value: unknown): value is L10nJob {
   if (!isRecord(value)) return false;
@@ -117,15 +117,12 @@ function buildSystemPrompt(locale: string): string {
 }
 
 function buildUserPrompt(items: TranslationItem[]): string {
+  const payload = items.map((item) => ({ path: item.path, type: item.type, value: item.value }));
   return [
     'Translate the following items.',
-    'Return JSON array: [{ "path": "...", "value": "..." }, ...]',
+    'Return JSON array: [{"path":"...","value":"..."},...]',
     '',
-    JSON.stringify(
-      items.map((item) => ({ path: item.path, type: item.type, value: item.value })),
-      null,
-      2,
-    ),
+    JSON.stringify(payload),
   ].join('\n');
 }
 

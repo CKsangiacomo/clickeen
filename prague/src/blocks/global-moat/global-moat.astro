@@ -1,33 +1,145 @@
 ---
-import Steps from '../steps/steps.astro';
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import DieterIcon from '../../components/DieterIcon.astro';
 
-type StepItem = {
+type GlobalMoatItem = {
   title: string;
   body: string;
   iconEnabled?: boolean;
   iconName?: string;
   icon?: string;
-  backgroundEnabled?: boolean;
-  backgroundPath?: string;
-  background?: string;
-  imageEnabled?: boolean;
-  imagePath?: string;
-  image?: string;
-  imageAlt?: string;
-  imageLayout?: 'inset' | 'bleed';
-  imageFit?: 'cover' | 'contain';
-  imagePositionY?: 'top' | 'center' | 'bottom';
 };
 
 type Props = {
   widget: string;
   title: string;
   subhead?: string;
-  items: StepItem[];
+  items: GlobalMoatItem[];
   visual?: { image?: string };
+  ctaHref?: string;
 };
 
-const { widget, title, subhead, items, visual } = Astro.props as Props;
+const { title, subhead, items } = Astro.props as Props;
+
+const headerPrimitives = assertPrimitives(
+  [
+    { type: 'heading', level: 3, content: title, className: 'display-3 ck-m0' },
+    ...(subhead
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subhead,
+            className: 'body-website ck-m0 ck-globalMoat__subhead ck-text-secondary',
+          } as const,
+        ]
+      : []),
+  ],
+  'global-moat.header',
+);
+
+function resolveIconName(item: GlobalMoatItem): string {
+  if (item.iconEnabled === false) return '';
+  const next = typeof item.iconName === 'string' ? item.iconName.trim() : '';
+  if (next) return next;
+  const legacy = typeof item.icon === 'string' ? item.icon.trim() : '';
+  return legacy;
+}
 ---
 
-<Steps widget={widget} title={title} subhead={subhead} steps={items} visual={visual} />
+<section class="ck-canvas ck-globalMoat">
+  <div class="ck-inline ck-stack">
+    <header class="ck-globalMoat__header ck-stack ck-gap-tight">
+      <PrimitiveRenderer primitives={headerPrimitives} />
+    </header>
+
+    <div class="ck-globalMoat__grid" aria-label={title}>
+      {items.map((item, i) => {
+        const iconName = resolveIconName(item);
+
+        return (
+          <article class="ck-globalMoat__card" aria-label={`Global feature ${i + 1}`}>
+            {iconName ? (
+              <div class="ck-globalMoat__icon" aria-hidden="true">
+                <DieterIcon name={iconName} size={40} />
+              </div>
+            ) : null}
+
+            <PrimitiveRenderer
+              primitives={assertPrimitives(
+                [
+                  { type: 'heading', level: 2, content: item.title, className: 'heading-2 ck-m0' },
+                  {
+                    type: 'text',
+                    variant: 'body',
+                    content: item.body,
+                    className: 'body-l ck-m0 ck-text-secondary',
+                  },
+                ],
+                `global-moat.items[${i}]`,
+              )}
+            />
+          </article>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-globalMoat {
+    background: var(--color-system-white);
+  }
+
+  .ck-globalMoat__header {
+    max-width: 880px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .ck-globalMoat__subhead {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .ck-globalMoat__grid {
+    margin-top: var(--space-10);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+    align-items: stretch;
+  }
+
+  .ck-globalMoat__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: calc(var(--space-6) + var(--space-4));
+
+    background-color: var(--color-system-gray-5-step5);
+    border-radius: var(--control-radius-4xl);
+    overflow: hidden;
+  }
+
+  .ck-globalMoat__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    color: var(--color-system-gray);
+    margin-bottom: var(--space-5);
+  }
+
+  @media (max-width: 900px) {
+    .ck-globalMoat__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 620px) {
+    .ck-globalMoat__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

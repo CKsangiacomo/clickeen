@@ -10,6 +10,7 @@ import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
 import SubpageCards from '../blocks/subpage-cards/subpage-cards.astro';
+import SplitCarousel from '../blocks/split-carousel/SplitCarousel.astro';
 
 type StringType = 'string' | 'array';
 type RequiredString = { key: string; type: StringType };
@@ -18,6 +19,7 @@ export type BlockType =
   | 'big-bang'
   | 'hero'
   | 'split'
+  | 'split-carousel'
   | 'steps'
   | 'subpage-cards'
   | 'control-moat'
@@ -26,6 +28,9 @@ export type BlockType =
   | 'cta-bottom-block'
   | 'minibob'
   | 'locale-showcase'
+  | 'embed-carousel'
+  | 'mobile-showcase'
+  | 'feature-explorer'
   | 'navmeta'
   | 'page-meta';
 
@@ -54,7 +59,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['visual', 'curatedRef'],
+    meta: ['visual', 'curatedRef', 'items'],
   },
   split: {
     type: 'split',
@@ -64,6 +69,14 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'subheadline', type: 'string' },
     ],
     meta: ['curatedRef', 'layout', 'copy'],
+  },
+  'split-carousel': {
+    type: 'split-carousel',
+    component: SplitCarousel,
+    required: [
+      { key: 'headline', type: 'string' },
+    ],
+    meta: ['items', 'layout', 'copy'],
   },
   steps: {
     type: 'steps',
@@ -126,7 +139,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'heading', type: 'string' },
       { key: 'subhead', type: 'string' },
     ],
-    meta: ['copy'],
+    meta: ['copy', 'mode'],
   },
   'locale-showcase': {
     type: 'locale-showcase',
@@ -136,6 +149,26 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'subtitle', type: 'string' },
     ],
     meta: ['curatedRef'],
+  },
+  'embed-carousel': {
+    type: 'embed-carousel',
+    component: null, // Lazy loaded
+    required: [],
+    meta: ['items', 'options', 'copy'],
+  },
+  'mobile-showcase': {
+    type: 'mobile-showcase',
+    component: null, // Lazy loaded
+    required: [],
+    meta: ['items', 'options', 'copy'],
+  },
+  'feature-explorer': {
+    type: 'feature-explorer',
+    component: null, // Lazy loaded
+    required: [
+      { key: 'categories', type: 'array' }
+    ],
+    meta: ['options', 'copy'],
   },
   navmeta: {
     type: 'navmeta',
@@ -277,7 +310,6 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
       if (typeof body !== 'string') {
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].body must be a string`);
       }
-
       const iconEnabled = (item as any).iconEnabled;
       if (iconEnabled != null && typeof iconEnabled !== 'boolean') {
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].iconEnabled must be boolean`);

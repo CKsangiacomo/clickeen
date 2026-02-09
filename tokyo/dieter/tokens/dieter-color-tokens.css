@@ -121,6 +121,7 @@
   /* Neutral ladder (light) */
   --color-system-white: #ffffff;
   --color-system-black: #212121;
+  --color-system-black-secondary: #2C2C30;
   --color-system-gray: #707075;
   --color-system-gray-contrast: #636366;
   --color-system-gray-2: #808085;

@@ -8,11 +8,14 @@ import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
+import SplitCarousel from '../blocks/split-carousel/SplitCarousel.astro';
 import Steps from '../blocks/steps/steps.astro';
 import SubpageCards from '../blocks/subpage-cards/subpage-cards.astro';
+import EmbedCarousel from '../blocks/embed-carousel/embed-carousel.astro';
+import FeatureExplorer from '../blocks/feature-explorer/feature-explorer.astro';
+import MobileShowcase from '../blocks/mobile-showcase/mobile-showcase.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
-import { resolvePragueHref } from '../lib/links';
 import { chooseShowcaseTiles, localeLabel, resolveTokyoInstanceLocales, sortLocaleOptions } from '../lib/instanceL10n';
 
 type Block = {
@@ -31,11 +34,10 @@ type Props = {
   market: string;
   locale: string;
   activeSubpage?: 'overview' | 'templates' | 'examples' | 'features' | 'pricing';
+  primaryCta: { label: string; href: string };
 };
 
-const { blocks, widget, market, locale, activeSubpage = 'overview' } = Astro.props;
-const personalization = activeSubpage === 'overview' ? { widget, page: activeSubpage, locale } : null;
-const hasMinibob = blocks.some((b) => b && b.type === 'minibob');
+const { blocks, widget, market, locale, activeSubpage = 'overview', primaryCta } = Astro.props;
 const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
 const explicitShowcasePublicId =
   blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.curatedRef?.publicId === 'string')?.curatedRef?.publicId ??
@@ -44,18 +46,6 @@ const showcasePublicId =
   explicitShowcasePublicId ??
   blocks.find((b) => b && b.curatedRef && typeof b.curatedRef.publicId === 'string')?.curatedRef?.publicId ??
   `wgt_main_${widget}`;
-
-// Helper to title-case widget name (faq -> FAQ, countdown -> Countdown)
-const titleCaseWidget = (name: string): string => {
-  return name
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
-
-const widgetDisplayName = titleCaseWidget(widget);
-const createFreeLabel = `Create a free ${widgetDisplayName} widget`;
-const seeTemplatesLabel = await pragueT(locale, 'prague.cta.seeTemplates');
 const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
 const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
 
@@ -64,17 +54,7 @@ const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRa
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
 const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
 const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
-const heroPrimaryCta = {
-  label: createFreeLabel,
-  href: hasMinibob ? '#minibob' : `/${market}/${locale}/create`,
-};
-const heroSecondaryCta =
-  activeSubpage === 'overview'
-    ? {
-        label: seeTemplatesLabel,
-        href: resolvePragueHref({ href: '/widgets/{widget}/templates', market, locale, widget }),
-      }
-    : undefined;
+const heroPrimaryCta = primaryCta;
 ---
 
 {blocks.map((block) => {
@@ -87,7 +67,7 @@ const heroSecondaryCta =
           headline={String(copy.headline ?? '')}
           body={String(copy.body ?? '')}
           primaryCta={heroPrimaryCta}
-          secondaryCta={heroSecondaryCta}
+          secondaryCta={undefined}
         />
       );
     }
@@ -102,13 +82,13 @@ const heroSecondaryCta =
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
-          secondaryCta={heroSecondaryCta}
+          secondaryCta={undefined}
           curatedRef={
             curatedPublicId
               ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: curatedEmbedMode }
               : undefined
           }
-          personalization={personalization ?? undefined}
+          items={(block as any).items}
         >
           <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
@@ -126,13 +106,27 @@ const heroSecondaryCta =
           headline={String(copy.headline ?? '')}
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
-          secondaryCta={heroSecondaryCta}
+          secondaryCta={undefined}
           layout={layout}
           curatedRef={
             curatedPublicId
               ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split`, embedMode: curatedEmbedMode }
               : undefined
           }
+        />
+      );
+    }
+    case 'split-carousel': {
+      const copy = block.copy ?? {};
+      const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
+      return (
+        <SplitCarousel
+          headline={String(copy.headline ?? '')}
+          subheadline={String(copy.subheadline ?? '')}
+          primaryCta={heroPrimaryCta}
+          secondaryCta={undefined}
+          layout={layout}
+          items={(block as any).items ?? []}
         />
       );
     }
@@ -145,6 +139,7 @@ const heroSecondaryCta =
           subhead={copy.subhead as string}
           steps={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
           visual={block.visual}
+          ctaHref={heroPrimaryCta.href}
         />
       );
     }
@@ -172,6 +167,7 @@ const heroSecondaryCta =
           subhead={copy.subhead as string}
           items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
           visual={block.visual}
+          ctaHref={heroPrimaryCta.href}
         />
       );
     }
@@ -184,6 +180,7 @@ const heroSecondaryCta =
           subhead={copy.subhead as string}
           items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
           visual={block.visual}
+          ctaHref={heroPrimaryCta.href}
         />
       );
     }
@@ -196,6 +193,7 @@ const heroSecondaryCta =
           subhead={copy.subhead as string}
           items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
           visual={block.visual}
+          ctaHref={heroPrimaryCta.href}
         />
       );
     }
@@ -213,7 +211,13 @@ const heroSecondaryCta =
       const copy = block.copy ?? {};
       return (
         <>
-          <Minibob widget={widget} locale={locale} heading={String(copy.heading ?? '')} subhead={String(copy.subhead ?? '')} />
+          <Minibob
+            widget={widget}
+            locale={locale}
+            page={activeSubpage}
+            heading={String(copy.heading ?? '')}
+            subhead={String(copy.subhead ?? '')}
+          />
           {!hasExplicitLocaleShowcase ? (
             <LocaleShowcase
               publicId={showcasePublicId}
@@ -238,6 +242,33 @@ const heroSecondaryCta =
           subtitle={subtitle}
           tiles={showcaseTileEntries}
           options={showcaseOptionEntries}
+        />
+      );
+    }
+    case 'embed-carousel': {
+      const copy = block.copy ?? {};
+      return (
+        <EmbedCarousel
+          items={(block as any).items ?? []}
+          options={(block as any).options ?? {}}
+        />
+      );
+    }
+    case 'mobile-showcase': {
+      const copy = block.copy ?? {};
+      return (
+        <MobileShowcase
+          items={(block as any).items ?? []}
+          options={(block as any).options ?? {}}
+        />
+      );
+    }
+    case 'feature-explorer': {
+      const copy = block.copy ?? {};
+      return (
+        <FeatureExplorer
+          categories={(block as any).categories ?? []}
+          options={(block as any).options ?? {}}
         />
       );
     }

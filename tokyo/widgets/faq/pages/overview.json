@@ -5,71 +5,72 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Build a fast, beautiful FAQ widget. Customize, publish, and localize in minutes.",
-        "title": "FAQ widget - Clickeen"
+        "title": "FAQ widget - Clickeen",
+        "description": "Build a fast, beautiful FAQ widget. Customize, publish, and localize in minutes."
       }
     },
     {
       "id": "hero",
       "type": "hero",
-      "visual": true,
+      "copy": {
+        "headline": "Beautiful answers. Built to be fast.",
+        "subheadline": "The polished FAQ widget your site deserves. Zero config, fully automated."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "FAQ widget. Beautiful answers. Built to be fast.",
-        "subheadline": "Polished design, effortless updates, and SEO foundations—ready for any language, powered by AI."
       }
     },
     {
       "id": "navmeta",
       "type": "navmeta",
       "copy": {
-        "description": "Help visitors find answers fast.",
-        "title": "FAQ"
+        "title": "FAQ",
+        "description": "Help visitors find answers fast."
       }
     },
     {
       "id": "minibob",
       "type": "minibob",
       "copy": {
-        "heading": "Make it yours",
-        "subhead": "Design your perfect FAQ right here. See changes instantly."
-      }
+        "heading": "Watch your FAQ build itself",
+        "subhead": "Enter your website URL and we'll write questions and answers for you instantly.",
+        "cta": "Claim your design"
+      },
+      "mode": "extraction"
     },
     {
-      "id": "overview-subpages",
+      "id": "subpage-cards",
       "type": "subpage-cards",
       "copy": {
-        "title": "Explore what’s possible",
-        "subhead": "Start with templates, learn from examples, then dive into features when you’re ready.",
+        "title": "Everything you need to build the perfect FAQ",
+        "subhead": "Deep dive into specific templates, real-world examples, and powerful features.",
         "items": [
           {
-            "title": "Templates",
-            "body": "Launch fast with polished starting points you can adapt to your brand."
+            "title": "Find your look",
+            "body": "Choose from Accordion, List, and Card layouts, then fine-tune typography and styles. Every pixel is customizable to feel native to your brand."
           },
           {
-            "title": "Examples",
-            "body": "See what great FAQs look like in the wild—and borrow the patterns that convert."
+            "title": "See the results",
+            "body": "From boutique hotels to high-volume retailers, see how businesses use FAQs to reduce support volume and increase trust."
           },
           {
-            "title": "Features",
-            "body": "Understand what you can control, from layouts and styling to localization and SEO."
+            "title": "Unlock the power",
+            "body": "Go beyond the basics with enterprise-grade power. Deep dive into Ombra AI editing, instant localization, and our SEO-native architecture."
           }
         ]
       },
       "links": [
         {
           "page": "templates",
-          "iconName": "circle.grid.2x2"
+          "iconName": "square.on.square"
         },
         {
           "page": "examples",
-          "iconName": "app.translucent"
+          "iconName": "square.stack.3d.up"
         },
         {
           "page": "features",
-          "iconName": "character.circle"
+          "iconName": "gear"
         }
       ]
     },
@@ -77,97 +78,53 @@
       "id": "locale-showcase",
       "type": "locale-showcase",
       "copy": {
-        "title": "Preview it in real languages",
-        "subtitle": "Switch locales to see how your FAQ reads across markets—without rebuilding anything."
+        "title": "The world is your oyster",
+        "subtitle": "Welcome every website visitor like a local. Instant, natural translations for a global audience."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
       "id": "steps",
       "type": "steps",
       "copy": {
+        "title": "Frequently Asked Questions",
+        "subhead": "The simplest way to help your visitors and your business.",
         "items": [
           {
-            "body": "Every question left unanswered is a customer walking away. Visitors leave when they can't find what they need. A well-designed FAQ kills objections before they even form—so customers convince themselves to buy without ever reaching out.",
-            "title": "Stop losing sales to unanswered questions"
+            "title": "Help customers get answers",
+            "body": "Naturally answer the questions your visitors ask most. They find what they need instantly, right on your page."
           },
           {
-            "body": "Cut support volume by 40%+ when customers find answers instantly. No more slack pings. No more \"quick question\" emails. No more context-switching hell. Your FAQ does the heavy lifting while you focus on work that actually matters.",
-            "title": "Get your time back"
+            "title": "Stop repeating yourself",
+            "body": "Every question the widget answers is one less email or call you have to handle. Automate the repeats."
           },
           {
-            "body": "The right FAQ anticipates doubt and removes friction at 2 AM when you're offline. Your answers work around the clock. Customers don't wait for you—they get unblocked, trust what they see, and hit \"buy\" without interrupting your day.",
-            "title": "Close more deals while you sleep"
-          }
-        ],
-        "subhead": "Your customers have questions. Answer them once, not a hundred times.",
-        "title": "FAQs that actually work (so you don't have to)"
-      }
-    },
-    {
-      "id": "split-right",
-      "type": "split",
-      "layout": "visual-right",
-      "copy": {
-        "headline": "Looks like it shipped with your product",
-        "subheadline": "Fine-tune spacing, surfaces, borders, and typography so the FAQ feels native—not embedded."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      }
-    },
-    {
-      "id": "control-moat",
-      "type": "control-moat",
-      "copy": {
-        "title": "Design control, down to the pixel",
-        "subhead": "Match your site and brand without compromise.",
-        "items": [
-          {
-            "title": "Layouts",
-            "body": "Choose structure per breakpoint—accordion, list, or cards. Control spacing, density, and alignment so it feels native."
-          },
-          {
-            "title": "Appearance",
-            "body": "Radius, borders, shadows, and surfaces that match your UI language. Make it look like it shipped with your product."
-          },
-          {
-            "title": "Typography",
-            "body": "Role-based type styles that keep hierarchy clean. Headings, body, labels—tuned to your brand."
+            "title": "A win-win for everyone",
+            "body": "When visitors get answers, they move forward with confidence. Your business stays focused while customers get helped."
           }
         ]
       }
     },
     {
-      "id": "split-left-2",
+      "id": "split-design",
       "type": "split",
-      "layout": "visual-left",
+      "layout": "visual-right",
       "copy": {
-        "headline": "SEO/GEO-ready (indexable embed)",
-        "subheadline": "Run an indexable mode that injects FAQPage JSON‑LD into the host page when you need search engines to pick it up."
+        "headline": "Total design control",
+        "subheadline": "Radius. Shadows. Borders. Spacing. Tune every property in our visual editor without writing a single line of CSS."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01",
-        "embedMode": "indexable"
+        "publicId": "wgt_curated_faq.lightblurs.v01"
       }
     },
     {
       "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "body": "Drop in a beautifully designed FAQ that surfaces the right answer at the moment of doubt. Customers get unblocked instantly, objections dissolve before they turn into tickets, and you close more sales without adding more support. Customize once, embed anywhere, and let it work 24/7.",
-        "headline": "Watch questions answer themselves in real-time"
-      }
-    },
-    {
-      "id": "split-stacked",
-      "type": "split",
-      "layout": "stacked",
-      "copy": {
-        "headline": "Any layout—accordion, list, or cards",
-        "subheadline": "Switch layouts per breakpoint and control density so it stays clean on desktop and effortless on mobile."
-      },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "headline": "The last FAQ you'll ever install",
+        "body": "One instance or one thousand. One language or all of them. Manage your entire global fleet with zero friction."
       }
     },
     {
@@ -175,31 +132,19 @@
       "type": "global-moat",
       "copy": {
         "title": "Global by default",
-        "subhead": "One widget, every market.",
+        "subhead": "Instant localization without the headache.",
         "items": [
           {
-            "title": "Instant localization",
-            "body": "Ship in new languages without a translation project. Keep the experience consistent everywhere."
+            "title": "Ombra AI",
+            "body": "Auto-writing and translation power."
           },
           {
-            "title": "RTL ready",
-            "body": "Support right-to-left languages without redesigning layouts. Directionality stays correct."
-          },
-          {
-            "title": "Locale-aware copy",
-            "body": "Adapt tone and phrasing for the audience, not just the words. The content reads natural."
-          },
-          {
-            "title": "SEO foundations",
-            "body": "Structured content that can be indexed when you need it. Make answers discoverable."
-          },
-          {
-            "title": "Governance",
-            "body": "Strict contracts prevent drift. Changes are explicit, auditable, and repeatable."
+            "title": "SEO",
+            "body": "Schema markup injected for search visibility."
           },
           {
             "title": "Performance",
-            "body": "Fast renders and sensible loading so the page stays smooth across devices and networks."
+            "body": "Zero layout shift. Lazy loaded."
           }
         ]
       }
@@ -208,19 +153,20 @@
       "id": "platform-strip",
       "type": "platform-strip",
       "copy": {
-        "title": "Built like a platform",
+        "title": "Enterprise-grade foundation",
+        "subhead": "Built for scale, speed, and reliability.",
         "items": [
           {
             "title": "Fast",
-            "body": "Lightweight embeds and lazy loading. No layout jank."
+            "body": "Edge delivery."
           },
           {
             "title": "Reliable",
-            "body": "Deterministic contracts and build gates keep shipping safe at scale."
+            "body": "99.99% uptime."
           },
           {
             "title": "Accessible",
-            "body": "Clear hierarchy, readable type, and interaction patterns that work across input methods."
+            "body": "WCAG 2.1 compliant."
           }
         ]
       }
@@ -229,12 +175,8 @@
       "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Connect with every customer, everywhere",
-        "subheadline": "AI-powered FAQ that speaks their language and understands their needs."
-      },
-      "primaryCta": {
-        "label": "Get started",
-        "href": "/signup"
+        "headline": "Automate your support today",
+        "subheadline": "Start your free trial."
       }
     }
   ]

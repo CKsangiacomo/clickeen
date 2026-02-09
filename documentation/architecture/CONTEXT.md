@@ -299,7 +299,7 @@ pnpm build:dieter               # Build Dieter assets first
 pnpm build                      # Build all packages
 
 # Development
-./scripts/dev-up.sh             # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
+bash scripts/dev-up.sh          # Start all (local): Tokyo (4000), Tokyo Worker (8791), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), Pitch (8790) (+ SF 3002 if enabled)
                                # Also builds Dieter + i18n and verifies Prague l10n overlays (auto-translates missing overlays when SF is running).
 pnpm dev:bob                    # Bob only
 pnpm dev:paris                  # Paris only

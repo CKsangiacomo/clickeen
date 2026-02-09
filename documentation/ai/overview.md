@@ -64,6 +64,22 @@ Boundary (explicit ownership):
 - Policy, entitlements, and persistence live in Paris.
 - San Francisco executes based on the AI Grant + request payload and returns structured results.
 
+## Tiered Access Control (The "AI Profile")
+As of PRD 041, LLM access is strictly tiered. Paris resolves a workspace's entitlement to an **AI Profile** during grant issuance:
+
+| AI Profile | Target User | Model Access | Performance |
+|------------|-------------|--------------|-------------|
+| `free_low` | Free / Minibob | Flash/Haiku class | Fast, basic reasoning |
+| `paid_standard` | Tier 1 (Basic) | GPT-4o-mini class | Standard reasoning |
+| `paid_premium` | Tier 2+ (Pro) | GPT-4o / Sonnet 3.5 | SOTA reasoning |
+| `curated_premium`| Internal/Special | GPT-5.2 / Reasoner | Max capability |
+
+San Francisco enforces this profile by:
+1.  Receiving the `ai.profile` in the Grant.
+2.  Resolving the allowed `Provider` and `Model` list for that profile.
+3.  Rejecting requests for providers/models not allowed by the profile.
+
+
 ## Why This Separation Exists (GA Reality)
 At scale, AI workloads are bursty, slow, and failure-prone; instance APIs must remain boring and stable.
 Keeping Paris and San Francisco separate prevents:
@@ -103,10 +119,16 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 
 - Endpoints:
   - `GET /healthz`
-  - `POST /v1/execute`
+  - `POST /v1/execute` (requires a Paris-minted AI Grant)
   - `POST /v1/outcome` (outcome attach, signed by Paris)
+  - `POST /v1/personalization/preview` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `GET /v1/personalization/preview/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/personalization/onboarding` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `GET /v1/personalization/onboarding/:jobId` (internal; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/l10n` (internal/local tooling; `Authorization: Bearer ${PARIS_DEV_JWT}`)
+  - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${PARIS_DEV_JWT}`)
 - Cloudflare bindings:
-  - `SF_KV` (sessions)
+  - `SF_KV` (sessions + job records)
   - `SF_EVENTS` (queue for async event ingestion)
   - `SF_D1` (queryable indexes)
   - `SF_R2` (raw event storage)
@@ -369,7 +391,8 @@ Definition of done:
 Status: shipped (implemented as thin proxies)
 
 Definition of done:
-- Deleted `bob/app/api/ai/faq-answer/route.ts` (FAQ-only route removed).
+- Legacy FAQ-only proxy is explicitly deprecated:
+  - `bob/app/api/ai/faq-copilot/route.ts` returns `410` and points callers to `/api/ai/sdr-copilot`.
 
 ## Open Questions (next)
 - Grant transport: return grant in `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).

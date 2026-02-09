@@ -115,7 +115,7 @@ Current target size:
 - ≥ 50 prompts (enough to catch regressions, small enough to stay fast)
 
 How to run:
-- `./scripts/dev-up.sh`
+- `bash scripts/dev-up.sh`
 - `pnpm eval:copilot`
 
 How to expand safely:

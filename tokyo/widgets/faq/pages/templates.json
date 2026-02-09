@@ -5,63 +5,92 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Choose from stunning FAQ designs that turn heads and convert visitors.",
-        "title": "FAQ templates - Clickeen"
+        "title": "FAQ templates - Clickeen",
+        "description": "Start with a pro-designed FAQ template. Customize everything."
       }
     },
     {
       "id": "hero",
       "type": "hero",
+      "copy": {
+        "headline": "One widget, infinite vibes.",
+        "subheadline": "From trending glassmorphism to timeless classics. Switch styles instantly without touching content."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
       },
-      "copy": {
-        "headline": "Your FAQ. Your way.",
-        "subheadline": "Beautiful by default. Unmistakably yours by design."
-      }
+      "items": [
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Glassmorphism"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Minimal"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Bold"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Neo-Brutalism"
+          }
+        }
+      ]
     },
     {
-      "id": "split-2026-trends",
-      "type": "split",
+      "id": "split-trends",
+      "type": "split-carousel",
       "layout": "visual-left",
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
       "copy": {
-        "headline": "Bold when you need it",
-        "subheadline": "Glassmorphism, liquid glass, neumorphism—trend-forward looks in light and dark."
-      }
+        "headline": "One widget, infinite vibes.",
+        "subheadline": "From trending glassmorphism to timeless classics. Switch styles instantly without touching content."
+      },
+      "items": [
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Glassmorphism"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Minimal"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Bold"
+          }
+        },
+        {
+          "curatedRef": {
+            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "title": "Neo-Brutalism"
+          }
+        }
+      ]
     },
     {
-      "id": "split-evergreen-styles",
-      "type": "split",
-      "layout": "visual-right",
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Elegant when you want it",
-        "subheadline": "Minimal, clean, and modern. Timeless styles that always feel current."
-      }
-    },
-    {
-      "id": "big-bang-freedom",
+      "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "Start with a design. Then make it yours.",
-        "body": "Get the aesthetic instantly. Trending designs or evergreen classics. Then customize without limits—per-corner radius, per-side shadows, per-role typography, and responsive breakpoints. A template that becomes your signature."
+        "headline": "Light mode. Dark mode. Any mode, it's your mode.",
+        "body": "Templates are just the starting line. You control the finish."
       }
     },
     {
-      "id": "navmeta",
-      "type": "navmeta",
-      "copy": {
-        "description": "Help visitors find answers fast.",
-        "title": "FAQ"
-      }
-    },
-    {
-      "id": "steps-customization",
+      "id": "control-moat",
       "type": "control-moat",
       "copy": {
         "title": "Design freedom, built in.",
@@ -107,90 +136,95 @@
       "id": "split-layouts",
       "type": "split",
       "layout": "visual-right",
+      "copy": {
+        "headline": "Switch engines instantly",
+        "subheadline": "Grid, List, or Accordion.",
+        "body": "Change the fundamental structure of your FAQ without rewriting a single word."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Three layout engines for your FAQ widget",
-        "subheadline": "Accordion for progressive reveal. List for simplicity. Cards for visual hierarchy. Grid or masonry. Responsive columns. Granular control over gaps and padding."
       }
     },
     {
       "id": "split-appearance",
       "type": "split",
       "layout": "visual-left",
+      "copy": {
+        "headline": "Interaction design included",
+        "subheadline": "Hover states. Active states. Focus rings.",
+        "body": "We handle the interactive details so the experience feels alive."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Appearance control without limits",
-        "subheadline": "Per-corner radius. Borders with custom colors. Shadows outside and inside (linked or independent per-side). Gradient, image, or video backgrounds. Total visual authority."
       }
     },
     {
       "id": "split-typography",
       "type": "split",
       "layout": "visual-right",
+      "copy": {
+        "headline": "Type that feels right",
+        "subheadline": "Bring your own fonts or choose from our library.",
+        "body": "Set the hierarchy once. We apply it everywhere."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Typography precision",
-        "subheadline": "Six distinct roles (headline, body, question, answer, button, section). Choose from 17 Google Fonts. Weight, style, size—all customizable per role. Dynamic scales."
       }
     },
     {
-      "id": "split-dark",
+      "id": "split-darkmode",
       "type": "split",
       "layout": "visual-left",
+      "copy": {
+        "headline": "Dark mode is automatic",
+        "subheadline": "It just works.",
+        "body": "Your FAQ adapts to the user's system preference instantly. No extra configuration."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Dark mode: sophisticated and modern",
-        "subheadline": "Modern interfaces thrive in darkness. Premium feel with cutting-edge aesthetics. Included with every template."
       }
     },
     {
       "id": "split-responsive",
       "type": "split",
       "layout": "visual-right",
+      "copy": {
+        "headline": "Mobile perfection",
+        "subheadline": "Touch targets that work.",
+        "body": "Layouts that stack beautifully on any device, automatically."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Desktop and mobile, perfectly tuned",
-        "subheadline": "Your FAQ widget responds to every breakpoint. Different column counts, padding, spacing per device. One design language, infinite viewports."
       }
     },
     {
-      "id": "steps-workflow",
+      "id": "steps",
       "type": "steps",
       "copy": {
-        "title": "From template to perfect fit",
-        "subhead": "How to build your FAQ widget",
+        "title": "Build your native FAQ",
+        "subhead": "From idea to live in three steps.",
         "items": [
           {
-            "title": "Choose a design template",
-            "body": "Trending, classic, or minimal. Light and dark modes."
+            "title": "Pick a foundation",
+            "body": "Select the template that matches your vibe."
           },
           {
-            "title": "Customize layouts and appearance",
-            "body": "Accordion, list, or cards. Per-corner radius, per-side shadows, gradients, borders."
+            "title": "Tune the details",
+            "body": "Refine colors and spacing in the visual editor."
           },
           {
-            "title": "Refine typography and responsiveness",
-            "body": "Six font roles, 17 Google Fonts. Perfect on desktop and mobile."
+            "title": "Ship it",
+            "body": "One embed code. Live everywhere."
           }
         ]
       }
     },
     {
-      "id": "cta-templates",
+      "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Create a free FAQ widget",
-        "subheadline": "Start with a design template or build from scratch. Total creative control."
+        "headline": "It's time to build",
+        "subheadline": "Start with a free template."
       }
     }
   ]

@@ -447,6 +447,28 @@
         <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.2.counterclockwise"></span>
         <span class="diet-btn-ictxt__label body-s">Update curated instance</span>
       </button>
+      <button
+        type="button"
+        class="diet-btn-ictxt dev-widget-workspace__action"
+        id="refresh-prague-preview"
+        data-size="md"
+        data-variant="secondary"
+        data-tone="purple4"
+      >
+        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.clockwise"></span>
+        <span class="diet-btn-ictxt__label body-s">Refresh Prague preview</span>
+      </button>
+	      <button
+	        type="button"
+	        class="diet-btn-ictxt dev-widget-workspace__action"
+	        id="translate-selected-locales"
+	        data-size="md"
+	        data-variant="secondary"
+	        data-tone="indigo4"
+	      >
+	        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="globe"></span>
+	        <span class="diet-btn-ictxt__label body-s">Translate locales</span>
+	      </button>
     </div>
   </div>
   <div id="l10n-status" role="status" aria-live="polite" data-state="idle" data-tone="unavailable">
@@ -641,6 +663,8 @@ const superadminResetFromJson = document.getElementById('superadmin-reset-from-j
 const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
 const createCuratedVersionBtn = document.getElementById('create-curated-version');
 const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
+const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
+const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
 const l10nStatus = document.getElementById('l10n-status');
 const l10nStatusValue = document.getElementById('l10n-status-value');
 const l10nStatusMeta = document.getElementById('l10n-status-meta');
@@ -730,8 +754,8 @@ function summarizeL10nStatus(locales) {
   });
   const total = locales.length;
   const updated = counts.succeeded;
-  const needsUpdate = counts.superseded;
-  const updating = counts.running + counts.queued + counts.dirty;
+  const needsUpdate = counts.superseded + counts.dirty;
+  const updating = counts.running + counts.queued;
 
   let label = 'Updated';
   let tone = 'ready';
@@ -749,8 +773,11 @@ function summarizeL10nStatus(locales) {
 
   const metaUpdated = total ? `${updated}/${total} updated` : '';
   const metaNeedsUpdate = needsUpdate > 0 ? `${needsUpdate} ${needsUpdate === 1 ? 'needs' : 'need'} update` : '';
-  const meta = [metaUpdated, metaNeedsUpdate].filter(Boolean).join(' · ');
-  const shouldPoll = label !== 'Updated';
+  const firstError = locales.find((entry) => entry?.status === 'failed' && entry?.lastError);
+  const rawError = firstError?.lastError ? String(firstError.lastError).trim() : '';
+  const metaError = rawError ? `Last error: ${rawError.length > 120 ? `${rawError.slice(0, 117)}...` : rawError}` : '';
+  const meta = [metaUpdated, metaNeedsUpdate, metaError].filter(Boolean).join(' · ');
+  const shouldPoll = label === 'Updating' || label === 'Retrying';
   return { label, tone, meta, shouldPoll };
 }
 
@@ -780,7 +807,7 @@ async function refreshL10nStatus(publicId) {
     if (!res.ok) {
       const reasonKey = payload?.error?.reasonKey || payload?.error?.code || null;
       if (res.status === 403 && String(reasonKey || '').includes('coreui.upsell')) {
-        setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
+        setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: 'Upgrade required' });
         return;
       }
       setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Unavailable', meta: '' });
@@ -789,7 +816,12 @@ async function refreshL10nStatus(publicId) {
 
     const locales = Array.isArray(payload?.locales) ? payload.locales : [];
     if (!locales.length) {
-      setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
+      setL10nStatusDisplay({
+        state: 'ready',
+        tone: 'unavailable',
+        value: 'Off',
+        meta: 'No active locales (EN only)',
+      });
       return;
     }
 
@@ -1460,13 +1492,13 @@ async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
     widgetType: widgetSlug,
     publicId,
     config,
-    status: 'unpublished',
+    status: 'published',
   });
   await updateWorkspaceInstance({
     workspaceId: DEV_WORKSPACE_ID,
     publicId,
     config,
-    status: 'unpublished',
+    status: 'published',
   });
   return { publicId, config };
 }
@@ -1630,13 +1662,13 @@ async function resetMainInstanceFromJson(widgetSlug) {
     widgetType: widgetSlug,
     publicId,
     config,
-    status: 'unpublished',
+    status: 'published',
   });
   await updateWorkspaceInstance({
     workspaceId: DEV_WORKSPACE_ID,
     publicId,
     config,
-    status: 'unpublished',
+    status: 'published',
   });
   return { publicId, config };
 }
@@ -1676,7 +1708,7 @@ async function updateCuratedInstanceFromEditor(instance) {
     workspaceId: CLICKEEN_WORKSPACE_ID,
     publicId,
     config,
-    status: 'unpublished',
+    status: 'published',
     meta: instance.meta ?? undefined,
   });
 
@@ -1833,7 +1865,7 @@ async function submitCuratedModal() {
     widgetType: curatedModalState.widgetSlug,
     publicId,
     config: sourceConfig,
-    status: 'unpublished',
+    status: 'published',
     meta,
   });
 
@@ -1842,7 +1874,7 @@ async function submitCuratedModal() {
     widgetType: curatedModalState.widgetSlug,
     publicId,
     config: sourceConfig,
-    status: 'unpublished',
+    status: 'published',
   });
 
   closeCuratedModal();
@@ -1871,7 +1903,7 @@ superadminUpdateDefaults?.addEventListener('click', async () => {
       widgetType: widgetSlug,
       publicId: result.publicId,
       config: result.config,
-      status: 'unpublished',
+      status: 'published',
     });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
@@ -1897,7 +1929,7 @@ superadminResetFromJson?.addEventListener('click', async () => {
       widgetType: widgetSlug,
       publicId: result.publicId,
       config: result.config,
-      status: 'unpublished',
+      status: 'published',
     });
     await refreshInstancesAndSelect(result.publicId);
   } catch (err) {
@@ -1941,9 +1973,79 @@ updateCuratedInstanceBtn?.addEventListener('click', async () => {
       widgetType: widgetSlug,
       publicId: result.publicId,
       config: result.config,
-      status: 'unpublished',
+      status: 'published',
     });
     await refreshInstancesAndSelect(result.publicId);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+  }
+});
+
+refreshPraguePreviewBtn?.addEventListener('click', async () => {
+  const labelEl = refreshPraguePreviewBtn?.querySelector('.diet-btn-ictxt__label');
+  const previousLabel = labelEl?.textContent || 'Refresh Prague preview';
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
+      throw new Error('[DevStudio] Select a curated instance first.');
+    }
+    if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = true;
+    if (labelEl) labelEl.textContent = 'Queuing...';
+    const res = await superadminFetch(
+      `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+        currentPublicId,
+      )}/render-snapshot?subject=devstudio&_t=${Date.now()}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      },
+    );
+    const text = await res.text().catch(() => '');
+    if (!res.ok) throw new Error(`[DevStudio] Refresh Prague preview failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
+    alert(
+      `[DevStudio] Queued snapshot refresh for ${currentPublicId}. Prague should reflect within ~60s. (If your latest edits aren’t showing, click “Update curated instance” first.)`,
+    );
+    if (labelEl) labelEl.textContent = 'Queued';
+    setTimeout(() => {
+      if (labelEl) labelEl.textContent = previousLabel;
+    }, 1500);
+  } catch (err) {
+    alert(err instanceof Error ? err.message : String(err));
+    if (labelEl) labelEl.textContent = previousLabel;
+  } finally {
+    if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = false;
+  }
+});
+
+translateSelectedLocalesBtn?.addEventListener('click', async () => {
+  try {
+    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+    if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
+      throw new Error('[DevStudio] Select a curated instance first.');
+    }
+
+    const res = await superadminFetch(
+      `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+        currentPublicId,
+      )}/l10n/enqueue-selected?subject=devstudio&_t=${Date.now()}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      },
+    );
+    const payloadText = await res.text().catch(() => '');
+    if (!res.ok) throw new Error(`[DevStudio] Translate locales failed (HTTP ${res.status})${payloadText ? `: ${payloadText}` : ''}`);
+    let payload = null;
+    try {
+      payload = payloadText ? JSON.parse(payloadText) : null;
+    } catch {}
+    const queued = payload?.queued ?? null;
+    const skipped = payload?.skipped ?? null;
+    alert(
+      `[DevStudio] Queued ${typeof queued === 'number' ? queued : 'translation'} job(s) for ${currentPublicId}${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}.`,
+    );
+    refreshL10nStatus(currentPublicId).catch(() => {});
   } catch (err) {
     alert(err instanceof Error ? err.message : String(err));
   }

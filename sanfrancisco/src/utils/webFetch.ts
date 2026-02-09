@@ -2,25 +2,25 @@ import { asString, isRecord } from '../http';
 
 export type FetchHtmlResult =
   | {
-      ok: true;
-      finalUrl: string;
-      status: number;
-      contentType: string;
-      html: string;
-      truncated: boolean;
-    }
+    ok: true;
+    finalUrl: string;
+    status: number;
+    contentType: string;
+    html: string;
+    truncated: boolean;
+  }
   | { ok: false; status?: number; message: string };
 
 export type FetchPageTextResult =
   | {
-      ok: true;
-      finalUrl: string;
-      status: number;
-      contentType: string;
-      title?: string;
-      text: string;
-      truncated: boolean;
-    }
+    ok: true;
+    finalUrl: string;
+    status: number;
+    contentType: string;
+    title?: string;
+    text: string;
+    truncated: boolean;
+  }
   | { ok: false; status?: number; message: string };
 
 export type HeadMeta = {
@@ -218,8 +218,19 @@ async function fetchHtmlPage(args: { url: URL; timeoutMs: number; maxBytes?: num
           redirect: 'manual',
           signal: controller.signal,
           headers: {
-            accept: 'text/html, text/plain;q=0.9, */*;q=0.1',
-            'user-agent': 'ClickeenAgent/1.0 (safe-fetch)',
+            accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'accept-language': 'en-US,en;q=0.9',
+            'cache-control': 'no-cache',
+            pragma: 'no-cache',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           },
         });
       } catch (err) {

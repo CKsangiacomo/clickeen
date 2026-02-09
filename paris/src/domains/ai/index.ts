@@ -43,7 +43,7 @@ async function hmacSha256Base64Url(secret: string, message: string): Promise<str
 
 const MINIBOB_SESSION_TTL_SEC = 60 * 60;
 const MINIBOB_SESSION_FUTURE_SKEW_SEC = 5 * 60;
-const MINIBOB_FP_LIMIT_PER_MINUTE = 6;
+const MINIBOB_SESSION_LIMIT_PER_MINUTE = 6;
 const MINIBOB_SESSION_LIMIT_PER_HOUR = 12;
 const MINIBOB_MINUTE_TTL_SEC = 2 * 60;
 const MINIBOB_HOUR_TTL_SEC = 2 * 60 * 60;
@@ -72,23 +72,6 @@ function resolveMinibobRateLimitMode(env: Env): { stage: string; mode: MinibobRa
   if (stage === 'local') return { stage, mode: 'off' };
   if (stage === 'cloud-dev') return { stage, mode: 'log' };
   return { stage, mode: 'enforce' };
-}
-
-function headerValue(headers: Headers, name: string, fallback = ''): string {
-  const raw = headers.get(name);
-  return raw && raw.trim() ? raw.trim() : fallback;
-}
-
-function getClientIp(req: Request): string {
-  const cfIp = headerValue(req.headers, 'cf-connecting-ip');
-  if (cfIp) return cfIp;
-  const forwarded = headerValue(req.headers, 'x-forwarded-for');
-  if (!forwarded) return 'local';
-  return forwarded.split(',')[0]?.trim() || 'local';
-}
-
-function utcDayKey(now: Date): string {
-  return now.toISOString().slice(0, 10);
 }
 
 function utcMinuteKey(now: Date): string {
@@ -175,21 +158,21 @@ async function applyMinibobRateLimit(args: {
   secret: string;
   sessionKey: string;
 }): Promise<
-  | { ok: true; stage: string; mode: MinibobRateLimitMode; fpHash: string; rateLimited: boolean; reason: string }
+  | { ok: true; stage: string; mode: MinibobRateLimitMode; rateLimited: boolean; reason: string }
   | { ok: false; response: Response; stage: string; mode: MinibobRateLimitMode; reason: string }
 > {
   const { stage, mode } = resolveMinibobRateLimitMode(args.env);
   if (mode === 'off') {
-    return { ok: true, stage, mode, fpHash: 'off', rateLimited: false, reason: 'off' };
+    return { ok: true, stage, mode, rateLimited: false, reason: 'off' };
   }
 
   const kv = args.env.MINIBOB_RATELIMIT_KV;
   if (!kv) {
     if (stage === 'local') {
-      return { ok: true, stage, mode: 'off', fpHash: 'local-no-kv', rateLimited: false, reason: 'no_kv_local' };
+      return { ok: true, stage, mode: 'off', rateLimited: false, reason: 'no_kv_local' };
     }
     if (stage === 'cloud-dev') {
-      return { ok: true, stage, mode: 'log', fpHash: 'cloud-dev-no-kv', rateLimited: false, reason: 'no_kv_cloud_dev' };
+      return { ok: true, stage, mode: 'log', rateLimited: false, reason: 'no_kv_cloud_dev' };
     }
     return {
       ok: false,
@@ -201,33 +184,30 @@ async function applyMinibobRateLimit(args: {
   }
 
   const now = new Date();
-  const dayKey = utcDayKey(now);
   const minuteKey = utcMinuteKey(now);
   const hourKey = utcHourKey(now);
 
-  const ip = getClientIp(args.req);
-  const userAgent = headerValue(args.req.headers, 'user-agent', 'unknown');
-  const acceptLanguage = headerValue(args.req.headers, 'accept-language', 'unknown');
-  const fpHash = await hmacSha256Base64Url(args.secret, `${dayKey}|${ip}|${userAgent}|${acceptLanguage}`);
+  // Note: Minibob grant requests may be proxied through Bob, so IP-based fingerprinting is proxy-fragile.
+  // Use the server-verified sessionKey as the stable rate-limit key, and rely on edge/WAF rules to protect
+  // the public `/api/ai/minibob/session` mint from infinite session rotation.
+  const sessionMinuteCounterKey = `minibob:session:${args.sessionKey}:minute:${minuteKey}`;
+  const sessionHourCounterKey = `minibob:session:${args.sessionKey}:hour:${hourKey}`;
 
-  const fpCounterKey = `minibob:fp:${fpHash}:minute:${minuteKey}`;
-  const sessionCounterKey = `minibob:session:${args.sessionKey}:hour:${hourKey}`;
-
-  const [fpCount, sessionCount] = await Promise.all([
-    incrementKvCounter(kv, fpCounterKey, MINIBOB_MINUTE_TTL_SEC),
-    incrementKvCounter(kv, sessionCounterKey, MINIBOB_HOUR_TTL_SEC),
+  const [minuteCount, hourCount] = await Promise.all([
+    incrementKvCounter(kv, sessionMinuteCounterKey, MINIBOB_MINUTE_TTL_SEC),
+    incrementKvCounter(kv, sessionHourCounterKey, MINIBOB_HOUR_TTL_SEC),
   ]);
 
-  const fpExceeded = fpCount > MINIBOB_FP_LIMIT_PER_MINUTE;
-  const sessionExceeded = sessionCount > MINIBOB_SESSION_LIMIT_PER_HOUR;
-  if (!fpExceeded && !sessionExceeded) {
-    return { ok: true, stage, mode, fpHash, rateLimited: false, reason: 'ok' };
+  const minuteExceeded = minuteCount > MINIBOB_SESSION_LIMIT_PER_MINUTE;
+  const hourExceeded = hourCount > MINIBOB_SESSION_LIMIT_PER_HOUR;
+  if (!minuteExceeded && !hourExceeded) {
+    return { ok: true, stage, mode, rateLimited: false, reason: 'ok' };
   }
 
-  const reason = fpExceeded ? 'fp_limit_exceeded' : 'session_limit_exceeded';
-  const retryAfterSec = fpExceeded ? 60 : 60 * 60;
+  const reason = minuteExceeded ? 'session_minute_limit_exceeded' : 'session_hour_limit_exceeded';
+  const retryAfterSec = minuteExceeded ? 60 : 60 * 60;
   if (mode === 'log') {
-    return { ok: true, stage, mode, fpHash, rateLimited: true, reason };
+    return { ok: true, stage, mode, rateLimited: true, reason };
   }
 
   return {

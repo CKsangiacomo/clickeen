@@ -1,0 +1,31 @@
+---
+type Props = {
+  categories?: { name: string; features: any[] }[];
+  options?: any;
+};
+
+const { categories = [], options = {} } = Astro.props;
+---
+
+<div class="feature-explorer" data-block="feature-explorer">
+  <div class="explorer-nav">
+    {categories.map((cat) => (
+      <button>{cat.name}</button>
+    ))}
+  </div>
+  <div class="explorer-content">
+    {/* Placeholder content area */}
+    <div class="feature-grid">
+      {categories[0]?.features.map((feature) => (
+         <div class="feature-card">{JSON.stringify(feature)}</div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .feature-explorer {
+    display: grid;
+    gap: var(--pkg-spacing-6);
+  }
+</style>

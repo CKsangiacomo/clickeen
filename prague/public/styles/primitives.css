@@ -86,6 +86,44 @@
   --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-black) 20%, transparent);
 }
 
+/* Secondary CTA (Prague marketing): solid gray → almost-black invert. */
+.ck-btn--secondaryCta {
+  /* Use only solid tokens/colors so this works even when `color-mix()` isn't supported. */
+  --ck-btn-bg: #e3e3e7;
+  --ck-btn-bg: var(--color-system-gray-6-step1);
+  --ck-btn-color: var(--color-system-black-secondary, #2C2C30);
+  --ck-btn-border-w: 0px;
+  --ck-btn-border-color: transparent;
+  --ck-btn-hover-bg: #2a2a2d; /* almost-black, slightly lifted */
+  --ck-btn-hover-color: var(--color-system-white);
+  --ck-btn-hover-border-color: transparent;
+  --ck-btn-clicked-bg: var(--color-system-black);
+  --ck-btn-clicked-color: var(--color-system-white);
+  --ck-btn-clicked-border-color: transparent;
+}
+
+/* Dark-glass chrome CTA (shared across Prague surfaces). */
+.ck-btn--glass {
+  --ck-btn-bg: rgba(0, 0, 0, 0.8);
+  --ck-btn-bg: color-mix(in oklab, var(--color-system-black) 80%, transparent);
+  --ck-btn-color: var(--color-system-white);
+  --ck-btn-border-w: 1px;
+  --ck-btn-border-color: rgba(255, 255, 255, 0.16);
+  --ck-btn-border-color: color-mix(in oklab, var(--color-system-white), transparent 84%);
+  --ck-btn-hover-bg: rgba(0, 0, 0, 0.86);
+  --ck-btn-hover-bg: color-mix(in oklab, var(--color-system-black) 86%, transparent);
+  --ck-btn-hover-color: var(--color-system-white);
+  --ck-btn-hover-border-color: rgba(255, 255, 255, 0.22);
+  --ck-btn-hover-border-color: color-mix(in oklab, var(--color-system-white), transparent 78%);
+  --ck-btn-clicked-bg: rgba(0, 0, 0, 0.9);
+  --ck-btn-clicked-bg: color-mix(in oklab, var(--color-system-black) 90%, transparent);
+  --ck-btn-clicked-color: var(--color-system-white);
+  --ck-btn-clicked-border-color: rgba(255, 255, 255, 0.28);
+  --ck-btn-clicked-border-color: color-mix(in oklab, var(--color-system-white), transparent 72%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 .ck-btn:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--ck-btn-hover-bg);
   color: var(--ck-btn-hover-color);

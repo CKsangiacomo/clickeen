@@ -1835,7 +1835,7 @@ Tokenization patterns
 - `documentation/services/bob.md` - Preview system architecture
 - `documentation/widgets/WidgetArchitecture.md` - Canonical widget + editor contracts
 - `tokyo/widgets/faq/spec.json` - Reference widget definition patterns (repeaters, clusters, strict controls)
-- `documentation/widgets/LogoShowcase/LogoShowcase.md` - Color picker, themes
+- `documentation/widgets/LogoShowcase/LogoShowcase_PRD.md` - Color picker, themes
 
 **Implementation Critical Points:**
 - ✅ **Timer JavaScript:** Use `requestAnimationFrame` for 60fps accuracy (not setInterval)

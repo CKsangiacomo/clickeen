@@ -26,6 +26,35 @@
         "spread": 0,
         "enabled": false
       },
+      "padding": {
+        "mobile": {
+          "all": 28,
+          "top": 28,
+          "left": 28,
+          "right": 28,
+          "bottom": 28,
+          "linked": true
+        },
+        "desktop": {
+          "all": 52,
+          "top": 52,
+          "left": 52,
+          "right": 52,
+          "bottom": 52,
+          "linked": true
+        }
+      },
+      "radiusBL": "4xl",
+      "radiusBR": "4xl",
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "widthMode": "full",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "contentWidth": 960,
+      "radiusLinked": true,
       "insideShadow": {
         "linked": true,
         "all": {
@@ -78,36 +107,7 @@
           "spread": -12,
           "enabled": false
         }
-      },
-      "padding": {
-        "mobile": {
-          "all": 28,
-          "top": 28,
-          "left": 28,
-          "right": 28,
-          "bottom": 28,
-          "linked": true
-        },
-        "desktop": {
-          "all": 52,
-          "top": 52,
-          "left": 52,
-          "right": 52,
-          "bottom": 52,
-          "linked": true
-        }
-      },
-      "radiusBL": "4xl",
-      "radiusBR": "4xl",
-      "radiusTL": "4xl",
-      "radiusTR": "4xl",
-      "widthMode": "full",
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "contentWidth": 960,
-      "radiusLinked": true
+      }
     },
     "seo": {
       "businessType": "online-service",
@@ -119,6 +119,29 @@
         "mode": "viewport",
         "width": 0,
         "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 24,
+          "top": 24,
+          "left": 24,
+          "right": 24,
+          "bottom": 24,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "left": 80,
+          "right": 80,
+          "bottom": 80,
+          "linked": true
+        }
+      },
+      "alignment": "center",
+      "background": {
+        "type": "color",
+        "color": "#d1d1d6"
       },
       "insideShadow": {
         "linked": true,
@@ -182,29 +205,6 @@
         "inset": false,
         "spread": 0,
         "enabled": false
-      },
-      "padding": {
-        "mobile": {
-          "all": 24,
-          "top": 24,
-          "left": 24,
-          "right": 24,
-          "bottom": 24,
-          "linked": true
-        },
-        "desktop": {
-          "all": 80,
-          "top": 80,
-          "left": 80,
-          "right": 80,
-          "bottom": 80,
-          "linked": true
-        }
-      },
-      "alignment": "center",
-      "background": {
-        "type": "color",
-        "color": "#d1d1d6"
       }
     },
     "title": "Frequently Asked Questions",
@@ -255,7 +255,7 @@
         "faqs": [
           {
             "id": "q1",
-            "answer": "Clickeen is something that will make Margherita very very rich",
+            "answer": "Clickeen is something that will make Margherita very very rich and alkways works.",
             "question": "What is Clickeen?",
             "defaultOpen": false
           },
@@ -338,6 +338,11 @@
           "spread": 0,
           "enabled": true
         },
+        "radiusBL": "2xl",
+        "radiusBR": "2xl",
+        "radiusTL": "2xl",
+        "radiusTR": "2xl",
+        "radiusLinked": true,
         "insideShadow": {
           "linked": true,
           "all": {
@@ -390,12 +395,7 @@
             "spread": -12,
             "enabled": false
           }
-        },
-        "radiusBL": "2xl",
-        "radiusBR": "2xl",
-        "radiusTL": "2xl",
-        "radiusTR": "2xl",
-        "radiusLinked": true
+        }
       },
       "ctaIconSize": 16,
       "ctaTextColor": "var(--color-system-white)",

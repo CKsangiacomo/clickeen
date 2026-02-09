@@ -23,6 +23,10 @@
 - Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
+- **Tiered Execution:** Enforces `ai.profile` from the grant.
+  - `free_low`: DeepSeek Flash/Haiku.
+  - `paid_standard`: GPT-4o-mini / Haiku.
+  - `paid_premium`: GPT-4o / Sonnet 3.5.
 - Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
 
 ## Personalization Preview (acquisition)

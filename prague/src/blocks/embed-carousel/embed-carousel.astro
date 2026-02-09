@@ -1,0 +1,27 @@
+---
+type Props = {
+  items?: { publicId?: string; curatedRef?: { publicId: string } }[];
+  options?: any;
+};
+
+const { items = [], options = {} } = Astro.props;
+---
+
+<div class="embed-carousel" data-block="embed-carousel">
+  <div class="carousel-track">
+    {items.map((item) => (
+      <div class="carousel-item">
+        {/* Placeholder for now */}
+        <pre>{JSON.stringify(item, null, 2)}</pre>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .embed-carousel {
+    display: block;
+    overflow-x: auto;
+    padding: var(--pkg-spacing-4);
+  }
+</style>

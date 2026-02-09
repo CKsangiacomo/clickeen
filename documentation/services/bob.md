@@ -181,11 +181,10 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 - `options="..."` must be valid JSON arrays (invalid JSON is a compile error).
 
 ### Guardrails
-Golden compiler fixtures live in:
-- `admin/tests/compiled-fixtures.test.ts`
-- `admin/tests/fixtures/compiled-faq.json`
+There are no golden compiler fixtures yet. The current sanity check is to compile every widget via Bob:
+- `pnpm compile:widgets` (runs `scripts/compile-all-widgets.mjs`, defaults `BOB_ORIGIN=http://localhost:3000`)
 
-Use them to catch accidental compiler drift during refactors.
+This catches missing/unknown control kinds, invalid JSON in `options="..."`, and asset contract regressions before they ship.
 
 ---
 
@@ -251,6 +250,9 @@ Minibob keep gate (public UX):
 ### AI routes (current)
 - `/api/ai/sdr-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
 - `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
+
+### User-Facing Controls (PRD 041)
+- **Model Selection:** Users on Tier 1+ can select their preferred AI model (e.g., "Quality" (GPT-4o) vs "Speed" (Haiku)) in the **Settings** panel. Bob passes this preference in the Copilot prompt payload, and San Francisco honors it if allowed by the grant's `ai.profile`.
 
 ### Copilot env vars (local + Cloud-dev)
 - `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.

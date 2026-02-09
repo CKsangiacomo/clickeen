@@ -12,7 +12,7 @@ import type {
 import { json, readJson } from '../../shared/http';
 import { ckError } from '../../shared/errors';
 import { asBearerToken, assertDevAuth, requireEnv } from '../../shared/auth';
-import { SUPPORTED_LOCALES, normalizeLocaleList } from '../../shared/l10n';
+import { normalizeLocaleList } from '../../shared/l10n';
 import { supabaseFetch } from '../../shared/supabase';
 import {
   asTrimmedString,
@@ -44,7 +44,7 @@ async function enqueueRenderSnapshot(env: Env, job: RenderSnapshotQueueJob) {
 }
 
 async function resolveSnapshotLocales(env: Env, args: { workspaceId: string; kind: 'curated' | 'user' }): Promise<string[]> {
-  if (args.kind === 'curated') return [...SUPPORTED_LOCALES];
+  if (args.kind === 'curated') return ['en'];
   const workspace = await loadWorkspaceById(env, args.workspaceId).catch(() => null);
   const normalized = normalizeLocaleList(workspace?.l10n_locales ?? [], 'l10n_locales');
   const locales = normalized.ok ? normalized.locales : [];
@@ -416,10 +416,16 @@ export async function handleCreateInstance(req: Request, env: Env) {
   const publicId = publicIdResult.value!;
   const workspaceId = workspaceIdRaw as string;
   const config = configResult.value!;
-  const status = statusResult.value ?? 'unpublished';
+  const requestedStatus = statusResult.value;
   const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
+
+  if (isCurated && requestedStatus === 'unpublished') {
+    return json([{ path: 'status', message: 'Curated instances are always published' }], { status: 422 });
+  }
+
+  const status = isCurated ? 'published' : requestedStatus ?? 'unpublished';
 
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
@@ -551,10 +557,18 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
   }
 
+  if (isCurated && status === 'unpublished') {
+    return json([{ path: 'status', message: 'Curated instances are always published' }], { status: 422 });
+  }
+
   if (config !== undefined || status !== undefined) {
     const update: Record<string, unknown> = {};
     if (config !== undefined) update.config = config;
-    if (status !== undefined) update.status = status;
+    if (isCurated) {
+      update.status = 'published';
+    } else if (status !== undefined) {
+      update.status = status;
+    }
 
     const patchPath = isCurated
       ? `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`
@@ -573,8 +587,8 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
   }
 
   const prevStatus = instance.status;
-  const nextStatus = status ?? prevStatus;
-  const statusChanged = status !== undefined && status !== prevStatus;
+  const nextStatus = isCurated ? 'published' : (status ?? prevStatus);
+  const statusChanged = isCurated ? prevStatus !== 'published' : (status !== undefined && status !== prevStatus);
   const configChanged = config !== undefined;
 
   if (nextStatus === 'published' && (statusChanged || configChanged)) {
@@ -587,7 +601,7 @@ export async function handleUpdateInstance(req: Request, env: Env, publicId: str
       action: 'upsert',
       locales,
     });
-  } else if (prevStatus === 'published' && nextStatus === 'unpublished') {
+  } else if (!isCurated && prevStatus === 'published' && nextStatus === 'unpublished') {
     await enqueueRenderSnapshot(env, { v: 1, kind: 'render-snapshot', publicId, action: 'delete' });
   }
 

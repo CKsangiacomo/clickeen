@@ -5,107 +5,112 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Hotels, restaurants, and tour operators use Clickeen to serve international customers in 29 languages instantly.",
-        "title": "FAQ examples - Clickeen"
+        "title": "FAQ examples - Clickeen",
+        "description": "Real-world FAQ examples for every industry."
       }
     },
     {
       "id": "hero",
       "type": "hero",
+      "copy": {
+        "headline": "Real problems. Solved instantly.",
+        "subheadline": "See how the world's best brands use Clickeen to answer questions."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "FAQ examples for hotels, restaurants, tour operators, and more",
-        "subheadline": "Give Ombra your website URL. Get your FAQ personalized to your business in 29 languages—instantly. No translator needed."
       }
     },
     {
-      "id": "split-hotels",
-      "type": "split",
-      "layout": "visual-left",
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Hotels in Barcelona: guests from 50+ countries ask ‘check-in time?’ in 15 languages",
-        "subheadline": "Give Ombra your hotel website. FAQ personalized to your property in 29 languages—instantly. Reduce front desk inquiries by 60%, improve guest satisfaction scores."
-      }
-    },
-    {
-      "id": "split-restaurants",
+      "id": "split-icp-1",
       "type": "split",
       "layout": "visual-right",
+      "copy": {
+        "headline": "Hotels & Accommodations",
+        "subheadline": "The digital concierge.",
+        "body": "Don't let 'What's the wifi?' block your front desk. Automate check-in details and parking info so guests serve themselves."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Restaurants in Paris: tourists ask dietary questions in French, English, Spanish, Chinese, Japanese",
-        "subheadline": "Your menu FAQs in 29 languages—instantly. No translator, no manual work. Improve table turnover, reduce wait staff interruptions."
       }
     },
     {
-      "id": "split-airbnb",
+      "id": "split-icp-2",
       "type": "split",
       "layout": "visual-left",
+      "copy": {
+        "headline": "Restaurants & Dining",
+        "subheadline": "Menu clarity before they order.",
+        "body": "Dietary questions handled instantly. Put allergen info right on your guests' phones so your staff can focus on service."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Airbnb hosts in Tuscany: check-in instructions, Wi‑Fi password, local tips in your guest's language",
-        "subheadline": "Give Ombra your listing URL. House rules in 29 languages instantly. 5-star reviews from international guests."
       }
     },
     {
-      "id": "big-bang-international",
+      "id": "split-icp-3",
+      "type": "split",
+      "layout": "visual-right",
+      "copy": {
+        "headline": "Vacation Rentals",
+        "subheadline": "The manual that never gets lost.",
+        "body": "Check-in instructions and house rules, right on their phone. Stop sending the same text message every Friday afternoon."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      }
+    },
+    {
+      "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "International customers don't wait for translations",
-        "body": "A hotel in Rome loses bookings when German tourists can't find check-in info. A restaurant in Tokyo loses reservations when English speakers can't find hours. Every unanswered question in their language is a lost customer. Ombra solves this: website URL → personalized FAQ in 29 languages, instantly."
+        "headline": "They won't wait for a translation",
+        "body": "Speak their language from the very first click."
       }
     },
     {
-      "id": "split-tours",
-      "type": "split",
-      "layout": "visual-right",
-      "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Tour operators in Thailand: booking, safety, itinerary FAQs for international travelers",
-        "subheadline": "Give Ombra your tour website. FAQ in 29 languages instantly. Reduce email support by 70%, increase conversion from international markets."
-      }
-    },
-    {
-      "id": "split-museums",
+      "id": "split-icp-4",
       "type": "split",
       "layout": "visual-left",
+      "copy": {
+        "headline": "Tour Operators",
+        "subheadline": "Confidence converts.",
+        "body": "Meeting points. Weather policies. Answer the blockers upfront and watch the bookings close themselves."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Museums in Rome: exhibit info, tickets, hours for visitors from around the world",
-        "subheadline": "Visitor FAQs in 29 languages—instantly. Improve visitor experience, reduce information desk inquiries by 50%."
       }
     },
     {
-      "id": "steps-implementation",
+      "id": "split-icp-5",
+      "type": "split",
+      "layout": "visual-right",
+      "copy": {
+        "headline": "Museums & Attractions",
+        "subheadline": "Kill the queue.",
+        "body": "Bag policies and ticket questions answered before they arrive at the gate. Smooth entry starts online."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq.lightblurs.v01"
+      }
+    },
+    {
+      "id": "steps",
       "type": "steps",
       "copy": {
-        "title": "From international confusion to instant clarity",
-        "subhead": "How hospitality businesses use Clickeen",
+        "title": "How the best brands do it",
+        "subhead": "Three steps to clarity.",
         "items": [
           {
-            "title": "Give Ombra your website URL",
-            "body": "AI reads your business context—location, services, policies. Understands your specific needs automatically."
+            "title": "Embed",
+            "body": "Paste the code. It works instantly."
           },
           {
-            "title": "FAQ personalized to your business in 29 languages—instantly",
-            "body": "No translator needed. No manual work. Content adapted to your business AND available globally, immediately."
+            "title": "Adapt",
+            "body": "The widget matches your container and font."
           },
           {
-            "title": "Embed and watch international inquiries drop",
-            "body": "3-line script. Works anywhere. Guests, tourists, travelers get answers in their language before they ask."
+            "title": "Answer",
+            "body": "Questions are resolved 24/7."
           }
         ]
       }
@@ -115,28 +120,29 @@
       "type": "platform-strip",
       "copy": {
         "title": "Built like a platform",
+        "subhead": "Reliable enough for the biggest brands.",
         "items": [
           {
             "title": "Fast",
-            "body": "Lightweight embeds and lazy loading. No layout jank."
+            "body": "Global edge delivery."
           },
           {
-            "title": "Reliable",
-            "body": "Deterministic contracts and build gates keep shipping safe at scale."
+            "title": "Secure",
+            "body": "Enterprise-grade compliance."
           },
           {
-            "title": "Accessible",
-            "body": "Clear hierarchy, readable type, and interaction patterns that work across input methods."
+            "title": "Proven",
+            "body": "Scale without limits."
           }
         ]
       }
     },
     {
-      "id": "cta-examples",
+      "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Get your FAQ in 29 languages—instantly",
-        "subheadline": "Give ombra your website URL. Personalized to your business, available globally. No translator needed."
+        "headline": "Solve it with Clickeen",
+        "subheadline": "Start your free design today."
       }
     }
   ]

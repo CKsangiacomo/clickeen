@@ -10,7 +10,9 @@ import { consumeBudget, currentUtcBudgetPeriodKey } from '../../shared/budgets';
 import { issueAiGrant } from '../ai';
 
 const PREVIEW_DEFAULT_OVERRIDES = ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
-const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,40}$/;
+// Allow reasonably deep widget config paths (e.g. `sections.0.faqs.3.answer`) without letting
+// arbitrary characters through (proto pollution safety happens when applying overrides).
+const PREVIEW_OVERRIDE_KEY_RE = /^[a-zA-Z0-9._-]{1,160}$/;
 
 function resolveWebsiteDepthCap(policy: Policy): number {
   const capRaw = policy.caps['personalization.sources.website.depth.max'];
@@ -135,13 +137,15 @@ export async function handlePersonalizationPreviewCreate(req: Request, env: Env)
   const sessionId = asTrimmedString((body as any).sessionId) || crypto.randomUUID();
 
   const minibobPolicy = resolvePolicy({ profile: 'minibob', role: 'editor' });
-  const maxRuns = minibobPolicy.budgets['budget.personalization.runs']?.max ?? null;
+  const stage = asTrimmedString(env.ENV_STAGE)?.toLowerCase() || 'cloud-dev';
+  // Local dev should never get blocked by monthly budgets (iteration speed > metering).
+  const maxRuns = stage === 'local' ? null : (minibobPolicy.budgets['budget.personalization.runs']?.max ?? null);
   const secret = maxRuns != null ? asTrimmedString(env.AI_GRANT_HMAC_SECRET) : null;
   const previewBudgetFingerprint =
     maxRuns != null && secret
       ? await hmacSha256Base64Url(
           secret,
-          `personalization.preview.v1|${currentUtcBudgetPeriodKey()}|${getClientIp(req)}|${headerValue(req.headers, 'user-agent', 'unknown')}|${headerValue(req.headers, 'accept-language', 'unknown')}`,
+          `personalization.preview.session.v1|${currentUtcBudgetPeriodKey()}|${sessionId}`,
         )
       : null;
 

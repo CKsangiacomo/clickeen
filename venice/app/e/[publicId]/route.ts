@@ -18,7 +18,7 @@ interface InstanceResponse {
   policy?: { profile?: string; flags?: Record<string, boolean> } | null;
 }
 
-const CACHE_PUBLISHED = 'public, max-age=300, s-maxage=600, stale-while-revalidate=1800';
+const CACHE_PUBLISHED = 'public, max-age=60, s-maxage=60';
 const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
 
 function extractCkWidgetJson(html: string): { json: Record<string, unknown>; re: RegExp } | null {
@@ -71,7 +71,7 @@ function extractNonce(html: string): string | null {
 export async function GET(req: Request, ctx: { params: Promise<{ publicId: string }> }) {
   const { publicId: rawPublicId } = await ctx.params;
   const publicId = String(rawPublicId || '').trim();
-  const isCurated = /^wgt_curated_/i.test(publicId);
+  const isCurated = /^wgt_curated_/i.test(publicId) || /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
   const url = new URL(req.url);
   const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light';
   const device = url.searchParams.get('device') === 'mobile' ? 'mobile' : 'desktop';

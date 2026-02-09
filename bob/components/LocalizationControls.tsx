@@ -9,6 +9,7 @@ import localesJson from '../../config/locales.json';
 import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
+const MINIBOB_TRANSLATIONS_UPSELL_MESSAGE = 'Create a free account to see your FAQs widget in all languages.';
 
 type LocalizationControlsProps = {
   mode?: 'translate' | 'settings';
@@ -23,6 +24,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const widgetType = compiled?.widgetname ?? '';
   const curated = publicId ? isCuratedPublicId(publicId) : false;
   const isTranslatePanel = mode === 'translate';
+  const minibobTranslationsLocked = policy.profile === 'minibob' && session.minibobPersonalizationUsed;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const showSelector = section !== 'footer';
@@ -45,6 +47,12 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
 
   useEffect(() => {
     if (!showSelector) return;
+    if (minibobTranslationsLocked) {
+      setWorkspaceLocales(null);
+      setWorkspaceError(null);
+      setWorkspaceLoading(false);
+      return;
+    }
     if (!workspaceId || curated) {
       setWorkspaceLocales(null);
       setWorkspaceError(null);
@@ -84,10 +92,17 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return () => {
       cancelled = true;
     };
-  }, [workspaceId, curated, showSelector, subject]);
+  }, [workspaceId, curated, showSelector, subject, minibobTranslationsLocked]);
 
   useEffect(() => {
     if (!publicId || !workspaceId || (!showSelector && !showFooter)) {
+      setInstanceLocales(null);
+      setInstanceError(null);
+      setInstanceLoading(false);
+      return;
+    }
+
+    if (minibobTranslationsLocked) {
       setInstanceLocales(null);
       setInstanceError(null);
       setInstanceLoading(false);
@@ -137,11 +152,12 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return () => {
       cancelled = true;
     };
-  }, [publicId, workspaceId, showSelector, showFooter, subject]);
+  }, [publicId, workspaceId, showSelector, showFooter, subject, minibobTranslationsLocked]);
 
   const availableLocales = useMemo(() => {
     if (!showSelector) return [locale.baseLocale];
     const baseLocale = locale.baseLocale;
+    if (minibobTranslationsLocked) return [baseLocale];
     const list = curated ? instanceLocales ?? [] : workspaceLocales ?? [];
     const normalized = Array.isArray(list)
       ? list
@@ -156,7 +172,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       .filter((code) => code !== baseLocale)
       .sort();
     return [baseLocale, ...rest];
-  }, [curated, instanceLocales, workspaceLocales, locale.baseLocale, showSelector]);
+  }, [curated, instanceLocales, workspaceLocales, locale.baseLocale, showSelector, minibobTranslationsLocked]);
 
   const activeLocale = locale.activeLocale;
   const baseLocale = locale.baseLocale;
@@ -165,6 +181,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const activeLocaleToken = normalizeLocaleToken(activeLocale);
   const hasInstance = Boolean(publicId && widgetType);
   const selectionDisabled =
+    minibobTranslationsLocked ||
     !hasInstance ||
     locale.loading ||
     (curated ? instanceLoading : workspaceLoading) ||
@@ -178,15 +195,17 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     !workspaceLoading &&
     availableLocales.length <= 1 &&
     !instanceError &&
-    !workspaceError;
+    !workspaceError &&
+    !minibobTranslationsLocked;
 
   const selectLocales = useMemo(() => {
     if (!showSelector) return [baseLocale];
+    if (minibobTranslationsLocked) return [baseLocale];
     if (availableLocales.includes(activeLocale)) return availableLocales;
     const deduped = Array.from(new Set([activeLocale, ...availableLocales]));
     const rest = deduped.filter((code) => code !== baseLocale).sort();
     return [baseLocale, ...rest];
-  }, [availableLocales, activeLocale, baseLocale, showSelector]);
+  }, [availableLocales, activeLocale, baseLocale, showSelector, minibobTranslationsLocked]);
 
   const localeOptions = useMemo(() => {
     const uiLocale = 'en';
@@ -200,6 +219,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   const localeOptionsKey = useMemo(() => localeOptions.map((option) => option.value).join('|'), [localeOptions]);
 
   const translateNote = (() => {
+    if (policy.profile === 'minibob') return null;
     if (!isTranslatePanel) return null;
     if (!isLocaleMode) {
       return 'Base content is only editable in Content panel.';
@@ -212,6 +232,12 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     return instanceLocales.find((entry) => normalizeLocaleToken(entry.locale) === activeLocaleToken) ?? null;
   }, [instanceLocales, activeLocaleToken]);
   const hasManualOverrides = Boolean(activeLocaleEntry?.hasUserOps);
+
+  useEffect(() => {
+    if (!minibobTranslationsLocked) return;
+    if (locale.activeLocale === locale.baseLocale) return;
+    setLocalePreview(locale.baseLocale);
+  }, [minibobTranslationsLocked, locale.activeLocale, locale.baseLocale, setLocalePreview]);
 
   useEffect(() => {
     if (!showSelector) return;
@@ -250,94 +276,127 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     <div className="tdmenucontent__cluster">
       <div className="tdmenucontent__cluster-body">
         {showSelector ? (
-          <>
           <div
-            key={localeOptionsKey}
-            ref={dropdownRef}
-            className="diet-dropdown-actions diet-popover-host localization-dropdown"
-            data-size="lg"
-            data-state="closed"
-            data-disabled={selectionDisabled ? 'true' : 'false'}
+            role={minibobTranslationsLocked ? 'button' : undefined}
+            tabIndex={minibobTranslationsLocked ? 0 : undefined}
+            aria-label={minibobTranslationsLocked ? MINIBOB_TRANSLATIONS_UPSELL_MESSAGE : undefined}
+            onClick={
+              minibobTranslationsLocked
+                ? (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE);
+                  }
+                : undefined
+            }
+            onKeyDown={
+              minibobTranslationsLocked
+                ? (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE);
+                  }
+                : undefined
+            }
           >
-            <input
-              ref={inputRef}
-              id="locale-preview"
-              type="hidden"
-              className="diet-dropdown-actions__value-field"
-              value={activeLocale}
-              data-placeholder={localeOptions[0]?.label || `Base (${baseLocale})`}
-              onInput={(event) => setLocalePreview((event.target as HTMLInputElement).value)}
-            />
             <div
-              className="diet-dropdown-header diet-dropdown-actions__control"
-              role="button"
-              aria-haspopup="listbox"
-              aria-expanded="false"
-              aria-label="Preview locale"
-              aria-disabled={selectionDisabled ? 'true' : 'false'}
-              aria-labelledby="locale-preview-label"
+              key={localeOptionsKey}
+              ref={dropdownRef}
+              className="diet-dropdown-actions diet-popover-host localization-dropdown"
+              data-size="lg"
+              data-state="closed"
+              data-disabled={selectionDisabled ? 'true' : 'false'}
             >
-              <span className="diet-dropdown-header-label label-s" id="locale-preview-label">
-                Language
-              </span>
-              <span
-                className="diet-dropdown-header-value body-s"
-                data-muted="true"
+              <input
+                ref={inputRef}
+                id="locale-preview"
+                type="hidden"
+                className="diet-dropdown-actions__value-field"
+                value={activeLocale}
                 data-placeholder={localeOptions[0]?.label || `Base (${baseLocale})`}
+                onInput={(event) => setLocalePreview((event.target as HTMLInputElement).value)}
               />
-            </div>
-            <div className="diet-popover diet-dropdown-actions__popover" role="listbox" aria-label="Locale" data-state="closed">
-              <div className="diet-popover__header">
-                <span className="diet-popover__header-label label-s">Language</span>
-              </div>
-              <div className="diet-popover__body diet-dropdown-actions__menu">
-                {localeOptions.map((option) => {
-                  const selected = option.value === activeLocale;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={`diet-btn-menuactions diet-dropdown-actions__menuaction${selected ? ' is-selected' : ''}`}
-                      data-size="lg"
-                      data-variant="neutral"
-                      data-value={option.value}
-                      data-label={option.label}
-                      role="option"
-                      aria-selected={selected ? 'true' : 'false'}
-                      data-selected={selected ? 'true' : undefined}
-                    >
-                      <span className="diet-btn-menuactions__label body-s">{option.label}</span>
-                      <span className="diet-btn-menuactions__icon" aria-hidden="true">
-                        <span className="diet-dropdown-actions__check diet-btn-ic" data-size="xs" data-variant="neutral" aria-hidden="true">
-                          <span className="diet-btn-ic__icon" data-icon="checkmark" />
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          {workspaceLoading ? <div className="label-s label-muted">Loading workspace locales…</div> : null}
-          {curated && instanceLoading ? <div className="label-s label-muted">Loading locale overlays…</div> : null}
-          {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
-          {curated && instanceError ? <div className="settings-panel__error">{instanceError}</div> : null}
-          {showEmptyState ? (
-            <div className="settings-panel__note">
-              No translations found yet. Publish the base locale to generate locale overlays.
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="primary"
-                type="button"
-                disabled={!canPublish || isPublishing}
-                onClick={() => publish()}
+              <div
+                className="diet-dropdown-header diet-dropdown-actions__control"
+                role="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-label="Preview locale"
+                aria-disabled={selectionDisabled ? 'true' : 'false'}
+                aria-labelledby="locale-preview-label"
               >
-                <span className="diet-btn-txt__label">Generate translations</span>
-              </button>
+                <span className="diet-dropdown-header-label label-s" id="locale-preview-label">
+                  Language
+                </span>
+                <span
+                  className="diet-dropdown-header-value body-s"
+                  data-muted="true"
+                  data-placeholder={localeOptions[0]?.label || `Base (${baseLocale})`}
+                />
+              </div>
+              <div
+                className="diet-popover diet-dropdown-actions__popover"
+                role="listbox"
+                aria-label="Locale"
+                data-state="closed"
+              >
+                <div className="diet-popover__header">
+                  <span className="diet-popover__header-label label-s">Language</span>
+                </div>
+                <div className="diet-popover__body diet-dropdown-actions__menu">
+                  {localeOptions.map((option) => {
+                    const selected = option.value === activeLocale;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`diet-btn-menuactions diet-dropdown-actions__menuaction${selected ? ' is-selected' : ''}`}
+                        data-size="lg"
+                        data-variant="neutral"
+                        data-value={option.value}
+                        data-label={option.label}
+                        role="option"
+                        aria-selected={selected ? 'true' : 'false'}
+                        data-selected={selected ? 'true' : undefined}
+                      >
+                        <span className="diet-btn-menuactions__label body-s">{option.label}</span>
+                        <span className="diet-btn-menuactions__icon" aria-hidden="true">
+                          <span
+                            className="diet-dropdown-actions__check diet-btn-ic"
+                            data-size="xs"
+                            data-variant="neutral"
+                            aria-hidden="true"
+                          >
+                            <span className="diet-btn-ic__icon" data-icon="checkmark" />
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          ) : null}
-          </>
+            {workspaceLoading ? <div className="label-s label-muted">Loading workspace locales…</div> : null}
+            {curated && instanceLoading ? <div className="label-s label-muted">Loading locale overlays…</div> : null}
+            {workspaceError ? <div className="settings-panel__error">{workspaceError}</div> : null}
+            {curated && instanceError ? <div className="settings-panel__error">{instanceError}</div> : null}
+            {showEmptyState ? (
+              <div className="settings-panel__note">
+                No translations found yet. Publish the base locale to generate locale overlays.
+                <button
+                  className="diet-btn-txt"
+                  data-size="md"
+                  data-variant="primary"
+                  type="button"
+                  disabled={!canPublish || isPublishing}
+                  onClick={() => publish()}
+                >
+                  <span className="diet-btn-txt__label">Generate translations</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         {showFooter ? (
@@ -378,6 +437,19 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               <div className="settings-panel__success">
                 Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Revert to
                 auto-translate&quot; to remove overrides.
+              </div>
+            ) : null}
+            {minibobTranslationsLocked ? (
+              <div
+                className="settings-panel__note settings-panel__note--upsell"
+                onClick={() => session.requestUpsell(MINIBOB_TRANSLATIONS_UPSELL_MESSAGE)}
+              >
+                <div className="label-s">{MINIBOB_TRANSLATIONS_UPSELL_MESSAGE}</div>
+                <div className="settings-panel__fullwidth">
+                  <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button">
+                    <span className="diet-btn-txt__label">Create free account</span>
+                  </button>
+                </div>
               </div>
             ) : null}
             {locale.error ? <div className="settings-panel__error">{locale.error}</div> : null}

@@ -1,0 +1,28 @@
+---
+type Props = {
+  items?: any[];
+  options?: any;
+};
+
+const { items = [], options = {} } = Astro.props;
+---
+
+<div class="mobile-showcase" data-block="mobile-showcase">
+  <div class="showcase-scroller">
+    {items.map((item) => (
+      <div class="mobile-frame">
+        {/* Placeholder */}
+        <pre>{JSON.stringify(item, null, 2)}</pre>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .mobile-showcase {
+    display: flex;
+    gap: var(--pkg-spacing-4);
+    overflow-x: auto;
+    padding: var(--pkg-spacing-4);
+  }
+</style>

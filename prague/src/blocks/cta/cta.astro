@@ -33,7 +33,7 @@ const headerPrimitives = assertPrimitives(
             type: 'text',
             variant: 'body',
             content: subheadline,
-            className: 'body-website ck-m0 ck-text-subtle',
+            className: 'body-website ck-m0 ck-text-secondary',
           },
         ]
       : []),
@@ -51,32 +51,49 @@ const resolvedActionGroup =
   });
 ---
 
-<section class="ck-canvas">
+<section class="ck-canvas ck-cta">
   <div class="ck-inline">
-    <div class="ck-cta__card">
-      <div class="ck-cta__content ck-stack ck-gap-loose">
-        <div class="ck-stack ck-gap-tight">
-          <PrimitiveRenderer primitives={headerPrimitives} />
+    <div class="ck-cta__content ck-stack ck-gap-loose">
+      <header class="ck-cta__header ck-stack ck-gap-tight">
+        <PrimitiveRenderer primitives={headerPrimitives} />
+      </header>
+      {resolvedActionGroup ? (
+        <div class="ck-cta__cta">
+          <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
         </div>
-        {resolvedActionGroup ? (
-          <div class="ck-cta__cta">
-            <PrimitiveRenderer primitives={[actionGroupToPrimitives(resolvedActionGroup)]} />
-          </div>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   </div>
 </section>
 
 <style>
-  .ck-cta__card {
-    background: var(--color-system-white);
-    border-radius: var(--control-radius-4xl);
-    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 88%);
-    box-shadow: var(--shadow-elevated);
-    padding: var(--space-8);
+  /* Be explicit: page `body` is gray; this block must paint its own surface. */
+  .ck-canvas.ck-cta {
+    background-color: var(--color-system-white);
+  }
+
+  .ck-canvas.ck-cta .ck-cta__content {
+    padding: var(--space-10) 0;
+    max-width: 980px;
+    margin-inline: auto;
+    text-align: center;
+    align-items: center;
+  }
+
+  .ck-canvas.ck-cta .ck-cta__header {
+    max-width: 880px;
+    margin-inline: auto;
+  }
+
+  .ck-canvas.ck-cta .ck-cta__cta {
+    display: flex;
+    justify-content: center;
+    width: 100%;
   }
 
   @media (max-width: 900px) {
+    .ck-canvas.ck-cta .ck-cta__content {
+      padding: var(--space-8) 0;
+    }
   }
 </style>

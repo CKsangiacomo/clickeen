@@ -1,5 +1,5 @@
 ---
-import Steps from '../steps/steps.astro';
+import StepsPrimitive from '../../components/StepsPrimitive.astro';
 
 type StepItem = {
   title: string;
@@ -25,9 +25,10 @@ type Props = {
   subhead?: string;
   items: StepItem[];
   visual?: { image?: string };
+  ctaHref?: string;
 };
 
-const { widget, title, subhead, items, visual } = Astro.props as Props;
+const { widget, title, subhead, items, visual, ctaHref } = Astro.props as Props;
 ---
 
-<Steps widget={widget} title={title} subhead={subhead} steps={items} visual={visual} />
+<StepsPrimitive widget={widget} title={title} subhead={subhead} steps={items} visual={visual} ctaHref={ctaHref} />

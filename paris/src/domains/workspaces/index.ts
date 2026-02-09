@@ -95,6 +95,39 @@ async function enqueueRenderSnapshot(env: Env, job: { publicId: string; action: 
   });
 }
 
+export async function handleWorkspaceInstanceRenderSnapshot(req: Request, env: Env, workspaceId: string, publicId: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  if (!env.RENDER_SNAPSHOT_QUEUE) {
+    return json({ error: 'RENDER_SNAPSHOT_QUEUE_MISSING' }, { status: 503 });
+  }
+
+  const publicIdResult = assertPublicId(publicId);
+  if (!publicIdResult.ok) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  }
+
+  const kind = inferInstanceKindFromPublicId(publicIdResult.value);
+  if (kind !== 'curated') {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'Curated publicId required' }, 422);
+  }
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
+  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+
+  await enqueueRenderSnapshot(env, { publicId: publicIdResult.value, action: 'upsert', locales: ['en'] });
+
+  return json({ ok: true, publicId: publicIdResult.value, locales: ['en'] });
+}
+
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -255,6 +288,16 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
   if (!isCurated && payload.meta !== undefined) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
+  if (isCurated && status === 'unpublished') {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.status.invalid',
+        detail: 'Curated instances are always published',
+      },
+      422,
+    );
+  }
   if (isCurated) {
     const isValidType = await isKnownWidgetType(env, widgetType);
     if (!isValidType) {
@@ -320,7 +363,11 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
 
   const update: Record<string, unknown> = {};
   if (config !== undefined) update.config = config;
-  if (status !== undefined) update.status = status;
+  if (isCurated) {
+    update.status = 'published';
+  } else if (status !== undefined) {
+    update.status = status;
+  }
   if (meta !== undefined) update.meta = meta;
 
   let updatedInstance: InstanceRow | CuratedInstanceRow | null = instance;
@@ -347,8 +394,8 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const shouldTrigger =
       config !== undefined ||
       (status === 'published' && updatedInstance.status === 'published');
-    const updatedIsCurated = resolveInstanceKind(updatedInstance) === 'curated';
-    if (shouldTrigger && (updatedIsCurated || updatedInstance.status === 'published')) {
+    const updatedKind = resolveInstanceKind(updatedInstance);
+    if (shouldTrigger && updatedKind !== 'curated' && updatedInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
         env,
         instance: updatedInstance,
@@ -376,7 +423,9 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const updatedPrevStatus = prevStatus;
     const updatedNextStatus = updatedInstance.status;
     const configChanged = config !== undefined;
-    if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
+    if (isCurated && updatedNextStatus === 'published' && (updatedPrevStatus !== updatedNextStatus || configChanged)) {
+      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: ['en'] });
+    } else if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
       const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
       const locales = normalized.ok ? normalized.locales : [];
       const maxLocalesTotalRaw = policyResult.policy.caps['l10n.locales.max'];
@@ -398,7 +447,7 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
           console.log('[ParisWorker] Snapshot regen budget exceeded', { workspaceId, publicId, detail: regen.detail });
         }
       }
-    } else if (updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
+    } else if (!isCurated && updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
       await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
     }
   }
@@ -446,10 +495,23 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   const widgetType = widgetTypeResult.value;
   const publicId = publicIdResult.value;
   const config = configResult.value;
-  const status = statusResult.value ?? 'unpublished';
+  const requestedStatus = statusResult.value;
   const meta = metaResult.value;
   const kind = inferInstanceKindFromPublicId(publicId);
   const isCurated = kind === 'curated';
+
+  if (isCurated && requestedStatus === 'unpublished') {
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.status.invalid',
+        detail: 'Curated instances are always published',
+      },
+      422,
+    );
+  }
+
+  const status = isCurated ? 'published' : requestedStatus ?? 'unpublished';
 
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
@@ -633,9 +695,10 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   }
 
   if (createdInstance) {
-    const shouldTrigger =
-      resolveInstanceKind(createdInstance) === 'curated' || createdInstance.status === 'published';
-    if (shouldTrigger) {
+    const createdKind = resolveInstanceKind(createdInstance);
+    if (createdKind === 'curated' && createdInstance.status === 'published') {
+      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: ['en'] });
+    } else if (createdKind !== 'curated' && createdInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
         env,
         instance: createdInstance,
@@ -801,7 +864,7 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
         public_id: publicId,
         widget_type: widgetType,
         kind: resolveCuratedRowKind(publicId),
-        status: 'unpublished',
+        status: 'published',
         config: baselineConfig,
       }),
     });
@@ -830,26 +893,6 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
   }
   if (!existing) {
     return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.notFound' }, 500);
-  }
-
-  const enqueueResult = await enqueueL10nJobs({
-    env,
-    instance: existing,
-    workspace,
-    widgetType,
-    baseUpdatedAt: existing.updated_at ?? null,
-    policy: policyResult.policy,
-  });
-  if (!enqueueResult.ok) {
-    console.error('[ParisWorker] l10n enqueue failed', enqueueResult.error);
-    return ckError(
-      {
-        kind: 'INTERNAL',
-        reasonKey: 'coreui.errors.l10n.enqueueFailed',
-        detail: enqueueResult.error,
-      },
-      500,
-    );
   }
 
   return json({ creativeKey, publicId }, { status: 200 });

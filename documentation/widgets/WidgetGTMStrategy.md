@@ -8,15 +8,15 @@
 
 These benefits apply to **every widget** Clickeen makes. Inherit them, don't repeat them.
 
-1. **Instant personalized localization (Ombra + 29 languages)** - Give Ombra your website URL and watch it instantly personalize widget content to your business AND make it available in 29 languages simultaneously. Then edit with natural language—no manual field updates, no translator needed
+1. **Instant personalized localization (Ombra + multi-language)** - Give Ombra your website URL and watch it instantly personalize widget content to your business, then localize it across your workspace’s active locales (tier-based; up to 29). (Minibob demo: fast base-language preview; upsell signup for “all languages”.) Then edit with natural language—no manual field updates, no translator needed
 2. **Templates OR pixel-perfect custom** - Pick a curated template OR define everything to the pixel exactly how you want it—your choice, total freedom
 3. **Hyper-flexible styling** - Adapt to any design system, any brand, any aesthetic—extreme customization without breaking
 4. **SEO/GEO optimized** - Code automatically optimized for every country, search engines, and geographic context
 
 **Platform positioning:**
-- vs. **Elfsight**: We give you instant personalized localization (29 languages from your website URL) + templates OR pixel-perfect custom; they lock you into templates with manual editing
-- vs. **Custom-built**: We give you Ombra (instant personalization + 29 languages simultaneously); they give you dev time and manual translation costs
-- vs. **Native CMS plugins**: We give you instant global reach (personalized content in 29 languages); they lock you into one platform with one language
+- vs. **Elfsight**: We give you instant personalized localization (website → active locales; up to 29) + templates OR pixel-perfect custom; they lock you into templates with manual editing
+- vs. **Custom-built**: We give you Ombra (instant personalization + multi-language localization up to 29); they give you dev time and manual translation costs
+- vs. **Native CMS plugins**: We give you instant global reach (personalized content in your active languages); they lock you into one platform with one language
 
 ---
 
@@ -48,12 +48,12 @@ These benefits apply to **every widget** Clickeen makes. Inherit them, don't rep
 
 **Content derivation:**
 - **Hero H1**: `[Widget name] + [Primary widget benefit] + [Primary platform benefit: instant personalized localization]`
-  - Example: "FAQ Widget that Reduces Support Load—Personalized to Your Business in 29 Languages Instantly"
-- **Subhead**: `[The Ombra hook: website → personalized + 29 languages]`
-  - Example: "Give Ombra your website URL and watch your FAQ personalize to your business AND go live in 29 languages—instantly, no manual work."
-- **Minibob block**: Above fold, auto-focus. Prompt: "Give me your website URL and I'll personalize this [widget] for your business in 29 languages—instantly" (let users experience the full Ombra superpower: personalized localization)
-- **Instant personalized localization highlight**: Showcase the website URL → personalized content in 29 languages flow. This is THE differentiator—no competitor can do this
-- **Moat section**: Lead with instant personalized localization (website → 29 languages instantly), then templates OR custom freedom, hyper-flexible styling, SEO/GEO optimization
+  - Example: "FAQ Widget that Reduces Support Load—Personalized to Your Business in Multiple Languages Instantly"
+- **Subhead**: `[The Ombra hook: website → personalized + active locales]`
+  - Example: "Give Ombra your website URL and watch your FAQ personalize to your business AND go live in your active languages—instantly, no manual work."
+- **Minibob block**: Above fold, auto-focus. Prompt: "Give me your website URL and I'll tailor this [widget] to your business in seconds." After rewrite, show an upsell CTA: "Create a free account to see your [widget] in all languages."
+- **Instant personalized localization highlight**: Showcase the website URL → personalized content in your active languages flow. This is THE differentiator—no competitor can do this
+- **Moat section**: Lead with instant personalized localization (website → active locales instantly), then templates OR custom freedom, hyper-flexible styling, SEO/GEO optimization
 - **Value prop section**: All widget benefits (why use this widget)
 - **Social proof**: Customer quote proving primary widget benefit
 - **CTA**: "Try [Widget] Now" (Minibob trial) + "View Templates" (exploration)
@@ -86,10 +86,10 @@ These benefits apply to **every widget** Clickeen makes. Inherit them, don't rep
 - **ICP sections**: 3-5 use cases, one per primary ICP from this list (PRIORITIZE hospitality & tourism):
   - **Primary ICPs**: Hotels, Restaurants & bars, Tour operators, Vacation rentals, Museums & attractions, Ski/beach resorts, Event venues, Spas (in tourist destinations), Transportation services, Cruise lines
   - **Secondary ICPs**: E-commerce (cross-border), SaaS (global), International schools, Export businesses
-  - Format: `[Business type] + [International customer pain] + [Widget benefit solution with 29 languages] + [Result]`
-  - Example: "**Hotels in Barcelona:** Guests from 50+ countries ask 'What time is check-in?' in 15 languages. Give Ombra your website → FAQ personalized to your hotel in 29 languages instantly. Reduce front desk inquiries by 60%."
-  - Example: "**Restaurants in Paris:** Tourists ask 'Do you have gluten-free options?' in French, English, Spanish, Chinese, Japanese. Get your FAQ in 29 languages instantly—no translator needed. Improve table turnover, reduce wait times."
-  - Example: "**Airbnb hosts in Tuscany:** Guests need check-in instructions, WiFi password, local tips in their language. Give Ombra your listing URL → house rules in 29 languages. 5-star reviews from international guests."
+  - Format: `[Business type] + [International customer pain] + [Widget benefit solution with multi-language localization] + [Result]`
+  - Example: "**Hotels in Barcelona:** Guests from 50+ countries ask 'What time is check-in?' in 15 languages. Give Ombra your website → FAQ personalized to your hotel in up to 29 languages instantly. Reduce front desk inquiries by 60%."
+  - Example: "**Restaurants in Paris:** Tourists ask 'Do you have gluten-free options?' in French, English, Spanish, Chinese, Japanese. Get your FAQ in your active languages instantly—no translator needed. Improve table turnover, reduce wait times."
+  - Example: "**Airbnb hosts in Tuscany:** Guests need check-in instructions, WiFi password, local tips in their language. Give Ombra your listing URL → house rules in your active languages (up to 29). 5-star reviews from international guests."
   - Example: "**Ski resorts in the Alps:** Visitors from Germany, UK, France, Italy, Russia ask about lift passes, rentals, conditions. Instant multilingual FAQ → reduce ticket window wait times by 40%."
 - **Proof**: Screenshots, before/after, customer quotes
 - **Emphasis**: Widget benefits (specific problem-solving) + instant personalized localization for each ICP
@@ -107,7 +107,7 @@ These benefits apply to **every widget** Clickeen makes. Inherit them, don't rep
 
   - **Category 1: Instant Personalized Localization** (THE differentiator)
     - Ombra AI editing - Natural language content updates
-    - Website URL → 29 languages instantly (no manual translation)
+    - Website URL → active locales instantly (up to 29; no manual translation)
     - Personalized to your business automatically
     - Then edit with natural language—no field-by-field updates
 
@@ -169,7 +169,7 @@ These benefits apply to **every widget** Clickeen makes. Inherit them, don't rep
 
 **Meta description formula:**
 `[Primary widget benefit] + [Instant personalized localization hook]. [CTA].`
-- Example: "Reduce support load with AI-powered FAQ. Give Ombra your website—get personalized content in 29 languages instantly. Try free."
+- Example: "Reduce support load with AI-powered FAQ. Give Ombra your website—get personalized content in multiple languages instantly. Try free."
 
 ---
 
@@ -195,9 +195,9 @@ These benefits apply to **every widget** Clickeen makes. Inherit them, don't rep
 
 **Platform positioning** (same for all widgets):
 ```
-vs. Elfsight: "We give you instant personalized localization (website → 29 languages). They give you manual editing, one language at a time."
-vs. Custom-built: "We give you Ombra (website → personalized content in 29 languages, instantly). They give you dev time + translator costs."
-vs. Native plugins: "We give you instant global reach (personalized in 29 languages from your website URL). They give you manual work, one language, one platform."
+vs. Elfsight: "We give you instant personalized localization (website → active locales, up to 29). They give you manual editing, one language at a time."
+vs. Custom-built: "We give you Ombra (website → personalized content in multiple languages, instantly). They give you dev time + translator costs."
+vs. Native plugins: "We give you instant global reach (personalized in your active languages from your website URL). They give you manual work, one language, one platform."
 ```
 
 **Widget positioning** (specific to this widget):
@@ -262,7 +262,7 @@ Always showcase these style variations:
 
 Primary business types that benefit most from Clickeen widgets:
 
-**PRIORITY: Hospitality & Tourism (International customers = 29 languages ESSENTIAL)**
+**PRIORITY: Hospitality & Tourism (international customers = multilingual essential)**
 
 1. **Hotels & accommodations** - International guests, multilingual FAQs (check-in/out, amenities, policies, local recommendations)
 2. **Restaurants & bars** - International tourists, multilingual menus, hours, reservations, dietary info
@@ -277,15 +277,15 @@ Primary business types that benefit most from Clickeen widgets:
 
 **SECONDARY: Businesses with international reach**
 
-11. **E-commerce stores (cross-border)** - Selling internationally, shipping/returns FAQs in 29 languages, currency/tax info
-12. **SaaS companies (global products)** - International users, feature questions, pricing, onboarding in 29 languages
+11. **E-commerce stores (cross-border)** - Selling internationally, shipping/returns FAQs in multiple languages, currency/tax info
+12. **SaaS companies (global products)** - International users, feature questions, pricing, onboarding in multiple languages
 13. **International schools & language schools** - International students, admissions, courses, accommodation, visa info
 14. **Export/import businesses** - International buyers/suppliers, product specs, shipping, compliance
 
 **Per ICP, ALWAYS emphasize:**
 - **International customer pain point** (e.g., "Hotels: Guests ask 'What time is check-in?' in 15 different languages")
 - **Widget benefit solution** (e.g., "Answer in their language before they ask")
-- **Instant personalized localization is THE solution** (e.g., "Give Ombra your website → FAQ in 29 languages instantly")
+- **Instant personalized localization is THE solution** (e.g., "Give Ombra your website → FAQ in multiple languages instantly")
 - **Measurable result** (e.g., "Reduce front desk inquiries by 60%, improve guest satisfaction scores")
 
 ---
@@ -296,7 +296,7 @@ This is THE MEAT—list every technical capability:
 
 **Instant Personalized Localization:**
 - Ombra AI editing (natural language)
-- Website URL → 29 languages instantly
+- Website URL → active locales instantly (up to 29)
 - Automatic business context personalization
 - No manual translation needed
 - Then edit with natural language
@@ -356,7 +356,7 @@ This is THE MEAT—list every technical capability:
 3. **Apply derivation rules** (Part 3) - Combine benefits into content
 4. **Check compliance**:
    - ✅ Hero mentions primary widget benefit + PRIMARY platform benefit (instant personalized localization)
-   - ✅ Minibob block appears above fold on Overview with "website URL → 29 languages" prompt
+   - ✅ Minibob block appears above fold on Overview with a fast "website URL → personalized preview" prompt + clear signup upsell for “all languages”
    - ✅ Each page answers its assigned buyer question
    - ✅ CTAs match the page's conversion goal
    - ✅ Tone is confident but factual (no hyperbole)
@@ -391,7 +391,7 @@ This is THE MEAT—list every technical capability:
 
 ## Widget-Specific Override
 
-**Location:** `documentation/widgets/[Widget]/[Widget]_ContentStrategy.md`
+**Location:** `documentation/widgets/<Widget>/<Widget>_ContentStrategy.md`
 
 **Contents:** Only Part 2 (widget benefits) and any widget-specific derivation rules.
 

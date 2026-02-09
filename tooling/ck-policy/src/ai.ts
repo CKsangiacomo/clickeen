@@ -93,10 +93,12 @@ const L10N_PRAGUE_BUDGETS: Record<AiProfile, AiBudget> = {
 };
 
 const PERSONALIZATION_PREVIEW_BUDGETS: Record<AiProfile, AiBudget> = {
-  free_low: { maxTokens: 400, timeoutMs: 12_000, maxRequests: 1 },
-  paid_standard: { maxTokens: 500, timeoutMs: 15_000, maxRequests: 1 },
-  paid_premium: { maxTokens: 650, timeoutMs: 18_000, maxRequests: 1 },
-  curated_premium: { maxTokens: 800, timeoutMs: 20_000, maxRequests: 1 },
+  // This runs inside a `waitUntil(...)` job (San Francisco). Keep budgets reasonably
+  // short, but long enough to avoid spurious provider timeouts in local/cloud-dev.
+  free_low: { maxTokens: 400, timeoutMs: 25_000, maxRequests: 1 },
+  paid_standard: { maxTokens: 500, timeoutMs: 30_000, maxRequests: 1 },
+  paid_premium: { maxTokens: 650, timeoutMs: 30_000, maxRequests: 1 },
+  curated_premium: { maxTokens: 800, timeoutMs: 30_000, maxRequests: 1 },
 };
 
 const PERSONALIZATION_ONBOARDING_BUDGETS: Record<AiProfile, AiBudget> = {
