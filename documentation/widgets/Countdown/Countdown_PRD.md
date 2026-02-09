@@ -70,7 +70,7 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 ### Detailed State from Competitor Analysis
 - `timer.mode`: 'date' | 'personal' | 'number' (visual cards with icons: calendar for date, user for personal, numbers for number).
 - `timer.targetDate`: Date/time picker (MM/DD/YYYY + HH:MM AM/PM) for date mode.
-- `timer.timezone`: Dropdown with all timezones (default: UTC; browser option allowed).
+- `timer.timezone`: Text field (IANA timezone, or `browser`) for date mode.
 - `timer.timeAmount`: Numeric (1-999, default 1) for personal mode.
 - `timer.timeUnit`: 'hours' | 'minutes' | 'days' | 'weeks' | 'months' (default: 'hours') for personal mode.
 - `timer.repeat`: '1 minute' | '5 minutes' | '1 hour' | '1 day' | '1 week' | 'never' (default: 'never') for personal mode.
@@ -91,7 +91,7 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `appearance.podBorder`: Pod border (enabled/width/color).
 - `appearance.separator`: Color/style picker.
 - `appearance.animation`: 'fade' (only; skip advanced).
-- `actions.during.type`: 'link' | 'form' (skip 'form' for V1).
+- `actions.during.type`: 'link' (V1).
 - `actions.during.url`: URL input (supports internal/external).
 - `actions.during.text`: Text input (max 50; default: "Purchase now").
 - `actions.during.style`: 'primary' | 'secondary'.
@@ -118,6 +118,7 @@ Required roles (minimum):
 - Validate state shape up front (throw clear errors; no merges).
 - Set `data-mode="<date|personal|number>"` on root.
 - Update all text/visibility via stable `data-role` hooks.
+- Keep `applyState(state)` pure: do not create timers/intervals inside it. Schedule ticking outside `applyState` and render from the latest state.
 - Drive all visual differences via CSS vars + `data-*`.
 - Apply platform globals:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
@@ -130,14 +131,10 @@ Personal countdown persistence rule (deterministic):
 
 ## 6) ToolDrawer panels (required mapping)
 Panels:
-- **Content**: `timer.*` (mode picker + mode settings)
-- **Layout**: `layout.*` + Stage/Pod controls (injected via defaults)
-- **Appearance**: `appearance.*` (colors/borders/shadows where applicable)
-- **Typography**: injected (roles: `heading`, `timer`, `label`, `button`)
-- **Behavior**: `behavior.showBacklink` + small toggles
-- **Actions**: `actions.*` (CTA during + after-end behavior)
-- **Settings**: workspace website URL setting (action-gated; not widget instance state)
-- **Advanced**: only if we ship `settings.*` (avoid custom CSS/JS in v1)
+- **Content**: `timer.*` (mode + settings + headline) and `actions.*` (CTA during + after-end behavior)
+- **Layout**: `layout.*` (position)
+- **Appearance**: `appearance.*` + Stage/Pod controls
+- **Settings**: `seoGeo.enabled` and `behavior.showBacklink`
 
 ToolDrawer spacing rule (authoring):
 - Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
@@ -146,10 +143,11 @@ ToolDrawer spacing rule (authoring):
 ### Detailed Panels from Competitor Analysis
 - **Content Panel**:
   - Mode selector: Visual cards with icons (calendar for date, user for personal, numbers for number).
-  - Date mode: Date/time pickers, timezone dropdown.
+  - Date mode: Date/time pickers, timezone field (`browser` or IANA).
   - Personal mode: Time amount/unit inputs, repeat dropdown.
   - Number mode: Target/starting numbers, duration input.
   - Headline: Rich text editor (bold, italic, link, lists, code view; max 500 chars).
+  - CTA (while running) + After timer ends.
 - **Layout Panel**:
   - Position: Visual cards for 5 options (inline, full-width, top-bar, bottom-bar, static-top).
   - Stage/Pod: Shared layout controls (pod width/content width, stage alignment, stage canvas sizing, stage/pod padding).
@@ -158,10 +156,6 @@ ToolDrawer spacing rule (authoring):
   - Colors: Pod background, text, timer tiles, separators.
   - Borders/shadows: Timer tile radius/border/shadow + pod border.
   - Animations: Fade only.
-- **Actions Panel**:
-  - During: Type selector (link/form—skip form), URL/text/style/new-tab toggles.
-  - After: Type selector (hide/link), URL/text if link.
-
 ## 7) Defaults (authoritative `spec.json` → `defaults`)
 The implementer must translate this PRD into a complete defaults object in `tokyo/widgets/countdown/spec.json`.
 Defaults must include:

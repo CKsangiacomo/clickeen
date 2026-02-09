@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen 是能让 Margherita 变得非常非常富有的东西"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常见问题"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "精美设计，轻松更新，SEO 基础——适用于任何语言。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "联系我们"
+    }
+  ],
+  "v": 1
+}

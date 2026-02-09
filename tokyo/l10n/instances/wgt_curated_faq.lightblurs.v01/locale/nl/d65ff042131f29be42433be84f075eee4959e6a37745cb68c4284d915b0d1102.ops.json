@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alle Vragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Wat is Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hoe installeer ik een widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Is er een gratis abonnement?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Waarom zou ik Clickeen gebruiken?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen biedt prachtige, in te bedden widgets die gericht zijn op conversie en eenvoudig op te zetten zijn, ontworpen om de gebruikersbetrokkenheid op uw site te verbeteren. <strong>Begin vandaag nog gratis met bouwen.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kopieer eenvoudig de insluitcode van je dashboard en plak deze voor de sluitende tag op je website. <strong>Probeer het nu—geen creditcard vereist.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, ons gratis plan bevat één actieve widget met basisfuncties om u op weg te helpen. <strong>Upgrade op elk moment om onbeperkte widgets en geavanceerde analyses te ontgrendelen.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen maakt je webaanwezigheid mooi, doorzoekbaar en gebruiksvriendelijk met widgets die eenvoudig te beheren zijn en geoptimaliseerd voor conversies. <strong>Sluit je aan bij duizenden tevreden makers en verhoog je betrokkenheid.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Neem contact met ons op"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Strak ontwerp, eenvoudige updates en SEO-essentials—klaar voor elke taal."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Veelgestelde vragen"
+    }
+  ],
+  "v": 1
+}

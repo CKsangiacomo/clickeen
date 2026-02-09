@@ -7,7 +7,16 @@ import {
 } from '@clickeen/composition';
 import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
 import InstanceEmbed from '../../components/InstanceEmbed.astro';
-import PersonalizationPreview from '../../components/PersonalizationPreview.astro';
+import Carousel from '../../components/Carousel.astro';
+
+type CarouselItem = {
+  curatedRef: {
+    publicId: string;
+    locale: string;
+    title?: string;
+    embedMode?: 'iframe' | 'indexable';
+  };
+};
 
 type Props = {
   headline: string;
@@ -21,10 +30,10 @@ type Props = {
     title?: string;
     embedMode?: 'iframe' | 'indexable';
   };
-  personalization?: { widget: string; page: string; locale: string };
+  items?: CarouselItem[];
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, actionGroup, curatedRef, personalization } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, curatedRef, items } = Astro.props;
 
 const resolvedActionGroup =
   actionGroup ??
@@ -32,7 +41,7 @@ const resolvedActionGroup =
     layout: 'row',
     className: 'ck-row',
     primaryClassName: 'ck-btn--lg label-l',
-    secondaryClassName: 'ck-btn--lg label-l',
+    secondaryClassName: 'ck-btn--secondaryCta ck-btn--lg label-l',
     primaryAttrs: { 'data-ck-copy': 'ctaText' },
   });
 
@@ -51,7 +60,7 @@ const headerPrimitives = assertPrimitives(
             type: 'text',
             variant: 'body',
             content: subheadline,
-            className: 'body-website ck-hero__subheadline ck-m0',
+            className: 'body-website ck-hero__subheadline ck-m0 ck-text-secondary',
             attrs: { 'data-ck-copy': 'heroSubtitle' },
           },
         ]
@@ -78,16 +87,11 @@ const headerPrimitives = assertPrimitives(
             </div>
           ) : null}
         </div>
-        {personalization ? (
-          <PersonalizationPreview
-            locale={personalization.locale}
-            widget={personalization.widget}
-            page={personalization.page}
-          />
-        ) : null}
       </div>
       <div class="ck-split__b" aria-hidden="true">
-        {curatedRef ? (
+        {items && items.length > 0 ? (
+          <Carousel items={items} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
+        ) : curatedRef ? (
           <InstanceEmbed
             publicId={curatedRef.publicId}
             locale={curatedRef.locale}

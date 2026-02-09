@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "一般問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "什麼是 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "有免費方案嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "如何安裝小工具？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "為什麼我應該使用 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen 是能讓 Margherita 變得非常非常富有的東西"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "是的，一個包含核心功能的有效小工具。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "複製嵌入代碼並貼到您網站 </body> 標籤之前。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "因為 Clickeen 是一個令人驚嘆的新平台，能讓網路變得美觀且易於使用。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "聯絡我們"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "精緻設計、輕鬆更新和 SEO 基礎—適用於任何語言。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常見問題"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,10 @@
+{
+  "baseFingerprint": "c3d1950e4635dd1e152406d0b384edea8a3d8e805da9ddbcc9fcf055bd04897a",
+  "publicId": "wgt_main_countdown",
+  "snapshot": {
+    "actions.after.text": "",
+    "actions.during.text": "Purchase now",
+    "timer.headline": "Sales are coming soon!!!🎯"
+  },
+  "v": 1
+}

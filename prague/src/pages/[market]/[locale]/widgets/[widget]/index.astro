@@ -54,7 +54,10 @@ const englishHref = `/${marketConfig.key}/en/widgets/${encodeURIComponent(widget
 
 // Helper to title-case widget name (faq -> FAQ, countdown -> Countdown)
 const titleCaseWidget = (name: string): string => {
-  return name
+  const normalized = String(name || '').trim();
+  if (!normalized) return 'Widget';
+  if (normalized.toLowerCase() === 'faq') return 'FAQ';
+  return normalized
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
@@ -125,7 +128,14 @@ setPragueOverlayHeaders(Astro.response.headers, overlayMeta);
         cta={{ label: createFreeLabel, href: `/${marketConfig.key}/${localeKey}/create`, variant: 'primary' }}
       />
 
-      <WidgetBlocks blocks={blocks} widget={widgetKey} market={marketConfig.key} locale={localeKey} activeSubpage="overview" />
+      <WidgetBlocks
+        blocks={blocks}
+        widget={widgetKey}
+        market={marketConfig.key}
+        locale={localeKey}
+        activeSubpage="overview"
+        primaryCta={{ label: createFreeLabel, href: `/${marketConfig.key}/${localeKey}/create` }}
+      />
 
       <Footer market={marketConfig.key} locale={localeKey} />
     </main>

@@ -79,7 +79,7 @@ Core columns:
 - `name` (text)
 - `slug` (text) — URL-safe workspace slug
 - `website_url` (text, nullable) — workspace setting used by Copilot/personalization context (action-gated; not tier-flagged)
-- `l10n_locales` (jsonb, nullable) — workspace-selected locales for auto-translate
+- `l10n_locales` (jsonb, nullable) — workspace **active locales** (non‑EN; EN is implied). Paris uses this set (bounded by tier entitlements + subject policy) to decide which locale overlays to generate/publish.
 
 ### `workspace_members`
 One row per user membership (roles).
@@ -202,3 +202,6 @@ Those concerns are intentionally outside Michael’s scope right now so the edit
 Migration `supabase/migrations/20260105000000__workspaces.sql` inserts two deterministic workspaces for dev:
 - `ck-dev` (`00000000-0000-0000-0000-000000000001`) — internal dev workspace (tier3)
 - `ck-demo` (`00000000-0000-0000-0000-000000000002`) — MiniBob demo workspace (free)
+
+DevStudio assumes `ck-dev` has its **workspace active locales** configured explicitly (no runtime fallbacks):
+- `supabase/migrations/20260209090000__seed_ck_dev_l10n_locales.sql` seeds `workspaces.l10n_locales` for `ck-dev` to all supported non‑EN locales (EN is implied).

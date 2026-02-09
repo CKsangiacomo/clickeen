@@ -23,943 +23,1247 @@
   To modify Bob's actual functionality, edit files in /bob directory.
   ═══════════════════════════════════════════════════════════════════════════
 -->
-<div class="devstudio-page" style="display: flex; flex-direction: column; height: 100%; padding: 0; background: var(--color-system-white);">
-<style>
-  .docs-shell__main.devstudio-page-layout {
-    padding: 32px;
-  }
-
-  .dev-widget-workspace-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    margin: 0 0 var(--space-4) 0;
-    width: 100%;
-  }
-
-  .dev-widget-workspace-header > * {
-    margin: 0;
-  }
-
-  #superadmin-actions {
-    display: none;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-
-  #superadmin-actions .diet-btn-txt {
-    box-shadow: var(--shadow-floating);
-  }
-
-  #superadmin-actions .dev-widget-workspace__actions {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-
-  #superadmin-actions .dev-widget-workspace__action,
-  .dev-widget-workspace__modal .dev-widget-workspace__action {
-    --btn-border-width: 0px;
-    --btn-border-color: transparent;
-    --btn-bg: var(--action-bg);
-    --btn-color: var(--color-system-black);
-    --btn-icon-color: var(--color-system-black);
-    --btn-hover-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 8%);
-    --btn-hover-border-color: transparent;
-    --btn-clicked-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 14%);
-    --btn-clicked-border-color: transparent;
-    box-shadow: var(--shadow-floating);
-  }
-
-  #superadmin-actions .dev-widget-workspace__action[data-tone="green4"],
-  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="green4"] {
-    --action-bg: var(--color-system-green-4);
-  }
-
-  #superadmin-actions .dev-widget-workspace__action[data-tone="purple4"],
-  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="purple4"] {
-    --action-bg: var(--color-system-purple-4);
-  }
-
-  #superadmin-actions .dev-widget-workspace__action[data-tone="pink4"],
-  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="pink4"] {
-    --action-bg: var(--color-system-pink-4);
-  }
-
-  #superadmin-actions .dev-widget-workspace__action[data-tone="indigo4"],
-  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="indigo4"] {
-    --action-bg: var(--color-system-indigo-4);
-  }
-
-  #superadmin-actions .dev-widget-workspace__action[data-tone="brown.5"],
-  .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone="brown.5"] {
-    --action-bg: var(--color-system-brown-5);
-  }
-
-  #l10n-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 6px 10px;
-    margin-left: auto;
-    margin-right: var(--space-2);
-    border-radius: var(--control-radius-lg);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    box-shadow: var(--shadow-floating);
-    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
-    color: var(--color-text);
-  }
-
-  #l10n-status[data-state="hidden"] {
-    display: none;
-  }
-
-  .dev-widget-workspace__l10n-label {
-    color: color-mix(in oklab, var(--color-text), transparent 45%);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: var(--fs-10);
-  }
-
-  .dev-widget-workspace__l10n-dot {
-    inline-size: 8px;
-    block-size: 8px;
-    border-radius: 999px;
-    background: var(--color-system-gray-6);
-  }
-
-  #l10n-status[data-tone="ready"] .dev-widget-workspace__l10n-dot {
-    background: var(--color-system-green);
-  }
-
-  #l10n-status[data-tone="pending"] .dev-widget-workspace__l10n-dot,
-  #l10n-status[data-tone="refreshing"] .dev-widget-workspace__l10n-dot {
-    background: var(--color-system-yellow);
-  }
-
-  #l10n-status[data-tone="running"] .dev-widget-workspace__l10n-dot {
-    background: var(--color-system-blue);
-  }
-
-  #l10n-status[data-tone="retrying"] .dev-widget-workspace__l10n-dot {
-    background: var(--color-system-orange);
-  }
-
-  #l10n-status[data-tone="unavailable"] .dev-widget-workspace__l10n-dot {
-    background: var(--color-system-gray-7);
-  }
-
-  .dev-widget-workspace__l10n-meta {
-    color: color-mix(in oklab, var(--color-text), transparent 35%);
-    font-size: var(--fs-11);
-  }
-
-  .dev-widget-workspace-header #instance-dropdown {
-    min-inline-size: 240px;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown {
-    position: relative;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__control {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--control-inline-gap-md);
-    inline-size: 100%;
-    min-block-size: var(--control-size-lg);
-    padding-inline: var(--control-padding-inline);
-    border-radius: var(--control-radius-lg);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
-    background: var(--role-surface-bg);
-    box-shadow: var(--shadow-floating);
-    color: var(--color-text);
-    cursor: pointer;
-    transition: background-color var(--duration-base), box-shadow var(--duration-base);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__control:hover {
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 6%);
-    box-shadow: var(--shadow-floating);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__control:focus-visible {
-    outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
-    outline-offset: 2px;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__value {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-0);
-    min-inline-size: 0;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__value-label {
-    color: color-mix(in oklab, var(--color-text), transparent 40%);
-    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__value-choice {
-    font: 600 var(--fs-14)/var(--lh-tight) var(--font-ui);
-    letter-spacing: -0.01em;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in oklab, var(--color-text), transparent 40%);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__icon svg {
-    inline-size: var(--icon-size-16);
-    block-size: var(--icon-size-16);
-    transition: transform var(--duration-base);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-dropdown__icon svg {
-    transform: rotate(180deg);
-  }
-
-  .dev-widget-workspace-header .diet-popover {
-    display: none;
-    position: absolute;
-    inset-inline-start: 0;
-    inset-block-start: calc(100% + var(--space-2));
-    inline-size: 100%;
-    z-index: 10;
-    padding: var(--space-3);
-    border-radius: var(--radius-4);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    box-shadow: var(--shadow-floating-lg);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-popover {
-    display: block;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__options {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    inline-size: 100%;
-    border-radius: var(--control-radius-md);
-    padding-inline: var(--control-padding-inline);
-    min-block-size: var(--control-size-md);
-    transition: background-color var(--duration-base);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__option svg {
-    inline-size: 1rem;
-    block-size: 1rem;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__option:not(.is-selected) .diet-btn-menuactions__icon {
-    opacity: 0;
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__option:hover {
-    background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
-  }
-
-  .dev-widget-workspace-header .diet-dropdown__option.is-selected {
-    background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
-    color: var(--color-system-blue);
-  }
-
-  .dev-widget-workspace__modal {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-    background: color-mix(in oklab, var(--color-system-black), transparent 65%);
-    z-index: 50;
-  }
-
-  .dev-widget-workspace__modal[hidden] {
-    display: none;
-  }
-
-  .dev-widget-workspace__modal-body {
-    inline-size: min(720px, 100%);
-    max-block-size: min(80vh, 720px);
-    overflow: hidden;
+<div
+  class="devstudio-page"
+  style="
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    padding: var(--space-4);
-    border-radius: var(--radius-4);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+    height: 100%;
+    padding: 0;
     background: var(--color-system-white);
-    box-shadow: var(--shadow-floating-lg);
-  }
+  "
+>
+  <style>
+    .docs-shell__main.devstudio-page-layout {
+      padding: 32px;
+    }
 
-  .dev-widget-workspace__modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
+    .dev-widget-workspace-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin: 0 0 var(--space-4) 0;
+      width: 100%;
+    }
 
-  .dev-widget-workspace__modal-title {
-    font: 600 var(--fs-16)/var(--lh-tight) var(--font-ui);
-    letter-spacing: -0.01em;
-  }
+    .dev-widget-workspace-header > * {
+      margin: 0;
+    }
 
-  .dev-widget-workspace__modal-subtitle {
-    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
-    color: color-mix(in oklab, var(--color-text), transparent 40%);
-  }
+    #superadmin-actions {
+      display: none;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
 
-  .dev-widget-workspace__modal-content {
-    overflow: auto;
-    display: grid;
-    gap: var(--space-4);
-  }
+    #superadmin-actions .diet-btn-txt {
+      box-shadow: var(--shadow-floating);
+    }
 
-  .dev-widget-workspace__tag-groups {
-    display: grid;
-    gap: var(--space-3);
-  }
+    #superadmin-actions .dev-widget-workspace__actions {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
 
-  .dev-widget-workspace__tag-group {
-    display: grid;
-    gap: var(--space-2);
-  }
+    #superadmin-actions .dev-widget-workspace__action,
+    .dev-widget-workspace__modal .dev-widget-workspace__action {
+      --btn-border-width: 0px;
+      --btn-border-color: transparent;
+      --btn-bg: var(--action-bg);
+      --btn-color: var(--color-system-black);
+      --btn-icon-color: var(--color-system-black);
+      --btn-hover-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 8%);
+      --btn-hover-border-color: transparent;
+      --btn-clicked-bg: color-mix(in oklab, var(--action-bg), var(--color-system-black) 14%);
+      --btn-clicked-border-color: transparent;
+      box-shadow: var(--shadow-floating);
+    }
 
-  .dev-widget-workspace__tag-group-title {
-    font: 600 var(--fs-12)/var(--lh-tight) var(--font-ui);
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-  }
+    #superadmin-actions .dev-widget-workspace__action[data-tone='green4'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='green4'] {
+      --action-bg: var(--color-system-green-4);
+    }
 
-  .dev-widget-workspace__tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-  }
+    #superadmin-actions .dev-widget-workspace__action[data-tone='purple4'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='purple4'] {
+      --action-bg: var(--color-system-purple-4);
+    }
 
-  .dev-widget-workspace__tag-option {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: 6px 8px;
-    border-radius: var(--control-radius-md);
-    border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-    background: var(--color-system-white);
-    font: 500 var(--fs-12)/var(--lh-tight) var(--font-ui);
-    color: var(--color-text);
-    cursor: pointer;
-  }
+    #superadmin-actions .dev-widget-workspace__action[data-tone='pink4'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='pink4'] {
+      --action-bg: var(--color-system-pink-4);
+    }
 
-  .dev-widget-workspace__tag-option input {
-    accent-color: var(--color-system-blue);
-  }
+    #superadmin-actions .dev-widget-workspace__action[data-tone='indigo4'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='indigo4'] {
+      --action-bg: var(--color-system-indigo-4);
+    }
 
-  .dev-widget-workspace__modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-2);
-  }
+    #superadmin-actions .dev-widget-workspace__action[data-tone='brown.5'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='brown.5'] {
+      --action-bg: var(--color-system-brown-5);
+    }
 
-</style>
+    #l10n-status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px 10px;
+      margin-left: auto;
+      margin-right: var(--space-2);
+      border-radius: var(--control-radius-lg);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+      background: var(--color-system-white);
+      box-shadow: var(--shadow-floating);
+      font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
+      color: var(--color-text);
+    }
 
-<header class="devstudio-page__header" style="flex-shrink: 0;">
-  <h1 class="heading-2" style="margin:0">Widget Workspace</h1>
-  <div id="superadmin-actions">
-    <div class="dev-widget-workspace__actions">
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="superadmin-update-defaults"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="purple4"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.clockwise"></span>
-        <span class="diet-btn-ictxt__label body-s">Update default config</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="superadmin-update-theme"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="orange4"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="paintbrush.pointed"></span>
-        <span class="diet-btn-ictxt__label body-s">Update theme</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="superadmin-reset-from-json"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="pink4"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.and.arrow.down"></span>
-        <span class="diet-btn-ictxt__label body-s">Reset instance from JSON</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="create-curated-instance"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="green4"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
-        <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="create-curated-version"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="indigo4"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
-        <span class="diet-btn-ictxt__label body-s">Create new instance version</span>
-      </button>
-      <button
-        type="button"
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        id="update-curated-instance"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="brown.5"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="arrow.trianglehead.2.counterclockwise"></span>
-        <span class="diet-btn-ictxt__label body-s">Update curated instance</span>
-      </button>
+    #l10n-status[data-state='hidden'] {
+      display: none;
+    }
+
+    .dev-widget-workspace__l10n-label {
+      color: color-mix(in oklab, var(--color-text), transparent 45%);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: var(--fs-10);
+    }
+
+    .dev-widget-workspace__l10n-dot {
+      inline-size: 8px;
+      block-size: 8px;
+      border-radius: 999px;
+      background: var(--color-system-gray-6);
+    }
+
+    #l10n-status[data-tone='ready'] .dev-widget-workspace__l10n-dot {
+      background: var(--color-system-green);
+    }
+
+    #l10n-status[data-tone='pending'] .dev-widget-workspace__l10n-dot,
+    #l10n-status[data-tone='refreshing'] .dev-widget-workspace__l10n-dot {
+      background: var(--color-system-yellow);
+    }
+
+    #l10n-status[data-tone='running'] .dev-widget-workspace__l10n-dot {
+      background: var(--color-system-blue);
+    }
+
+    #l10n-status[data-tone='retrying'] .dev-widget-workspace__l10n-dot {
+      background: var(--color-system-orange);
+    }
+
+    #l10n-status[data-tone='unavailable'] .dev-widget-workspace__l10n-dot {
+      background: var(--color-system-gray-7);
+    }
+
+    .dev-widget-workspace__l10n-meta {
+      color: color-mix(in oklab, var(--color-text), transparent 35%);
+      font-size: var(--fs-11);
+    }
+
+    .dev-widget-workspace-header #instance-dropdown {
+      min-inline-size: 240px;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown {
+      position: relative;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__control {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--control-inline-gap-md);
+      inline-size: 100%;
+      min-block-size: var(--control-size-lg);
+      padding-inline: var(--control-padding-inline);
+      border-radius: var(--control-radius-lg);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 10%);
+      background: var(--role-surface-bg);
+      box-shadow: var(--shadow-floating);
+      color: var(--color-text);
+      cursor: pointer;
+      transition:
+        background-color var(--duration-base),
+        box-shadow var(--duration-base);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__control:hover {
+      background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 6%);
+      box-shadow: var(--shadow-floating);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__control:focus-visible {
+      outline: 2px solid var(--focus-ring-color, var(--color-system-blue));
+      outline-offset: 2px;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__value {
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--space-0);
+      min-inline-size: 0;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__value-label {
+      color: color-mix(in oklab, var(--color-text), transparent 40%);
+      font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__value-choice {
+      font: 600 var(--fs-14) / var(--lh-tight) var(--font-ui);
+      letter-spacing: -0.01em;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: color-mix(in oklab, var(--color-text), transparent 40%);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__icon svg {
+      inline-size: var(--icon-size-16);
+      block-size: var(--icon-size-16);
+      transition: transform var(--duration-base);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-dropdown__icon svg {
+      transform: rotate(180deg);
+    }
+
+    .dev-widget-workspace-header .diet-popover {
+      display: none;
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block-start: calc(100% + var(--space-2));
+      inline-size: 100%;
+      z-index: 10;
+      padding: var(--space-3);
+      border-radius: var(--radius-4);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+      background: var(--color-system-white);
+      box-shadow: var(--shadow-floating-lg);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown[data-state='open'] .diet-popover {
+      display: block;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__options {
+      display: grid;
+      gap: var(--space-1);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      inline-size: 100%;
+      border-radius: var(--control-radius-md);
+      padding-inline: var(--control-padding-inline);
+      min-block-size: var(--control-size-md);
+      transition: background-color var(--duration-base);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__option svg {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    .dev-widget-workspace-header
+      .diet-dropdown__option:not(.is-selected)
+      .diet-btn-menuactions__icon {
+      opacity: 0;
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__option:hover {
+      background: color-mix(in oklab, var(--role-surface-bg), var(--color-system-white) 12%);
+    }
+
+    .dev-widget-workspace-header .diet-dropdown__option.is-selected {
+      background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
+      color: var(--color-system-blue);
+    }
+
+    .dev-widget-workspace__modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      background: color-mix(in oklab, var(--color-system-black), transparent 65%);
+      z-index: 50;
+    }
+
+    .dev-widget-workspace__modal[hidden] {
+      display: none;
+    }
+
+    .dev-widget-workspace__modal-body {
+      inline-size: min(720px, 100%);
+      max-block-size: min(80vh, 720px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      border-radius: var(--radius-4);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+      background: var(--color-system-white);
+      box-shadow: var(--shadow-floating-lg);
+    }
+
+    .dev-widget-workspace__modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .dev-widget-workspace__modal-title {
+      font: 600 var(--fs-16) / var(--lh-tight) var(--font-ui);
+      letter-spacing: -0.01em;
+    }
+
+    .dev-widget-workspace__modal-subtitle {
+      font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
+      color: color-mix(in oklab, var(--color-text), transparent 40%);
+    }
+
+    .dev-widget-workspace__modal-content {
+      overflow: auto;
+      display: grid;
+      gap: var(--space-4);
+    }
+
+    .dev-widget-workspace__tag-groups {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .dev-widget-workspace__tag-group {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .dev-widget-workspace__tag-group-title {
+      font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
+
+    .dev-widget-workspace__tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+    }
+
+    .dev-widget-workspace__tag-option {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 6px 8px;
+      border-radius: var(--control-radius-md);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
+      background: var(--color-system-white);
+      font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+
+    .dev-widget-workspace__tag-option input {
+      accent-color: var(--color-system-blue);
+    }
+
+    .dev-widget-workspace__modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-2);
+    }
+  </style>
+
+  <header class="devstudio-page__header" style="flex-shrink: 0">
+    <h1 class="heading-2" style="margin: 0">Widget Workspace</h1>
+    <div id="superadmin-actions">
+      <div class="dev-widget-workspace__actions">
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="superadmin-update-defaults"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="purple4"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="arrow.trianglehead.clockwise"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Update default config</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="superadmin-update-theme"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="orange4"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="paintbrush.pointed"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Update theme</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="superadmin-reset-from-json"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="pink4"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="square.and.arrow.down"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Reset instance from JSON</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="create-curated-instance"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="green4"
+        >
+          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
+          <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="create-curated-version"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="indigo4"
+        >
+          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
+          <span class="diet-btn-ictxt__label body-s">Create new instance version</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="update-curated-instance"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="brown.5"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="arrow.trianglehead.2.counterclockwise"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Update curated instance</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="refresh-prague-preview"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="purple4"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="arrow.trianglehead.clockwise"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Refresh Prague preview</span>
+        </button>
+        <button
+          type="button"
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          id="translate-selected-locales"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="indigo4"
+        >
+          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="globe"></span>
+          <span class="diet-btn-ictxt__label body-s">Translate locales</span>
+        </button>
+      </div>
     </div>
-  </div>
-  <div id="l10n-status" role="status" aria-live="polite" data-state="idle" data-tone="unavailable">
-    <span class="dev-widget-workspace__l10n-label">Translations</span>
-    <span class="dev-widget-workspace__l10n-dot" aria-hidden="true"></span>
-    <span class="dev-widget-workspace__l10n-value" id="l10n-status-value">-</span>
-    <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
-  </div>
-  <div class="diet-dropdown" id="instance-dropdown" data-size="md" data-state="closed" style="display:none;">
     <div
-      id="instance-dropdown-control"
-      class="diet-dropdown__control"
-      role="button"
-      tabindex="0"
-      aria-haspopup="listbox"
-      aria-expanded="false"
+      id="l10n-status"
+      role="status"
+      aria-live="polite"
+      data-state="idle"
+      data-tone="unavailable"
     >
-      <span class="diet-dropdown__value" data-label="Instance">
-        <span class="diet-dropdown__value-label label">Instance</span>
-        <span class="diet-dropdown__value-choice body" id="current-instance-label">Loading...</span>
-      </span>
-      <span class="diet-dropdown__icon" aria-hidden="true">
-        <svg viewBox="0 0 16 16" fill="none">
-          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
+      <span class="dev-widget-workspace__l10n-label">Translations</span>
+      <span class="dev-widget-workspace__l10n-dot" aria-hidden="true"></span>
+      <span class="dev-widget-workspace__l10n-value" id="l10n-status-value">-</span>
+      <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
     </div>
-    <input id="instance-dropdown-value" type="hidden" value="" />
-    <div class="diet-popover" role="dialog" aria-label="Select widget instance">
-      <div class="diet-popover__body">
-        <div class="diet-dropdown__options" role="listbox" id="instance-dropdown-menu">
-          <!-- Instances will be populated here -->
+    <div
+      class="diet-dropdown"
+      id="instance-dropdown"
+      data-size="md"
+      data-state="closed"
+      style="display: none"
+    >
+      <div
+        id="instance-dropdown-control"
+        class="diet-dropdown__control"
+        role="button"
+        tabindex="0"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+      >
+        <span class="diet-dropdown__value" data-label="Instance">
+          <span class="diet-dropdown__value-label label">Instance</span>
+          <span class="diet-dropdown__value-choice body" id="current-instance-label"
+            >Loading...</span
+          >
+        </span>
+        <span class="diet-dropdown__icon" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none">
+            <path
+              d="M4 6l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+      </div>
+      <input id="instance-dropdown-value" type="hidden" value="" />
+      <div class="diet-popover" role="dialog" aria-label="Select widget instance">
+        <div class="diet-popover__body">
+          <div class="diet-dropdown__options" role="listbox" id="instance-dropdown-menu">
+            <!-- Instances will be populated here -->
+          </div>
         </div>
       </div>
     </div>
+  </header>
+
+  <div
+    class="devstudio-page-section"
+    style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex"
+  >
+    <iframe
+      id="bob-iframe"
+      src="about:blank"
+      style="width: 100%; height: 100%; border: 0; display: block"
+      title="Bob Widget Builder"
+    ></iframe>
   </div>
-</header>
 
-<div class="devstudio-page-section" style="padding: 0; overflow: hidden; flex: 1; margin: 0; display: flex;">
-  <iframe
-    id="bob-iframe"
-    src="about:blank"
-    style="width: 100%; height: 100%; border: 0; display: block;"
-    title="Bob Widget Builder"
-  ></iframe>
-</div>
-
-<div class="dev-widget-workspace__modal" id="curated-modal" hidden>
-  <div class="dev-widget-workspace__modal-body" role="dialog" aria-modal="true" aria-labelledby="curated-modal-title">
-    <div class="dev-widget-workspace__modal-header">
-      <div>
-        <div class="dev-widget-workspace__modal-title" id="curated-modal-title">Create curated instance</div>
-        <div class="dev-widget-workspace__modal-subtitle" id="curated-modal-subtitle"></div>
+  <div class="dev-widget-workspace__modal" id="curated-modal" hidden>
+    <div
+      class="dev-widget-workspace__modal-body"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="curated-modal-title"
+    >
+      <div class="dev-widget-workspace__modal-header">
+        <div>
+          <div class="dev-widget-workspace__modal-title" id="curated-modal-title">
+            Create curated instance
+          </div>
+          <div class="dev-widget-workspace__modal-subtitle" id="curated-modal-subtitle"></div>
+        </div>
+        <button
+          class="diet-btn-txt"
+          type="button"
+          data-size="sm"
+          data-variant="neutral"
+          id="curated-modal-close"
+        >
+          <span class="diet-btn-txt__label">Close</span>
+        </button>
       </div>
-      <button class="diet-btn-txt" type="button" data-size="sm" data-variant="neutral" id="curated-modal-close">
-        <span class="diet-btn-txt__label">Close</span>
-      </button>
-    </div>
-    <div class="dev-widget-workspace__modal-content">
-      <div class="diet-textfield" data-size="md">
-        <label class="diet-textfield__control">
-          <span class="diet-textfield__display-label">Curated style name:</span>
-          <input
-            id="curated-style-name"
-            type="text"
-            class="diet-textfield__field"
-            placeholder="Liquid glass, Brutalism, Yellow..."
-            autocomplete="off"
-          />
-        </label>
+      <div class="dev-widget-workspace__modal-content">
+        <div class="diet-textfield" data-size="md">
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label">Curated style name:</span>
+            <input
+              id="curated-style-name"
+              type="text"
+              class="diet-textfield__field"
+              placeholder="Liquid glass, Brutalism, Yellow..."
+              autocomplete="off"
+            />
+          </label>
+        </div>
+        <div class="dev-widget-workspace__tag-groups" id="curated-tag-groups"></div>
       </div>
-      <div class="dev-widget-workspace__tag-groups" id="curated-tag-groups"></div>
-    </div>
-    <div class="dev-widget-workspace__modal-actions">
-      <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" id="curated-modal-cancel">
-        <span class="diet-btn-txt__label">Cancel</span>
-      </button>
-      <button
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        type="button"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="green4"
-        id="curated-modal-confirm"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
-        <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
-      </button>
+      <div class="dev-widget-workspace__modal-actions">
+        <button
+          class="diet-btn-txt"
+          type="button"
+          data-size="md"
+          data-variant="secondary"
+          id="curated-modal-cancel"
+        >
+          <span class="diet-btn-txt__label">Cancel</span>
+        </button>
+        <button
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          type="button"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="green4"
+          id="curated-modal-confirm"
+        >
+          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
+          <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="dev-widget-workspace__modal" id="theme-modal" hidden>
-  <div class="dev-widget-workspace__modal-body" role="dialog" aria-modal="true" aria-labelledby="theme-modal-title">
-    <div class="dev-widget-workspace__modal-header">
-      <div>
-        <div class="dev-widget-workspace__modal-title" id="theme-modal-title">Update theme</div>
-        <div class="dev-widget-workspace__modal-subtitle" id="theme-modal-subtitle">
-          Overwrite a Tokyo theme with the current editor state.
+  <div class="dev-widget-workspace__modal" id="theme-modal" hidden>
+    <div
+      class="dev-widget-workspace__modal-body"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="theme-modal-title"
+    >
+      <div class="dev-widget-workspace__modal-header">
+        <div>
+          <div class="dev-widget-workspace__modal-title" id="theme-modal-title">Update theme</div>
+          <div class="dev-widget-workspace__modal-subtitle" id="theme-modal-subtitle">
+            Overwrite a Tokyo theme with the current editor state.
+          </div>
+        </div>
+        <button
+          class="diet-btn-txt"
+          type="button"
+          data-size="sm"
+          data-variant="neutral"
+          id="theme-modal-close"
+        >
+          <span class="diet-btn-txt__label">Close</span>
+        </button>
+      </div>
+      <div class="dev-widget-workspace__modal-content">
+        <div class="diet-textfield" data-size="md">
+          <label class="diet-textfield__control">
+            <span class="diet-textfield__display-label">Theme</span>
+            <select id="theme-modal-select" class="diet-textfield__field"></select>
+          </label>
         </div>
       </div>
-      <button class="diet-btn-txt" type="button" data-size="sm" data-variant="neutral" id="theme-modal-close">
-        <span class="diet-btn-txt__label">Close</span>
-      </button>
-    </div>
-    <div class="dev-widget-workspace__modal-content">
-      <div class="diet-textfield" data-size="md">
-        <label class="diet-textfield__control">
-          <span class="diet-textfield__display-label">Theme</span>
-          <select id="theme-modal-select" class="diet-textfield__field"></select>
-        </label>
+      <div class="dev-widget-workspace__modal-actions">
+        <button
+          class="diet-btn-txt"
+          type="button"
+          data-size="md"
+          data-variant="secondary"
+          id="theme-modal-cancel"
+        >
+          <span class="diet-btn-txt__label">Cancel</span>
+        </button>
+        <button
+          class="diet-btn-ictxt dev-widget-workspace__action"
+          type="button"
+          data-size="md"
+          data-variant="secondary"
+          data-tone="orange4"
+          id="theme-modal-confirm"
+        >
+          <span
+            class="diet-btn-ictxt__icon"
+            aria-hidden="true"
+            data-icon="paintbrush.pointed"
+          ></span>
+          <span class="diet-btn-ictxt__label body-s">Update theme</span>
+        </button>
       </div>
     </div>
-    <div class="dev-widget-workspace__modal-actions">
-      <button class="diet-btn-txt" type="button" data-size="md" data-variant="secondary" id="theme-modal-cancel">
-        <span class="diet-btn-txt__label">Cancel</span>
-      </button>
-      <button
-        class="diet-btn-ictxt dev-widget-workspace__action"
-        type="button"
-        data-size="md"
-        data-variant="secondary"
-        data-tone="orange4"
-        id="theme-modal-confirm"
-      >
-        <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="paintbrush.pointed"></span>
-        <span class="diet-btn-ictxt__label body-s">Update theme</span>
-      </button>
-    </div>
   </div>
-</div>
 
-<script type="module">
-// This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
-// DevStudio swaps DOM but does not automatically remove global event listeners.
-// Use an AbortController keyed on `window` so re-entering this tool page doesn't
-// accumulate listeners and spam postMessage loops.
-const CK_DEV_WIDGET_WORKSPACE_ABORT_KEY = '__CK_DEV_WIDGET_WORKSPACE_ABORT__';
-try {
-  const prev = window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY];
-  if (prev && typeof prev.abort === 'function') prev.abort();
-} catch {}
-const abortController = new AbortController();
-try {
-  window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
-} catch {}
+  <script type="module">
+    // This page is rendered inside DevStudio’s SPA shell. When navigating between tools,
+    // DevStudio swaps DOM but does not automatically remove global event listeners.
+    // Use an AbortController keyed on `window` so re-entering this tool page doesn't
+    // accumulate listeners and spam postMessage loops.
+    const CK_DEV_WIDGET_WORKSPACE_ABORT_KEY = '__CK_DEV_WIDGET_WORKSPACE_ABORT__';
+    try {
+      const prev = window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY];
+      if (prev && typeof prev.abort === 'function') prev.abort();
+    } catch {}
+    const abortController = new AbortController();
+    try {
+      window[CK_DEV_WIDGET_WORKSPACE_ABORT_KEY] = abortController;
+    } catch {}
 
-function requireBobOrigin() {
-  const params = new URLSearchParams(window.location.search);
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
-  const raw = (params.get('bob') || defaultBob).trim();
-  try {
-    return new URL(raw).origin;
-  } catch {
-    throw new Error(`Invalid ?bob= origin: "${raw}"`);
-  }
-}
+    function requireBobOrigin() {
+      const params = new URLSearchParams(window.location.search);
+      const isLocal =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const defaultBob = isLocal ? 'http://localhost:3000' : 'https://bob.dev.clickeen.com';
+      const raw = (params.get('bob') || defaultBob).trim();
+      try {
+        return new URL(raw).origin;
+      } catch {
+        throw new Error(`Invalid ?bob= origin: "${raw}"`);
+      }
+    }
 
-const BOB_ORIGIN = requireBobOrigin();
-const PARIS_API = `${BOB_ORIGIN}/api/paris`;
+    const BOB_ORIGIN = requireBobOrigin();
+    const PARIS_API = `${BOB_ORIGIN}/api/paris`;
 
-function resolveTokyoBaseUrl() {
-  // Keep in sync with bob/lib/env/tokyo.ts (but plain JS for DevStudio tools).
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal) return 'http://localhost:4000';
-  // Cloudflare Pages build/runtime (dev). Keep stable even if env vars aren't wired yet.
-  return 'https://tokyo.dev.clickeen.com';
-}
+    function resolveTokyoBaseUrl() {
+      // Keep in sync with bob/lib/env/tokyo.ts (but plain JS for DevStudio tools).
+      const isLocal =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocal) return 'http://localhost:4000';
+      // Cloudflare Pages build/runtime (dev). Keep stable even if env vars aren't wired yet.
+      return 'https://tokyo.dev.clickeen.com';
+    }
 
-const TOKYO_BASE = resolveTokyoBaseUrl();
-const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
-// v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
-// In prod this will point at the Clickeen marketing workspace.
-const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
-let currentPublicId = null;
-let instances = [];
-let isOpen = false;
-const isLocalDevStudio = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const TOKYO_BASE = resolveTokyoBaseUrl();
+    const DEV_WORKSPACE_ID = '00000000-0000-0000-0000-000000000001';
+    // v1: curated instances live in the single Clickeen-owned workspace in dev, which is ck-dev.
+    // In prod this will point at the Clickeen marketing workspace.
+    const CLICKEEN_WORKSPACE_ID = DEV_WORKSPACE_ID;
+    let currentPublicId = null;
+    let instances = [];
+    let isOpen = false;
+    const isLocalDevStudio =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-const dropdown = document.getElementById('instance-dropdown');
-const control = document.getElementById('instance-dropdown-control');
-const valueField = document.getElementById('instance-dropdown-value');
-const menu = document.getElementById('instance-dropdown-menu');
-const iframe = document.getElementById('bob-iframe');
-const currentLabel = document.getElementById('current-instance-label');
-const compiledCache = new Map();
-const superadminActions = document.getElementById('superadmin-actions');
-const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
-const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
-const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
-const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
-const createCuratedVersionBtn = document.getElementById('create-curated-version');
-const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
-const l10nStatus = document.getElementById('l10n-status');
-const l10nStatusValue = document.getElementById('l10n-status-value');
-const l10nStatusMeta = document.getElementById('l10n-status-meta');
-const curatedModal = document.getElementById('curated-modal');
-const curatedModalTitle = document.getElementById('curated-modal-title');
-const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
-const curatedModalClose = document.getElementById('curated-modal-close');
-const curatedModalCancel = document.getElementById('curated-modal-cancel');
-const curatedModalConfirm = document.getElementById('curated-modal-confirm');
-const curatedStyleNameField = document.getElementById('curated-style-name');
-const curatedTagGroups = document.getElementById('curated-tag-groups');
-const themeModal = document.getElementById('theme-modal');
-const themeModalClose = document.getElementById('theme-modal-close');
-const themeModalCancel = document.getElementById('theme-modal-cancel');
-const themeModalConfirm = document.getElementById('theme-modal-confirm');
-const themeModalSelect = document.getElementById('theme-modal-select');
-let l10nStatusTimer = null;
+    const dropdown = document.getElementById('instance-dropdown');
+    const control = document.getElementById('instance-dropdown-control');
+    const valueField = document.getElementById('instance-dropdown-value');
+    const menu = document.getElementById('instance-dropdown-menu');
+    const iframe = document.getElementById('bob-iframe');
+    const currentLabel = document.getElementById('current-instance-label');
+    const compiledCache = new Map();
+    const superadminActions = document.getElementById('superadmin-actions');
+    const superadminUpdateDefaults = document.getElementById('superadmin-update-defaults');
+    const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
+    const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
+    const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
+    const createCuratedVersionBtn = document.getElementById('create-curated-version');
+    const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
+    const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
+    const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
+    const l10nStatus = document.getElementById('l10n-status');
+    const l10nStatusValue = document.getElementById('l10n-status-value');
+    const l10nStatusMeta = document.getElementById('l10n-status-meta');
+    const curatedModal = document.getElementById('curated-modal');
+    const curatedModalTitle = document.getElementById('curated-modal-title');
+    const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
+    const curatedModalClose = document.getElementById('curated-modal-close');
+    const curatedModalCancel = document.getElementById('curated-modal-cancel');
+    const curatedModalConfirm = document.getElementById('curated-modal-confirm');
+    const curatedStyleNameField = document.getElementById('curated-style-name');
+    const curatedTagGroups = document.getElementById('curated-tag-groups');
+    const themeModal = document.getElementById('theme-modal');
+    const themeModalClose = document.getElementById('theme-modal-close');
+    const themeModalCancel = document.getElementById('theme-modal-cancel');
+    const themeModalConfirm = document.getElementById('theme-modal-confirm');
+    const themeModalSelect = document.getElementById('theme-modal-select');
+    let l10nStatusTimer = null;
 
-const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
+    const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 
-const CURATED_TAG_GROUPS = [
-  {
-    id: 'icp',
-    label: 'ICP',
-    options: [
-      { id: 'saas', label: 'SaaS' },
-      { id: 'ecommerce', label: 'E-commerce' },
-      { id: 'agencies', label: 'Agencies' },
-      { id: 'education', label: 'Education' },
-      { id: 'healthcare', label: 'Healthcare' },
-      { id: 'restaurants', label: 'Restaurants' },
-    ],
-  },
-  {
-    id: 'objective',
-    label: 'Objective',
-    options: [
-      { id: 'conversion', label: 'Conversion' },
-      { id: 'lead-gen', label: 'Lead Gen' },
-      { id: 'support-deflection', label: 'Support Deflection' },
-      { id: 'social-proof', label: 'Social Proof' },
-      { id: 'onboarding', label: 'Onboarding' },
-    ],
-  },
-  {
-    id: 'style',
-    label: 'Style',
-    options: [
-      { id: 'minimal', label: 'Minimal' },
-      { id: 'bold', label: 'Bold' },
-      { id: 'playful', label: 'Playful' },
-      { id: 'brutalist', label: 'Brutalist' },
-      { id: 'glass', label: 'Glass' },
-      { id: 'editorial', label: 'Editorial' },
-    ],
-  },
-];
-const CURATED_VERSION_PAD = 2;
-let curatedModalState = null;
-let themeModalState = null;
+    const CURATED_TAG_GROUPS = [
+      {
+        id: 'icp',
+        label: 'ICP',
+        options: [
+          { id: 'saas', label: 'SaaS' },
+          { id: 'ecommerce', label: 'E-commerce' },
+          { id: 'agencies', label: 'Agencies' },
+          { id: 'education', label: 'Education' },
+          { id: 'healthcare', label: 'Healthcare' },
+          { id: 'restaurants', label: 'Restaurants' },
+        ],
+      },
+      {
+        id: 'objective',
+        label: 'Objective',
+        options: [
+          { id: 'conversion', label: 'Conversion' },
+          { id: 'lead-gen', label: 'Lead Gen' },
+          { id: 'support-deflection', label: 'Support Deflection' },
+          { id: 'social-proof', label: 'Social Proof' },
+          { id: 'onboarding', label: 'Onboarding' },
+        ],
+      },
+      {
+        id: 'style',
+        label: 'Style',
+        options: [
+          { id: 'minimal', label: 'Minimal' },
+          { id: 'bold', label: 'Bold' },
+          { id: 'playful', label: 'Playful' },
+          { id: 'brutalist', label: 'Brutalist' },
+          { id: 'glass', label: 'Glass' },
+          { id: 'editorial', label: 'Editorial' },
+        ],
+      },
+    ];
+    const CURATED_VERSION_PAD = 2;
+    let curatedModalState = null;
+    let themeModalState = null;
 
-const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
-bobUrl.searchParams.set('subject', 'devstudio');
-if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
-iframe.src = bobUrl.toString();
+    const bobUrl = new URL(`${BOB_ORIGIN}/bob`);
+    bobUrl.searchParams.set('subject', 'devstudio');
+    if (!isLocalDevStudio) bobUrl.searchParams.set('readonly', '1');
+    iframe.src = bobUrl.toString();
 
-function setL10nStatusDisplay({ state, tone, value, meta }) {
-  if (!(l10nStatus instanceof HTMLElement)) return;
-  l10nStatus.dataset.state = state || 'idle';
-  l10nStatus.dataset.tone = tone || 'unavailable';
-  if (l10nStatusValue instanceof HTMLElement) l10nStatusValue.textContent = value || '-';
-  if (l10nStatusMeta instanceof HTMLElement) l10nStatusMeta.textContent = meta || '';
-}
+    function setL10nStatusDisplay({ state, tone, value, meta }) {
+      if (!(l10nStatus instanceof HTMLElement)) return;
+      l10nStatus.dataset.state = state || 'idle';
+      l10nStatus.dataset.tone = tone || 'unavailable';
+      if (l10nStatusValue instanceof HTMLElement) l10nStatusValue.textContent = value || '-';
+      if (l10nStatusMeta instanceof HTMLElement) {
+        l10nStatusMeta.textContent = meta || '';
+        l10nStatusMeta.title = meta || '';
+      }
+    }
 
-function summarizeL10nStatus(locales) {
-  const counts = {
-    dirty: 0,
-    queued: 0,
-    running: 0,
-    failed: 0,
-    superseded: 0,
-    succeeded: 0,
-  };
-  locales.forEach((entry) => {
-    const key = entry?.status;
-    if (key && key in counts) counts[key] += 1;
-  });
-  const total = locales.length;
-  const updated = counts.succeeded;
-  const needsUpdate = counts.superseded;
-  const updating = counts.running + counts.queued + counts.dirty;
+    function summarizePublishStatus(payload) {
+      const locales = Array.isArray(payload?.locales) ? payload.locales : [];
+      const total = locales.length;
+      const summary =
+        payload?.summary && typeof payload.summary === 'object' ? payload.summary : {};
+      const l10nSummary = summary?.l10n && typeof summary.l10n === 'object' ? summary.l10n : {};
+      const pipelineL10n =
+        payload?.pipeline?.l10n && typeof payload.pipeline.l10n === 'object'
+          ? payload.pipeline.l10n
+          : {};
+      const nonBaseLocales = locales.filter((entry) => entry?.locale !== 'en');
+      const pointerFlipped =
+        typeof summary.pointerFlipped === 'number'
+          ? summary.pointerFlipped
+          : locales.filter((entry) => entry?.stage === 'pointer_flipped').length;
+      const awaitingL10n =
+        typeof summary.awaitingL10n === 'number'
+          ? summary.awaitingL10n
+          : locales.filter((entry) => entry?.stage === 'awaiting_l10n').length;
+      const awaitingSnapshot =
+        typeof summary.awaitingSnapshot === 'number'
+          ? summary.awaitingSnapshot
+          : locales.filter((entry) => entry?.stage === 'awaiting_snapshot').length;
+      const failed =
+        typeof summary.failed === 'number'
+          ? summary.failed
+          : locales.filter((entry) => entry?.stage === 'failed').length;
+      const unpublished =
+        typeof summary.unpublished === 'number'
+          ? summary.unpublished
+          : locales.filter((entry) => entry?.stage === 'unpublished').length;
+      const dirty =
+        typeof l10nSummary.dirty === 'number'
+          ? l10nSummary.dirty
+          : nonBaseLocales.filter((entry) => entry?.l10n?.status === 'dirty').length;
+      const queued =
+        typeof l10nSummary.queued === 'number'
+          ? l10nSummary.queued
+          : nonBaseLocales.filter((entry) => entry?.l10n?.status === 'queued').length;
+      const running =
+        typeof l10nSummary.running === 'number'
+          ? l10nSummary.running
+          : nonBaseLocales.filter((entry) => entry?.l10n?.status === 'running').length;
+      const retrying =
+        typeof l10nSummary.retrying === 'number'
+          ? l10nSummary.retrying
+          : nonBaseLocales.filter(
+              (entry) => entry?.l10n?.status === 'failed' && Boolean(entry?.l10n?.nextAttemptAt),
+            ).length;
+      const failedTerminal =
+        typeof l10nSummary.failedTerminal === 'number'
+          ? l10nSummary.failedTerminal
+          : nonBaseLocales.filter(
+              (entry) => entry?.l10n?.status === 'failed' && !entry?.l10n?.nextAttemptAt,
+            ).length;
+      const superseded =
+        typeof l10nSummary.superseded === 'number'
+          ? l10nSummary.superseded
+          : nonBaseLocales.filter((entry) => entry?.l10n?.status === 'superseded').length;
+      const inFlight =
+        typeof l10nSummary.inFlight === 'number' ? l10nSummary.inFlight : queued + running;
+      const needsEnqueue =
+        typeof l10nSummary.needsEnqueue === 'number'
+          ? l10nSummary.needsEnqueue
+          : dirty + superseded;
+      const stageReasons =
+        pipelineL10n?.stageReasons && typeof pipelineL10n.stageReasons === 'object'
+          ? pipelineL10n.stageReasons
+          : {};
+      const rawNextActionLabel =
+        pipelineL10n?.nextAction &&
+        typeof pipelineL10n.nextAction === 'object' &&
+        typeof pipelineL10n.nextAction.label === 'string'
+          ? pipelineL10n.nextAction.label.trim()
+          : '';
+      const fallbackNextActionLabel =
+        failedTerminal > 0
+          ? 'Inspect last error and requeue failed locales.'
+          : needsEnqueue > 0
+            ? 'Click "Translate locales" to enqueue stale locales.'
+            : retrying > 0
+              ? 'Retry backoff in progress; wait for next attempt.'
+              : inFlight > 0
+                ? 'Translations are running; wait for completion.'
+                : awaitingSnapshot > 0
+                  ? 'Waiting for snapshot publish.'
+                  : '';
+      const nextActionLabel = rawNextActionLabel || fallbackNextActionLabel;
 
-  let label = 'Updated';
-  let tone = 'ready';
+      let label = 'Live';
+      let tone = 'ready';
 
-  if (counts.failed > 0) {
-    label = 'Retrying';
-    tone = 'retrying';
-  } else if (updating > 0) {
-    label = 'Updating';
-    tone = counts.running > 0 ? 'running' : 'pending';
-  } else if (needsUpdate > 0) {
-    label = 'Needs update';
-    tone = 'refreshing';
-  }
+      if (unpublished > 0) {
+        label = 'Draft';
+        tone = 'unavailable';
+      } else if (failedTerminal > 0 || (failed > 0 && retrying === 0)) {
+        label = 'Failed';
+        tone = 'unavailable';
+      } else if (inFlight > 0) {
+        label = 'Updating';
+        tone = 'running';
+      } else if (retrying > 0) {
+        label = 'Retrying';
+        tone = 'retrying';
+      } else if (awaitingSnapshot > 0) {
+        label = 'Publishing';
+        tone = 'pending';
+      } else if (needsEnqueue > 0 || awaitingL10n > 0) {
+        label = 'Outdated';
+        tone = 'pending';
+      }
 
-  const metaUpdated = total ? `${updated}/${total} updated` : '';
-  const metaNeedsUpdate = needsUpdate > 0 ? `${needsUpdate} ${needsUpdate === 1 ? 'needs' : 'need'} update` : '';
-  const meta = [metaUpdated, metaNeedsUpdate].filter(Boolean).join(' · ');
-  const shouldPoll = label !== 'Updated';
-  return { label, tone, meta, shouldPoll };
-}
+      const metaLive = total ? `${pointerFlipped}/${total} live` : '';
+      const metaRunning = running > 0 ? `${running} running` : '';
+      const metaQueued = queued > 0 ? `${queued} queued` : '';
+      const metaRetrying = retrying > 0 ? `${retrying} retrying` : '';
+      const metaOutdated = needsEnqueue > 0 ? `${needsEnqueue} stale` : '';
+      const metaFailed = failedTerminal > 0 ? `${failedTerminal} failed` : '';
+      const unresolvedAwaiting =
+        awaitingL10n > inFlight + retrying + needsEnqueue
+          ? awaitingL10n - (inFlight + retrying + needsEnqueue)
+          : 0;
+      const metaAwaiting = unresolvedAwaiting > 0 ? `${unresolvedAwaiting} pending` : '';
+      const metaSnapshot = awaitingSnapshot > 0 ? `${awaitingSnapshot} snapshotting` : '';
+      const firstLocaleError = locales.find((entry) => entry?.l10n?.lastError);
+      const rawLocaleError = firstLocaleError?.l10n?.lastError
+        ? String(firstLocaleError.l10n.lastError).trim()
+        : '';
+      const rawPipelineError =
+        payload?.pipeline?.renderIndexError && typeof payload.pipeline.renderIndexError === 'string'
+          ? payload.pipeline.renderIndexError.trim()
+          : '';
+      const rawL10nPipelineError =
+        pipelineL10n?.overlayMatchError && typeof pipelineL10n.overlayMatchError === 'string'
+          ? pipelineL10n.overlayMatchError.trim()
+          : '';
+      const rawError = rawLocaleError || rawPipelineError || rawL10nPipelineError;
+      const metaError = rawError
+        ? `Last error: ${rawError.length > 120 ? `${rawError.slice(0, 117)}...` : rawError}`
+        : '';
+      const stageReasonLabel = {
+        l10n_running: 'running',
+        l10n_queued: 'queued',
+        l10n_retrying: 'retrying',
+        l10n_failed_terminal: 'terminal failures',
+        l10n_dirty: 'dirty',
+        l10n_superseded: 'superseded',
+        snapshot_missing: 'snapshot pending',
+        instance_unpublished: 'instance unpublished',
+      };
+      const topReason = Object.entries(stageReasons)
+        .filter(
+          (entry) => typeof entry[0] === 'string' && typeof entry[1] === 'number' && entry[1] > 0,
+        )
+        .sort((a, b) => b[1] - a[1])[0];
+      const metaWhy = topReason
+        ? `Why: ${topReason[1]} ${stageReasonLabel[topReason[0]] || topReason[0]}`
+        : '';
+      const metaAction = nextActionLabel ? `Next: ${nextActionLabel}` : '';
+      const meta = [
+        metaLive,
+        metaRunning,
+        metaQueued,
+        metaRetrying,
+        metaOutdated,
+        metaFailed,
+        metaAwaiting,
+        metaSnapshot,
+        metaWhy,
+        metaAction,
+        metaError,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const shouldPoll = inFlight > 0 || retrying > 0 || awaitingSnapshot > 0;
+      return { label, tone, meta, shouldPoll };
+    }
 
-async function refreshL10nStatus(publicId) {
-  if (!publicId) {
-    setL10nStatusDisplay({ state: 'hidden', tone: 'unavailable', value: '-', meta: '' });
-    return;
-  }
-
-  if (l10nStatusTimer) {
-    clearTimeout(l10nStatusTimer);
-    l10nStatusTimer = null;
-  }
-
-  setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
-
-  try {
-    const workspaceId = CLICKEEN_WORKSPACE_ID;
-    const res = await fetch(
-      `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
-        publicId,
-      )}/l10n/status?subject=devstudio&_t=${Date.now()}`,
-      { cache: 'no-store' },
-    );
-    const payload = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      const reasonKey = payload?.error?.reasonKey || payload?.error?.code || null;
-      if (res.status === 403 && String(reasonKey || '').includes('coreui.upsell')) {
-        setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
+    async function refreshL10nStatus(publicId) {
+      if (!publicId) {
+        setL10nStatusDisplay({ state: 'hidden', tone: 'unavailable', value: '-', meta: '' });
         return;
       }
-      setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Unavailable', meta: '' });
-      return;
+
+      if (l10nStatusTimer) {
+        clearTimeout(l10nStatusTimer);
+        l10nStatusTimer = null;
+      }
+
+      setL10nStatusDisplay({ state: 'loading', tone: 'pending', value: 'Loading...', meta: '' });
+
+      try {
+        const workspaceId = CLICKEEN_WORKSPACE_ID;
+        const res = await fetch(
+          `${PARIS_API}/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+            publicId,
+          )}/publish/status?subject=devstudio&_t=${Date.now()}`,
+          { cache: 'no-store' },
+        );
+        const payload = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          const reasonKey = payload?.error?.reasonKey || payload?.error?.code || null;
+          if (res.status === 403 && String(reasonKey || '').includes('coreui.upsell')) {
+            setL10nStatusDisplay({
+              state: 'ready',
+              tone: 'unavailable',
+              value: 'Off',
+              meta: 'Upgrade required',
+            });
+            return;
+          }
+          setL10nStatusDisplay({
+            state: 'ready',
+            tone: 'unavailable',
+            value: 'Unavailable',
+            meta: '',
+          });
+          return;
+        }
+
+        const locales = Array.isArray(payload?.locales) ? payload.locales : [];
+        if (!locales.length) {
+          setL10nStatusDisplay({
+            state: 'ready',
+            tone: 'unavailable',
+            value: 'Off',
+            meta: 'No active locales (EN only)',
+          });
+          return;
+        }
+
+        const summary = summarizePublishStatus(payload);
+        setL10nStatusDisplay({
+          state: 'ready',
+          tone: summary.tone,
+          value: summary.label,
+          meta: summary.meta,
+        });
+
+        if (summary.shouldPoll) {
+          l10nStatusTimer = setTimeout(() => {
+            refreshL10nStatus(publicId).catch(() => {});
+          }, 15000);
+        }
+      } catch (err) {
+        console.error('[DevStudio] Failed to load l10n status', err);
+        setL10nStatusDisplay({
+          state: 'ready',
+          tone: 'unavailable',
+          value: 'Unavailable',
+          meta: '',
+        });
+      }
     }
 
-    const locales = Array.isArray(payload?.locales) ? payload.locales : [];
-    if (!locales.length) {
-      setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Off', meta: '' });
-      return;
+    let isPosting = false;
+    window.addEventListener(
+      'message',
+      (event) => {
+        if (event.origin !== BOB_ORIGIN) return;
+        if (event.source !== iframe.contentWindow) return;
+        const data = event.data;
+        if (data && data.type === 'bob:session-ready' && currentPublicId) {
+          console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
+          if (isPosting) return;
+          isPosting = true;
+          Promise.resolve(sendInstanceToIframe(currentPublicId))
+            .catch((error) => console.error('[DevStudio] Failed to send instance to Bob', error))
+            .finally(() => {
+              isPosting = false;
+            });
+        }
+        if (data && data.type === 'bob:published') {
+          const publicId = typeof data.publicId === 'string' ? data.publicId : '';
+          const workspaceId = typeof data.workspaceId === 'string' ? data.workspaceId : '';
+          const widgetType = typeof data.widgetType === 'string' ? data.widgetType : '';
+          const config = data.config && typeof data.config === 'object' ? data.config : null;
+          if (!publicId || !workspaceId || !widgetType || !config) return;
+          refreshL10nStatus(publicId).catch(() => {});
+        }
+      },
+      { signal: abortController.signal },
+    );
+
+    function attachDropdown() {
+      const header = document.querySelector('.devstudio-page__header');
+      if (!header || !dropdown) {
+        requestAnimationFrame(attachDropdown);
+        return;
+      }
+      header.classList.add('dev-widget-workspace-header');
+      dropdown.style.display = 'inline-block';
+      header.appendChild(dropdown);
+    }
+    attachDropdown();
+
+    function normalizeWidgetname(raw) {
+      if (!raw) return null;
+      if (/^[a-z0-9_]+$/.test(raw)) return raw;
+      const parts = String(raw)
+        .split(/[^a-z0-9_]+/i)
+        .filter(Boolean);
+      if (!parts.length) return null;
+      return parts[parts.length - 1].toLowerCase();
     }
 
-    const summary = summarizeL10nStatus(locales);
-    setL10nStatusDisplay({ state: 'ready', tone: summary.tone, value: summary.label, meta: summary.meta });
-
-    if (summary.shouldPoll) {
-      l10nStatusTimer = setTimeout(() => {
-        refreshL10nStatus(publicId).catch(() => {});
-      }, 15000);
+    async function ensureCompiledWidget(widgetname) {
+      const slug = normalizeWidgetname(widgetname);
+      if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
+      if (compiledCache.has(slug)) return compiledCache.get(slug);
+      const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
+      if (!res.ok) {
+        let details = '';
+        try {
+          const text = await res.text();
+          if (text) {
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed && typeof parsed === 'object' && 'error' in parsed) {
+                details = String(parsed.error || '');
+              } else {
+                details = text;
+              }
+            } catch {
+              details = text;
+            }
+          }
+        } catch {}
+        const suffix = details ? ` → ${details}` : '';
+        throw new Error(`Failed to compile widget ${widgetname} (${res.status})${suffix}`);
+      }
+      const json = await res.json();
+      compiledCache.set(slug, json);
+      return json;
     }
-  } catch (err) {
-    console.error('[DevStudio] Failed to load l10n status', err);
-    setL10nStatusDisplay({ state: 'ready', tone: 'unavailable', value: 'Unavailable', meta: '' });
-  }
-}
 
-let isPosting = false;
-window.addEventListener('message', (event) => {
-  if (event.origin !== BOB_ORIGIN) return;
-  if (event.source !== iframe.contentWindow) return;
-  const data = event.data;
-  if (data && data.type === 'bob:session-ready' && currentPublicId) {
-    console.log('[DevStudio] Received bob:session-ready, posting instance', currentPublicId);
-    if (isPosting) return;
-    isPosting = true;
-    Promise.resolve(sendInstanceToIframe(currentPublicId))
-      .catch((error) => console.error('[DevStudio] Failed to send instance to Bob', error))
-      .finally(() => {
-        isPosting = false;
+    async function fetchInstanceConfig(publicId) {
+      const res = await fetch(
+        `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
+        { cache: 'no-store' },
+      );
+      if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
+      const json = await res.json();
+      return json?.config ?? null;
+    }
+
+    async function fetchInstances() {
+      console.log('[DevStudio] Fetching instances from Paris');
+      const res = await fetch(`${PARIS_API}/curated-instances?_t=${Date.now()}`, {
+        cache: 'no-store',
       });
-  }
-  if (data && data.type === 'bob:published') {
-    const publicId = typeof data.publicId === 'string' ? data.publicId : '';
-    const workspaceId = typeof data.workspaceId === 'string' ? data.workspaceId : '';
-    const widgetType = typeof data.widgetType === 'string' ? data.widgetType : '';
-    const config = data.config && typeof data.config === 'object' ? data.config : null;
-    if (!publicId || !workspaceId || !widgetType || !config) return;
-    refreshL10nStatus(publicId).catch(() => {});
-  }
-}, { signal: abortController.signal });
-
-function attachDropdown() {
-  const header = document.querySelector('.devstudio-page__header');
-  if (!header || !dropdown) {
-    requestAnimationFrame(attachDropdown);
-    return;
-  }
-  header.classList.add('dev-widget-workspace-header');
-  dropdown.style.display = 'inline-block';
-  header.appendChild(dropdown);
-}
-attachDropdown();
-
-function normalizeWidgetname(raw) {
-  if (!raw) return null;
-  if (/^[a-z0-9_]+$/.test(raw)) return raw;
-  const parts = String(raw).split(/[^a-z0-9_]+/i).filter(Boolean);
-  if (!parts.length) return null;
-  return parts[parts.length - 1].toLowerCase();
-}
-
-async function ensureCompiledWidget(widgetname) {
-  const slug = normalizeWidgetname(widgetname);
-  if (!slug) throw new Error(`Cannot normalize widget name: ${widgetname}`);
-  if (compiledCache.has(slug)) return compiledCache.get(slug);
-  const res = await fetch(`${BOB_ORIGIN}/api/widgets/${slug}/compiled`, { cache: 'no-store' });
-  if (!res.ok) {
-    let details = '';
-    try {
-      const text = await res.text();
-      if (text) {
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        let detail = text;
         try {
           const parsed = JSON.parse(text);
-          if (parsed && typeof parsed === 'object' && 'error' in parsed) {
-            details = String(parsed.error || '');
-          } else {
-            details = text;
+          if (parsed && typeof parsed === 'object' && parsed.error) {
+            detail = parsed.error?.reasonKey
+              ? String(parsed.error.reasonKey)
+              : JSON.stringify(parsed.error);
           }
-        } catch {
-          details = text;
-        }
+        } catch {}
+        throw new Error(
+          `[DevStudio] Failed to fetch instances (HTTP ${res.status})${detail ? `: ${detail}` : ''}`,
+        );
       }
-    } catch {}
-    const suffix = details ? ` → ${details}` : '';
-    throw new Error(`Failed to compile widget ${widgetname} (${res.status})${suffix}`);
-  }
-  const json = await res.json();
-  compiledCache.set(slug, json);
-  return json;
-}
+      const data = await res.json();
+      const payload = Array.isArray(data.instances) ? data.instances : [];
+      instances = payload.map((inst) => ({
+        publicId: inst.publicId,
+        widgetname: inst.widgetname,
+        widgetSlug: normalizeWidgetname(inst.widgetname),
+        label: inst.displayName || inst.publicId,
+        config: inst.config ?? null,
+        meta: normalizeCuratedMeta(inst.meta ?? null),
+      }));
 
-async function fetchInstanceConfig(publicId) {
-  const res = await fetch(
-    `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(DEV_WORKSPACE_ID)}&subject=devstudio&_t=${Date.now()}`,
-    { cache: 'no-store' },
-  );
-  if (!res.ok) throw new Error(`Failed to load instance ${publicId} (${res.status})`);
-  const json = await res.json();
-  return json?.config ?? null;
-}
-
-async function fetchInstances() {
-  console.log('[DevStudio] Fetching instances from Paris');
-  const res = await fetch(`${PARIS_API}/curated-instances?_t=${Date.now()}`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    let detail = text;
-    try {
-      const parsed = JSON.parse(text);
-      if (parsed && typeof parsed === 'object' && parsed.error) {
-        detail = parsed.error?.reasonKey ? String(parsed.error.reasonKey) : JSON.stringify(parsed.error);
+      const uniqueWidgetnames = Array.from(
+        new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)),
+      );
+      if (instances.length === 0) {
+        currentPublicId = null;
+        currentLabel.textContent = 'No instances yet';
+        valueField.value = '';
+        dropdown.style.display = 'none';
+        return;
       }
-    } catch {}
-    throw new Error(`[DevStudio] Failed to fetch instances (HTTP ${res.status})${detail ? `: ${detail}` : ''}`);
-  }
-  const data = await res.json();
-  const payload = Array.isArray(data.instances) ? data.instances : [];
-  instances = payload.map((inst) => ({
-    publicId: inst.publicId,
-    widgetname: inst.widgetname,
-    widgetSlug: normalizeWidgetname(inst.widgetname),
-    label: inst.displayName || inst.publicId,
-    config: inst.config ?? null,
-    meta: normalizeCuratedMeta(inst.meta ?? null),
-  }));
 
-  const uniqueWidgetnames = Array.from(new Set(instances.map((inst) => inst.widgetSlug || inst.widgetname)));
-  if (instances.length === 0) {
-    currentPublicId = null;
-    currentLabel.textContent = 'No instances yet';
-    valueField.value = '';
-    dropdown.style.display = 'none';
-    return;
-  }
+      const compileResults = await Promise.allSettled(
+        uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)),
+      );
+      const compileErrors = compileResults.filter((result) => result.status === 'rejected');
+      if (compileErrors.length > 0) {
+        console.error(
+          '[DevStudio] Failed to compile one or more widgets; instance list will still load',
+          compileErrors,
+        );
+      }
 
-  const compileResults = await Promise.allSettled(
-    uniqueWidgetnames.map((widgetname) => ensureCompiledWidget(widgetname)),
-  );
-  const compileErrors = compileResults.filter((result) => result.status === 'rejected');
-  if (compileErrors.length > 0) {
-    console.error('[DevStudio] Failed to compile one or more widgets; instance list will still load', compileErrors);
-  }
+      currentPublicId = currentPublicId || instances[0].publicId;
 
-  currentPublicId = currentPublicId || instances[0].publicId;
+      console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
+      updateCurrentLabel();
+      renderInstances();
+      try {
+        await sendInstanceToIframe(currentPublicId);
+      } catch (error) {
+        console.error('[DevStudio] Failed to load initial instance into Bob', error);
+      }
+      refreshL10nStatus(currentPublicId).catch(() => {});
+    }
 
-  console.log('[DevStudio] Current publicId', currentPublicId, 'instances', instances.length);
-  updateCurrentLabel();
-  renderInstances();
-  try {
-    await sendInstanceToIframe(currentPublicId);
-  } catch (error) {
-    console.error('[DevStudio] Failed to load initial instance into Bob', error);
-  }
-  refreshL10nStatus(currentPublicId).catch(() => {});
-}
+    function updateCurrentLabel() {
+      const current = instances.find((inst) => inst.publicId === currentPublicId);
+      currentLabel.textContent = current?.label || currentPublicId;
+      valueField.value = currentPublicId;
+    }
 
-function updateCurrentLabel() {
-  const current = instances.find((inst) => inst.publicId === currentPublicId);
-  currentLabel.textContent = current?.label || currentPublicId;
-  valueField.value = currentPublicId;
-}
-
-function renderInstances() {
-  menu.innerHTML = instances
-    .map((inst) => {
-      const selected = inst.publicId === currentPublicId;
-      return `
+    function renderInstances() {
+      menu.innerHTML = instances
+        .map((inst) => {
+          const selected = inst.publicId === currentPublicId;
+          return `
         <button
           type="button"
           class="diet-btn-menuactions diet-dropdown__option${selected ? ' is-selected' : ''}"
@@ -975,1147 +1279,1311 @@ function renderInstances() {
           </span>
         </button>
       `;
-    })
-    .join('');
+        })
+        .join('');
 
-  menu.querySelectorAll('[data-public-id]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const publicId = button.getAttribute('data-public-id');
-      if (!publicId) return;
-      switchInstance(publicId);
-    });
-  });
-}
-
-function switchInstance(publicId) {
-  currentPublicId = publicId;
-  isOpen = false;
-  dropdown.setAttribute('data-state', 'closed');
-  control.setAttribute('aria-expanded', 'false');
-  updateCurrentLabel();
-  renderInstances();
-  sendInstanceToIframe(publicId).catch((error) => {
-    console.error('[DevStudio] Failed to send instance to Bob', error);
-  });
-  refreshL10nStatus(publicId).catch(() => {});
-}
-
-function requireSuperadminKey() {
-  if (!isLocalDevStudio) {
-    throw new Error('[DevStudio] Superadmin actions are only available on DevStudio Local.');
-  }
-  const existing = sessionStorage.getItem(SUPERADMIN_KEY_STORAGE);
-  if (existing && existing.trim()) return existing.trim();
-  const entered = window.prompt('Superadmin key (stored in sessionStorage):');
-  const key = (entered || '').trim();
-  if (!key) throw new Error('[DevStudio] Missing superadmin key');
-  sessionStorage.setItem(SUPERADMIN_KEY_STORAGE, key);
-  return key;
-}
-
-async function superadminFetch(url, init) {
-  const headers = new Headers(init?.headers || {});
-  const attempt = async () => fetch(url, { ...init, headers });
-
-  const res = await attempt();
-  if (res.status !== 403) return res;
-
-  // Only prompt for a superadmin key if Bob is enforcing it (via CK_SUPERADMIN_KEY).
-  // Retry once with the provided key.
-  try {
-    const clone = res.clone();
-    const data = await clone.json().catch(() => null);
-    const reasonKey = data?.error?.reasonKey;
-    if (reasonKey !== 'coreui.errors.superadmin.invalid') return res;
-  } catch {
-    return res;
-  }
-
-  const key = requireSuperadminKey();
-  headers.set('x-ck-superadmin-key', key);
-  return attempt();
-}
-
-function requireWidgetSlugForAction() {
-  const current = instances.find((inst) => inst.publicId === currentPublicId);
-  const fallback = current?.widgetSlug || normalizeWidgetname(current?.widgetname) || 'faq';
-  const entered = window.prompt('Widget type (slug):', fallback);
-  const slug = normalizeWidgetname(entered);
-  if (!slug) throw new Error('[DevStudio] Missing widget type');
-  return slug;
-}
-
-function slugifyKey(raw) {
-  return String(raw || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-}
-
-function isCuratedPublicId(publicId) {
-  return typeof publicId === 'string' && publicId.startsWith('wgt_curated_');
-}
-
-function parseCuratedPublicId(publicId) {
-  if (!isCuratedPublicId(publicId)) return null;
-  const match = /^wgt_curated_([^\\.]+)\\.([^\\.]+)\\.v(\\d+)$/.exec(publicId);
-  if (!match) return null;
-  return {
-    widgetSlug: match[1],
-    styleSlug: match[2],
-    version: Number(match[3]),
-  };
-}
-
-function normalizeCuratedTags(raw) {
-  const tags = {};
-  CURATED_TAG_GROUPS.forEach((group) => {
-    tags[group.id] = [];
-  });
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return tags;
-  CURATED_TAG_GROUPS.forEach((group) => {
-    const values = raw[group.id];
-    if (Array.isArray(values)) {
-      tags[group.id] = values.map((value) => String(value)).filter(Boolean);
-    }
-  });
-  return tags;
-}
-
-function normalizeCuratedMeta(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const styleName = typeof raw.styleName === 'string' ? raw.styleName.trim() : '';
-  const styleSlug = typeof raw.styleSlug === 'string' ? raw.styleSlug.trim() : '';
-  const version = typeof raw.version === 'number' && Number.isFinite(raw.version)
-    ? Math.max(1, Math.round(raw.version))
-    : null;
-  const tags = normalizeCuratedTags(raw.tags);
-  return {
-    styleName: styleName || null,
-    styleSlug: styleSlug || null,
-    version,
-    tags,
-  };
-}
-
-function resolveCuratedStyle(instance) {
-  if (!instance) return null;
-  const meta = normalizeCuratedMeta(instance.meta);
-  const parsed = parseCuratedPublicId(instance.publicId);
-  const styleSlug = meta?.styleSlug || parsed?.styleSlug || null;
-  const styleName =
-    meta?.styleName ||
-    (styleSlug ? styleSlug.replace(/_/g, ' ') : null);
-  const version = meta?.version ?? parsed?.version ?? null;
-  const tags = meta?.tags ?? normalizeCuratedTags(null);
-  return {
-    styleName,
-    styleSlug,
-    version,
-    tags,
-    widgetSlug: instance.widgetSlug || parsed?.widgetSlug || null,
-  };
-}
-
-function formatCuratedVersion(version) {
-  return `v${String(version).padStart(CURATED_VERSION_PAD, '0')}`;
-}
-
-function buildCuratedPublicId(widgetSlug, styleSlug, version) {
-  return `wgt_curated_${widgetSlug}.${styleSlug}.${formatCuratedVersion(version)}`;
-}
-
-function getCuratedVersions(widgetSlug, styleSlug) {
-  return instances
-    .filter((inst) => isCuratedPublicId(inst.publicId))
-    .map((inst) => resolveCuratedStyle(inst))
-    .filter((style) => style && style.widgetSlug === widgetSlug && style.styleSlug === styleSlug)
-    .map((style) => style.version)
-    .filter((version) => typeof version === 'number');
-}
-
-function getNextCuratedVersion(widgetSlug, styleSlug) {
-  const versions = getCuratedVersions(widgetSlug, styleSlug);
-  const max = versions.length ? Math.max(...versions) : 0;
-  return max + 1;
-}
-
-async function createWorkspaceInstance({ workspaceId, widgetType, publicId, config, status, meta }) {
-  const res = await superadminFetch(
-    `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ widgetType, publicId, config, status, meta }),
-    }
-  );
-  const text = await res.text().catch(() => '');
-  if (!res.ok) throw new Error(`[DevStudio] Create instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
-  return text ? JSON.parse(text) : null;
-}
-
-async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
-  const res = await superadminFetch(
-    `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
-    {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ config, status, meta }),
-    }
-  );
-  const text = await res.text().catch(() => '');
-  if (!res.ok) throw new Error(`[DevStudio] Update instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
-  return text ? JSON.parse(text) : null;
-}
-
-async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
-  const res = await superadminFetch(
-    `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ widgetType, publicId, config, status }),
-    }
-  );
-  if (res.ok) {
-    const text = await res.text().catch(() => '');
-    return text ? JSON.parse(text) : null;
-  }
-
-  // If the instance already exists, update it to the desired config/status.
-  const text = await res.text().catch(() => '');
-  if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
-    await updateWorkspaceInstance({ workspaceId, publicId, config, status });
-    return { ok: true, existed: true };
-  }
-
-  throw new Error(`[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
-}
-
-async function promoteInstanceToCloud({ workspaceId, widgetType, publicId, config, status }) {
-  if (!isLocalDevStudio) return { ok: false, skipped: true };
-  const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ workspaceId, widgetType, publicId, config, status }),
-  });
-  const text = await res.text().catch(() => '');
-  if (!res.ok) {
-    let detail = text || `HTTP ${res.status}`;
-    try {
-      const parsed = text ? JSON.parse(text) : null;
-      detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
-    } catch {}
-    console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
-    alert(`[DevStudio] Cloud promote failed for ${publicId}: ${detail}`);
-    return { ok: false, error: detail };
-  }
-  return { ok: true };
-}
-
-async function exportInstanceDataFromBob({
-  timeoutMs = 2500,
-  persistAssets = false,
-  exportMode = 'base',
-  assetScope = 'workspace',
-  assetPublicId,
-  assetWidgetType,
-} = {}) {
-  const target = iframe.contentWindow;
-  if (!target) throw new Error('[DevStudio] Bob iframe not ready');
-  const requestId = crypto.randomUUID();
-
-  return await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error('[DevStudio] Timed out requesting instance data from Bob'));
-    }, timeoutMs);
-
-    const cleanup = () => {
-      clearTimeout(timeout);
-      window.removeEventListener('message', onMessage);
-    };
-
-    const onMessage = (event) => {
-      if (event.origin !== BOB_ORIGIN) return;
-      const data = event.data;
-      if (!data || typeof data !== 'object') return;
-      if (data.type !== 'bob:export-instance-data') return;
-      if (data.requestId !== requestId) return;
-      cleanup();
-      if (data.ok !== true) {
-        reject(new Error(data.error || '[DevStudio] Bob failed to export instance data'));
-        return;
-      }
-      resolve(data);
-    };
-
-    window.addEventListener('message', onMessage);
-    target.postMessage(
-      {
-        type: 'devstudio:export-instance-data',
-        requestId,
-        persistAssets,
-        exportMode,
-        assetScope,
-        assetPublicId,
-        assetWidgetType,
-      },
-      BOB_ORIGIN
-    );
-  });
-}
-
-function cloneJson(value) {
-  // v1: config is JSON-only.
-  return JSON.parse(JSON.stringify(value ?? null));
-}
-
-function extractPrimaryUrl(raw) {
-  const v = String(raw || '').trim();
-  if (!v) return null;
-  if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
-  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (m && m[2]) return m[2];
-  return null;
-}
-
-function replacePrimaryUrl(raw, nextUrl) {
-  const v = String(raw || '');
-  const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-  if (m && m[2]) return v.replace(m[2], nextUrl);
-  return nextUrl;
-}
-
-function isNonPersistableUrl(rawUrl) {
-  const v = String(rawUrl || '').trim();
-  return /^(?:data|blob):/i.test(v);
-}
-
-function extFromMime(mime) {
-  const mt = String(mime || '').toLowerCase();
-  if (mt === 'image/png') return 'png';
-  if (mt === 'image/jpeg') return 'jpg';
-  if (mt === 'image/webp') return 'webp';
-  if (mt === 'image/gif') return 'gif';
-  if (mt === 'image/svg+xml') return 'svg';
-  if (mt === 'video/mp4') return 'mp4';
-  if (mt === 'video/webm') return 'webm';
-  if (mt === 'application/pdf') return 'pdf';
-  return 'bin';
-}
-
-async function uploadTokyoAsset({ scope, workspaceId, widgetType, publicId, blob, filename, variant = 'original' }) {
-  const headers = new Headers();
-  headers.set('content-type', blob.type || 'application/octet-stream');
-  headers.set('x-filename', filename || 'upload.bin');
-  headers.set('x-variant', variant);
-
-  let endpoint = '';
-  if (scope === 'workspace') {
-    if (!workspaceId) throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
-    headers.set('x-workspace-id', workspaceId);
-    endpoint = `${TOKYO_BASE}/workspace-assets/upload`;
-  } else if (scope === 'curated') {
-    if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
-    const normalized = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
-    if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
-    headers.set('x-public-id', publicId);
-    headers.set('x-widget-type', normalized);
-    endpoint = `${TOKYO_BASE}/curated-assets/upload`;
-  } else if (scope === 'widget') {
-    const normalized = normalizeWidgetname(widgetType) || String(widgetType || '').trim().toLowerCase();
-    if (!normalized) throw new Error('[DevStudio] Missing widgetType for widget asset upload');
-    headers.set('x-widget-type', normalized);
-    endpoint = `${TOKYO_BASE}/widgets/upload`;
-  } else {
-    throw new Error(`[DevStudio] Unknown asset upload scope: ${String(scope)}`);
-  }
-
-  const res = await fetch(`${endpoint}?_t=${Date.now()}`, {
-    method: 'POST',
-    headers,
-    body: blob,
-  });
-  const text = await res.text().catch(() => '');
-  if (!res.ok) {
-    throw new Error(
-      `[DevStudio] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
-    );
-  }
-  const json = text ? JSON.parse(text) : null;
-  const url = json?.url;
-  if (!url || typeof url !== 'string') throw new Error('[DevStudio] Asset upload missing url');
-  return url;
-}
-
-async function persistConfigAssetsToTokyo(config, { scope, workspaceId, widgetType, publicId }) {
-  if (!config || typeof config !== 'object') return config;
-
-  const cache = new Map();
-  const visit = async (node) => {
-    if (typeof node === 'string') {
-      const url = extractPrimaryUrl(node);
-      if (!url || !isNonPersistableUrl(url)) return;
-
-      if (!cache.has(url)) {
-        const blob = await fetch(url).then((r) => r.blob());
-        const ext = extFromMime(blob.type);
-        const filename = `upload.${ext}`;
-        const uploadedUrl = await uploadTokyoAsset({
-          scope,
-          workspaceId,
-          widgetType,
-          publicId,
-          blob,
-          filename,
-          variant: 'original',
+      menu.querySelectorAll('[data-public-id]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const publicId = button.getAttribute('data-public-id');
+          if (!publicId) return;
+          switchInstance(publicId);
         });
-        cache.set(url, uploadedUrl);
+      });
+    }
+
+    function switchInstance(publicId) {
+      currentPublicId = publicId;
+      isOpen = false;
+      dropdown.setAttribute('data-state', 'closed');
+      control.setAttribute('aria-expanded', 'false');
+      updateCurrentLabel();
+      renderInstances();
+      sendInstanceToIframe(publicId).catch((error) => {
+        console.error('[DevStudio] Failed to send instance to Bob', error);
+      });
+      refreshL10nStatus(publicId).catch(() => {});
+    }
+
+    function requireSuperadminKey() {
+      if (!isLocalDevStudio) {
+        throw new Error('[DevStudio] Superadmin actions are only available on DevStudio Local.');
       }
-      const uploaded = cache.get(url);
-      return replacePrimaryUrl(node, uploaded);
+      const existing = sessionStorage.getItem(SUPERADMIN_KEY_STORAGE);
+      if (existing && existing.trim()) return existing.trim();
+      const entered = window.prompt('Superadmin key (stored in sessionStorage):');
+      const key = (entered || '').trim();
+      if (!key) throw new Error('[DevStudio] Missing superadmin key');
+      sessionStorage.setItem(SUPERADMIN_KEY_STORAGE, key);
+      return key;
     }
 
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) {
-      for (let i = 0; i < node.length; i += 1) {
-        const replaced = await visit(node[i]);
-        if (typeof replaced === 'string') node[i] = replaced;
+    async function superadminFetch(url, init) {
+      const headers = new Headers(init?.headers || {});
+      const attempt = async () => fetch(url, { ...init, headers });
+
+      const res = await attempt();
+      if (res.status !== 403) return res;
+
+      // Only prompt for a superadmin key if Bob is enforcing it (via CK_SUPERADMIN_KEY).
+      // Retry once with the provided key.
+      try {
+        const clone = res.clone();
+        const data = await clone.json().catch(() => null);
+        const reasonKey = data?.error?.reasonKey;
+        if (reasonKey !== 'coreui.errors.superadmin.invalid') return res;
+      } catch {
+        return res;
       }
-      return;
+
+      const key = requireSuperadminKey();
+      headers.set('x-ck-superadmin-key', key);
+      return attempt();
     }
 
-    for (const [key, value] of Object.entries(node)) {
-      const replaced = await visit(value);
-      if (typeof replaced === 'string') node[key] = replaced;
+    function requireWidgetSlugForAction() {
+      const current = instances.find((inst) => inst.publicId === currentPublicId);
+      const fallback = current?.widgetSlug || normalizeWidgetname(current?.widgetname) || 'faq';
+      const entered = window.prompt('Widget type (slug):', fallback);
+      const slug = normalizeWidgetname(entered);
+      if (!slug) throw new Error('[DevStudio] Missing widget type');
+      return slug;
     }
-  };
 
-  await visit(config);
-  return config;
-}
-
-function stripTokyoBaseFromConfig(config, tokyoBase) {
-  if (!config || typeof config !== 'object') return config;
-  const base = String(tokyoBase || '').trim().replace(/\/+$/, '');
-  if (!base) return config;
-  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const baseRegex = new RegExp(escaped, 'g');
-
-  const visit = (node) => {
-    if (typeof node === 'string') {
-      if (!node.includes(base)) return;
-      return node.replace(baseRegex, '');
+    function slugifyKey(raw) {
+      return String(raw || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
     }
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) {
-      for (let i = 0; i < node.length; i += 1) {
-        const replaced = visit(node[i]);
-        if (typeof replaced === 'string') node[i] = replaced;
+
+    function isCuratedPublicId(publicId) {
+      return typeof publicId === 'string' && publicId.startsWith('wgt_curated_');
+    }
+
+    function parseCuratedPublicId(publicId) {
+      if (!isCuratedPublicId(publicId)) return null;
+      const match = /^wgt_curated_([^\\.]+)\\.([^\\.]+)\\.v(\\d+)$/.exec(publicId);
+      if (!match) return null;
+      return {
+        widgetSlug: match[1],
+        styleSlug: match[2],
+        version: Number(match[3]),
+      };
+    }
+
+    function normalizeCuratedTags(raw) {
+      const tags = {};
+      CURATED_TAG_GROUPS.forEach((group) => {
+        tags[group.id] = [];
+      });
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return tags;
+      CURATED_TAG_GROUPS.forEach((group) => {
+        const values = raw[group.id];
+        if (Array.isArray(values)) {
+          tags[group.id] = values.map((value) => String(value)).filter(Boolean);
+        }
+      });
+      return tags;
+    }
+
+    function normalizeCuratedMeta(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+      const styleName = typeof raw.styleName === 'string' ? raw.styleName.trim() : '';
+      const styleSlug = typeof raw.styleSlug === 'string' ? raw.styleSlug.trim() : '';
+      const version =
+        typeof raw.version === 'number' && Number.isFinite(raw.version)
+          ? Math.max(1, Math.round(raw.version))
+          : null;
+      const tags = normalizeCuratedTags(raw.tags);
+      return {
+        styleName: styleName || null,
+        styleSlug: styleSlug || null,
+        version,
+        tags,
+      };
+    }
+
+    function resolveCuratedStyle(instance) {
+      if (!instance) return null;
+      const meta = normalizeCuratedMeta(instance.meta);
+      const parsed = parseCuratedPublicId(instance.publicId);
+      const styleSlug = meta?.styleSlug || parsed?.styleSlug || null;
+      const styleName = meta?.styleName || (styleSlug ? styleSlug.replace(/_/g, ' ') : null);
+      const version = meta?.version ?? parsed?.version ?? null;
+      const tags = meta?.tags ?? normalizeCuratedTags(null);
+      return {
+        styleName,
+        styleSlug,
+        version,
+        tags,
+        widgetSlug: instance.widgetSlug || parsed?.widgetSlug || null,
+      };
+    }
+
+    function formatCuratedVersion(version) {
+      return `v${String(version).padStart(CURATED_VERSION_PAD, '0')}`;
+    }
+
+    function buildCuratedPublicId(widgetSlug, styleSlug, version) {
+      return `wgt_curated_${widgetSlug}.${styleSlug}.${formatCuratedVersion(version)}`;
+    }
+
+    function getCuratedVersions(widgetSlug, styleSlug) {
+      return instances
+        .filter((inst) => isCuratedPublicId(inst.publicId))
+        .map((inst) => resolveCuratedStyle(inst))
+        .filter(
+          (style) => style && style.widgetSlug === widgetSlug && style.styleSlug === styleSlug,
+        )
+        .map((style) => style.version)
+        .filter((version) => typeof version === 'number');
+    }
+
+    function getNextCuratedVersion(widgetSlug, styleSlug) {
+      const versions = getCuratedVersions(widgetSlug, styleSlug);
+      const max = versions.length ? Math.max(...versions) : 0;
+      return max + 1;
+    }
+
+    async function createWorkspaceInstance({
+      workspaceId,
+      widgetType,
+      publicId,
+      config,
+      status,
+      meta,
+    }) {
+      const res = await superadminFetch(
+        `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ widgetType, publicId, config, status, meta }),
+        },
+      );
+      const text = await res.text().catch(() => '');
+      if (!res.ok)
+        throw new Error(
+          `[DevStudio] Create instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function updateWorkspaceInstance({ workspaceId, publicId, config, status, meta }) {
+      const res = await superadminFetch(
+        `${PARIS_API}/instance/${encodeURIComponent(publicId)}?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ config, status, meta }),
+        },
+      );
+      const text = await res.text().catch(() => '');
+      if (!res.ok)
+        throw new Error(
+          `[DevStudio] Update instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function ensureWorkspaceInstance({ workspaceId, widgetType, publicId, config, status }) {
+      const res = await superadminFetch(
+        `${PARIS_API}/instances?workspaceId=${encodeURIComponent(workspaceId)}&subject=devstudio&_t=${Date.now()}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ widgetType, publicId, config, status }),
+        },
+      );
+      if (res.ok) {
+        const text = await res.text().catch(() => '');
+        return text ? JSON.parse(text) : null;
       }
-      return;
+
+      // If the instance already exists, update it to the desired config/status.
+      const text = await res.text().catch(() => '');
+      if (res.status === 409 || (text || '').toLowerCase().includes('duplicate')) {
+        await updateWorkspaceInstance({ workspaceId, publicId, config, status });
+        return { ok: true, existed: true };
+      }
+
+      throw new Error(
+        `[DevStudio] Ensure instance failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+      );
     }
-    for (const [key, value] of Object.entries(node)) {
-      const replaced = visit(value);
-      if (typeof replaced === 'string') node[key] = replaced;
+
+    async function promoteInstanceToCloud({ workspaceId, widgetType, publicId, config, status }) {
+      if (!isLocalDevStudio) return { ok: false, skipped: true };
+      const res = await fetch(`/api/promote-instance?_t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ workspaceId, widgetType, publicId, config, status }),
+      });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        let detail = text || `HTTP ${res.status}`;
+        try {
+          const parsed = text ? JSON.parse(text) : null;
+          detail = parsed?.error?.detail || parsed?.error?.reasonKey || detail;
+        } catch {}
+        console.warn('[DevStudio] Cloud promote failed', { publicId, detail });
+        alert(`[DevStudio] Cloud promote failed for ${publicId}: ${detail}`);
+        return { ok: false, error: detail };
+      }
+      return { ok: true };
     }
-  };
 
-  visit(config);
-  return config;
-}
+    async function exportInstanceDataFromBob({
+      timeoutMs = 2500,
+      persistAssets = false,
+      exportMode = 'base',
+      assetScope = 'workspace',
+      assetPublicId,
+      assetWidgetType,
+    } = {}) {
+      const target = iframe.contentWindow;
+      if (!target) throw new Error('[DevStudio] Bob iframe not ready');
+      const requestId = crypto.randomUUID();
 
-async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
-  const publicId = `wgt_main_${widgetSlug}`;
-  const exported = await exportInstanceDataFromBob({
-    persistAssets: true,
-    exportMode: 'current',
-    assetScope: 'curated',
-    assetPublicId: publicId,
-    assetWidgetType: widgetSlug,
-  });
-  const config = exported?.instanceData;
-  if (!config || typeof config !== 'object') {
-    throw new Error('[DevStudio] Bob export did not include instanceData');
-  }
+      return await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('[DevStudio] Timed out requesting instance data from Bob'));
+        }, timeoutMs);
 
-  const exportedPublicId = exported?.meta?.publicId;
-  if (exportedPublicId && exportedPublicId !== publicId) {
-    const ok = window.confirm(
-      `Save the currently loaded editor state (${exportedPublicId}) into default instance (${publicId})?`
-    );
-  if (!ok) throw new Error('[DevStudio] Canceled');
-  }
+        const cleanup = () => {
+          clearTimeout(timeout);
+          window.removeEventListener('message', onMessage);
+        };
 
-  // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
-  // so downstream curated instances deterministically inherit the updated baseline.
-  const defaultsForSpec = stripTokyoBaseFromConfig(cloneJson(config), TOKYO_BASE);
-  await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
-  compiledCache.delete(widgetSlug);
+        const onMessage = (event) => {
+          if (event.origin !== BOB_ORIGIN) return;
+          const data = event.data;
+          if (!data || typeof data !== 'object') return;
+          if (data.type !== 'bob:export-instance-data') return;
+          if (data.requestId !== requestId) return;
+          cleanup();
+          if (data.ok !== true) {
+            reject(new Error(data.error || '[DevStudio] Bob failed to export instance data'));
+            return;
+          }
+          resolve(data);
+        };
 
-  await createWorkspaceInstance({
-    workspaceId: DEV_WORKSPACE_ID,
-    widgetType: widgetSlug,
-    publicId,
-    config,
-    status: 'unpublished',
-  });
-  await updateWorkspaceInstance({
-    workspaceId: DEV_WORKSPACE_ID,
-    publicId,
-    config,
-    status: 'unpublished',
-  });
-  return { publicId, config };
-}
+        window.addEventListener('message', onMessage);
+        target.postMessage(
+          {
+            type: 'devstudio:export-instance-data',
+            requestId,
+            persistAssets,
+            exportMode,
+            assetScope,
+            assetPublicId,
+            assetWidgetType,
+          },
+          BOB_ORIGIN,
+        );
+      });
+    }
 
-async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
-  const res = await fetch(`/api/widget-spec-defaults?_t=${Date.now()}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ widgetType: widgetSlug, defaults }),
-  });
-  const text = await res.text().catch(() => '');
-  if (!res.ok) {
-    throw new Error(
-      `[DevStudio] Update widget spec defaults failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
-    );
-  }
-  return text ? JSON.parse(text) : null;
-}
+    function cloneJson(value) {
+      // v1: config is JSON-only.
+      return JSON.parse(JSON.stringify(value ?? null));
+    }
 
-function getValueAtPath(obj, path) {
-  if (!obj || !path) return undefined;
-  return path.split('.').reduce((acc, key) => {
-    if (!acc || typeof acc !== 'object') return undefined;
-    return acc[key];
-  }, obj);
-}
+    function extractPrimaryUrl(raw) {
+      const v = String(raw || '').trim();
+      if (!v) return null;
+      if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
+      const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+      if (m && m[2]) return m[2];
+      return null;
+    }
 
-	function buildThemeValuesFromConfig(config) {
-	  const paths = [
-	    'stage.background',
-	    'pod.background',
-	    'appearance.itemBackground',
-	    'appearance.textColor',
-	    'typography.globalFamily',
-	  ];
-	  const values = {};
-	  paths.forEach((path) => {
-	    const value = getValueAtPath(config, path);
-	    if (value !== undefined) values[path] = value;
-	  });
-	  return values;
-	}
+    function replacePrimaryUrl(raw, nextUrl) {
+      const v = String(raw || '');
+      const m = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
+      if (m && m[2]) return v.replace(m[2], nextUrl);
+      return nextUrl;
+    }
 
-async function listTokyoThemes() {
-	  const res = await fetch(`/api/themes/list?_t=${Date.now()}`, { cache: 'no-store' });
-	  const text = await res.text().catch(() => '');
-	  if (!res.ok) {
-	    throw new Error(
-	      `[DevStudio] List themes failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
-	    );
-	  }
-	  const json = text ? JSON.parse(text) : null;
-	  const themes = Array.isArray(json?.themes) ? json.themes : [];
-	  return themes
-	    .map((theme) => ({
-	      id: String(theme?.id || '').trim().toLowerCase(),
-	      label: String(theme?.label || '').trim(),
-	    }))
-	    .filter((theme) => Boolean(theme.id) && theme.id !== 'custom');
-	}
+    function isNonPersistableUrl(rawUrl) {
+      const v = String(rawUrl || '').trim();
+      return /^(?:data|blob):/i.test(v);
+    }
 
-	function openThemeModal({ themes, defaultThemeId }) {
-	  if (!themeModal || !(themeModalSelect instanceof HTMLSelectElement)) {
-	    return Promise.resolve(null);
-	  }
+    function extFromMime(mime) {
+      const mt = String(mime || '').toLowerCase();
+      if (mt === 'image/png') return 'png';
+      if (mt === 'image/jpeg') return 'jpg';
+      if (mt === 'image/webp') return 'webp';
+      if (mt === 'image/gif') return 'gif';
+      if (mt === 'image/svg+xml') return 'svg';
+      if (mt === 'video/mp4') return 'mp4';
+      if (mt === 'video/webm') return 'webm';
+      if (mt === 'application/pdf') return 'pdf';
+      return 'bin';
+    }
 
-	  const normalizedThemes = Array.isArray(themes) ? themes : [];
-	  if (!normalizedThemes.length) return Promise.resolve(null);
+    async function uploadTokyoAsset({
+      scope,
+      workspaceId,
+      widgetType,
+      publicId,
+      blob,
+      filename,
+      variant = 'original',
+    }) {
+      const headers = new Headers();
+      headers.set('content-type', blob.type || 'application/octet-stream');
+      headers.set('x-filename', filename || 'upload.bin');
+      headers.set('x-variant', variant);
 
-	  themeModalSelect.replaceChildren();
-	  normalizedThemes.forEach((theme) => {
-	    const opt = document.createElement('option');
-	    opt.value = theme.id;
-	    opt.textContent = theme.label ? `${theme.label} (${theme.id})` : theme.id;
-	    themeModalSelect.appendChild(opt);
-	  });
+      let endpoint = '';
+      if (scope === 'workspace') {
+        if (!workspaceId)
+          throw new Error('[DevStudio] Missing workspaceId for workspace asset upload');
+        headers.set('x-workspace-id', workspaceId);
+        endpoint = `${TOKYO_BASE}/workspace-assets/upload`;
+      } else if (scope === 'curated') {
+        if (!publicId) throw new Error('[DevStudio] Missing publicId for curated asset upload');
+        const normalized =
+          normalizeWidgetname(widgetType) ||
+          String(widgetType || '')
+            .trim()
+            .toLowerCase();
+        if (!normalized) throw new Error('[DevStudio] Missing widgetType for curated asset upload');
+        headers.set('x-public-id', publicId);
+        headers.set('x-widget-type', normalized);
+        endpoint = `${TOKYO_BASE}/curated-assets/upload`;
+      } else if (scope === 'widget') {
+        const normalized =
+          normalizeWidgetname(widgetType) ||
+          String(widgetType || '')
+            .trim()
+            .toLowerCase();
+        if (!normalized) throw new Error('[DevStudio] Missing widgetType for widget asset upload');
+        headers.set('x-widget-type', normalized);
+        endpoint = `${TOKYO_BASE}/widgets/upload`;
+      } else {
+        throw new Error(`[DevStudio] Unknown asset upload scope: ${String(scope)}`);
+      }
 
-	  const initial = normalizedThemes.some((t) => t.id === defaultThemeId)
-	    ? defaultThemeId
-	    : normalizedThemes[0]?.id || '';
-	  themeModalSelect.value = initial;
+      const res = await fetch(`${endpoint}?_t=${Date.now()}`, {
+        method: 'POST',
+        headers,
+        body: blob,
+      });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(
+          `[DevStudio] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      }
+      const json = text ? JSON.parse(text) : null;
+      const url = json?.url;
+      if (!url || typeof url !== 'string') throw new Error('[DevStudio] Asset upload missing url');
+      return url;
+    }
 
-	  themeModal.hidden = false;
-	  themeModalSelect.focus();
+    async function persistConfigAssetsToTokyo(
+      config,
+      { scope, workspaceId, widgetType, publicId },
+    ) {
+      if (!config || typeof config !== 'object') return config;
 
-	  return new Promise((resolve) => {
-	    themeModalState = { resolve };
-	  });
-	}
+      const cache = new Map();
+      const visit = async (node) => {
+        if (typeof node === 'string') {
+          const url = extractPrimaryUrl(node);
+          if (!url || !isNonPersistableUrl(url)) return;
 
-	function closeThemeModal(result) {
-	  if (themeModal) themeModal.hidden = true;
-	  if (themeModalState && typeof themeModalState.resolve === 'function') {
-	    themeModalState.resolve(result ?? null);
-	  }
-	  themeModalState = null;
-	}
+          if (!cache.has(url)) {
+            const blob = await fetch(url).then((r) => r.blob());
+            const ext = extFromMime(blob.type);
+            const filename = `upload.${ext}`;
+            const uploadedUrl = await uploadTokyoAsset({
+              scope,
+              workspaceId,
+              widgetType,
+              publicId,
+              blob,
+              filename,
+              variant: 'original',
+            });
+            cache.set(url, uploadedUrl);
+          }
+          const uploaded = cache.get(url);
+          return replacePrimaryUrl(node, uploaded);
+        }
 
-	async function updateTokyoTheme({ themeId, values }) {
-	  const res = await fetch(`/api/themes/update?_t=${Date.now()}`, {
-	    method: 'POST',
-	    headers: { 'content-type': 'application/json' },
-	    body: JSON.stringify({ themeId, values }),
-  });
-  const text = await res.text().catch(() => '');
-  if (!res.ok) {
-    throw new Error(
-      `[DevStudio] Update theme failed (HTTP ${res.status})${text ? `: ${text}` : ''}`
-    );
-  }
-  return text ? JSON.parse(text) : null;
-}
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node)) {
+          for (let i = 0; i < node.length; i += 1) {
+            const replaced = await visit(node[i]);
+            if (typeof replaced === 'string') node[i] = replaced;
+          }
+          return;
+        }
 
-	async function updateThemeFromEditor(widgetSlug) {
-	  const exported = await exportInstanceDataFromBob({
-	    persistAssets: false,
-	    exportMode: 'current',
-	  });
-	  const config = exported?.instanceData;
-	  if (!config || typeof config !== 'object') {
-	    throw new Error('[DevStudio] Bob export did not include instanceData');
-	  }
+        for (const [key, value] of Object.entries(node)) {
+          const replaced = await visit(value);
+          if (typeof replaced === 'string') node[key] = replaced;
+        }
+      };
 
-	  const editorThemeId = String(config?.appearance?.theme || '').trim().toLowerCase();
-	  const themes = await listTokyoThemes().catch(() => null);
-	  const defaultThemeId =
-	    editorThemeId && editorThemeId !== 'custom' ? editorThemeId : themes?.[0]?.id || '';
-	  if (!themes?.length) throw new Error('[DevStudio] Theme list not found.');
-	  const themeId = await openThemeModal({ themes, defaultThemeId });
-	  if (!themeId) throw new Error('[DevStudio] Canceled');
+      await visit(config);
+      return config;
+    }
 
-	  const values = buildThemeValuesFromConfig(config);
-	  if (!Object.keys(values).length) {
-	    throw new Error('[DevStudio] Theme values not found in current config.');
-	  }
+    function stripTokyoBaseFromConfig(config, tokyoBase) {
+      if (!config || typeof config !== 'object') return config;
+      const base = String(tokyoBase || '')
+        .trim()
+        .replace(/\/+$/, '');
+      if (!base) return config;
+      const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const baseRegex = new RegExp(escaped, 'g');
 
-	  const cleanedValues = stripTokyoBaseFromConfig(cloneJson(values), TOKYO_BASE);
-	  await updateTokyoTheme({ themeId, values: cleanedValues });
-	  compiledCache.delete(widgetSlug);
-	  if (currentPublicId) {
-    await sendInstanceToIframe(currentPublicId);
-  }
-  return { themeId, values: cleanedValues };
-}
+      const visit = (node) => {
+        if (typeof node === 'string') {
+          if (!node.includes(base)) return;
+          return node.replace(baseRegex, '');
+        }
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node)) {
+          for (let i = 0; i < node.length; i += 1) {
+            const replaced = visit(node[i]);
+            if (typeof replaced === 'string') node[i] = replaced;
+          }
+          return;
+        }
+        for (const [key, value] of Object.entries(node)) {
+          const replaced = visit(value);
+          if (typeof replaced === 'string') node[key] = replaced;
+        }
+      };
 
-async function resetMainInstanceFromJson(widgetSlug) {
-  compiledCache.delete(widgetSlug);
-  const compiled = await ensureCompiledWidget(widgetSlug);
-  const defaults = compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
-  if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+      visit(config);
+      return config;
+    }
 
-  const publicId = `wgt_main_${widgetSlug}`;
-  const ok = window.confirm(
-    `Reset ${publicId} from JSON defaults? This will overwrite the current config.`
-  );
-  if (!ok) throw new Error('[DevStudio] Canceled');
+    async function updateDefaultsMainInstanceFromEditor(widgetSlug) {
+      const publicId = `wgt_main_${widgetSlug}`;
+      const exported = await exportInstanceDataFromBob({
+        persistAssets: true,
+        exportMode: 'current',
+        assetScope: 'curated',
+        assetPublicId: publicId,
+        assetWidgetType: widgetSlug,
+      });
+      const config = exported?.instanceData;
+      if (!config || typeof config !== 'object') {
+        throw new Error('[DevStudio] Bob export did not include instanceData');
+      }
 
-  const config = cloneJson(defaults);
-  await createWorkspaceInstance({
-    workspaceId: DEV_WORKSPACE_ID,
-    widgetType: widgetSlug,
-    publicId,
-    config,
-    status: 'unpublished',
-  });
-  await updateWorkspaceInstance({
-    workspaceId: DEV_WORKSPACE_ID,
-    publicId,
-    config,
-    status: 'unpublished',
-  });
-  return { publicId, config };
-}
+      const exportedPublicId = exported?.meta?.publicId;
+      if (exportedPublicId && exportedPublicId !== publicId) {
+        const ok = window.confirm(
+          `Save the currently loaded editor state (${exportedPublicId}) into default instance (${publicId})?`,
+        );
+        if (!ok) throw new Error('[DevStudio] Canceled');
+      }
 
-async function updateCuratedInstanceFromEditor(instance) {
-  if (!instance || !isCuratedPublicId(instance.publicId)) {
-    throw new Error('[DevStudio] Select a curated instance first.');
-  }
-  const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
-  const publicId = instance.publicId;
-  const exported = await exportInstanceDataFromBob({
-    persistAssets: true,
-    exportMode: 'current',
-    assetScope: 'curated',
-    assetPublicId: publicId,
-    assetWidgetType: widgetSlug,
-  });
-  const config = exported?.instanceData;
-  if (!config || typeof config !== 'object') {
-    throw new Error('[DevStudio] Bob export did not include instanceData');
-  }
+      // Source-of-truth for compiled defaults is Tokyo widget spec.json. In local dev, keep it in sync
+      // so downstream curated instances deterministically inherit the updated baseline.
+      const defaultsForSpec = stripTokyoBaseFromConfig(cloneJson(config), TOKYO_BASE);
+      await updateTokyoWidgetSpecDefaults({ widgetSlug, defaults: defaultsForSpec });
+      compiledCache.delete(widgetSlug);
 
-  const exportedPublicId = exported?.meta?.publicId;
-  if (exportedPublicId && exportedPublicId !== publicId) {
-    const ok = window.confirm(
-      `Update curated instance (${publicId}) with the currently loaded editor state (${exportedPublicId})?`
-    );
-    if (!ok) throw new Error('[DevStudio] Canceled');
-  }
+      await createWorkspaceInstance({
+        workspaceId: DEV_WORKSPACE_ID,
+        widgetType: widgetSlug,
+        publicId,
+        config,
+        status: 'published',
+      });
+      await updateWorkspaceInstance({
+        workspaceId: DEV_WORKSPACE_ID,
+        publicId,
+        config,
+        status: 'published',
+      });
+      return { publicId, config };
+    }
 
-  const ok = window.confirm(
-    `Update curated instance ${publicId} in place? This will overwrite the current config.`
-  );
-  if (!ok) throw new Error('[DevStudio] Canceled');
+    async function updateTokyoWidgetSpecDefaults({ widgetSlug, defaults }) {
+      const res = await fetch(`/api/widget-spec-defaults?_t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ widgetType: widgetSlug, defaults }),
+      });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(
+          `[DevStudio] Update widget spec defaults failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      }
+      return text ? JSON.parse(text) : null;
+    }
 
-  await updateWorkspaceInstance({
-    workspaceId: CLICKEEN_WORKSPACE_ID,
-    publicId,
-    config,
-    status: 'unpublished',
-    meta: instance.meta ?? undefined,
-  });
+    function getValueAtPath(obj, path) {
+      if (!obj || !path) return undefined;
+      return path.split('.').reduce((acc, key) => {
+        if (!acc || typeof acc !== 'object') return undefined;
+        return acc[key];
+      }, obj);
+    }
 
-  return { publicId, config };
-}
+    function buildThemeValuesFromConfig(config) {
+      const paths = [
+        'stage.background',
+        'pod.background',
+        'appearance.itemBackground',
+        'appearance.textColor',
+        'typography.globalFamily',
+      ];
+      const values = {};
+      paths.forEach((path) => {
+        const value = getValueAtPath(config, path);
+        if (value !== undefined) values[path] = value;
+      });
+      return values;
+    }
 
-function renderCuratedTagGroups(selectedTags) {
-  if (!curatedTagGroups) return;
-  curatedTagGroups.innerHTML = CURATED_TAG_GROUPS.map((group) => {
-    const tags = group.options
-      .map((option) => {
-        const isChecked = Array.isArray(selectedTags?.[group.id])
-          ? selectedTags[group.id].includes(option.id)
-          : false;
-        return `
+    async function listTokyoThemes() {
+      const res = await fetch(`/api/themes/list?_t=${Date.now()}`, { cache: 'no-store' });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(
+          `[DevStudio] List themes failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      }
+      const json = text ? JSON.parse(text) : null;
+      const themes = Array.isArray(json?.themes) ? json.themes : [];
+      return themes
+        .map((theme) => ({
+          id: String(theme?.id || '')
+            .trim()
+            .toLowerCase(),
+          label: String(theme?.label || '').trim(),
+        }))
+        .filter((theme) => Boolean(theme.id) && theme.id !== 'custom');
+    }
+
+    function openThemeModal({ themes, defaultThemeId }) {
+      if (!themeModal || !(themeModalSelect instanceof HTMLSelectElement)) {
+        return Promise.resolve(null);
+      }
+
+      const normalizedThemes = Array.isArray(themes) ? themes : [];
+      if (!normalizedThemes.length) return Promise.resolve(null);
+
+      themeModalSelect.replaceChildren();
+      normalizedThemes.forEach((theme) => {
+        const opt = document.createElement('option');
+        opt.value = theme.id;
+        opt.textContent = theme.label ? `${theme.label} (${theme.id})` : theme.id;
+        themeModalSelect.appendChild(opt);
+      });
+
+      const initial = normalizedThemes.some((t) => t.id === defaultThemeId)
+        ? defaultThemeId
+        : normalizedThemes[0]?.id || '';
+      themeModalSelect.value = initial;
+
+      themeModal.hidden = false;
+      themeModalSelect.focus();
+
+      return new Promise((resolve) => {
+        themeModalState = { resolve };
+      });
+    }
+
+    function closeThemeModal(result) {
+      if (themeModal) themeModal.hidden = true;
+      if (themeModalState && typeof themeModalState.resolve === 'function') {
+        themeModalState.resolve(result ?? null);
+      }
+      themeModalState = null;
+    }
+
+    async function updateTokyoTheme({ themeId, values }) {
+      const res = await fetch(`/api/themes/update?_t=${Date.now()}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ themeId, values }),
+      });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(
+          `[DevStudio] Update theme failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+        );
+      }
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function updateThemeFromEditor(widgetSlug) {
+      const exported = await exportInstanceDataFromBob({
+        persistAssets: false,
+        exportMode: 'current',
+      });
+      const config = exported?.instanceData;
+      if (!config || typeof config !== 'object') {
+        throw new Error('[DevStudio] Bob export did not include instanceData');
+      }
+
+      const editorThemeId = String(config?.appearance?.theme || '')
+        .trim()
+        .toLowerCase();
+      const themes = await listTokyoThemes().catch(() => null);
+      const defaultThemeId =
+        editorThemeId && editorThemeId !== 'custom' ? editorThemeId : themes?.[0]?.id || '';
+      if (!themes?.length) throw new Error('[DevStudio] Theme list not found.');
+      const themeId = await openThemeModal({ themes, defaultThemeId });
+      if (!themeId) throw new Error('[DevStudio] Canceled');
+
+      const values = buildThemeValuesFromConfig(config);
+      if (!Object.keys(values).length) {
+        throw new Error('[DevStudio] Theme values not found in current config.');
+      }
+
+      const cleanedValues = stripTokyoBaseFromConfig(cloneJson(values), TOKYO_BASE);
+      await updateTokyoTheme({ themeId, values: cleanedValues });
+      compiledCache.delete(widgetSlug);
+      if (currentPublicId) {
+        await sendInstanceToIframe(currentPublicId);
+      }
+      return { themeId, values: cleanedValues };
+    }
+
+    async function resetMainInstanceFromJson(widgetSlug) {
+      compiledCache.delete(widgetSlug);
+      const compiled = await ensureCompiledWidget(widgetSlug);
+      const defaults =
+        compiled?.defaults && typeof compiled.defaults === 'object' ? compiled.defaults : null;
+      if (!defaults) throw new Error('[DevStudio] Compiled widget did not include defaults');
+
+      const publicId = `wgt_main_${widgetSlug}`;
+      const ok = window.confirm(
+        `Reset ${publicId} from JSON defaults? This will overwrite the current config.`,
+      );
+      if (!ok) throw new Error('[DevStudio] Canceled');
+
+      const config = cloneJson(defaults);
+      await createWorkspaceInstance({
+        workspaceId: DEV_WORKSPACE_ID,
+        widgetType: widgetSlug,
+        publicId,
+        config,
+        status: 'published',
+      });
+      await updateWorkspaceInstance({
+        workspaceId: DEV_WORKSPACE_ID,
+        publicId,
+        config,
+        status: 'published',
+      });
+      return { publicId, config };
+    }
+
+    async function updateCuratedInstanceFromEditor(instance) {
+      if (!instance || !isCuratedPublicId(instance.publicId)) {
+        throw new Error('[DevStudio] Select a curated instance first.');
+      }
+      const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
+      const publicId = instance.publicId;
+      const exported = await exportInstanceDataFromBob({
+        persistAssets: true,
+        exportMode: 'current',
+        assetScope: 'curated',
+        assetPublicId: publicId,
+        assetWidgetType: widgetSlug,
+      });
+      const config = exported?.instanceData;
+      if (!config || typeof config !== 'object') {
+        throw new Error('[DevStudio] Bob export did not include instanceData');
+      }
+
+      const exportedPublicId = exported?.meta?.publicId;
+      if (exportedPublicId && exportedPublicId !== publicId) {
+        const ok = window.confirm(
+          `Update curated instance (${publicId}) with the currently loaded editor state (${exportedPublicId})?`,
+        );
+        if (!ok) throw new Error('[DevStudio] Canceled');
+      }
+
+      const ok = window.confirm(
+        `Update curated instance ${publicId} in place? This will overwrite the current config.`,
+      );
+      if (!ok) throw new Error('[DevStudio] Canceled');
+
+      await updateWorkspaceInstance({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        publicId,
+        config,
+        status: 'published',
+        meta: instance.meta ?? undefined,
+      });
+
+      return { publicId, config };
+    }
+
+    function renderCuratedTagGroups(selectedTags) {
+      if (!curatedTagGroups) return;
+      curatedTagGroups.innerHTML = CURATED_TAG_GROUPS.map((group) => {
+        const tags = group.options
+          .map((option) => {
+            const isChecked = Array.isArray(selectedTags?.[group.id])
+              ? selectedTags[group.id].includes(option.id)
+              : false;
+            return `
           <label class="dev-widget-workspace__tag-option">
             <input type="checkbox" data-tag-group="${group.id}" value="${option.id}" ${isChecked ? 'checked' : ''} />
             <span>${option.label}</span>
           </label>
         `;
-      })
-      .join('');
-    return `
+          })
+          .join('');
+        return `
       <div class="dev-widget-workspace__tag-group">
         <div class="dev-widget-workspace__tag-group-title">${group.label}</div>
         <div class="dev-widget-workspace__tag-list">${tags}</div>
       </div>
     `;
-  }).join('');
-}
-
-function readCuratedTagSelections() {
-  const tags = {};
-  CURATED_TAG_GROUPS.forEach((group) => {
-    tags[group.id] = [];
-  });
-  if (!curatedTagGroups) return tags;
-  curatedTagGroups.querySelectorAll('input[type="checkbox"][data-tag-group]').forEach((input) => {
-    if (!(input instanceof HTMLInputElement)) return;
-    if (!input.checked) return;
-    const groupId = input.dataset.tagGroup;
-    if (!groupId || !tags[groupId]) return;
-    tags[groupId].push(input.value);
-  });
-  return tags;
-}
-
-function updateCuratedModalConfirmState() {
-  if (!(curatedModalConfirm instanceof HTMLButtonElement)) return;
-  if (!curatedModalState) {
-    curatedModalConfirm.disabled = true;
-    return;
-  }
-  if (curatedModalState.mode === 'create') {
-    const name = curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value.trim() : '';
-    curatedModalConfirm.disabled = !name;
-  } else {
-    curatedModalConfirm.disabled = false;
-  }
-}
-
-function openCuratedModal(mode, { widgetSlug, baseInstance }) {
-  if (!curatedModal || !curatedModalConfirm || !(curatedStyleNameField instanceof HTMLInputElement)) return;
-  const style = baseInstance ? resolveCuratedStyle(baseInstance) : null;
-  if (mode === 'version' && (!style?.styleName || !style?.styleSlug)) {
-    throw new Error('[DevStudio] Select a curated instance with a style name first.');
-  }
-  curatedModalState = {
-    mode,
-    widgetSlug,
-    styleName: style?.styleName ?? '',
-    styleSlug: style?.styleSlug ?? '',
-  };
-
-  if (curatedModalTitle instanceof HTMLElement) {
-    curatedModalTitle.textContent = mode === 'create' ? 'Create curated instance' : 'Create instance version';
-  }
-  if (curatedModalSubtitle instanceof HTMLElement) {
-    if (mode === 'create') {
-      curatedModalSubtitle.textContent = `Creates v01 for ${widgetSlug}.`;
-    } else {
-      const nextVersion = getNextCuratedVersion(widgetSlug, style.styleSlug);
-      curatedModalSubtitle.textContent = `Creates ${style.styleName} ${formatCuratedVersion(nextVersion)}.`;
+      }).join('');
     }
-  }
 
-  curatedStyleNameField.readOnly = mode === 'version';
-  curatedStyleNameField.value = mode === 'version' ? style.styleName : '';
-
-  const icon = curatedModalConfirm.querySelector('.diet-btn-ictxt__icon');
-  if (icon) icon.setAttribute('data-icon', mode === 'create' ? 'plus.square' : 'square.on.square');
-  const label = curatedModalConfirm.querySelector('.diet-btn-ictxt__label');
-  if (label) label.textContent = mode === 'create' ? 'Create curated instance' : 'Create new instance version';
-  curatedModalConfirm.dataset.tone = mode === 'create' ? 'green4' : 'indigo4';
-
-  const tags = mode === 'version' ? style.tags : normalizeCuratedTags(null);
-  renderCuratedTagGroups(tags);
-  updateCuratedModalConfirmState();
-  curatedModal.hidden = false;
-  curatedStyleNameField.focus();
-}
-
-function closeCuratedModal() {
-  if (curatedModal) curatedModal.hidden = true;
-  curatedModalState = null;
-  if (curatedStyleNameField instanceof HTMLInputElement) curatedStyleNameField.value = '';
-  updateCuratedModalConfirmState();
-}
-
-async function submitCuratedModal() {
-  if (!curatedModalState) return;
-  if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-  const tags = readCuratedTagSelections();
-
-  let styleName = curatedModalState.styleName;
-  let styleSlug = curatedModalState.styleSlug;
-  let version = 1;
-
-  if (curatedModalState.mode === 'create') {
-    const inputName = curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value.trim() : '';
-    styleName = inputName;
-    styleSlug = slugifyKey(inputName);
-    if (!styleName || !styleSlug) throw new Error('[DevStudio] Enter a style name.');
-    if (getCuratedVersions(curatedModalState.widgetSlug, styleSlug).length > 0) {
-      throw new Error('[DevStudio] Style already exists. Use Create new instance version.');
+    function readCuratedTagSelections() {
+      const tags = {};
+      CURATED_TAG_GROUPS.forEach((group) => {
+        tags[group.id] = [];
+      });
+      if (!curatedTagGroups) return tags;
+      curatedTagGroups
+        .querySelectorAll('input[type="checkbox"][data-tag-group]')
+        .forEach((input) => {
+          if (!(input instanceof HTMLInputElement)) return;
+          if (!input.checked) return;
+          const groupId = input.dataset.tagGroup;
+          if (!groupId || !tags[groupId]) return;
+          tags[groupId].push(input.value);
+        });
+      return tags;
     }
-    version = 1;
-  } else {
-    if (!styleName || !styleSlug) throw new Error('[DevStudio] Missing style metadata.');
-    version = getNextCuratedVersion(curatedModalState.widgetSlug, styleSlug);
-  }
 
-  const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug, version);
-  const exported = await exportInstanceDataFromBob({
-    persistAssets: true,
-    exportMode: 'current',
-    assetScope: 'curated',
-    assetPublicId: publicId,
-    assetWidgetType: curatedModalState.widgetSlug,
-  });
-  const sourceConfig = exported?.instanceData;
-  if (!sourceConfig || typeof sourceConfig !== 'object') {
-    throw new Error('[DevStudio] Bob export did not include instanceData');
-  }
-  const meta = {
-    styleName,
-    styleSlug,
-    version,
-    tags,
-  };
+    function updateCuratedModalConfirmState() {
+      if (!(curatedModalConfirm instanceof HTMLButtonElement)) return;
+      if (!curatedModalState) {
+        curatedModalConfirm.disabled = true;
+        return;
+      }
+      if (curatedModalState.mode === 'create') {
+        const name =
+          curatedStyleNameField instanceof HTMLInputElement
+            ? curatedStyleNameField.value.trim()
+            : '';
+        curatedModalConfirm.disabled = !name;
+      } else {
+        curatedModalConfirm.disabled = false;
+      }
+    }
 
-  await createWorkspaceInstance({
-    workspaceId: CLICKEEN_WORKSPACE_ID,
-    widgetType: curatedModalState.widgetSlug,
-    publicId,
-    config: sourceConfig,
-    status: 'unpublished',
-    meta,
-  });
+    function openCuratedModal(mode, { widgetSlug, baseInstance }) {
+      if (
+        !curatedModal ||
+        !curatedModalConfirm ||
+        !(curatedStyleNameField instanceof HTMLInputElement)
+      )
+        return;
+      const style = baseInstance ? resolveCuratedStyle(baseInstance) : null;
+      if (mode === 'version' && (!style?.styleName || !style?.styleSlug)) {
+        throw new Error('[DevStudio] Select a curated instance with a style name first.');
+      }
+      curatedModalState = {
+        mode,
+        widgetSlug,
+        styleName: style?.styleName ?? '',
+        styleSlug: style?.styleSlug ?? '',
+      };
 
-  await promoteInstanceToCloud({
-    workspaceId: CLICKEEN_WORKSPACE_ID,
-    widgetType: curatedModalState.widgetSlug,
-    publicId,
-    config: sourceConfig,
-    status: 'unpublished',
-  });
+      if (curatedModalTitle instanceof HTMLElement) {
+        curatedModalTitle.textContent =
+          mode === 'create' ? 'Create curated instance' : 'Create instance version';
+      }
+      if (curatedModalSubtitle instanceof HTMLElement) {
+        if (mode === 'create') {
+          curatedModalSubtitle.textContent = `Creates v01 for ${widgetSlug}.`;
+        } else {
+          const nextVersion = getNextCuratedVersion(widgetSlug, style.styleSlug);
+          curatedModalSubtitle.textContent = `Creates ${style.styleName} ${formatCuratedVersion(nextVersion)}.`;
+        }
+      }
 
-  closeCuratedModal();
-  await refreshInstancesAndSelect(publicId);
-}
+      curatedStyleNameField.readOnly = mode === 'version';
+      curatedStyleNameField.value = mode === 'version' ? style.styleName : '';
 
-async function refreshInstancesAndSelect(publicId) {
-  await fetchInstances();
-  if (!publicId) return;
-  const found = instances.find((inst) => inst.publicId === publicId);
-  if (found) {
-    switchInstance(publicId);
-  }
-}
+      const icon = curatedModalConfirm.querySelector('.diet-btn-ictxt__icon');
+      if (icon)
+        icon.setAttribute('data-icon', mode === 'create' ? 'plus.square' : 'square.on.square');
+      const label = curatedModalConfirm.querySelector('.diet-btn-ictxt__label');
+      if (label)
+        label.textContent =
+          mode === 'create' ? 'Create curated instance' : 'Create new instance version';
+      curatedModalConfirm.dataset.tone = mode === 'create' ? 'green4' : 'indigo4';
 
-if (isLocalDevStudio && superadminActions) {
-  superadminActions.style.display = 'inline-flex';
-}
+      const tags = mode === 'version' ? style.tags : normalizeCuratedTags(null);
+      renderCuratedTagGroups(tags);
+      updateCuratedModalConfirmState();
+      curatedModal.hidden = false;
+      curatedStyleNameField.focus();
+    }
 
-superadminUpdateDefaults?.addEventListener('click', async () => {
-  try {
-    const widgetSlug = requireWidgetSlugForAction();
-    const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
-    await promoteInstanceToCloud({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      widgetType: widgetSlug,
-      publicId: result.publicId,
-      config: result.config,
-      status: 'unpublished',
+    function closeCuratedModal() {
+      if (curatedModal) curatedModal.hidden = true;
+      curatedModalState = null;
+      if (curatedStyleNameField instanceof HTMLInputElement) curatedStyleNameField.value = '';
+      updateCuratedModalConfirmState();
+    }
+
+    async function submitCuratedModal() {
+      if (!curatedModalState) return;
+      if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+      const tags = readCuratedTagSelections();
+
+      let styleName = curatedModalState.styleName;
+      let styleSlug = curatedModalState.styleSlug;
+      let version = 1;
+
+      if (curatedModalState.mode === 'create') {
+        const inputName =
+          curatedStyleNameField instanceof HTMLInputElement
+            ? curatedStyleNameField.value.trim()
+            : '';
+        styleName = inputName;
+        styleSlug = slugifyKey(inputName);
+        if (!styleName || !styleSlug) throw new Error('[DevStudio] Enter a style name.');
+        if (getCuratedVersions(curatedModalState.widgetSlug, styleSlug).length > 0) {
+          throw new Error('[DevStudio] Style already exists. Use Create new instance version.');
+        }
+        version = 1;
+      } else {
+        if (!styleName || !styleSlug) throw new Error('[DevStudio] Missing style metadata.');
+        version = getNextCuratedVersion(curatedModalState.widgetSlug, styleSlug);
+      }
+
+      const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug, version);
+      const exported = await exportInstanceDataFromBob({
+        persistAssets: true,
+        exportMode: 'current',
+        assetScope: 'curated',
+        assetPublicId: publicId,
+        assetWidgetType: curatedModalState.widgetSlug,
+      });
+      const sourceConfig = exported?.instanceData;
+      if (!sourceConfig || typeof sourceConfig !== 'object') {
+        throw new Error('[DevStudio] Bob export did not include instanceData');
+      }
+      const meta = {
+        styleName,
+        styleSlug,
+        version,
+        tags,
+      };
+
+      await createWorkspaceInstance({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        widgetType: curatedModalState.widgetSlug,
+        publicId,
+        config: sourceConfig,
+        status: 'published',
+        meta,
+      });
+
+      await promoteInstanceToCloud({
+        workspaceId: CLICKEEN_WORKSPACE_ID,
+        widgetType: curatedModalState.widgetSlug,
+        publicId,
+        config: sourceConfig,
+        status: 'published',
+      });
+
+      closeCuratedModal();
+      await refreshInstancesAndSelect(publicId);
+    }
+
+    async function refreshInstancesAndSelect(publicId) {
+      await fetchInstances();
+      if (!publicId) return;
+      const found = instances.find((inst) => inst.publicId === publicId);
+      if (found) {
+        switchInstance(publicId);
+      }
+    }
+
+    if (isLocalDevStudio && superadminActions) {
+      superadminActions.style.display = 'inline-flex';
+    }
+
+    superadminUpdateDefaults?.addEventListener('click', async () => {
+      try {
+        const widgetSlug = requireWidgetSlugForAction();
+        const result = await updateDefaultsMainInstanceFromEditor(widgetSlug);
+        await promoteInstanceToCloud({
+          workspaceId: CLICKEEN_WORKSPACE_ID,
+          widgetType: widgetSlug,
+          publicId: result.publicId,
+          config: result.config,
+          status: 'published',
+        });
+        await refreshInstancesAndSelect(result.publicId);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
     });
-    await refreshInstancesAndSelect(result.publicId);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
 
-superadminUpdateTheme?.addEventListener('click', async () => {
-  try {
-    const widgetSlug = requireWidgetSlugForAction();
-    await updateThemeFromEditor(widgetSlug);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
-
-superadminResetFromJson?.addEventListener('click', async () => {
-  try {
-    const widgetSlug = requireWidgetSlugForAction();
-    const result = await resetMainInstanceFromJson(widgetSlug);
-    await promoteInstanceToCloud({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      widgetType: widgetSlug,
-      publicId: result.publicId,
-      config: result.config,
-      status: 'unpublished',
+    superadminUpdateTheme?.addEventListener('click', async () => {
+      try {
+        const widgetSlug = requireWidgetSlugForAction();
+        await updateThemeFromEditor(widgetSlug);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
     });
-    await refreshInstancesAndSelect(result.publicId);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
 
-createCuratedInstanceBtn?.addEventListener('click', () => {
-  try {
-    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-    const instance = instances.find((inst) => inst.publicId === currentPublicId);
-    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-    openCuratedModal('create', { widgetSlug, baseInstance: instance });
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
-
-createCuratedVersionBtn?.addEventListener('click', () => {
-  try {
-    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-    const instance = instances.find((inst) => inst.publicId === currentPublicId);
-    if (!instance || !isCuratedPublicId(instance.publicId)) {
-      throw new Error('[DevStudio] Select a curated instance first.');
-    }
-    const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
-    openCuratedModal('version', { widgetSlug, baseInstance: instance });
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
-
-updateCuratedInstanceBtn?.addEventListener('click', async () => {
-  try {
-    if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-    const instance = instances.find((inst) => inst.publicId === currentPublicId);
-    const result = await updateCuratedInstanceFromEditor(instance);
-    const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-    await promoteInstanceToCloud({
-      workspaceId: CLICKEEN_WORKSPACE_ID,
-      widgetType: widgetSlug,
-      publicId: result.publicId,
-      config: result.config,
-      status: 'unpublished',
+    superadminResetFromJson?.addEventListener('click', async () => {
+      try {
+        const widgetSlug = requireWidgetSlugForAction();
+        const result = await resetMainInstanceFromJson(widgetSlug);
+        await promoteInstanceToCloud({
+          workspaceId: CLICKEEN_WORKSPACE_ID,
+          widgetType: widgetSlug,
+          publicId: result.publicId,
+          config: result.config,
+          status: 'published',
+        });
+        await refreshInstancesAndSelect(result.publicId);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
     });
-    await refreshInstancesAndSelect(result.publicId);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
 
-curatedModalConfirm?.addEventListener('click', async () => {
-  try {
-    await submitCuratedModal();
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
+    createCuratedInstanceBtn?.addEventListener('click', () => {
+      try {
+        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+        const instance = instances.find((inst) => inst.publicId === currentPublicId);
+        const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
+        openCuratedModal('create', { widgetSlug, baseInstance: instance });
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-curatedModalClose?.addEventListener('click', () => {
-  closeCuratedModal();
-});
+    createCuratedVersionBtn?.addEventListener('click', () => {
+      try {
+        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+        const instance = instances.find((inst) => inst.publicId === currentPublicId);
+        if (!instance || !isCuratedPublicId(instance.publicId)) {
+          throw new Error('[DevStudio] Select a curated instance first.');
+        }
+        const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
+        openCuratedModal('version', { widgetSlug, baseInstance: instance });
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-curatedModalCancel?.addEventListener('click', () => {
-  closeCuratedModal();
-});
+    updateCuratedInstanceBtn?.addEventListener('click', async () => {
+      try {
+        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+        const instance = instances.find((inst) => inst.publicId === currentPublicId);
+        const result = await updateCuratedInstanceFromEditor(instance);
+        const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
+        await promoteInstanceToCloud({
+          workspaceId: CLICKEEN_WORKSPACE_ID,
+          widgetType: widgetSlug,
+          publicId: result.publicId,
+          config: result.config,
+          status: 'published',
+        });
+        await refreshInstancesAndSelect(result.publicId);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-themeModalConfirm?.addEventListener('click', () => {
-  try {
-    if (!(themeModalSelect instanceof HTMLSelectElement)) throw new Error('[DevStudio] Theme selector missing');
-    const themeId = String(themeModalSelect.value || '').trim().toLowerCase();
-    if (!themeId) throw new Error('[DevStudio] Select a theme first.');
-    closeThemeModal(themeId);
-  } catch (err) {
-    alert(err instanceof Error ? err.message : String(err));
-  }
-});
+    refreshPraguePreviewBtn?.addEventListener('click', async () => {
+      const labelEl = refreshPraguePreviewBtn?.querySelector('.diet-btn-ictxt__label');
+      const previousLabel = labelEl?.textContent || 'Refresh Prague preview';
+      try {
+        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+        if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
+          throw new Error('[DevStudio] Select a curated instance first.');
+        }
+        if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = true;
+        if (labelEl) labelEl.textContent = 'Queuing...';
+        const res = await superadminFetch(
+          `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+            currentPublicId,
+          )}/render-snapshot?subject=devstudio&_t=${Date.now()}`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+          },
+        );
+        const text = await res.text().catch(() => '');
+        if (!res.ok)
+          throw new Error(
+            `[DevStudio] Refresh Prague preview failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+          );
+        alert(
+          `[DevStudio] Queued snapshot refresh for ${currentPublicId}. Prague should reflect within ~60s. (If your latest edits aren’t showing, click “Update curated instance” first.)`,
+        );
+        if (labelEl) labelEl.textContent = 'Queued';
+        setTimeout(() => {
+          if (labelEl) labelEl.textContent = previousLabel;
+        }, 1500);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+        if (labelEl) labelEl.textContent = previousLabel;
+      } finally {
+        if (refreshPraguePreviewBtn) refreshPraguePreviewBtn.disabled = false;
+      }
+    });
 
-themeModalClose?.addEventListener('click', () => {
-  closeThemeModal(null);
-});
+    translateSelectedLocalesBtn?.addEventListener('click', async () => {
+      try {
+        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
+        if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
+          throw new Error('[DevStudio] Select a curated instance first.');
+        }
 
-themeModalCancel?.addEventListener('click', () => {
-  closeThemeModal(null);
-});
+        const res = await superadminFetch(
+          `${PARIS_API}/workspaces/${encodeURIComponent(CLICKEEN_WORKSPACE_ID)}/instances/${encodeURIComponent(
+            currentPublicId,
+          )}/l10n/enqueue-selected?subject=devstudio&_t=${Date.now()}`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          },
+        );
+        const payloadText = await res.text().catch(() => '');
+        if (!res.ok)
+          throw new Error(
+            `[DevStudio] Translate locales failed (HTTP ${res.status})${payloadText ? `: ${payloadText}` : ''}`,
+          );
+        let payload = null;
+        try {
+          payload = payloadText ? JSON.parse(payloadText) : null;
+        } catch {}
+        const queued = payload?.queued ?? null;
+        const skipped = payload?.skipped ?? null;
+        if (typeof queued === 'number' && queued === 0) {
+          const applyStep = isCuratedPublicId(currentPublicId)
+            ? 'Update curated instance'
+            : 'Update default config';
+          alert(
+            `[DevStudio] No locale jobs were queued for ${currentPublicId}. If you edited base content in Bob, click "${applyStep}" first, then click "Translate locales".${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}`,
+          );
+        } else {
+          alert(
+            `[DevStudio] Queued ${typeof queued === 'number' ? queued : 'translation'} job(s) for ${currentPublicId}${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}.`,
+          );
+        }
+        refreshL10nStatus(currentPublicId).catch(() => {});
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-themeModal?.addEventListener('click', (event) => {
-  if (event.target === themeModal) closeThemeModal(null);
-});
+    curatedModalConfirm?.addEventListener('click', async () => {
+      try {
+        await submitCuratedModal();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-document.addEventListener(
-  'keydown',
-  (event) => {
-    if (event.key !== 'Escape') return;
-    if (themeModal && !themeModal.hidden) closeThemeModal(null);
-  },
-  { signal: abortController.signal }
-);
+    curatedModalClose?.addEventListener('click', () => {
+      closeCuratedModal();
+    });
 
-if (curatedStyleNameField instanceof HTMLInputElement) {
-  curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);
-}
+    curatedModalCancel?.addEventListener('click', () => {
+      closeCuratedModal();
+    });
 
-async function sendInstanceToIframe(publicId) {
-  if (!publicId) {
-    throw new Error('[DevStudio] Missing publicId for sendInstanceToIframe');
-  }
+    themeModalConfirm?.addEventListener('click', () => {
+      try {
+        if (!(themeModalSelect instanceof HTMLSelectElement))
+          throw new Error('[DevStudio] Theme selector missing');
+        const themeId = String(themeModalSelect.value || '')
+          .trim()
+          .toLowerCase();
+        if (!themeId) throw new Error('[DevStudio] Select a theme first.');
+        closeThemeModal(themeId);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : String(err));
+      }
+    });
 
-  const target = iframe.contentWindow;
-  if (!target) {
-    throw new Error('[DevStudio] Bob iframe contentWindow unavailable');
-  }
+    themeModalClose?.addEventListener('click', () => {
+      closeThemeModal(null);
+    });
 
-  const instance = instances.find((inst) => inst.publicId === publicId);
-  if (!instance) {
-    throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
-  }
+    themeModalCancel?.addEventListener('click', () => {
+      closeThemeModal(null);
+    });
 
-  const slug = instance.widgetSlug || normalizeWidgetname(instance.widgetname);
-  if (!slug) {
-    throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
-  }
+    themeModal?.addEventListener('click', (event) => {
+      if (event.target === themeModal) closeThemeModal(null);
+    });
 
-  let compiled = compiledCache.get(slug);
-  if (!compiled) {
-    compiled = await ensureCompiledWidget(instance.widgetname);
-  }
-  const config = await fetchInstanceConfig(publicId);
-  instance.config = config;
-  console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
-  target.postMessage(
-    {
-      type: 'devstudio:load-instance',
-      subjectMode: 'devstudio',
-      publicId,
-      workspaceId: DEV_WORKSPACE_ID,
-      widgetname: slug,
-      compiled,
-      instanceData: config ?? null,
-    },
-    BOB_ORIGIN
-  );
-}
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Escape') return;
+        if (themeModal && !themeModal.hidden) closeThemeModal(null);
+      },
+      { signal: abortController.signal },
+    );
 
-function setOpen(nextState) {
-  isOpen = nextState;
-  dropdown.setAttribute('data-state', isOpen ? 'open' : 'closed');
-  control.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-}
-
-control.addEventListener('click', () => {
-  setOpen(!isOpen);
-}, { signal: abortController.signal });
-
-control.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault();
-    setOpen(!isOpen);
-  } else if (event.key === 'ArrowDown') {
-    event.preventDefault();
-    setOpen(true);
-    const firstOption = menu.querySelector('[data-public-id]');
-    firstOption?.focus();
-  } else if (event.key === 'Escape') {
-    setOpen(false);
-  }
-}, { signal: abortController.signal });
-
-menu.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    setOpen(false);
-    control.focus();
-  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-    const options = Array.from(menu.querySelectorAll('[data-public-id]'));
-    const currentIndex = options.indexOf(document.activeElement);
-    const nextIndex = event.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
-    const next = options[nextIndex];
-    if (next) {
-      event.preventDefault();
-      next.focus();
+    if (curatedStyleNameField instanceof HTMLInputElement) {
+      curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);
     }
-  } else if (event.key === 'Home') {
-    const first = menu.querySelector('[data-public-id]');
-    if (first) {
-      event.preventDefault();
-      first.focus();
-    }
-  } else if (event.key === 'End') {
-    const options = menu.querySelectorAll('[data-public-id]');
-    const last = options[options.length - 1];
-    if (last) {
-      event.preventDefault();
-      last.focus();
-    }
-  } else if (event.key === 'Tab') {
-    setOpen(false);
-  } else if (event.key === 'Enter' || event.key === ' ') {
-    const target = event.target.closest('[data-public-id]');
-    if (target) {
-      event.preventDefault();
-      target.click();
-    }
-  }
-}, { signal: abortController.signal });
 
-document.addEventListener('click', (event) => {
-  if (!dropdown.contains(event.target)) {
-    setOpen(false);
-  }
-}, { signal: abortController.signal });
-	
-	(async () => {
-	  try {
-	    await fetchInstances();
-	  } catch (error) {
-	    console.error('[DevStudio] Failed to fetch instances', error);
-	    currentLabel.textContent = 'Error loading instances';
-	  }
-	})();
-</script>
+    async function sendInstanceToIframe(publicId) {
+      if (!publicId) {
+        throw new Error('[DevStudio] Missing publicId for sendInstanceToIframe');
+      }
+
+      const target = iframe.contentWindow;
+      if (!target) {
+        throw new Error('[DevStudio] Bob iframe contentWindow unavailable');
+      }
+
+      const instance = instances.find((inst) => inst.publicId === publicId);
+      if (!instance) {
+        throw new Error(`[DevStudio] Instance not found for publicId ${publicId}`);
+      }
+
+      const slug = instance.widgetSlug || normalizeWidgetname(instance.widgetname);
+      if (!slug) {
+        throw new Error(`[DevStudio] Unable to derive widget slug for ${instance.widgetname}`);
+      }
+
+      let compiled = compiledCache.get(slug);
+      if (!compiled) {
+        compiled = await ensureCompiledWidget(instance.widgetname);
+      }
+      const config = await fetchInstanceConfig(publicId);
+      instance.config = config;
+      console.log('[DevStudio] Posting instance to Bob', { publicId, widgetname: slug });
+      target.postMessage(
+        {
+          type: 'devstudio:load-instance',
+          subjectMode: 'devstudio',
+          publicId,
+          workspaceId: DEV_WORKSPACE_ID,
+          widgetname: slug,
+          compiled,
+          instanceData: config ?? null,
+        },
+        BOB_ORIGIN,
+      );
+    }
+
+    function setOpen(nextState) {
+      isOpen = nextState;
+      dropdown.setAttribute('data-state', isOpen ? 'open' : 'closed');
+      control.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    control.addEventListener(
+      'click',
+      () => {
+        setOpen(!isOpen);
+      },
+      { signal: abortController.signal },
+    );
+
+    control.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setOpen(!isOpen);
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          setOpen(true);
+          const firstOption = menu.querySelector('[data-public-id]');
+          firstOption?.focus();
+        } else if (event.key === 'Escape') {
+          setOpen(false);
+        }
+      },
+      { signal: abortController.signal },
+    );
+
+    menu.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Escape') {
+          setOpen(false);
+          control.focus();
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          const options = Array.from(menu.querySelectorAll('[data-public-id]'));
+          const currentIndex = options.indexOf(document.activeElement);
+          const nextIndex = event.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+          const next = options[nextIndex];
+          if (next) {
+            event.preventDefault();
+            next.focus();
+          }
+        } else if (event.key === 'Home') {
+          const first = menu.querySelector('[data-public-id]');
+          if (first) {
+            event.preventDefault();
+            first.focus();
+          }
+        } else if (event.key === 'End') {
+          const options = menu.querySelectorAll('[data-public-id]');
+          const last = options[options.length - 1];
+          if (last) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (event.key === 'Tab') {
+          setOpen(false);
+        } else if (event.key === 'Enter' || event.key === ' ') {
+          const target = event.target.closest('[data-public-id]');
+          if (target) {
+            event.preventDefault();
+            target.click();
+          }
+        }
+      },
+      { signal: abortController.signal },
+    );
+
+    document.addEventListener(
+      'click',
+      (event) => {
+        if (!dropdown.contains(event.target)) {
+          setOpen(false);
+        }
+      },
+      { signal: abortController.signal },
+    );
+
+    (async () => {
+      try {
+        await fetchInstances();
+      } catch (error) {
+        console.error('[DevStudio] Failed to fetch instances', error);
+        currentLabel.textContent = 'Error loading instances';
+      }
+    })();
+  </script>
 </div>

@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "모든 질문"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeen이란 무엇인가요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "위젯을 어떻게 설치하나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "무료 플랜이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "왜 Clickeen을 사용해야 하나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen은 아름답고, 삽입 가능하며, 전환에 중점을 둔 위젯을 제공하여 사이트에서 사용자 참여를 향상시키도록 설계되었습니다. <strong>오늘 무료로 시작하세요.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "대시보드에서 임베드 코드를 복사하여 웹사이트의 닫는 태그 전에 붙여넣기만 하면 됩니다. <strong>지금 시도해보세요—신용카드는 필요 없습니다.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "네, 무료 플랜에는 시작할 수 있는 핵심 기능을 갖춘 하나의 활성 위젯이 포함되어 있습니다. <strong>언제든지 업그레이드하여 무제한 위젯과 고급 분석 기능을 잠금 해제하세요.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen은 관리하기 쉽고 전환에 최적화된 위젯으로 귀하의 웹 존재를 아름답고 검색 가능하며 사용자 친화적으로 만듭니다. <strong>수천 명의 만족한 창작자들과 함께 참여를 증대하세요.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "문의하기"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "세련된 디자인, 쉬운 업데이트, SEO 필수 요소 - 어떤 언어에도 준비되어 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "자주 묻는 질문"
+    }
+  ],
+  "v": 1
+}

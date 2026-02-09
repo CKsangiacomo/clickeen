@@ -149,6 +149,7 @@ async function getAiGrant(args: {
   mode: 'editor' | 'ops';
   widgetType: string;
   sessionId: string;
+  sessionToken?: string;
   instancePublicId?: string;
   workspaceId?: string;
   subject?: string;
@@ -172,33 +173,13 @@ async function getAiGrant(args: {
   const useMinibobGrant = subjectNormalized === 'minibob';
 
   if (useMinibobGrant) {
-    // Minibob uses a server-issued session token to prevent infinite client-generated sessionIds.
-    let sessionRes: Response;
-    try {
-      sessionRes = await fetch(`${baseUrl}/api/ai/minibob/session`, { method: 'POST', headers });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: `Minibob session request failed: ${message}` };
-    }
-
-    const sessionText = await sessionRes.text().catch(() => '');
-    const sessionPayload = safeJsonParse(sessionText) as any;
-    if (!sessionRes.ok) {
-      let message =
-        typeof sessionPayload?.message === 'string'
-          ? sessionPayload.message
-          : looksLikeHtml(sessionText)
-            ? `Paris returned an HTML error page (HTTP ${sessionRes.status}). Check PARIS_BASE_URL (currently: ${baseUrl}).`
-            : sessionText || `Session request failed (${sessionRes.status})`;
-      if (looksLikeHtml(message)) {
-        message = summarizeUpstreamError({ serviceName: 'Paris', baseUrl: parisBaseUrl, status: sessionRes.status, bodyText: message });
-      }
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message };
-    }
-
-    const sessionToken = asTrimmedString(sessionPayload?.sessionToken);
+    const sessionToken = asTrimmedString(args.sessionToken);
     if (!sessionToken) {
-      return { ok: false as const, error: 'AI_UPSTREAM_ERROR', message: 'Session service returned an invalid response' };
+      return {
+        ok: false as const,
+        error: 'AI_UPSTREAM_ERROR',
+        message: 'Missing sessionToken for Minibob request (client must mint /api/ai/minibob/session once per session).',
+      };
     }
 
     let grantRes: Response;
@@ -358,6 +339,7 @@ export async function POST(req: Request) {
     const prompt = asTrimmedString(body?.prompt);
     const widgetType = asTrimmedString(body?.widgetType);
     const sessionId = asTrimmedString(body?.sessionId);
+    const sessionToken = asTrimmedString(body?.sessionToken);
     const instancePublicId = asTrimmedString(body?.instancePublicId) || undefined;
     const workspaceId = asTrimmedString(body?.workspaceId) || undefined;
     const subject = asTrimmedString(body?.subject) || undefined;
@@ -366,12 +348,16 @@ export async function POST(req: Request) {
     const currentConfig = body?.currentConfig;
     const controls = body?.controls;
 
+    const subjectNormalized = (subject || '').trim().toLowerCase();
+    const isMinibob = subjectNormalized === 'minibob';
+
     const issues: Array<{ path: string; message: string }> = [];
     if (!prompt) issues.push({ path: 'prompt', message: 'prompt is required' });
     if (!widgetType) issues.push({ path: 'widgetType', message: 'widgetType is required' });
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
+    if (isMinibob && !sessionToken) issues.push({ path: 'sessionToken', message: 'sessionToken is required for Minibob requests' });
     if (issues.length) return NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 });
 
     const agentId = 'sdr.widget.copilot.v1';
@@ -380,6 +366,7 @@ export async function POST(req: Request) {
       mode: 'ops',
       widgetType,
       sessionId,
+      ...(isMinibob ? { sessionToken } : {}),
       instancePublicId,
       workspaceId,
       subject,
@@ -390,7 +377,6 @@ export async function POST(req: Request) {
     });
     if (!grantRes.ok) {
       if (grantRes.error === 'AI_UPSELL') {
-        const isMinibob = subject === 'minibob';
         const action = isMinibob ? ('signup' as const) : ('upgrade' as const);
         const ctaText = isMinibob ? 'Create a free account to continue' : 'Upgrade to continue';
         const message = isMinibob ? 'Copilot limit reached. Create a free account to continue.' : 'Copilot limit reached. Upgrade to continue.';
@@ -402,7 +388,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const traceClient = subject === 'minibob' ? 'minibob' : 'bob';
+    const traceClient = isMinibob ? 'minibob' : 'bob';
     const executed = await executeOnSanFrancisco({
       grant: grantRes.value,
       agentId,

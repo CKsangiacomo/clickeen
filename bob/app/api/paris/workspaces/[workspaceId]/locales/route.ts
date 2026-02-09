@@ -5,8 +5,8 @@ export const runtime = 'edge';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id',
+  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-request-id, x-ck-superadmin-key',
 } as const;
 
 const PARIS_DEV_JWT = process.env.PARIS_DEV_JWT;
@@ -54,6 +54,47 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ workspa
 
   try {
     const res = await fetchWithTimeout(url.toString(), { method: 'GET', headers, cache: 'no-store' });
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: {
+        'Content-Type': res.headers.get('Content-Type') || 'application/json',
+        ...CORS_HEADERS,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const status = error instanceof Error && error.name === 'AbortError' ? 504 : 502;
+    return NextResponse.json({ error: 'PARIS_PROXY_ERROR', message }, { status, headers: CORS_HEADERS });
+  }
+}
+
+export async function PUT(request: NextRequest, ctx: { params: Promise<{ workspaceId: string }> }) {
+  const { workspaceId } = await ctx.params;
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'INVALID_WORKSPACE_ID' }, { status: 400, headers: CORS_HEADERS });
+  }
+
+  const paris = resolveParisBaseOrResponse();
+  if (!paris.ok) return paris.response;
+
+  const url = new URL(`${paris.baseUrl.replace(/\/$/, '')}/api/workspaces/${encodeURIComponent(workspaceId)}/locales`);
+  const requestUrl = new URL(request.url);
+  const subject = (requestUrl.searchParams.get('subject') || '').trim();
+  if (subject) url.searchParams.set('subject', subject);
+
+  const headers: HeadersInit = { 'Content-Type': request.headers.get('Content-Type') || 'application/json' };
+  if (PARIS_DEV_JWT) headers['Authorization'] = `Bearer ${PARIS_DEV_JWT}`;
+
+  const bodyText = await request.text().catch(() => '');
+
+  try {
+    const res = await fetchWithTimeout(url.toString(), {
+      method: 'PUT',
+      headers,
+      body: bodyText || undefined,
+      cache: 'no-store',
+    });
     const data = await res.text();
     return new NextResponse(data, {
       status: res.status,

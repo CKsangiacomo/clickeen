@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Questions générales"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Qu'est-ce que Clickeen ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Y a-t-il un plan gratuit ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Comment installer un widget ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Pourquoi devrais-je utiliser Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen est quelque chose qui rendra Margherita très très riche"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Oui, un widget actif avec les fonctionnalités principales."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Copiez le code d'intégration et collez-le avant </body> sur votre site."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Parce que Clickeen est une nouvelle plateforme incroyable pour rendre le web beau et facile à utiliser."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactez-nous"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Design soigné, mises à jour sans effort, et bases SEO—prêt pour n'importe quelle langue."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Questions Fréquemment Posées"
+    }
+  ],
+  "v": 1
+}

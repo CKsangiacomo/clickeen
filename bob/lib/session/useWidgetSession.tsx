@@ -84,6 +84,7 @@ type SessionState = {
   previewData: Record<string, unknown> | null;
   previewOps: WidgetOp[] | null;
   isDirty: boolean;
+  minibobPersonalizationUsed: boolean;
   policy: Policy;
   enforcement: EnforcementState | null;
   upsell: { reasonKey: string; detail?: string; cta: 'signup' | 'upgrade' } | null;
@@ -371,6 +372,7 @@ function useWidgetSessionInternal() {
     previewData: null,
     previewOps: null,
     isDirty: false,
+    minibobPersonalizationUsed: false,
     policy: initialPolicy,
     enforcement: null,
     upsell: null,
@@ -388,12 +390,53 @@ function useWidgetSessionInternal() {
   const stateRef = useRef(state);
   stateRef.current = state;
   const previewOpsRef = useRef<WidgetOp[] | null>(null);
+  const pendingMinibobInjectionRef = useRef<Record<string, unknown> | null>(null);
   const allowlistCacheRef = useRef<Map<string, AllowlistEntry[]>>(new Map());
   const localeRequestRef = useRef(0);
 
   useEffect(() => {
     previewOpsRef.current = state.previewOps;
   }, [state.previewOps]);
+
+  const applyMinibobInjectedState = useCallback((nextState: Record<string, unknown>): boolean => {
+    const snapshot = stateRef.current;
+    const compiled = snapshot.compiled;
+    if (!compiled || compiled.controls.length === 0) return false;
+    if (!compiled.defaults || typeof compiled.defaults !== 'object' || Array.isArray(compiled.defaults)) return false;
+
+    const defaults = compiled.defaults as Record<string, unknown>;
+    let resolved: Record<string, unknown> = structuredClone(nextState);
+
+    resolved = applyDefaultsIntoConfig(defaults, resolved);
+    resolved = sanitizeConfig({
+      config: resolved,
+      limits: compiled.limits ?? null,
+      policy: snapshot.policy,
+      context: 'load',
+    });
+
+    const baseNext = resolved;
+    const instanceNext =
+      snapshot.locale.activeLocale !== snapshot.locale.baseLocale
+        ? applyLocalizationOps(applyLocalizationOps(baseNext, snapshot.locale.baseOps), snapshot.locale.userOps)
+        : baseNext;
+
+    setState((prev) => ({
+      ...prev,
+      undoSnapshot: prev.instanceData,
+      baseInstanceData: baseNext,
+      instanceData: instanceNext,
+      previewData: null,
+      previewOps: null,
+      isDirty: true,
+      minibobPersonalizationUsed: true,
+      error: null,
+      upsell: null,
+      lastUpdate: { source: 'external', path: '', ts: Date.now() },
+    }));
+
+    return true;
+  }, []);
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -726,6 +769,76 @@ function useWidgetSessionInternal() {
     };
   }, [loadLocaleAllowlist, state.compiled?.widgetname, state.locale.allowlist.length, state.meta?.widgetname]);
 
+  // [Minibob Bridge] Listen for direct state injection from Prague Personalization
+  useEffect(() => {
+    // Check mode directly from URL/Context instead of state.meta (which lacks this prop)
+    const mode = resolveSubjectModeFromUrl();
+    if (mode !== 'minibob') return;
+
+    const handler = (event: MessageEvent) => {
+      // Basic origin check could go here if needed, but for now we rely on the specific protocol
+      const data = event.data;
+      if (!data || typeof data !== 'object') return;
+
+      // Protocol: ck:minibob-preview-state
+      // Expects: { type: '...', state: Record<string, unknown> }
+      if (data.type !== 'ck:minibob-preview-state') return;
+
+      const requestId = typeof (data as any).requestId === 'string' ? (data as any).requestId.trim() : '';
+      const nextState = data.state;
+      if (!isRecord(nextState)) return;
+
+      let applied = false;
+      try {
+        applied = applyMinibobInjectedState(nextState);
+      } catch (err) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[useWidgetSession] Minibob state injection rejected', err);
+        }
+      }
+
+      if (!applied) {
+        try {
+          pendingMinibobInjectionRef.current = structuredClone(nextState);
+        } catch {
+          pendingMinibobInjectionRef.current = nextState;
+        }
+      }
+
+      if (requestId) {
+        try {
+          const target =
+            event.source && typeof (event.source as Window).postMessage === 'function'
+              ? (event.source as Window)
+              : window.parent;
+          const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+          target?.postMessage({ type: 'ck:minibob-preview-state-applied', requestId, ok: applied }, targetOrigin);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [applyMinibobInjectedState]);
+
+  useEffect(() => {
+    const mode = resolveSubjectModeFromUrl();
+    if (mode !== 'minibob') return;
+    if (!state.compiled) return;
+    const pending = pendingMinibobInjectionRef.current;
+    if (!pending) return;
+
+    try {
+      if (applyMinibobInjectedState(pending)) {
+        pendingMinibobInjectionRef.current = null;
+      }
+    } catch {
+      // ignore
+    }
+  }, [applyMinibobInjectedState, state.compiled]);
+
   const loadParisLayer = useCallback(async (
     workspaceId: string,
     publicId: string,
@@ -954,7 +1067,7 @@ function useWidgetSessionInternal() {
         const errorCode = json?.error?.code || json?.error?.reasonKey;
         let message = json?.error?.message || errorCode || 'Failed to save locale overrides';
         if (errorCode === 'FINGERPRINT_MISMATCH') {
-          message = 'Base content changed. Switch to Base, publish, then try saving overrides again.';
+          message = 'Base content changed. Switch to Base, click "Save", refresh translations, then try saving overrides again.';
         }
         setState((prev) => ({
           ...prev,
@@ -980,6 +1093,83 @@ function useWidgetSessionInternal() {
       }));
     }
   }, [loadLocaleAllowlist]);
+
+  const refreshLocaleTranslations = useCallback(async () => {
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const subject = resolvePolicySubject(snapshot.policy);
+
+    if (snapshot.policy.role === 'viewer') {
+      const message = 'Read-only mode: translation refresh is disabled.';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+    if (!publicId || !workspaceId) {
+      const message = 'Missing instance context';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+    if (snapshot.isDirty) {
+      const message = 'Base content changed. Click "Save" first, then refresh translations.';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+
+    setState((prev) => ({
+      ...prev,
+      locale: { ...prev.locale, loading: true, error: null },
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId
+        )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        },
+      );
+      const json = (await res.json().catch(() => null)) as any;
+      if (!res.ok) {
+        const message =
+          json?.error?.message ||
+          json?.error?.reasonKey ||
+          json?.error?.code ||
+          `Failed to refresh translations (HTTP ${res.status})`;
+        setState((prev) => ({
+          ...prev,
+          locale: { ...prev.locale, loading: false, error: message },
+        }));
+        return { ok: false as const, message };
+      }
+      const queued = typeof json?.queued === 'number' ? json.queued : 0;
+      const skipped = typeof json?.skipped === 'number' ? json.skipped : 0;
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, loading: false, error: null },
+      }));
+      return { ok: true as const, queued, skipped };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, loading: false, error: message },
+      }));
+      return { ok: false as const, message };
+    }
+  }, []);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -1105,6 +1295,7 @@ function useWidgetSessionInternal() {
         baseInstanceData: resolved,
         publishedBaseInstanceData: structuredClone(resolved),
         isDirty: false,
+        minibobPersonalizationUsed: false,
         policy: nextPolicy,
         enforcement: nextEnforcement,
         selectedPath: null,
@@ -1136,6 +1327,7 @@ function useWidgetSessionInternal() {
         baseInstanceData: {},
         publishedBaseInstanceData: {},
         isDirty: false,
+        minibobPersonalizationUsed: false,
         error: { source: 'load', message: messageText },
         upsell: null,
         enforcement: null,
@@ -1399,18 +1591,18 @@ function useWidgetSessionInternal() {
         compiled.presets = { ...(compiled.presets ?? {}), ...themePresets };
       }
     }
-	    await loadInstance({
-	      type: 'devstudio:load-instance',
-	      widgetname: widgetType,
-	      compiled,
-	      instanceData: instanceJson.config,
-	      policy: instanceJson.policy,
-	      enforcement: instanceJson.enforcement,
-	      publicId: instanceJson.publicId ?? publicId,
-	      workspaceId,
-	      label: instanceJson.publicId ?? publicId,
-	      subjectMode: subject,
-	    });
+    await loadInstance({
+      type: 'devstudio:load-instance',
+      widgetname: widgetType,
+      compiled,
+      instanceData: instanceJson.config,
+      policy: instanceJson.policy,
+      enforcement: instanceJson.enforcement,
+      publicId: instanceJson.publicId ?? publicId,
+      workspaceId,
+      label: instanceJson.publicId ?? publicId,
+      subjectMode: subject,
+    });
   }, [loadInstance]);
 
   const setCopilotThread = useCallback((key: string, next: CopilotThread) => {
@@ -1560,6 +1752,7 @@ function useWidgetSessionInternal() {
         instanceData: {},
         baseInstanceData: {},
         isDirty: false,
+        minibobPersonalizationUsed: false,
         error: { source: 'load', message: messageText },
         upsell: null,
         locale: { ...DEFAULT_LOCALE_STATE },
@@ -1577,6 +1770,7 @@ function useWidgetSessionInternal() {
       previewData: state.previewData,
       previewOps: state.previewOps,
       isDirty: state.isDirty,
+      minibobPersonalizationUsed: state.minibobPersonalizationUsed,
       isMinibob: state.policy.profile === 'minibob',
       policy: state.policy,
       upsell: state.upsell,
@@ -1602,6 +1796,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      refreshLocaleTranslations,
       revertLocaleOverrides,
       loadInstance,
       consumeBudget,
@@ -1623,6 +1818,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      refreshLocaleTranslations,
       revertLocaleOverrides,
       setSelectedPath,
       consumeBudget,

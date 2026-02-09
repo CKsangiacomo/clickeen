@@ -541,8 +541,14 @@ export default defineConfig({
               return;
             }
 
-            const status = String(payload?.status || 'unpublished').trim();
+            const isCuratedInstance = publicId.startsWith('wgt_curated_') || publicId.startsWith('wgt_main_');
+            const status = String(payload?.status || (isCuratedInstance ? 'published' : 'unpublished')).trim();
             if (status !== 'unpublished' && status !== 'published') {
+              res.statusCode = 422;
+              res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' } }));
+              return;
+            }
+            if (isCuratedInstance && status !== 'published') {
               res.statusCode = 422;
               res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' } }));
               return;

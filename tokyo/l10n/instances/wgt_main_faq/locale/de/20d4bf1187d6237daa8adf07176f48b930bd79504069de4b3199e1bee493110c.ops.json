@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Allgemeine Fragen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Was ist Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Gibt es einen kostenlosen Plan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Wie installiere ich ein Widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Warum sollte ich Clickeen verwenden?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen ist etwas, das Margherita sehr, sehr reich machen wird"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Ja, ein aktives Widget mit Kernfunktionen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kopieren Sie den Einbettungscode und fügen Sie ihn vor </body> auf Ihrer Website ein."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Weil Clickeen eine fantastische neue Plattform ist, um das Web schön und einfach zu bedienen zu machen."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontaktieren Sie uns"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Poliertes Design, mühelose Aktualisierungen und SEO-Grundlagen – bereit für jede Sprache."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Häufig gestellte Fragen"
+    }
+  ],
+  "v": 1
+}

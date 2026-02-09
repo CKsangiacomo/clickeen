@@ -1,5 +1,5 @@
 import type { Env } from './shared/types';
-import { json } from './shared/http';
+import { corsPreflight, json } from './shared/http';
 import { assertWorkspaceId } from './shared/validation';
 import { handleHealthz, handleNotImplemented } from './shared/handlers';
 import { handleAiGrant, handleAiMinibobGrant, handleAiMinibobSession, handleAiOutcome } from './domains/ai';
@@ -23,6 +23,8 @@ import {
   handleWorkspaceCreateInstance,
   handleWorkspaceEnsureWebsiteCreative,
   handleWorkspaceGetInstance,
+  handleWorkspaceInstancePublishStatus,
+  handleWorkspaceInstanceRenderSnapshot,
   handleWorkspaceInstances,
   handleWorkspaceUpdateInstance,
 } from './domains/workspaces';
@@ -33,6 +35,7 @@ import {
   handleWorkspaceInstanceLayerGet,
   handleWorkspaceInstanceLayerUpsert,
   handleWorkspaceInstanceLayersList,
+  handleWorkspaceInstanceL10nEnqueueSelected,
   handleWorkspaceInstanceL10nStatus,
   handleWorkspaceLocalesGet,
   handleWorkspaceLocalesPut,
@@ -45,6 +48,7 @@ export default {
       const url = new URL(req.url);
       const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
+      if (req.method === 'OPTIONS') return corsPreflight(req);
       if (pathname === '/api/healthz') return handleHealthz();
 
       if (pathname === '/api/l10n/jobs/report') {
@@ -170,6 +174,45 @@ export default {
         if (!workspaceIdResult.ok) return workspaceIdResult.response;
         const publicId = decodeURIComponent(workspaceInstanceL10nMatch[2]);
         if (req.method === 'GET') return handleWorkspaceInstanceL10nStatus(req, env, workspaceIdResult.value, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstancePublishStatusMatch = pathname.match(
+        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/publish\/status$/
+      );
+      if (workspaceInstancePublishStatusMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancePublishStatusMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstancePublishStatusMatch[2]);
+        if (req.method === 'GET') {
+          return handleWorkspaceInstancePublishStatus(req, env, workspaceIdResult.value, publicId);
+        }
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstanceL10nEnqueueSelectedMatch = pathname.match(
+        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/l10n\/enqueue-selected$/
+      );
+      if (workspaceInstanceL10nEnqueueSelectedMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceL10nEnqueueSelectedMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstanceL10nEnqueueSelectedMatch[2]);
+        if (req.method === 'POST') {
+          return handleWorkspaceInstanceL10nEnqueueSelected(req, env, workspaceIdResult.value, publicId);
+        }
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstanceRenderSnapshotMatch = pathname.match(
+        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/render-snapshot$/
+      );
+      if (workspaceInstanceRenderSnapshotMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstanceRenderSnapshotMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstanceRenderSnapshotMatch[2]);
+        if (req.method === 'POST') {
+          return handleWorkspaceInstanceRenderSnapshot(req, env, workspaceIdResult.value, publicId);
+        }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

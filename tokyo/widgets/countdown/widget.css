@@ -120,14 +120,6 @@ body {
   max-width: 100%;
 }
 
-.pod[data-layout-position='full-width'],
-.pod[data-layout-position='top-bar'],
-.pod[data-layout-position='bottom-bar'],
-.pod[data-layout-position='static-top'] {
-  width: 100%;
-  max-width: 100%;
-}
-
 .ck-widget.ck-countdown-widget {
   box-sizing: border-box;
   width: 100%;

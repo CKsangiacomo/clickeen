@@ -35,7 +35,10 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
-  if (isL10nIndex || isI18nManifest || isRenderIndex) {
+  if (isRenderIndex) {
+    return { cache: 'force-cache', next: { revalidate: 60 } };
+  }
+  if (isL10nIndex || isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 300 } };
   }
   if (isDieter || isWidget) {

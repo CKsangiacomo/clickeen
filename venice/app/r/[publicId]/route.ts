@@ -18,7 +18,7 @@ interface InstanceResponse {
   policy?: { flags?: Record<string, boolean> } | null;
 }
 
-const CACHE_PUBLISHED = 'public, max-age=300, s-maxage=600, stale-while-revalidate=1800';
+const CACHE_PUBLISHED = 'public, max-age=60, s-maxage=60';
 const CACHE_DRAFT = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
 
 function extractBodyHtml(widgetHtml: string): string {

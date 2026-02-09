@@ -93,10 +93,12 @@ const L10N_PRAGUE_BUDGETS: Record<AiProfile, AiBudget> = {
 };
 
 const PERSONALIZATION_PREVIEW_BUDGETS: Record<AiProfile, AiBudget> = {
-  free_low: { maxTokens: 400, timeoutMs: 12_000, maxRequests: 1 },
-  paid_standard: { maxTokens: 500, timeoutMs: 15_000, maxRequests: 1 },
-  paid_premium: { maxTokens: 650, timeoutMs: 18_000, maxRequests: 1 },
-  curated_premium: { maxTokens: 800, timeoutMs: 20_000, maxRequests: 1 },
+  // This runs inside a `waitUntil(...)` job (San Francisco). Keep budgets reasonably
+  // short, but long enough to avoid spurious provider timeouts in local/cloud-dev.
+  free_low: { maxTokens: 400, timeoutMs: 25_000, maxRequests: 1 },
+  paid_standard: { maxTokens: 500, timeoutMs: 30_000, maxRequests: 1 },
+  paid_premium: { maxTokens: 650, timeoutMs: 30_000, maxRequests: 1 },
+  curated_premium: { maxTokens: 800, timeoutMs: 30_000, maxRequests: 1 },
 };
 
 const PERSONALIZATION_ONBOARDING_BUDGETS: Record<AiProfile, AiBudget> = {
@@ -137,7 +139,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     category: 'agent',
     taskClass: 'l10n.instance',
     description: 'Instance localization pipeline.',
-    supportedProviders: ['deepseek'],
+    supportedProviders: ['deepseek', 'openai', 'anthropic'],
     defaultProvider: 'deepseek',
     executionSurface: 'queue',
     allowProviderChoice: false,
@@ -182,7 +184,12 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     allowModelChoice: false,
     budgetsByProfile: PERSONALIZATION_ONBOARDING_BUDGETS,
     requiredEntitlements: ['budget.personalization.runs', 'budget.personalization.website.crawls'],
-    toolCaps: ['tool:fetchWebsite', 'tool:fetchGBP', 'tool:fetchFacebook', 'tool:writeWorkspaceProfile'],
+    toolCaps: [
+      'tool:fetchWebsite',
+      'tool:fetchGBP',
+      'tool:fetchFacebook',
+      'tool:writeWorkspaceProfile',
+    ],
   },
   {
     agentId: 'debug.grantProbe',
@@ -206,7 +213,9 @@ for (const entry of AI_AGENT_REGISTRY) {
     throw new Error(`[ck-policy] AI registry entry missing supported providers: ${entry.agentId}`);
   }
   if (!entry.supportedProviders.includes(entry.defaultProvider)) {
-    throw new Error(`[ck-policy] AI registry entry defaultProvider not supported: ${entry.agentId}`);
+    throw new Error(
+      `[ck-policy] AI registry entry defaultProvider not supported: ${entry.agentId}`,
+    );
   }
   const canonical = entry.agentId.trim();
   if (AGENT_LOOKUP.has(canonical)) {
@@ -269,7 +278,10 @@ const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderMo
   paid_standard: {
     deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat', 'deepseek-reasoner'] },
     openai: { defaultModel: 'gpt-4o-mini', allowed: ['gpt-4o-mini'] },
-    anthropic: { defaultModel: 'claude-3-5-sonnet-20240620', allowed: ['claude-3-5-sonnet-20240620'] },
+    anthropic: {
+      defaultModel: 'claude-3-5-sonnet-20240620',
+      allowed: ['claude-3-5-sonnet-20240620'],
+    },
     groq: { defaultModel: 'llama-3.3-70b-versatile', allowed: ['llama-3.3-70b-versatile'] },
     amazon: {
       defaultModel: 'amazon.nova-pro-v1:0',
@@ -277,9 +289,15 @@ const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderMo
     },
   },
   paid_premium: {
-    deepseek: { defaultModel: 'deepseek-reasoner', allowed: ['deepseek-chat', 'deepseek-reasoner'] },
+    deepseek: {
+      defaultModel: 'deepseek-reasoner',
+      allowed: ['deepseek-chat', 'deepseek-reasoner'],
+    },
     openai: { defaultModel: 'gpt-4o', allowed: ['gpt-4o-mini', 'gpt-4o'] },
-    anthropic: { defaultModel: 'claude-3-5-sonnet-20240620', allowed: ['claude-3-5-sonnet-20240620'] },
+    anthropic: {
+      defaultModel: 'claude-3-5-sonnet-20240620',
+      allowed: ['claude-3-5-sonnet-20240620'],
+    },
     groq: { defaultModel: 'llama-3.3-70b-versatile', allowed: ['llama-3.3-70b-versatile'] },
     amazon: {
       defaultModel: 'amazon.nova-pro-v1:0',
@@ -313,7 +331,9 @@ export function listAiAgents(): AiRegistryEntry[] {
   return AI_AGENT_REGISTRY.slice();
 }
 
-export function resolveAiAgent(agentId: string): { entry: AiRegistryEntry; canonicalId: string; requestedId: string } | null {
+export function resolveAiAgent(
+  agentId: string,
+): { entry: AiRegistryEntry; canonicalId: string; requestedId: string } | null {
   const requested = typeof agentId === 'string' ? agentId.trim() : '';
   if (!requested) return null;
   const entry = AGENT_LOOKUP.get(requested);
@@ -321,13 +341,20 @@ export function resolveAiAgent(agentId: string): { entry: AiRegistryEntry; canon
   return { entry, canonicalId: entry.agentId, requestedId: requested };
 }
 
-export function resolveAiProfile(args: { policyProfile: PolicyProfile; taskClass: string; isCurated?: boolean }): AiProfile {
+export function resolveAiProfile(args: {
+  policyProfile: PolicyProfile;
+  taskClass: string;
+  isCurated?: boolean;
+}): AiProfile {
   if (args.isCurated) return 'curated_premium';
   if (CURATED_TASK_CLASSES.has(args.taskClass)) return 'curated_premium';
   return PROFILE_BY_POLICY[args.policyProfile] ?? 'free_low';
 }
 
-export function resolveAiAllowedProviders(entry: AiRegistryEntry, profile: AiProfile): AiProvider[] {
+export function resolveAiAllowedProviders(
+  entry: AiRegistryEntry,
+  profile: AiProfile,
+): AiProvider[] {
   const allowed = Object.keys(MODELS_BY_PROFILE[profile] ?? {}) as AiProvider[];
   const filtered = entry.supportedProviders.filter((provider) => allowed.includes(provider));
   return uniqProviders(filtered);
@@ -337,30 +364,42 @@ export function resolveAiBudgets(entry: AiRegistryEntry, profile: AiProfile): Ai
   return entry.budgetsByProfile[profile] ?? entry.budgetsByProfile.free_low;
 }
 
-export function resolveAiModels(profile: AiProfile, provider: AiProvider): ProviderModelPolicy | null {
+export function resolveAiModels(
+  profile: AiProfile,
+  provider: AiProvider,
+): ProviderModelPolicy | null {
   const profileConfig = MODELS_BY_PROFILE[profile] ?? null;
   if (!profileConfig) return null;
   const entry = profileConfig[provider];
   if (!entry) return null;
-  const allowed = Array.isArray(entry.allowed) ? entry.allowed.filter((m) => typeof m === 'string' && m.trim()) : [];
+  const allowed = Array.isArray(entry.allowed)
+    ? entry.allowed.filter((m) => typeof m === 'string' && m.trim())
+    : [];
   const defaultModel = typeof entry.defaultModel === 'string' ? entry.defaultModel.trim() : '';
   if (!defaultModel || allowed.length === 0) return null;
   if (!allowed.includes(defaultModel)) return null;
   return { defaultModel, allowed };
 }
 
-export function resolveAiDefaultProvider(profile: AiProfile, allowedProviders: AiProvider[]): AiProvider {
+export function resolveAiDefaultProvider(
+  profile: AiProfile,
+  allowedProviders: AiProvider[],
+): AiProvider {
   const preferred = DEFAULT_PROVIDER_BY_PROFILE[profile] ?? 'deepseek';
   if (allowedProviders.includes(preferred)) return preferred;
   return allowedProviders[0] ?? 'deepseek';
 }
 
 export function listAiProviderUi(): AiProviderUiMeta[] {
-  return (Object.keys(PROVIDER_LABELS) as AiProvider[]).map((provider) => ({ provider, label: PROVIDER_LABELS[provider] }));
+  return (Object.keys(PROVIDER_LABELS) as AiProvider[]).map((provider) => ({
+    provider,
+    label: PROVIDER_LABELS[provider],
+  }));
 }
 
 export function labelAiProvider(provider: string): string {
-  const key = typeof provider === 'string' ? (provider.trim() as AiProvider) : ('deepseek' as AiProvider);
+  const key =
+    typeof provider === 'string' ? (provider.trim() as AiProvider) : ('deepseek' as AiProvider);
   return PROVIDER_LABELS[key] ?? provider;
 }
 
@@ -393,7 +432,11 @@ export function resolveAiPolicyCapsule(args: {
   requestedModel?: string;
   isCurated?: boolean;
 }): AiGrantPolicy {
-  const profile = resolveAiProfile({ policyProfile: args.policyProfile, taskClass: args.entry.taskClass, isCurated: args.isCurated });
+  const profile = resolveAiProfile({
+    policyProfile: args.policyProfile,
+    taskClass: args.entry.taskClass,
+    isCurated: args.isCurated,
+  });
   const allowedProviders = resolveAiAllowedProviders(args.entry, profile);
   if (!allowedProviders.length) {
     throw new Error(`[ck-policy] No allowed providers for ${args.entry.agentId} (${profile})`);
@@ -408,17 +451,23 @@ export function resolveAiPolicyCapsule(args: {
       .filter(Boolean) as Array<[AiProvider, ProviderModelPolicy]>,
   ) as AiGrantPolicy['models'];
 
-  const allowProviderChoice = Boolean(args.entry.allowProviderChoice) && allowedProviders.length > 1;
-  const providerCandidate = typeof args.requestedProvider === 'string' ? args.requestedProvider.trim() : '';
-  const selectedProvider = allowProviderChoice && allowedProviders.includes(providerCandidate as AiProvider)
-    ? (providerCandidate as AiProvider)
-    : undefined;
+  const allowProviderChoice =
+    Boolean(args.entry.allowProviderChoice) && allowedProviders.length > 1;
+  const providerCandidate =
+    typeof args.requestedProvider === 'string' ? args.requestedProvider.trim() : '';
+  const selectedProvider =
+    allowProviderChoice && allowedProviders.includes(providerCandidate as AiProvider)
+      ? (providerCandidate as AiProvider)
+      : undefined;
 
   const allowModelChoice = Boolean(args.entry.allowModelChoice);
   const modelCandidate = typeof args.requestedModel === 'string' ? args.requestedModel.trim() : '';
   const modelProvider = selectedProvider ?? defaultProvider;
   const selectedModel =
-    allowModelChoice && modelCandidate && models && models[modelProvider]?.allowed?.includes(modelCandidate)
+    allowModelChoice &&
+    modelCandidate &&
+    models &&
+    models[modelProvider]?.allowed?.includes(modelCandidate)
       ? modelCandidate
       : undefined;
 

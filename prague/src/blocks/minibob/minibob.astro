@@ -1,15 +1,18 @@
 ---
 import { assertPrimitives } from '@clickeen/composition';
 import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import { loadWidgetLocalizationAllowlistPaths } from '../../lib/widgetLocalizationAllowlist';
+import PersonalizationPreview from '../../components/PersonalizationPreview.astro';
 
 type Props = {
   widget: string;
   locale: string;
+  page: string;
   heading: string;
   subhead: string;
 };
 
-const { widget, locale, heading, subhead } = Astro.props;
+const { widget, locale, page, heading, subhead } = Astro.props;
 
 const headerPrimitives = assertPrimitives(
   [
@@ -23,7 +26,7 @@ const headerPrimitives = assertPrimitives(
       type: 'text',
       variant: 'body',
       content: subhead,
-      className: 'body-website ck-m0 ck-minibobStage__subhead ck-text-muted',
+      className: 'body-website ck-m0 ck-minibobStage__subhead ck-text-secondary',
     },
   ],
   'minibob.header',
@@ -43,11 +46,42 @@ const workspaceId = String(
 const publicId = `wgt_main_${widget}`;
 const iframeSrc = `${BOB_URL.replace(/\/+$/, '')}/bob?subject=minibob&minibob=true&workspaceId=${encodeURIComponent(workspaceId)}&publicId=${encodeURIComponent(publicId)}&locale=${encodeURIComponent(locale)}`;
 const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
+const createHref = (() => {
+  try {
+    const parts = Astro.url.pathname.split('/').filter(Boolean);
+    const marketKey = parts[0] || 'us';
+    const localeKey = parts[1] || locale || 'en';
+    return `/${marketKey}/${localeKey}/create`;
+  } catch {
+    return `/${locale || 'en'}/create`;
+  }
+})();
+const bobOrigin = (() => {
+  try {
+    return new URL(BOB_URL).origin;
+  } catch {
+    return '';
+  }
+})();
+
+// Load allowlist for this widget type so PersonalizationPreview knows what AI can touch
+const allowedOverrides = (await loadWidgetLocalizationAllowlistPaths(widget)) ?? undefined;
 ---
 
-<section id="minibob" class="ck-canvas">
+<section id="minibob" class="ck-canvas" data-bob-origin={bobOrigin} data-create-href={createHref}>
   <div class="ck-minibobStage ck-stack ck-gap-tight">
     <PrimitiveRenderer primitives={headerPrimitives} />
+    <div class="ck-minibobStage__personalize">
+      <PersonalizationPreview
+        locale={locale}
+        widget={widget}
+        page={page}
+        variant="embed"
+        publicId={publicId}
+        targetIframeId={iframeId}
+        allowedOverrides={allowedOverrides}
+      />
+    </div>
   </div>
 
   <div class="ck-inline">
@@ -63,6 +97,32 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
   </div>
 </section>
 
+<script is:inline>
+  (() => {
+    const root = document.getElementById('minibob');
+    if (!(root instanceof HTMLElement)) return;
+    if (root.dataset.ckUpsellBound === '1') return;
+    root.dataset.ckUpsellBound = '1';
+
+    const expectedOrigin = root.dataset.bobOrigin || '';
+    const signupHref = root.dataset.createHref || '';
+
+    const iframe = root.querySelector('iframe.ck-minibob__iframe');
+    if (!(iframe instanceof HTMLIFrameElement)) return;
+
+    window.addEventListener('message', (event) => {
+      if (expectedOrigin && event.origin !== expectedOrigin) return;
+      if (event.source !== iframe.contentWindow) return;
+      const data = event.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type !== 'bob:upsell') return;
+      if (data.cta !== 'signup') return;
+      if (!signupHref) return;
+      window.location.href = signupHref;
+    });
+  })();
+</script>
+
 <style>
   #minibob.ck-canvas {
     background: var(--color-system-white);
@@ -76,17 +136,28 @@ const iframeId = `ck-minibob-${widget}-${locale}`.replace(/[^a-z0-9_-]/gi, '-');
     text-align: center;
   }
 
+  .ck-minibobStage__personalize {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-4);
+  }
+
   .ck-minibob__iframe {
     width: 100%;
-    height: clamp(520px, 70vh, 860px);
+    height: clamp(520px, 78vh, 920px);
     border: 0;
     border-radius: var(--control-radius-lg);
     box-shadow: none;
     background: var(--color-system-white);
   }
 
+  @supports (height: 1svh) {
+    .ck-minibob__iframe {
+      height: clamp(520px, 78svh, 920px);
+    }
+  }
+
   @media (max-width: 900px) {
     .ck-minibobStage { margin-bottom: var(--space-5); }
-    .ck-minibob__iframe { height: 640px; }
   }
 </style>

@@ -1,0 +1,444 @@
+---
+import { assertPrimitives } from '@clickeen/composition';
+import PrimitiveRenderer from '@clickeen/composition/renderers/astro/PrimitiveRenderer.astro';
+import DieterIcon from './DieterIcon.astro';
+
+type StepItem = {
+  title: string;
+  body: string;
+  // Icon support (new + legacy)
+  iconEnabled?: boolean;
+  iconName?: string;
+  icon?: string;
+  // Background support (new + legacy)
+  backgroundEnabled?: boolean;
+  backgroundPath?: string;
+  background?: string;
+  // Image support (new + legacy)
+  imageEnabled?: boolean;
+  imagePath?: string;
+  image?: string;
+  imageAlt?: string;
+  imageLayout?: 'inset' | 'bleed';
+  imageFit?: 'cover' | 'contain';
+  imagePositionY?: 'top' | 'center' | 'bottom';
+};
+
+type Props = {
+  widget: string;
+  title: string;
+  subhead?: string;
+  steps: StepItem[];
+  visual?: { image?: string };
+  ctaHref?: string;
+  variant?: 'cards' | 'value-props';
+};
+
+const { widget, title, subhead, steps, visual, ctaHref, variant } = Astro.props as Props;
+const TOKYO_URL = import.meta.env.PUBLIC_TOKYO_URL;
+const widgetSlug = encodeURIComponent(String(widget));
+const visualImage = typeof visual?.image === 'string' ? visual.image : '';
+const hasTileImages = Array.isArray(steps) && steps.some((step) => Boolean(resolveStepImagePath(step)));
+const resolvedVariant = variant === 'value-props' && Array.isArray(steps) && steps.length > 3 ? 'cards' : (variant ?? 'cards');
+
+function titleCaseWidgetType(input: string): string {
+  const s = String(input || '').trim();
+  if (!s) return 'Widget';
+  if (s.toLowerCase() === 'faq') return 'FAQ';
+  const spaced = s
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase();
+  return spaced.replace(/\b[a-z]/g, (m) => m.toUpperCase());
+}
+
+const ctaLabel = `Create a free ${titleCaseWidgetType(widget)} widget`;
+const resolvedCtaHref = typeof ctaHref === 'string' && ctaHref.trim() ? ctaHref.trim() : '#minibob';
+
+function resolveTokyoAssetUrl(args: { widgetSlug: string; path: string }): string {
+  const base = String(TOKYO_URL || '').replace(/\/+$/, '');
+  const raw = String(args.path || '').trim();
+  if (!base || !raw) return '';
+
+  // Allow absolute URLs when explicitly provided.
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  const normalized = raw.replace(/^\/+/, '');
+
+  // Allow full Tokyo-relative paths like "widgets/..." or "dieter/...".
+  if (normalized.startsWith('widgets/') || normalized.startsWith('dieter/')) {
+    return `${base}/${encodeURI(normalized)}`;
+  }
+
+  // Default: widget page asset.
+  return `${base}/widgets/${args.widgetSlug}/pages/assets/${encodeURI(normalized)}`;
+}
+
+function resolveStepIconName(step: StepItem): string {
+  if (step.iconEnabled === false) return '';
+  const next = typeof step.iconName === 'string' ? step.iconName.trim() : '';
+  if (next) return next;
+  const legacy = typeof step.icon === 'string' ? step.icon.trim() : '';
+  return legacy;
+}
+
+function resolveStepBackgroundPath(step: StepItem): string {
+  if (step.backgroundEnabled === false) return '';
+  const next = typeof step.backgroundPath === 'string' ? step.backgroundPath.trim() : '';
+  if (next) return next;
+  const legacy = typeof step.background === 'string' ? step.background.trim() : '';
+  return legacy;
+}
+
+function resolveStepImagePath(step: StepItem): string {
+  if (step.imageEnabled === false) return '';
+  const next = typeof step.imagePath === 'string' ? step.imagePath.trim() : '';
+  if (next) return next;
+  const legacy = typeof step.image === 'string' ? step.image.trim() : '';
+  return legacy;
+}
+
+function resolveStepImageAlt(step: StepItem): string {
+  const alt = typeof step.imageAlt === 'string' ? step.imageAlt.trim() : '';
+  return alt;
+}
+
+function resolveStepImageLayout(step: StepItem): 'inset' | 'bleed' {
+  const raw = typeof step.imageLayout === 'string' ? step.imageLayout.trim() : '';
+  return raw === 'bleed' ? 'bleed' : 'inset';
+}
+
+function resolveStepImageFit(step: StepItem): 'cover' | 'contain' {
+  const raw = typeof step.imageFit === 'string' ? step.imageFit.trim() : '';
+  return raw === 'cover' ? 'cover' : 'contain';
+}
+
+function resolveStepImagePositionY(step: StepItem): 'top' | 'center' | 'bottom' {
+  const raw = typeof step.imagePositionY === 'string' ? step.imagePositionY.trim() : '';
+  return raw === 'top' || raw === 'bottom' ? raw : 'center';
+}
+
+const headerPrimitives = assertPrimitives(
+  [
+    {
+      type: 'heading',
+      level: 3,
+      content: title,
+      className: 'display-3 ck-m0',
+    },
+    ...(subhead
+      ? [
+          {
+            type: 'text',
+            variant: 'body',
+            content: subhead,
+            className: 'body-website ck-m0 ck-steps__subhead ck-text-secondary',
+          } as const,
+        ]
+      : []),
+  ],
+  'steps.header',
+);
+---
+
+<section class="ck-canvas ck-stepsCanvas" data-variant={resolvedVariant}>
+  <div class="ck-inline ck-stack ck-steps__inline">
+    <header class="ck-steps__header ck-stack ck-gap-tight">
+      <PrimitiveRenderer primitives={headerPrimitives} />
+    </header>
+
+    <div class="ck-row ck-steps__row" aria-label={title}>
+      {steps.map((step, i) => {
+        const hasImage = Boolean(resolveStepImagePath(step));
+        const tileClass = `ck-steps__tile ck-steps__tile--${resolveStepImageLayout(step)}${hasImage ? ' ck-steps__tile--hasImage' : ''}`;
+        const backgroundPath = resolveStepBackgroundPath(step);
+        const backgroundUrl = backgroundPath ? resolveTokyoAssetUrl({ widgetSlug, path: backgroundPath }) : '';
+        const backgroundVar = backgroundUrl ? ` --ck-steps-tile-bg-image: url(${JSON.stringify(backgroundUrl)});` : '';
+        const iconName = resolveStepIconName(step);
+
+        return (
+          <div
+            class={tileClass}
+            style={`--ck-steps-media-fit: ${resolveStepImageFit(step)}; --ck-steps-media-position-y: ${resolveStepImagePositionY(step)};${backgroundVar}`}
+            role="group"
+            aria-label={`Benefit ${i + 1}`}
+          >
+            <div class="ck-steps__tileContent">
+              {iconName ? (
+                <div class="ck-steps__icon">
+                  <DieterIcon name={iconName} size={44} />
+                </div>
+              ) : null}
+
+              <PrimitiveRenderer
+                primitives={assertPrimitives(
+                  [
+                    {
+                      type: 'heading',
+                      level: 2,
+                      content: step.title,
+                      className: 'heading-2 ck-m0',
+                    },
+                    {
+                      type: 'text',
+                      variant: 'body',
+                      content: step.body,
+                      className: 'body-l ck-m0 ck-steps__body ck-text-secondary',
+                    },
+                  ],
+                  `steps.items[${i}]`,
+                )}
+              />
+
+              {resolvedVariant === 'value-props' ? (
+                <div class="ck-steps__tileCta">
+                  <a class="ck-btn ck-btn--secondaryCta label-s" href={resolvedCtaHref}>
+                    {ctaLabel}
+                  </a>
+                </div>
+              ) : null}
+            </div>
+
+            {hasImage ? (
+              <div class="ck-steps__tileMedia">
+                <img
+                  src={resolveTokyoAssetUrl({ widgetSlug, path: resolveStepImagePath(step) })}
+                  alt={resolveStepImageAlt(step)}
+                  class="ck-steps__tileImage"
+                  loading="lazy"
+                />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+
+    {visual?.image && !hasTileImages && visualImage ? (
+      <div class="ck-steps__visual">
+        <img src={resolveTokyoAssetUrl({ widgetSlug, path: visualImage })} alt="" class="ck-steps__image" />
+      </div>
+    ) : null}
+  </div>
+</section>
+
+<style>
+  .ck-stepsCanvas {
+    /* Match the reference: clean white section between hero and the next gray band. */
+    background: var(--color-system-white);
+  }
+
+  .ck-steps__inline {
+    /* Inline container with no additional vertical padding */
+  }
+
+  .ck-steps__header {
+    max-width: 880px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  /* Never force casing on authored copy. */
+  .ck-steps__header :where(h1, h2, h3, h4, h5, h6),
+  .ck-steps__tileContent :where(h1, h2, h3, h4, h5, h6) {
+    text-transform: none;
+  }
+
+  .ck-steps__subhead {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .ck-steps__row {
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-top: var(--space-10);
+  }
+
+  .ck-steps__tile {
+    flex: 1 1 0;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    --ck-steps-tile-pad: calc(var(--space-6) + var(--space-6));
+    --ck-steps-tile-pad-bottom: var(--ck-steps-tile-pad);
+    /* Default (cards) variant. */
+    background-color: var(--color-system-gray-5-step5);
+    background-image: var(--ck-steps-tile-bg-image, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--control-radius-4xl);
+    overflow: hidden;
+  }
+
+  .ck-steps__tileContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: var(--space-3);
+    padding: var(--ck-steps-tile-pad);
+  }
+
+  /* Value props variant (3-column, divider layout). */
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile {
+    background-color: transparent;
+    border-radius: 0px;
+    overflow: visible;
+    position: relative;
+    transition: transform var(--duration-snap, 140ms) ease;
+  }
+
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tileContent {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hover elevation chrome (shadow only; keep tile background transparent). */
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--control-radius-4xl);
+    box-shadow: var(--shadow-elevated);
+    opacity: 0;
+    transition: opacity var(--duration-snap, 140ms) ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tileCta {
+    margin-top: auto;
+    padding-top: var(--space-6);
+    opacity: 0;
+    transform: translateY(2px);
+    pointer-events: none;
+    transition: opacity var(--duration-base, 160ms), transform var(--duration-base, 160ms);
+  }
+
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:hover .ck-steps__tileCta,
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:focus-within .ck-steps__tileCta {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:hover,
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:focus-within {
+    transform: translateY(-1px);
+    z-index: 2;
+  }
+
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:hover::before,
+  .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:focus-within::before {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tileCta {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+  }
+
+  /* When a tile has media, reduce the dead space between body and image. */
+  .ck-steps__tile--hasImage .ck-steps__tileContent {
+    --ck-steps-tile-pad-bottom: var(--space-6);
+    padding-bottom: var(--ck-steps-tile-pad-bottom);
+  }
+
+  .ck-steps__body {
+    /* In the reference the body reads lighter than the title. */
+  }
+
+  .ck-steps__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    background: transparent;
+    border: 0;
+    color: var(--color-system-gray);
+    margin-bottom: var(--space-6);
+  }
+
+  .ck-steps__tile--inset {
+    --ck-steps-media-pad-x: calc(var(--space-6) + var(--space-6));
+    --ck-steps-media-radius: var(--control-radius-2xl);
+    --ck-steps-media-inner-pad: var(--space-3);
+  }
+
+  .ck-steps__tile--bleed {
+    --ck-steps-media-pad-x: 0px;
+    --ck-steps-media-radius: 0px;
+    --ck-steps-media-inner-pad: var(--space-3);
+  }
+
+  .ck-steps__tileMedia {
+    margin: 0 var(--ck-steps-media-pad-x, calc(var(--space-6) + var(--space-6))) 0
+      var(--ck-steps-media-pad-x, calc(var(--space-6) + var(--space-6)));
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--ck-steps-media-radius, var(--control-radius-2xl));
+    box-sizing: border-box;
+    padding: 0 var(--ck-steps-media-inner-pad, 0px);
+    background: transparent;
+  }
+
+  .ck-steps__tileImage {
+    width: 100%;
+    height: 100%;
+    object-fit: var(--ck-steps-media-fit, cover);
+    object-position: center var(--ck-steps-media-position-y, center);
+    display: block;
+  }
+
+  .ck-steps__visual {
+    margin-top: var(--space-10);
+    display: flex;
+    justify-content: center;
+  }
+
+  .ck-steps__image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--control-radius-2xl);
+  }
+
+  @media (max-width: 900px) {
+    .ck-steps__tile {
+      min-width: 240px;
+    }
+  }
+
+  /* Desktop: value-props-style columns with dividers. */
+  @media (min-width: 901px) {
+    .ck-stepsCanvas[data-variant='value-props'] .ck-steps__row {
+      gap: 0px;
+    }
+    .ck-stepsCanvas[data-variant='value-props'] .ck-steps__tile:not(:first-child)::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: var(--ck-steps-tile-pad);
+      bottom: var(--ck-steps-tile-pad-bottom);
+      width: 1px;
+      background: var(--color-system-gray-6);
+      opacity: 1;
+      transition: opacity var(--duration-snap, 140ms) ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* When hovering/focusing the row, remove dividers so elevation reads cleanly. */
+    .ck-stepsCanvas[data-variant='value-props'] .ck-steps__row:hover .ck-steps__tile:not(:first-child)::after,
+    .ck-stepsCanvas[data-variant='value-props'] .ck-steps__row:focus-within .ck-steps__tile:not(:first-child)::after {
+      opacity: 0;
+    }
+  }
+</style>
+

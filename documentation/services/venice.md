@@ -110,7 +110,7 @@ Widgets consume `window.CK_WIDGET.state` for the initial render (legacy). For mu
 
 **Cache strategy (shipped):**
   - With `?ts=<timestamp>`: `no-store` (explicit cache bust)
-  - Published: `public, max-age=300, s-maxage=600, stale-while-revalidate=1800`
+  - Published: `public, max-age=60, s-maxage=60`
   - Unpublished (without `ts`): `public, max-age=60, s-maxage=60, stale-while-revalidate=300`
 
 ### JSON Render Route: `GET /r/:publicId` (shipped)

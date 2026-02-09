@@ -16,6 +16,10 @@ const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 const widgetType = (() => {
   const raw = String(publicId || '').trim();
 
+  if (raw.startsWith('wgt_main_')) {
+    return raw.slice('wgt_main_'.length);
+  }
+
   // Handle curated instances: wgt_curated_widgetname
   if (raw.startsWith('wgt_curated_')) {
     const rest = raw.slice('wgt_curated_'.length);
@@ -27,6 +31,7 @@ const widgetType = (() => {
   // For now, return empty string - Venice handles the widget type internally
   return '';
 })();
+
 // Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
 const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
@@ -74,11 +79,11 @@ const brandSvgs = {
       {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
       <div class="ck-instanceEmbed__topbar">
         <details class="ck-share">
-          <summary class="diet-btn-is ck-share__btn">
+          <summary class="ck-btn ck-btn--md label-s ck-share__btn">
             <span class="diet-btn-is__icon" aria-hidden="true">
               <Icon name="share" size={18} />
             </span>
-            <span class="diet-btn-is__label label-s">Share</span>
+            <span class="diet-btn-is__label">Share</span>
           </summary>
 
           <div class="ck-share__menu" role="menu" aria-label="Share options">
@@ -184,6 +189,11 @@ const brandSvgs = {
     position: relative;
     isolation: isolate;
     --ck-creative-chrome-inset: var(--space-4);
+    --ck-embedChromeBtn-bg: color-mix(in oklab, var(--color-system-black) 80%, transparent);
+    --ck-embedChromeBtn-color: var(--color-system-white);
+    --ck-embedChromeBtn-border: 1px solid color-mix(in oklab, var(--color-system-white), transparent 84%);
+    --ck-embedChromeBtn-hover-bg: color-mix(in oklab, var(--color-system-black) 86%, transparent);
+    --ck-embedChromeBtn-clicked-bg: color-mix(in oklab, var(--color-system-black) 90%, transparent);
     border-radius: var(--control-radius-4xl);
     overflow: hidden;
     background: transparent;
@@ -201,7 +211,7 @@ const brandSvgs = {
     align-items: center;
     justify-content: flex-end;
     padding: 0;
-    z-index: 3;
+    z-index: 80;
     opacity: 0;
     transition: opacity var(--duration-base, 160ms);
   }
@@ -213,6 +223,28 @@ const brandSvgs = {
 
   @media (hover: none) {
     .ck-instanceEmbed__topbar { opacity: 1; }
+  }
+
+  /* Dark glass CTA (share) inside embed chrome — matches personalize, but ~20% smaller. */
+  .ck-instanceEmbed__topbar .ck-share__btn {
+    --ck-btn-bg: var(--ck-embedChromeBtn-bg);
+    --ck-btn-color: var(--ck-embedChromeBtn-color);
+    --ck-btn-border-w: 1px;
+    --ck-btn-border-color: color-mix(in oklab, var(--color-system-white), transparent 84%);
+    --ck-btn-hover-bg: var(--ck-embedChromeBtn-hover-bg);
+    --ck-btn-hover-color: var(--ck-embedChromeBtn-color);
+    --ck-btn-hover-border-color: color-mix(in oklab, var(--color-system-white), transparent 78%);
+    --ck-btn-clicked-bg: var(--ck-embedChromeBtn-clicked-bg);
+    --ck-btn-clicked-color: var(--ck-embedChromeBtn-color);
+    --ck-btn-clicked-border-color: color-mix(in oklab, var(--color-system-white), transparent 72%);
+    --ck-btn-radius: var(--control-radius-lg);
+    --ck-btn-min-h: 2.6rem; /* 52px * 0.8 = 41.6px */
+    /* Match the personalize CTA padding rhythm, scaled down ~20%. */
+    --ck-btn-px: calc((var(--control-padding-inline) + var(--space-2)) * 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    gap: var(--control-inline-gap-sm);
+    color: var(--ck-embedChromeBtn-color);
   }
 
   .ck-share {
@@ -228,40 +260,6 @@ const brandSvgs = {
   .ck-share__btn::-webkit-details-marker { display: none; }
   .ck-share__btn::marker { content: ''; }
 
-  /* Dieter-aligned Share button (local alias class).
-     Note: Prague does not load Dieter component CSS bundles; we define the minimal button chrome here. */
-  .diet-btn-is {
-    /* Align with Dieter secondary button semantics. */
-    --btn-bg: color-mix(in oklab, var(--color-system-black) 8%, transparent);
-    --btn-color: var(--color-system-black);
-    --btn-hover-bg: color-mix(in oklab, var(--color-system-black) 35%, transparent);
-    --btn-clicked-bg: color-mix(in oklab, var(--color-system-black) 20%, transparent);
-    --btn-radius: var(--control-radius-sm);
-    --btn-min-h: 2.25rem; /* 36px (matches Prague small button rhythm) */
-    --btn-px: calc(var(--control-padding-inline) - var(--space-1));
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: var(--btn-min-h);
-    padding-block: 0;
-    padding-inline: var(--btn-px);
-    border-radius: var(--btn-radius);
-    border: 0;
-    background: var(--btn-bg);
-    color: var(--btn-color);
-    cursor: pointer;
-    user-select: none;
-    gap: var(--control-inline-gap-sm);
-    text-decoration: none;
-    white-space: nowrap;
-    letter-spacing: -0.02em;
-    transition: background-color var(--duration-base, 160ms), color var(--duration-base, 160ms), transform var(--duration-base, 160ms);
-  }
-
-  .diet-btn-is:hover { background: var(--btn-hover-bg); }
-  .diet-btn-is:active { background: var(--btn-clicked-bg); transform: translateY(1px); }
-
   .diet-btn-is__icon {
     display: inline-flex;
     width: 18px;
@@ -269,6 +267,11 @@ const brandSvgs = {
     align-items: center;
     justify-content: center;
     color: currentColor;
+  }
+
+  /* Ensure label utilities cannot override the button chrome color. */
+  .ck-instanceEmbed__topbar .ck-share__btn .diet-btn-is__label {
+    color: inherit;
   }
 
   .ck-share__menu {

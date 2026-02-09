@@ -4,6 +4,7 @@ import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { labelAiModel, labelAiProvider, resolveAiAgent, resolveAiPolicyCapsule } from '@clickeen/ck-policy';
 import type { AiProvider } from '@clickeen/ck-policy';
+import { resolveParisBaseUrl } from '../lib/env/paris';
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -123,6 +124,66 @@ function writeStoredAiSelection(key: string, value: AiSelection) {
   } catch {
     // best-effort
   }
+}
+
+const MINIBOB_SESSION_STORAGE_KEY = 'ck:minibob.session.v1';
+const MINIBOB_SESSION_EXP_SKEW_SEC = 30;
+
+type StoredMinibobSession = { sessionToken: string; exp: number };
+
+function readStoredMinibobSession(): StoredMinibobSession | null {
+  try {
+    const raw = sessionStorage.getItem(MINIBOB_SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as any;
+    const sessionToken = asTrimmedString(parsed?.sessionToken);
+    const exp = typeof parsed?.exp === 'number' && Number.isFinite(parsed.exp) ? parsed.exp : 0;
+    if (!sessionToken || !exp) return null;
+    return { sessionToken, exp };
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredMinibobSession(value: StoredMinibobSession) {
+  try {
+    sessionStorage.setItem(MINIBOB_SESSION_STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // best-effort
+  }
+}
+
+function isMinibobSessionFresh(session: StoredMinibobSession): boolean {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return session.exp > nowSec + MINIBOB_SESSION_EXP_SKEW_SEC;
+}
+
+async function mintMinibobSessionToken(): Promise<StoredMinibobSession> {
+  const parisBaseUrl = resolveParisBaseUrl();
+  const url = `${parisBaseUrl.replace(/\/+$/, '')}/api/ai/minibob/session`;
+  const res = await fetch(url, { method: 'POST', headers: { accept: 'application/json' } });
+  const text = await res.text().catch(() => '');
+  if (looksLikeHtml(text)) {
+    throw new Error(normalizeAssistantText(text));
+  }
+  const parsed = safeJsonParse(text) as any;
+  if (!res.ok) {
+    throw new Error(
+      normalizeErrorMessage({
+        resStatus: res.status,
+        parsed,
+        bodyText: text,
+        fallback: `Minibob session request failed (${res.status}).`,
+      }),
+    );
+  }
+
+  const sessionToken = asTrimmedString(parsed?.sessionToken);
+  const exp = typeof parsed?.exp === 'number' && Number.isFinite(parsed.exp) ? parsed.exp : 0;
+  if (!sessionToken || !exp) {
+    throw new Error('Minibob session service returned an invalid response.');
+  }
+  return { sessionToken, exp };
 }
 
 export function CopilotPane() {
@@ -363,6 +424,18 @@ export function CopilotPane() {
     pushMessage({ role: 'user', text: prompt });
 
     try {
+      let minibobSessionToken = '';
+      if (isMinibob) {
+        const stored = readStoredMinibobSession();
+        if (stored && isMinibobSessionFresh(stored)) {
+          minibobSessionToken = stored.sessionToken;
+        } else {
+          const minted = await mintMinibobSessionToken();
+          writeStoredMinibobSession(minted);
+          minibobSessionToken = minted.sessionToken;
+        }
+      }
+
       const selection = aiPolicy && !isMinibob ? clampAiSelection(aiSelection, aiPolicy) : null;
       const res = await fetch('/api/ai/sdr-copilot', {
         method: 'POST',
@@ -373,6 +446,7 @@ export function CopilotPane() {
           currentConfig: session.instanceData,
           controls: controlsForAi,
           sessionId,
+          ...(isMinibob ? { sessionToken: minibobSessionToken } : {}),
           instancePublicId,
           workspaceId,
           subject: aiSubject,

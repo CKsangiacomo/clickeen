@@ -102,7 +102,7 @@ function normalizeCuratedPublicId(raw) {
 function normalizeLocale(raw) {
   const v = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
   if (!v) return null;
-  if (!/^[a-z]{2}(?:-[a-z0-9]+)*$/.test(v)) return null;
+  if (!/^[a-z]{2,3}(?:-[a-z0-9]+)*$/.test(v)) return null;
   return v;
 }
 

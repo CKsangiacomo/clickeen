@@ -628,7 +628,7 @@ function checkEntitlement(
 ## References
 
 - Content-addressed storage: `/documentation/architecture/CONTEXT.md`
-- Localization system: `/tokyo/l10n/README.md`
+- Localization system: `/documentation/capabilities/localization.md`
 - Agent system: `/sanfrancisco/README.md`
 - Widget specification: `/tokyo/widgets/*/spec.json`
 

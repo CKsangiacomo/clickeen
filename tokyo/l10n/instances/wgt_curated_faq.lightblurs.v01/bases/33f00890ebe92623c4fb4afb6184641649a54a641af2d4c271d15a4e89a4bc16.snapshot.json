@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "33f00890ebe92623c4fb4afb6184641649a54a641af2d4c271d15a4e89a4bc16",
+  "publicId": "wgt_curated_faq.lightblurs.v01",
+  "snapshot": {
+    "cta.label": "Contact us ",
+    "header.subtitleHtml": "Sleek design, easy updates, and SEO essentials—ready for any language.",
+    "header.title": "Frequently Asked Questions",
+    "sections.0.faqs.0.answer": "Clickeen provides embeddable, conversion-focused widgets that are easy to set up and designed to enhance user engagement on your site. <strong>Start building for free today.</strong>",
+    "sections.0.faqs.0.question": "What is Clickeen?",
+    "sections.0.faqs.1.answer": "Copy the embed code from your dashboard and paste it before the closing </body> tag on your website. <strong>Try it now—no credit card required.</strong>",
+    "sections.0.faqs.1.question": "How do I install a widget?",
+    "sections.0.faqs.2.answer": "Yes, our free plan includes one active widget with core features to get you started. <strong>Upgrade anytime to unlock unlimited widgets and advanced analytics.</strong>",
+    "sections.0.faqs.2.question": "Is there a free plan?",
+    "sections.0.faqs.3.answer": "Clickeen makes your web presence beautiful and user-friendly with widgets that are simple to manage and optimized for conversions. <strong>Join thousands of satisfied creators and boost your engagement.</strong>",
+    "sections.0.faqs.3.question": "Why should I use Clickeen?",
+    "sections.0.title": "All Questions"
+  },
+  "v": 1
+}

@@ -60,6 +60,10 @@ Artifacts (authoritative paths):
 - `renders/instances/<publicId>/<fingerprint>/r.json` (immutable)
 - `renders/instances/<publicId>/<fingerprint>/meta.json` (immutable)
 
+Cache semantics:
+- `renders/instances/<publicId>/index.json` is mutable and served with a short TTL (`cache-control: public, max-age=60, s-maxage=60`).
+- Fingerprinted render artifacts are immutable (`cache-control: public, max-age=31536000, immutable`).
+
 Generation:
 - Triggered by Paris on publish/unpublish (via `instance-render-snapshot-{env}` queue).
 - Also triggered by Tokyo-worker after l10n overlay publish (locale-scoped).

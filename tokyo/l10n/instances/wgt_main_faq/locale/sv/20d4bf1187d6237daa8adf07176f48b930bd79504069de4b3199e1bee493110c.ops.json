@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen är något som kommer att göra Margherita väldigt, väldigt rik"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Polerad design, enkla uppdateringar och SEO-grunder—redo för vilket språk som helst."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakta oss"
+    }
+  ],
+  "v": 1
+}

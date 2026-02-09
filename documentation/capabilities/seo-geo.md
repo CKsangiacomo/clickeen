@@ -1,7 +1,7 @@
 # SEO + GEO Platform Architecture (Iframe++ SEO/GEO)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-02-03
+Last updated: 2026-02-07
 
 This document defines the **shipped** SEO/GEO model and contracts across:
 - **Tokyo** widget definitions (state shape + limits + l10n allowlists)
@@ -108,6 +108,7 @@ Source-of-truth implementation:
 - `venice/app/r/[publicId]/route.ts`
 - `venice/lib/schema/index.ts`
 - `venice/lib/schema/faq.ts`
+- `venice/lib/schema/countdown.ts`
 
 ---
 
@@ -118,10 +119,13 @@ Source-of-truth implementation:
 - Loaders **only inject** what Venice returns.
 - Prague/Bob must not implement per-widget schema logic.
 
-### Current widget support (as of 2026-01-30)
+### Current widget support (as of 2026-02-07)
 - `faq`
   - `schemaJsonLd`: `FAQPage` (questions/answers)
   - `excerptHtml`: Q/A excerpt list (bounded)
+- `countdown`
+  - `schemaJsonLd`: not shipped yet
+  - `excerptHtml`: short excerpt (bounded; headline + timer meta)
 
 ### Gating rules (shipped)
 - `state.seoGeo.enabled !== true` → both `schemaJsonLd` and `excerptHtml` must be empty strings.
@@ -155,8 +159,8 @@ All tiers can toggle SEO/GEO optimization; there is no `seoGeo.enabled` key in `
 ## How to extend to new widgets (deterministic pattern)
 
 For a new widget type `X`:
-1) Add `XSchemaJsonLd(state, locale) -> string` in `venice/lib/schema/x.ts`.
-2) Add `XExcerptHtml(state, locale) -> string` in `venice/lib/schema/x.ts`.
+1) Add `XSchemaJsonLd(state, locale) -> string` in `venice/lib/schema/<widgetType>.ts` (see `venice/lib/schema/faq.ts`).
+2) Add `XExcerptHtml(state, locale) -> string` in `venice/lib/schema/<widgetType>.ts`.
 3) Register both in `venice/lib/schema/index.ts`.
 4) Ensure the widget’s state contains the minimal SEO/GEO keys used for gating:
    - `seoGeo.enabled`

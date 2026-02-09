@@ -103,6 +103,9 @@ if ! supabase status >/dev/null 2>&1; then
   supabase start
 fi
 
+echo "[dev-up] Applying pending Supabase migrations (non-destructive)"
+run_with_status "Applying Supabase migrations" supabase migration up
+
 echo "[dev-up] Loading local Supabase connection values"
 ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
 ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"

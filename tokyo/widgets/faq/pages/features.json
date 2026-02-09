@@ -5,108 +5,108 @@
       "id": "page-meta",
       "type": "page-meta",
       "copy": {
-        "description": "Everything you need to ship AI-powered FAQs that work globally and grow virally.",
-        "title": "FAQ features - Clickeen"
+        "title": "FAQ features - Clickeen",
+        "description": "The definitive answer engine. Speed, SEO, and AI built in."
       }
     },
     {
       "id": "hero",
       "type": "hero",
+      "copy": {
+        "headline": "The answer engine",
+        "subheadline": "Speed. SEO section. AI. The definitive FAQ infrastructure."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Why the FAQ widget beats Elfsight, Typeform, and custom-built",
-        "subheadline": "Built from scratch for AI. Works globally. Grows virally. One FAQ, infinite possibilities."
       }
     },
     {
-      "id": "split-ai-editing",
+      "id": "split-ai",
       "type": "split",
-      "layout": "visual-left",
+      "layout": "visual-right",
+      "copy": {
+        "headline": "Don't write. Just describe.",
+        "subheadline": "Natural language editing powered by Ombra.",
+        "body": "Turn your intent into code. Describe the change you want, and the widget builds itself."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "AI editing: describe, done",
-        "subheadline": "Tell it what you want in plain English. 'Make the questions more casual' or 'add a section about pricing.' AI understands and executes instantly."
       }
     },
     {
       "id": "split-global",
       "type": "split",
-      "layout": "visual-right",
+      "layout": "visual-left",
+      "copy": {
+        "headline": "29 languages. One toggle.",
+        "subheadline": "Geography is just a parameter.",
+        "body": "Zero-effort localization. We detect the visitor's locale and serve the right answer instantly."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Global instant: any language, now",
-        "subheadline": "Geography is a parameter, not a project. Add Spanish, Japanese, or Arabic with one click. No manual translation, no delays."
       }
     },
     {
       "id": "split-composable",
       "type": "split",
-      "layout": "visual-left",
+      "layout": "visual-right",
+      "copy": {
+        "headline": "Write once. Run everywhere.",
+        "subheadline": "One source of truth.",
+        "body": "Your website. Your app. Your help center. Your email footer. Power them all from one dashboard."
+      },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
-      },
-      "copy": {
-        "headline": "Composable everywhere: one FAQ, infinite contexts",
-        "subheadline": "Same FAQ works in website, email, landing pages, ads. One source, infinite possibilities."
       }
     },
     {
-      "id": "steps-differentiators",
+      "id": "steps-diff",
       "type": "steps",
       "copy": {
         "title": "Why Clickeen changes everything",
+        "subheadline": "The new standard for interaction.",
         "items": [
           {
-            "title": "Instant personalized localization",
-            "body": "Website URL → personalized content in 29 languages instantly. No manual translation, no translator costs. AI understands your business context."
+            "title": "Google sees every word",
+            "body": "Server-side rendering means zero layout shift and perfect indexability."
           },
           {
-            "title": "Templates or pixel-perfect custom",
-            "body": "Start with a curated template OR define everything yourself—your choice, total freedom. No compromises, no limitations."
+            "title": "Rich snippets",
+            "body": "Automatic JSON-LD injection helps you dominate search results."
           },
           {
-            "title": "Composable architecture",
-            "body": "One FAQ works everywhere: website, email, landing pages, ads. Same content, infinite contexts. No rebuilding for each channel."
+            "title": "Deep linking",
+            "body": "Point users to the specific answer they need with a stable URL."
           }
         ]
       }
     },
     {
-      "id": "big-bang-ecosystem",
+      "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "Built for AI, operated by AI",
-        "body": "Clickeen isn't just another FAQ builder—it's the first product designed for AI operation from day one. While competitors retrofit AI features, we built an architecture that AI agents can understand, modify, and optimize autonomously."
+        "headline": "Built for the next decade",
+        "body": "A living knowledge base that grows with you."
       }
     },
     {
-      "id": "steps-ecosystem",
+      "id": "steps-eco",
       "type": "steps",
       "copy": {
-        "title": "How Clickeen's AI ecosystem works",
-        "subhead": "A complete platform that gets smarter with every interaction.",
+        "title": "Smarter with every interaction",
+        "subhead": "The Clickeen Ecosystem.",
         "items": [
           {
-            "title": "AI understands your intent",
-            "body": "Describe changes naturally. 'Make it more professional' or 'add urgency to the CTA.' AI executes perfectly."
+            "title": "Mistake-proof",
+            "body": "Every change is versioned. Revert instantly if you break something."
           },
           {
-            "title": "Global operation by default",
-            "body": "AI handles localization, support, and marketing across all markets simultaneously."
+            "title": "Immutable",
+            "body": "What you publish is exactly what they see. No surprises."
           },
           {
-            "title": "Continuous learning and improvement",
-            "body": "Every user interaction teaches the AI system, making all FAQs smarter over time."
-          },
-          {
-            "title": "Viral distribution automation",
-            "body": "Free FAQs become marketing channels that automatically drive acquisition."
+            "title": "Edge-Cached",
+            "body": "Milliseconds matter. We deliver answers from the location nearest your user."
           }
         ]
       }
@@ -115,20 +115,20 @@
       "id": "control-moat",
       "type": "control-moat",
       "copy": {
-        "title": "Design control, down to the pixel",
-        "subhead": "Match your site and brand without compromise.",
+        "title": "Design usually requires compromise. Not here.",
+        "subhead": "No compromise on aesthetics.",
         "items": [
           {
             "title": "Layouts",
-            "body": "Choose structure per breakpoint—accordion, list, or cards. Control spacing, density, and alignment so it feels native."
-          },
-          {
-            "title": "Appearance",
-            "body": "Radius, borders, shadows, and surfaces that match your UI language. Make it look like it shipped with your product."
+            "body": "Flexible structures."
           },
           {
             "title": "Typography",
-            "body": "Role-based type styles that keep hierarchy clean. Headings, body, labels—tuned to your brand."
+            "body": "Complete font control."
+          },
+          {
+            "title": "Themes",
+            "body": "Dark/Light mode support."
           }
         ]
       }
@@ -137,32 +137,20 @@
       "id": "global-moat",
       "type": "global-moat",
       "copy": {
-        "title": "Global by default",
-        "subhead": "One widget, every market.",
+        "title": "Performance is a feature",
+        "subhead": "Speed that travels.",
         "items": [
           {
-            "title": "Instant localization",
-            "body": "Ship in new languages without a translation project. Keep the experience consistent everywhere."
+            "title": "Edge caching",
+            "body": "Sub-millisecond delivery."
           },
           {
-            "title": "RTL ready",
-            "body": "Support right-to-left languages without redesigning layouts. Directionality stays correct."
+            "title": "L10n",
+            "body": "Native language support."
           },
           {
-            "title": "Locale-aware copy",
-            "body": "Adapt tone and phrasing for the audience, not just the words. The content reads natural."
-          },
-          {
-            "title": "SEO foundations",
-            "body": "Structured content that can be indexed when you need it. Make answers discoverable."
-          },
-          {
-            "title": "Governance",
-            "body": "Strict contracts prevent drift. Changes are explicit, auditable, and repeatable."
-          },
-          {
-            "title": "Performance",
-            "body": "Fast renders and sensible loading so the page stays smooth across devices and networks."
+            "title": "SEO",
+            "body": "Search engine optimized."
           }
         ]
       }
@@ -171,29 +159,30 @@
       "id": "platform-strip",
       "type": "platform-strip",
       "copy": {
-        "title": "Built like a platform",
+        "title": "Architected for excellence",
+        "subhead": "The technical foundation of the world's best sites.",
         "items": [
           {
-            "title": "Fast",
-            "body": "Lightweight embeds and lazy loading. No layout jank."
+            "title": "SoC 2",
+            "body": "Enterprise compliance."
           },
           {
-            "title": "Reliable",
-            "body": "Deterministic contracts and build gates keep shipping safe at scale."
+            "title": "99.99%",
+            "body": "High availability SLA."
           },
           {
-            "title": "Accessible",
-            "body": "Clear hierarchy, readable type, and interaction patterns that work across input methods."
+            "title": "Global",
+            "body": "Multi-region deployment."
           }
         ]
       }
     },
     {
-      "id": "cta-features",
+      "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Experience the future of FAQs",
-        "subheadline": "The platform that gets smarter with every interaction. Built for the AI era."
+        "headline": "Upgrade your answers",
+        "subheadline": "Start your free trial today."
       }
     }
   ]

@@ -3,28 +3,39 @@ type Props = {
   locale: string;
   widget: string;
   page: string;
+  publicId?: string;
   allowedOverrides?: string[];
+  targetIframeId?: string;
+  variant?: 'default' | 'embed';
 };
 
-const { locale, widget, page, allowedOverrides } = Astro.props;
+const { locale, widget, page, publicId, allowedOverrides, targetIframeId, variant = 'default' } = Astro.props;
 const PARIS_URL = import.meta.env.PUBLIC_PARIS_URL as string | undefined;
+const resolvedParisUrl = (PARIS_URL && PARIS_URL.trim()) ? PARIS_URL.trim() : (import.meta.env.DEV ? 'http://localhost:3001' : '');
 const overrides = Array.isArray(allowedOverrides) && allowedOverrides.length
   ? allowedOverrides
-  : ['heroTitle', 'heroSubtitle', 'sectionTitle', 'ctaText'];
-const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]+/gi, '-');
+  : ['heroTitle', 'heroSubtitle', 'sectionTitle'];
 ---
 
 <div
-  class="ck-personalize"
-  id={rootId}
+  class={`ck-personalize ${variant === 'embed' ? 'ck-personalize--embed' : ''}`}
   data-ck-personalize="true"
-  data-paris-url={PARIS_URL ?? ''}
+  data-variant={variant}
+  data-is-dev={import.meta.env.DEV ? '1' : '0'}
+  data-debug-notes="0"
+  data-paris-url={resolvedParisUrl}
   data-widget={widget}
   data-page={page}
   data-locale={locale}
+  data-public-id={publicId}
+  data-target-iframe-id={targetIframeId}
   data-overrides={overrides.join(',')}
 >
-  <button class="ck-btn ck-btn--secondary ck-btn--md label-m" type="button" data-action="open">
+  <button
+    class={`ck-btn ck-btn--primary ck-btn--lg label-l ${variant === 'embed' ? 'ck-personalize__trigger' : ''}`}
+    type="button"
+    data-action="open"
+  >
     Make this widget yours
   </button>
 
@@ -32,13 +43,18 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
     <div class="ck-card ck-personalize__modal" role="dialog" aria-modal="true" aria-label="Personalize preview">
       <div class="ck-personalize__header">
         <div class="heading-3">Personalize this preview</div>
-        <button class="ck-btn ck-btn--secondary ck-btn--sm label-s" type="button" data-action="close">
-          Close
-        </button>
+        <div class="ck-personalize__headerActions">
+          <button class="ck-btn ck-btn--secondary ck-btn--sm label-s" type="button" data-action="reset" hidden>
+            Reset (dev)
+          </button>
+          <button class="ck-btn ck-btn--secondary ck-btn--sm label-s" type="button" data-action="close">
+            Close
+          </button>
+        </div>
       </div>
 
       <p class="body-website ck-text-muted">
-        Enter a business website and we'll tailor the page copy in seconds.
+        Enter a business website and we'll tailor this preview in seconds.
       </p>
 
       <form class="ck-personalize__form" data-role="form">
@@ -59,6 +75,10 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
 
 <script is:inline>
   (function () {
+    const SESSION_ID_KEY = 'ck.personalization.sessionId.v1';
+    const USED_KEY = 'ck.personalization.used.v1';
+    const USED_EVENT = 'ck:personalization-used';
+
     const roots = document.querySelectorAll('.ck-personalize[data-ck-personalize="true"]');
     roots.forEach((root) => {
       if (!(root instanceof HTMLElement)) return;
@@ -69,7 +89,10 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
       const widget = root.dataset.widget || '';
       const page = root.dataset.page || '';
       const locale = root.dataset.locale || '';
-      const allowedOverrides = (root.dataset.overrides || '')
+      const publicId = root.dataset.publicId || '';
+      const variant = root.dataset.variant || 'default';
+      const isEmbedVariant = variant === 'embed';
+      const allowedOverridePatterns = (root.dataset.overrides || '')
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
@@ -81,8 +104,12 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
       const submitBtn = root.querySelector('[data-role="submit"]');
       const openBtn = root.querySelector('[data-action="open"]');
       const closeBtn = root.querySelector('[data-action="close"]');
+      const resetBtn = root.querySelector('[data-action="reset"]');
 
       if (!overlay || !form || !statusEl || !notesEl || !submitBtn || !openBtn || !closeBtn) return;
+
+      const input = form.querySelector('input[name="url"]');
+      const isDev = root.dataset.isDev === '1';
 
       const setStatus = (text, tone) => {
         statusEl.textContent = text || '';
@@ -90,6 +117,12 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
       };
 
       const setNotes = (notes) => {
+        // Notes are model/debug hints; keep hidden in the default UX.
+        const debugEnabled = root.dataset.debugNotes === '1';
+        if (!debugEnabled) {
+          notesEl.textContent = '';
+          return;
+        }
         if (!Array.isArray(notes) || notes.length === 0) {
           notesEl.textContent = '';
           return;
@@ -99,8 +132,8 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
 
       const showOverlay = () => {
         overlay.hidden = false;
-        setStatus('', '');
         setNotes([]);
+        refreshUsageState({ announce: true });
       };
 
       const hideOverlay = () => {
@@ -113,6 +146,433 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
         if (/^https?:\/\//i.test(trimmed)) return trimmed;
         return 'https://' + trimmed;
       };
+
+      const safeSessionStorage = () => {
+        try {
+          if (typeof window === 'undefined') return null;
+          return window.sessionStorage || null;
+        } catch {
+          return null;
+        }
+      };
+
+      const createSessionId = () => {
+        return window.crypto && typeof window.crypto.randomUUID === 'function'
+          ? window.crypto.randomUUID()
+          : String(Date.now());
+      };
+
+      const getOrCreateSessionId = () => {
+        const store = safeSessionStorage();
+        const existing = store ? String(store.getItem(SESSION_ID_KEY) || '').trim() : '';
+        if (existing) return existing;
+        const next = createSessionId();
+        if (store) {
+          try {
+            store.setItem(SESSION_ID_KEY, next);
+          } catch {
+            // Ignore storage write failures.
+          }
+        }
+        return next;
+      };
+
+      const isUsedThisSession = () => {
+        const store = safeSessionStorage();
+        if (!store) return false;
+        try {
+          return String(store.getItem(USED_KEY) || '').trim() === '1';
+        } catch {
+          return false;
+        }
+      };
+
+      const markUsedThisSession = () => {
+        const store = safeSessionStorage();
+        if (store) {
+          try {
+            store.setItem(USED_KEY, '1');
+          } catch {
+            // Ignore storage write failures.
+          }
+        }
+        try {
+          window.dispatchEvent(new CustomEvent(USED_EVENT));
+        } catch {
+          // Ignore event failures.
+        }
+      };
+
+      const setBusy = (busy) => {
+        submitBtn.disabled = Boolean(busy);
+        if (input instanceof HTMLInputElement) input.disabled = Boolean(busy);
+      };
+
+      const refreshUsageState = ({ announce } = { announce: false }) => {
+        const used = isUsedThisSession();
+        if (used) {
+          setBusy(false);
+          submitBtn.disabled = true;
+          if (input instanceof HTMLInputElement) input.disabled = true;
+          if (announce) {
+            setStatus('Preview already personalized for this session.', 'success');
+          }
+        } else if (announce) {
+          setStatus('', '');
+        }
+      };
+
+      let sessionId = getOrCreateSessionId();
+
+      const resetSessionUsage = () => {
+        if (!isDev) return;
+        const store = safeSessionStorage();
+        const next = createSessionId();
+        if (store) {
+          try {
+            store.removeItem(USED_KEY);
+            store.setItem(SESSION_ID_KEY, next);
+          } catch {
+            // Ignore storage write failures.
+          }
+        }
+        sessionId = next;
+        setBusy(false);
+        submitBtn.disabled = false;
+        if (input instanceof HTMLInputElement) input.disabled = false;
+        setStatus('Reset. You can personalize again.', 'success');
+        setNotes([]);
+        try {
+          window.dispatchEvent(new CustomEvent(USED_EVENT));
+        } catch {
+          // Ignore event failures.
+        }
+      };
+
+      const snapshotCurrentCopy = (keys) => {
+        if (!Array.isArray(keys) || keys.length === 0) return {};
+        const out = {};
+        keys.forEach((key) => {
+          const safeKey = String(key || '').trim();
+          if (!safeKey) return;
+          const nodes = document.querySelectorAll('[data-ck-copy="' + safeKey + '"]');
+          if (!nodes || nodes.length === 0) return;
+          for (const node of nodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            const text = String(node.textContent || '').replace(/\s+/g, ' ').trim();
+            if (!text) continue;
+            out[safeKey] = text;
+            break;
+          }
+        });
+        return out;
+      };
+
+      const getByPath = (obj, path) => {
+        if (!obj || typeof obj !== 'object') return undefined;
+        const parts = String(path || '')
+          .split('.')
+          .map((p) => p.trim())
+          .filter(Boolean);
+        let cur = obj;
+        for (const part of parts) {
+          if (cur == null) return undefined;
+          const isIndex = /^[0-9]+$/.test(part);
+          if (isIndex) {
+            const idx = Number(part);
+            if (!Array.isArray(cur)) return undefined;
+            cur = cur[idx];
+            continue;
+          }
+          if (typeof cur !== 'object') return undefined;
+          cur = cur[part];
+        }
+        return cur;
+      };
+
+      const fetchInstanceConfig = async () => {
+        if (!publicId) return null;
+        const url = parisBase + '/api/instance/' + encodeURIComponent(publicId);
+        let res;
+        try {
+          res = await fetch(url, { method: 'GET' });
+        } catch (err) {
+          throw buildFetchError(url, err);
+        }
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          const message = payload && payload.message ? String(payload.message) : 'Request failed';
+          throw new Error(message);
+        }
+        if (!payload || typeof payload !== 'object') return null;
+        const cfg = payload.config;
+        if (!cfg || typeof cfg !== 'object') return null;
+        return cfg;
+      };
+
+      const buildCurrentCopy = async () => {
+        const fromDom = snapshotCurrentCopy(allowedOverridePatterns);
+        if (fromDom && Object.keys(fromDom).length) return fromDom;
+        if (!publicId) return fromDom;
+        const cfg = await fetchInstanceConfig();
+        if (!cfg) return fromDom;
+        const out = {};
+        allowedOverridePatterns.forEach((key) => {
+          const value = getByPath(cfg, key);
+          if (typeof value !== 'string') return;
+          const trimmed = value.replace(/\s+/g, ' ').trim();
+          if (!trimmed) return;
+          out[key] = trimmed;
+        });
+        return out;
+      };
+
+      const normalizeOpPath = (raw) => {
+        return String(raw || '')
+          .replace(/\[(\d+)\]/g, '.$1')
+          .replace(/\.+/g, '.')
+          .replace(/^\./, '')
+          .replace(/\.$/, '');
+      };
+
+      const splitPathSegments = (pathStr) => {
+        return String(pathStr || '')
+          .split('.')
+          .map((seg) => seg.trim())
+          .filter(Boolean);
+      };
+
+      const isNumericSegment = (seg) => /^[0-9]+$/.test(seg);
+
+      const pathMatchesAllowlist = (pathStr, allowPath) => {
+        const pathSegs = splitPathSegments(pathStr);
+        const allowSegs = splitPathSegments(allowPath);
+        if (pathSegs.length !== allowSegs.length) return false;
+        for (let i = 0; i < allowSegs.length; i += 1) {
+          const allow = allowSegs[i];
+          const actual = pathSegs[i];
+          if (allow === '*') {
+            if (!isNumericSegment(actual)) return false;
+            continue;
+          }
+          if (allow !== actual) return false;
+        }
+        return true;
+      };
+
+      const deepClone = (value) => {
+        if (typeof structuredClone === 'function') return structuredClone(value);
+        return JSON.parse(JSON.stringify(value));
+      };
+
+      const containsUrl = (value) => /\bhttps?:\/\//i.test(value) || /\bwww\./i.test(value);
+
+      const trimCopy = (value, maxLen) => {
+        const trimmed = String(value || '').replace(/\s+/g, ' ').trim();
+        if (!trimmed) return '';
+        const limit = typeof maxLen === 'number' && Number.isFinite(maxLen) ? maxLen : 220;
+        if (trimmed.length <= limit) return trimmed;
+        return trimmed.slice(0, limit).trim();
+      };
+
+      const sanitizeOverrideValue = (raw) => {
+        if (typeof raw !== 'string') return '';
+        if (containsUrl(raw)) return '';
+        const trimmed = trimCopy(raw, 220);
+        if (!trimmed) return '';
+        const safe = trimmed.replace(/[<>]/g, '').trim();
+        return safe;
+      };
+
+      const buildAllowedOverrideKeysFromConfig = (cfg, patterns) => {
+        if (!cfg || typeof cfg !== 'object') return [];
+        if (!Array.isArray(patterns) || patterns.length === 0) return [];
+
+        const normalizedPatterns = patterns.map((p) => normalizeOpPath(p)).filter(Boolean);
+        if (normalizedPatterns.length === 0) return [];
+
+        const matches = [];
+        const seen = new Set();
+        let seq = 0;
+
+        const walk = (value, parts) => {
+          if (typeof value === 'string') {
+            const path = parts.join('.');
+            for (let i = 0; i < normalizedPatterns.length; i += 1) {
+              const allow = normalizedPatterns[i];
+              if (!pathMatchesAllowlist(path, allow)) continue;
+              if (!seen.has(path)) {
+                seen.add(path);
+                matches.push({ path, order: i, seq });
+                seq += 1;
+              }
+              break;
+            }
+            return;
+          }
+
+          if (Array.isArray(value)) {
+            for (let i = 0; i < value.length; i += 1) {
+              walk(value[i], parts.concat(String(i)));
+            }
+            return;
+          }
+
+          if (!value || typeof value !== 'object') return;
+          for (const key of Object.keys(value)) {
+            walk(value[key], parts.concat(key));
+          }
+        };
+
+        walk(cfg, []);
+
+        matches.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.seq - b.seq));
+        return matches.map((m) => m.path);
+      };
+
+      const buildCurrentCopyFromConfig = (cfg, keys) => {
+        if (!cfg || typeof cfg !== 'object') return {};
+        if (!Array.isArray(keys) || keys.length === 0) return {};
+        const out = {};
+        keys.forEach((key) => {
+          const value = getByPath(cfg, key);
+          if (typeof value !== 'string') return;
+          const trimmed = value.replace(/\s+/g, ' ').trim();
+          if (!trimmed) return;
+          out[key] = trimmed;
+        });
+        return out;
+      };
+
+      const setByPath = (obj, path, value) => {
+        if (!obj || typeof obj !== 'object') return false;
+        const parts = splitPathSegments(path);
+        if (parts.length === 0) return false;
+
+        const prohibited = new Set(['__proto__', 'prototype', 'constructor']);
+        if (parts.some((part) => prohibited.has(part))) return false;
+
+        let cur = obj;
+        for (let i = 0; i < parts.length - 1; i += 1) {
+          const part = parts[i];
+          if (isNumericSegment(part)) {
+            const idx = Number(part);
+            if (!Array.isArray(cur)) return false;
+            cur = cur[idx];
+            continue;
+          }
+          if (!cur || typeof cur !== 'object') return false;
+          cur = cur[part];
+        }
+
+        const last = parts[parts.length - 1];
+        if (!cur || typeof cur !== 'object') return false;
+        if (typeof cur[last] !== 'string') return false;
+        cur[last] = value;
+        return true;
+      };
+
+      const applyCopyOverridesToConfig = (cfg, overrides, allowedKeys) => {
+        if (!cfg || typeof cfg !== 'object') return { nextState: cfg, appliedCount: 0 };
+        if (!overrides || typeof overrides !== 'object') return { nextState: cfg, appliedCount: 0 };
+        const allowed = new Set(Array.isArray(allowedKeys) ? allowedKeys.map((k) => normalizeOpPath(k)) : []);
+        if (allowed.size === 0) return { nextState: cfg, appliedCount: 0 };
+
+        const clone = deepClone(cfg);
+        let applied = 0;
+
+        Object.keys(overrides).forEach((rawKey) => {
+          const key = normalizeOpPath(rawKey);
+          if (!allowed.has(key)) return;
+          const value = sanitizeOverrideValue(overrides[rawKey]);
+          if (!value) return;
+          if (setByPath(clone, key, value)) applied += 1;
+        });
+
+        return { nextState: clone, appliedCount: applied };
+      };
+
+      const postStateUpdateToEmbed = async (state) => {
+        let iframe = null;
+
+        const makeRequestId = () => {
+          try {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+              return crypto.randomUUID();
+            }
+          } catch {
+            // ignore
+          }
+          return String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+        };
+
+        // [Protocol B] Minibob (Explicit Targeting)
+        // If targetIframeId is provided, we must find that specific iframe
+        // and send the specialized "ck:minibob-preview-state" message.
+        const targetId = root.dataset.targetIframeId;
+        if (targetId) {
+          iframe = document.getElementById(targetId);
+          if (!(iframe instanceof HTMLIFrameElement) || !iframe.contentWindow) return false;
+
+          const targetWindow = iframe.contentWindow;
+          const requestId = makeRequestId();
+          const message = {
+            type: 'ck:minibob-preview-state',
+            requestId,
+            widgetname: widget,
+            publicId: publicId || null,
+            state: state,
+          };
+          targetWindow.postMessage(message, '*');
+
+          return await new Promise((resolve) => {
+            let done = false;
+            const cleanup = () => {
+              if (done) return;
+              done = true;
+              window.removeEventListener('message', onMessage);
+              if (timeoutId != null) window.clearTimeout(timeoutId);
+            };
+
+            const onMessage = (event) => {
+              if (event.source !== targetWindow) return;
+              const data = event.data;
+              if (!data || typeof data !== 'object') return;
+              if (data.type !== 'ck:minibob-preview-state-applied') return;
+              if (data.requestId !== requestId) return;
+              cleanup();
+              resolve(Boolean(data.ok));
+            };
+
+            const timeoutId = window.setTimeout(() => {
+              cleanup();
+              resolve(false);
+            }, 1500);
+
+            window.addEventListener('message', onMessage);
+          });
+        }
+
+        // [Protocol A] Standard Embed (Contextual Targeting)
+        // Fallback to finding the closest embed wrapper
+        const host = root.closest('.ck-instanceEmbed');
+        if (!(host instanceof HTMLElement)) return false;
+        iframe = host.querySelector('.ck-instanceEmbed__iframe');
+        if (!(iframe instanceof HTMLIFrameElement)) return false;
+        
+        const targetWindow = iframe.contentWindow;
+        if (!targetWindow) return false;
+
+        const message = {
+          type: 'ck:state-update',
+          widgetname: widget,
+          publicId: publicId || null,
+          state: state,
+        };
+
+          targetWindow.postMessage(message, '*');
+          return true;
+        };
 
       const applyOverrides = (overrides) => {
         if (!overrides || typeof overrides !== 'object') return 0;
@@ -131,29 +591,92 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
         return applied;
       };
 
+      const buildFetchError = (targetUrl, err) => {
+        const message = err && typeof err.message === 'string' ? err.message : '';
+        const isNetwork = message.toLowerCase().includes('failed to fetch');
+        if (!isNetwork) return new Error(message || 'Request failed');
+
+        try {
+          const target = new URL(String(targetUrl || ''), window.location.href);
+          const pageProtocol = window.location && window.location.protocol ? window.location.protocol : '';
+          if (pageProtocol === 'https:' && target.protocol === 'http:') {
+            return new Error('Personalization is misconfigured (Paris URL is http on an https page).');
+          }
+          if (target.hostname === 'localhost' || target.hostname === '127.0.0.1') {
+            return new Error('Could not reach local Paris (is `scripts/dev-up.sh` running?).');
+          }
+        } catch {
+          // ignore
+        }
+
+        return new Error('Could not reach personalization service. Please try again.');
+      };
+
       const postJson = async (url, body) => {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
+        let res;
+        try {
+          res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+        } catch (err) {
+          throw buildFetchError(url, err);
+        }
         const payload = await res.json().catch(() => null);
         if (!res.ok) {
-          const message = payload && payload.error && payload.error.message ? payload.error.message : 'Request failed';
+          const message = (() => {
+            const kind = payload && payload.error && typeof payload.error.kind === 'string' ? payload.error.kind : '';
+            const reasonKey =
+              payload && payload.error && typeof payload.error.reasonKey === 'string' ? payload.error.reasonKey : '';
+            const detail = payload && payload.error && typeof payload.error.detail === 'string' ? payload.error.detail : '';
+            const topMessage = payload && typeof payload.message === 'string' ? payload.message : '';
+            const nestedMessage = payload && payload.error && typeof payload.error.message === 'string' ? payload.error.message : '';
+
+            if (kind === 'DENY' && reasonKey.includes('budgetExceeded')) {
+              return 'Personalization is limited to one preview per session.';
+            }
+            return nestedMessage || topMessage || detail || 'Request failed';
+          })();
+
+          try {
+            const kind = payload && payload.error && typeof payload.error.kind === 'string' ? payload.error.kind : '';
+            const reasonKey =
+              payload && payload.error && typeof payload.error.reasonKey === 'string' ? payload.error.reasonKey : '';
+            if (res.status === 403 && kind === 'DENY' && reasonKey.includes('budgetExceeded')) {
+              markUsedThisSession();
+            }
+          } catch {
+            // Ignore deny state propagation failures.
+          }
+
           throw new Error(message);
         }
         return payload;
       };
 
       const getJson = async (url) => {
-        const res = await fetch(url, { method: 'GET' });
+        let res;
+        try {
+          res = await fetch(url, { method: 'GET' });
+        } catch (err) {
+          throw buildFetchError(url, err);
+        }
         const payload = await res.json().catch(() => null);
         if (!res.ok) {
-          const message = payload && payload.error && payload.error.message ? payload.error.message : 'Request failed';
+          const message = (() => {
+            const topMessage = payload && typeof payload.message === 'string' ? payload.message : '';
+            const nestedMessage = payload && payload.error && typeof payload.error.message === 'string' ? payload.error.message : '';
+            const detail = payload && payload.error && typeof payload.error.detail === 'string' ? payload.error.detail : '';
+            return nestedMessage || topMessage || detail || 'Request failed';
+          })();
           throw new Error(message);
         }
         return payload;
       };
+
+      const MAX_EMBED_OVERRIDES = 12;
+      let lastEmbedPreview = null;
 
       const runPreview = async (rawUrl) => {
         if (!parisBase) {
@@ -162,11 +685,30 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
         const url = normalizeUrl(rawUrl);
         if (!url) throw new Error('Enter a valid website URL.');
 
-        const sessionId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now());
+        lastEmbedPreview = null;
+
+        let currentCopy = {};
+        let allowedOverrides = allowedOverridePatterns;
+
+        if (isEmbedVariant) {
+          if (!publicId) throw new Error('Embed preview is missing a publicId.');
+          const cfg = await fetchInstanceConfig();
+          if (!cfg) throw new Error('Could not load widget preview state.');
+          const derived = buildAllowedOverrideKeysFromConfig(cfg, allowedOverridePatterns).slice(0, MAX_EMBED_OVERRIDES);
+          if (derived.length === 0) {
+            throw new Error("This widget doesn't expose anything editable yet.");
+          }
+          allowedOverrides = derived;
+          currentCopy = buildCurrentCopyFromConfig(cfg, derived);
+          lastEmbedPreview = { cfg, allowedOverrides };
+        } else {
+          currentCopy = await buildCurrentCopy();
+        }
+
         const payload = await postJson(parisBase + '/api/personalization/preview', {
           url: url,
           locale: locale,
-          templateContext: { widget: widget, page: page },
+          templateContext: { widget: widget, page: page, currentCopy },
           allowedOverrides: allowedOverrides,
           sessionId: sessionId,
         });
@@ -176,12 +718,38 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
         return jobId;
       };
 
+      const progressMessageForPayload = (payload) => {
+        if (!payload || typeof payload !== 'object') return 'Personalizing your widget copy…';
+        const status = typeof payload.status === 'string' ? payload.status.trim().toLowerCase() : '';
+        const stageRaw =
+          (typeof payload.stage === 'string' && payload.stage.trim()) ||
+          (typeof payload.phase === 'string' && payload.phase.trim()) ||
+          (typeof payload.step === 'string' && payload.step.trim()) ||
+          '';
+        const stage = String(stageRaw || '').trim().toLowerCase();
+
+        if (stage.includes('fetch')) return 'Hold tight — reading your website…';
+        if (stage.includes('read')) return 'Hold tight — reading your website…';
+        if (stage.includes('extract')) return 'Extracting what makes your business unique…';
+        if (stage.includes('draft')) return 'Drafting personalized widget copy…';
+        if (stage.includes('apply')) return 'Applying updates to the preview…';
+
+        if (status === 'queued') return 'Hold tight — reading your website…';
+        if (status === 'running') return 'Personalizing your widget copy…';
+        if (status === 'processing') return 'Personalizing your widget copy…';
+        return 'Personalizing your widget copy…';
+      };
+
       const pollPreview = async (jobId) => {
         let attempts = 0;
         const poll = async () => {
           attempts += 1;
           const payload = await getJson(parisBase + '/api/personalization/preview/' + encodeURIComponent(jobId));
           if (payload && payload.status && payload.status !== 'completed' && payload.status !== 'failed') {
+            const message = progressMessageForPayload(payload);
+            if (message && statusEl.textContent !== message) {
+              setStatus(message, 'loading');
+            }
             if (attempts > 30) {
               throw new Error('Preview is taking too long. Please try again.');
             }
@@ -201,6 +769,13 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
         showOverlay();
       });
 
+      if (resetBtn instanceof HTMLButtonElement) {
+        resetBtn.hidden = !isDev;
+        if (isDev) {
+          resetBtn.addEventListener('click', () => resetSessionUsage());
+        }
+      }
+
       closeBtn.addEventListener('click', () => {
         hideOverlay();
       });
@@ -216,34 +791,84 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
 
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const input = form.querySelector('input[name="url"]');
-        const value = input ? input.value : '';
+        refreshUsageState({ announce: true });
+        if (isUsedThisSession()) return;
 
-        submitBtn.disabled = true;
-        setStatus('Generating preview...', 'loading');
+        const value = input instanceof HTMLInputElement ? input.value : '';
+
+        setBusy(true);
+        setStatus('Hold tight — reading your website…', 'loading');
         setNotes([]);
 
         try {
           const jobId = await runPreview(value);
-          setStatus('Analyzing your site...', 'loading');
+          setStatus('Personalizing your widget copy…', 'loading');
           const payload = await pollPreview(jobId);
           if (payload && payload.status === 'failed') {
-            throw new Error('Preview failed. Try another website.');
+            const rawMessage =
+              payload && payload.error && typeof payload.error.message === 'string' ? payload.error.message : '';
+            const friendly = (() => {
+              const message = String(rawMessage || '').trim();
+              const lowered = message.toLowerCase();
+              if (!message) return 'Preview failed. Try again in a moment.';
+              if (lowered.includes('openai') && lowered.includes('api')) {
+                return 'Personalization is not configured (missing AI provider credentials in local dev).';
+              }
+              if (lowered.includes('url is not allowed')) return "That website can't be used for personalization.";
+              if (lowered.includes('execution timeout exceeded')) {
+                return 'Personalization timed out while generating copy. Try again.';
+              }
+              if (lowered.includes('timeout')) return 'Personalization timed out while reading that website. Try again.';
+              if (lowered.includes('provider_error')) return 'Personalization had a hiccup. Try again.';
+              return message;
+            })();
+            throw new Error(friendly);
           }
+          setStatus('Nice — applying updates to the preview…', 'loading');
           const result = payload && payload.result ? payload.result : {};
           const overrides = result && result.copyOverrides ? result.copyOverrides : {};
-          const applied = applyOverrides(overrides);
+          const overrideKeys = overrides && typeof overrides === 'object' ? Object.keys(overrides) : [];
+          let success = false;
+          let appliedCount = 0;
+          let posted = false;
+
+          if (isEmbedVariant) {
+            const cfg = lastEmbedPreview && lastEmbedPreview.cfg ? lastEmbedPreview.cfg : await fetchInstanceConfig();
+            const allowed =
+              lastEmbedPreview && Array.isArray(lastEmbedPreview.allowedOverrides)
+                ? lastEmbedPreview.allowedOverrides
+                : buildAllowedOverrideKeysFromConfig(cfg, allowedOverridePatterns).slice(0, MAX_EMBED_OVERRIDES);
+            const applied = applyCopyOverridesToConfig(cfg, overrides, allowed);
+            appliedCount = applied.appliedCount;
+            posted = appliedCount > 0 ? await postStateUpdateToEmbed(applied.nextState) : false;
+            success = posted && appliedCount > 0;
+          } else {
+            appliedCount = applyOverrides(overrides);
+            success = appliedCount > 0;
+          }
+
           setStatus(
-            applied ? 'Preview applied. Scroll to see updates.' : 'Preview completed, but no updates were applied.',
-            applied ? 'success' : 'warning'
+            success
+              ? 'Done — your widget preview is personalized.'
+              : overrideKeys.length
+                ? isEmbedVariant && appliedCount > 0 && !posted
+                  ? 'We generated copy, but could not apply it to the preview yet. Wait for the editor to load, then try again.'
+                  : "We generated copy, but this preview doesn't expose anything editable yet."
+                : 'We could not find anything safe to change for this preview.',
+            success ? 'success' : 'warning',
           );
           setNotes(result && result.notes ? result.notes : []);
+          markUsedThisSession();
         } catch (err) {
           setStatus(err && err.message ? err.message : 'Preview failed.', 'error');
         } finally {
-          submitBtn.disabled = false;
+          setBusy(false);
+          refreshUsageState();
         }
       });
+
+      window.addEventListener(USED_EVENT, () => refreshUsageState());
+      refreshUsageState();
     });
   })();
 </script>
@@ -251,6 +876,18 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
 <style>
   .ck-personalize {
     margin-top: var(--space-3);
+  }
+
+  .ck-personalize--embed {
+    margin-top: 0;
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .ck-personalize__trigger {
+    width: auto;
+    justify-content: center;
   }
 
   .ck-personalize__overlay[hidden] {
@@ -281,6 +918,12 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
     gap: var(--space-3);
   }
 
+  .ck-personalize__headerActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
   .ck-personalize__form {
     display: grid;
     gap: var(--space-3);
@@ -304,6 +947,7 @@ const rootId = `ck-personalize-${widget}-${page}-${locale}`.replace(/[^a-z0-9_-]
     min-height: 1.2em;
   }
 
+  .ck-personalize__status[data-tone="loading"] { color: color-mix(in oklab, var(--color-system-black), transparent 42%); }
   .ck-personalize__status[data-tone="success"] { color: var(--color-system-green); }
   .ck-personalize__status[data-tone="warning"] { color: var(--color-system-orange-contrast); }
   .ck-personalize__status[data-tone="error"] { color: var(--color-system-red); }

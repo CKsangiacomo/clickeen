@@ -44,7 +44,7 @@ Non-visual blocks:
 - They are present in `blocks[]` but are not rendered by the block renderer.
 
 Supported block types (registered):
-`big-bang`, `hero`, `split`, `steps`, `outcomes`, `cta`, `minibob`, `navmeta`, `page-meta`.
+`big-bang`, `hero`, `split`, `split-carousel`, `steps`, `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`, `cta-bottom-block`, `minibob`, `locale-showcase`, `embed-carousel`, `mobile-showcase`, `feature-explorer`, `navmeta`, `page-meta`.
 
 ### Block registry + validation (executed)
 
@@ -58,16 +58,23 @@ Validation rules:
 
 Required copy keys (enforced today):
 - `big-bang`: `headline`, `body`
-- `hero`: `headline`, `subheadline` (meta: `visual` allowed; `curatedRef` allowed)
-- `split`: `headline`, `subheadline` (meta: `layout`, `curatedRef` allowed)
-- `steps`: `title`, `items[]`
-- `cta`: `headline`, `subheadline`
+- `hero`: `headline`, `subheadline` (meta: `visual`, `curatedRef`, `items`)
+- `split`: `headline`, `subheadline` (meta: `layout`, `curatedRef`)
+- `split-carousel`: `headline` (meta: `layout`, `items`)
+- `steps`: `title`, `items[]` (meta: `visual`)
+- `subpage-cards`: `title`, `items[]` (meta: `links`)
+- `control-moat`: `title`, `items[]` (meta: `visual`)
+- `global-moat`: `title`, `items[]` (meta: `visual`)
+- `platform-strip`: `title`, `items[]` (meta: `visual`)
+- `locale-showcase`: `title`, `subtitle` (meta: `curatedRef`)
+- `cta-bottom-block`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
+- `feature-explorer`: `categories[]`
 - `navmeta`: `title`, `description`
 - `page-meta`: `title`, `description`
 
 Notes:
-- `outcomes` currently has no enforced required keys, but expects `items[]` when used.
+- `embed-carousel` and `mobile-showcase` currently have no enforced required keys; they are meta-driven (`items`, `options`).
 
 Blocks without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
 
@@ -181,17 +188,59 @@ Copy contract:
 Acquisition preview hook:
 - Steps header exposes `data-ck-copy="sectionTitle"` for personalization preview.
 
-### 2.6 Outcomes
+### 2.6 Split Carousel (Templates)
 
-`blocks/outcomes/outcomes`
-- Props: `{ title?: string, items: { title: string, body: string, eyebrow?: string }[] }`
-- Used for proof points / outcomes tiles.
+`blocks/split-carousel/SplitCarousel.astro`
+- Props: `{ headline: string, subheadline?: string, layout: 'visual-left' | 'visual-right' | 'stacked', items: any[] }`
+- Used for: templates pages where the “visual” side is a carousel of curated embeds.
 
-### 2.7 CTA
+Copy contract:
+- `headline`, `subheadline`
 
-`blocks/cta/cta`
-- Props: `{ headline: string, subheadline?: string, primaryCta?: { label: string, href: string }, actionGroup?: ActionGroup }`
-- CTA label/href are currently derived from Prague chrome strings; per-block CTA metadata is ignored (reserved for future use).
+### 2.7 Subpage Cards (Overview navigation)
+
+`blocks/subpage-cards/subpage-cards`
+- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], links?: { page: 'templates'|'examples'|'features', iconName?: string }[] }`
+- Used for: Overview pages to deep-link into Templates/Examples/Features.
+
+Copy contract:
+- `title`, `items[]` (and optional `subhead`)
+
+### 2.8 Control moat (Design depth)
+
+`blocks/control-moat/control-moat`
+- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
+- Used for: “Design control” deep dive sections.
+
+Copy contract:
+- `title`, `items[]` (and optional `subhead`)
+
+### 2.9 Global moat (Localization/infra proof)
+
+`blocks/global-moat/global-moat`
+- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
+- Used for: “Global by default / infra” proof sections.
+
+Copy contract:
+- `title`, `items[]` (and optional `subhead`)
+
+### 2.10 Platform strip (Enterprise baseline)
+
+`blocks/platform-strip/platform-strip`
+- Props: `{ title: string, subhead?: string, items: { title: string, body: string }[], visual?: any }`
+- Used for: quiet enterprise baseline reassurance.
+
+Copy contract:
+- `title`, `items[]` (and optional `subhead`)
+
+### 2.11 CTA bottom block
+
+`blocks/cta/cta` (`type: "cta-bottom-block"`)
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string } }`
+- CTA label/href are standardized at the page level (Prague chrome / route config), not authored per-block.
+
+Copy contract:
+- `headline`, `subheadline`
 
 ### Action group (flexible CTA pattern)
 `ActionGroup` supports CTA layouts beyond primary/secondary:
@@ -201,7 +250,23 @@ Acquisition preview hook:
 Acquisition preview hook:
 - CTA primary button uses `data-ck-copy="ctaText"` for personalization preview.
 
-### 2.8 Minibob island
+### 2.12 Locale showcase (Global proof)
+
+`blocks/locale-showcase/locale-showcase`
+- Purpose: show the **same instance** in a few real locales (default tiles: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
+- Props: `{ title: string, subtitle: string, curatedRef?: { publicId: string } }`
+- Placement:
+  - Preferred: include a `locale-showcase` block explicitly in page JSON (deterministic placement).
+  - Convenience: if a widget page includes `minibob` but no explicit `locale-showcase`, Prague injects a default locale showcase immediately after `minibob` (see `prague/src/components/WidgetBlocks.astro`).
+- Instance selection:
+  - If the explicit `locale-showcase` block provides `curatedRef.publicId`, use that.
+  - Else use the first `curatedRef.publicId` found in the page blocks.
+  - Else fall back to `wgt_main_{widget}`.
+
+Copy contract:
+- `title`, `subtitle`
+
+### 2.13 Minibob island
 
 `blocks/minibob/minibob`
 - Island: the only Prague section that ships JS.
@@ -219,22 +284,17 @@ Acquisition preview hook:
     - fallback: `PUBLIC_MINIBOB_WORKSPACE_ID`
   - `publicId` is always derived as `wgt_main_{widget}` (no override).
 
-**System-injected locale showcase (non-JSON):**
-- Widget pages append a locale showcase section immediately after `minibob`.
-- Purpose: show the **same curated instance** in three locales (default: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
-- Locale is forced per embed via `localeOverride` in `InstanceEmbed` (block-level locale selection).
-- This section is injected in `prague/src/components/WidgetBlocks.astro` and is not part of page JSON.
-
 ## 3) Page templates (composition)
 
 Page templates are just a list of blocks in a fixed order. Example (widget landing):
 - site/nav (global chrome)
 - hero
-- split (optional)
-- steps
-- outcomes (optional)
-- cta
 - minibob
+- subpage-cards (overview only)
+- split / split-carousel (optional; page-specific)
+- steps / control-moat / global-moat / platform-strip (page-specific)
+- cta-bottom-block
+- locale-showcase (explicit) or injected after minibob (default)
 
 ## 4) Content mapping (Tokyo → Prague)
 
@@ -255,3 +315,22 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Prague overview: `documentation/services/prague/prague-overview.md`
 - Localization contract: `documentation/capabilities/localization.md`
+
+### 2.14 Embed Carousel (Premium)
+
+`blocks/embed-carousel/embed-carousel`
+- Props: `{ items: { publicId: string, curatedRef?: { publicId: string } }[], options: Object }`
+- Behavior: Horizontal scroll snap carousel of lazy−loaded Clickeen widgets.
+- Used for: "Made with Clickeen" galleries.
+
+### 2.15 Mobile Showcase (Premium)
+
+`blocks/mobile-showcase/mobile-showcase`
+- Props: `{ items: any[], options: { device: 'iphone'|'android' } }`
+- Behavior: Horizontal scroll of mobile device frames showing widget content.
+
+### 2.16 Feature Explorer (Premium)
+
+`blocks/feature-explorer/feature-explorer`
+- Props: `{ categories: { name: string, features: Feature[] }[], options: Object }`
+- Behavior: Tabbed/Pill navigation switching between feature grids. Client-side interactive.

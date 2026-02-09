@@ -32,7 +32,7 @@ const headerPrimitives = assertPrimitives(
             type: 'text',
             variant: 'body',
             content: subhead,
-            className: 'body-website ck-m0 ck-text-subtle ck-subpageCards__subhead',
+            className: 'body-website ck-m0 ck-text-secondary ck-subpageCards__subhead',
           } as const,
         ]
       : []),
@@ -48,6 +48,10 @@ function pageLabel(page: LinkItem['page']): string {
   if (page === 'templates') return 'Templates';
   if (page === 'examples') return 'Examples';
   return 'Features';
+}
+
+function ctaLabel(page: LinkItem['page']): string {
+  return `See ${pageLabel(page).toLowerCase()}`;
 }
 ---
 
@@ -80,7 +84,7 @@ function pageLabel(page: LinkItem['page']): string {
                     type: 'text',
                     variant: 'body',
                     content: card.body,
-                    className: 'body-l ck-m0 ck-text-subtle',
+                    className: 'body-l ck-m0 ck-text-secondary',
                   },
                 ],
                 `subpage-cards.items[${i}]`,
@@ -88,7 +92,7 @@ function pageLabel(page: LinkItem['page']): string {
             />
 
             <div class="ck-subpageCards__hint" aria-hidden="true">
-              <span class="label-m">Explore</span>
+              <span class="ck-btn ck-btn--secondaryCta label-s ck-subpageCards__cta">{ctaLabel(page)}</span>
             </div>
           </a>
         );
@@ -135,13 +139,11 @@ function pageLabel(page: LinkItem['page']): string {
     text-decoration: none;
     color: inherit;
 
-    border: 1px solid color-mix(in oklab, var(--color-system-black), transparent 90%);
-    transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+    transition: transform 140ms ease, box-shadow 140ms ease;
   }
 
   .ck-subpageCards__tile:hover {
     transform: translateY(-1px);
-    border-color: color-mix(in oklab, var(--color-system-black), transparent 84%);
     box-shadow: var(--shadow-elevated);
   }
 
@@ -162,7 +164,18 @@ function pageLabel(page: LinkItem['page']): string {
   .ck-subpageCards__hint {
     margin-top: auto;
     padding-top: var(--space-4);
-    color: var(--color-system-gray);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .ck-subpageCards__cta {
+    text-decoration: none;
+    /* Match embed overlay "Share" pill proportions (glass, smaller chrome). */
+    --ck-btn-radius: var(--control-radius-lg);
+    --ck-btn-min-h: 2.6rem; /* 52px * 0.8 = 41.6px */
+    --ck-btn-px: calc((var(--control-padding-inline) + var(--space-2)) * 0.8);
+    gap: var(--control-inline-gap-sm);
   }
 
   @media (max-width: 900px) {

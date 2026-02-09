@@ -4,7 +4,7 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const scriptEl = document.currentScript;
+  const scriptEl = document.currentScript || window.CK_CURRENT_SCRIPT;
   if (!(scriptEl instanceof HTMLElement)) return;
 
   const widgetRoot = scriptEl.closest('[data-ck-widget="countdown"]');
@@ -80,8 +80,20 @@
   widgetRoot.style.setProperty('--ck-asset-origin', assetOrigin);
 
   const resolvedPublicId = (() => {
-    const attr = widgetRoot.getAttribute('data-ck-public-id');
-    if (typeof attr === 'string' && attr.trim()) return attr.trim();
+    const direct = widgetRoot.getAttribute('data-ck-public-id');
+    if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+    const rootNode = widgetRoot.getRootNode();
+    if (rootNode instanceof ShadowRoot) {
+      const host = rootNode.host;
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    }
+
+    const ancestor = widgetRoot.closest('[data-ck-public-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
+
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
     const candidate = global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
     return candidate || '';
@@ -406,6 +418,9 @@
     return null;
   }
 
+  let currentState = null;
+  let currentPhase = 'active';
+  let timerKey = '';
   let currentAnimationFrame = null;
   let timerInterval = null;
   let hasDuringCta = false;
@@ -413,6 +428,7 @@
 
   function applyState(state) {
     assertCountdownState(state);
+    currentState = state;
 
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[Countdown] Missing CKStagePod.applyStagePod');
@@ -444,22 +460,20 @@
       numberDisplayEl.hidden = true;
       unitsDisplayEl.hidden = false;
     }
-
-    updateTimer(state);
   }
 
   function resolveFillBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
+    if (!window.CKFill || typeof window.CKFill.toCssBackground !== 'function') {
+      throw new Error('[Countdown] Missing CKFill.toCssBackground');
     }
-    return String(value ?? '');
+    return window.CKFill.toCssBackground(value);
   }
 
   function resolveFillColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
+    if (!window.CKFill || typeof window.CKFill.toCssColor !== 'function') {
+      throw new Error('[Countdown] Missing CKFill.toCssColor');
     }
-    return String(value ?? '');
+    return window.CKFill.toCssColor(value);
   }
 
   function applyAppearanceVars(state) {
@@ -497,7 +511,6 @@
     countdownRoot.setAttribute('data-layout-align', alignment);
 
     stageEl.setAttribute('data-layout-position', position);
-    podEl.setAttribute('data-layout-position', position);
     countdownRoot.style.removeProperty('--countdown-content-width');
     countdownRoot.removeAttribute('data-layout-width');
   }
@@ -570,9 +583,32 @@
     afterMsgEl.hidden = !hasAfterLink;
   }
 
-  function updateTimer(state) {
+  function resolveTimerKey(state) {
+    if (state.timer.mode === 'date') {
+      return `date|${state.timer.targetDate}|${state.timer.timezone}`;
+    }
+    if (state.timer.mode === 'personal') {
+      const storageKey = resolveStorageKey(state) || '';
+      return `personal|${storageKey}|${state.timer.timeAmount}|${state.timer.timeUnit}|${state.timer.repeat}`;
+    }
+    if (state.timer.mode === 'number') {
+      return `number|${state.timer.startingNumber}|${state.timer.targetNumber}|${state.timer.countDuration}`;
+    }
+    return String(state.timer.mode || '');
+  }
+
+  function syncTimerScheduler(state) {
+    const nextKey = resolveTimerKey(state);
+    if (nextKey === timerKey) {
+      renderPhase(currentState || state, currentPhase);
+      return;
+    }
+    timerKey = nextKey;
+
     if (currentAnimationFrame) cancelAnimationFrame(currentAnimationFrame);
     if (timerInterval) clearInterval(timerInterval);
+    currentAnimationFrame = null;
+    timerInterval = null;
 
     if (state.timer.mode === 'date') {
       const targetParts = parseTargetDate(state.timer.targetDate);
@@ -581,7 +617,8 @@
       const tick = () => {
         const totalSeconds = Math.max(0, Math.floor((targetTimeMs - Date.now()) / 1000));
         updateUnits(totalSeconds);
-        renderPhase(state, totalSeconds === 0 ? 'ended' : 'active');
+        currentPhase = totalSeconds === 0 ? 'ended' : 'active';
+        renderPhase(currentState || state, currentPhase);
       };
 
       tick();
@@ -616,17 +653,20 @@
           if (cycleElapsed < durationSeconds) {
             const remaining = Math.max(0, durationSeconds - cycleElapsed);
             updateUnits(remaining);
-            renderPhase(state, 'active');
+            currentPhase = 'active';
+            renderPhase(currentState || state, currentPhase);
             return;
           }
           updateUnits(0);
-          renderPhase(state, 'ended');
+          currentPhase = 'ended';
+          renderPhase(currentState || state, currentPhase);
           return;
         }
 
         const remaining = Math.max(0, durationSeconds - elapsedSeconds);
         updateUnits(remaining);
-        renderPhase(state, remaining === 0 ? 'ended' : 'active');
+        currentPhase = remaining === 0 ? 'ended' : 'active';
+        renderPhase(currentState || state, currentPhase);
       };
 
       tick();
@@ -648,11 +688,13 @@
         if (progress < 1) {
           currentAnimationFrame = requestAnimationFrame(animate);
         } else {
-          renderPhase(state, 'ended');
+          currentPhase = 'ended';
+          renderPhase(currentState || state, currentPhase);
         }
       };
 
-      renderPhase(state, 'active');
+      currentPhase = 'active';
+      renderPhase(currentState || state, currentPhase);
       animate();
     }
   }
@@ -679,11 +721,24 @@
 
   window.addEventListener('message', (event) => {
     const data = event.data;
-    if (!data || data.type !== 'ck:state-update') return;
+    if (!data || typeof data !== 'object') return;
+    if (data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'countdown') return;
     applyState(data.state);
+    syncTimerScheduler(data.state);
   });
 
-  const initialState = window.CK_WIDGET && window.CK_WIDGET.state;
-  if (initialState) applyState(initialState);
+  const keyedPayload =
+    resolvedPublicId &&
+    window.CK_WIDGETS &&
+    typeof window.CK_WIDGETS === 'object' &&
+    window.CK_WIDGETS[resolvedPublicId] &&
+    typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
+      ? window.CK_WIDGETS[resolvedPublicId]
+      : null;
+  const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
+  if (initialState) {
+    applyState(initialState);
+    syncTimerScheduler(initialState);
+  }
 })();

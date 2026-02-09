@@ -539,6 +539,7 @@
   // actually affect list markup.
   let lastItemsSignature = '';
   let lastAccordionSignature = '';
+  let lastState = null;
 
   listEl.addEventListener('click', (event) => {
     if (!accordionRuntime.isAccordion) return;
@@ -560,6 +561,7 @@
 
   function applyState(state) {
     assertFaqState(state);
+    lastState = state;
 
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[FAQ] Missing CKStagePod.applyStagePod');
@@ -701,6 +703,84 @@
     if (!data || data.type !== 'ck:state-update') return;
     if (data.widgetname !== 'faq') return;
     applyState(data.state);
+  });
+
+  function containsUrl(value) {
+    return /\bhttps?:\/\//i.test(value) || /\bwww\./i.test(value);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function trimCopy(value, maxLen) {
+    const trimmed = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!trimmed) return '';
+    const limit = typeof maxLen === 'number' && Number.isFinite(maxLen) ? maxLen : 220;
+    if (trimmed.length <= limit) return trimmed;
+    return trimmed.slice(0, limit).trim();
+  }
+
+  function applyCopyOverrides(overrides) {
+    if (!overrides || typeof overrides !== 'object') return 0;
+    if (!lastState) return 0;
+
+    const clone =
+      typeof structuredClone === 'function' ? structuredClone(lastState) : JSON.parse(JSON.stringify(lastState));
+
+    const allowedKeyRe =
+      /^(header\.(?:title|subtitleHtml)|sections\.\d+\.title|sections\.\d+\.faqs\.\d+\.(?:question|answer))$/;
+
+    let applied = 0;
+    Object.keys(overrides).forEach((key) => {
+      if (!allowedKeyRe.test(key)) return;
+      const raw = overrides[key];
+      if (typeof raw !== 'string') return;
+      if (containsUrl(raw)) return;
+      const value = escapeHtml(trimCopy(raw, 220));
+      if (!value) return;
+
+      const parts = key.split('.').filter(Boolean);
+      let cur = clone;
+      for (let i = 0; i < parts.length - 1; i += 1) {
+        const part = parts[i];
+        const isIndex = /^[0-9]+$/.test(part);
+        if (isIndex) {
+          const idx = Number(part);
+          if (!Array.isArray(cur)) return;
+          cur = cur[idx];
+          continue;
+        }
+        if (!cur || typeof cur !== 'object') return;
+        cur = cur[part];
+      }
+      const last = parts[parts.length - 1];
+      if (!cur || typeof cur !== 'object') return;
+      if (typeof cur[last] !== 'string') return;
+      cur[last] = value;
+      applied += 1;
+    });
+
+    if (applied > 0) applyState(clone);
+    return applied;
+  }
+
+  window.addEventListener('message', (event) => {
+    const data = event.data;
+    if (!data || typeof data !== 'object') return;
+    if (data.type !== 'ck:copy-overrides') return;
+    if (data.widgetname !== 'faq') return;
+    if (data.publicId && typeof data.publicId === 'string' && resolvedPublicId && data.publicId !== resolvedPublicId) return;
+
+    const appliedCount = applyCopyOverrides(data.overrides);
+    try {
+      window.parent?.postMessage(
+        { type: 'ck:copy-overrides-applied', widgetname: 'faq', publicId: resolvedPublicId, appliedCount },
+        '*',
+      );
+    } catch {
+      // ignore
+    }
   });
 
   const keyedPayload =
