@@ -18,7 +18,19 @@ type LocalizationControlsProps = {
 
 export function LocalizationControls({ mode = 'translate', section = 'full' }: LocalizationControlsProps) {
   const session = useWidgetSession();
-  const { meta, compiled, locale, policy, isPublishing, publish, setLocalePreview, saveLocaleOverrides, revertLocaleOverrides } = session;
+  const {
+    meta,
+    compiled,
+    locale,
+    policy,
+    isDirty,
+    isPublishing,
+    publish,
+    setLocalePreview,
+    saveLocaleOverrides,
+    refreshLocaleTranslations,
+    revertLocaleOverrides,
+  } = session;
   const publicId = meta?.publicId ? String(meta.publicId) : '';
   const workspaceId = meta?.workspaceId ? String(meta.workspaceId) : '';
   const widgetType = compiled?.widgetname ?? '';
@@ -44,6 +56,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
   >(null);
   const [instanceError, setInstanceError] = useState<string | null>(null);
   const [instanceLoading, setInstanceLoading] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showSelector) return;
@@ -224,7 +237,7 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
     if (!isLocaleMode) {
       return 'Base content is only editable in Content panel.';
     }
-    return `Translation-only mode. To add or remove content, switch to Content (${baseLocale}), edit, then publish to regenerate translations.`;
+    return `Translation-only mode. To add or remove content, switch to Content (${baseLocale}), edit, then click "Save".`;
   })();
 
   const activeLocaleEntry = useMemo(() => {
@@ -267,6 +280,10 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
       }),
     );
   }, [activeLocale, showSelector]);
+
+  useEffect(() => {
+    setRefreshMessage(null);
+  }, [publicId, activeLocale, locale.stale]);
 
   if (!hasInstance) {
     return showSelector ? <div className="label-s label-muted">Load an instance from DevStudio to manage localization.</div> : null;
@@ -383,16 +400,29 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
             {curated && instanceError ? <div className="settings-panel__error">{instanceError}</div> : null}
             {showEmptyState ? (
               <div className="settings-panel__note">
-                No translations found yet. Publish the base locale to generate locale overlays.
+                No translations found yet. Save the base locale to generate locale overlays.
                 <button
                   className="diet-btn-txt"
                   data-size="md"
                   data-variant="primary"
                   type="button"
-                  disabled={!canPublish || isPublishing}
-                  onClick={() => publish()}
+                  disabled={!canPublish || isPublishing || locale.loading}
+                  onClick={async () => {
+                    setRefreshMessage(null);
+                    if (isDirty) {
+                      await publish();
+                      return;
+                    }
+                    const result = await refreshLocaleTranslations();
+                    if (!result.ok) return;
+                    setRefreshMessage(
+                      result.queued > 0
+                        ? `Queued ${result.queued} translation job${result.queued === 1 ? '' : 's'}.`
+                        : 'Translations are already up to date.',
+                    );
+                  }}
                 >
-                  <span className="diet-btn-txt__label">Generate translations</span>
+                  <span className="diet-btn-txt__label">{isDirty ? 'Save to generate translations' : 'Generate translations'}</span>
                 </button>
               </div>
             ) : null}
@@ -427,12 +457,37 @@ export function LocalizationControls({ mode = 'translate', section = 'full' }: L
               </div>
               {isStale ? (
                 <div className="settings-panel__warning">
-                  Base content changed. {activeLocale} is showing the previous translation. Click &quot;Publish&quot; to update
-                  translations.
+                  {isDirty
+                    ? `Base content changed. ${activeLocale} is showing the previous translation. Click "Save" to refresh translations.`
+                    : `Base content changed. ${activeLocale} is showing the previous translation.`}
+                  {!isDirty ? (
+                    <div className="settings-panel__fullwidth">
+                      <button
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="primary"
+                        type="button"
+                        disabled={locale.loading || isPublishing}
+                        onClick={async () => {
+                          setRefreshMessage(null);
+                          const result = await refreshLocaleTranslations();
+                          if (!result.ok) return;
+                          setRefreshMessage(
+                            result.queued > 0
+                              ? `Queued ${result.queued} translation job${result.queued === 1 ? '' : 's'}.`
+                              : 'Translations are already up to date.',
+                          );
+                        }}
+                      >
+                        <span className="diet-btn-txt__label">{locale.loading ? 'Refreshing…' : 'Refresh translations'}</span>
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               </>
             ) : null}
+            {refreshMessage ? <div className="settings-panel__success">{refreshMessage}</div> : null}
             {isLocaleMode && hasManualOverrides ? (
               <div className="settings-panel__success">
                 Manual edits saved for {activeLocale}. Auto-translation won&apos;t replace those fields. Click &quot;Revert to

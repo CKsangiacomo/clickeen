@@ -23,6 +23,7 @@ import {
   handleWorkspaceCreateInstance,
   handleWorkspaceEnsureWebsiteCreative,
   handleWorkspaceGetInstance,
+  handleWorkspaceInstancePublishStatus,
   handleWorkspaceInstanceRenderSnapshot,
   handleWorkspaceInstances,
   handleWorkspaceUpdateInstance,
@@ -173,6 +174,19 @@ export default {
         if (!workspaceIdResult.ok) return workspaceIdResult.response;
         const publicId = decodeURIComponent(workspaceInstanceL10nMatch[2]);
         if (req.method === 'GET') return handleWorkspaceInstanceL10nStatus(req, env, workspaceIdResult.value, publicId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const workspaceInstancePublishStatusMatch = pathname.match(
+        /^\/api\/workspaces\/([^/]+)\/instances\/([^/]+)\/publish\/status$/
+      );
+      if (workspaceInstancePublishStatusMatch) {
+        const workspaceIdResult = assertWorkspaceId(decodeURIComponent(workspaceInstancePublishStatusMatch[1]));
+        if (!workspaceIdResult.ok) return workspaceIdResult.response;
+        const publicId = decodeURIComponent(workspaceInstancePublishStatusMatch[2]);
+        if (req.method === 'GET') {
+          return handleWorkspaceInstancePublishStatus(req, env, workspaceIdResult.value, publicId);
+        }
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

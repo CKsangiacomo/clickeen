@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Liên hệ với chúng tôi"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Thiết kế tinh tế, cập nhật dễ dàng và các yếu tố SEO cần thiết—sẵn sàng cho bất kỳ ngôn ngữ nào."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen cung cấp các tiện ích đẹp mắt, có thể nhúng và tập trung vào chuyển đổi, dễ dàng thiết lập và được thiết kế để tăng cường sự tương tác của người dùng trên trang web của bạn. <strong>Bắt đầu xây dựng miễn phí ngay hôm nay.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Chỉ cần sao chép mã nhúng từ bảng điều khiển của bạn và dán nó trước thẻ đóng trên trang web của bạn. <strong>Thử ngay bây giờ—không cần thẻ tín dụng.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeen là gì?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Làm thế nào để cài đặt một tiện ích?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Có, gói miễn phí của chúng tôi bao gồm một tiện ích hoạt động với các tính năng cốt lõi để bạn bắt đầu. <strong>Nâng cấp bất cứ lúc nào để mở khóa tiện ích không giới hạn và phân tích nâng cao.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen làm cho sự hiện diện web của bạn trở nên đẹp mắt, dễ tìm kiếm và thân thiện với người dùng với các tiện ích dễ quản lý và tối ưu hóa cho chuyển đổi. <strong>Tham gia cùng hàng ngàn nhà sáng tạo hài lòng và tăng cường sự tương tác của bạn.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Tại sao tôi nên sử dụng Clickeen?"
+    }
+  ],
+  "v": 1
+}

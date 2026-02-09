@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "सामान्य प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeen क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "क्या कोई मुफ़्त योजना है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "मैं एक विजेट कैसे इंस्टॉल करूं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "मुझे Clickeen का उपयोग क्यों करना चाहिए?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen एक ऐसी चीज़ है जो मार्गेरिटा को बहुत अमीर बना देगी"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "हाँ, मुख्य सुविधाओं के साथ एक सक्रिय विजेट।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "एम्बेड कोड कॉपी करें और इसे अपनी साइट पर </body> से पहले पेस्ट करें।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "क्योंकि Clickeen वेब को सुंदर और उपयोग में आसान बनाने के लिए एक अद्भुत नया प्लेटफॉर्म है।"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "हमसे संपर्क करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "पॉलिश डिज़ाइन, आसान अपडेट, और एसईओ नींव—किसी भी भाषा के लिए तैयार।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "अक्सर पूछे जाने वाले प्रश्न"
+    }
+  ],
+  "v": 1
+}

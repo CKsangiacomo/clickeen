@@ -1067,7 +1067,7 @@ function useWidgetSessionInternal() {
         const errorCode = json?.error?.code || json?.error?.reasonKey;
         let message = json?.error?.message || errorCode || 'Failed to save locale overrides';
         if (errorCode === 'FINGERPRINT_MISMATCH') {
-          message = 'Base content changed. Switch to Base, publish, then try saving overrides again.';
+          message = 'Base content changed. Switch to Base, click "Save", refresh translations, then try saving overrides again.';
         }
         setState((prev) => ({
           ...prev,
@@ -1093,6 +1093,83 @@ function useWidgetSessionInternal() {
       }));
     }
   }, [loadLocaleAllowlist]);
+
+  const refreshLocaleTranslations = useCallback(async () => {
+    const snapshot = stateRef.current;
+    const publicId = snapshot.meta?.publicId ? String(snapshot.meta.publicId) : '';
+    const workspaceId = snapshot.meta?.workspaceId ? String(snapshot.meta.workspaceId) : '';
+    const subject = resolvePolicySubject(snapshot.policy);
+
+    if (snapshot.policy.role === 'viewer') {
+      const message = 'Read-only mode: translation refresh is disabled.';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+    if (!publicId || !workspaceId) {
+      const message = 'Missing instance context';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+    if (snapshot.isDirty) {
+      const message = 'Base content changed. Click "Save" first, then refresh translations.';
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, error: message, loading: false },
+      }));
+      return { ok: false as const, message };
+    }
+
+    setState((prev) => ({
+      ...prev,
+      locale: { ...prev.locale, loading: true, error: null },
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/paris/workspaces/${encodeURIComponent(workspaceId)}/instances/${encodeURIComponent(
+          publicId
+        )}/l10n/enqueue-selected?subject=${encodeURIComponent(subject)}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        },
+      );
+      const json = (await res.json().catch(() => null)) as any;
+      if (!res.ok) {
+        const message =
+          json?.error?.message ||
+          json?.error?.reasonKey ||
+          json?.error?.code ||
+          `Failed to refresh translations (HTTP ${res.status})`;
+        setState((prev) => ({
+          ...prev,
+          locale: { ...prev.locale, loading: false, error: message },
+        }));
+        return { ok: false as const, message };
+      }
+      const queued = typeof json?.queued === 'number' ? json.queued : 0;
+      const skipped = typeof json?.skipped === 'number' ? json.skipped : 0;
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, loading: false, error: null },
+      }));
+      return { ok: true as const, queued, skipped };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        locale: { ...prev.locale, loading: false, error: message },
+      }));
+      return { ok: false as const, message };
+    }
+  }, []);
 
   const revertLocaleOverrides = useCallback(async () => {
     const snapshot = stateRef.current;
@@ -1719,6 +1796,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      refreshLocaleTranslations,
       revertLocaleOverrides,
       loadInstance,
       consumeBudget,
@@ -1740,6 +1818,7 @@ function useWidgetSessionInternal() {
       setPreview,
       setLocalePreview,
       saveLocaleOverrides,
+      refreshLocaleTranslations,
       revertLocaleOverrides,
       setSelectedPath,
       consumeBudget,

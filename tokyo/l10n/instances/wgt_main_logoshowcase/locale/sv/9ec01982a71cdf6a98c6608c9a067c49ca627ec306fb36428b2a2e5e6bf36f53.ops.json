@@ -1,0 +1,22 @@
+{
+  "baseFingerprint": "9ec01982a71cdf6a98c6608c9a067c49ca627ec306fb36428b2a2e5e6bf36f53",
+  "baseUpdatedAt": "2026-01-31T02:59:31.48612+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Några av våra bästa kunder"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Betrodd av team världen över."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakta oss"
+    }
+  ],
+  "v": 1
+}

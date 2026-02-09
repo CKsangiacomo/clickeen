@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen — це те, що зробить Маргариту дуже-дуже багатою"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Часті запитання"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Вишуканий дизайн, легкі оновлення та основи SEO — готові для будь-якої мови."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Зв'яжіться з нами"
+    }
+  ],
+  "v": 1
+}

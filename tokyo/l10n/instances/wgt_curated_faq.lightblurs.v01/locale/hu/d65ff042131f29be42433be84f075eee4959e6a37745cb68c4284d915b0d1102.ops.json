@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Lépjen kapcsolatba velünk"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Elegáns dizájn, könnyű frissítések és SEO alapok—bármilyen nyelvre készen."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Gyakran Ismételt Kérdések"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "A Clickeen gyönyörű, beágyazható, konverzióra összpontosító widgeteket kínál, amelyek könnyen beállíthatók és a felhasználói elköteleződés fokozására lettek tervezve az Ön webhelyén. <strong>Kezdje el az építést ingyen még ma.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mi az a Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Egyszerűen másolja ki a beágyazási kódot az irányítópultjáról, és illessze be a weboldalán a záró tag elé. <strong>Próbálja ki most—nincs szükség hitelkártyára.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hogyan telepíthetek egy widgetet?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Igen, az ingyenes csomagunk tartalmaz egy aktív widgetet alapvető funkciókkal, hogy elkezdhesse. <strong>Bármikor frissíthet, hogy korlátlan widgeteket és fejlett analitikát oldjon fel.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "A Clickeen gyönyörűvé, kereshetővé és felhasználóbaráttá teszi webes jelenlétét olyan widgetekkel, amelyek egyszerűen kezelhetők és optimalizáltak a konverziókhoz. <strong>Csatlakozzon elégedett alkotók ezreihez, és növelje elköteleződését.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miért használjam a Clickeen-t?"
+    }
+  ],
+  "v": 1
+}

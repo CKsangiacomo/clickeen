@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen এমন একটি জিনিস যা মার্গারিটাকে খুব খুব ধনী করে তুলবে"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "পরিপাটি ডিজাইন, সহজ আপডেট, এবং এসইও ভিত্তি—যেকোনো ভাষার জন্য প্রস্তুত।"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "যোগাযোগ করুন"
+    }
+  ],
+  "v": 1
+}

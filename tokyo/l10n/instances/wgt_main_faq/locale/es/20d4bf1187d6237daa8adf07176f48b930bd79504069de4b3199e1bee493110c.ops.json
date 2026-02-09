@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Preguntas generales"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "¿Qué es Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "¿Hay un plan gratuito?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "¿Cómo instalo un widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "¿Por qué debería usar Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen es algo que hará a Margherita muy muy rica"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Sí, un widget activo con funciones principales."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Copia el código de integración y pégalo antes de </body> en tu sitio."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Porque Clickeen es una nueva y asombrosa plataforma para hacer la web hermosa y fácil de usar."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contáctanos"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Diseño pulido, actualizaciones sin esfuerzo y bases de SEO—listo para cualquier idioma."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Preguntas Frecuentes"
+    }
+  ],
+  "v": 1
+}

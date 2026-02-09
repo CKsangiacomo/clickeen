@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakt os"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Elegant design, nemme opdateringer og SEO-væsentligheder—klar til ethvert sprog."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ofte Stillede Spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen tilbyder smukke, indlejringsvenlige widgets med fokus på konvertering, der er nemme at opsætte og designet til at forbedre brugerengagementet på din side. <strong>Begynd at bygge gratis i dag.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Hvad er Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kopier blot indlejringskoden fra dit dashboard og indsæt den før den afsluttende tag på din hjemmeside. <strong>Prøv det nu—ingen kreditkort er påkrævet.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hvordan installerer jeg en widget?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, vores gratis plan inkluderer én aktiv widget med kernefunktioner for at komme i gang. <strong>Opgrader når som helst for at låse op for ubegrænsede widgets og avanceret analyse.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen gør din webtilstedeværelse smuk, søgbar og brugervenlig med widgets, der er nemme at administrere og optimeret til konverteringer. <strong>Deltag i tusindvis af tilfredse skabere og øg din engagement.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Hvorfor skal jeg bruge Clickeen?"
+    }
+  ],
+  "v": 1
+}

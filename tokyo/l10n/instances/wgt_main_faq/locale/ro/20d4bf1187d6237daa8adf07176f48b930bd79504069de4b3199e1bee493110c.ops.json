@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen este ceva care o va face pe Margherita foarte, foarte bogată"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Întrebări frecvente"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Design rafinat, actualizări fără efort și fundații SEO—pregătite pentru orice limbă."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactați-ne"
+    }
+  ],
+  "v": 1
+}

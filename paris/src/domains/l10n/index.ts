@@ -59,7 +59,7 @@ async function publishLayerLocal(
   publicId: string,
   layer: string,
   layerKey: string,
-  action: 'upsert' | 'delete'
+  action: 'upsert' | 'delete',
 ): Promise<Response | null> {
   const base = resolveLocalTokyoWorkerBase(env);
   if (!base) return null;
@@ -79,18 +79,28 @@ async function publishLayerLocal(
   return null;
 }
 
-async function loadInstanceOverlay(env: Env, publicId: string, layer: string, layerKey: string): Promise<InstanceOverlayRow | null> {
+async function loadInstanceOverlay(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+): Promise<InstanceOverlayRow | null> {
   const params = new URLSearchParams({
-    select: 'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
+    select:
+      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
     layer: `eq.${layer}`,
     layer_key: `eq.${layerKey}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance overlay (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load instance overlay (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as InstanceOverlayRow[];
   return rows?.[0] ?? null;
@@ -98,14 +108,19 @@ async function loadInstanceOverlay(env: Env, publicId: string, layer: string, la
 
 async function loadInstanceOverlays(env: Env, publicId: string): Promise<InstanceOverlayRow[]> {
   const params = new URLSearchParams({
-    select: 'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
+    select:
+      'public_id,layer,layer_key,ops,user_ops,base_fingerprint,base_updated_at,source,geo_targets,workspace_id,updated_at',
     public_id: `eq.${publicId}`,
     order: 'layer.asc,layer_key.asc',
   });
-  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load instance overlays (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load instance overlays (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   return ((await res.json()) as InstanceOverlayRow[]).filter(Boolean);
 }
@@ -129,11 +144,15 @@ async function markL10nPublishDirty(args: {
     publish_next_at: null,
     last_error: null,
   };
-  const res = await supabaseFetch(env, `/rest/v1/l10n_publish_state?on_conflict=public_id,layer,layer_key`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates' },
-    body: JSON.stringify(payload),
-  });
+  const res = await supabaseFetch(
+    env,
+    `/rest/v1/l10n_publish_state?on_conflict=public_id,layer,layer_key`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(payload),
+    },
+  );
   if (!res.ok) {
     const detail = await readJson(res);
     return apiError('INTERNAL_ERROR', 'Failed to mark l10n publish state', 500, detail);
@@ -150,6 +169,9 @@ const L10N_GENERATE_STATUS: ReadonlySet<L10nGenerateStatus> = new Set([
   'superseded',
 ]);
 
+const L10N_GENERATE_MAX_ATTEMPTS = 3;
+const L10N_GENERATE_STALE_REQUEUE_MS = 10 * 60_000;
+
 function isL10nGenerateStatus(value: unknown): value is L10nGenerateStatus {
   return typeof value === 'string' && L10N_GENERATE_STATUS.has(value as L10nGenerateStatus);
 }
@@ -161,7 +183,57 @@ function computeL10nGenerateBackoffMs(attempts: number): number {
   return (minutes * 60 + jitterSeconds) * 1000;
 }
 
-async function loadL10nGenerateStates(env: Env, publicId: string, layer: string, baseFingerprint: string) {
+function isL10nGenerateInFlightStale(
+  lastAttemptAt: string | null | undefined,
+  nowMs: number,
+): boolean {
+  const lastAttemptMs = lastAttemptAt ? Date.parse(lastAttemptAt) : NaN;
+  if (!Number.isFinite(lastAttemptMs)) return true;
+  return nowMs - lastAttemptMs >= L10N_GENERATE_STALE_REQUEUE_MS;
+}
+
+function canRetryL10nGenerate(attempts: number): boolean {
+  const normalized = Math.max(0, Math.floor(attempts || 0));
+  return normalized < L10N_GENERATE_MAX_ATTEMPTS;
+}
+
+function toRetryExhaustedError(message: string): string {
+  const trimmed = String(message || '').trim() || 'unknown_error';
+  return trimmed.startsWith('retry_exhausted:') ? trimmed : `retry_exhausted:${trimmed}`;
+}
+
+function computeL10nGenerateNextAttemptAt(occurredAtIso: string, attempts: number): string | null {
+  if (!canRetryL10nGenerate(attempts)) return null;
+  const delayMs = computeL10nGenerateBackoffMs(Math.max(1, attempts));
+  const parsed = Date.parse(occurredAtIso);
+  const anchorMs = Number.isFinite(parsed) ? parsed : Date.now();
+  return new Date(anchorMs + delayMs).toISOString();
+}
+
+function resolveL10nFailureRetryState(args: {
+  occurredAtIso: string;
+  attempts: number;
+  message: string;
+}) {
+  const nextAttemptAt = computeL10nGenerateNextAttemptAt(args.occurredAtIso, args.attempts);
+  if (nextAttemptAt) {
+    return {
+      nextAttemptAt,
+      lastError: String(args.message || '').trim() || 'unknown_error',
+    };
+  }
+  return {
+    nextAttemptAt: null,
+    lastError: toRetryExhaustedError(args.message),
+  };
+}
+
+async function loadL10nGenerateStates(
+  env: Env,
+  publicId: string,
+  layer: string,
+  baseFingerprint: string,
+) {
   const params = new URLSearchParams({
     select: [
       'public_id',
@@ -183,10 +255,14 @@ async function loadL10nGenerateStates(env: Env, publicId: string, layer: string,
     layer: `eq.${layer}`,
     base_fingerprint: `eq.${baseFingerprint}`,
   });
-  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load l10n generate state (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load l10n generate state (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as L10nGenerateStateRow[];
   const map = new Map<string, L10nGenerateStateRow>();
@@ -201,7 +277,7 @@ async function loadL10nGenerateStateRow(
   publicId: string,
   layer: string,
   layerKey: string,
-  baseFingerprint: string
+  baseFingerprint: string,
 ): Promise<L10nGenerateStateRow | null> {
   const params = new URLSearchParams({
     select: [
@@ -226,10 +302,14 @@ async function loadL10nGenerateStateRow(
     base_fingerprint: `eq.${baseFingerprint}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load l10n generate state row (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load l10n generate state row (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as L10nGenerateStateRow[];
   return rows?.[0] ?? null;
@@ -237,14 +317,20 @@ async function loadL10nGenerateStateRow(
 
 async function upsertL10nGenerateStates(env: Env, rows: L10nGenerateStateRow[]) {
   if (!rows.length) return;
-  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?on_conflict=public_id,layer,layer_key,base_fingerprint`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates' },
-    body: JSON.stringify(rows),
-  });
+  const res = await supabaseFetch(
+    env,
+    `/rest/v1/l10n_generate_state?on_conflict=public_id,layer,layer_key,base_fingerprint`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(rows),
+    },
+  );
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to upsert l10n generate state (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to upsert l10n generate state (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
 }
 
@@ -273,35 +359,57 @@ async function supersedeL10nGenerateStates(args: {
   });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to supersede l10n generate state (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to supersede l10n generate state (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
 }
 
-async function loadLatestL10nSnapshot(env: Env, publicId: string): Promise<L10nBaseSnapshotRow | null> {
+async function loadLatestL10nSnapshot(
+  env: Env,
+  publicId: string,
+): Promise<L10nBaseSnapshotRow | null> {
   const params = new URLSearchParams({
-    select: ['public_id', 'base_fingerprint', 'snapshot', 'widget_type', 'base_updated_at', 'created_at'].join(','),
+    select: [
+      'public_id',
+      'base_fingerprint',
+      'snapshot',
+      'widget_type',
+      'base_updated_at',
+      'created_at',
+    ].join(','),
     public_id: `eq.${publicId}`,
     order: 'created_at.desc',
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/l10n_base_snapshots?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_base_snapshots?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load l10n base snapshot (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load l10n base snapshot (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as L10nBaseSnapshotRow[];
   return rows?.[0] ?? null;
 }
 
 async function upsertL10nSnapshot(env: Env, row: L10nBaseSnapshotRow): Promise<void> {
-  const res = await supabaseFetch(env, `/rest/v1/l10n_base_snapshots?on_conflict=public_id,base_fingerprint`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates' },
-    body: JSON.stringify(row),
-  });
+  const res = await supabaseFetch(
+    env,
+    `/rest/v1/l10n_base_snapshots?on_conflict=public_id,base_fingerprint`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(row),
+    },
+  );
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to upsert l10n base snapshot (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to upsert l10n base snapshot (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
 }
 
@@ -366,7 +474,11 @@ async function rebaseUserOverlays(args: {
 
   for (const row of userOverlays) {
     const filteredOps = filterOpsForSnapshot(row.ops ?? [], args.allowlistPaths, snapshotKeys);
-    const filteredUserOps = filterOpsForSnapshot(row.user_ops ?? [], args.allowlistPaths, snapshotKeys);
+    const filteredUserOps = filterOpsForSnapshot(
+      row.user_ops ?? [],
+      args.allowlistPaths,
+      snapshotKeys,
+    );
 
     const patchRes = await supabaseFetch(
       args.env,
@@ -386,7 +498,9 @@ async function rebaseUserOverlays(args: {
     );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
-      throw new Error(`[ParisWorker] Failed to rebase user overlay (${patchRes.status}): ${JSON.stringify(details)}`);
+      throw new Error(
+        `[ParisWorker] Failed to rebase user overlay (${patchRes.status}): ${JSON.stringify(details)}`,
+      );
     }
 
     if (!args.env.L10N_PUBLISH_QUEUE) {
@@ -417,9 +531,18 @@ async function rebaseUserOverlays(args: {
       console.error('[ParisWorker] Failed to enqueue user overlay publish during rebase', detail);
       continue;
     }
-    const localPublish = await publishLayerLocal(args.env, args.publicId, 'user', row.layer_key, 'upsert');
+    const localPublish = await publishLayerLocal(
+      args.env,
+      args.publicId,
+      'user',
+      row.layer_key,
+      'upsert',
+    );
     if (localPublish) {
-      console.error('[ParisWorker] Failed to locally publish user overlay during rebase', localPublish);
+      console.error(
+        '[ParisWorker] Failed to locally publish user overlay during rebase',
+        localPublish,
+      );
     }
   }
 }
@@ -483,31 +606,49 @@ async function applyL10nGenerateReport(args: { env: Env; report: L10nGenerateRep
   const { env, report } = args;
   let existing: L10nGenerateStateRow | null = null;
   try {
-    existing = await loadL10nGenerateStateRow(env, report.publicId, report.layer, report.layerKey, report.baseFingerprint);
+    existing = await loadL10nGenerateStateRow(
+      env,
+      report.publicId,
+      report.layer,
+      report.layerKey,
+      report.baseFingerprint,
+    );
   } catch (error) {
     console.error('[ParisWorker] Failed to load l10n generate state for report', error);
   }
 
-  const occurredAt = report.occurredAt && !Number.isNaN(Date.parse(report.occurredAt)) ? report.occurredAt : new Date().toISOString();
+  const occurredAt =
+    report.occurredAt && !Number.isNaN(Date.parse(report.occurredAt))
+      ? report.occurredAt
+      : new Date().toISOString();
   const attemptsRaw =
     typeof report.attempts === 'number' && Number.isFinite(report.attempts)
       ? Math.max(0, Math.floor(report.attempts))
       : null;
   const attempts = attemptsRaw ?? existing?.attempts ?? 1;
+  const failedRetry =
+    report.status === 'failed'
+      ? resolveL10nFailureRetryState({
+          occurredAtIso: occurredAt,
+          attempts: Math.max(1, attempts),
+          message: report.error ? String(report.error) : 'unknown_error',
+        })
+      : null;
 
   let nextAttemptAt: string | null = null;
   let lastAttemptAt: string | null = existing?.last_attempt_at ?? null;
   if (report.status !== 'dirty') {
     lastAttemptAt = occurredAt;
   }
-  if (report.status === 'failed') {
-    const delayMs = computeL10nGenerateBackoffMs(Math.max(1, attempts));
-    nextAttemptAt = new Date(Date.parse(occurredAt) + delayMs).toISOString();
-  }
+  if (failedRetry) nextAttemptAt = failedRetry.nextAttemptAt;
 
   let lastError: string | null = null;
   if (report.status === 'failed' || report.status === 'superseded') {
-    lastError = report.error ? String(report.error) : report.status === 'superseded' ? 'superseded' : 'unknown_error';
+    if (report.status === 'failed') {
+      lastError = failedRetry?.lastError ?? 'unknown_error';
+    } else {
+      lastError = report.error ? String(report.error) : 'superseded';
+    }
   }
 
   await updateL10nGenerateStatus({
@@ -561,17 +702,23 @@ export async function handleL10nGenerateReport(req: Request, env: Env): Promise<
   if (!layerKey) issues.push({ path: 'layerKey', message: 'invalid layerKey' });
 
   const baseFingerprint = asTrimmedString(reportRaw.baseFingerprint);
-  if (!baseFingerprint) issues.push({ path: 'baseFingerprint', message: 'baseFingerprint is required' });
+  if (!baseFingerprint)
+    issues.push({ path: 'baseFingerprint', message: 'baseFingerprint is required' });
 
   const status = isL10nGenerateStatus(reportRaw.status) ? reportRaw.status : null;
   if (!status) issues.push({ path: 'status', message: 'invalid status' });
 
   const attemptsRaw = reportRaw.attempts;
   const attempts =
-    typeof attemptsRaw === 'number' && Number.isFinite(attemptsRaw) ? Math.max(0, Math.floor(attemptsRaw)) : undefined;
+    typeof attemptsRaw === 'number' && Number.isFinite(attemptsRaw)
+      ? Math.max(0, Math.floor(attemptsRaw))
+      : undefined;
 
   const widgetTypeRaw = reportRaw.widgetType;
-  const widgetTypeResult = widgetTypeRaw !== undefined ? assertWidgetType(widgetTypeRaw) : { ok: true as const, value: null };
+  const widgetTypeResult =
+    widgetTypeRaw !== undefined
+      ? assertWidgetType(widgetTypeRaw)
+      : { ok: true as const, value: null };
   if (!widgetTypeResult.ok) issues.push(...widgetTypeResult.issues);
 
   const workspaceIdRaw = reportRaw.workspaceId;
@@ -606,8 +753,12 @@ export async function handleL10nGenerateReport(req: Request, env: Env): Promise<
   return json({ ok: true });
 }
 
-async function loadPendingL10nGenerateStates(env: Env, limit = 50): Promise<L10nGenerateStateRow[]> {
+async function loadPendingL10nGenerateStates(
+  env: Env,
+  limit = 50,
+): Promise<L10nGenerateStateRow[]> {
   const nowIso = new Date().toISOString();
+  const staleBeforeIso = new Date(Date.now() - L10N_GENERATE_STALE_REQUEUE_MS).toISOString();
   const params = new URLSearchParams({
     select: [
       'public_id',
@@ -631,18 +782,25 @@ async function loadPendingL10nGenerateStates(env: Env, limit = 50): Promise<L10n
   });
   params.set(
     'or',
-    `(status.eq.dirty,and(status.eq.failed,next_attempt_at.lte.${nowIso}),and(status.eq.failed,next_attempt_at.is.null))`,
+    `(status.eq.dirty,and(status.eq.failed,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},next_attempt_at.lte.${nowIso}),and(status.eq.failed,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},next_attempt_at.is.null),and(status.eq.queued,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.lte.${staleBeforeIso}),and(status.eq.queued,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.is.null),and(status.eq.running,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.lte.${staleBeforeIso}),and(status.eq.running,attempts.lt.${L10N_GENERATE_MAX_ATTEMPTS},last_attempt_at.is.null))`,
   );
-  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load pending l10n generate state (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load pending l10n generate state (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as L10nGenerateStateRow[];
   return rows?.filter(Boolean) ?? [];
 }
 
-async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ processed: number; queued: number; failed: number }> {
+async function requeueL10nGenerateStates(
+  env: Env,
+  limit = 50,
+): Promise<{ processed: number; queued: number; failed: number }> {
   const rows = await loadPendingL10nGenerateStates(env, limit);
   if (!rows.length) return { processed: 0, queued: 0, failed: 0 };
 
@@ -676,31 +834,51 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
     const locale = row.layer_key;
     const widgetType = row.widget_type ?? null;
     const workspaceId = row.workspace_id ?? null;
-    const attempts = (row.attempts ?? 0) + 1;
+    const currentAttempts = Math.max(0, Math.floor(row.attempts ?? 0));
+    if (!canRetryL10nGenerate(currentAttempts)) {
+      failedRows.push({
+        ...row,
+        status: 'failed',
+        attempts: currentAttempts,
+        next_attempt_at: null,
+        last_attempt_at: nowIso,
+        last_error: toRetryExhaustedError(row.last_error ?? 'max_attempts_reached'),
+      });
+      continue;
+    }
+    const attempts = currentAttempts + 1;
     const kind = inferInstanceKindFromPublicId(row.public_id);
     if (!locale || !widgetType || !workspaceId) {
-      const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      const retry = resolveL10nFailureRetryState({
+        occurredAtIso: nowIso,
+        attempts,
+        message: 'missing_job_metadata',
+      });
       failedRows.push({
         ...row,
         status: 'failed',
         attempts,
-        next_attempt_at: nextAttemptAt,
+        next_attempt_at: retry.nextAttemptAt,
         last_attempt_at: nowIso,
-        last_error: 'missing_job_metadata',
+        last_error: retry.lastError,
       });
       continue;
     }
 
     const selectedLocales = await resolveWorkspaceLocaleSet(workspaceId);
     if (!selectedLocales) {
-      const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      const retry = resolveL10nFailureRetryState({
+        occurredAtIso: nowIso,
+        attempts,
+        message: 'workspace_locales_unavailable',
+      });
       failedRows.push({
         ...row,
         status: 'failed',
         attempts,
-        next_attempt_at: nextAttemptAt,
+        next_attempt_at: retry.nextAttemptAt,
         last_attempt_at: nowIso,
-        last_error: 'workspace_locales_unavailable',
+        last_error: retry.lastError,
       });
       continue;
     }
@@ -729,14 +907,18 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
     if (!issued.ok) {
       const details = await readJson(issued.response).catch(() => null);
       const detail = details ? JSON.stringify(details) : `status ${issued.response.status}`;
-      const nextAttemptAt = new Date(Date.parse(nowIso) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      const retry = resolveL10nFailureRetryState({
+        occurredAtIso: nowIso,
+        attempts,
+        message: `ai_grant_failed:${detail}`,
+      });
       failedRows.push({
         ...row,
         status: 'failed',
         attempts,
-        next_attempt_at: nextAttemptAt,
+        next_attempt_at: retry.nextAttemptAt,
         last_attempt_at: nowIso,
-        last_error: `ai_grant_failed:${detail}`,
+        last_error: retry.lastError,
       });
       continue;
     }
@@ -778,13 +960,17 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
     const failedAt = new Date().toISOString();
     const queueFailures = queuedRows.map((row) => {
       const attempts = row.attempts ?? 1;
-      const nextAttemptAt = new Date(Date.parse(failedAt) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      const retry = resolveL10nFailureRetryState({
+        occurredAtIso: failedAt,
+        attempts,
+        message: 'L10N_GENERATE_QUEUE missing',
+      });
       return {
         ...row,
         status: 'failed',
-        next_attempt_at: nextAttemptAt,
+        next_attempt_at: retry.nextAttemptAt,
         last_attempt_at: failedAt,
-        last_error: 'L10N_GENERATE_QUEUE missing',
+        last_error: retry.lastError,
       };
     });
     await upsertL10nGenerateStates(env, queueFailures);
@@ -798,13 +984,17 @@ async function requeueL10nGenerateStates(env: Env, limit = 50): Promise<{ proces
     const failedAt = new Date().toISOString();
     const queueFailures = queuedRows.map((row) => {
       const attempts = row.attempts ?? 1;
-      const nextAttemptAt = new Date(Date.parse(failedAt) + computeL10nGenerateBackoffMs(attempts)).toISOString();
+      const retry = resolveL10nFailureRetryState({
+        occurredAtIso: failedAt,
+        attempts,
+        message: detail,
+      });
       return {
         ...row,
         status: 'failed',
-        next_attempt_at: nextAttemptAt,
+        next_attempt_at: retry.nextAttemptAt,
         last_attempt_at: failedAt,
-        last_error: detail,
+        last_error: retry.lastError,
       };
     });
     await upsertL10nGenerateStates(env, queueFailures);
@@ -842,7 +1032,7 @@ function readWorkspaceLocales(workspace: WorkspaceRow): Response | { locales: st
         reasonKey: 'coreui.errors.workspace.locales.invalid',
         detail: JSON.stringify(normalized.issues),
       },
-      500
+      500,
     );
   }
   return { locales: normalized.locales };
@@ -867,7 +1057,7 @@ function enforceL10nSelection(policy: Policy, locales: string[]) {
         upsell: 'UP',
         detail: `l10n.locales.max=${maxLocalesTotal}`,
       },
-      403
+      403,
     );
   }
   const maxCustom = requirePolicyCap(policy, 'l10n.locales.custom.max');
@@ -883,7 +1073,7 @@ function enforceL10nSelection(policy: Policy, locales: string[]) {
           upsell: 'UP',
           detail: `l10n.locales.custom.max=${maxCustom}`,
         },
-        403
+        403,
       );
     }
   }
@@ -894,7 +1084,12 @@ function enforceLayerEntitlement(_policy: Policy, _layer: string): Response | nu
   return null;
 }
 
-export async function handleWorkspaceInstanceLayersList(req: Request, env: Env, workspaceId: string, publicId: string) {
+export async function handleWorkspaceInstanceLayersList(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -911,7 +1106,8 @@ export async function handleWorkspaceInstanceLayersList(req: Request, env: Env, 
   }
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   const rows = await loadInstanceOverlays(env, publicIdResult.value);
   return json({
@@ -939,7 +1135,7 @@ export async function handleWorkspaceInstanceLayerGet(
   workspaceId: string,
   publicId: string,
   layerRaw: string,
-  layerKeyRaw: string
+  layerKeyRaw: string,
 ) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -966,11 +1162,16 @@ export async function handleWorkspaceInstanceLayerGet(
   }
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   const row = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
   if (!row) {
-    return apiError('LAYER_NOT_FOUND', 'Layer overlay not found', 404, { publicId, layer, layerKey });
+    return apiError('LAYER_NOT_FOUND', 'Layer overlay not found', 404, {
+      publicId,
+      layer,
+      layerKey,
+    });
   }
 
   const { userOps } = resolveUserOps(row);
@@ -995,7 +1196,7 @@ export async function handleWorkspaceInstanceLayerUpsert(
   workspaceId: string,
   publicId: string,
   layerRaw: string,
-  layerKeyRaw: string
+  layerKeyRaw: string,
 ) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -1021,10 +1222,20 @@ export async function handleWorkspaceInstanceLayerUpsert(
     return apiError('LAYER_KEY_INVALID', 'Invalid layerKey', 400, { layer, layerKey: layerKeyRaw });
   }
   if (layer === 'locale' && hasLocaleSuffix(publicIdResult.value, layerKey)) {
-    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale: layerKey });
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, {
+      publicId,
+      locale: layerKey,
+    });
   }
-  if (layer === 'user' && layerKey !== 'global' && hasLocaleSuffix(publicIdResult.value, layerKey)) {
-    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, { publicId, locale: layerKey });
+  if (
+    layer === 'user' &&
+    layerKey !== 'global' &&
+    hasLocaleSuffix(publicIdResult.value, layerKey)
+  ) {
+    return apiError('LOCALE_INVALID', 'publicId must be locale-free', 400, {
+      publicId,
+      locale: layerKey,
+    });
   }
 
   const entitlementGate = enforceLayerEntitlement(policyResult.policy, layer);
@@ -1139,7 +1350,9 @@ export async function handleWorkspaceInstanceLayerUpsert(
   const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
   const existingUserOps = resolveUserOps(existing).userOps;
 
-  const geoResult = hasGeoTargets ? normalizeGeoCountries((payload as any).geoTargets, 'geoTargets') : null;
+  const geoResult = hasGeoTargets
+    ? normalizeGeoCountries((payload as any).geoTargets, 'geoTargets')
+    : null;
   if (geoResult && !geoResult.ok) {
     return apiError('OPS_INVALID_TYPE', 'Invalid geoTargets', 400, geoResult.issues);
   }
@@ -1149,7 +1362,9 @@ export async function handleWorkspaceInstanceLayerUpsert(
     return apiError(opsResult.code, opsResult.message, 400, opsResult.detail);
   }
 
-  const userOpsResult = hasUserOps ? validateL10nOps((payload as any).userOps, allowlistPaths) : null;
+  const userOpsResult = hasUserOps
+    ? validateL10nOps((payload as any).userOps, allowlistPaths)
+    : null;
   if (hasUserOps && userOpsResult && !userOpsResult.ok) {
     return apiError(userOpsResult.code, userOpsResult.message, 400, userOpsResult.detail);
   }
@@ -1163,12 +1378,17 @@ export async function handleWorkspaceInstanceLayerUpsert(
     amount: 1,
   });
   if (!publish.ok) {
-    return ckError({ kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail }, 403);
+    return ckError(
+      { kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail },
+      403,
+    );
   }
 
   let row: InstanceOverlayRow | null = null;
   if (hasOps) {
-    const geoTargets = hasGeoTargets ? geoResult?.geoCountries ?? null : existing?.geo_targets ?? null;
+    const geoTargets = hasGeoTargets
+      ? (geoResult?.geoCountries ?? null)
+      : (existing?.geo_targets ?? null);
     const payloadRow = {
       public_id: publicIdResult.value,
       layer,
@@ -1187,13 +1407,17 @@ export async function handleWorkspaceInstanceLayerUpsert(
       workspace_id: instanceWorkspaceId,
     };
 
-    const upsertRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`, {
-      method: 'POST',
-      headers: {
-        Prefer: 'resolution=merge-duplicates,return=representation',
+    const upsertRes = await supabaseFetch(
+      env,
+      `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`,
+      {
+        method: 'POST',
+        headers: {
+          Prefer: 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify(payloadRow),
       },
-      body: JSON.stringify(payloadRow),
-    });
+    );
     if (!upsertRes.ok) {
       const details = await readJson(upsertRes);
       return apiError('INTERNAL_ERROR', 'Failed to upsert layer', 500, details);
@@ -1215,13 +1439,17 @@ export async function handleWorkspaceInstanceLayerUpsert(
         geo_targets: null,
         workspace_id: instanceWorkspaceId,
       };
-      const insertRes = await supabaseFetch(env, `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`, {
-        method: 'POST',
-        headers: {
-          Prefer: 'resolution=merge-duplicates,return=representation',
+      const insertRes = await supabaseFetch(
+        env,
+        `/rest/v1/widget_instance_overlays?on_conflict=public_id,layer,layer_key`,
+        {
+          method: 'POST',
+          headers: {
+            Prefer: 'resolution=merge-duplicates,return=representation',
+          },
+          body: JSON.stringify(payloadRow),
         },
-        body: JSON.stringify(payloadRow),
-      });
+      );
       if (!insertRes.ok) {
         const details = await readJson(insertRes);
         return apiError('INTERNAL_ERROR', 'Failed to create layer overrides', 500, details);
@@ -1255,7 +1483,13 @@ export async function handleWorkspaceInstanceLayerUpsert(
     const overlayFingerprint = row?.base_fingerprint ?? computedFingerprint;
     if (overlayFingerprint) {
       try {
-        const existingState = await loadL10nGenerateStateRow(env, publicIdResult.value, layer, layerKey, overlayFingerprint);
+        const existingState = await loadL10nGenerateStateRow(
+          env,
+          publicIdResult.value,
+          layer,
+          layerKey,
+          overlayFingerprint,
+        );
         const attempts = existingState?.attempts ?? 1;
         await updateL10nGenerateStatus({
           env,
@@ -1304,7 +1538,13 @@ export async function handleWorkspaceInstanceLayerUpsert(
     return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
   }
 
-  const localPublish = await publishLayerLocal(env, publicIdResult.value, layer, layerKey, 'upsert');
+  const localPublish = await publishLayerLocal(
+    env,
+    publicIdResult.value,
+    layer,
+    layerKey,
+    'upsert',
+  );
   if (localPublish) return localPublish;
 
   const resolvedSource = row?.source ?? source ?? null;
@@ -1325,7 +1565,7 @@ export async function handleWorkspaceInstanceLayerDelete(
   workspaceId: string,
   publicId: string,
   layerRaw: string,
-  layerKeyRaw: string
+  layerKeyRaw: string,
 ) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
@@ -1368,7 +1608,13 @@ export async function handleWorkspaceInstanceLayerDelete(
 
   const existing = await loadInstanceOverlay(env, publicIdResult.value, layer, layerKey);
   if (!existing) {
-    return json({ publicId: publicIdResult.value, layer, layerKey, deleted: false, reason: 'not_found' });
+    return json({
+      publicId: publicIdResult.value,
+      layer,
+      layerKey,
+      deleted: false,
+      reason: 'not_found',
+    });
   }
 
   const maxPublishes = policyResult.policy.budgets['budget.l10n.publishes']?.max ?? null;
@@ -1380,7 +1626,10 @@ export async function handleWorkspaceInstanceLayerDelete(
     amount: 1,
   });
   if (!publish.ok) {
-    return ckError({ kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail }, 403);
+    return ckError(
+      { kind: 'DENY', reasonKey: publish.reasonKey, upsell: 'UP', detail: publish.detail },
+      403,
+    );
   }
 
   const deleteRes = await supabaseFetch(
@@ -1422,13 +1671,24 @@ export async function handleWorkspaceInstanceLayerDelete(
     return apiError('INTERNAL_ERROR', 'Failed to enqueue publish job', 500, detail);
   }
 
-  const localPublish = await publishLayerLocal(env, publicIdResult.value, layer, layerKey, 'delete');
+  const localPublish = await publishLayerLocal(
+    env,
+    publicIdResult.value,
+    layer,
+    layerKey,
+    'delete',
+  );
   if (localPublish) return localPublish;
 
   return json({ publicId: publicIdResult.value, layer, layerKey, deleted: true });
 }
 
-export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, workspaceId: string, publicId: string) {
+export async function handleWorkspaceInstanceL10nStatus(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -1440,10 +1700,12 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   if (!policyResult.ok) return policyResult.response;
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  if (!widgetType)
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   let localizationAllowlist: Array<{ path: string; type: 'string' | 'richtext' }>;
   try {
@@ -1455,7 +1717,6 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   const l10nSnapshot = buildL10nSnapshot(instance.config, localizationAllowlist);
   const baseFingerprint = await computeBaseFingerprint(l10nSnapshot);
   const baseUpdatedAt = instance.updated_at ?? null;
-  const kind = resolveInstanceKind(instance);
 
   const workspaceLocales = resolveWorkspaceActiveLocales({ workspace });
   if (workspaceLocales instanceof Response) return workspaceLocales;
@@ -1463,7 +1724,7 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
   if (entitlementGate) return entitlementGate;
 
-  let stateMap = locales.length
+  const stateMap = locales.length
     ? await loadL10nGenerateStates(env, publicId, 'locale', baseFingerprint)
     : new Map<string, L10nGenerateStateRow>();
   const overlays = locales.length ? await loadInstanceOverlays(env, publicId) : [];
@@ -1480,54 +1741,6 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
     overlayStale.add(key);
   });
 
-  if (kind !== 'curated' && locales.length && stateMap.size === 0 && overlayStale.size > 0) {
-    try {
-      const enqueueResult = await enqueueL10nJobs({
-        env,
-        instance,
-        workspace,
-        widgetType,
-        baseUpdatedAt,
-        policy: policyResult.policy,
-      });
-      if (!enqueueResult.ok) {
-        console.error('[ParisWorker] l10n enqueue failed (status refresh)', enqueueResult.error);
-      }
-      stateMap = await loadL10nGenerateStates(env, publicId, 'locale', baseFingerprint);
-    } catch (error) {
-      console.error('[ParisWorker] Failed to enqueue l10n on status refresh', error);
-    }
-  }
-
-  if (overlayMatch.size) {
-    const nowIso = new Date().toISOString();
-    const backfillRows: L10nGenerateStateRow[] = [];
-    overlayMatch.forEach((locale) => {
-      const existing = stateMap.get(locale);
-      if (existing?.status === 'succeeded') return;
-      const attempts = Math.max(existing?.attempts ?? 0, 1);
-      backfillRows.push({
-        public_id: publicId,
-        layer: 'locale',
-        layer_key: locale,
-        base_fingerprint: baseFingerprint,
-        base_updated_at: baseUpdatedAt,
-        widget_type: widgetType,
-        workspace_id: workspace.id,
-        status: 'succeeded',
-        attempts,
-        next_attempt_at: null,
-        last_attempt_at: existing?.last_attempt_at ?? nowIso,
-        last_error: null,
-        changed_paths: existing?.changed_paths ?? null,
-        removed_paths: existing?.removed_paths ?? null,
-      });
-    });
-    if (backfillRows.length) {
-      await upsertL10nGenerateStates(env, backfillRows);
-    }
-  }
-
   const localeStates = locales.map((locale) => {
     const row = stateMap.get(locale);
     const hasMatch = overlayMatch.has(locale);
@@ -1535,14 +1748,14 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
     let status: L10nGenerateStatus = row?.status ?? 'dirty';
     if (hasMatch) status = 'succeeded';
     else if (!row?.status && hasStale) status = 'superseded';
-    const attempts = hasMatch ? Math.max(row?.attempts ?? 0, 1) : row?.attempts ?? 0;
+    const attempts = hasMatch ? Math.max(row?.attempts ?? 0, 1) : (row?.attempts ?? 0);
     return {
       locale,
       status,
       attempts,
-      nextAttemptAt: hasMatch ? null : row?.next_attempt_at ?? null,
+      nextAttemptAt: hasMatch ? null : (row?.next_attempt_at ?? null),
       lastAttemptAt: row?.last_attempt_at ?? null,
-      lastError: hasMatch ? null : row?.last_error ?? null,
+      lastError: hasMatch ? null : (row?.last_error ?? null),
     };
   });
 
@@ -1555,7 +1768,12 @@ export async function handleWorkspaceInstanceL10nStatus(req: Request, env: Env, 
   });
 }
 
-export async function handleWorkspaceInstanceL10nEnqueueSelected(req: Request, env: Env, workspaceId: string, publicId: string) {
+export async function handleWorkspaceInstanceL10nEnqueueSelected(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -1567,15 +1785,12 @@ export async function handleWorkspaceInstanceL10nEnqueueSelected(req: Request, e
   if (!policyResult.ok) return policyResult.response;
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
-
-  const kind = resolveInstanceKind(instance);
-  if (kind !== 'curated') {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'Curated publicId required' }, 422);
-  }
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  if (!widgetType)
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const workspaceLocales = resolveWorkspaceActiveLocales({ workspace });
   if (workspaceLocales instanceof Response) return workspaceLocales;
@@ -1662,14 +1877,25 @@ export async function handleWorkspaceLocalesPut(req: Request, env: Env, workspac
   const entitlementGate = enforceL10nSelection(policyResult.policy, locales);
   if (entitlementGate) return entitlementGate;
 
-  const patchRes = await supabaseFetch(env, `/rest/v1/workspaces?id=eq.${encodeURIComponent(workspaceId)}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ l10n_locales: locales }),
-  });
+  const patchRes = await supabaseFetch(
+    env,
+    `/rest/v1/workspaces?id=eq.${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ l10n_locales: locales }),
+    },
+  );
   if (!patchRes.ok) {
     const details = await readJson(patchRes);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail: JSON.stringify(details),
+      },
+      500,
+    );
   }
 
   return json({ locales });
@@ -1686,13 +1912,23 @@ export async function enqueueL10nJobs(args: {
   allowNoDiff?: boolean;
 }) {
   if (!args.widgetType) {
-    return { ok: false as const, queued: 0, skipped: 0, error: 'coreui.errors.instance.widgetMissing' };
+    return {
+      ok: false as const,
+      queued: 0,
+      skipped: 0,
+      error: 'coreui.errors.instance.widgetMissing',
+    };
   }
 
   const kind = resolveInstanceKind(args.instance);
   const workspaceLocales = readWorkspaceLocales(args.workspace);
   if (workspaceLocales instanceof Response) {
-    return { ok: false as const, queued: 0, skipped: 0, error: 'coreui.errors.workspace.locales.invalid' };
+    return {
+      ok: false as const,
+      queued: 0,
+      skipped: 0,
+      error: 'coreui.errors.workspace.locales.invalid',
+    };
   }
   const locales = args.localesOverride ?? workspaceLocales.locales;
   const entitlementGate = enforceL10nSelection(args.policy, locales);
@@ -1714,7 +1950,10 @@ export async function enqueueL10nJobs(args: {
   const l10nSnapshot = buildL10nSnapshot(args.instance.config, localizationAllowlist);
   const baseFingerprint = await computeBaseFingerprint(l10nSnapshot);
   const previousSnapshot = await loadLatestL10nSnapshot(args.env, args.instance.public_id);
-  const { changedPaths, removedPaths } = diffL10nSnapshots(previousSnapshot?.snapshot ?? null, l10nSnapshot);
+  const { changedPaths, removedPaths } = diffL10nSnapshots(
+    previousSnapshot?.snapshot ?? null,
+    l10nSnapshot,
+  );
   const fingerprintChanged = previousSnapshot?.base_fingerprint !== baseFingerprint;
 
   const envStage = asTrimmedString(args.env.ENV_STAGE) ?? 'cloud-dev';
@@ -1774,19 +2013,60 @@ export async function enqueueL10nJobs(args: {
   }
 
   const existingStates = await loadL10nGenerateStates(args.env, publicId, layer, baseFingerprint);
+  let matchingOverlayLocales = new Set<string>();
+  try {
+    const overlays = await loadInstanceOverlays(args.env, publicId);
+    overlays.forEach((row) => {
+      if (row.layer !== 'locale') return;
+      if (!row.layer_key) return;
+      if (row.base_fingerprint !== baseFingerprint) return;
+      matchingOverlayLocales.add(row.layer_key);
+    });
+  } catch (error) {
+    console.error('[ParisWorker] Failed to load overlay matches for l10n enqueue', error);
+  }
   const pendingLocales: string[] = [];
   const dirtyRows: L10nGenerateStateRow[] = [];
+  const succeededRows: L10nGenerateStateRow[] = [];
   const nowMs = Date.now();
-  // In non-local environments queued/running states can get stuck if the queue
-  // consumer was unavailable. Treat long-stale attempts as requeueable.
-  const requeueStaleMs = 10 * 60_000;
+  const nowIso = new Date(nowMs).toISOString();
+  const allowRetryScheduleOverride = Boolean(args.allowNoDiff);
 
   locales.forEach((locale) => {
     const current = existingStates.get(locale);
+    const hasMatchingOverlay = matchingOverlayLocales.has(locale);
+    if (diffIsEmpty && hasMatchingOverlay) {
+      if (current?.status !== 'succeeded') {
+        const attempts = Math.max(current?.attempts ?? 0, 1);
+        succeededRows.push({
+          public_id: publicId,
+          layer,
+          layer_key: locale,
+          base_fingerprint: baseFingerprint,
+          base_updated_at: baseUpdatedAt,
+          widget_type: args.widgetType!,
+          workspace_id: workspaceId,
+          status: 'succeeded',
+          attempts,
+          next_attempt_at: null,
+          last_attempt_at: current?.last_attempt_at ?? nowIso,
+          last_error: null,
+          changed_paths: current?.changed_paths ?? null,
+          removed_paths: current?.removed_paths ?? null,
+        });
+      }
+      return;
+    }
     if (current?.status === 'succeeded') return;
+    if (current?.status === 'failed') {
+      const attempts = Math.max(0, Math.floor(current.attempts ?? 0));
+      if (!canRetryL10nGenerate(attempts)) return;
+      const nextAttemptMs = current.next_attempt_at ? Date.parse(current.next_attempt_at) : NaN;
+      const retryReady = !Number.isFinite(nextAttemptMs) || nextAttemptMs <= nowMs;
+      if (!retryReady && !allowRetryScheduleOverride) return;
+    }
     if (current && (current.status === 'queued' || current.status === 'running')) {
-      const lastAttemptAt = current.last_attempt_at ? Date.parse(current.last_attempt_at) : NaN;
-      const staleAttempt = !Number.isFinite(lastAttemptAt) || nowMs - lastAttemptAt >= requeueStaleMs;
+      const staleAttempt = isL10nGenerateInFlightStale(current.last_attempt_at, nowMs);
       if (!staleAttempt && !useDirectDispatch) return;
     }
     pendingLocales.push(locale);
@@ -1803,10 +2083,14 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: current?.last_attempt_at ?? null,
       last_error: null,
-      changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-      removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+      changed_paths: effectiveChangedPaths,
+      removed_paths: effectiveRemovedPaths,
     });
   });
+
+  if (succeededRows.length) {
+    await upsertL10nGenerateStates(args.env, succeededRows);
+  }
 
   if (!pendingLocales.length) return { ok: true as const, queued: 0, skipped: locales.length };
 
@@ -1815,7 +2099,12 @@ export async function enqueueL10nJobs(args: {
   const grantSubject = kind === 'curated' ? 'devstudio' : 'workspace';
   const grantWorkspaceId = grantSubject === 'workspace' ? workspaceId : undefined;
   if (grantSubject === 'workspace' && !grantWorkspaceId) {
-    return { ok: false as const, queued: 0, skipped: 0, error: 'Missing workspaceId for user l10n grant' };
+    return {
+      ok: false as const,
+      queued: 0,
+      skipped: 0,
+      error: 'Missing workspaceId for user l10n grant',
+    };
   }
   const jobs: L10nJob[] = [];
   for (const locale of pendingLocales) {
@@ -1830,7 +2119,12 @@ export async function enqueueL10nJobs(args: {
     if (!issued.ok) {
       const details = await readJson(issued.response).catch(() => null);
       const detail = details ? JSON.stringify(details) : `status ${issued.response.status}`;
-      return { ok: false as const, queued: 0, skipped: 0, error: `AI grant failed for l10n: ${detail}` };
+      return {
+        ok: false as const,
+        queued: 0,
+        skipped: 0,
+        error: `AI grant failed for l10n: ${detail}`,
+      };
     }
     jobs.push({
       v: 2,
@@ -1870,7 +2164,11 @@ export async function enqueueL10nJobs(args: {
       const failedRows: L10nGenerateStateRow[] = pendingLocales.map((locale) => {
         const current = existingStates.get(locale);
         const attempts = (current?.attempts ?? 0) + 1;
-        const nextAttemptAt = new Date(failedAt.getTime() + computeL10nGenerateBackoffMs(attempts)).toISOString();
+        const retry = resolveL10nFailureRetryState({
+          occurredAtIso: failedAt.toISOString(),
+          attempts,
+          message: detail,
+        });
         return {
           public_id: publicId,
           layer,
@@ -1881,15 +2179,20 @@ export async function enqueueL10nJobs(args: {
           workspace_id: workspaceId,
           status: 'failed',
           attempts,
-          next_attempt_at: nextAttemptAt,
+          next_attempt_at: retry.nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
-          last_error: detail,
-          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+          last_error: retry.lastError,
+          changed_paths: effectiveChangedPaths,
+          removed_paths: effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
-      return { ok: false as const, queued: 0, skipped: locales.length - pendingLocales.length, error: detail };
+      return {
+        ok: false as const,
+        queued: 0,
+        skipped: locales.length - pendingLocales.length,
+        error: detail,
+      };
     }
     if (!res.ok) {
       const detail =
@@ -1901,7 +2204,11 @@ export async function enqueueL10nJobs(args: {
       const failedRows: L10nGenerateStateRow[] = pendingLocales.map((locale) => {
         const current = existingStates.get(locale);
         const attempts = (current?.attempts ?? 0) + 1;
-        const nextAttemptAt = new Date(failedAt.getTime() + computeL10nGenerateBackoffMs(attempts)).toISOString();
+        const retry = resolveL10nFailureRetryState({
+          occurredAtIso: failedAt.toISOString(),
+          attempts,
+          message: detail,
+        });
         return {
           public_id: publicId,
           layer,
@@ -1912,15 +2219,20 @@ export async function enqueueL10nJobs(args: {
           workspace_id: workspaceId,
           status: 'failed',
           attempts,
-          next_attempt_at: nextAttemptAt,
+          next_attempt_at: retry.nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
-          last_error: detail,
-          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+          last_error: retry.lastError,
+          changed_paths: effectiveChangedPaths,
+          removed_paths: effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
-      return { ok: false as const, queued: 0, skipped: locales.length - pendingLocales.length, error: detail };
+      return {
+        ok: false as const,
+        queued: 0,
+        skipped: locales.length - pendingLocales.length,
+        error: detail,
+      };
     }
   } else {
     if (!args.env.L10N_GENERATE_QUEUE) {
@@ -1928,7 +2240,11 @@ export async function enqueueL10nJobs(args: {
       const failedRows: L10nGenerateStateRow[] = pendingLocales.map((locale) => {
         const current = existingStates.get(locale);
         const attempts = (current?.attempts ?? 0) + 1;
-        const nextAttemptAt = new Date(failedAt.getTime() + computeL10nGenerateBackoffMs(attempts)).toISOString();
+        const retry = resolveL10nFailureRetryState({
+          occurredAtIso: failedAt.toISOString(),
+          attempts,
+          message: 'L10N_GENERATE_QUEUE missing',
+        });
         return {
           public_id: publicId,
           layer,
@@ -1939,15 +2255,20 @@ export async function enqueueL10nJobs(args: {
           workspace_id: workspaceId,
           status: 'failed',
           attempts,
-          next_attempt_at: nextAttemptAt,
+          next_attempt_at: retry.nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
-          last_error: 'L10N_GENERATE_QUEUE missing',
-          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+          last_error: retry.lastError,
+          changed_paths: effectiveChangedPaths,
+          removed_paths: effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
-      return { ok: false as const, queued: 0, skipped: locales.length - pendingLocales.length, error: 'L10N_GENERATE_QUEUE missing' };
+      return {
+        ok: false as const,
+        queued: 0,
+        skipped: locales.length - pendingLocales.length,
+        error: 'L10N_GENERATE_QUEUE missing',
+      };
     }
 
     try {
@@ -1958,7 +2279,11 @@ export async function enqueueL10nJobs(args: {
       const failedRows: L10nGenerateStateRow[] = pendingLocales.map((locale) => {
         const current = existingStates.get(locale);
         const attempts = (current?.attempts ?? 0) + 1;
-        const nextAttemptAt = new Date(failedAt.getTime() + computeL10nGenerateBackoffMs(attempts)).toISOString();
+        const retry = resolveL10nFailureRetryState({
+          occurredAtIso: failedAt.toISOString(),
+          attempts,
+          message: detail,
+        });
         return {
           public_id: publicId,
           layer,
@@ -1969,15 +2294,20 @@ export async function enqueueL10nJobs(args: {
           workspace_id: workspaceId,
           status: 'failed',
           attempts,
-          next_attempt_at: nextAttemptAt,
+          next_attempt_at: retry.nextAttemptAt,
           last_attempt_at: failedAt.toISOString(),
-          last_error: detail,
-          changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-          removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+          last_error: retry.lastError,
+          changed_paths: effectiveChangedPaths,
+          removed_paths: effectiveRemovedPaths,
         };
       });
       await upsertL10nGenerateStates(args.env, failedRows);
-      return { ok: false as const, queued: 0, skipped: locales.length - pendingLocales.length, error: detail };
+      return {
+        ok: false as const,
+        queued: 0,
+        skipped: locales.length - pendingLocales.length,
+        error: detail,
+      };
     }
   }
 
@@ -1998,11 +2328,15 @@ export async function enqueueL10nJobs(args: {
       next_attempt_at: null,
       last_attempt_at: queuedAt,
       last_error: null,
-      changed_paths: current?.changed_paths ?? effectiveChangedPaths,
-      removed_paths: current?.removed_paths ?? effectiveRemovedPaths,
+      changed_paths: effectiveChangedPaths,
+      removed_paths: effectiveRemovedPaths,
     };
   });
   await upsertL10nGenerateStates(args.env, queuedRows);
 
-  return { ok: true as const, queued: pendingLocales.length, skipped: locales.length - pendingLocales.length };
+  return {
+    ok: true as const,
+    queued: pendingLocales.length,
+    skipped: locales.length - pendingLocales.length,
+  };
 }

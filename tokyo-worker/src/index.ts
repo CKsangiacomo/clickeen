@@ -796,6 +796,16 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
     await publishLayerIndex(env, publicId);
   }
 
+  if ((layer === 'locale' || layer === 'user') && env.RENDER_SNAPSHOT_QUEUE) {
+    await env.RENDER_SNAPSHOT_QUEUE.send({
+      v: 1,
+      kind: 'render-snapshot',
+      publicId,
+      locales: [layerKey],
+      action: 'upsert',
+    });
+  }
+
   return json({ publicId, layer, layerKey, action: resolvedAction }, { status: 200 });
 }
 

@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Toutes les questions"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Qu'est-ce que Clickeen ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Comment installer un widget ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Y a-t-il un plan gratuit ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Pourquoi devrais-je utiliser Clickeen ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen propose de magnifiques widgets intégrables, axés sur la conversion, qui sont faciles à configurer et conçus pour améliorer l'engagement des utilisateurs sur votre site. <strong>Commencez à créer gratuitement dès aujourd'hui.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Copiez simplement le code d'intégration depuis votre tableau de bord et collez-le avant la balise de fermeture sur votre site web. <strong>Essayez-le maintenant—aucune carte de crédit requise.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oui, notre plan gratuit inclut un widget actif avec des fonctionnalités de base pour commencer. <strong>Améliorez à tout moment pour débloquer des widgets illimités et des analyses avancées.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen rend votre présence en ligne belle, facile à trouver et conviviale avec des widgets simples à gérer et optimisés pour les conversions. <strong>Rejoignez des milliers de créateurs satisfaits et augmentez votre engagement.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactez-nous"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Design élégant, mises à jour faciles et éléments essentiels de SEO—prêt pour n'importe quelle langue."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Questions Fréquemment Posées"
+    }
+  ],
+  "v": 1
+}

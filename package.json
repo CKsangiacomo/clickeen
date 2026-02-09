@@ -18,6 +18,7 @@
     "dev": "turbo dev",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
+    "gate:l10n": "node scripts/l10n/convergence-gate.mjs",
     "build": "pnpm build:i18n && pnpm build:l10n && turbo build",
     "lint": "turbo lint",
     "test": "turbo test",

@@ -1,0 +1,22 @@
+{
+  "baseFingerprint": "c3d1950e4635dd1e152406d0b384edea8a3d8e805da9ddbcc9fcf055bd04897a",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.after.text",
+      "value": ""
+    },
+    {
+      "op": "set",
+      "path": "timer.headline",
+      "value": "Hamarosan jönnek az akciók!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Vásároljon most"
+    }
+  ],
+  "v": 1
+}

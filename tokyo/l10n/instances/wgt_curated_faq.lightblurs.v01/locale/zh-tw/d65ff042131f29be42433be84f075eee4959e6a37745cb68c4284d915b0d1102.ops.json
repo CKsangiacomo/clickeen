@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "所有問題"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "什麼是 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "如何安裝 widget？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "有免費方案嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "為什麼我應該使用 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen 提供美觀、可嵌入且專注於轉換的 widget，易於設置，旨在提升您網站上的用戶互動。<strong>立即免費開始構建。</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "只需從您的儀表板複製嵌入代碼，然後將其粘貼到您網站的結束標籤之前。<strong>立即嘗試—不需要信用卡。</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "是的，我們的免費計劃包括一個具有核心功能的活動 widget，讓您開始使用。<strong>隨時升級以解鎖無限的 widget 和高級分析。</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen 透過簡單管理的小工具，讓您的網頁存在變得美觀、可搜尋且使用者友好，並針對轉換進行優化。<strong>加入數千名滿意的創作者，提升您的互動率。</strong>"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "聯絡我們"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "時尚設計、輕鬆更新和 SEO 必備——適用於任何語言。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常見問題"
+    }
+  ],
+  "v": 1
+}

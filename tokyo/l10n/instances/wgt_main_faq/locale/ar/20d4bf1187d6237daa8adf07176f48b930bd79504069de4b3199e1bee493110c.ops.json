@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "20d4bf1187d6237daa8adf07176f48b930bd79504069de4b3199e1bee493110c",
+  "baseUpdatedAt": "2026-02-09T18:02:14.607321+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "أسئلة عامة"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما هو Clickeen؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "هل هناك خطة مجانية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "كيف أقوم بتثبيت عنصر واجهة المستخدم؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "لماذا يجب أن أستخدم Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen هو شيء سيجعل مارغريتا غنية جدًا جدًا"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "نعم، عنصر واجهة مستخدم نشط واحد مع ميزات أساسية."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "انسخ كود التضمين والصقه قبل </body> في موقعك."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "لأن Clickeen هو منصة جديدة مذهلة لجعل الويب جميلاً وسهل الاستخدام."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "اتصل بنا"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "تصميم مصقول، تحديثات سهلة، وأساسيات تحسين محركات البحث - جاهز لأي لغة."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة"
+    }
+  ],
+  "v": 1
+}

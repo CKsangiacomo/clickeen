@@ -1,0 +1,57 @@
+{
+  "baseFingerprint": "d65ff042131f29be42433be84f075eee4959e6a37745cb68c4284d915b0d1102",
+  "baseUpdatedAt": "2026-02-09T22:02:20.222161+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ota yhteyttä"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tyylikäs muotoilu, helpot päivitykset ja SEO-oleellisuudet—valmiina mille tahansa kielelle."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Usein kysytyt kysymykset"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen tarjoaa kauniita, upotettavia, konversioon keskittyviä widgettejä, jotka on helppo asentaa ja suunniteltu parantamaan käyttäjien sitoutumista sivustollasi. <strong>Aloita rakentaminen ilmaiseksi jo tänään.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mikä on Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kopioi upotuskoodi hallintapaneelista ja liitä se ennen </body> -tunnisteen sulkemista verkkosivustollasi. <strong>Kokeile nyt—ei luottokorttia vaadita.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Kuinka asennan widgetin?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kyllä, ilmainen suunnitelmamme sisältää yhden aktiivisen widgetin, jossa on ydinominaisuudet, jotta pääset alkuun. <strong>Päivitä milloin tahansa avataksesi rajattomat widgetit ja edistyneet analytiikat.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Clickeen tekee verkkoläsnäolostasi kauniin, hakukelpoisen ja käyttäjäystävällisen widgeteillä, joita on helppo hallita ja jotka on optimoitu konversioita varten. <strong>Liity tuhansien tyytyväisten luojien joukkoon ja lisää sitoutumistasi.</strong>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miksi minun pitäisi käyttää Clickeenia?"
+    }
+  ],
+  "v": 1
+}

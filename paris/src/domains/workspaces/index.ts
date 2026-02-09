@@ -1,10 +1,12 @@
-import { computeBaseFingerprint } from '@clickeen/l10n';
+import { buildL10nSnapshot, computeBaseFingerprint } from '@clickeen/l10n';
 import { can, evaluateLimits } from '@clickeen/ck-policy';
 import type { LimitsSpec, Policy } from '@clickeen/ck-policy';
 import type {
   CuratedInstanceRow,
   Env,
   InstanceRow,
+  InstanceOverlayRow,
+  L10nGenerateStateRow,
   UpdatePayload,
   WidgetRow,
   WorkspaceBusinessProfileRow,
@@ -14,16 +16,17 @@ import { ckError } from '../../shared/errors';
 import { assertDevAuth } from '../../shared/auth';
 import { supabaseFetch } from '../../shared/supabase';
 import {
+  asTrimmedString,
   assertConfig,
   assertMeta,
   assertStatus,
   configNonPersistableUrlIssues,
   isRecord,
 } from '../../shared/validation';
-import { isKnownWidgetType, loadWidgetLimits } from '../../shared/tokyo';
+import { isKnownWidgetType, loadWidgetLimits, requireTokyoBase } from '../../shared/tokyo';
 import { requireWorkspace } from '../../shared/workspaces';
 import { resolveEditorPolicyFromRequest } from '../../shared/policy';
-import { normalizeLocaleList } from '../../shared/l10n';
+import { loadWidgetLocalizationAllowlist, normalizeLocaleList } from '../../shared/l10n';
 import { consumeBudget } from '../../shared/budgets';
 import {
   allowCuratedWrites,
@@ -58,7 +61,9 @@ async function loadEnforcement(env: Env, publicId: string): Promise<EnforcementR
     public_id: `eq.${publicId}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(env, `/rest/v1/instance_enforcement_state?${params.toString()}`, {
+    method: 'GET',
+  });
   if (!res.ok) return null;
   const rows = (await res.json().catch(() => null)) as EnforcementRow[] | null;
   return rows?.[0] ?? null;
@@ -84,18 +89,226 @@ function normalizeActiveEnforcement(row: EnforcementRow | null): null | {
   };
 }
 
-async function enqueueRenderSnapshot(env: Env, job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] }) {
-  if (!env.RENDER_SNAPSHOT_QUEUE) return;
-  await env.RENDER_SNAPSHOT_QUEUE.send({
-    v: 1,
-    kind: 'render-snapshot',
-    publicId: job.publicId,
-    action: job.action,
-    locales: job.locales,
-  });
+type RenderSnapshotEnqueueResult = { ok: true } | { ok: false; error: string };
+
+type RenderIndexEntry = { e: string; r: string; meta: string };
+
+function resolveLocalTokyoWorkerBase(env: Env): string | null {
+  const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
+  if (stage !== 'local') return null;
+  const base = asTrimmedString(env.TOKYO_WORKER_BASE_URL);
+  if (!base) return null;
+  return base.replace(/\/+$/, '');
 }
 
-export async function handleWorkspaceInstanceRenderSnapshot(req: Request, env: Env, workspaceId: string, publicId: string) {
+async function enqueueRenderSnapshotLocal(
+  env: Env,
+  job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] },
+): Promise<string | null> {
+  const base = resolveLocalTokyoWorkerBase(env);
+  if (!base) return null;
+  const token = asTrimmedString(env.TOKYO_DEV_JWT) ?? asTrimmedString(env.PARIS_DEV_JWT);
+  const headers: HeadersInit = { 'content-type': 'application/json' };
+  if (token) headers['authorization'] = `Bearer ${token}`;
+  const res = await fetch(
+    `${base}/renders/instances/${encodeURIComponent(job.publicId)}/snapshot`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        action: job.action,
+        locales: job.locales,
+      }),
+    },
+  );
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    return `[ParisWorker] Local render snapshot publish failed (${res.status}): ${detail}`;
+  }
+  return null;
+}
+
+function resolveActivePublishLocales(
+  workspaceLocales: unknown,
+  policy: Policy,
+): { locales: string[]; invalidWorkspaceLocales: string | null } {
+  const normalized = normalizeLocaleList(workspaceLocales, 'l10n_locales');
+  const additionalLocales = normalized.ok ? normalized.locales : [];
+  const maxLocalesTotalRaw = policy.caps['l10n.locales.max'];
+  const maxLocalesTotal =
+    maxLocalesTotalRaw == null ? null : Math.max(1, Math.floor(maxLocalesTotalRaw));
+  const deduped = Array.from(new Set(['en', ...additionalLocales]));
+  const locales = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
+  const invalidWorkspaceLocales = normalized.ok ? null : JSON.stringify(normalized.issues);
+  return { locales, invalidWorkspaceLocales };
+}
+
+async function enqueueRenderSnapshot(
+  env: Env,
+  job: { publicId: string; action: 'upsert' | 'delete'; locales?: string[] },
+): Promise<RenderSnapshotEnqueueResult> {
+  if (!env.RENDER_SNAPSHOT_QUEUE) {
+    return { ok: false, error: 'RENDER_SNAPSHOT_QUEUE missing' };
+  }
+  try {
+    const locales = Array.isArray(job.locales)
+      ? Array.from(
+          new Set(
+            job.locales
+              .map((locale) => (typeof locale === 'string' ? locale.trim() : ''))
+              .filter(Boolean),
+          ),
+        )
+      : [];
+    const jobs =
+      job.action === 'delete'
+        ? [job]
+        : locales.length
+          ? locales.map((locale) => ({ ...job, locales: [locale] }))
+          : [job];
+
+    for (const next of jobs) {
+      await env.RENDER_SNAPSHOT_QUEUE.send({
+        v: 1,
+        kind: 'render-snapshot',
+        publicId: next.publicId,
+        action: next.action,
+        locales: next.locales,
+      });
+      const localBypassError = await enqueueRenderSnapshotLocal(env, next);
+      if (localBypassError) return { ok: false, error: localBypassError };
+    }
+    return { ok: true };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: detail };
+  }
+}
+
+async function loadL10nGenerateStatesForFingerprint(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+}): Promise<Map<string, L10nGenerateStateRow>> {
+  const params = new URLSearchParams({
+    select: [
+      'public_id',
+      'layer',
+      'layer_key',
+      'base_fingerprint',
+      'base_updated_at',
+      'widget_type',
+      'workspace_id',
+      'status',
+      'attempts',
+      'next_attempt_at',
+      'last_attempt_at',
+      'last_error',
+      'changed_paths',
+      'removed_paths',
+    ].join(','),
+    public_id: `eq.${args.publicId}`,
+    layer: 'eq.locale',
+    base_fingerprint: `eq.${args.baseFingerprint}`,
+  });
+  const res = await supabaseFetch(args.env, `/rest/v1/l10n_generate_state?${params.toString()}`, {
+    method: 'GET',
+  });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load l10n generate state (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = (await res.json()) as L10nGenerateStateRow[];
+  const map = new Map<string, L10nGenerateStateRow>();
+  rows?.forEach((row) => {
+    if (row?.layer_key) map.set(row.layer_key, row);
+  });
+  return map;
+}
+
+async function loadLocaleOverlayMatchesForFingerprint(args: {
+  env: Env;
+  publicId: string;
+  baseFingerprint: string;
+}): Promise<Set<string>> {
+  const params = new URLSearchParams({
+    select: ['layer', 'layer_key', 'base_fingerprint'].join(','),
+    public_id: `eq.${args.publicId}`,
+    layer: 'eq.locale',
+    base_fingerprint: `eq.${args.baseFingerprint}`,
+  });
+  const res = await supabaseFetch(
+    args.env,
+    `/rest/v1/widget_instance_overlays?${params.toString()}`,
+    {
+      method: 'GET',
+    },
+  );
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(
+      `[ParisWorker] Failed to load locale overlay matches (${res.status}): ${JSON.stringify(details)}`,
+    );
+  }
+  const rows = (await res.json()) as InstanceOverlayRow[];
+  const out = new Set<string>();
+  rows?.forEach((row) => {
+    if (row?.layer !== 'locale') return;
+    if (!row?.layer_key) return;
+    if (row?.base_fingerprint !== args.baseFingerprint) return;
+    out.add(row.layer_key);
+  });
+  return out;
+}
+
+function normalizeRenderIndexEntry(raw: unknown): RenderIndexEntry | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const entry = raw as Record<string, unknown>;
+  const e = typeof entry.e === 'string' && entry.e.trim() ? entry.e.trim() : '';
+  const r = typeof entry.r === 'string' && entry.r.trim() ? entry.r.trim() : '';
+  const meta = typeof entry.meta === 'string' && entry.meta.trim() ? entry.meta.trim() : '';
+  if (!e || !r || !meta) return null;
+  return { e, r, meta };
+}
+
+async function loadRenderIndexCurrent(args: {
+  env: Env;
+  publicId: string;
+}): Promise<Record<string, RenderIndexEntry> | null> {
+  const base = requireTokyoBase(args.env);
+  const url = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/index.json`;
+  const res = await fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+    headers: { 'X-Request-ID': crypto.randomUUID() },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`[ParisWorker] Failed to load render index (${res.status}): ${detail}`.trim());
+  }
+  const payload = (await res.json().catch(() => null)) as unknown;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const current = (payload as Record<string, unknown>).current;
+  if (!current || typeof current !== 'object' || Array.isArray(current)) return null;
+
+  const out: Record<string, RenderIndexEntry> = {};
+  Object.entries(current).forEach(([locale, entry]) => {
+    const normalized = normalizeRenderIndexEntry(entry);
+    if (!normalized) return;
+    out[locale] = normalized;
+  });
+  return out;
+}
+
+export async function handleWorkspaceInstanceRenderSnapshot(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -106,10 +319,6 @@ export async function handleWorkspaceInstanceRenderSnapshot(req: Request, env: E
   const policyResult = resolveEditorPolicyFromRequest(req, workspace);
   if (!policyResult.ok) return policyResult.response;
 
-  if (!env.RENDER_SNAPSHOT_QUEUE) {
-    return json({ error: 'RENDER_SNAPSHOT_QUEUE_MISSING' }, { status: 503 });
-  }
-
   const publicIdResult = assertPublicId(publicId);
   if (!publicIdResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
@@ -117,15 +326,41 @@ export async function handleWorkspaceInstanceRenderSnapshot(req: Request, env: E
 
   const kind = inferInstanceKindFromPublicId(publicIdResult.value);
   if (kind !== 'curated') {
-    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'Curated publicId required' }, 422);
+    return ckError(
+      {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: 'Curated publicId required',
+      },
+      422,
+    );
   }
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicIdResult.value);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const { locales: activeLocales } = resolveActivePublishLocales(
+    workspace.l10n_locales,
+    policyResult.policy,
+  );
 
-  await enqueueRenderSnapshot(env, { publicId: publicIdResult.value, action: 'upsert', locales: ['en'] });
+  const enqueue = await enqueueRenderSnapshot(env, {
+    publicId: publicIdResult.value,
+    action: 'upsert',
+    locales: activeLocales,
+  });
+  if (!enqueue.ok) {
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.publish.failed',
+        detail: enqueue.error,
+      },
+      503,
+    );
+  }
 
-  return json({ ok: true, publicId: publicIdResult.value, locales: ['en'] });
+  return json({ ok: true, publicId: publicIdResult.value, locales: activeLocales });
 }
 
 export async function handleWorkspaceInstances(req: Request, env: Env, workspaceId: string) {
@@ -141,7 +376,12 @@ export async function handleWorkspaceInstances(req: Request, env: Env, workspace
   return handleInstances(new Request(url.toString(), { method: 'GET', headers: req.headers }), env);
 }
 
-export async function handleWorkspaceGetInstance(req: Request, env: Env, workspaceId: string, publicId: string) {
+export async function handleWorkspaceGetInstance(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -153,10 +393,13 @@ export async function handleWorkspaceGetInstance(req: Request, env: Env, workspa
   if (!policyResult.ok) return policyResult.response;
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const instanceKind = resolveInstanceKind(instance);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  if (!widgetType)
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const baseFingerprint = await computeBaseFingerprint(instance.config);
   const enforcementRow = await loadEnforcement(env, publicId);
@@ -167,7 +410,7 @@ export async function handleWorkspaceGetInstance(req: Request, env: Env, workspa
     status: instance.status,
     widgetType,
     config: instance.config,
-    meta: isCuratedInstanceRow(instance) ? instance.meta ?? null : null,
+    meta: isCuratedInstanceRow(instance) ? (instance.meta ?? null) : null,
     updatedAt: instance.updated_at ?? null,
     baseFingerprint,
     enforcement,
@@ -177,6 +420,276 @@ export async function handleWorkspaceGetInstance(req: Request, env: Env, workspa
       tier: workspace.tier,
       websiteUrl: workspace.website_url,
     },
+  });
+}
+
+export async function handleWorkspaceInstancePublishStatus(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const workspaceResult = await requireWorkspace(env, workspaceId);
+  if (!workspaceResult.ok) return workspaceResult.response;
+  const workspace = workspaceResult.workspace;
+
+  const policyResult = resolveEditorPolicyFromRequest(req, workspace);
+  if (!policyResult.ok) return policyResult.response;
+
+  const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  const instanceKind = resolveInstanceKind(instance);
+
+  const widgetType = await resolveWidgetTypeForInstance(env, instance);
+  if (!widgetType)
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+
+  const configFingerprint = await computeBaseFingerprint(instance.config);
+
+  let localizationAllowlist: Array<{ path: string; type: 'string' | 'richtext' }>;
+  try {
+    localizationAllowlist = await loadWidgetLocalizationAllowlist(env, widgetType);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.limits.loadFailed', detail }, 500);
+  }
+
+  const l10nSnapshot = buildL10nSnapshot(instance.config, localizationAllowlist);
+  const l10nBaseFingerprint = await computeBaseFingerprint(l10nSnapshot);
+  const { locales, invalidWorkspaceLocales } = resolveActivePublishLocales(
+    workspace.l10n_locales,
+    policyResult.policy,
+  );
+
+  let stateMap = new Map<string, L10nGenerateStateRow>();
+  try {
+    stateMap = await loadL10nGenerateStatesForFingerprint({
+      env,
+      publicId,
+      baseFingerprint: l10nBaseFingerprint,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError(
+      { kind: 'INTERNAL', reasonKey: 'coreui.errors.l10n.enqueueFailed', detail },
+      500,
+    );
+  }
+
+  let overlayMatchLocales = new Set<string>();
+  let overlayMatchError: string | null = null;
+  try {
+    overlayMatchLocales = await loadLocaleOverlayMatchesForFingerprint({
+      env,
+      publicId,
+      baseFingerprint: l10nBaseFingerprint,
+    });
+  } catch (error) {
+    overlayMatchError = error instanceof Error ? error.message : String(error);
+  }
+
+  let renderIndexCurrent: Record<string, RenderIndexEntry> | null = null;
+  let renderIndexError: string | null = null;
+  try {
+    renderIndexCurrent = await loadRenderIndexCurrent({ env, publicId });
+  } catch (error) {
+    renderIndexError = error instanceof Error ? error.message : String(error);
+  }
+
+  const localeStatuses = locales.map((locale) => {
+    const state = locale === 'en' ? null : stateMap.get(locale);
+    const hasOverlayMatch = locale !== 'en' && overlayMatchLocales.has(locale);
+    const l10nStatus =
+      locale === 'en' ? 'succeeded' : hasOverlayMatch ? 'succeeded' : (state?.status ?? 'dirty');
+    const snapshot = renderIndexCurrent?.[locale] ?? null;
+    const snapshotStatus = snapshot ? 'pointer_flipped' : 'missing';
+    const retryScheduled = Boolean(state?.next_attempt_at);
+
+    let stage = 'pointer_flipped';
+    let stageReason = 'live';
+    if (instance.status !== 'published') {
+      stage = 'unpublished';
+      stageReason = 'instance_unpublished';
+    } else if (locale !== 'en') {
+      if (l10nStatus === 'failed') {
+        if (retryScheduled) {
+          stage = 'awaiting_l10n';
+          stageReason = 'l10n_retrying';
+        } else {
+          stage = 'failed';
+          stageReason = 'l10n_failed_terminal';
+        }
+      } else if (l10nStatus === 'dirty') {
+        stage = 'awaiting_l10n';
+        stageReason = 'l10n_dirty';
+      } else if (l10nStatus === 'queued') {
+        stage = 'awaiting_l10n';
+        stageReason = 'l10n_queued';
+      } else if (l10nStatus === 'running') {
+        stage = 'awaiting_l10n';
+        stageReason = 'l10n_running';
+      } else if (l10nStatus === 'superseded') {
+        stage = 'awaiting_l10n';
+        stageReason = 'l10n_superseded';
+      }
+    }
+    if (stage === 'pointer_flipped' && !snapshot) {
+      stage = 'awaiting_snapshot';
+      stageReason = 'snapshot_missing';
+    }
+
+    return {
+      locale,
+      l10n: {
+        status: l10nStatus,
+        attempts: locale === 'en' ? 0 : (state?.attempts ?? 0),
+        nextAttemptAt: locale === 'en' ? null : (state?.next_attempt_at ?? null),
+        lastAttemptAt: locale === 'en' ? null : (state?.last_attempt_at ?? null),
+        lastError: locale === 'en' ? null : (state?.last_error ?? null),
+      },
+      snapshot: {
+        status: snapshotStatus,
+        e: snapshot?.e ?? null,
+        r: snapshot?.r ?? null,
+        meta: snapshot?.meta ?? null,
+      },
+      stage,
+      stageReason,
+    };
+  });
+
+  const nonBaseLocaleStatuses = localeStatuses.filter((entry) => entry.locale !== 'en');
+  const l10nSummary = {
+    dirty: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'dirty').length,
+    queued: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'queued').length,
+    running: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'running').length,
+    succeeded: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'succeeded').length,
+    failed: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'failed').length,
+    superseded: nonBaseLocaleStatuses.filter((entry) => entry.l10n.status === 'superseded').length,
+    retrying: nonBaseLocaleStatuses.filter(
+      (entry) => entry.l10n.status === 'failed' && Boolean(entry.l10n.nextAttemptAt),
+    ).length,
+    failedTerminal: nonBaseLocaleStatuses.filter(
+      (entry) => entry.l10n.status === 'failed' && !entry.l10n.nextAttemptAt,
+    ).length,
+    inFlight: nonBaseLocaleStatuses.filter(
+      (entry) => entry.stageReason === 'l10n_queued' || entry.stageReason === 'l10n_running',
+    ).length,
+    needsEnqueue: nonBaseLocaleStatuses.filter(
+      (entry) => entry.stageReason === 'l10n_dirty' || entry.stageReason === 'l10n_superseded',
+    ).length,
+  };
+
+  const summary = {
+    total: localeStatuses.length,
+    pointerFlipped: localeStatuses.filter((entry) => entry.stage === 'pointer_flipped').length,
+    awaitingL10n: localeStatuses.filter((entry) => entry.stage === 'awaiting_l10n').length,
+    awaitingSnapshot: localeStatuses.filter((entry) => entry.stage === 'awaiting_snapshot').length,
+    failed: localeStatuses.filter((entry) => entry.stage === 'failed').length,
+    unpublished: localeStatuses.filter((entry) => entry.stage === 'unpublished').length,
+    l10n: l10nSummary,
+  };
+
+  const blockedStageReasonSummary = localeStatuses
+    .filter((entry) => entry.stage !== 'pointer_flipped')
+    .reduce(
+      (acc, entry) => {
+        const key =
+          typeof entry.stageReason === 'string' && entry.stageReason.trim()
+            ? entry.stageReason.trim()
+            : 'unknown';
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+  const overall =
+    instance.status !== 'published'
+      ? 'unpublished'
+      : summary.failed > 0
+        ? 'failed'
+        : l10nSummary.inFlight > 0
+          ? 'l10n_in_flight'
+          : l10nSummary.retrying > 0
+            ? 'l10n_retrying'
+            : summary.awaitingL10n > 0
+              ? 'awaiting_l10n'
+              : summary.awaitingSnapshot > 0
+                ? 'awaiting_snapshot'
+                : 'ready';
+
+  const nextAction =
+    instance.status !== 'published'
+      ? { key: 'publish_instance', label: 'Publish instance to start localization.' }
+      : l10nSummary.failedTerminal > 0
+        ? {
+            key: 'inspect_terminal_failures',
+            label: 'Inspect last error and requeue failed locales.',
+          }
+        : l10nSummary.needsEnqueue > 0
+          ? instanceKind === 'curated'
+            ? {
+                key: 'enqueue_selected',
+                label: 'Click "Translate locales" to enqueue stale locales.',
+              }
+            : {
+                key: 'publish_instance',
+                label: 'Publish base content to enqueue locale updates.',
+              }
+          : l10nSummary.retrying > 0
+            ? {
+                key: 'wait_retry_backoff',
+                label: 'Retry backoff in progress; wait for next attempt.',
+              }
+            : l10nSummary.inFlight > 0
+              ? {
+                  key: 'wait_in_flight',
+                  label: 'Translations are running; wait for completion.',
+                }
+              : summary.awaitingSnapshot > 0
+                ? {
+                    key: 'wait_snapshot_publish',
+                    label: 'Waiting for snapshot publish.',
+                  }
+                : null;
+
+  return json({
+    publicId: instance.public_id,
+    widgetType,
+    instanceStatus: instance.status,
+    revision: {
+      configFingerprint,
+      l10nBaseFingerprint,
+      updatedAt: instance.updated_at ?? null,
+    },
+    pipeline: {
+      overall,
+      bindings: {
+        renderSnapshotQueue: Boolean(env.RENDER_SNAPSHOT_QUEUE),
+        l10nGenerateQueue: Boolean(env.L10N_GENERATE_QUEUE),
+      },
+      renderIndexFound: Boolean(renderIndexCurrent),
+      renderIndexError,
+      workspaceLocales: {
+        invalid: invalidWorkspaceLocales,
+      },
+      l10n: {
+        inFlight: l10nSummary.inFlight,
+        retrying: l10nSummary.retrying,
+        failedTerminal: l10nSummary.failedTerminal,
+        needsEnqueue: l10nSummary.needsEnqueue,
+        stageReasons: blockedStageReasonSummary,
+        nextAction,
+        overlayMatchError,
+      },
+    },
+    summary,
+    locales: localeStatuses,
   });
 }
 
@@ -208,11 +721,16 @@ async function enforceLimits(
       detail: first.detail,
       paths: [first.path],
     },
-    403
+    403,
   );
 }
 
-export async function handleWorkspaceUpdateInstance(req: Request, env: Env, workspaceId: string, publicId: string) {
+export async function handleWorkspaceUpdateInstance(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+  publicId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -227,7 +745,7 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
   if (!publishGate.allow) {
     return ckError(
       { kind: 'DENY', reasonKey: publishGate.reasonKey, upsell: 'UP', detail: publishGate.detail },
-      403
+      403,
     );
   }
 
@@ -238,7 +756,10 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' }, 422);
   }
 
-  const configResult = payload.config !== undefined ? assertConfig(payload.config) : { ok: true as const, value: undefined };
+  const configResult =
+    payload.config !== undefined
+      ? assertConfig(payload.config)
+      : { ok: true as const, value: undefined };
   if (!configResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.config.invalid' }, 422);
   }
@@ -248,7 +769,8 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.status.invalid' }, 422);
   }
 
-  const metaResult = payload.meta !== undefined ? assertMeta(payload.meta) : { ok: true as const, value: undefined };
+  const metaResult =
+    payload.meta !== undefined ? assertMeta(payload.meta) : { ok: true as const, value: undefined };
   if (!metaResult.ok) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
@@ -262,10 +784,12 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
   }
 
   const instance = await loadInstanceByWorkspaceAndPublicId(env, workspaceId, publicId);
-  if (!instance) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
+  if (!instance)
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' }, 404);
 
   const widgetType = await resolveWidgetTypeForInstance(env, instance);
-  if (!widgetType) return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
+  if (!widgetType)
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.instance.widgetMissing' }, 500);
 
   const enforcementRow = await loadEnforcement(env, publicId);
   const enforcement = normalizeActiveEnforcement(enforcementRow);
@@ -315,7 +839,7 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
           detail: issues[0]?.message,
           paths: issues.map((i) => i.path),
         },
-        422
+        422,
       );
     }
 
@@ -337,15 +861,23 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
         status: 'eq.published',
         limit: '250',
       });
-      const countRes = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+      const countRes = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, {
+        method: 'GET',
+      });
       if (!countRes.ok) {
         const details = await readJson(countRes);
         return ckError(
-          { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.readFailed',
+            detail: JSON.stringify(details),
+          },
           500,
         );
       }
-      const publishedRows = (await countRes.json().catch(() => null)) as Array<{ public_id?: string }> | null;
+      const publishedRows = (await countRes.json().catch(() => null)) as Array<{
+        public_id?: string;
+      }> | null;
       const publishedCount = Array.isArray(publishedRows) ? publishedRows.length : 0;
       if (publishedCount >= max) {
         return ckError(
@@ -381,9 +913,18 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
   });
   if (!patchRes.ok) {
     const details = await readJson(patchRes);
-    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    return ckError(
+      {
+        kind: 'INTERNAL',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail: JSON.stringify(details),
+      },
+      500,
+    );
   }
-  const updated = (await patchRes.json().catch(() => null)) as Array<InstanceRow | CuratedInstanceRow> | null;
+  const updated = (await patchRes.json().catch(() => null)) as Array<
+    InstanceRow | CuratedInstanceRow
+  > | null;
   updatedInstance = updated?.[0] ?? updatedInstance;
 
   if (!updatedInstance) {
@@ -392,10 +933,8 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
 
   if (updatedInstance) {
     const shouldTrigger =
-      config !== undefined ||
-      (status === 'published' && updatedInstance.status === 'published');
-    const updatedKind = resolveInstanceKind(updatedInstance);
-    if (shouldTrigger && updatedKind !== 'curated' && updatedInstance.status === 'published') {
+      config !== undefined || (status === 'published' && updatedInstance.status === 'published');
+    if (shouldTrigger && updatedInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
         env,
         instance: updatedInstance,
@@ -423,32 +962,85 @@ export async function handleWorkspaceUpdateInstance(req: Request, env: Env, work
     const updatedPrevStatus = prevStatus;
     const updatedNextStatus = updatedInstance.status;
     const configChanged = config !== undefined;
-    if (isCurated && updatedNextStatus === 'published' && (updatedPrevStatus !== updatedNextStatus || configChanged)) {
-      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: ['en'] });
-    } else if (!isCurated && updatedNextStatus === 'published' && (statusChanged || configChanged)) {
-      const normalized = normalizeLocaleList(workspace.l10n_locales, 'l10n_locales');
-      const locales = normalized.ok ? normalized.locales : [];
-      const maxLocalesTotalRaw = policyResult.policy.caps['l10n.locales.max'];
-      const maxLocalesTotal = maxLocalesTotalRaw == null ? null : Math.max(1, maxLocalesTotalRaw);
-      const deduped = Array.from(new Set(['en', ...locales]));
-      const limited = maxLocalesTotal == null ? deduped : deduped.slice(0, maxLocalesTotal);
-      if (env.RENDER_SNAPSHOT_QUEUE) {
-        const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
-        const regen = await consumeBudget({
-          env,
-          scope: { kind: 'workspace', workspaceId },
-          budgetKey: 'budget.snapshots.regens',
-          max: maxRegens,
-          amount: 1,
-        });
-        if (regen.ok) {
-          await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: limited });
-        } else {
-          console.log('[ParisWorker] Snapshot regen budget exceeded', { workspaceId, publicId, detail: regen.detail });
-        }
+    if (
+      isCurated &&
+      updatedNextStatus === 'published' &&
+      (updatedPrevStatus !== updatedNextStatus || configChanged)
+    ) {
+      const enqueue = await enqueueRenderSnapshot(env, {
+        publicId,
+        action: 'upsert',
+        locales: ['en'],
+      });
+      if (!enqueue.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: enqueue.error,
+          },
+          503,
+        );
       }
-    } else if (!isCurated && updatedPrevStatus === 'published' && updatedNextStatus === 'unpublished') {
-      await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
+    } else if (
+      !isCurated &&
+      updatedNextStatus === 'published' &&
+      (statusChanged || configChanged)
+    ) {
+      const { locales: activeLocales } = resolveActivePublishLocales(
+        workspace.l10n_locales,
+        policyResult.policy,
+      );
+      const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
+      const regen = await consumeBudget({
+        env,
+        scope: { kind: 'workspace', workspaceId },
+        budgetKey: 'budget.snapshots.regens',
+        max: maxRegens,
+        amount: 1,
+      });
+      if (!regen.ok) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: regen.reasonKey,
+            upsell: 'UP',
+            detail: regen.detail,
+          },
+          403,
+        );
+      }
+      const enqueue = await enqueueRenderSnapshot(env, {
+        publicId,
+        action: 'upsert',
+        locales: activeLocales,
+      });
+      if (!enqueue.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: enqueue.error,
+          },
+          503,
+        );
+      }
+    } else if (
+      !isCurated &&
+      updatedPrevStatus === 'published' &&
+      updatedNextStatus === 'unpublished'
+    ) {
+      const enqueue = await enqueueRenderSnapshot(env, { publicId, action: 'delete' });
+      if (!enqueue.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: enqueue.error,
+          },
+          503,
+        );
+      }
     }
   }
 
@@ -468,7 +1060,10 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
 
   const createGate = can(policyResult.policy, 'instance.create');
   if (!createGate.allow) {
-    return ckError({ kind: 'DENY', reasonKey: createGate.reasonKey, upsell: 'UP', detail: createGate.detail }, 403);
+    return ckError(
+      { kind: 'DENY', reasonKey: createGate.reasonKey, upsell: 'UP', detail: createGate.detail },
+      403,
+    );
   }
 
   let payload: unknown;
@@ -486,9 +1081,18 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   const publicIdResult = assertPublicId((payload as any).publicId);
   const configResult = assertConfig((payload as any).config);
   const statusResult = assertStatus((payload as any).status);
-  const metaResult = (payload as any).meta !== undefined ? assertMeta((payload as any).meta) : { ok: true as const, value: undefined };
+  const metaResult =
+    (payload as any).meta !== undefined
+      ? assertMeta((payload as any).meta)
+      : { ok: true as const, value: undefined };
 
-  if (!widgetTypeResult.ok || !publicIdResult.ok || !configResult.ok || !statusResult.ok || !metaResult.ok) {
+  if (
+    !widgetTypeResult.ok ||
+    !publicIdResult.ok ||
+    !configResult.ok ||
+    !statusResult.ok ||
+    !metaResult.ok
+  ) {
     return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   }
 
@@ -511,7 +1115,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     );
   }
 
-  const status = isCurated ? 'published' : requestedStatus ?? 'unpublished';
+  const status = isCurated ? 'published' : (requestedStatus ?? 'unpublished');
 
   if (isCurated && !allowCuratedWrites(env)) {
     return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.superadmin.localOnly' }, 403);
@@ -538,7 +1142,7 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         detail: issues[0]?.message,
         paths: issues.map((i) => i.path),
       },
-      422
+      422,
     );
   }
 
@@ -566,14 +1170,23 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     });
     if (!curatedInsert.ok) {
       const details = await readJson(curatedInsert);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      );
     }
     const created = (await curatedInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     createdInstance = created?.[0] ?? null;
   } else {
     const widgetTypesCapRaw = policyResult.policy.caps['widgets.types.max'];
     const widgetTypesCap =
-      typeof widgetTypesCapRaw === 'number' && Number.isFinite(widgetTypesCapRaw) ? Math.max(0, Math.floor(widgetTypesCapRaw)) : null;
+      typeof widgetTypesCapRaw === 'number' && Number.isFinite(widgetTypesCapRaw)
+        ? Math.max(0, Math.floor(widgetTypesCapRaw))
+        : null;
 
     let widget = await loadWidgetByType(env, widgetType);
     if (!widget) {
@@ -583,19 +1196,36 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify({
           type: widgetType,
-          name: typeof widgetName === 'string' && widgetName.trim() ? widgetName.trim() : (titleCase(widgetType) || widgetType),
+          name:
+            typeof widgetName === 'string' && widgetName.trim()
+              ? widgetName.trim()
+              : titleCase(widgetType) || widgetType,
         }),
       });
       if (!insertRes.ok) {
         const details = await readJson(insertRes);
-        return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: JSON.stringify(details),
+          },
+          500,
+        );
       }
       const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
       widget = created?.[0] ?? null;
     }
 
     if (!widget?.id) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: 'Failed to resolve widget row',
+        },
+        500,
+      );
     }
 
     // Enforce distinct widget types cap (per workspace tier).
@@ -619,15 +1249,25 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
         widget_id: `eq.${widget.id}`,
         limit: '1',
       });
-      const existingTypeRes = await supabaseFetch(env, `/rest/v1/widget_instances?${existingTypeParams.toString()}`, { method: 'GET' });
+      const existingTypeRes = await supabaseFetch(
+        env,
+        `/rest/v1/widget_instances?${existingTypeParams.toString()}`,
+        { method: 'GET' },
+      );
       if (!existingTypeRes.ok) {
         const details = await readJson(existingTypeRes);
         return ckError(
-          { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.readFailed',
+            detail: JSON.stringify(details),
+          },
           500,
         );
       }
-      const existingTypeRows = (await existingTypeRes.json().catch(() => null)) as Array<{ public_id?: string | null }> | null;
+      const existingTypeRows = (await existingTypeRes.json().catch(() => null)) as Array<{
+        public_id?: string | null;
+      }> | null;
       const hasWidgetType = Boolean(existingTypeRows?.length);
 
       if (!hasWidgetType) {
@@ -641,15 +1281,23 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
             limit: String(pageSize),
             offset: String(offset),
           });
-          const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, { method: 'GET' });
+          const res = await supabaseFetch(env, `/rest/v1/widget_instances?${params.toString()}`, {
+            method: 'GET',
+          });
           if (!res.ok) {
             const details = await readJson(res);
             return ckError(
-              { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) },
+              {
+                kind: 'INTERNAL',
+                reasonKey: 'coreui.errors.db.readFailed',
+                detail: JSON.stringify(details),
+              },
               500,
             );
           }
-          const rows = (await res.json().catch(() => null)) as Array<{ widget_id?: string | null }> | null;
+          const rows = (await res.json().catch(() => null)) as Array<{
+            widget_id?: string | null;
+          }> | null;
           if (!rows?.length) break;
           for (const row of rows) {
             const id = typeof row?.widget_id === 'string' ? row.widget_id : null;
@@ -688,7 +1336,14 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
     });
     if (!instanceInsert.ok) {
       const details = await readJson(instanceInsert);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      );
     }
     const created = (await instanceInsert.json().catch(() => null)) as InstanceRow[] | null;
     createdInstance = created?.[0] ?? null;
@@ -697,7 +1352,21 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
   if (createdInstance) {
     const createdKind = resolveInstanceKind(createdInstance);
     if (createdKind === 'curated' && createdInstance.status === 'published') {
-      await enqueueRenderSnapshot(env, { publicId, action: 'upsert', locales: ['en'] });
+      const enqueue = await enqueueRenderSnapshot(env, {
+        publicId,
+        action: 'upsert',
+        locales: ['en'],
+      });
+      if (!enqueue.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: enqueue.error,
+          },
+          503,
+        );
+      }
     } else if (createdKind !== 'curated' && createdInstance.status === 'published') {
       const enqueueResult = await enqueueL10nJobs({
         env,
@@ -718,6 +1387,45 @@ export async function handleWorkspaceCreateInstance(req: Request, env: Env, work
           500,
         );
       }
+
+      const { locales: activeLocales } = resolveActivePublishLocales(
+        workspace.l10n_locales,
+        policyResult.policy,
+      );
+      const maxRegens = policyResult.policy.budgets['budget.snapshots.regens']?.max ?? null;
+      const regen = await consumeBudget({
+        env,
+        scope: { kind: 'workspace', workspaceId },
+        budgetKey: 'budget.snapshots.regens',
+        max: maxRegens,
+        amount: 1,
+      });
+      if (!regen.ok) {
+        return ckError(
+          {
+            kind: 'DENY',
+            reasonKey: regen.reasonKey,
+            upsell: 'UP',
+            detail: regen.detail,
+          },
+          403,
+        );
+      }
+      const enqueue = await enqueueRenderSnapshot(env, {
+        publicId,
+        action: 'upsert',
+        locales: activeLocales,
+      });
+      if (!enqueue.ok) {
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.publish.failed',
+            detail: enqueue.error,
+          },
+          503,
+        );
+      }
     }
   }
 
@@ -729,7 +1437,10 @@ const WEBSITE_CREATIVE_PAGES = new Set(['overview', 'templates', 'examples', 'fe
 function assertWebsiteCreativePage(value: unknown) {
   const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
   if (!trimmed || !WEBSITE_CREATIVE_PAGES.has(trimmed)) {
-    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalid' }, 422) };
+    return {
+      ok: false as const,
+      response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalid' }, 422),
+    };
   }
   return { ok: true as const, value: trimmed };
 }
@@ -739,7 +1450,10 @@ function assertWebsiteCreativeSlot(value: unknown) {
   // Website creative block ids are dot-separated slot keys (e.g. "feature.left.50").
   // Lock: lowercase segments matching [a-z0-9][a-z0-9_-]*, separated by dots.
   if (!trimmed || !/^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$/.test(trimmed)) {
-    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.slot.invalid' }, 422) };
+    return {
+      ok: false as const,
+      response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.slot.invalid' }, 422),
+    };
   }
   return { ok: true as const, value: trimmed };
 }
@@ -754,7 +1468,11 @@ function titleCase(input: string): string {
     .join(' ');
 }
 
-export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: Env, workspaceId: string) {
+export async function handleWorkspaceEnsureWebsiteCreative(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+) {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -783,7 +1501,8 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
   }
 
   const widgetTypeResult = assertWidgetType((payload as any).widgetType);
-  if (!widgetTypeResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
+  if (!widgetTypeResult.ok)
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' }, 422);
 
   const pageResult = assertWebsiteCreativePage((payload as any).page);
   if (!pageResult.ok) return pageResult.response;
@@ -800,7 +1519,8 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
   const publicId = `wgt_curated_${creativeKey}`;
 
   const publicIdResult = assertPublicId(publicId);
-  if (!publicIdResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
+  if (!publicIdResult.ok)
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' }, 422);
 
   const isValidType = await isKnownWidgetType(env, widgetType);
   if (!isValidType) {
@@ -815,7 +1535,8 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
   }
 
   const baselineConfigResult = assertConfig((payload as any).baselineConfig);
-  if (!baselineConfigResult.ok) return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
+  if (!baselineConfigResult.ok)
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' }, 422);
   const baselineConfig = baselineConfigResult.value;
 
   const issues = configNonPersistableUrlIssues(baselineConfig);
@@ -847,14 +1568,28 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
       });
       if (!insertRes.ok) {
         const details = await readJson(insertRes);
-        return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+        return ckError(
+          {
+            kind: 'INTERNAL',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: JSON.stringify(details),
+          },
+          500,
+        );
       }
       const created = (await insertRes.json().catch(() => null)) as WidgetRow[] | null;
       widget = created?.[0] ?? null;
     }
 
     if (!widget?.id) {
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: 'Failed to resolve widget row' }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: 'Failed to resolve widget row',
+        },
+        500,
+      );
     }
 
     const instanceInsert = await supabaseFetch(env, `/rest/v1/curated_widget_instances`, {
@@ -870,19 +1605,37 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
     });
     if (!instanceInsert.ok) {
       const details = await readJson(instanceInsert);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      );
     }
     const created = (await instanceInsert.json().catch(() => null)) as CuratedInstanceRow[] | null;
     existing = created?.[0] ?? null;
   } else {
-    const patchRes = await supabaseFetch(env, `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ config: baselineConfig, kind: resolveCuratedRowKind(publicId) }),
-    });
+    const patchRes = await supabaseFetch(
+      env,
+      `/rest/v1/curated_widget_instances?public_id=eq.${encodeURIComponent(publicId)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ config: baselineConfig, kind: resolveCuratedRowKind(publicId) }),
+      },
+    );
     if (!patchRes.ok) {
       const details = await readJson(patchRes);
-      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+      return ckError(
+        {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.db.writeFailed',
+          detail: JSON.stringify(details),
+        },
+        500,
+      );
     }
     const updated = (await patchRes.json().catch(() => null)) as CuratedInstanceRow[] | null;
     existing = updated?.[0] ?? existing;
@@ -898,16 +1651,25 @@ export async function handleWorkspaceEnsureWebsiteCreative(req: Request, env: En
   return json({ creativeKey, publicId }, { status: 200 });
 }
 
-async function loadWorkspaceBusinessProfile(env: Env, workspaceId: string): Promise<WorkspaceBusinessProfileRow | null> {
+async function loadWorkspaceBusinessProfile(
+  env: Env,
+  workspaceId: string,
+): Promise<WorkspaceBusinessProfileRow | null> {
   const params = new URLSearchParams({
     select: 'workspace_id,profile,sources,created_at,updated_at',
     workspace_id: `eq.${workspaceId}`,
     limit: '1',
   });
-  const res = await supabaseFetch(env, `/rest/v1/workspace_business_profiles?${params.toString()}`, { method: 'GET' });
+  const res = await supabaseFetch(
+    env,
+    `/rest/v1/workspace_business_profiles?${params.toString()}`,
+    { method: 'GET' },
+  );
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to load workspace profile (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to load workspace profile (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as WorkspaceBusinessProfileRow[];
   return rows?.[0] ?? null;
@@ -924,34 +1686,52 @@ async function upsertWorkspaceBusinessProfile(args: {
     profile: args.profile,
     ...(args.sources ? { sources: args.sources } : {}),
   };
-  const res = await supabaseFetch(args.env, `/rest/v1/workspace_business_profiles?on_conflict=workspace_id`, {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(payload),
-  });
+  const res = await supabaseFetch(
+    args.env,
+    `/rest/v1/workspace_business_profiles?on_conflict=workspace_id`,
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(payload),
+    },
+  );
   if (!res.ok) {
     const details = await readJson(res);
-    throw new Error(`[ParisWorker] Failed to upsert workspace profile (${res.status}): ${JSON.stringify(details)}`);
+    throw new Error(
+      `[ParisWorker] Failed to upsert workspace profile (${res.status}): ${JSON.stringify(details)}`,
+    );
   }
   const rows = (await res.json()) as WorkspaceBusinessProfileRow[];
   return rows?.[0] ?? null;
 }
 
-export async function handleWorkspaceBusinessProfileGet(req: Request, env: Env, workspaceId: string): Promise<Response> {
+export async function handleWorkspaceBusinessProfileGet(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+): Promise<Response> {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
   try {
     const row = await loadWorkspaceBusinessProfile(env, workspaceId);
     if (!row) return json({ error: 'NOT_FOUND' }, { status: 404 });
-    return json({ profile: row.profile, sources: row.sources ?? null, updatedAt: row.updated_at ?? null });
+    return json({
+      profile: row.profile,
+      sources: row.sources ?? null,
+      updatedAt: row.updated_at ?? null,
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     return json({ error: 'DB_ERROR', detail }, { status: 500 });
   }
 }
 
-export async function handleWorkspaceBusinessProfileUpsert(req: Request, env: Env, workspaceId: string): Promise<Response> {
+export async function handleWorkspaceBusinessProfileUpsert(
+  req: Request,
+  env: Env,
+  workspaceId: string,
+): Promise<Response> {
   const auth = assertDevAuth(req, env);
   if (!auth.ok) return auth.response;
 
@@ -965,15 +1745,23 @@ export async function handleWorkspaceBusinessProfileUpsert(req: Request, env: En
     return json([{ path: 'body', message: 'body must be an object' }], { status: 422 });
   }
 
-  const profile = isRecord((body as any).profile) ? ((body as any).profile as Record<string, unknown>) : null;
+  const profile = isRecord((body as any).profile)
+    ? ((body as any).profile as Record<string, unknown>)
+    : null;
   if (!profile) {
     return json([{ path: 'profile', message: 'profile must be an object' }], { status: 422 });
   }
-  const sources = isRecord((body as any).sources) ? ((body as any).sources as Record<string, unknown>) : undefined;
+  const sources = isRecord((body as any).sources)
+    ? ((body as any).sources as Record<string, unknown>)
+    : undefined;
 
   try {
     const row = await upsertWorkspaceBusinessProfile({ env, workspaceId, profile, sources });
-    return json({ profile: row?.profile ?? profile, sources: row?.sources ?? sources ?? null, updatedAt: row?.updated_at ?? null });
+    return json({
+      profile: row?.profile ?? profile,
+      sources: row?.sources ?? sources ?? null,
+      updatedAt: row?.updated_at ?? null,
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     return json({ error: 'DB_ERROR', detail }, { status: 500 });
