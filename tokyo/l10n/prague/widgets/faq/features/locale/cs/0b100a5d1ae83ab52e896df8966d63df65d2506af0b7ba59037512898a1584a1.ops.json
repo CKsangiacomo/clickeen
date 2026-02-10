@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funkce FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Jak funguje widget FAQ: SEO, lokalizace, publikování a úpravy s pomocí AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Jak funguje widget FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Od návrhů s AI přes lokalizaci až po SEO — systémy, které udržují odpovědi přesné a snadno dohledatelné."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Popište to jednou. AI doplní zbytek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Vygenerujte ve editoru strukturované návrhy a před publikováním každý návrh přijměte, upravte nebo zamítněte."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Až 29 jazyků v jednom widgetu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Automaticky zobrazujte přeložené odpovědi a tam, kde záleží na tónu značky nebo nuancích, dolaďte text ručně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Publikujte jednou. Aktualizujte všechny stránky."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Upravte vše na jednom místě, publikujte a pošlete nejnovější odpovědi do každého živého vložení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Vyhledávače vaše odpovědi přečtou"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Odpovědi renderované na serveru, výstup se schématem a deep linky pomáhají vyhledávačům indexovat a zobrazovat správný obsah."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google vidí každé slovo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Rozšířené úryvky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Hluboké odkazování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Server-side rendering udrží odpovědi indexovatelné a s téměř nulovým posunem rozložení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Automatické JSON-LD pomáhá vyhledávačům zobrazovat vaše odpovědi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Nasměrujte uživatele na konkrétní odpověď, kterou potřebují, pomocí stabilní URL."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Živá znalostní báze, která roste s vámi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Udržujte odpovědi přesné, i když se vyvíjí váš produkt, pravidla i publikum."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Spolehlivé už z principu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Verzované publikování a jasně dané hranice pro „live“ obsah udrží časté změny pod kontrolou i v týmu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Verzované změny"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Hranice publikování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Cacheované na edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Každé publikování se verzují, takže tým může iterovat s kontrolou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Živý obsah se změní až po výslovném publikování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Milisekundy rozhodují. Odpovědi doručujeme z lokace nejbližší vašemu uživateli."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Plná kontrola nad designem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Nastavte zaoblení, stíny, ohraničení, rozestupy i typografii ve vizuálním editoru navrženém pro konzistenci značky."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Rozvržení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Motivy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Struktury akordeonu, seznamu i karet s responzivními ovladači rozestupů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Typografie podle rolí pro nadpisy, otázky, odpovědi i CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Podpora světlého i tmavého režimu s kontrolou brandových barev."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globální doručování ve výchozím nastavení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Spojte lokalizaci, SEO a doručování na edge do jednoho systému, aby globální stránky zůstaly rychlé a srozumitelné."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge doručování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalizace"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Doručováno z edge infrastruktury."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Až 29 jazyků s možností přepsání."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Strukturované odpovědi s podporou JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Stvořené pro produkční weby"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Použijte standardní nebo bezskriptové vložení a udržte živé aktualizace předvídatelné díky explicitnímu publikování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Způsoby vložení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Kontrola publikování"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Skládání bez kompromisů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standardní vložení přes script a bezskriptová varianta přes iframe."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Explicitní publikační proces pro změny naživo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Styly, obsah i jazyky kombinujete bez forků."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Vytvořte lepší FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Začněte zdarma, publikujte rychle a udržujte FAQ aktuální na každé stránce i v každém jazyce."
+    }
+  ],
+  "v": 1
+}

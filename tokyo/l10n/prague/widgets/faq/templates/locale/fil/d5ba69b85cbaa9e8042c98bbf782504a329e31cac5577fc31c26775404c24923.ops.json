@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga template ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Magsimula sa pro-designed na template ng FAQ. I-customize ang lahat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Isang FAQ widget. Lahat ng estilo. Kahit anong wika."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Pumili ng ready-made na estilo o magdisenyo mula sa simula, tapos mag-publish nang isang beses at panatilihing updated ang bawat live FAQ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Isang FAQ widget. Walang hanggan ang itsura."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Lumipat sa Liquid Glass, Pure Canvas, Rebel Blocks, at Enterprise Prime nang hindi nire-rewrite ang mga sagot mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Light mode. Dark mode. Anumang mode—mode mo ’yan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Panimula lang ang mga template. Ikaw ang may kontrol sa dulo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kalayaang magdisenyo, built in."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Mula layout systems hanggang visual finishes at typography roles, kontrolado mo ang bawat design decision sa editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Mga layout, sa paraan mo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrol sa itsura nang walang limitasyon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Eksaktong typography"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Maraming layout system, hindi iisa. Per-breakpoint na istruktura. Independent na padding at spacing para sa desktop/mobile. Kontrolin ang columns, stacking, alignment, at reflow—eksakto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Per-corner radius. Borders na may custom na kulay. Mga shadow sa labas at loob (linked o independent per-side). Gradient, image, o video backgrounds. Buong kontrol sa visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Anim na natatanging role (headline, body, question, answer, button, section). Pumili mula sa 17 Google Fonts. Weight, style, size—lahat nako-customize per role. Dynamic na scales."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Magpalit ng layout agad-agad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Pumili ng Accordion, List, o Cards at magpalit anumang oras nang hindi binubuo muli ang content mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Kasama ang interaction design"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "May built-in na hover, active, at focus states para laging pulido ang FAQ mo sa kahit anong device."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipong tama ang dating"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Gamitin ang sarili mong fonts o ang library namin, tapos ayusin ang hierarchy para sa headlines, questions, answers, at CTAs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Awtomatiko ang dark mode"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Awtomatikong umaangkop ang FAQ mo sa light o dark sections para laging natural ang dating ng design."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perpektong mobile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Nananatiling malinaw at madaling basahin ang tap targets, spacing, at layout sa phones, tablets, at desktop screens."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Buuin ang FAQ mo sa tatlong hakbang"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Pumili ng panimulang estilo, i-fine-tune ang bawat detalye, at mag-publish ng isang bersyon na nag-a-update kahit saan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Pumili ng estilo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "I-customize ang lahat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "I-publish"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Magsimula sa template na tugma sa brand mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Ayusin ang layout, spacing, colors, radius, at typography sa visual editor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Mag-push ng isang update at magiging live ito kahit saan naka-embed ang FAQ mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Magsimula sa template. Gawin mong iyo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Pumili ng kahit anong template, ipantugma sa brand mo, at i-launch ang FAQ widget mo nang libre."
+    }
+  ],
+  "v": 1
+}

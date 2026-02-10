@@ -32,6 +32,10 @@ const TRANSLATE_BATCH_MAX_ITEMS = 60;
 const TRANSLATE_BATCH_MAX_CHARS = 2500;
 const TRANSLATE_REQUEST_RETRIES = 2;
 const TRANSLATE_SPLIT_MAX_DEPTH = 7;
+const TRANSLATE_LOCALE_CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(String(process.env.PRAGUE_L10N_TRANSLATE_CONCURRENCY || '4'), 10) || 4,
+);
 
 async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   const keys = [...locales].sort((a, b) => a.localeCompare(b));
@@ -270,6 +274,23 @@ async function sleep(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function runWithConcurrency(items, limit, worker) {
+  const queue = Array.isArray(items) ? items.slice() : [];
+  if (!queue.length) return;
+  const concurrency = Math.max(1, Math.min(limit, queue.length));
+
+  const runners = Array.from({ length: concurrency }, async () => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const next = queue.shift();
+      if (typeof next === 'undefined') return;
+      await worker(next);
+    }
+  });
+
+  await Promise.all(runners);
+}
+
 function splitTranslateBatches(items) {
   const batches = [];
   let current = [];
@@ -376,7 +397,7 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
   if (!items.length) return;
 
   const expectedPaths = new Set(items.map((item) => item.path));
-  for (const locale of locales) {
+  await runWithConcurrency(locales, TRANSLATE_LOCALE_CONCURRENCY, async (locale) => {
     const outDir = path.join(TOKYO_PRAGUE_ROOT, 'chrome', 'locale', locale);
     const outPath = path.join(outDir, `${baseFingerprint}.ops.json`);
     let needsRegeneration = false;
@@ -402,7 +423,7 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
         }
       }
     }
-    if (!needsRegeneration) continue;
+    if (!needsRegeneration) return;
     const job = {
       v: 1,
       surface: 'prague',
@@ -418,7 +439,7 @@ async function translateChrome({ base, baseFingerprint, baseUpdatedAt, locales }
     const ops = translated.map((item) => ({ op: 'set', path: item.path, value: item.value }));
     await ensureDir(outDir);
     await fs.writeFile(outPath, prettyStableJson({ v: 1, baseFingerprint, baseUpdatedAt, ops }));
-  }
+  });
   await writeLayerIndex({ pageId: 'chrome', locales, baseFingerprint });
 }
 
@@ -552,7 +573,7 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     previousByLocale.set(locale, { prevFingerprint, prevOpsByPath, prevSnapshot });
   }
 
-  for (const locale of missingLocales) {
+  await runWithConcurrency(missingLocales, TRANSLATE_LOCALE_CONCURRENCY, async (locale) => {
     const prev = previousByLocale.get(locale) ?? null;
 
     const carry = new Map();
@@ -619,7 +640,7 @@ async function translatePage({ pageId, pagePath, base, blockTypeMap, baseFingerp
     }
 
     overlaysByLocale.set(locale, ops);
-  }
+  });
 
   for (const locale of missingLocales) {
     const ops = overlaysByLocale.get(locale) ?? [];

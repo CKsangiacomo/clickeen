@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget de preguntas frecuentes - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Crea un widget de preguntas frecuentes rápido y atractivo. Personaliza, publica y localiza en minutos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Un widget de FAQ. Todas tus respuestas. En cualquier idioma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Diseñalo a tu manera, publica una sola vez y todas las FAQ activas de tu sitio se actualizan con las últimas respuestas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Ayuda a los visitantes a encontrar respuestas rápidamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Mira cómo tu FAQ se construye sola"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Introduce la URL de tu sitio web y escribiremos preguntas y respuestas al instante para ti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Todo lo que necesitas para crear la FAQ perfecta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Explora plantillas, ejemplos por industria y funciones clave para lanzar más rápido y sin adivinanzas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Encuentra tu estilo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Mira los resultados"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Desbloquea el poder"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Elige entre diseños de Acordeón, Lista y Tarjeta, y luego ajusta tipografía y estilos. Cada píxel es personalizable para que encaje de forma nativa con tu marca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "De hoteles y alojamientos a restaurantes y tours, descubre cómo los equipos usan un único widget de FAQ para responder con claridad a las preguntas repetidas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Usa Ombra AI, localización integrada y salida lista para SEO para escalar sin más trabajo de ingeniería."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "El mundo es tuyo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Da la bienvenida a cada visitante de tu web como si fuera de aquí. Traducciones instantáneas y naturales para una audiencia global."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Preguntas frecuentes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dales claridad al instante, reduce las preguntas repetidas a soporte y mantén a tu equipo enfocado en trabajo de mayor valor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Ayuda a los clientes a obtener respuestas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Deja de repetirte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Una situación en la que todos ganan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Responde de forma natural a las preguntas que tus visitantes hacen con más frecuencia. Encuentran lo que necesitan al instante, directamente en tu página."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Cada pregunta que responde el widget es un correo o una llamada menos que tienes que atender. Automatiza lo repetitivo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Cuando los visitantes obtienen respuestas, avanzan con confianza. Tu negocio se mantiene enfocado mientras se ayuda a los clientes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Control total del diseño"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Radio. Sombras. Bordes. Espaciado. Ajusta cada propiedad en nuestro editor visual sin escribir ni una sola línea de CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Un solo widget de FAQ para todas tus respuestas en cualquier idioma."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Edita una vez, haz clic en Publicar y cada página activa mostrará la última versión."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global por defecto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Llega a audiencias globales con traducción automática y ediciones manuales rápidas cuando el lenguaje de marca necesite un toque humano."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Rendimiento"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Genera y adapta el texto para su uso real en la interfaz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "El esquema listo para buscadores se incluye automáticamente."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "La entrega en el edge mantiene tiempos de carga rápidos en todo el mundo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Diseñado para tráfico real en producción"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Entrega rápida en el edge, alta disponibilidad fiable y patrones de accesibilidad que funcionan en sitios reales en producción."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Velocidad global"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Fiabilidad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Accesibilidad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Servido desde infraestructura edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Diseñado para una alta disponibilidad bajo carga real."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Creado con patrones de interacción accesibles."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Crea tu FAQ en minutos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Lanza gratis, personaliza tu diseño y publica una FAQ lista para producción en minutos."
+    }
+  ],
+  "v": 1
+}

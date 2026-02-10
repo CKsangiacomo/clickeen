@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funciones de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Cómo funciona el widget de FAQ: SEO, localización, flujo de publicación y edición asistida por IA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Cómo funciona el widget de FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "De los borradores con IA a la localización y el SEO: estos sistemas mantienen las respuestas precisas y fáciles de encontrar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Descríbelo una vez. La IA redacta el resto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Genera borradores estructurados dentro del editor y luego acepta, edita o rechaza cada sugerencia antes de publicar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Hasta 29 idiomas en un solo widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Sirve respuestas traducidas automáticamente y ajusta el texto manualmente cuando la voz de marca o el matiz importan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Publica una vez. Actualiza todas las páginas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Edita una sola vez desde una única fuente; luego publica y envía las respuestas más recientes a cada inserción en vivo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Los motores de búsqueda pueden leer tus respuestas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Respuestas renderizadas en servidor, salida de schema y enlaces profundos ayudan a los buscadores a indexar y mostrar el contenido correcto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google ve cada palabra"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Fragmentos enriquecidos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Enlaces profundos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "El renderizado del lado del servidor mantiene tus respuestas indexables con casi cero cambio de diseño."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "El JSON-LD automático ayuda a los motores de búsqueda a mostrar tus respuestas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Dirige a los usuarios a la respuesta específica que necesitan con una URL estable."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Una base de conocimiento viva que crece contigo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mantén las respuestas precisas a medida que evolucionan tu producto, tus políticas y tu audiencia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Fiable por diseño"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "La publicación con versiones y límites explícitos en producción mantienen bajo control las actualizaciones frecuentes en equipos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Cambios versionados"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Límite de publicación"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "En caché en el edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Cada publicación queda versionada para que los equipos iteren con control."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "El contenido en producción solo cambia tras una publicación explícita."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Los milisegundos importan. Entregamos respuestas desde la ubicación más cercana a tu usuario."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Control total del diseño"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Controla radios, sombras, bordes, espaciado y tipografía en un editor visual pensado para la consistencia de marca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Diseños"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Tipografía"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Temas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Estructuras de acordeón, lista y tarjetas con controles de espaciado responsive."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Tipografía por rol para títulos, preguntas, respuestas y CTAs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Soporte de modo claro y oscuro con control de colores de marca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Entrega global por defecto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Combina localización, SEO y entrega en el edge en un solo sistema para que tus páginas globales sigan siendo rápidas y claras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Entrega en el edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Localización"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Servido desde infraestructura en el edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Hasta 29 idiomas con soporte de sobrescrituras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Respuestas estructuradas con soporte JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Hecho para sitios en producción"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Usa inserciones estándar o sin scripts y mantén las actualizaciones en vivo predecibles con control explícito de publicación."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Modos de inserción"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Control de publicación"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Componibilidad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Inserción estándar con script y opciones de iframe sin scripts."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Flujo de publicación explícito para actualizaciones en vivo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Estilos, contenido e idiomas se combinan sin bifurcaciones."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Crea una mejor experiencia de FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Empieza gratis, publica rápido y mantén tus FAQ al día en cada página y en cada idioma."
+    }
+  ],
+  "v": 1
+}

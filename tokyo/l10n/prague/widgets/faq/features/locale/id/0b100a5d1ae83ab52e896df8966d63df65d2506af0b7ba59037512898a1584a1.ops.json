@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Fitur FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Cara kerja widget FAQ: SEO, lokalisasi, alur publikasi, dan penyuntingan berbantuan AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Cara kerja widget FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dari penyusunan dengan AI hingga lokalisasi dan SEO—ini sistem yang menjaga jawaban tetap akurat dan mudah ditemukan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Jelaskan sekali. AI menyusun sisanya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Hasilkan draf terstruktur langsung di editor, lalu terima, edit, atau tolak tiap saran sebelum dipublikasikan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Hingga 29 bahasa dalam satu widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Sajikan jawaban terjemahan secara otomatis dan sempurnakan pilihan kata secara manual saat suara brand atau nuansa itu penting."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Publikasikan sekali. Perbarui semua halaman."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Edit sekali dari satu sumber, lalu publikasikan dan dorong jawaban terbaru ke setiap embed yang aktif."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Mesin pencari bisa membaca jawaban Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Jawaban yang dirender di server, output schema, dan deep link membantu mesin pencari mengindeks dan menampilkan konten yang tepat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google melihat setiap kata"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Cuplikan kaya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Tautan mendalam"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Rendering sisi server menjaga jawaban Anda tetap dapat diindeks dengan pergeseran tata letak nyaris nol."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "JSON-LD otomatis membantu mesin pencari menampilkan jawaban Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Arahkan pengguna ke jawaban spesifik yang mereka butuhkan dengan URL yang stabil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Basis pengetahuan yang hidup dan tumbuh bersama Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Jaga jawaban tetap akurat seiring produk, kebijakan, dan audiens Anda berkembang."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Andal sejak desain"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Publikasi berversi dan batas konten live yang jelas membuat update yang sering tetap terkontrol untuk tim."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Perubahan berversi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Batas publikasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Di-cache di edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Setiap publikasi memiliki versi, sehingga tim bisa beriterasi dengan kontrol."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Konten live berubah hanya setelah publikasi yang eksplisit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Milidetik itu penting. Kami mengirimkan jawaban dari lokasi terdekat dengan pengguna Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Kontrol desain sepenuhnya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Atur radius, bayangan, border, spasi, dan tipografi dalam editor visual yang dibuat untuk konsistensi brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Tata letak"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tema"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Struktur accordion, daftar, dan kartu dengan kontrol spasi responsif."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Tipografi berbasis peran untuk judul, pertanyaan, jawaban, dan CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Dukungan mode terang dan gelap dengan kontrol warna brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Pengiriman global secara default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Gabungkan lokalisasi, SEO, dan edge delivery dalam satu sistem agar halaman global tetap cepat dan jelas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge delivery"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalisasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Disajikan dari infrastruktur edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Hingga 29 bahasa dengan dukungan override."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Jawaban terstruktur dengan dukungan JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Dibuat untuk situs production"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Gunakan embed standar atau tanpa skrip, dan jaga update live tetap terprediksi dengan kontrol publikasi yang eksplisit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Mode embed"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Kontrol publikasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Komposabilitas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Embed skrip standar dan opsi iframe tanpa skrip."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Alur publikasi eksplisit untuk update live."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Gaya, konten, dan bahasa berpadu tanpa perlu fork."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Bangun pengalaman FAQ yang lebih baik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Mulai gratis, publikasikan cepat, dan jaga FAQ Anda tetap terbaru di setiap halaman dan bahasa."
+    }
+  ],
+  "v": 1
+}

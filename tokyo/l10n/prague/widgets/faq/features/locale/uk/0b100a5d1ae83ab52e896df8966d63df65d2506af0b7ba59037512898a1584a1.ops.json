@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Можливості FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Як працює віджет FAQ: SEO, локалізація, процес публікації та редагування за підтримки ШІ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Як працює віджет FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Від чернеток за допомогою ШІ до локалізації та SEO — це системи, які підтримують відповіді точними та легко знаходяться."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Опишіть один раз. Решту чернеток зробить ШІ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Створюйте структуровані чернетки прямо в редакторі, а перед публікацією приймайте, редагуйте або відхиляйте кожну пропозицію."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "До 29 мов в одному віджеті."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Автоматично показуйте перекладені відповіді та за потреби вручну доводьте формулювання — коли важливі тон або бренд-голос."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Опублікуйте один раз. Оновіть усі сторінки."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Внесіть зміни один раз в єдиному джерелі, потім опублікуйте — і найсвіжіші відповіді з’являться в кожному активному вбудуванні."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Пошукові системи читають ваші відповіді"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Відповіді, відрендерені на сервері, schema-вивід і глибокі посилання допомагають пошуковикам індексувати та показувати потрібний контент."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google бачить кожне слово"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Розширені сніпети"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Глибинні посилання"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Серверний рендеринг зберігає відповіді придатними для індексації та майже прибирає зсув макета."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Автоматичний JSON-LD допомагає пошуковим системам показувати ваші відповіді."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Спрямовуйте користувачів на конкретну відповідь, яка їм потрібна, за допомогою стабільної URL-адреси."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Жива база знань, що зростає разом із вами."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Підтримуйте відповіді точними, навіть коли змінюються продукт, політики та аудиторія."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Надійність закладена в дизайн"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Версійна публікація та чіткі межі «в продакшені» допомагають командам контролювати часті оновлення."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Зміни з версіями"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Межа публікації"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Кешування на Edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Кожна публікація має версію, тож команди можуть ітерувати з повним контролем."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Зміни в live-контенті з’являються лише після явної публікації."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Мілісекунди мають значення. Ми доставляємо відповіді з локації, найближчої до вашого користувача."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Повний контроль над дизайном"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Керуйте радіусами, тінями, межами, відступами та типографікою у візуальному редакторі, створеному для цілісності бренду."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Макети"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Типографіка"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Теми"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Структури акордеона, списку та карток із адаптивним контролем відступів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Типографіка за ролями для заголовків, запитань, відповідей і CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Підтримка світлої та темної тем із контролем бренд-кольорів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Глобальна доставка за замовчуванням"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Поєднайте локалізацію, SEO та edge-доставку в одній системі — щоб глобальні сторінки залишалися швидкими й зрозумілими."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge-доставка"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Локалізація"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Подається з edge-інфраструктури."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "До 29 мов із підтримкою перевизначень."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Структуровані відповіді з підтримкою JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Створено для продакшн-сайтів"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Використовуйте стандартне або безскриптове вбудовування й тримайте live-оновлення передбачуваними завдяки явному контролю публікації."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Режими вбудовування"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Контроль публікації"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Композиційність"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Стандартне вбудовування через скрипт і безскриптовий варіант через iframe."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Явний процес публікації для live-оновлень."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Стилі, контент і мови поєднуються без форків."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Створіть кращий досвід FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Почніть безкоштовно, публікуйте швидко й тримайте FAQ актуальним на кожній сторінці та кожною мовою."
+    }
+  ],
+  "v": 1
+}

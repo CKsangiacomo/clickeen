@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ตัวอย่าง FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ตัวอย่าง FAQ จากโลกจริงสำหรับทุกอุตสาหกรรม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ตัวอย่างวิดเจ็ต FAQ แยกตามอุตสาหกรรม"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ดูว่าทีมในธุรกิจท่องเที่ยว โรงแรม และงานบริการ ใช้วิดเจ็ต FAQ ตัวเดียวเพื่อตอบคำถามซ้ำ ๆ ได้เร็วขึ้นอย่างไร"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "โรงแรม & รีสอร์ต"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "ตอบคำถามเรื่องเช็กอิน ที่จอดรถ และอาหารเช้าตั้งแต่ก่อนเข้าพัก ลดการถูกรบกวนที่ฟรอนต์เดสก์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "ร้านอาหาร คาเฟ่ & บาร์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "ทำให้รายละเอียดเมนู สารก่อภูมิแพ้ และเวลาเปิด-ปิดชัดเจนบนมือถือ เพื่อให้ลูกค้าตัดสินใจได้ไวขึ้น ลดการถาม-ตอบกับพนักงานซ้ำไปมา"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "ที่พักให้เช่า & ผู้จัดการอสังหาฯ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "ทำให้ขั้นตอนเช็กอิน รายละเอียด Wi‑Fi และกฎของบ้านสอดคล้องกันทุกที่พัก ด้วยขั้นตอนการเผยแพร่เพียงครั้งเดียว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ผู้เข้าชมจากทั่วโลกคาดหวังความชัดเจนทันที"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "เผยแพร่ครั้งเดียว แล้วส่งคำตอบเป็นภาษาที่ถูกต้องตั้งแต่คลิกแรก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "ผู้ให้บริการทัวร์ & บริษัทท่องเที่ยว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "สรุปจุดรับ-ส่ง กติกาการยกเลิก และนโยบายสภาพอากาศให้ชัดเจนตั้งแต่แรก เพื่อให้ลูกค้าตัดสินใจจองได้อย่างมั่นใจ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "สถานที่ท่องเที่ยว พิพิธภัณฑ์ & สวนสนุก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "อธิบายเรื่องบัตรเข้าชม กฎการเข้า และข้อมูลการเข้าถึง (Accessibility) ก่อนผู้เข้าชมเดินทางมา เพื่อให้การเข้าชมราบรื่นสำหรับทุกคน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "วงจรการทำงานที่เรียบง่าย"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "เก็บคำถามที่ถูกถามซ้ำไว้ครั้งเดียว อัปเดตและเผยแพร่ได้เร็ว และทำให้ทุกหน้าที่ออนไลน์สอดคล้องกันเมื่อรายละเอียดเปลี่ยน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "เพิ่มคำถามยอดฮิตของคุณ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "เผยแพร่ครั้งเดียว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "ซิงก์ทุกภาษาให้ตรงกัน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "เริ่มจากคำถามที่ผู้เข้าชมถามซ้ำ ๆ ก่อนตัดสินใจ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "คลิกเดียวทำให้คำตอบล่าสุดของคุณขึ้นแสดงบนทุกหน้า"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "เมื่อเนื้อหาต้นทางเปลี่ยน คำแปลจะรีเฟรชตาม เพื่อให้ข้อความของคุณสอดคล้องกันเสมอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "สร้างมาเพื่อใช้งานจริงในระดับโปรดักชัน"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "ความเร็วระดับ Global edge ตัวเลือกฝังใช้งานที่ยืดหยุ่น และขั้นตอนเผยแพร่ที่เรียบง่ายเพื่อให้คำตอบอัปเดตอยู่เสมอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "รวดเร็ว"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "ยืดหยุ่น"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "อัปเดตเสมอ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "ส่งมอบผ่าน edge ทั่วโลก"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "ตัวเลือกการฝังแบบมาตรฐานและแบบไม่ต้องใช้สคริปต์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "เผยแพร่ครั้งเดียวเพื่ออัปเดตทุกหน้าที่ออนไลน์"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "แก้ได้ด้วย Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "เริ่มฟรี ปรับดีไซน์ให้เข้ากับแบรนด์ และเผยแพร่ FAQ แบบไลฟ์ที่ขยายได้ครอบคลุมหลายหน้า"
+    }
+  ],
+  "v": 1
+}

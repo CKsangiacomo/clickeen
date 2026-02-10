@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 範本 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "從專業設計的 FAQ 範本開始。所有內容都能自訂。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "一個 FAQ 小工具。百變風格。支援所有語言。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "選擇現成風格或從零設計，發布一次，讓所有線上 FAQ 隨時保持最新。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "一個 FAQ 小工具。無限外觀。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "在 Liquid Glass、Pure Canvas、Rebel Blocks 與 Enterprise Prime 間自由切換，不必重寫任何答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "亮色模式。暗色模式。任何模式，都是你的模式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "範本只是起跑線。終點由你掌控。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "內建的設計自由。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "從版面系統到視覺質感與字體角色，每個設計決策都能在編輯器中精準掌控。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "版面隨你設定"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "外觀控制不設限"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "字體排印的精準度"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "多種版面系統，而非只有一種。可針對各斷點設定結構。桌機/手機的內距與間距可各自獨立。精準控制欄位、堆疊、對齊與重新排版。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "每個角的圓角半徑可獨立設定。邊框可自訂顏色。外陰影與內陰影（可連動或每邊獨立）。漸層、圖片或影片背景。全面掌握視覺呈現。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "六種明確角色（標題、內文、問題、答案、按鈕、區段）。可從 17 款 Google Fonts 中選擇。字重、樣式、大小——皆可依角色自訂。動態縮放。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "版型即刻切換"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "選擇手風琴、列表或卡片，隨時切換，不需重建內容。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "內建互動設計"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "內建滑過、啟用與焦點狀態，讓你的 FAQ 在每台裝置上都更精緻到位。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "恰到好處的字體"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "使用你的自訂字體或我們的字庫，並微調標題、問題、答案與 CTA 的層級。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "暗色模式自動啟用"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "你的 FAQ 會自動適配淺色或深色區塊，視覺始終自然一致。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "行動端完美呈現"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "點擊區、間距與版面在手機、平板與桌機上都清楚好讀。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "三步完成你的 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "選一個起始風格、細調每個細節，發布一個版本，處處同步更新。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "挑選風格"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "全面自訂"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "發布"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "從最符合你品牌的範本開始。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "在視覺化編輯器中調整版型、間距、色彩、圓角與字體。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "一次更新，所有嵌入 FAQ 的地方立刻同步上線。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "從範本開始，做成你的風格。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "挑選任一範本，調整成符合你的品牌風格，免費上線你的 FAQ 小工具。"
+    }
+  ],
+  "v": 1
+}

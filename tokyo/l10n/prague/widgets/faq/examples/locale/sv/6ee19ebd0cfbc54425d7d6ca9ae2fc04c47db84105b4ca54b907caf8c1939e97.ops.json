@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-exempel – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Verkliga FAQ-exempel för alla branscher."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exempel på FAQ-widgetar per bransch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Se hur team inom resor, hotell och serviceföretag använder en och samma FAQ-widget för att svara på återkommande frågor snabbare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotell & resorter"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Besvara frågor om incheckning, parkering och frukost innan gästerna anländer och minska avbrotten i receptionen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restauranger, kaféer & barer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Gör menyer, allergener och öppettider tydliga i mobilen så gästerna bestämmer sig snabbare med mindre fram och tillbaka med personalen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Semesterboenden & fastighetsförvaltare"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Håll incheckningssteg, Wi‑Fi-information och husregler konsekventa i alla boenden med ett enda publiceringsflöde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Globala besökare förväntar sig tydliga svar direkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Publicera en gång och ge svar på rätt språk redan från första klicket."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Turoperatörer & resebyråer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Ta upp upphämtningsplatser, avbokningsregler och väderpolicy i förväg så att bokningsbeslut tas med trygghet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Attraktioner, museer & nöjesparker"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Förtydliga biljetter, inträdesregler och tillgänglighetsinfo innan besökarna kommer, så blir ankomsten smidigare för alla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "En enkel arbetscykel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Fånga återkommande frågor en gång, publicera uppdateringar snabbt och håll alla sidor i synk när detaljer förändras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Lägg till era vanligaste frågor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Publicera en gång"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Håll alla språk synkade"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Börja med de återkommande frågor besökare ställer innan de bestämmer sig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Ett klick gör att era senaste svar blir live på varje sida."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "När grundinnehållet ändras uppdateras översättningarna, så budskapet alltid är konsekvent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Byggt för drift i produktion"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Snabb global edge-prestanda, flexibla inbäddningsalternativ och ett enkelt publiceringsflöde som håller svaren uppdaterade."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snabb"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Flexibelt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Alltid uppdaterat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Global edge-leverans."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standardiserade inbäddningar och alternativ utan script."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Publicera en gång för att uppdatera varje sida som är live."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Lös det med Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kom igång gratis, anpassa designen till ert varumärke och publicera en live-FAQ som skalar över flera sidor."
+    }
+  ],
+  "v": 1
+}

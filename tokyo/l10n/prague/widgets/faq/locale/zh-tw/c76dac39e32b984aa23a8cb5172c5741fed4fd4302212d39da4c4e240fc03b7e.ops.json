@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 小工具 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "打造快速、美觀的常見問題小工具。幾分鐘內即可自訂、發佈並進行本地化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "一個 FAQ 小工具。所有答案。任何語言。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "依你的方式設計，一次發布，網站上所有已上線的 FAQ 都會同步更新為最新答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "協助訪客快速找到答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "看著你的 FAQ 自己長出來"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "輸入你的網站網址，我們會立刻為你撰寫問題與答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "打造完美 FAQ 所需的一切"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "探索範本、產業案例與核心功能，讓你零猜測、快速上線。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "找到你的風格"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "看見成果"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "解鎖強大能力"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "在手風琴、清單與卡片版型中任選，並微調字體與樣式。每個像素都可自訂，讓它自然融入你的品牌。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "從飯店與短租到餐廳與行程，看各團隊如何用同一個 FAQ 小工具清楚回答重複問題。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "運用 Ombra AI、內建在地化與 SEO 友善輸出，無需額外工程也能規模化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "全世界任你探索"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "像在地人一樣迎接每位網站訪客。為全球受眾提供即時、自然的翻譯。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "常見問題"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "讓訪客立即釐清疑問，減少重複的客服提問，讓團隊專注在更高價值的工作。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "幫助客戶找到答案"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "別再重複回答"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "對每個人都是雙贏"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "自然回答訪客最常問的問題。他們能在你的頁面上立刻找到所需資訊。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "小工具回答的每個問題，都是你少處理的一封郵件或一通電話。把重複的事自動化。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "當訪客得到答案，就能更有信心地往下一步前進。你的業務保持專注，同時客戶也獲得協助。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "完全掌控設計"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "圓角、陰影、邊框、間距。在我們的視覺化編輯器中調整每個屬性，無需寫任何一行 CSS。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "一個 FAQ 小工具，任何語言都能呈現所有答案。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "編輯一次，按下發布，每個已上線頁面都會顯示最新版本。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "預設就能全球化"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "透過自動翻譯觸及全球受眾；當品牌措辭需要人味時，也能快速手動微調。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "效能"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "產出並調整文案，符合真實介面使用情境。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "自動包含可供搜尋的結構化資料（schema）。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "邊緣交付讓全球載入速度都保持迅速。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "為真實線上流量打造"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "快速的邊緣交付、穩定的可用性表現，以及在正式環境網站也經得起考驗的無障礙模式。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "全球速度"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "可靠性"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "無障礙"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "由邊緣基礎設施提供服務。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "在真實負載下也能維持高可用性而設計。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "採用符合無障礙的互動模式打造。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "幾分鐘完成你的 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "免費開始、自訂設計，幾分鐘內發布可正式上線的 FAQ。"
+    }
+  ],
+  "v": 1
+}

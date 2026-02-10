@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS şablonları - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Profesyonelce tasarlanmış bir SSS şablonuyla başlayın. Her şeyi özelleştirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Tek bir SSS widget’ı. Her stil. Her dil."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Hazır bir stil seçin ya da sıfırdan tasarlayın; tek sefer yayınlayın ve yayındaki tüm SSS’lerinizi güncel tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Tek bir SSS widget’ı. Sonsuz görünüm."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Yanıtlarınızı yeniden yazmadan Liquid Glass, Pure Canvas, Rebel Blocks ve Enterprise Prime arasında geçiş yapın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Açık mod. Koyu mod. Hangi mod olursa olsun, senin modun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Şablonlar sadece başlangıç çizgisi. Bitişi sen belirlersin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Tasarım özgürlüğü, içinde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Düzen sistemlerinden görsel bitişlere ve tipografi rollerine kadar tüm tasarım kararlarını editörde kontrol edebilirsiniz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Düzenler, senin tarzın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Sınırsız görünüm kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipografide hassasiyet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Tek bir düzen sistemi değil, birçok. Her breakpoint için yapı. Masaüstü/mobil padding ve aralıklar birbirinden bağımsız. Sütunları, üst üste binmeyi, hizalamayı ve yeniden akışı—tam olarak—kontrol edin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Her köşe için ayrı radius. Özel renkli kenarlıklar. Dışta ve içte gölgeler (bağlı ya da her kenar için bağımsız). Gradyan, görsel veya video arka planlar. Tam görsel hakimiyet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Altı farklı rol (başlık, gövde, soru, yanıt, buton, bölüm). 17 Google Font arasından seçin. Ağırlık, stil, boyut—her rol için özelleştirilebilir. Dinamik ölçekler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Düzenleri anında değiştirin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Akordeon, Liste veya Kartlar’ı seçin; içeriği yeniden oluşturmadan istediğiniz an değiştirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Etkileşim tasarımı dahil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover, aktif ve odak durumları hazır gelir; SSS’niz her cihazda özenli görünür."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "İyi hissettiren tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Kendi fontlarınızı veya kütüphanemizi kullanın; başlıklar, sorular, yanıtlar ve CTA’lar için hiyerarşiyi ince ayarlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Koyu mod otomatik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "SSS’niz açık veya koyu bölümlere otomatik uyum sağlar; tasarım her zaman doğal görünür."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobil kusursuzluk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Dokunma hedefleri, boşluklar ve düzen; telefon, tablet ve masaüstünde okunaklı kalır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "SSS’nizi üç adımda oluşturun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Bir başlangıç stili seçin, her detayı ince ayarlayın ve her yerde güncellenen tek bir sürüm yayınlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Bir stil seçin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Her şeyi özelleştirin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Yayınlayın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Markanıza uyan şablondan başlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Görsel editörde düzeni, aralıkları, renkleri, köşe yuvarlaklığını ve tipografiyi ayarlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Tek bir güncelleme yapın; SSS’nizin gömülü olduğu her yerde anında yayına alınsın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Bir şablonla başlayın. Kendi tarzınıza uyarlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "İstediğiniz şablonu seçin, markanıza uyacak şekilde düzenleyin ve SSS widget’ınızı ücretsiz yayınlayın."
+    }
+  ],
+  "v": 1
+}

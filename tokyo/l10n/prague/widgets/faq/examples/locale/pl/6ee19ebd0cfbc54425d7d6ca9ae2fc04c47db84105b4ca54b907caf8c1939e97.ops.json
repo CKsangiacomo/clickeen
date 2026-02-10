@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Przykłady FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Przykłady FAQ z prawdziwego świata dla każdej branży."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Przykłady widgetu FAQ według branży"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Zobacz, jak zespoły w turystyce, hotelarstwie i usługach korzystają z jednego widgetu FAQ, aby szybciej odpowiadać na powtarzające się pytania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotele i resorty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Odpowiadaj na pytania o zameldowanie, parking i śniadania, zanim goście przyjadą — i ogranicz przerwy na recepcji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restauracje, kawiarnie i bary"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Zadbaj o czytelne menu, alergeny i godziny otwarcia na mobile, aby goście szybciej podejmowali decyzje i mniej angażowali personel w wymianę pytań."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Wynajem wakacyjny i zarządzanie nieruchomościami"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Utrzymuj spójne instrukcje zameldowania, dane Wi‑Fi i zasady domu we wszystkich obiektach dzięki jednemu procesowi publikacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Goście z całego świata oczekują natychmiastowej jasności"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Opublikuj raz i podawaj odpowiedzi w odpowiednim języku już od pierwszego kliknięcia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Operatorzy turystyczni i biura podróży"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Ustal z góry punkty odbioru, zasady anulowania i politykę na wypadek pogody, aby decyzje o rezerwacji zapadały z pełnym przekonaniem."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Atrakcje, muzea i parki rozrywki"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Wyjaśnij kwestie biletów, zasad wejścia i dostępności, zanim odwiedzający przyjadą — aby wejście było płynniejsze dla wszystkich."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Prosty cykl działania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Zbierz powtarzające się pytania raz, szybko publikuj aktualizacje i utrzymuj spójność na wszystkich stronach na żywo, gdy zmieniają się szczegóły."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Dodaj najczęstsze pytania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Opublikuj raz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Utrzymuj synchronizację wszystkich języków"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Zacznij od pytań, które odwiedzający zadają najczęściej, zanim podejmą decyzję."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Jedno kliknięcie publikuje najnowsze odpowiedzi na każdej stronie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Gdy zmienia się treść bazowa, tłumaczenia odświeżają się, aby przekaz pozostał spójny."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Stworzone do użycia produkcyjnego"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Szybkość global edge, elastyczne opcje osadzania i prosty proces publikacji, który utrzymuje odpowiedzi na bieżąco."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Szybkie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Elastyczne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Aktualne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Globalne dostarczanie z edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standardowe i bezskryptowe opcje osadzania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Opublikuj raz, aby zaktualizować każdą stronę na żywo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Rozwiąż to z Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Zacznij za darmo, dopasuj wygląd do swojej marki i publikuj FAQ na żywo, które skaluje się na wielu stronach."
+    }
+  ],
+  "v": 1
+}

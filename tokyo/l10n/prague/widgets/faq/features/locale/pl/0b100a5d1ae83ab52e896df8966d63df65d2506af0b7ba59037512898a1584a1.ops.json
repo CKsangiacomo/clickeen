@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funkcje FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Jak działa widget FAQ: SEO, lokalizacja, proces publikacji i edycja wspierana przez AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Jak działa widget FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Od szkiców tworzonych przez AI po lokalizację i SEO — te mechanizmy dbają, by odpowiedzi były trafne i łatwe do znalezienia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Opisz raz. AI przygotuje resztę."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Twórz uporządkowane szkice w edytorze, a potem zaakceptuj, edytuj lub odrzuć każdą sugestię przed publikacją."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Nawet 29 języków w jednym widżecie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Automatycznie wyświetlaj przetłumaczone odpowiedzi i dopracuj brzmienie ręcznie, gdy liczy się ton marki lub niuanse."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Opublikuj raz. Zaktualizuj każdą stronę."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Edytuj raz w jednym źródle, a potem opublikuj i wypchnij najnowsze odpowiedzi do wszystkich osadzonych wersji na żywo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Wyszukiwarki mogą odczytać Twoje odpowiedzi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Renderowanie po stronie serwera, dane schema i linki bezpośrednie pomagają wyszukiwarkom indeksować i wyświetlać właściwe treści."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google widzi każde słowo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Bogate wyniki"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Deep linking"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Renderowanie po stronie serwera sprawia, że odpowiedzi są indeksowalne przy niemal zerowym przesunięciu układu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Automatyczny JSON-LD pomaga wyszukiwarkom wyświetlać Twoje odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Kieruj użytkowników do konkretnej odpowiedzi, której potrzebują, dzięki stabilnemu URL."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Żywa baza wiedzy, która rośnie razem z Tobą."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Utrzymuj odpowiedzi na bieżąco, gdy zmieniają się produkt, zasady i odbiorcy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Niezawodność wbudowana w projekt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Publikowanie z wersjonowaniem i jasne granice „na żywo” pozwalają zespołom bezpiecznie kontrolować częste aktualizacje."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Wersjonowane zmiany"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Granica publikacji"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Cache’owane na brzegu sieci"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Każda publikacja tworzy wersję, więc zespoły mogą iterować z pełną kontrolą."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Treści na żywo zmieniają się dopiero po świadomej publikacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Milisekundy mają znaczenie. Dostarczamy odpowiedzi z lokalizacji najbliższej Twojemu użytkownikowi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Pełna kontrola nad wyglądem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Kontroluj zaokrąglenia, cienie, obramowania, odstępy i typografię w wizualnym edytorze stworzonym dla spójności marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Układy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Typografia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Motywy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Układy akordeonu, listy i kart z responsywną kontrolą odstępów."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Typografia oparta o role dla tytułów, pytań, odpowiedzi i CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Obsługa trybu jasnego i ciemnego z kontrolą kolorów marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalna dystrybucja w standardzie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Połącz lokalizację, SEO i dostarczanie na edge w jednym systemie, aby globalne strony były szybkie i czytelne."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Dostarczanie na edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalizacja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Dostarczane z infrastruktury edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Nawet 29 języków z możliwością nadpisywania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Ustrukturyzowane odpowiedzi z obsługą JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Stworzone dla stron produkcyjnych"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Korzystaj ze standardowych lub bezskryptowych osadzeń i utrzymuj przewidywalne aktualizacje na żywo dzięki jawnej kontroli publikacji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Tryby osadzania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Kontrola publikacji"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Komponowalność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standardowe osadzenie przez skrypt oraz opcje iframe bez skryptów."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Jawny proces publikacji dla aktualizacji na żywo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Style, treści i języki łączą się bez rozgałęzień."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Zbuduj lepsze FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Zacznij za darmo, publikuj szybko i utrzymuj FAQ aktualne na każdej stronie i w każdym języku."
+    }
+  ],
+  "v": 1
+}

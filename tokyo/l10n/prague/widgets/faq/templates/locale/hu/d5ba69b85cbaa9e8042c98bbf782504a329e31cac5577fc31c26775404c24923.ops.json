@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK-sablonok – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kezdd egy profik által megtervezett GYIK-sablonnal. Szabj testre mindent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Egy GYIK widget. Minden stílus. Bármilyen nyelv."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Válassz kész stílust, vagy tervezz a nulláról, majd publikálj egyszer, és tartsd naprakészen az összes élő GYIK-et."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Egy GYIK widget. Végtelen megjelenés."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Válts Liquid Glass, Pure Canvas, Rebel Blocks és Enterprise Prime között anélkül, hogy újra kellene írnod a válaszaidat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Világos mód. Sötét mód. Bármilyen mód — ez a te módod."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "A sablonok csak a rajtvonalat jelentik. A célt te határozod meg."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Beépített tervezési szabadság."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Az elrendezési rendszerektől a vizuális finomhangoláson át a tipográfiai szerepkörökig minden dizájndöntést te irányítasz a szerkesztőben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Elrendezések, a te módodon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Megjelenésvezérlés korlátok nélkül"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipográfiai precizitás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Nem egy, hanem több elrendezési rendszer. Töréspontonkénti felépítés. Független asztali/mobil térközök és belső margók. Oszlopok, egymásra rendezés, igazítás és újratördelés — pontosan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Sarokrádiusz sarkonként. Szegélyek egyéni színekkel. Külső és belső árnyékok (összekapcsolva vagy oldalaként függetlenül). Átmenetes, képes vagy videós háttér. Teljes vizuális kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Hat külön szerep (címsor, törzsszöveg, kérdés, válasz, gomb, szakasz). Válassz 17 Google Font közül. Vastagság, stílus, méret — mind szerepenként testreszabható. Dinamikus skálák."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Válts elrendezést azonnal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Válaszd az Accordion, List vagy Cards elrendezést, és válts bármikor anélkül, hogy újra kellene építened a tartalmad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interakciótervezéssel együtt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "A hover, active és focus állapotok beépítettek, így a GYIK minden eszközön kifinomult hatást kelt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipográfia, ami a helyére kerül"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Használd a saját betűtípusaidat vagy a könyvtárunkat, majd állítsd be a hierarchiát a címsorokhoz, kérdésekhez, válaszokhoz és CTA-khoz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "A sötét mód automatikus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "A GYIK automatikusan igazodik a világos és sötét szekciókhoz, így a dizájn mindig natívnak hat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobilon tökéletes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Az érintési felületek, térközök és az elrendezés olvasható marad mobilon, tableten és asztali képernyőn is."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Készítsd el a GYIK-et három lépésben"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Válassz kiinduló stílust, finomhangolj minden részletet, és publikálj egyetlen verziót, amely mindenhol frissül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Válassz stílust"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Szabd testre mindent"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikálás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Indulj a márkádhoz illő sablonnal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Állítsd be az elrendezést, térközöket, színeket, lekerekítést és tipográfiát a vizuális szerkesztőben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Egyetlen frissítés, és mindenhol azonnal élesedik, ahol a GYIK be van ágyazva."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Indulj sablonnal. Tedd a sajátoddá."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Válassz bármelyik sablont, igazítsd a márkádhoz, és indítsd el ingyen a GYIK widgeted."
+    }
+  ],
+  "v": 1
+}

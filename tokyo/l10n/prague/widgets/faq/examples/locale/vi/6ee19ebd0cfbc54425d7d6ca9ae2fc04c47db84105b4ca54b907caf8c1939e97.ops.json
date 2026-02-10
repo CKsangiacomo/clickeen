@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Ví dụ Câu hỏi thường gặp - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Ví dụ FAQ thực tế cho mọi ngành."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Ví dụ widget FAQ theo ngành"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Xem cách các đội ngũ trong du lịch, lưu trú và dịch vụ dùng một widget FAQ để trả lời các câu hỏi lặp lại nhanh hơn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Khách sạn & Khu nghỉ dưỡng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Trả lời trước các câu hỏi về check-in, chỗ đỗ xe và bữa sáng trước khi khách đến, giảm gián đoạn tại quầy lễ tân."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Nhà hàng, Quán cà phê & Quán bar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Giữ rõ ràng thông tin thực đơn, chất gây dị ứng và giờ mở cửa trên di động để khách quyết định nhanh hơn, giảm trao đổi qua lại với nhân viên."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Cho thuê kỳ nghỉ & Quản lý bất động sản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Giữ nhất quán các bước check-in, thông tin Wi‑Fi và nội quy nhà trên mọi cơ sở với một quy trình xuất bản duy nhất."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Khách quốc tế kỳ vọng thông tin rõ ràng ngay lập tức"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Xuất bản một lần và hiển thị câu trả lời đúng ngôn ngữ ngay từ cú nhấp đầu tiên."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Đơn vị tổ chức tour & Đại lý du lịch"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Làm rõ trước điểm đón, quy định hủy và chính sách thời tiết để khách đặt chỗ với sự tự tin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Điểm tham quan, Bảo tàng & Công viên giải trí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Làm rõ vé, quy định vào cửa và thông tin hỗ trợ tiếp cận trước khi khách đến, để quá trình vào cổng mượt mà cho mọi người."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Một vòng vận hành đơn giản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Ghi lại câu hỏi lặp lại một lần, cập nhật nhanh và giữ mọi trang đang hiển thị đồng nhất khi thông tin thay đổi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Thêm các câu hỏi hàng đầu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Xuất bản một lần"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Đồng bộ mọi ngôn ngữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Bắt đầu với những câu hỏi lặp lại mà khách thường hỏi trước khi quyết định."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Chỉ một cú nhấp để đưa câu trả lời mới nhất lên mọi trang."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Khi nội dung gốc thay đổi, bản dịch được làm mới để thông điệp luôn nhất quán."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Thiết kế cho vận hành thực tế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Tốc độ edge toàn cầu, tùy chọn nhúng linh hoạt và quy trình xuất bản đơn giản giúp câu trả lời luôn cập nhật."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nhanh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Linh hoạt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Luôn cập nhật"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Phân phối biên toàn cầu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Tùy chọn nhúng tiêu chuẩn và không cần script."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Xuất bản một lần để cập nhật mọi trang đang hiển thị."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Giải quyết cùng Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bắt đầu miễn phí, tùy biến thiết kế theo thương hiệu của bạn và xuất bản một FAQ trực tiếp có thể mở rộng trên nhiều trang."
+    }
+  ],
+  "v": 1
+}

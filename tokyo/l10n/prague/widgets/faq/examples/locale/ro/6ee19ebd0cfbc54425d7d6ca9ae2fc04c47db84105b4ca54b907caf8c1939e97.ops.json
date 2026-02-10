@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemple de întrebări frecvente - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Exemple de întrebări frecvente (FAQ) din lumea reală pentru fiecare industrie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemple de widget FAQ pe industrii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vezi cum echipele din turism, ospitalitate și servicii folosesc un singur widget FAQ ca să răspundă mai rapid la întrebările repetate."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hoteluri & Resorturi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Răspunde din timp la întrebări despre check-in, parcare și mic dejun, înainte să ajungă oaspeții, și redu întreruperile la recepție."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restaurante, Cafenele & Baruri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Păstrează clar pe mobil detaliile din meniu, alergenii și programul, ca oaspeții să decidă mai repede, cu mai puține discuții cu stafful."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Închirieri de vacanță & Administratori de proprietăți"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Păstrează pașii de check-in, detaliile Wi‑Fi și regulile casei consecvente între proprietăți, cu un singur flux de publicare."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Vizitatorii internaționali se așteaptă la claritate instant"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Publici o singură dată și oferi răspunsuri în limba potrivită încă de la primul click."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Operatori de turism & Agenții de turism"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Clarifică din start punctele de preluare, regulile de anulare și politicile meteo, astfel încât deciziile de rezervare să se ia cu încredere."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Atracții, Muzee & Parcuri tematice"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Clarifică biletele, regulile de acces și informațiile despre accesibilitate înainte să vină vizitatorii, pentru o sosire mai ușoară pentru toată lumea."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Un flux de lucru simplu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Colectezi o singură dată întrebările repetate, publici rapid actualizări și menții aliniate toate paginile live pe măsură ce se schimbă detaliile."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Adaugă întrebările principale"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Publică o singură dată"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Păstrează toate limbile sincronizate"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Începe cu întrebările repetate pe care vizitatorii le pun înainte să decidă."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Cu un singur click, cele mai noi răspunsuri devin live pe fiecare pagină."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Când se schimbă conținutul de bază, traducerile se actualizează, astfel încât mesajul tău rămâne aliniat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Gândit pentru utilizare în producție"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Viteză globală la edge, opțiuni flexibile de embed și un flux simplu de publicare care păstrează răspunsurile la zi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rapid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Flexibil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "La zi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Livrare globală la edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Opțiuni de embed standard și fără scripturi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Publici o singură dată ca să actualizezi fiecare pagină live."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Rezolvă cu Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Începe gratuit, adaptează designul la brandul tău și publică un FAQ live care se scalează pe toate paginile."
+    }
+  ],
+  "v": 1
+}

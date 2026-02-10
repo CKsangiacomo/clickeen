@@ -13,8 +13,8 @@
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "One widget, infinite vibes.",
-        "subheadline": "From trending glassmorphism to timeless classics, switch visual styles instantly without rewriting a single answer."
+        "headline": "One FAQ widget. Every style. Any language.",
+        "subheadline": "Pick a ready-made style or design from scratch, then publish once and keep every live FAQ up to date."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -51,8 +51,8 @@
       "type": "split-carousel",
       "layout": "visual-left",
       "copy": {
-        "headline": "One widget, infinite vibes.",
-        "subheadline": "Move across premium style directions in seconds while keeping the same content, structure, and publishing flow."
+        "headline": "One FAQ widget. Infinite looks.",
+        "subheadline": "Move across Liquid Glass, Pure Canvas, Rebel Blocks, and Enterprise Prime without rewriting your answers."
       },
       "items": [
         {

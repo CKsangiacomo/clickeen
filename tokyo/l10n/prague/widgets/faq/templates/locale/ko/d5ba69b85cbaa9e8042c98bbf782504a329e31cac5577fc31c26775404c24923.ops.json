@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 템플릿 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "프로가 디자인한 FAQ 템플릿으로 시작하세요. 모든 것을 원하는 대로 커스터마이즈할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 위젯 하나. 모든 스타일. 어떤 언어든."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "미리 준비된 스타일을 고르거나 처음부터 디자인한 뒤, 한 번만 퍼블리시하면 모든 라이브 FAQ가 항상 최신으로 유지됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "FAQ 위젯 하나. 무한한 스타일."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "답변을 다시 쓰지 않고도 Liquid Glass, Pure Canvas, Rebel Blocks, Enterprise Prime을 자유롭게 오갈 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "라이트 모드. 다크 모드. 어떤 모드든, 당신의 모드입니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "템플릿은 출발선일 뿐입니다. 결승선은 당신이 정합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "내장된 디자인 자유도."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "레이아웃 시스템부터 비주얼 마감, 타이포그래피 역할까지—모든 디자인 결정은 에디터에서 제어할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "레이아웃도 내 방식대로"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "제한 없는 외형 제어"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "타이포그래피 정밀 제어"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "하나가 아닌 여러 레이아웃 시스템. 브레이크포인트별 구조. 데스크톱/모바일 패딩과 간격을 독립적으로 설정. 컬럼, 스태킹, 정렬, 리플로우까지—정확하게 제어하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "모서리별 라운드. 커스텀 컬러의 테두리. 바깥/안쪽 그림자(사이드별 연동 또는 독립 설정). 그라데이션, 이미지, 비디오 배경. 완전한 비주얼 통제권."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "서로 다른 6가지 역할(헤드라인, 본문, 질문, 답변, 버튼, 섹션). 17가지 Google Fonts에서 선택. 굵기, 스타일, 크기—역할별로 모두 커스터마이즈. 동적 스케일."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "레이아웃을 즉시 전환"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "아코디언, 리스트, 카드 중에서 선택하고, 콘텐츠를 다시 만들지 않고 언제든 전환하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "인터랙션 디자인까지 포함"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "호버·활성·포커스 상태가 기본으로 제공되어 어떤 기기에서도 FAQ가 세련되게 보입니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "딱 맞는 타이포그래피"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "내 폰트 또는 라이브러리를 사용하고, 헤드라인·질문·답변·CTA의 계층을 섬세하게 조정하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "다크 모드는 자동입니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQ가 라이트/다크 섹션에 자동으로 맞춰져, 언제나 자연스러운 디자인을 유지합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "모바일 완성도"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "터치 영역, 여백, 레이아웃이 휴대폰·태블릿·데스크톱에서도 읽기 좋게 유지됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "3단계로 FAQ 만들기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "시작 스타일을 고르고, 디테일을 모두 다듬은 뒤, 어디서나 함께 업데이트되는 한 가지 버전을 퍼블리시하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "스타일 선택"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "모두 커스터마이즈"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "퍼블리시"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "브랜드에 맞는 템플릿으로 시작하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "비주얼 에디터에서 레이아웃, 여백, 색상, 라운드, 타이포그래피를 조정하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "한 번 업데이트하면 FAQ가 삽입된 모든 곳에 즉시 반영됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "템플릿으로 시작하세요. 당신의 스타일로 완성하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "어떤 템플릿이든 선택해 브랜드에 맞게 꾸미고, FAQ 위젯을 무료로 시작하세요."
+    }
+  ],
+  "v": 1
+}

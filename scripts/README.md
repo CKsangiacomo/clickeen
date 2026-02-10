@@ -18,6 +18,13 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Publish: uses Wrangler `r2 bulk put` (fast), falls back to per-file uploads if unavailable.
   - Env: `WRANGLER_BIN` (defaults to `tokyo-worker/node_modules/.bin/wrangler`), `TOKYO_R2_BUCKET`, `PRAGUE_SYNC_PUBLISH_BULK_CONCURRENCY`, `PRAGUE_SYNC_PUBLISH_BULK_TIMEOUT_MS`
   - Log: `Logs/prague-sync.log`
+- `refresh-prague.mjs` — single command for Prague copy refresh (async by default).
+  - Run (async default): `node scripts/refresh-prague.mjs`
+  - Run (blocking): `node scripts/refresh-prague.mjs --wait`
+  - Run + publish local R2: `node scripts/refresh-prague.mjs --publish-local`
+  - Run + publish remote R2: `node scripts/refresh-prague.mjs --publish-remote`
+  - Behavior: wraps `prague-sync` with strict-latest verification and changed-only translation regeneration.
+  - Log (async): `Logs/prague-sync.log`
 
 ## Build / compile
 - `build-dieter.js` — builds Dieter assets into `tokyo/dieter`.
@@ -42,6 +49,7 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/l10n/translate-instances.mjs`
 - `prague-l10n/verify.mjs` / `prague-l10n/translate.mjs` — Prague overlay verify/translate.
   - Run: `node scripts/prague-l10n/verify.mjs`, `node scripts/prague-l10n/translate.mjs`
+  - Env: `PRAGUE_L10N_TRANSLATE_CONCURRENCY` (default `4`, locale-level parallelism)
 - `prague-l10n/status.mjs` / `prague-l10n/watch.mjs` — status view and local watch loop.
   - Run: `node scripts/prague-l10n/status.mjs`, `node scripts/prague-l10n/watch.mjs`
 - `prague-blocks/validate.mjs` / `prague-blocks/diff.mjs` — validate/diff Prague page blocks.

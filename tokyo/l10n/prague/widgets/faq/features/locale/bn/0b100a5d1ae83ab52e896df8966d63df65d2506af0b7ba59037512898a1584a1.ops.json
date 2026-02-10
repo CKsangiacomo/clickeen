@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ ফিচারসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "FAQ উইজেট কীভাবে কাজ করে: SEO, লোকালাইজেশন, প্রকাশের ফ্লো, এবং AI-সহায়ক এডিটিং।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ উইজেট কীভাবে কাজ করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI ড্রাফটিং থেকে লোকালাইজেশন ও SEO—এই সিস্টেমগুলোই উত্তরগুলোকে নির্ভুল ও সহজে খুঁজে পাওয়ার মতো রাখে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "একবার বর্ণনা করুন। বাকি অংশ AI ড্রাফট করবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "এডিটরের ভেতরেই স্ট্রাকচার্ড ড্রাফট তৈরি করুন, তারপর প্রকাশের আগে প্রতিটি পরামর্শ গ্রহণ, সম্পাদনা বা বাতিল করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "একটি উইজেটে সর্বোচ্চ ২৯টি ভাষা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "স্বয়ংক্রিয়ভাবে অনুবাদিত উত্তর দেখান এবং ব্র্যান্ড ভয়েস বা সূক্ষ্মতা গুরুত্বপূর্ণ হলে হাতে শব্দচয়ন ঠিক করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "একবার প্রকাশ করুন। প্রতিটি পেজ আপডেট করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "একটি সোর্সে একবার এডিট করুন, তারপর পাবলিশ করে সর্বশেষ উত্তরগুলো সব লাইভ এমবেডে পাঠিয়ে দিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "সার্চ ইঞ্জিন আপনার উত্তর পড়তে পারে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "সার্ভার-রেন্ডারড উত্তর, স্কিমা আউটপুট, এবং ডিপ লিংক সার্চ ইঞ্জিনকে সঠিক কনটেন্ট ইনডেক্স ও প্রদর্শনে সাহায্য করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google প্রতিটি শব্দ দেখে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "রিচ স্নিপেটস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "ডিপ লিঙ্কিং"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "সার্ভার-সাইড রেন্ডারিং আপনার উত্তরগুলোকে ইনডেক্সযোগ্য রাখে, প্রায় শূন্য লেআউট শিফটসহ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "স্বয়ংক্রিয় JSON-LD সার্চ ইঞ্জিনকে আপনার উত্তরগুলো আরও ভালোভাবে সারফেস করতে সাহায্য করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "স্থিতিশীল URL দিয়ে ব্যবহারকারীদের তাদের প্রয়োজনীয় নির্দিষ্ট উত্তরে নিয়ে যান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "আপনার সঙ্গে বেড়ে ওঠে এমন একটি জীবন্ত নলেজ বেস।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "আপনার প্রোডাক্ট, নীতিমালা ও অডিয়েন্স বদলালেও উত্তরগুলোকে নির্ভুল রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "ডিজাইনেই নির্ভরযোগ্য"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "ভার্সনড পাবলিশিং এবং স্পষ্ট লাইভ বাউন্ডারি টিমের জন্য ঘনঘন আপডেটকে নিয়ন্ত্রিত রাখে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "ভার্সনযুক্ত পরিবর্তন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "পাবলিশ বাউন্ডারি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "এজ-ক্যাশড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "প্রতিটি পাবলিশ ভার্সন হিসেবে থাকে, যাতে টিম নিয়ন্ত্রণ রেখে ইটারেট করতে পারে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "স্পষ্টভাবে পাবলিশ করার পরেই লাইভ কনটেন্ট বদলায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "মিলিসেকেন্ড গুরুত্বপূর্ণ। আমরা আপনার ব্যবহারকারীর নিকটতম অবস্থান থেকে উত্তর পৌঁছে দিই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "সম্পূর্ণ ডিজাইন নিয়ন্ত্রণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "ব্র্যান্ড কনসিস্টেন্সির জন্য তৈরি ভিজ্যুয়াল এডিটরে রেডিয়াস, শ্যাডো, বর্ডার, স্পেসিং এবং টাইপোগ্রাফি নিয়ন্ত্রণ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "টাইপোগ্রাফি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "থিমস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "রেসপন্সিভ স্পেসিং কন্ট্রোলসহ অ্যাকর্ডিয়ন, লিস্ট এবং কার্ড স্ট্রাকচার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "টাইটেল, প্রশ্ন, উত্তর এবং CTA-র জন্য রোল-ভিত্তিক টাইপোগ্রাফি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ব্র্যান্ড কালার নিয়ন্ত্রণসহ লাইট ও ডার্ক মোড সাপোর্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "ডিফল্টভাবেই গ্লোবাল ডেলিভারি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "একটি সিস্টেমে লোকালাইজেশন, SEO ও এজ ডেলিভারি মিলিয়ে নিন—যাতে গ্লোবাল পেজগুলো দ্রুত ও স্পষ্ট থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "এজ ডেলিভারি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "লোকালাইজেশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "এজ ইনফ্রাস্ট্রাকচার থেকে সার্ভ করা হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "ওভাররাইড সাপোর্টসহ সর্বোচ্চ ২৯টি ভাষা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "JSON-LD সাপোর্টসহ স্ট্রাকচার্ড উত্তর।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "প্রোডাকশন সাইটের জন্য তৈরি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "স্ট্যান্ডার্ড বা স্ক্রিপ্টলেস এমবেড ব্যবহার করুন এবং স্পষ্ট পাবলিশ কন্ট্রোলে লাইভ আপডেটকে পূর্বানুমেয় রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "এমবেড মোড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "পাবলিশ নিয়ন্ত্রণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "কম্পোজেবিলিটি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "স্ট্যান্ডার্ড স্ক্রিপ্ট এমবেড এবং স্ক্রিপ্টলেস iframe অপশন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "লাইভ আপডেটের জন্য স্পষ্ট পাবলিশ ফ্লো।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "স্টাইল, কনটেন্ট ও ভাষা—ফর্ক ছাড়াই একসাথে কাজ করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "আরও ভালো FAQ অভিজ্ঞতা তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ফ্রি দিয়ে শুরু করুন, দ্রুত পাবলিশ করুন, এবং প্রতিটি পেজ ও ভাষা জুড়ে আপনার FAQ আপডেটেড রাখুন।"
+    }
+  ],
+  "v": 1
+}
