@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תבניות שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "התחילו עם תבנית שאלות נפוצות בעיצוב מקצועי. התאימו הכול."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "וידג׳ט אחד, אינסוף וייבים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "מגלסמורפיזם טרנדי ועד קלאסיקות על־זמניות. החליפו סגנונות מיידית בלי לגעת בתוכן."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "וידג׳ט אחד, אינסוף וייבים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "מגלסמורפיזם טרנדי ועד קלאסיקות על־זמניות. החליפו סגנונות מיידית בלי לגעת בתוכן."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "מצב בהיר. מצב כהה. כל מצב — זה המצב שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "תבניות הן רק קו הזינוק. אתם שולטים בקו הסיום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "חופש עיצובי, מובנה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "מפריסות ועד גימורים ועד פונטים — התאמה אישית שמרגישה נטולת מאמץ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "פריסות, בדרך שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "שליטה במראה בלי גבולות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "דיוק טיפוגרפי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "הרבה מערכות פריסה, לא אחת. מבנה לפי נקודות שבירה. ריפוד ומרווחים נפרדים לדסקטופ/מובייל. שליטה בעמודות, ערימה, יישור וזרימה מחדש — בדיוק."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "רדיוס לכל פינה. מסגרות עם צבעים מותאמים. צללים חיצוניים ופנימיים (מקושרים או עצמאיים לכל צד). רקעי גרדיאנט, תמונה או וידאו. סמכות חזותית מלאה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "שישה תפקידים מובחנים (כותרת, גוף, שאלה, תשובה, כפתור, מקטע). בחרו מתוך 17 Google Fonts. משקל, סגנון, גודל — הכול ניתן להתאמה לכל תפקיד. קני מידה דינמיים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "החליפו מנועים מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Grid, List או Accordion."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "עיצוב אינטראקציה כלול"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "מצבי ריחוף. מצבים פעילים. טבעות פוקוס."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "טיפוגרפיה שמרגישה נכון"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "הביאו פונטים משלכם או בחרו מהספרייה שלנו."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "מצב כהה הוא אוטומטי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "זה פשוט עובד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "שלמות במובייל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "מטרות מגע שעובדות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "בנו FAQ נייטיבי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "מהרעיון ועד לייב בשלושה צעדים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "בחרו בסיס"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "כוונו את הפרטים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "שחררו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "בחרו את התבנית שמתאימה לווייב שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "שפרו צבעים ומרווחים בעורך הוויזואלי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "קוד הטמעה אחד. חי בכל מקום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "הגיע הזמן לבנות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "התחילו עם תבנית חינמית."
+    }
+  ],
+  "v": 1
+}

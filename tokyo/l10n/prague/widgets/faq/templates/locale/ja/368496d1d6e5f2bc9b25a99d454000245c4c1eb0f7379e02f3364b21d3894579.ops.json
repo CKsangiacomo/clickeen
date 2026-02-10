@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQテンプレート - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "プロがデザインしたFAQテンプレートからスタート。すべてをカスタマイズできます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "1つのウィジェット、無限の雰囲気。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "トレンドのグラスモーフィズムから時代を超える定番まで。コンテンツに触れずにスタイルを瞬時に切り替え。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "1つのウィジェット、無限の雰囲気。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "トレンドのグラスモーフィズムから時代を超える定番まで。コンテンツに触れずにスタイルを瞬時に切り替え。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ライトモード。ダークモード。どんなモードでも、あなたのモード。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "テンプレートはスタートラインにすぎません。ゴールを決めるのはあなたです。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "デザインの自由を、標準搭載。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "レイアウトから仕上げ、フォントまで—手間なく感じるカスタマイズ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "レイアウトは思いのまま"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "外観コントロールに制限なし"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "タイポグラフィの精密さ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "レイアウトシステムは1つではなく複数。ブレークポイントごとの構造。デスクトップ/モバイルで独立した余白と間隔。カラム、積み重ね、整列、リフローを—狙い通りにコントロール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "角ごとの角丸。カスタムカラーの境界線。外側/内側のシャドウ（各辺で連動または独立）。グラデーション、画像、動画の背景。見た目を完全に掌握。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "6つの明確な役割（見出し、本文、質問、回答、ボタン、セクション）。17種類のGoogle Fontsから選択。太さ、スタイル、サイズ—役割ごとにすべてカスタマイズ可能。ダイナミックなスケール。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "エンジンを瞬時に切り替え"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "グリッド、リスト、またはアコーディオン。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "インタラクションデザインも込み"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "ホバー状態。アクティブ状態。フォーカスリング。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "しっくりくる文字組み"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "お手持ちのフォントを使うか、ライブラリから選べます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "ダークモードは自動"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "ただ動きます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "モバイルも完璧"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "タップしやすい操作領域。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "ネイティブなFAQを作ろう"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "アイデアから公開まで3ステップ。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "土台を選ぶ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "細部を調整する"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "公開する"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "あなたの雰囲気に合うテンプレートを選びましょう。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ビジュアルエディターで色と余白を整えます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "埋め込みコードは1つ。どこでも公開。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "さあ、作ろう"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "無料テンプレートから始めよう。"
+    }
+  ],
+  "v": 1
+}

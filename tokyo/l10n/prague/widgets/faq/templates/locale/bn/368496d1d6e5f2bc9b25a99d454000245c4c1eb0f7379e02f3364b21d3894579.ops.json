@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ টেমপ্লেট - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "প্রো-ডিজাইন করা FAQ টেমপ্লেট দিয়ে শুরু করুন। সবকিছু কাস্টমাইজ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "একটি উইজেট, অসীম ভাইবস।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ট্রেন্ডিং গ্লাসমরফিজম থেকে কালজয়ী ক্লাসিক পর্যন্ত। কনটেন্ট না ছুঁয়েই তাৎক্ষণিকভাবে স্টাইল বদলান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "একটি উইজেট, অসীম ভাইবস।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "ট্রেন্ডিং গ্লাসমরফিজম থেকে কালজয়ী ক্লাসিক পর্যন্ত। কনটেন্ট না ছুঁয়েই তাৎক্ষণিকভাবে স্টাইল বদলান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "লাইট মোড। ডার্ক মোড। যেকোনো মোড—এটাই আপনার মোড।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "টেমপ্লেট শুধু শুরুর রেখা। ফিনিশ আপনার নিয়ন্ত্রণে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ডিজাইন স্বাধীনতা, বিল্ট-ইন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "লেআউট থেকে ফিনিশ থেকে ফন্ট—এমন কাস্টমাইজেশন যা একদম effortless লাগে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট, আপনার মতো করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "সীমাহীন অ্যাপিয়ারেন্স কন্ট্রোল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "টাইপোগ্রাফি প্রিসিশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "একটি নয়, অনেক লেআউট সিস্টেম। প্রতি ব্রেকপয়েন্টে স্ট্রাকচার। ডেস্কটপ/মোবাইলে আলাদা প্যাডিং ও স্পেসিং। কলাম, স্ট্যাকিং, অ্যালাইনমেন্ট, এবং রিফ্লো—একদম নিখুঁতভাবে নিয়ন্ত্রণ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "প্রতি-কোণার রেডিয়াস। কাস্টম রঙের বর্ডার। বাইরে ও ভেতরের শ্যাডো (লিঙ্কড বা প্রতি-সাইডে আলাদা)। গ্রেডিয়েন্ট, ইমেজ, বা ভিডিও ব্যাকগ্রাউন্ড। সম্পূর্ণ ভিজ্যুয়াল কর্তৃত্ব।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ছয়টি আলাদা রোল (headline, body, question, answer, button, section)। 17টি Google Fonts থেকে বেছে নিন। ওজন, স্টাইল, সাইজ—প্রতি রোলে সবকিছু কাস্টমাইজেবল। ডায়নামিক স্কেল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "তাৎক্ষণিকভাবে ইঞ্জিন বদলান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "গ্রিড, লিস্ট, বা অ্যাকর্ডিয়ন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "ইন্টারঅ্যাকশন ডিজাইন অন্তর্ভুক্ত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "হোভার স্টেট। অ্যাকটিভ স্টেট। ফোকাস রিং।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "যে টাইপ একদম ঠিক লাগে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "নিজস্ব ফন্ট আনুন বা আমাদের লাইব্রেরি থেকে বেছে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "ডার্ক মোড স্বয়ংক্রিয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "এটা নিজে থেকেই কাজ করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "মোবাইলে পারফেকশন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "কাজ করে এমন টাচ টার্গেট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "আপনার নেটিভ FAQ তৈরি করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "আইডিয়া থেকে লাইভ—তিন ধাপে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "একটি ভিত্তি বেছে নিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "ডিটেইলস টিউন করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "রিলিজ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "আপনার ভাইবের সাথে মানানসই টেমপ্লেটটি নির্বাচন করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ভিজ্যুয়াল এডিটরে রঙ ও স্পেসিং আরও নিখুঁত করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "একটি এম্বেড কোড। সর্বত্র লাইভ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "এখনই তৈরি করার সময়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "একটি ফ্রি টেমপ্লেট দিয়ে শুরু করুন।"
+    }
+  ],
+  "v": 1
+}

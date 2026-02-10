@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "b64eb29520c309dc2b616231cee00f0b589a4bc9cbce00e0f7adc35894120bfd",
+  "baseUpdatedAt": "2026-02-06T23:05:31.453Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উদাহরণ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "প্রতিটি শিল্পের জন্য বাস্তব-জগতের FAQ উদাহরণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "বাস্তব সমস্যা। মুহূর্তেই সমাধান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "দেখুন, বিশ্বের সেরা ব্র্যান্ডগুলো কীভাবে প্রশ্নের উত্তর দিতে Clickeen ব্যবহার করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "হোটেল ও আবাসন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "ডিজিটাল কনসিয়ার্জ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "রেস্তোরাঁ ও ডাইনিং"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "অর্ডার দেওয়ার আগেই মেনু সম্পর্কে স্পষ্টতা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "ভ্যাকেশন রেন্টালস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "যে ম্যানুয়াল আর কখনও হারায় না।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "তারা অনুবাদের জন্য অপেক্ষা করবে না"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "প্রথম ক্লিক থেকেই তাদের ভাষায় কথা বলুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "ট্যুর অপারেটরস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "আত্মবিশ্বাসই রূপান্তর ঘটায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "জাদুঘর ও দর্শনীয় স্থান"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "লাইনের ঝামেলা শেষ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "সেরা ব্র্যান্ডগুলো যেভাবে করে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "স্পষ্টতার জন্য তিনটি ধাপ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "এমবেড করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "অ্যাডাপ্ট করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "উত্তর দিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "কোড পেস্ট করুন। সঙ্গে সঙ্গে কাজ করবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "উইজেটটি আপনার কন্টেইনার ও ফন্টের সাথে মিলে যায়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "প্রশ্নগুলোর সমাধান ২৪/৭।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "একটি প্ল্যাটফর্মের মতো নির্মিত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "সবচেয়ে বড় ব্র্যান্ডগুলোর জন্যও যথেষ্ট নির্ভরযোগ্য।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "দ্রুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "নিরাপদ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "পরীক্ষিত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "গ্লোবাল এজ ডেলিভারি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "এন্টারপ্রাইজ-গ্রেড কমপ্লায়েন্স।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "সীমাহীনভাবে স্কেল করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeen দিয়ে সমাধান করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "আজই আপনার ফ্রি ডিজাইন শুরু করুন।"
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "686c15c7d92d19eb3d5beac6edcd50d6e5dd0995df607290701b2eb27ceb6c21",
+  "baseUpdatedAt": "2026-02-07T01:00:04.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Byg et hurtigt og flot FAQ-widget. Tilpas, udgiv og lokaliser på få minutter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Smukke svar. Bygget til at være hurtig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Den gennemførte FAQ-widget, din side fortjener. Ingen konfiguration, fuldt automatiseret."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjælp besøgende med hurtigt at finde svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Se din FAQ bygge sig selv"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Indtast din websides URL, så skriver vi spørgsmål og svar til dig med det samme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Alt, du behøver for at bygge den perfekte FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Dyk ned i specifikke skabeloner, eksempler fra den virkelige verden og stærke funktioner."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Find dit look"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Se resultaterne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Lås kraften op"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Vælg mellem Accordion-, Liste- og Kortlayouts, og finjustér derefter typografi og stilarter. Hver eneste pixel kan tilpasses, så det føles naturligt for dit brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Fra boutiquehoteller til detailhandlere med stort volumen – se, hvordan virksomheder bruger FAQs til at reducere supportmængden og øge tilliden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Gå ud over det basale med enterprise-klasse styrke. Dyk ned i Ombra AI-redigering, øjeblikkelig lokalisering og vores SEO-native arkitektur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Verden er din østers"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Byd alle besøgende velkommen som en lokal. Øjeblikkelige, naturlige oversættelser til et globalt publikum."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Ofte stillede spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Den enkleste måde at hjælpe dine besøgende og din virksomhed."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Hjælp kunder med at få svar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Stop med at gentage dig selv"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "En win-win for alle"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Besvar naturligt de spørgsmål, dine besøgende oftest stiller. De finder det, de har brug for, med det samme – direkte på din side."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Hvert spørgsmål, widgetten besvarer, er én email eller et opkald mindre, du skal håndtere. Automatisér gentagelserne."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Når besøgende får svar, går de videre med selvtillid. Din virksomhed kan holde fokus, mens kunderne får hjælp."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Fuld designkontrol"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Radius. Skygger. Kanter. Mellemrum. Finjustér hver egenskab i vores visuelle editor uden at skrive en eneste linje CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Den sidste FAQ, du nogensinde installerer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Én instans eller tusind. Ét sprog eller alle. Administrér hele din globale flåde uden friktion."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalt som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Øjeblikkelig lokalisering uden hovedpine."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Ydeevne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Automatisk skrivning og oversættelseskraft."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Schema-markup indsættes for synlighed i søgning."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Ingen layout shift. Indlæses lazy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Enterprise-klasse fundament"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Bygget til skala, hastighed og pålidelighed."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Hurtig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Pålidelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tilgængelig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Levering ved edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "99,99% oppetid."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "WCAG 2.1-kompatibel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Automatisér din support i dag"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Start din gratis prøveperiode."
+    }
+  ],
+  "v": 1
+}

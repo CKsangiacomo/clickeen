@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "686c15c7d92d19eb3d5beac6edcd50d6e5dd0995df607290701b2eb27ceb6c21",
+  "baseUpdatedAt": "2026-02-07T01:00:04.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ विजेट - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "तेज़, सुंदर FAQ विजेट बनाएँ। मिनटों में कस्टमाइज़ करें, प्रकाशित करें और स्थानीयकरण करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "खूबसूरत जवाब। तेज़ी के लिए बनाया गया।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "आपकी साइट के लायक पॉलिश्ड FAQ विजेट। बिना किसी कॉन्फ़िग के, पूरी तरह ऑटोमेटेड।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "अक्सर पूछे जाने वाले प्रश्न"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "आगंतुकों को जल्दी उत्तर ढूँढने में मदद करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "अपने FAQ को खुद बनते देखें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "अपनी वेबसाइट का URL दर्ज करें और हम तुरंत आपके लिए सवाल और जवाब लिख देंगे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "परफेक्ट FAQ बनाने के लिए आपको जो कुछ चाहिए"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "खास टेम्पलेट्स, वास्तविक उदाहरणों और शक्तिशाली फीचर्स में गहराई से जाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "अपना लुक चुनें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "नतीजे देखें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "ताकत अनलॉक करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Accordion, List, और Card लेआउट्स में से चुनें, फिर टाइपोग्राफी और स्टाइल्स को बारीकी से सेट करें। हर पिक्सल कस्टमाइज़ेबल है ताकि वह आपके ब्रांड के लिए नैटिव लगे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "बुटीक होटलों से लेकर हाई-वॉल्यूम रिटेलर्स तक, देखें कि व्यवसाय सपोर्ट वॉल्यूम घटाने और भरोसा बढ़ाने के लिए FAQs का उपयोग कैसे करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "एंटरप्राइज़-ग्रेड पावर के साथ बेसिक्स से आगे बढ़ें। Ombra AI एडिटिंग, इंस्टेंट लोकलाइज़ेशन, और हमारी SEO-नैटिव आर्किटेक्चर में गहराई से जाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "दुनिया आपकी मुट्ठी में है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "हर वेबसाइट विज़िटर का स्वागत लोकल की तरह करें। वैश्विक ऑडियंस के लिए तुरंत, प्राकृतिक अनुवाद।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "अक्सर पूछे जाने वाले सवाल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "अपने विज़िटर्स और अपने व्यवसाय की मदद करने का सबसे आसान तरीका।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "ग्राहकों को जवाब पाने में मदद करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "खुद को दोहराना बंद करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "सबके लिए विन-विन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "आपके विज़िटर जो सवाल सबसे ज़्यादा पूछते हैं, उनके जवाब स्वाभाविक रूप से दें। वे वहीँ आपकी पेज पर तुरंत अपनी ज़रूरत की चीज़ पा जाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "विजेट जिस भी सवाल का जवाब देता है, वह आपके लिए संभालने वाला एक ईमेल या कॉल कम हो जाता है। बार-बार होने वाले सवालों को ऑटोमेट करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "जब विज़िटर्स को जवाब मिलते हैं, वे भरोसे के साथ आगे बढ़ते हैं। आपका व्यवसाय फोकस में रहता है, और ग्राहकों को मदद मिलती है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "पूरी डिज़ाइन कंट्रोल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "रेडियस। शैडोज़। बॉर्डर्स। स्पेसिंग। एक भी लाइन CSS लिखे बिना हमारे विज़ुअल एडिटर में हर प्रॉपर्टी को ट्यून करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "आख़िरी FAQ जिसे आप कभी इंस्टॉल करेंगे"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "एक इंस्टेंस या एक हज़ार। एक भाषा या सभी। बिना किसी झंझट के अपने पूरे ग्लोबल फ्लीट को मैनेज करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "डिफ़ॉल्ट रूप से ग्लोबल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "बिना सिरदर्द के इंस्टेंट लोकलाइज़ेशन।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "परफ़ॉर्मेंस"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "ऑटो-राइटिंग और अनुवाद की शक्ति।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "सर्च विज़िबिलिटी के लिए Schema मार्कअप इंजेक्ट किया गया।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "ज़ीरो लेआउट शिफ्ट। लेज़ी लोडेड।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "एंटरप्राइज़-ग्रेड फ़ाउंडेशन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "स्केल, स्पीड और भरोसेमंदी के लिए बनाया गया।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "तेज़"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "विश्वसनीय"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "सुलभ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "एज डिलीवरी।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "99.99% अपटाइम।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "WCAG 2.1 कंप्लायंट।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "आज ही अपने सपोर्ट को ऑटोमेट करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "अपना फ्री ट्रायल शुरू करें।"
+    }
+  ],
+  "v": 1
+}

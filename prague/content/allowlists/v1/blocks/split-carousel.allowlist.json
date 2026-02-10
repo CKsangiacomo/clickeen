@@ -1,0 +1,13 @@
+{
+  "paths": [
+    {
+      "path": "copy.headline",
+      "type": "string"
+    },
+    {
+      "path": "copy.subheadline",
+      "type": "string"
+    }
+  ],
+  "v": 1
+}

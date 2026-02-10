@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Šablony FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Začněte s profesionálně navrženou šablonou FAQ. Přizpůsobte si úplně všechno."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Jeden widget, nekonečno vibeů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Od trendového glassmorphismu po nadčasovou klasiku. Styly přepnete okamžitě, aniž byste sahali na obsah."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Jeden widget, nekonečno vibeů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Od trendového glassmorphismu po nadčasovou klasiku. Styly přepnete okamžitě, aniž byste sahali na obsah."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Světlý režim. Tmavý režim. Jakýkoli režim — je to váš režim."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Šablony jsou jen startovní čára. Cíl máte pod kontrolou vy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Svoboda designu, rovnou v základu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Od rozvržení přes detaily až po písma — přizpůsobení, které působí bez námahy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Rozvržení podle vás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kontrola vzhledu bez limitů"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografická přesnost"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Více systémů rozvržení, ne jen jeden. Struktura pro každý breakpoint. Nezávislé odsazení a mezery pro desktop a mobil. Ovládejte sloupce, skládání, zarovnání i přelévání — přesně."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Poloměr zaoblení pro každý roh. Ohraničení s vlastními barvami. Stíny vně i uvnitř (svázané nebo nezávislé pro každou stranu). Pozadí s přechodem, obrázkem nebo videem. Naprostá vizuální kontrola."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Šest jasně oddělených rolí (nadpis, text, otázka, odpověď, tlačítko, sekce). Vyberte si ze 17 Google Fonts. Tloušťka, styl, velikost — vše nastavitelné pro každou roli. Dynamické škálování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Okamžitě přepínejte mezi rozvrženími"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Mřížka, seznam nebo akordeon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interakční design v ceně"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Stavy při najetí. Aktivní stavy. Ohraničení při fokusování."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Písmo, které sedí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Přineste si vlastní fonty nebo vybírejte z naší knihovny."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Tmavý režim je automatický"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Prostě to funguje."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Dokonalost na mobilu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Dotykové cíle, které fungují."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Vytvořte si nativní FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Od nápadu po spuštění ve třech krocích."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Vyberte základ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Vylaďte detaily"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Nasadit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Vyberte šablonu, která odpovídá vašemu vibeu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Dolaďte barvy a rozestupy ve vizuálním editoru."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Jeden embed kód. Živě všude."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Je čas tvořit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Začněte s bezplatnou šablonou."
+    }
+  ],
+  "v": 1
+}
