@@ -1,7 +1,10 @@
 {
   "v": 1,
   "paths": [
-    { "path": "timer.headline", "type": "richtext" },
+    { "path": "header.title", "type": "richtext" },
+    { "path": "header.subtitleHtml", "type": "richtext" },
+    { "path": "cta.label", "type": "string" },
+    { "path": "cta.href", "type": "string" },
     { "path": "actions.during.text", "type": "string" },
     { "path": "actions.after.text", "type": "string" }
   ]

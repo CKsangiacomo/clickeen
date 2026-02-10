@@ -133,12 +133,15 @@ body {
 }
 
 .ck-countdown {
+  --ck-header-gap: var(--space-4);
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
   background: transparent;
   box-sizing: border-box;
+}
+
+.ck-countdown__body {
+  display: grid;
+  gap: var(--space-4);
 }
 
 .ck-countdown[data-layout-align='left'] {

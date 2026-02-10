@@ -1,7 +1,9 @@
 {
   "v": 1,
   "paths": [
-    { "path": "timer.headline", "type": "richtext", "role": "headline" },
+    { "path": "header.title", "type": "richtext", "role": "headline" },
+    { "path": "header.subtitleHtml", "type": "richtext", "role": "subhead" },
+    { "path": "cta.label", "type": "string", "role": "cta" },
     { "path": "actions.during.text", "type": "string", "role": "cta" },
     { "path": "actions.after.text", "type": "string", "role": "cta" }
   ]
