@@ -14,7 +14,29 @@ function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function providerHasCredentials(env: Env, provider: AiProvider): boolean {
+  switch (provider) {
+    case 'deepseek':
+      return Boolean(asTrimmedString(env.DEEPSEEK_API_KEY));
+    case 'openai':
+      return Boolean(asTrimmedString(env.OPENAI_API_KEY));
+    case 'anthropic':
+      return Boolean(asTrimmedString(env.ANTHROPIC_API_KEY));
+    case 'groq':
+      return Boolean(asTrimmedString(env.GROQ_API_KEY));
+    case 'amazon':
+      return (
+        Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
+        Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
+        Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION))
+      );
+    default:
+      return false;
+  }
+}
+
 function resolveProvider(args: {
+  env: Env;
   allowedProviders: AiProvider[];
   defaultProvider: AiProvider;
   selectedProvider?: string;
@@ -32,6 +54,11 @@ function resolveProvider(args: {
     return selected as AiProvider;
   }
 
+  if (allowed.includes(args.defaultProvider) && providerHasCredentials(args.env, args.defaultProvider)) {
+    return args.defaultProvider;
+  }
+  const firstAvailable = allowed.find((provider) => providerHasCredentials(args.env, provider));
+  if (firstAvailable) return firstAvailable;
   if (allowed.includes(args.defaultProvider)) return args.defaultProvider;
   return allowed[0]!;
 }
@@ -71,6 +98,7 @@ export function resolveModelSelection(args: { env: Env; grant: AIGrant; agentId:
   const defaultProvider = (args.grant.ai?.defaultProvider ?? entry.defaultProvider) as AiProvider;
 
   const provider = resolveProvider({
+    env: args.env,
     allowedProviders,
     defaultProvider,
     selectedProvider,

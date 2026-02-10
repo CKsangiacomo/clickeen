@@ -249,6 +249,59 @@ function normalizeBracePlaceholderSpacing(source: string, translated: string): s
   return normalized;
 }
 
+function splitPathSegments(pathStr: string): string[] {
+  return String(pathStr || '')
+    .split('.')
+    .map((seg) => seg.trim())
+    .filter(Boolean);
+}
+
+function isNumericSegment(seg: string): boolean {
+  return /^\d+$/.test(seg);
+}
+
+function pathMatchesPattern(pathStr: string, pattern: string): boolean {
+  const pathSegs = splitPathSegments(pathStr);
+  const patternSegs = splitPathSegments(pattern);
+  if (pathSegs.length !== patternSegs.length) return false;
+  for (let i = 0; i < patternSegs.length; i += 1) {
+    const pat = patternSegs[i] ?? '';
+    const actual = pathSegs[i] ?? '';
+    if (pat === '*') {
+      if (!isNumericSegment(actual)) return false;
+      continue;
+    }
+    if (pat !== actual) return false;
+  }
+  return true;
+}
+
+function expandPathPatterns(patterns: string[], candidates: string[]): string[] {
+  const out = new Set<string>();
+  for (const raw of patterns) {
+    const pattern = String(raw || '').trim();
+    if (!pattern) continue;
+    if (!pattern.includes('*')) {
+      out.add(pattern);
+      continue;
+    }
+    for (const candidate of candidates) {
+      if (pathMatchesPattern(candidate, pattern)) out.add(candidate);
+    }
+  }
+  return Array.from(out);
+}
+
+function deleteMergedByPathOrPattern(merged: Map<string, string>, pathOrPattern: string): void {
+  if (!pathOrPattern.includes('*')) {
+    merged.delete(pathOrPattern);
+    return;
+  }
+  for (const key of Array.from(merged.keys())) {
+    if (pathMatchesPattern(key, pathOrPattern)) merged.delete(key);
+  }
+}
+
 function isLikelyNonTranslatableLiteral(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return true;
@@ -1028,6 +1081,7 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
 
   try {
     const entryMap = new Map(entries.map((entry) => [entry.path, entry]));
+    const existing = await fetchExistingLocale({ ...job, locale }, locale, env);
     const jobChangedPaths =
       job.v === 2 && Array.isArray(job.changedPaths)
         ? job.changedPaths.filter((path) => typeof path === 'string' && path.trim())
@@ -1036,11 +1090,21 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
       job.v === 2 && Array.isArray(job.removedPaths)
         ? job.removedPaths.filter((path) => typeof path === 'string' && path.trim())
         : [];
-    const removedSet = new Set(jobRemovedPaths);
-    const translateAll = jobChangedPaths == null;
-    const targetPaths = translateAll ? entries.map((entry) => entry.path) : jobChangedPaths;
+    const candidatePaths = Array.from(
+      new Set([
+        ...entries.map((entry) => entry.path),
+        ...(existing?.ops ?? [])
+          .map((op) => (op && op.op === 'set' && typeof op.path === 'string' ? op.path : ''))
+          .filter(Boolean),
+      ]),
+    );
+    const expandedChangedPaths =
+      jobChangedPaths == null ? null : expandPathPatterns(jobChangedPaths, candidatePaths);
+    const expandedRemovedPaths = expandPathPatterns(jobRemovedPaths, candidatePaths);
+    const removedSet = new Set(expandedRemovedPaths);
+    const translateAll = expandedChangedPaths == null;
+    const targetPaths = translateAll ? entries.map((entry) => entry.path) : expandedChangedPaths;
 
-    const existing = await fetchExistingLocale({ ...job, locale }, locale, env);
     const fingerprintMatch =
       existing?.baseFingerprint && existing.baseFingerprint === baseFingerprint;
     if (translateAll && fingerprintMatch && removedSet.size === 0) {
@@ -1204,7 +1268,7 @@ export async function executeL10nJob(job: L10nJob, env: Env, grant: AIGrant): Pr
         merged.set(op.path, op.value);
       }
     });
-    removedSet.forEach((path) => merged.delete(path));
+    removedSet.forEach((pathOrPattern) => deleteMergedByPathOrPattern(merged, pathOrPattern));
     [...directOps, ...translatedOps].forEach((op) => {
       merged.set(op.path, op.value);
     });
