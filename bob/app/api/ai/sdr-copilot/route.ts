@@ -191,6 +191,8 @@ async function getAiGrant(args: {
           sessionToken,
           sessionId: args.sessionId,
           widgetType: args.widgetType,
+          ...(args.provider ? { provider: args.provider } : {}),
+          ...(args.model ? { model: args.model } : {}),
         }),
       });
     } catch (err) {

@@ -38,16 +38,20 @@ Worker vars/secrets:
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
 - `OPENAI_API_KEY` (secret, optional): required for Paid Standard/Premium tiers and L10n
-- `OPENAI_MODEL` (optional): defaults to `gpt-4o-mini`
+- `OPENAI_MODEL` (optional): defaults to `gpt-5.2`
 - `ANTHROPIC_API_KEY` (secret, optional): required for Paid Standard/Premium tiers
 - `GROQ_API_KEY` (secret, optional): required for Llama models
-- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (secret, optional): required for Bedrock
+- `NOVA_API_KEY` (secret, optional): required for direct Amazon Nova API access
+- `NOVA_BASE_URL` (optional): defaults to `https://api.nova.amazon.com/v1`
+- `NOVA_MODEL` (optional): defaults to `nova-2-lite-v1`
+- `AMAZON_BEDROCK_ACCESS_KEY_ID` / `AMAZON_BEDROCK_SECRET_ACCESS_KEY` / `AMAZON_BEDROCK_REGION` (secret/var, optional): Bedrock fallback path for Amazon provider
 
 Provider split (Tiered Execution):
-- **Free / Minibob**: DeepSeek (Flash/Haiku class)
-- **Paid Standard**: Mixed (GPT-4o-mini, Claude Haiku, Llama 70B)
-- **Paid Premium**: SOTA (GPT-4o, Claude 3.5 Sonnet)
-- **Strings L10n**: OpenAI (GPT-4o)
+- **Free / Minibob**: `deepseek-chat` default (agent-scoped alternatives may include Nova Lite)
+- **Paid Standard**: mixed provider access (OpenAI/Anthropic/DeepSeek/Groq/Nova) with policy + agent constraints
+- **Paid Premium**: higher-capability defaults (OpenAI `gpt-4o`) with policy + agent constraints
+- **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
+- **Prague strings L10n**: OpenAI via policy router
 
 ## 3) HTTP endpoints
 
@@ -80,12 +84,12 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
-### `POST /v1/l10n/translate` (local only)
+### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
 
 Auth:
 - `Authorization: Bearer ${PARIS_DEV_JWT}`
-- Only available when `ENVIRONMENT=local`
+- Available only when `ENVIRONMENT` is `local` or `dev`
 
 Provider:
 - OpenAI (uses `OPENAI_API_KEY`, `OPENAI_MODEL`)

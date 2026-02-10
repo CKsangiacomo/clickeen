@@ -134,6 +134,7 @@ Panels:
 - **Content**: `timer.*` (mode + settings + headline) and `actions.*` (CTA during + after-end behavior)
 - **Layout**: `layout.*` (position)
 - **Appearance**: `appearance.*` + Stage/Pod controls
+- **Typography**: `typography.*` (compiler-injected roles)
 - **Settings**: `seoGeo.enabled` and `behavior.showBacklink`
 
 ToolDrawer spacing rule (authoring):

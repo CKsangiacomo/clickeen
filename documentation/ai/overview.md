@@ -67,12 +67,12 @@ Boundary (explicit ownership):
 ## Tiered Access Control (The "AI Profile")
 As of PRD 041, LLM access is strictly tiered. Paris resolves a workspace's entitlement to an **AI Profile** during grant issuance:
 
-| AI Profile | Target User | Model Access | Performance |
-|------------|-------------|--------------|-------------|
-| `free_low` | Free / Minibob | Flash/Haiku class | Fast, basic reasoning |
-| `paid_standard` | Tier 1 (Basic) | GPT-4o-mini class | Standard reasoning |
-| `paid_premium` | Tier 2+ (Pro) | GPT-4o / Sonnet 3.5 | SOTA reasoning |
-| `curated_premium`| Internal/Special | GPT-5.2 / Reasoner | Max capability |
+| AI Profile | Target User | Default Access | Performance |
+|------------|-------------|----------------|-------------|
+| `free_low` | Free / Minibob | `deepseek-chat` (agent-scoped alternatives may include Nova Lite) | Fast, low-cost |
+| `paid_standard` | Tier 1 (Basic) | `gpt-4o-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova Lite/Pro where the agent allows it) | Balanced |
+| `paid_premium` | Tier 2+ (Pro) | `gpt-4o` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova Micro/Lite/Pro where the agent allows it) | Higher quality |
+| `curated_premium`| Internal/Special | `gpt-5.2` (OpenAI curated set) | Max capability |
 
 San Francisco enforces this profile by:
 1.  Receiving the `ai.profile` in the Grant.
@@ -170,8 +170,8 @@ type AIGrant = {
   mode: 'editor' | 'ops'; // editor copilots vs operational agents
   ai?: {
     profile: 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
-    allowedProviders: Array<'deepseek' | 'openai' | 'anthropic'>;
-    selectedProvider?: 'deepseek' | 'openai' | 'anthropic';
+    allowedProviders: Array<'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon'>;
+    selectedProvider?: 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
     selectedModel?: string;
     allowProviderChoice?: boolean;
     allowModelChoice?: boolean;

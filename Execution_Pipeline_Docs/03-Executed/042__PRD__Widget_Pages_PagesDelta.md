@@ -1,5 +1,25 @@
 # PRD 042 — Widget Pages: Deterministic Wireframes
 
+**Status:** EXECUTED  
+**PRD #:** 042  
+**Date:** 2026-02-06  
+**Executed:** 2026-02-10  
+**Type:** Execution delta / wireframe contract
+
+---
+
+## Execution record (authoritative)
+
+This file is the deterministic page-construction delta used during PRD 042 execution.
+As-built runtime contracts are implemented in:
+- `prague/src/lib/blockRegistry.ts`
+- `prague/src/components/WidgetBlocks.astro`
+- `tokyo/widgets/*/pages/*.json`
+
+When this delta conflicts with runtime code, runtime code is the source of truth.
+
+---
+
 This is the **execution playbook** for AIs building widget pages in:
 - `tokyo/widgets/<widget>/pages/overview.json`
 - `tokyo/widgets/<widget>/pages/templates.json`

@@ -111,6 +111,9 @@ export type Env = {
   TOKYO_DEV_JWT?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
+  NOVA_API_KEY?: string;
+  NOVA_MODEL?: string;
+  NOVA_BASE_URL?: string;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
   GROQ_API_KEY?: string;

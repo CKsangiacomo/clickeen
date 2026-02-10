@@ -1,16 +1,30 @@
 # PRD 43 — Countdown “Gold Standard” Uplift (match FAQ bar)
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Date:** 2026-02-07  
+**Executed:** 2026-02-10  
 **Owner:** Product Dev Team (Platform + Widgets)  
 **Type:** Refactor + capability completion (compliance + UX + SEO/GEO)  
 **User-facing change:** Cleaner editor panels + real SEO/GEO behavior for Countdown  
 
 ---
 
+## 0) As-built execution record (authoritative)
+
+Delivered outcomes:
+- Countdown ToolDrawer now follows the panel contract (`content`, `layout`, `appearance`, `typography`, `settings`).
+- Timezone input moved to a scalable textfield flow (`browser` or IANA token) instead of giant dropdown payloads.
+- Allowlist type drift was corrected (`timer.headline` richtext alignment across localization/user/sdr contracts).
+- Venice SEO/GEO includes Countdown excerpt support (schema remains empty unless explicitly supported).
+- Canonical docs were aligned (`documentation/widgets/Countdown/Countdown_PRD.md`, `documentation/capabilities/seo-geo.md`).
+
+Sections below preserve the original execution plan/context; runtime code and docs above are the final contract.
+
+---
+
 ## 0) Summary
 
-Countdown (`tokyo/widgets/countdown/`) works today, but it is **not** at the FAQ “gold standard” bar:
+At PRD kickoff, Countdown (`tokyo/widgets/countdown/`) was below the FAQ “gold standard” bar:
 - Editor panels violate the **panel contract** (extra panels).
 - ToolDrawer organization is dated (clusters lack meaningful labels; some controls are overly large / brittle).
 - SEO/GEO toggle exists in state/ToolDrawer but **does not produce Venice meta artifacts** (Venice supports `faq` only).
@@ -368,4 +382,3 @@ Actions:
 5) Manual:
    - Bob: edit headline, timer modes, CTA text; preview updates live.
    - Venice: enable `seoGeo.enabled`, verify `/r/:publicId?meta=1` includes excerptHtml.
-

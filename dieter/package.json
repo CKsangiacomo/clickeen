@@ -10,7 +10,6 @@
   "main": "index.html",
   "scripts": {
     "build": "node ../scripts/build-dieter.js",
-    "copy": "node ../scripts/copy-dieter-assets.js",
     "prepare": "pnpm run build"
   }
 }

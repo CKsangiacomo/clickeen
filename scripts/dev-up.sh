@@ -1,53 +1,75 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Simple dev up script: stop stale listeners, then start Tokyo CDN + Workers + UIs.
-# Logs go to Logs/ and URLs are printed at the end.
-
-DEV_UP_FULL_REBUILD=0
-DEV_UP_PRAGUE_L10N=0
-for arg in "$@"; do
-  case "$arg" in
-    --full|--rebuild-all)
-      DEV_UP_FULL_REBUILD=1
-      ;;
-    --prague-l10n|--l10n)
-      DEV_UP_PRAGUE_L10N=1
-      ;;
-    --help|-h)
-      echo "Usage: scripts/dev-up.sh [--full] [--prague-l10n]"
-      echo ""
-      echo "Options:"
-      echo "  --full        Runs 'pnpm -w build' before starting dev servers."
-      echo "  --prague-l10n Verifies Prague l10n overlays and starts regeneration in the background (requires SanFrancisco + OPENAI_API_KEY)."
-      exit 0
-      ;;
-    *)
-      echo "[dev-up] Unknown argument: $arg" >&2
-      exit 1
-      ;;
-  esac
-done
+# Canonical local startup script.
+# Starts local services only and keeps startup concerns boring:
+# - load env
+# - start services
+# - health checks
 
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
-mkdir -p Execution_Pipeline_Docs
 LOG_DIR="$ROOT_DIR/Logs"
 mkdir -p "$LOG_DIR"
 WRANGLER_PERSIST_DIR="$ROOT_DIR/.wrangler/state"
 mkdir -p "$WRANGLER_PERSIST_DIR"
+LOCK_DIR="$ROOT_DIR/.dev-up.lock"
+
 TOKYO_WORKER_INSPECTOR_PORT=9231
 PARIS_INSPECTOR_PORT=9232
 SANFRANCISCO_INSPECTOR_PORT=9233
+
 DEV_UP_HEALTH_ATTEMPTS="${DEV_UP_HEALTH_ATTEMPTS:-60}"
 DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
-DEV_UP_STATUS_INTERVAL="${DEV_UP_STATUS_INTERVAL:-15}"
+DEV_UP_FULL_REBUILD=0
+DEV_UP_PRAGUE_L10N=0
 NEEDS_PRAGUE_L10N_TRANSLATE=0
+STARTED_PID=""
+
+ensure_lock() {
+  if [ -d "$LOCK_DIR" ]; then
+    local stale=1
+    if [ -f "$LOCK_DIR/pid" ]; then
+      local existing_pid
+      existing_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+      if [ -n "$existing_pid" ] && kill -0 "$existing_pid" >/dev/null 2>&1; then
+        stale=0
+      fi
+    fi
+    if [ "$stale" = "1" ]; then
+      rm -rf "$LOCK_DIR"
+    fi
+  fi
+  if ! mkdir "$LOCK_DIR" >/dev/null 2>&1; then
+    local owner_pid
+    owner_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+    if [ -n "$owner_pid" ]; then
+      echo "[dev-up] Another dev-up run is in progress (pid $owner_pid)."
+    else
+      echo "[dev-up] Another dev-up run is in progress."
+    fi
+    exit 1
+  fi
+  echo "$$" > "$LOCK_DIR/pid"
+}
+
+cleanup_lock() {
+  rm -rf "$LOCK_DIR"
+}
+
+tail_log() {
+  local log_file="${1:-}"
+  if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+    echo "[dev-up] Last log lines from $log_file:"
+    tail -n 40 "$log_file" || true
+  fi
+}
 
 wait_for_url() {
   local url="$1"
   local label="$2"
+  local log_file="${3:-}"
   local i
 
   for i in $(seq 1 "$DEV_UP_HEALTH_ATTEMPTS"); do
@@ -58,37 +80,80 @@ wait_for_url() {
   done
 
   echo "[dev-up] Timeout waiting for $label @ $url"
+  tail_log "$log_file"
   return 1
 }
 
-run_with_status() {
-  local label="$1"
+start_detached() {
+  local log_file="$1"
   shift
-  local start_ts
-  start_ts=$(date +%s)
-  echo "[dev-up] ${label}"
-  (
-    while true; do
-      sleep "$DEV_UP_STATUS_INTERVAL"
-      now=$(date +%s)
-      elapsed=$((now - start_ts))
-      echo "[dev-up] ${label}... (${elapsed}s elapsed)"
-    done
-  ) &
-  local status_pid=$!
-  set +e
-  "$@"
-  local exit_code=$?
-  set -e
-  kill "$status_pid" >/dev/null 2>&1 || true
-  wait "$status_pid" >/dev/null 2>&1 || true
-  if [ "$exit_code" -ne 0 ]; then
-    return "$exit_code"
-  fi
-  local end_ts
-  end_ts=$(date +%s)
-  echo "[dev-up] ${label} done ($((end_ts - start_ts))s)"
+  nohup "$@" </dev/null >"$log_file" 2>&1 &
+  STARTED_PID="$!"
 }
+
+stop_port() {
+  local port="$1"
+  local pids
+  pids=$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null || true)
+  if [ -z "$pids" ]; then
+    return 0
+  fi
+
+  echo "[dev-up] Stopping listeners on port $port: $pids"
+  kill $pids >/dev/null 2>&1 || true
+  sleep 1
+  pids=$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    echo "[dev-up] Force-stopping listeners on port $port: $pids"
+    kill -9 $pids >/dev/null 2>&1 || true
+  fi
+}
+
+warn_dirty_widget_copy() {
+  if ! command -v git >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local dirty
+  dirty=$(git status --porcelain --untracked-files=all -- tokyo/widgets/*/pages/*.json 2>/dev/null || true)
+  if [ -z "$dirty" ]; then
+    return 0
+  fi
+
+  echo "[dev-up] WARNING: Uncommitted widget page copy changes detected."
+  echo "[dev-up] WARNING: Local Prague may differ from committed/deployed previews."
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    echo "[dev-up]   $line"
+  done <<<"$dirty"
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --full|--rebuild-all)
+      DEV_UP_FULL_REBUILD=1
+      ;;
+    --prague-l10n|--l10n)
+      DEV_UP_PRAGUE_L10N=1
+      ;;
+    --help|-h)
+      echo "Usage: bash scripts/dev-up.sh [--full] [--prague-l10n]"
+      echo ""
+      echo "Options:"
+      echo "  --full        Runs workspace build before starting services."
+      echo "  --prague-l10n Verifies Prague overlays and runs translation in the background if needed."
+      exit 0
+      ;;
+    *)
+      echo "[dev-up] Unknown argument: $arg" >&2
+      exit 1
+      ;;
+  esac
+done
+
+ensure_lock
+trap cleanup_lock EXIT
+warn_dirty_widget_copy
 
 if [ -f "$ROOT_DIR/.env.local" ]; then
   echo "[dev-up] Loading $ROOT_DIR/.env.local"
@@ -104,19 +169,17 @@ if ! supabase status >/dev/null 2>&1; then
 fi
 
 echo "[dev-up] Applying pending Supabase migrations (non-destructive)"
-run_with_status "Applying Supabase migrations" supabase migration up
+supabase migration up
 
 echo "[dev-up] Loading local Supabase connection values"
 ORIG_SUPABASE_URL="${SUPABASE_URL:-}"
 ORIG_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
 DEV_UP_USE_REMOTE_SUPABASE="${DEV_UP_USE_REMOTE_SUPABASE:-}"
-# Avoid depending on ripgrep (rg) in dev environments; plain grep is sufficient.
 # shellcheck disable=SC2046
 eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
-# Prefer the local Supabase values from `supabase status`; only fall back to existing env vars
-# (and even then, only when DEV_UP_USE_REMOTE_SUPABASE=1 below).
 SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
 SUPABASE_SERVICE_ROLE_KEY=${SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
+
 if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
   if [ "$DEV_UP_USE_REMOTE_SUPABASE" = "1" ] || [ "$DEV_UP_USE_REMOTE_SUPABASE" = "true" ]; then
     if [ -z "$ORIG_SUPABASE_URL" ] || [ -z "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
@@ -131,17 +194,15 @@ if [ -n "$ORIG_SUPABASE_URL" ] || [ -n "$ORIG_SUPABASE_SERVICE_ROLE_KEY" ]; then
     echo "[dev-up] To use remote Supabase in local dev, set DEV_UP_USE_REMOTE_SUPABASE=1"
   fi
 fi
+
 if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
   echo "[dev-up] Failed to resolve SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from Supabase status"
   exit 1
 fi
 
-# Dev auth token shared by Bob -> Paris requests.
 PARIS_DEV_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/paris.dev.jwt"
-if [ -z "${PARIS_DEV_JWT:-}" ]; then
-  if [ -f "$PARIS_DEV_JWT_FILE" ]; then
-    PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
-  fi
+if [ -z "${PARIS_DEV_JWT:-}" ] && [ -f "$PARIS_DEV_JWT_FILE" ]; then
+  PARIS_DEV_JWT="$(cat "$PARIS_DEV_JWT_FILE")"
 fi
 if [ -z "${PARIS_DEV_JWT:-}" ]; then
   echo "[dev-up] Missing PARIS_DEV_JWT."
@@ -149,33 +210,27 @@ if [ -z "${PARIS_DEV_JWT:-}" ]; then
   exit 1
 fi
 
-# Default TOKYO_DEV_JWT to the Paris dev token for local workflows.
 if [ -z "${TOKYO_DEV_JWT:-}" ]; then
   TOKYO_DEV_JWT="$PARIS_DEV_JWT"
 fi
 
-# Shared HMAC used for Paris grants -> SanFrancisco verification.
 AI_GRANT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/ai.grant.hmac.secret"
-if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
-  if [ -f "$AI_GRANT_HMAC_SECRET_FILE" ]; then
-    AI_GRANT_HMAC_SECRET="$(cat "$AI_GRANT_HMAC_SECRET_FILE")"
-  fi
+if [ -z "${AI_GRANT_HMAC_SECRET:-}" ] && [ -f "$AI_GRANT_HMAC_SECRET_FILE" ]; then
+  AI_GRANT_HMAC_SECRET="$(cat "$AI_GRANT_HMAC_SECRET_FILE")"
 fi
 if [ -z "${AI_GRANT_HMAC_SECRET:-}" ]; then
-  echo "[dev-up] AI_GRANT_HMAC_SECRET not set; AI copilots will be disabled in local dev."
+  echo "[dev-up] AI_GRANT_HMAC_SECRET not set; SanFrancisco copilot services will stay disabled."
 fi
 
 USAGE_EVENT_HMAC_SECRET_FILE="$ROOT_DIR/Execution_Pipeline_Docs/usage.event.hmac.secret"
-if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
-  if [ -f "$USAGE_EVENT_HMAC_SECRET_FILE" ]; then
-    USAGE_EVENT_HMAC_SECRET="$(cat "$USAGE_EVENT_HMAC_SECRET_FILE")"
-  fi
+if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ] && [ -f "$USAGE_EVENT_HMAC_SECRET_FILE" ]; then
+  USAGE_EVENT_HMAC_SECRET="$(cat "$USAGE_EVENT_HMAC_SECRET_FILE")"
 fi
 if [ -z "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
   echo "[dev-up] USAGE_EVENT_HMAC_SECRET not set; view metering will be disabled in local dev."
-  echo "[dev-up] Set USAGE_EVENT_HMAC_SECRET in $ROOT_DIR/.env.local or create $USAGE_EVENT_HMAC_SECRET_FILE."
 fi
 
+TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 SF_BASE_URL=""
 if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
   SF_BASE_URL="http://localhost:3002"
@@ -185,92 +240,54 @@ if [ "$DEV_UP_FULL_REBUILD" = "1" ]; then
   echo "[dev-up] Full rebuild requested (--full): running workspace build"
   pnpm -w build
 else
-  echo "[dev-up] Building Dieter directly into tokyo/dieter"
-  (
-    cd "$ROOT_DIR"
-    pnpm --filter @ck/dieter build
-  )
+  echo "[dev-up] Building Dieter assets for local Tokyo"
+  pnpm --filter @ck/dieter build
 
-  echo "[dev-up] Building i18n bundles into tokyo/i18n"
+  echo "[dev-up] Building i18n bundles"
   node "$ROOT_DIR/scripts/i18n/build.mjs"
   node "$ROOT_DIR/scripts/i18n/validate.mjs"
 
-  echo "[dev-up] Verifying Prague l10n overlays (non-blocking by default)"
+  echo "[dev-up] Verifying Prague l10n overlays (non-blocking)"
   PRAGUE_L10N_VERIFY_LOG="$LOG_DIR/prague-l10n.verify.log"
-  if node "$ROOT_DIR/scripts/prague-l10n/verify.mjs" > "$PRAGUE_L10N_VERIFY_LOG" 2>&1; then
+  if node "$ROOT_DIR/scripts/prague-l10n/verify.mjs" >"$PRAGUE_L10N_VERIFY_LOG" 2>&1; then
     echo "[dev-up] Prague l10n overlays OK"
   else
-    echo "[dev-up] Prague l10n overlays missing/out-of-date (startup will continue)"
-    echo "[dev-up] See $PRAGUE_L10N_VERIFY_LOG"
+    echo "[dev-up] Prague l10n overlays are out of date. See $PRAGUE_L10N_VERIFY_LOG"
     if [ "$DEV_UP_PRAGUE_L10N" = "1" ]; then
       NEEDS_PRAGUE_L10N_TRANSLATE=1
     else
-      echo "[dev-up] To generate overlays (requires SanFrancisco + OPENAI_API_KEY):"
-      echo "[dev-up]   node scripts/prague-l10n/translate.mjs"
-      echo "[dev-up] Or rerun: scripts/dev-up.sh --prague-l10n"
+      echo "[dev-up] Re-run with --prague-l10n to regenerate overlays in background."
     fi
   fi
 fi
 
-echo "[dev-up] Killing stale listeners on 3000,3001,3002,3003,4000,4321,5173,8790,8791 (if any)"
+echo "[dev-up] Stopping stale listeners"
 for p in 3000 3001 3002 3003 4000 4321 5173 8790 8791; do
-  PIDS=$(lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null || true)
-  if [ -n "$PIDS" ]; then
-    echo "[dev-up] Killing $PIDS on port $p"
-    kill -9 $PIDS || true
-  fi
+  stop_port "$p"
 done
-
-# Wrangler/workerd can get stuck in a broken state without holding the LISTEN socket
-# (e.g. after a crash/reload loop). Kill them by commandline as a backstop.
-echo "[dev-up] Killing stale wrangler/workerd processes (ports 3001/3002/8790/8791)"
-pkill -f "wrangler.*dev.*--port 3001" || true
-pkill -f "wrangler.*dev.*--port 3002" || true
-pkill -f "wrangler.*dev.*--port 8790" || true
-pkill -f "wrangler.*dev.*--port 8791" || true
-pkill -f "workerd serve.*entry=localhost:3001" || true
-pkill -f "workerd serve.*entry=localhost:3002" || true
-pkill -f "workerd serve.*entry=localhost:8790" || true
-pkill -f "workerd serve.*entry=localhost:8791" || true
-
-echo "[dev-up] Cleaning Bob build artifacts (.next/.next-dev) to avoid stale chunk mismatches"
-rm -rf "$ROOT_DIR/bob/.next" "$ROOT_DIR/bob/.next-dev" || true
-
-echo "[dev-up] Cleaning Venice build artifacts (.next/.next-dev) to avoid stale edge sandbox mismatches"
-rm -rf "$ROOT_DIR/venice/.next" "$ROOT_DIR/venice/.next-dev" || true
-
-# Local dev always uses the local Tokyo CDN stub.
-TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 
 echo "[dev-up] Starting Tokyo CDN stub on 4000"
 (
   cd "$ROOT_DIR/tokyo"
-  PORT=4000 nohup node dev-server.mjs > "$LOG_DIR/tokyo.dev.log" 2>&1 &
-  TOKYO_PID=$!
+  start_detached "$LOG_DIR/tokyo.dev.log" env PORT=4000 node dev-server.mjs
+  TOKYO_PID="$STARTED_PID"
   echo "[dev-up] Tokyo PID: $TOKYO_PID"
 )
-if ! wait_for_url "http://localhost:4000/healthz" "Tokyo"; then
-  exit 1
-fi
+wait_for_url "http://localhost:4000/healthz" "Tokyo" "$LOG_DIR/tokyo.dev.log"
 
-echo "[dev-up] Starting Tokyo Worker (8791) for l10n publishing"
+echo "[dev-up] Starting Tokyo Worker (8791)"
 (
   cd "$ROOT_DIR/tokyo-worker"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
   VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
   VARS+=(--var "VENICE_BASE_URL:http://localhost:3003")
-  if [ -n "${TOKYO_DEV_JWT:-}" ]; then
-    VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
-  fi
-  nohup pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
-    "${VARS[@]}" \
-    > "$LOG_DIR/tokyo-worker.dev.log" 2>&1 &
-  TOKYO_WORKER_PID=$!
+  VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
+  start_detached "$LOG_DIR/tokyo-worker.dev.log" pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
+    "${VARS[@]}"
+  TOKYO_WORKER_PID="$STARTED_PID"
   echo "[dev-up] Tokyo Worker PID: $TOKYO_WORKER_PID"
 )
-if ! wait_for_url "http://localhost:8791/healthz" "Tokyo Worker"; then
-  exit 1
-fi
+wait_for_url "http://localhost:8791/healthz" "Tokyo Worker" "$LOG_DIR/tokyo-worker.dev.log"
 
 echo "[dev-up] Starting Paris Worker (3001)"
 (
@@ -289,43 +306,27 @@ echo "[dev-up] Starting Paris Worker (3001)"
   if [ -n "${USAGE_EVENT_HMAC_SECRET:-}" ]; then
     VARS+=(--var "USAGE_EVENT_HMAC_SECRET:$USAGE_EVENT_HMAC_SECRET")
   fi
-
-  nohup pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
-    "${VARS[@]}" \
-    > "$LOG_DIR/paris.dev.log" 2>&1 &
-  PARIS_PID=$!
+  start_detached "$LOG_DIR/paris.dev.log" pnpm exec wrangler dev --local --env local --port 3001 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$PARIS_INSPECTOR_PORT" \
+    "${VARS[@]}"
+  PARIS_PID="$STARTED_PID"
   echo "[dev-up] Paris PID: $PARIS_PID"
 )
-if ! wait_for_url "http://localhost:3001/api/healthz" "Paris"; then
-  exit 1
-fi
-
-echo "[dev-up] Note: instances are created/edited from DevStudio Local (human-driven)"
+wait_for_url "http://localhost:3001/api/healthz" "Paris" "$LOG_DIR/paris.dev.log"
 
 echo "[dev-up] Starting Venice embed runtime (3003)"
 (
   cd "$ROOT_DIR/venice"
-  PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" nohup pnpm dev > "$LOG_DIR/venice.dev.log" 2>&1 &
-  VENICE_PID=$!
+  start_detached "$LOG_DIR/venice.dev.log" env PORT=3003 PARIS_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_URL="$TOKYO_URL" USAGE_EVENT_HMAC_SECRET="${USAGE_EVENT_HMAC_SECRET:-}" pnpm dev
+  VENICE_PID="$STARTED_PID"
   echo "[dev-up] Venice PID: $VENICE_PID"
 )
-if ! wait_for_url "http://localhost:3003/dieter/tokens/tokens.css" "Venice"; then
-  exit 1
-fi
+wait_for_url "http://localhost:3003/dieter/tokens/tokens.css" "Venice" "$LOG_DIR/venice.dev.log"
 
-if [ -n "${AI_GRANT_HMAC_SECRET:-}" ] || [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
-  SF_REQUIRED=0
-  if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
-    SF_REQUIRED=1
-  fi
+if [ -n "$SF_BASE_URL" ]; then
   echo "[dev-up] Starting SanFrancisco Worker (3002)"
   (
     cd "$ROOT_DIR/sanfrancisco"
-    # DEEPSEEK_API_KEY is required for real executions; missing key is still useful for boot verification.
-    VARS=()
-    if [ -n "${AI_GRANT_HMAC_SECRET:-}" ]; then
-      VARS+=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
-    fi
+    VARS=(--var "AI_GRANT_HMAC_SECRET:$AI_GRANT_HMAC_SECRET")
     if [ -n "${DEEPSEEK_API_KEY:-}" ]; then
       VARS+=(--var "DEEPSEEK_API_KEY:$DEEPSEEK_API_KEY")
     fi
@@ -335,101 +336,83 @@ if [ -n "${AI_GRANT_HMAC_SECRET:-}" ] || [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" 
     if [ -n "${OPENAI_MODEL:-}" ]; then
       VARS+=(--var "OPENAI_MODEL:$OPENAI_MODEL")
     fi
+    if [ -n "${NOVA_API_KEY:-}" ]; then
+      VARS+=(--var "NOVA_API_KEY:$NOVA_API_KEY")
+    fi
+    if [ -n "${NOVA_MODEL:-}" ]; then
+      VARS+=(--var "NOVA_MODEL:$NOVA_MODEL")
+    fi
+    if [ -n "${NOVA_BASE_URL:-}" ]; then
+      VARS+=(--var "NOVA_BASE_URL:$NOVA_BASE_URL")
+    fi
     VARS+=(--var "PARIS_BASE_URL:http://localhost:3001")
     VARS+=(--var "PARIS_DEV_JWT:$PARIS_DEV_JWT")
     VARS+=(--var "TOKYO_BASE_URL:$TOKYO_URL")
-    if [ -n "${TOKYO_DEV_JWT:-}" ]; then
-      VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
-    fi
-
-    nohup pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" "${VARS[@]}" \
-      > "$LOG_DIR/sanfrancisco.dev.log" 2>&1 &
-    SF_PID=$!
+    VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
+    start_detached "$LOG_DIR/sanfrancisco.dev.log" pnpm exec wrangler dev --local --env local --port 3002 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$SANFRANCISCO_INSPECTOR_PORT" \
+      "${VARS[@]}"
+    SF_PID="$STARTED_PID"
     echo "[dev-up] SanFrancisco PID: $SF_PID"
   )
-  if ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco"; then
-    if [ "$SF_REQUIRED" = "1" ]; then
-      exit 1
-    fi
-    echo "[dev-up] SanFrancisco failed to start; continuing startup"
-  fi
-fi
-
-(
-  cd "$ROOT_DIR/bob"
-  if [ -n "$SF_BASE_URL" ]; then
-    # Always prefer local Workers in local dev (avoid accidentally pointing at Cloudflare URLs from .env.local).
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/bob.dev.log" 2>&1 &
-  else
-    PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/bob.dev.log" 2>&1 &
-  fi
-  BOB_PID=$!
-  echo "[dev-up] Bob PID: $BOB_PID"
-)
-if ! wait_for_url "http://localhost:3000" "Bob"; then
-  exit 1
-fi
-
-(
-  cd "$ROOT_DIR/admin"
-  PORT=5173 TOKYO_URL="$TOKYO_URL" nohup pnpm dev > "$LOG_DIR/devstudio.dev.log" 2>&1 &
-  DEVSTUDIO_PID=$!
-  echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
-)
-if ! wait_for_url "http://localhost:5173" "DevStudio"; then
-  exit 1
-fi
-
-echo "[dev-up] Starting Pitch Agent worker (8790)"
-(
-  cd "$ROOT_DIR/pitch"
-  nohup pnpm dev > "$LOG_DIR/pitch.dev.log" 2>&1 &
-  PITCH_PID=$!
-  echo "[dev-up] Pitch PID: $PITCH_PID"
-)
-if ! wait_for_url "http://localhost:8790/healthz" "Pitch"; then
-  exit 1
-fi
-
-if [ -n "${PITCH_SERVICE_KEY:-}" ] && [ -n "${OPENAI_API_KEY:-}" ]; then
-  echo "[dev-up] Syncing pitch docs to local Pitch worker"
-  (
-    cd "$ROOT_DIR/pitch"
-    PITCH_API_URL="http://localhost:8790" PITCH_SERVICE_KEY="$PITCH_SERVICE_KEY" pnpm -s sync-docs
-  ) || echo "[dev-up] Pitch docs sync failed; continuing startup (non-fatal)"
-else
-  echo "[dev-up] Skipping pitch docs sync (requires PITCH_SERVICE_KEY + OPENAI_API_KEY in $ROOT_DIR/.env.local)"
+  wait_for_url "http://localhost:3002/healthz" "SanFrancisco" "$LOG_DIR/sanfrancisco.dev.log"
 fi
 
 if [ "$NEEDS_PRAGUE_L10N_TRANSLATE" = "1" ]; then
   if [ -z "${OPENAI_API_KEY:-}" ]; then
-    echo "[dev-up] Prague l10n translate requested but OPENAI_API_KEY is missing; skipping"
-  elif ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco (for Prague l10n)"; then
-    echo "[dev-up] Prague l10n translate requested but SanFrancisco is not reachable; skipping"
+    echo "[dev-up] --prague-l10n requested, but OPENAI_API_KEY is missing. Skipping translation."
+  elif ! wait_for_url "http://localhost:3002/healthz" "SanFrancisco (for Prague l10n)" "$LOG_DIR/sanfrancisco.dev.log"; then
+    echo "[dev-up] --prague-l10n requested, but SanFrancisco is not reachable. Skipping translation."
   else
-    echo "[dev-up] Starting Prague l10n translate in background (requested)"
+    echo "[dev-up] Starting Prague l10n translate in background"
     PRAGUE_L10N_TRANSLATE_LOG="$LOG_DIR/prague-l10n.translate.log"
-    PRAGUE_L10N_VERIFY_LOG="$LOG_DIR/prague-l10n.verify.log"
-    nohup bash -lc "SANFRANCISCO_BASE_URL=\"http://localhost:3002\" node \"$ROOT_DIR/scripts/prague-l10n/translate.mjs\" > \"$PRAGUE_L10N_TRANSLATE_LOG\" 2>&1 && node \"$ROOT_DIR/scripts/prague-l10n/verify.mjs\" > \"$PRAGUE_L10N_VERIFY_LOG\" 2>&1" >/dev/null 2>&1 &
-    PRAGUE_L10N_PID=$!
-    echo "[dev-up] Prague l10n PID: $PRAGUE_L10N_PID"
+    nohup bash -lc "SANFRANCISCO_BASE_URL='http://localhost:3002' node '$ROOT_DIR/scripts/prague-l10n/translate.mjs' > '$PRAGUE_L10N_TRANSLATE_LOG' 2>&1 && node '$ROOT_DIR/scripts/prague-l10n/verify.mjs' > '$LOG_DIR/prague-l10n.verify.log' 2>&1" >/dev/null 2>&1 &
+    echo "[dev-up] Prague l10n translate PID: $!"
     echo "[dev-up] Tail logs: tail -f $PRAGUE_L10N_TRANSLATE_LOG"
   fi
 fi
 
-echo "[dev-up] Starting Prague marketing site (4321)"
+echo "[dev-up] Starting Bob (3000)"
+(
+  cd "$ROOT_DIR/bob"
+  if [ -n "$SF_BASE_URL" ]; then
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" SANFRANCISCO_BASE_URL="$SF_BASE_URL" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  else
+    start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 PARIS_BASE_URL="http://localhost:3001" PARIS_DEV_JWT="$PARIS_DEV_JWT" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  fi
+  BOB_PID="$STARTED_PID"
+  echo "[dev-up] Bob PID: $BOB_PID"
+)
+wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
+
+echo "[dev-up] Starting DevStudio (5173)"
+(
+  cd "$ROOT_DIR/admin"
+  start_detached "$LOG_DIR/devstudio.dev.log" env PORT=5173 TOKYO_URL="$TOKYO_URL" pnpm dev
+  DEVSTUDIO_PID="$STARTED_PID"
+  echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
+)
+wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
+
+echo "[dev-up] Starting Pitch worker (8790)"
+(
+  cd "$ROOT_DIR/pitch"
+  start_detached "$LOG_DIR/pitch.dev.log" pnpm dev
+  PITCH_PID="$STARTED_PID"
+  echo "[dev-up] Pitch PID: $PITCH_PID"
+)
+wait_for_url "http://localhost:8790/healthz" "Pitch" "$LOG_DIR/pitch.dev.log"
+
+echo "[dev-up] Starting Prague (4321)"
 (
   cd "$ROOT_DIR/prague"
-  PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" nohup pnpm dev > "$LOG_DIR/prague.dev.log" 2>&1 &
-  PRAGUE_PID=$!
+  start_detached "$LOG_DIR/prague.dev.log" env PORT=4321 PUBLIC_TOKYO_URL="$TOKYO_URL" PUBLIC_BOB_URL="http://localhost:3000" PUBLIC_VENICE_URL="http://localhost:3003" pnpm dev
+  PRAGUE_PID="$STARTED_PID"
   echo "[dev-up] Prague PID: $PRAGUE_PID"
 )
-if ! wait_for_url "http://localhost:4321" "Prague"; then
-  exit 1
-fi
+wait_for_url "http://localhost:4321" "Prague" "$LOG_DIR/prague.dev.log"
 
 echo "[dev-up] URLs:"
-echo "  Tokyo:    http://localhost:4000/healthz"
+echo "  Tokyo:     http://localhost:4000/healthz"
 echo "  Paris:     http://localhost:3001"
 if [ -n "$SF_BASE_URL" ]; then
   echo "  SF:        http://localhost:3002/healthz"
@@ -438,3 +421,4 @@ echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  Pitch:     http://localhost:8790/healthz"
 echo "  Prague:    http://localhost:4321/us/en/widgets/faq"
+echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"

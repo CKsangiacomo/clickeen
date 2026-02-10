@@ -504,6 +504,12 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
     return json([{ path: 'mode', message: 'mode is not allowed for minibob grants' }], { status: 403 });
   }
 
+  const requestedProviderRaw = asTrimmedString((body as any).provider);
+  const requestedModelRaw = asTrimmedString((body as any).model);
+  // Minibob defaults to Nova unless explicitly overridden by request payload.
+  const requestedProvider = requestedProviderRaw || 'amazon';
+  const requestedModel = requestedModelRaw || (requestedProvider === 'amazon' ? 'nova-2-lite-v1' : '');
+
   const verified = await verifyMinibobSessionToken(sessionToken, secret);
   if (!verified.ok) {
     logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'invalid_session_token', sessionId, widgetType });
@@ -566,6 +572,8 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
     env,
     agentId: 'sdr.widget.copilot.v1',
     mode: 'ops',
+    requestedProvider: requestedProvider || undefined,
+    requestedModel: requestedModel || undefined,
     subject: 'minibob',
     trace: { sessionId },
     budgets: minibobBudgets,

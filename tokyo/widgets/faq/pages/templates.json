@@ -14,7 +14,7 @@
       "type": "hero",
       "copy": {
         "headline": "One widget, infinite vibes.",
-        "subheadline": "From trending glassmorphism to timeless classics. Switch styles instantly without touching content."
+        "subheadline": "From trending glassmorphism to timeless classics, switch visual styles instantly without rewriting a single answer."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -23,25 +23,25 @@
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Glassmorphism"
+            "title": "Liquid Glass"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Minimal"
+            "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Bold"
+            "title": "Rebel Blocks"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Neo-Brutalism"
+            "title": "Enterprise Prime"
           }
         }
       ]
@@ -52,31 +52,31 @@
       "layout": "visual-left",
       "copy": {
         "headline": "One widget, infinite vibes.",
-        "subheadline": "From trending glassmorphism to timeless classics. Switch styles instantly without touching content."
+        "subheadline": "Move across premium style directions in seconds while keeping the same content, structure, and publishing flow."
       },
       "items": [
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Glassmorphism"
+            "title": "Liquid Glass"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Minimal"
+            "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Bold"
+            "title": "Rebel Blocks"
           }
         },
         {
           "curatedRef": {
             "publicId": "wgt_curated_faq.lightblurs.v01",
-            "title": "Neo-Brutalism"
+            "title": "Enterprise Prime"
           }
         }
       ]
@@ -94,7 +94,7 @@
       "type": "control-moat",
       "copy": {
         "title": "Design freedom, built in.",
-        "subhead": "From layouts to finishes to fonts—customization that feels effortless.",
+        "subhead": "From layout systems to visual finishes to typography roles, every design decision is controllable in the editor.",
         "items": [
           {
             "title": "Layouts, your way",
@@ -137,9 +137,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Switch engines instantly",
-        "subheadline": "Grid, List, or Accordion.",
-        "body": "Change the fundamental structure of your FAQ without rewriting a single word."
+        "headline": "Switch layouts instantly",
+        "subheadline": "Choose Accordion, List, or Cards and switch anytime without rebuilding your content.",
+        "body": "Change structure anytime without rewriting your answers."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -151,8 +151,8 @@
       "layout": "visual-left",
       "copy": {
         "headline": "Interaction design included",
-        "subheadline": "Hover states. Active states. Focus rings.",
-        "body": "We handle the interactive details so the experience feels alive."
+        "subheadline": "Hover, active, and focus states are built in so your FAQ feels polished on every device.",
+        "body": "Polished interaction states are built in."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -164,8 +164,8 @@
       "layout": "visual-right",
       "copy": {
         "headline": "Type that feels right",
-        "subheadline": "Bring your own fonts or choose from our library.",
-        "body": "Set the hierarchy once. We apply it everywhere."
+        "subheadline": "Use your own fonts or our library, then tune hierarchy for headlines, questions, answers, and CTAs.",
+        "body": "Set typography by role and keep it consistent everywhere."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -177,8 +177,8 @@
       "layout": "visual-left",
       "copy": {
         "headline": "Dark mode is automatic",
-        "subheadline": "It just works.",
-        "body": "Your FAQ adapts to the user's system preference instantly. No extra configuration."
+        "subheadline": "Your FAQ automatically adapts to light or dark sections so the design always feels native.",
+        "body": "Your FAQ adapts to light or dark contexts automatically."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -190,8 +190,8 @@
       "layout": "visual-right",
       "copy": {
         "headline": "Mobile perfection",
-        "subheadline": "Touch targets that work.",
-        "body": "Layouts that stack beautifully on any device, automatically."
+        "subheadline": "Tap targets, spacing, and layout stay readable across phones, tablets, and desktop screens.",
+        "body": "Built for mobile, tablet, and desktop out of the box."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -201,20 +201,20 @@
       "id": "steps",
       "type": "steps",
       "copy": {
-        "title": "Build your native FAQ",
-        "subhead": "From idea to live in three steps.",
+        "title": "Build your FAQ in three steps",
+        "subhead": "Choose a starting style, fine-tune every detail, and publish one version that updates everywhere.",
         "items": [
           {
-            "title": "Pick a foundation",
-            "body": "Select the template that matches your vibe."
+            "title": "Pick a style",
+            "body": "Start from the template that matches your brand."
           },
           {
-            "title": "Tune the details",
-            "body": "Refine colors and spacing in the visual editor."
+            "title": "Customize everything",
+            "body": "Adjust layout, spacing, colors, radius, and typography in the visual editor."
           },
           {
-            "title": "Ship it",
-            "body": "One embed code. Live everywhere."
+            "title": "Publish",
+            "body": "Push one update and it goes live everywhere your FAQ is embedded."
           }
         ]
       }
@@ -223,8 +223,8 @@
       "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "It's time to build",
-        "subheadline": "Start with a free template."
+        "headline": "Start with a template. Make it yours.",
+        "subheadline": "Pick any template, make it match your brand, and launch your FAQ widget for free."
       }
     }
   ]

@@ -13,8 +13,8 @@
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Real problems. Solved instantly.",
-        "subheadline": "See how the world's best brands use Clickeen to answer questions."
+        "headline": "FAQ widget examples by industry",
+        "subheadline": "See how teams in travel, hospitality, and service businesses use one FAQ widget to answer repeat questions faster."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -25,9 +25,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Hotels & Accommodations",
-        "subheadline": "The digital concierge.",
-        "body": "Don't let 'What's the wifi?' block your front desk. Automate check-in details and parking info so guests serve themselves."
+        "headline": "Hotels & Resorts",
+        "subheadline": "Answer check-in, parking, and breakfast questions before guests arrive and reduce front-desk interruptions.",
+        "body": "Guests repeat check-in, parking, and breakfast questions every day. Put those answers in one FAQ widget and publish updates once. Guests get clear answers in their language before messaging the front desk."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -38,9 +38,9 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Restaurants & Dining",
-        "subheadline": "Menu clarity before they order.",
-        "body": "Dietary questions handled instantly. Put allergen info right on your guests' phones so your staff can focus on service."
+        "headline": "Restaurants, Cafes & Bars",
+        "subheadline": "Keep menu details, allergens, and hours clear on mobile so guests decide faster with less staff back-and-forth.",
+        "body": "Guests check menu details, allergens, and opening hours from their phones. Use the FAQ widget to keep those answers current. Visitors decide faster while staff handle fewer repeated questions."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -51,9 +51,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Vacation Rentals",
-        "subheadline": "The manual that never gets lost.",
-        "body": "Check-in instructions and house rules, right on their phone. Stop sending the same text message every Friday afternoon."
+        "headline": "Vacation Rentals & Property Managers",
+        "subheadline": "Keep check-in steps, Wi-Fi details, and house rules consistent across properties with one publish flow.",
+        "body": "Check-in instructions, Wi-Fi details, and house rules repeat across properties. Keep them in one FAQ widget and publish once. Every listing shows the latest version without manual rework."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -63,8 +63,8 @@
       "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "They won't wait for a translation",
-        "body": "Speak their language from the very first click."
+        "headline": "Global visitors expect instant clarity",
+        "body": "Publish once and serve answers in the right language from the first click."
       }
     },
     {
@@ -72,9 +72,9 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "Tour Operators",
-        "subheadline": "Confidence converts.",
-        "body": "Meeting points. Weather policies. Answer the blockers upfront and watch the bookings close themselves."
+        "headline": "Tour Operators & Travel Agencies",
+        "subheadline": "Handle pickup points, cancellation rules, and weather policies upfront so booking decisions happen with confidence.",
+        "body": "Travelers need clear pickup points, cancellation rules, and weather policies. Add those answers to the FAQ widget and localize for key markets. Booking friction drops because questions are resolved before checkout."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -85,9 +85,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Museums & Attractions",
-        "subheadline": "Kill the queue.",
-        "body": "Bag policies and ticket questions answered before they arrive at the gate. Smooth entry starts online."
+        "headline": "Attractions, Museums & Theme Parks",
+        "subheadline": "Clarify tickets, entry rules, and accessibility info before visitors show up, so arrival is smoother for everyone.",
+        "body": "Visitors ask about tickets, bag policy, accessibility, and opening times. Keep these answers in one FAQ widget and update when operations change. Arrival flow is smoother because expectations are clear before entry."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -97,20 +97,20 @@
       "id": "steps",
       "type": "steps",
       "copy": {
-        "title": "How the best brands do it",
-        "subhead": "Three steps to clarity.",
+        "title": "A simple operating loop",
+        "subhead": "Capture repeated questions once, publish updates fast, and keep every live page aligned as details change.",
         "items": [
           {
-            "title": "Embed",
-            "body": "Paste the code. It works instantly."
+            "title": "Add your top questions",
+            "body": "Start with the repeated questions visitors ask before they decide."
           },
           {
-            "title": "Adapt",
-            "body": "The widget matches your container and font."
+            "title": "Publish once",
+            "body": "One click makes your latest answers live on every page."
           },
           {
-            "title": "Answer",
-            "body": "Questions are resolved 24/7."
+            "title": "Keep every language in sync",
+            "body": "When base content changes, translations refresh so your message stays aligned."
           }
         ]
       }
@@ -119,20 +119,20 @@
       "id": "platform-strip",
       "type": "platform-strip",
       "copy": {
-        "title": "Built like a platform",
-        "subhead": "Reliable enough for the biggest brands.",
+        "title": "Built for production use",
+        "subhead": "Global edge speed, flexible embed options, and a simple publish flow that keeps answers current.",
         "items": [
           {
             "title": "Fast",
             "body": "Global edge delivery."
           },
           {
-            "title": "Secure",
-            "body": "Enterprise-grade compliance."
+            "title": "Flexible",
+            "body": "Standard and scriptless embed options."
           },
           {
-            "title": "Proven",
-            "body": "Scale without limits."
+            "title": "Current",
+            "body": "Publish once to update every live page."
           }
         ]
       }
@@ -142,7 +142,7 @@
       "type": "cta-bottom-block",
       "copy": {
         "headline": "Solve it with Clickeen",
-        "subheadline": "Start your free design today."
+        "subheadline": "Start free, adapt the design to your brand, and publish a live FAQ that scales across pages."
       }
     }
   ]

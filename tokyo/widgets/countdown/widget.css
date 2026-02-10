@@ -171,20 +171,7 @@ body {
   animation: ck-countdown-fade 0.4s ease-out both;
 }
 
-.ck-countdown__header {
-  margin: 0;
-}
 
-.ck-countdown__title {
-  margin: 0;
-  font-family: var(--typo-heading-family, var(--font-ui));
-  font-style: var(--typo-heading-style, normal);
-  font-weight: var(--typo-heading-weight, 600);
-  font-size: var(--typo-heading-size, var(--fs-24));
-  line-height: var(--lh-tight);
-  color: var(--countdown-text-color, var(--typo-heading-color));
-  text-align: var(--countdown-text-align, center);
-}
 
 .ck-countdown__timer {
   display: flex;

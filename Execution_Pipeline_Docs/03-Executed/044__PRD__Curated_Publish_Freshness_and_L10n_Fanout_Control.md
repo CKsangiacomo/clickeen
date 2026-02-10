@@ -1,10 +1,29 @@
 # PRD 44 — Curated Publish Freshness + L10n Fanout Control (DevStudio ↔ Prague ↔ Venice)
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Date:** 2026-02-09  
+**Executed:** 2026-02-10  
 **Owner:** Product Dev Team (Platform + DevStudio + Runtime)  
 **Type:** Infra/architecture hardening + DevStudio UX additions  
 **User-facing change:** Faster, predictable “updates everywhere” + l10n cost bounded by design  
+
+---
+
+## 0) As-built execution record (authoritative)
+
+Delivered outcomes:
+- Curated snapshot freshness control is shipped via DevStudio action + Paris endpoint:
+  - `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio`
+- Curated/user l10n fanout uses workspace active locales (`workspaces.l10n_locales`) instead of `SUPPORTED_LOCALES` defaults.
+- DevStudio ships explicit locale enqueue action:
+  - `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio`
+- Publish-status now exposes finite pipeline buckets/reasons (`inFlight`, `retrying`, `failedTerminal`, `needsEnqueue`, `stageReasons`, `nextAction`) for non-blackbox debugging.
+
+Execution nuance (important):
+- Curated published saves/updates still auto-enqueue l10n in Paris.
+- The explicit DevStudio “Translate locales” action is additive (used for immediate/manual enqueue and no-diff backfill).
+
+If any legacy planning text below conflicts with runtime, this execution record + runtime code wins.
 
 ---
 
@@ -25,7 +44,7 @@ The fix must preserve Cloudflare “cached greatness”:
 
 This PRD introduces a small but foundational publish/refresh control plane for curated templates:
 - a **DevStudio “Refresh Prague preview”** action that regenerates render snapshots deterministically
-- a **curated l10n policy** that uses **entitlement-derived active locales + explicit actions** (no automatic 29-locale fanout; no auto-translate on edit)
+- a **curated l10n policy** that uses **entitlement-derived active locales + explicit actions** (no automatic 29-locale fanout; explicit enqueue controls for fast/manual refresh)
 - improved failure visibility so we stop “shooting ourselves in the foot”
 
 ---
@@ -174,7 +193,9 @@ We will keep this simple and automatic:
 - Curated instances do **not** default to `SUPPORTED_LOCALES` (29) for every operation.
 - “All supported locales” is an explicit operation (DevStudio button), not a default.
 - Status endpoints and DevStudio display are based on the **active** locale set.
-- **Curated edits do not auto-enqueue translation.** Translation is a deliberate operation (DevStudio action) so iteration is bounded and predictable.
+- Curated translation supports both:
+  - auto-enqueue on published save/update (runtime default),
+  - explicit DevStudio enqueue action for immediate/manual refresh and no-diff backfill.
 
 ### 5.3 Improve freshness without killing caching
 We keep caching, but tune pointer/response TTLs to match the SLA:
@@ -255,8 +276,8 @@ Rollout note:
 - In user workspaces, an empty active locale set means l10n is effectively “Off” (status returns empty list) until the user’s tier/config enables locales.
 
 Behavioral change (P0):
-- **Remove automatic l10n enqueue for curated edits** in the workspace instance update flow.
-  - Curated translation becomes manual (DevStudio action) to avoid accidental O(edits × locales) fanout.
+- **Keep curated fanout bounded to active locales** in the workspace instance update flow.
+  - Curated translation remains auto-enqueued on published saves/updates, and DevStudio manual enqueue remains available for operator control.
 
 Explicit actions (P0/P1):
 - (P0) Add a dev-auth endpoint to enqueue **active locales** for curated (endpoint name kept for compatibility):
@@ -350,8 +371,8 @@ Mitigation:
 
 ---
 
-## 10) Open questions (must answer before implementation starts)
+## 10) Decisions (resolved in execution)
 
-1) **SLA:** Is “≤ 60s in cloud-dev/GA” acceptable for “almost instant”, or do we require true instant via cache purges?
-2) **Curated locale selection UX:** Do we want curated to share workspace l10n selection UI, or keep an internal “devstudio locales” config?
-3) **Default curated translation behavior:** **DECISION: fully manual.** Curated edits never auto-enqueue translation.
+1) **SLA target:** short-pointer freshness with snapshot regeneration (no cache purge strategy required for v1).
+2) **Curated locale selection source:** workspace active locales (`workspaces.l10n_locales`) with EN implied.
+3) **Curated translation trigger model:** auto-enqueue on published save/update + explicit DevStudio enqueue action for manual/backfill control.

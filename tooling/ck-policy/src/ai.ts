@@ -248,7 +248,7 @@ const PROVIDER_LABELS: Record<AiProvider, string> = {
   openai: 'OpenAI',
   anthropic: 'Claude',
   groq: 'Groq (Llama)',
-  amazon: 'Amazon (Bedrock)',
+  amazon: 'Amazon Nova',
 };
 
 const MODEL_LABELS: Record<string, string> = {
@@ -263,6 +263,9 @@ const MODEL_LABELS: Record<string, string> = {
   // Groq
   'llama-3.3-70b-versatile': 'Llama 3.3 70B (fast)',
   // Amazon Bedrock (model IDs)
+  'nova-2-lite-v1': 'Nova 2 Lite',
+  'nova-2-pro-v1': 'Nova 2 Pro',
+  'nova-2-micro-v1': 'Nova 2 Micro',
   'amazon.nova-micro-v1:0': 'Nova Micro',
   'amazon.nova-lite-v1:0': 'Nova Lite',
   'amazon.nova-pro-v1:0': 'Nova Pro',
@@ -274,6 +277,7 @@ type ProviderModelPolicy = { defaultModel: string; allowed: string[] };
 const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderModelPolicy>>> = {
   free_low: {
     deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] },
+    amazon: { defaultModel: 'nova-2-lite-v1', allowed: ['nova-2-lite-v1'] },
   },
   paid_standard: {
     deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat', 'deepseek-reasoner'] },

@@ -1,12 +1,24 @@
 # Widget Pages GTM System — “Gigantic Leap FW” (Overview/Templates/Examples/Features)
 
-**Status:** PLANNING  
+**Status:** EXECUTED  
 **PRD #:** 042  
 **Priority:** P0 (GTM leverage; scales across 100s of widgets)  
 **Owner:** GTM Dev (Prague/Tokyo) + Product Dev (Bob/Widgets)  
 **Date:** 2026-02-04  
+**Executed:** 2026-02-10
 
 Source strategy doc: [documentation/widgets/WidgetGTMStrategy.md](../../documentation/widgets/WidgetGTMStrategy.md)
+
+---
+
+## 0) As-built execution record (authoritative)
+
+This PRD is executed. Core block-system outcomes are implemented in:
+- `prague/src/lib/blockRegistry.ts`
+- `prague/src/components/WidgetBlocks.astro`
+- `tokyo/widgets/*/pages/*.json`
+
+When this document conflicts with runtime code/contracts, runtime code is the source of truth.
 
 ---
 

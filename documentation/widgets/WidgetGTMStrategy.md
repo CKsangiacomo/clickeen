@@ -1,417 +1,364 @@
-# Widget GTM Strategy Template
+# Widget GTM Strategy
 
-**Purpose:** Teach AI how to market a widget by starting with benefits, then deriving all content from them.
-
----
-
-## Part 1: Clickeen Platform Benefits (Universal to All Widgets)
-
-These benefits apply to **every widget** Clickeen makes. Inherit them, don't repeat them.
-
-1. **Instant personalized localization (Ombra + multi-language)** - Give Ombra your website URL and watch it instantly personalize widget content to your business, then localize it across your workspace’s active locales (tier-based; up to 29). (Minibob demo: fast base-language preview; upsell signup for “all languages”.) Then edit with natural language—no manual field updates, no translator needed
-2. **Templates OR pixel-perfect custom** - Pick a curated template OR define everything to the pixel exactly how you want it—your choice, total freedom
-3. **Hyper-flexible styling** - Adapt to any design system, any brand, any aesthetic—extreme customization without breaking
-4. **SEO/GEO optimized** - Code automatically optimized for every country, search engines, and geographic context
-
-**Platform positioning:**
-- vs. **Elfsight**: We give you instant personalized localization (website → active locales; up to 29) + templates OR pixel-perfect custom; they lock you into templates with manual editing
-- vs. **Custom-built**: We give you Ombra (instant personalization + multi-language localization up to 29); they give you dev time and manual translation costs
-- vs. **Native CMS plugins**: We give you instant global reach (personalized content in your active languages); they lock you into one platform with one language
+STATUS: CANONICAL (AI-executable)
+OWNER: Product Dev Team + GTM Dev Team
+RELATED:
+- `documentation/architecture/CONTEXT.md`
+- `documentation/widgets/WidgetPraguePagesBuilder.md`
+- `documentation/widgets/WidgetBuildContract.md`
 
 ---
 
-## Part 2: [Widget] Specific Benefits
+## 0) Why this exists
 
-**Why use THIS widget instead of alternatives?** List 3-5 clear, specific benefits.
+This document exists to stop vague marketing copy.
 
-### Template (replace this with actual widget)
-1. **[Primary benefit]** - The #1 reason to use this widget
-2. **[Secondary benefit]** - The #2 reason
-3. **[Tertiary benefit]** - The #3 reason
-4. **[Additional benefits]** - Any other differentiators
+For every widget, AI must produce Prague page content that is:
+- simple to read
+- concrete
+- provably true from code/architecture
+- easy to localize
 
-**Widget positioning:**
-- vs. **[Competitor A]**: We [benefit they lack]
-- vs. **[Competitor B]**: We [benefit they lack]
-- vs. **[DIY approach]**: We [benefit they lack]
+This is not an investor narrative doc.
+This is a production copy system for `/widgets/{widget}/overview|templates|examples|features`.
 
 ---
 
-## Part 3: Deriving Content from Benefits
+## 1) Non-negotiable rules
 
-### 3.1 Prague Pages Framework
-
-**4 pages, each answers a different buyer question:**
-
-#### Overview Page (`/widgets/[widget]/`)
-**Question:** "What is this?"
-
-**Content derivation:**
-- **Hero H1**: `[Widget name] + [Primary widget benefit] + [Primary platform benefit: instant personalized localization]`
-  - Example: "FAQ Widget that Reduces Support Load—Personalized to Your Business in Multiple Languages Instantly"
-- **Subhead**: `[The Ombra hook: website → personalized + active locales]`
-  - Example: "Give Ombra your website URL and watch your FAQ personalize to your business AND go live in your active languages—instantly, no manual work."
-- **Minibob block**: Above fold, auto-focus. Prompt: "Give me your website URL and I'll tailor this [widget] to your business in seconds." After rewrite, show an upsell CTA: "Create a free account to see your [widget] in all languages."
-- **Instant personalized localization highlight**: Showcase the website URL → personalized content in your active languages flow. This is THE differentiator—no competitor can do this
-- **Moat section**: Lead with instant personalized localization (website → active locales instantly), then templates OR custom freedom, hyper-flexible styling, SEO/GEO optimization
-- **Value prop section**: All widget benefits (why use this widget)
-- **Social proof**: Customer quote proving primary widget benefit
-- **CTA**: "Try [Widget] Now" (Minibob trial) + "View Templates" (exploration)
+1. One claim = one proof.
+2. If a claim cannot be tied to a system fact, do not use it.
+3. Benefits are capabilities, not slogans.
+4. Prefer mechanism language over hype language.
+5. No invented metrics.
+6. Use positive capability framing.
 
 ---
 
-#### Templates Page (`/widgets/[widget]/templates`)
-**Question:** "Does it look good for my brand?"
+## 2) Inputs required before writing copy
 
-**Content derivation:**
-- **Hero H1**: `[Widget] Templates + [Platform benefit: templates OR custom]`
-  - Example: "FAQ Templates: Pick One OR Build Your Own Pixel-Perfect Design"
-- **Gallery**: 8-15 style variations showcasing:
-  - **2026 Trends**: Brutalism, Glassmorphism (liquid glass), Neumorphism, Claymorphism, Y2K Revival (metallic/chrome), Neo-brutalism (brutalism + bright colors), Bento Grid, 3D Depth
-  - **Evergreen Styles**: Minimal, Apple/iOS, Material Design, Flat, Corporate/Professional, Editorial
-- **Filter**: By style category, color scheme, layout structure
-- **Universal variations**: Every template shown in light AND dark mode
-- **Live previews**: Iframe embeds (not screenshots), device-responsive
-- **Emphasis**: Platform benefit (templates OR custom) - "Start with a template OR define everything yourself—total freedom. Light/Dark mode always included."
-- **CTA**: "Install This Template" (conversion) + "Customize in Editor" (deeper engagement)
+Required input set for any widget:
 
----
+| Input | Source | Why needed |
+| --- | --- | --- |
+| Widget visitor problem | widget PRD | Core value proposition |
+| Widget actions (what it actually does) | widget PRD + `tokyo/widgets/{widgetType}/` | Prevent fake claims |
+| Supported layouts and visual range | `spec.json`, `widget.css`, pages | Templates/examples accuracy |
+| Localization behavior | `localization.json`, l10n docs/contracts | Correct language claims |
+| Embed/runtime behavior | architecture docs + runtime code | Infra claims |
+| Curated instance references | `tokyo/widgets/{widgetType}/pages/*.json` | Visual proof on Prague pages |
 
-#### Examples Page (`/widgets/[widget]/examples`)
-**Question:** "Does this work for my specific business type?"
-
-**Content derivation:**
-- **Hero H1**: `[Widget] Examples for [ICP list]`
-  - Example: "FAQ Examples for SaaS, E-commerce, Service Businesses, and More"
-- **ICP sections**: 3-5 use cases, one per primary ICP from this list (PRIORITIZE hospitality & tourism):
-  - **Primary ICPs**: Hotels, Restaurants & bars, Tour operators, Vacation rentals, Museums & attractions, Ski/beach resorts, Event venues, Spas (in tourist destinations), Transportation services, Cruise lines
-  - **Secondary ICPs**: E-commerce (cross-border), SaaS (global), International schools, Export businesses
-  - Format: `[Business type] + [International customer pain] + [Widget benefit solution with multi-language localization] + [Result]`
-  - Example: "**Hotels in Barcelona:** Guests from 50+ countries ask 'What time is check-in?' in 15 languages. Give Ombra your website → FAQ personalized to your hotel in up to 29 languages instantly. Reduce front desk inquiries by 60%."
-  - Example: "**Restaurants in Paris:** Tourists ask 'Do you have gluten-free options?' in French, English, Spanish, Chinese, Japanese. Get your FAQ in your active languages instantly—no translator needed. Improve table turnover, reduce wait times."
-  - Example: "**Airbnb hosts in Tuscany:** Guests need check-in instructions, WiFi password, local tips in their language. Give Ombra your listing URL → house rules in your active languages (up to 29). 5-star reviews from international guests."
-  - Example: "**Ski resorts in the Alps:** Visitors from Germany, UK, France, Italy, Russia ask about lift passes, rentals, conditions. Instant multilingual FAQ → reduce ticket window wait times by 40%."
-- **Proof**: Screenshots, before/after, customer quotes
-- **Emphasis**: Widget benefits (specific problem-solving) + instant personalized localization for each ICP
-- **CTA**: "Build Your Own" (conversion) + "Contact for [ICP]" (enterprise nurture)
+If any required input is missing, stop and resolve before generating copy.
 
 ---
 
-#### Features Page (`/widgets/[widget]/features`)
-**Question:** "Why is this better than competitors?"
+## 3) Canonical Benefit Library
 
-**Content derivation:**
-- **Hero H1**: `Why [Widget] is Better`
-  - Example: "Why FAQ Widget Beats Elfsight, TypeForm, and Custom-Built"
-- **Feature list**: ALL benefits (platform + widget), grouped by category. This is THE MEAT—list everything granularly:
+Use this section as the source of truth for Prague copy generation.
+These benefits are reusable across widgets.
 
-  - **Category 1: Instant Personalized Localization** (THE differentiator)
-    - Ombra AI editing - Natural language content updates
-    - Website URL → active locales instantly (up to 29; no manual translation)
-    - Personalized to your business automatically
-    - Then edit with natural language—no field-by-field updates
+### 1) DESIGN BENEFITS
 
-  - **Category 2: Design Freedom**
-    - Templates OR pixel-perfect custom (your choice)
-    - 8-15 curated templates (2026 trends: Brutalism, Glassmorphism, Neumorphism, Claymorphism, Y2K, Neo-brutalism, Bento, 3D Depth + Evergreens: Minimal, Apple, Material, Flat, Corporate, Editorial)
-    - Light/Dark mode always supported
-    - Hyper-flexible styling—every Dieter token customizable
-    - Device-responsive (mobile/tablet/desktop previews)
-    - Supernova effects (advanced animations)
+What users can visually create, instantly, without code, across every widget.
 
-  - **Category 3: Technical Excellence**
-    - Zero-code embed (3-line script, works anywhere)
-    - CDN delivery (global edge network, <50ms p99)
-    - Lazy loading (performance optimized)
-    - Snapshot rendering (immutable artifacts, zero Paris calls)
-    - Multi-widget support (no conflicts, session isolation)
-    - No jQuery (modern web standards)
-    - TypeScript (type-safe widgets)
-    - CSP compliant (security first)
-    - WCAG AA accessible
+#### 1.1 Every widget lets users go live instantly by choosing a style - or design from scratch.
+- `1.1.1` Users can pick a style and publish in seconds.
+- `1.1.2` Power users can start from a blank canvas and design everything.
+- `1.1.3` Speed and control are both first-class options, no template trap.
 
-  - **Category 4: SEO/GEO Optimization**
-    - Structured data (schema.org)
-    - Country-specific content (geo overlays)
-    - Automatic optimization for every country
-    - Indexable content (SEO-friendly iframes)
+#### 1.2 Every widget offers unprecedented styling depth - without writing any CSS or JS.
+- `1.2.1` Users control spacing, layout, surfaces, borders, radius, shadows, and inner components directly in the UI.
+- `1.2.2` Styling is not limited to colors or themes, it includes structural control.
+- `1.2.3` Custom CSS/JS is unnecessary because the editor is powerful enough.
 
-  - **Category 5: Platform Integration**
-    - Composable architecture (widgets work together)
-    - Real-time preview (see changes instantly)
-    - Version history (track changes)
-    - No vendor lock-in (export your data)
-    - Works with: WordPress, Webflow, Shopify, Squarespace, custom sites
+#### 1.3 Every widget supports unmatched typography control - for every single piece of text.
+- `1.3.1` Headings, body text, labels, CTAs, captions, and inline copy are styled independently.
+- `1.3.2` Typography is role-based and per-string, not one global font setting.
+- `1.3.3` This is critical for brand-driven sites where typography is identity.
 
-  - **Category 6: [Widget-specific]** → Widget benefits unique to this widget
+#### 1.4 Every widget supports rich inline text formatting - safely.
+- `1.4.1` Users can apply bold, italic, underline, strike, and links directly in text fields.
+- `1.4.2` Formatting is constrained and safe, so layout and structure remain intact.
+- `1.4.3` Rich text behavior is consistent across widgets.
 
-- **Comparison table** (recommended): Clickeen vs. Competitor A vs. Competitor B (show granular feature differences)
-- **Emphasis**: Granular differentiation (not high-level marketing)—list every technical advantage
-- **CTA**: "Start Free" (conversion) + "Compare to [Competitor]" (validation)
+#### 1.5 Every widget can be designed around the pod/stage - not forced into a boxed layout.
+- `1.5.1` Widgets can live in heroes, banners, sidebars, dark sections, or full-bleed areas.
+- `1.5.2` The container itself is a design surface.
+- `1.5.3` Widgets feel native to the page, not bolted on.
 
----
+#### 1.6 Every widget works across mobile and desktop, all screen sizes and densities - automatically.
+- `1.6.1` No breakpoints for users to manage.
+- `1.6.2` No responsive CSS for users to write.
+- `1.6.3` Mobile, tablet, and desktop work by default.
 
-### 3.2 SEO Strategy
+#### 1.7 Every widget supports light and dark modes out of the box.
+- `1.7.1` Widgets adapt to light and dark sections.
+- `1.7.2` No duplicate widgets or alternate designs are required.
+- `1.7.3` Visual consistency is preserved.
 
-**Keyword derivation:**
-- **Primary keyword**: `[Widget name] + instant + multilingual/29 languages`
-  - Example: "faq widget instant 29 languages", "multilingual faq instant personalization"
-- **Secondary keywords**: Platform benefits as modifiers
-  - Example: "ai-powered multilingual faq", "instant personalized faq 29 languages", "customizable faq widget", "seo optimized faq"
-- **Long-tail keywords**: The instant personalized localization benefit phrased as user problems
-  - Example: "how to create multilingual faq instantly", "faq widget personalized to my business in multiple languages", "instant translation faq widget"
+#### 1.8 Every widget can use rich media as part of its design and content.
+- `1.8.1` Images, video, and Lottie assets are supported inputs.
+- `1.8.2` Motion and media are intentional capabilities, not hacks.
+- `1.8.3` High-craft visuals are possible without custom frontend work.
 
-**Search intent mapping:**
-- **Informational queries** ("what is faq widget") → Overview page
-- **Comparison queries** ("faq widget vs elfsight") → Features page
-- **Transactional queries** ("best faq widget for saas") → Examples page
-- **Visual queries** ("faq widget templates") → Templates page
+#### 1.STYLE Canonical style catalog (marketable names + short definitions)
 
-**Meta description formula:**
-`[Primary widget benefit] + [Instant personalized localization hook]. [CTA].`
-- Example: "Reduce support load with AI-powered FAQ. Give Ombra your website—get personalized content in multiple languages instantly. Try free."
+Use these names when generating Templates-page copy and style showcases.
 
----
+Evergreen set:
+- `Pure Canvas` - Clean minimal style focused on clarity, whitespace, and readability.
+- `Serif Signature` - Editorial look with typographic personality and premium tone.
+- `Enterprise Prime` - Structured, trustworthy style for B2B and compliance-heavy brands.
+- `Velvet UI` - Soft, refined interface style with gentle depth and modern polish.
+- `Studio Modern` - Balanced contemporary system look inspired by product UI patterns.
+- `Clarity+` - High-contrast accessibility-first style prioritizing legibility and navigation.
 
-### 3.3 CTA Strategy
+Trend-forward set:
+- `Liquid Glass` - Frosted/translucent surfaces with blur and layered depth.
+- `Rebel Blocks` - Bold neo-brutal visual language with hard contrast and strong hierarchy.
+- `Soft Pop 3D` - Playful clay-like style with rounded forms and tactile depth.
+- `Midnight Luxe` - Dark premium aesthetic with restrained highlights and strong contrast.
+- `Chrome Wave` - Y2K-inspired metallic energy with glossy accents and high shine.
+- `Neon Aura` - Gradient-led glow style for expressive, high-energy visual identity.
 
-**Derive CTAs from benefits:**
-- **Primary CTA**: `Try [Instant personalized localization]`
-  - Example: "Get This [Widget] in 29 Languages—Instantly" or "Give Ombra Your Website" or "Personalize to Your Business in 29 Languages"
-- **Secondary CTA**: `Experience [Design freedom]`
-  - Example: "See Templates OR Custom Design"
-- **Tertiary CTA**: `Explore [Widget benefit]`
-  - Example: "See How to [Primary Widget Benefit]"
+#### ICP.CATALOG Canonical ICP list (and why they benefit from Clickeen)
 
-**CTA placement:**
-- **Overview**: Minibob (trial) + Templates link (exploration)
-- **Templates**: Install button (conversion) + Customize link (engagement)
-- **Examples**: Build your own (conversion) + Contact (enterprise)
-- **Features**: Start free (conversion) + Compare (validation)
+Why these ICPs:
+- They serve high visitor traffic with repeated questions.
+- They often need multilingual coverage.
+- They update operational content frequently and need publish speed.
+- They benefit from strong visual control without custom frontend work.
 
----
+ICP list:
+- `Hotels & Resorts` - Frequent guest questions across many locales; publish-once updates keep every placement aligned.
+- `Vacation Rentals & Property Managers` - Repeated check-in and property rules across listings; one workflow scales cleanly.
+- `Restaurants, Cafes & Bars` - Menu, allergen, and hours questions need fast mobile answers for local and tourist audiences.
+- `Tour Operators & Travel Agencies` - Pickup, policy, and itinerary clarity in multiple languages improves booking confidence.
+- `Attractions, Museums & Theme Parks` - High-volume visitor logistics benefit from consistent, localized answers.
+- `Event Venues & Ticketed Experiences` - Event details change often; instant publish propagation prevents stale information.
+- `Spas, Wellness & Aesthetic Clinics` - Trust-heavy service questions benefit from branded presentation and clear localized copy.
+- `Transportation & Mobility Services` - Timing and baggage rules require reliable, always-current on-page guidance.
+- `Cruise & Shore Excursion Providers` - Global traveler mix demands multilingual, high-clarity pre-book information.
+- `Destination Services (DMC, local concierge)` - Multi-market service catalogs need composable style/content/language control.
+- `E-commerce Brands (cross-border)` - Shipping, returns, and duties content changes often across regions and languages.
+- `SaaS & Digital Products (global self-serve)` - Product onboarding and support copy must stay synchronized across locales.
+- `Education & Training Providers (international audiences)` - Admissions and course policy clarity benefits from predictable multilingual UX.
+- `Professional Services (legal, finance, consulting)` - Regulated trust contexts require precise copy and brand-consistent presentation.
 
-### 3.4 Positioning Messages
+### 2) PLATFORM / INFRA + AI BENEFITS
 
-**Platform positioning** (same for all widgets):
-```
-vs. Elfsight: "We give you instant personalized localization (website → active locales, up to 29). They give you manual editing, one language at a time."
-vs. Custom-built: "We give you Ombra (website → personalized content in multiple languages, instantly). They give you dev time + translator costs."
-vs. Native plugins: "We give you instant global reach (personalized in your active languages from your website URL). They give you manual work, one language, one platform."
-```
+What makes widgets installable, scalable, intelligent, and safe.
 
-**Widget positioning** (specific to this widget):
-Derive from widget benefits vs. competitor weaknesses.
+#### 2.1 Every widget provides multiple embed options so it works on any website.
+- `2.1.1` Recommended embed for most sites.
+- `2.1.2` Scriptless iframe embed for restrictive builders.
+- `2.1.3` Works on WordPress, Webflow, Shopify, site builders, and custom stacks.
 
-Format: `"We [widget benefit]. They [competitor weakness]."`
-- Example (FAQ): "We reduce support load with structured data. TypeForm redirects users away from your site."
+#### 2.2 Every widget works on modern websites that behave like apps.
+- `2.2.1` Pages that update without reloads still render widgets correctly.
+- `2.2.2` Widgets do not disappear or duplicate during navigation.
+- `2.2.3` No engineering is required to fix embeds.
 
----
+#### 2.3 Every widget updates everywhere with one click.
+- `2.3.1` Edit once, then click Publish.
+- `2.3.2` The update propagates instantly to every placement.
+- `2.3.3` No re-embedding and no redeploying.
 
-### 3.5 Content Tone & Voice
+#### 2.4 Every widget loads fast globally by default.
+- `2.4.1` Served from edge infrastructure worldwide.
+- `2.4.2` No CDN configuration required by users.
+- `2.4.3` Performance is a default property.
 
-**Tone:**
-- Confident but not arrogant
-- Helpful but not hand-holdy
-- Technical terms OK, but explain moats in simple language
+#### 2.5 Clickeen does not require custom CSS or custom JS, because users do not need escape hatches.
+- `2.5.1` Competing tools often rely on pasted CSS/JS to patch limitations.
+- `2.5.2` Clickeen puts capability into the core system.
+- `2.5.3` Users stay productive and safe in product-native workflows.
 
-**Anti-patterns** (never write these):
-- ❌ "World's best [widget]"
-- ❌ "Revolutionary" / "Game-changing"
-- ❌ "Unlike other tools..." (implies comparison without proof)
+#### 2.AI.0 In Clickeen, AI helps, but users always stay in control.
+- `2.AI.0.1` AI suggests and assists; it never silently changes live widgets.
+- `2.AI.0.2` Every AI output can be accepted, edited, overridden, or rejected.
+- `2.AI.0.3` Nothing publishes automatically; users decide.
 
-**Patterns** (write these):
-- ✅ "[Specific benefit] you won't find elsewhere"
-- ✅ "[Platform benefit]: [What it means for user]"
-- ✅ "[Widget benefit] in [timeframe]" (e.g., "Reduce support load in 24 hours")
+#### 2.AI.1 Every widget can use Ombra AI, purpose-built for widget content.
+- `2.AI.1.1` Ombra generates structured, UI-ready copy, not chat responses.
+- `2.AI.1.2` Suggestions appear directly where users edit.
+- `2.AI.1.3` AI assists and users decide.
 
----
+#### 2.AI.2 Every widget can run on the best LLM for the job.
+- `2.AI.2.1` Cost-effective models for scale.
+- `2.AI.2.2` High-quality models for precision.
+- `2.AI.2.3` No lock-in to a single model or tone.
 
-### 3.6 Reference Material for Content Generation
+#### 2.AI.3 Clickeen is AI-native, not AI-bolted-on.
+- `2.AI.3.1` AI is embedded in creation, editing, publishing, and localization.
+- `2.AI.3.2` AI understands context: widget type, field intent, language, and placement.
+- `2.AI.3.3` AI respects publish boundaries and user intent.
 
-**A) Design Style Catalog (for Templates Page)**
+### 3) LOCALIZATION BENEFITS
 
-Always showcase these style variations:
+Global by default.
 
-**2026 Trends:**
-- **Brutalism** - Raw, bold, geometric shapes, high contrast
-- **Glassmorphism (Liquid Glass)** - Frosted glass, blur effects, transparency
-- **Neumorphism** - Soft shadows, tactile feel, subtle depth
-- **Claymorphism** - 3D clay-like, playful, rounded
-- **Y2K Revival** - Metallic, chrome, holographic gradients
-- **Neo-brutalism** - Brutalism + bright accent colors
-- **Bento Grid** - Card-based, modular layout
-- **3D Depth** - Layered, parallax, dimensional
+#### 3.1 Every widget ships with up to 29 languages out of the box.
+- `3.1.1` Multilingual support is immediate.
+- `3.1.2` No duplicate widgets per language.
+- `3.1.3` Global readiness is default.
 
-**Evergreen Styles:**
-- **Minimal** - Clean, white space, simple
-- **Apple/iOS** - Refined, simple, elegant
-- **Material Design** - Google's system, elevation, motion
-- **Flat** - No shadows, simple shapes, bright colors
-- **Corporate/Professional** - Traditional, clean, trustworthy
-- **Editorial** - Magazine-style, typography-focused
+#### 3.2 One content change updates every language and every placement.
+- `3.2.1` Edit once, then Publish.
+- `3.2.2` All languages stay in sync automatically.
+- `3.2.3` No manual translation management.
 
-**Universal:**
-- **Light/Dark mode** - Always supported for every template
-- **High contrast** - Accessibility option
-- **Colorblind-safe** - Accessible color palettes
+#### 3.3 Localization is AI-driven and intent-aware, not literal machine translation.
+- `3.3.1` Translations preserve meaning, tone, and CTA strength.
+- `3.3.2` Translations are optimized for real UI usage and GEO friendliness.
+- `3.3.3` Output feels native in each language.
 
----
+#### 3.4 Users can override any translation instantly, while keeping system coherence.
+- `3.4.1` Brand terms and local nuance are easy to adjust.
+- `3.4.2` Overrides do not fork widgets or languages.
+- `3.4.3` Users can revert to AI-generated translation at any time.
 
-**B) Target ICPs (for Examples Page)**
-
-Primary business types that benefit most from Clickeen widgets:
-
-**PRIORITY: Hospitality & Tourism (international customers = multilingual essential)**
-
-1. **Hotels & accommodations** - International guests, multilingual FAQs (check-in/out, amenities, policies, local recommendations)
-2. **Restaurants & bars** - International tourists, multilingual menus, hours, reservations, dietary info
-3. **Tour operators & travel agencies** - International customers by definition, booking info, itineraries, safety guidelines, cancellation policies
-4. **Vacation rentals (Airbnb, villas, apartments)** - International guests, house rules, check-in instructions, local tips, amenities
-5. **Museums & cultural attractions** - International visitors, exhibit info, tickets, hours, accessibility, guided tours
-6. **Ski resorts & beach resorts** - International tourists, activities, rentals, conditions, packages
-7. **Event venues & conference centers** - International attendees, booking, capacity, catering, AV equipment
-8. **Spas & wellness centers** (in tourist destinations) - International guests, treatments, pricing, booking
-9. **Transportation services** - Car rentals, ferry services, shuttle buses - international travelers, booking, routes, pricing
-10. **Cruise lines & boat tours** - International passengers, itineraries, cabins, excursions, policies
-
-**SECONDARY: Businesses with international reach**
-
-11. **E-commerce stores (cross-border)** - Selling internationally, shipping/returns FAQs in multiple languages, currency/tax info
-12. **SaaS companies (global products)** - International users, feature questions, pricing, onboarding in multiple languages
-13. **International schools & language schools** - International students, admissions, courses, accommodation, visa info
-14. **Export/import businesses** - International buyers/suppliers, product specs, shipping, compliance
-
-**Per ICP, ALWAYS emphasize:**
-- **International customer pain point** (e.g., "Hotels: Guests ask 'What time is check-in?' in 15 different languages")
-- **Widget benefit solution** (e.g., "Answer in their language before they ask")
-- **Instant personalized localization is THE solution** (e.g., "Give Ombra your website → FAQ in multiple languages instantly")
-- **Measurable result** (e.g., "Reduce front desk inquiries by 60%, improve guest satisfaction scores")
+#### 3.5 Styles, content, and language are fully composable.
+- `3.5.1` Any style works with any content in any language.
+- `3.5.2` No design-language forks are required.
+- `3.5.3` Composability is what allows clean scale to hundreds of widgets.
 
 ---
 
-**C) Comprehensive Platform Features (for Features Page)**
+## 4) Metric claim policy (important)
 
-This is THE MEAT—list every technical capability:
+We can use hard numbers, but only with evidence.
 
-**Instant Personalized Localization:**
-- Ombra AI editing (natural language)
-- Website URL → active locales instantly (up to 29)
-- Automatic business context personalization
-- No manual translation needed
-- Then edit with natural language
+Allowed:
+- "Edge delivery by default" (no number)
+- "X ms p95" only if metric source is explicitly available and dated
 
-**Design System:**
-- 8-15 curated templates (see style catalog above)
-- Templates OR pixel-perfect custom (your choice)
-- Light/Dark mode (always supported)
-- Every Dieter token customizable
-- Device-responsive previews (mobile/tablet/desktop)
-- Supernova effects (advanced animations)
-- Hyper-flexible styling (any design system, any brand)
+Required format for numeric claims:
+- `<claim> (<metric>, <date>, <source>)`
+- Example: `Median widget load 82ms (2026-02-10, cloud-dev smoke run #123)`
 
-**Technical Excellence:**
-- Zero-code embed (3-line script)
-- Works anywhere (WordPress, Webflow, Shopify, Squarespace, custom sites)
-- CDN delivery (global edge, <50ms p99)
-- Lazy loading (performance optimized)
-- Snapshot rendering (immutable artifacts)
-- Multi-widget support (no conflicts)
-- Session isolation (widgets don't interfere)
-- No jQuery (modern web standards)
-- TypeScript (type-safe)
-- CSP compliant (security first)
-- WCAG AA accessible
-
-**SEO/GEO:**
-- Structured data (schema.org)
-- Country-specific content (geo overlays)
-- Automatic optimization per country
-- Indexable content (SEO-friendly)
-- Canonical URLs
-- Hreflang tags
-
-**Platform Integration:**
-- Composable architecture (widgets work together)
-- Shared design system (consistent across widgets)
-- Real-time preview (instant feedback)
-- Version history (track changes)
-- No vendor lock-in (export data)
-- API access (for enterprise)
-
-**Reliability:**
-- 99.9% uptime SLA
-- Global CDN (Cloudflare)
-- Automatic failover
-- Zero-downtime deploys
+If no verified metric exists, keep the claim non-numeric.
 
 ---
 
-## Part 4: AI Generation Instructions
+## 5) Widget-specific benefit extraction (per widget)
 
-**To generate Prague pages for a widget:**
+For each widget, define 3 to 5 widget-specific truths in this format:
 
-1. **Read platform benefits** (Part 1) - These are inherited by all widgets
-2. **Read widget benefits** (Part 2) - These are specific to this widget
-3. **Apply derivation rules** (Part 3) - Combine benefits into content
-4. **Check compliance**:
-   - ✅ Hero mentions primary widget benefit + PRIMARY platform benefit (instant personalized localization)
-   - ✅ Minibob block appears above fold on Overview with a fast "website URL → personalized preview" prompt + clear signup upsell for “all languages”
-   - ✅ Each page answers its assigned buyer question
-   - ✅ CTAs match the page's conversion goal
-   - ✅ Tone is confident but factual (no hyperbole)
-   - ✅ All 4 platform benefits mentioned at least once (instant personalized localization [PRIMARY], templates OR custom, hyper-flexible styling, SEO/GEO)
-   - ✅ All widget benefits mentioned at least once
-   - ✅ "Instant personalized localization" is THE hero—mentioned prominently on every page
+| Field | Required content |
+| --- | --- |
+| `benefit_id` | Stable key, e.g. `faq.answer_on_page` |
+| `claim_line` | 3-8 words, direct |
+| `visitor_problem` | Real on-page problem |
+| `widget_action` | What widget does in UI/runtime |
+| `visible_result` | What visitor/user can observe |
+| `proof_anchor` | PRD section, file path, or known UI behavior |
 
-**Quality check:** If you can't clearly explain why someone should use this widget (widget benefits), **don't write the page**. Go back and clarify the benefits first.
-
----
-
-## Part 5: Success Metrics
-
-**Measure benefit communication effectiveness:**
-
-### Awareness (Do people understand what this is?)
-- Prague page views (especially Overview)
-- Minibob trial starts (platform benefit #1 experienced)
-- Time on page (engagement with benefits)
-
-### Consideration (Do benefits resonate?)
-- Templates page clicks (platform benefit #3: design control)
-- Examples page clicks (widget benefit validation)
-- Scroll depth on Features page (competitive differentiation)
-
-### Conversion (Do benefits drive action?)
-- Widget installs from Prague
-- Free → Paid upgrades (platform benefits unlock use cases)
-- ICP penetration rate (widget benefits match ICP needs)
+Example (FAQ):
+- `claim_line`: "Answer questions on-page"
+- `widget_action`: "Renders expandable Q/A sections"
+- `visible_result`: "Visitor gets answer without leaving page"
 
 ---
 
-## Widget-Specific Override
+## 6) How to distribute claims across the 4 Prague pages
 
-**Location:** `documentation/widgets/<Widget>/<Widget>_ContentStrategy.md`
+### Overview (`/widgets/{widget}`)
+Question answered: "What is this and why should I care?"
 
-**Contents:** Only Part 2 (widget benefits) and any widget-specific derivation rules.
+Use mix:
+- 2 widget-specific claims
+- 2 platform/infra claims from section `2`
+- 1 localization claim from section `3`
+- 1 AI control claim from section `2.AI`
 
-**Example structure:**
-```markdown
-# FAQ Widget Content Strategy
+Must include:
+- one immediate proof block (`minibob` and/or curated embed)
+- one localization proof block (`locale-showcase`)
 
-## Widget-Specific Benefits
-1. Reduce support load (FAQ-specific structured data + AI triage)
-2. Improve SEO (FAQ-specific schema.org markup)
-3. Scale internationally (FAQ-specific translation workflows)
+### Templates (`/widgets/{widget}/templates`)
+Question answered: "Will this match my brand?"
 
-## Derivation Rule Overrides
-- Overview H1: Emphasize "reduce support" more than design
-- Examples ICPs: SaaS (feature objections), E-commerce (returns), Services (appointments)
-- Positioning: vs. Intercom (we're widget, not full help desk)
-```
+Use mix:
+- mostly design claims from section `1`
+- one short platform claim from section `2` (optional)
 
-**AI reads:** Platform benefits (universal) + Widget benefits (specific) → Generates content
+Must show:
+- visual range (modern + classic)
+- control depth (layout, appearance, typography)
+
+### Examples (`/widgets/{widget}/examples`)
+Question answered: "Will this work for my business case?"
+
+Use mix:
+- scenario-first, not feature-first
+- each example maps: context -> widget action -> visible result
+- each scenario should pull one relevant design/platform/localization claim from section `1/2/3`
+
+Do not write abstract benefit slogans here.
+
+### Features (`/widgets/{widget}/features`)
+Question answered: "Why is this better engineered?"
+
+Use mix:
+- mechanism-heavy copy
+- claim + proof cadence
+- include technical language only when accurate (`SSR`, `JSON-LD`, `publish-gated`, `allowlist`, `edge`)
 
 ---
 
-**End of GTM Strategy Template**
+## 7) Copy style that localizes well
+
+Localization quality improves when source copy is clean.
+
+Rules:
+1. One idea per sentence.
+2. Keep idioms out of body copy.
+3. Keep syntax simple in subtitles and feature bodies.
+4. Prefer concrete nouns and verbs.
+5. Avoid stacked metaphors and slang.
+
+---
+
+## 8) Output package expected from AI
+
+For each widget, AI should produce:
+
+1. A short `claim bank`:
+- 3-5 widget-specific claims
+- selected claims from sections `1`, `2`, `2.AI`, and `3`
+- proof anchor for each claim
+
+2. Four page copy maps:
+- Overview
+- Templates
+- Examples
+- Features
+
+2.1 For `Examples`, include:
+- selected ICP names from `ICP.CATALOG`
+- one-line rationale per selected ICP for why Clickeen is a strong fit
+- scenario mapping (`context -> widget action -> visible result`)
+
+3. Final page JSON content for:
+- `tokyo/widgets/{widgetType}/pages/overview.json`
+- `tokyo/widgets/{widgetType}/pages/templates.json`
+- `tokyo/widgets/{widgetType}/pages/examples.json`
+- `tokyo/widgets/{widgetType}/pages/features.json`
+
+4. A brief validation note:
+- Which claims are numeric vs non-numeric
+- Any claim intentionally excluded because proof was missing
+
+---
+
+## 9) Definition of done for GTM copy quality
+
+The result is ready only if all are true:
+
+1. Copy is direct and non-generic.
+2. Every important claim maps to a known system fact.
+3. Wording is capability-first and mechanism-backed.
+4. Localization-safe writing style is respected.
+5. The four pages have distinct jobs (no duplicated narrative).
+6. Another AI can regenerate consistent pages using this doc without inventing benefits.

@@ -11,6 +11,36 @@ type BedrockConverseResponse = {
   usage?: { inputTokens?: number; outputTokens?: number };
 };
 
+type NovaApiChatResponse = {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  model?: string;
+};
+
+function asTrimmed(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function hasNovaApiKey(env: Env): boolean {
+  return Boolean(asTrimmed(env.NOVA_API_KEY));
+}
+
+function normalizeModelForNovaApi(modelId: string): string {
+  const trimmed = asTrimmed(modelId);
+  if (!trimmed) return '';
+  const bedrockStyle = trimmed.match(/^(?:[a-z]{2}\.)?amazon\.([a-z0-9.-]+?)(?::\d+)?$/i);
+  if (bedrockStyle?.[1]) return bedrockStyle[1];
+  return trimmed;
+}
+
+function normalizeModelForBedrock(modelId: string): string {
+  const trimmed = asTrimmed(modelId);
+  if (!trimmed) return '';
+  if (/^(?:[a-z]{2}\.)?amazon\.[a-z0-9.-]+(?::\d+)?$/i.test(trimmed)) return trimmed;
+  if (/^[a-z0-9.-]+$/i.test(trimmed)) return `amazon.${trimmed}:0`;
+  return trimmed;
+}
+
 function requireAwsCreds(env: Env): {
   accessKeyId: string;
   secretAccessKey: string;
@@ -163,7 +193,89 @@ function extractSystemPrompt(messages: ChatMessage[]): string | null {
   return system ? String(system.content ?? '') : null;
 }
 
-export async function callAmazonBedrockChat(args: {
+async function callNovaApiChat(args: {
+  env: Env;
+  modelId: string;
+  messages: ChatMessage[];
+  temperature: number;
+  maxTokens: number;
+  timeoutMs: number;
+}): Promise<{ content: string; usage: Usage }> {
+  const apiKey = asTrimmed(args.env.NOVA_API_KEY);
+  if (!apiKey) {
+    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'amazon', message: 'Missing NOVA_API_KEY' });
+  }
+
+  const baseUrl = (asTrimmed(args.env.NOVA_BASE_URL) || 'https://api.nova.amazon.com/v1').replace(/\/+$/, '');
+  const modelId = normalizeModelForNovaApi(args.modelId);
+  if (!modelId) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing modelId' });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), args.timeoutMs);
+  const startedAt = Date.now();
+
+  try {
+    let res: Response;
+    try {
+      res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+          'content-type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: modelId,
+          messages: args.messages,
+          temperature: args.temperature,
+          max_tokens: args.maxTokens,
+        }),
+      });
+    } catch (err: unknown) {
+      const name = isRecord(err) ? asString((err as any).name) : null;
+      if (name === 'AbortError') {
+        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      }
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'amazon', message: 'Upstream request failed' });
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'amazon', message: `Upstream error (${res.status}) ${text}`.trim() });
+    }
+
+    let responseJson: NovaApiChatResponse;
+    try {
+      responseJson = (await res.json()) as NovaApiChatResponse;
+    } catch (err: unknown) {
+      const name = isRecord(err) ? asString((err as any).name) : null;
+      if (name === 'AbortError') {
+        throw new HttpError(429, { code: 'BUDGET_EXCEEDED', message: 'Execution timeout exceeded' });
+      }
+      throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'amazon', message: 'Invalid upstream JSON' });
+    }
+
+    const latencyMs = Date.now() - startedAt;
+    const content = responseJson.choices?.[0]?.message?.content ?? '';
+    if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'amazon', message: 'Empty model response' });
+
+    const usage: Usage = {
+      provider: 'amazon',
+      model: responseJson.model ?? modelId,
+      promptTokens: responseJson.usage?.prompt_tokens ?? 0,
+      completionTokens: responseJson.usage?.completion_tokens ?? 0,
+      latencyMs,
+    };
+
+    return { content, usage };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function callBedrockConverseChat(args: {
   env: Env;
   modelId: string;
   messages: ChatMessage[];
@@ -180,7 +292,7 @@ export async function callAmazonBedrockChat(args: {
   const startedAt = Date.now();
 
   try {
-    const modelId = String(args.modelId || '').trim();
+    const modelId = normalizeModelForBedrock(args.modelId);
     if (!modelId) {
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Missing modelId' });
     }
@@ -266,3 +378,16 @@ export async function callAmazonBedrockChat(args: {
   }
 }
 
+export async function callAmazonBedrockChat(args: {
+  env: Env;
+  modelId: string;
+  messages: ChatMessage[];
+  temperature: number;
+  maxTokens: number;
+  timeoutMs: number;
+}): Promise<{ content: string; usage: Usage }> {
+  if (hasNovaApiKey(args.env)) {
+    return callNovaApiChat(args);
+  }
+  return callBedrockConverseChat(args);
+}

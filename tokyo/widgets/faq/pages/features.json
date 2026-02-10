@@ -6,15 +6,15 @@
       "type": "page-meta",
       "copy": {
         "title": "FAQ features - Clickeen",
-        "description": "The definitive answer engine. Speed, SEO, and AI built in."
+        "description": "How the FAQ widget works: SEO, localization, publish flow, and AI-assisted editing."
       }
     },
     {
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "The answer engine",
-        "subheadline": "Speed. SEO section. AI. The definitive FAQ infrastructure."
+        "headline": "How the FAQ widget works",
+        "subheadline": "From AI drafting to localization and SEO, these are the systems that keep answers accurate and discoverable."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -25,9 +25,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Don't write. Just describe.",
-        "subheadline": "Natural language editing powered by Ombra.",
-        "body": "Turn your intent into code. Describe the change you want, and the widget builds itself."
+        "headline": "Describe it once. AI drafts the rest.",
+        "subheadline": "Generate structured drafts inside the editor, then accept, edit, or reject each suggestion before publish.",
+        "body": "Ombra generates structured FAQ copy inside the editor. Accept, edit, override, or reject each suggestion before publish."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -38,9 +38,9 @@
       "type": "split",
       "layout": "visual-left",
       "copy": {
-        "headline": "29 languages. One toggle.",
-        "subheadline": "Geography is just a parameter.",
-        "body": "Zero-effort localization. We detect the visitor's locale and serve the right answer instantly."
+        "headline": "Up to 29 languages in one widget.",
+        "subheadline": "Serve translated answers automatically and fine-tune wording manually when brand voice or nuance matters.",
+        "body": "You edit one source. Clickeen serves translated answers and lets you override any line when needed."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -51,9 +51,9 @@
       "type": "split",
       "layout": "visual-right",
       "copy": {
-        "headline": "Write once. Run everywhere.",
-        "subheadline": "One source of truth.",
-        "body": "Your website. Your app. Your help center. Your email footer. Power them all from one dashboard."
+        "headline": "Publish once. Update every page.",
+        "subheadline": "Edit once in one source, then publish and push the latest answers to every live embed.",
+        "body": "After you click Publish, every live embed loads the latest content."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -63,16 +63,16 @@
       "id": "steps-diff",
       "type": "steps",
       "copy": {
-        "title": "Why Clickeen changes everything",
-        "subheadline": "The new standard for interaction.",
+        "title": "Search engines can read your answers",
+        "subhead": "Server-rendered answers, schema output, and deep links help search engines index and surface the right content.",
         "items": [
           {
             "title": "Google sees every word",
-            "body": "Server-side rendering means zero layout shift and perfect indexability."
+            "body": "Server-side rendering keeps your answers indexable with near-zero layout shift."
           },
           {
             "title": "Rich snippets",
-            "body": "Automatic JSON-LD injection helps you dominate search results."
+            "body": "Automatic JSON-LD helps search engines surface your answers."
           },
           {
             "title": "Deep linking",
@@ -85,24 +85,24 @@
       "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "Built for the next decade",
-        "body": "A living knowledge base that grows with you."
+        "headline": "A living knowledge base that grows with you.",
+        "body": "Keep answers accurate as your product, policies, and audience evolve."
       }
     },
     {
       "id": "steps-eco",
       "type": "steps",
       "copy": {
-        "title": "Smarter with every interaction",
-        "subhead": "The Clickeen Ecosystem.",
+        "title": "Reliable by design",
+        "subhead": "Versioned publishing and explicit live boundaries keep frequent updates controlled for teams.",
         "items": [
           {
-            "title": "Mistake-proof",
-            "body": "Every change is versioned. Revert instantly if you break something."
+            "title": "Versioned changes",
+            "body": "Every publish is versioned, so teams can iterate with control."
           },
           {
-            "title": "Immutable",
-            "body": "What you publish is exactly what they see. No surprises."
+            "title": "Publish boundary",
+            "body": "Live content changes only after explicit publish."
           },
           {
             "title": "Edge-Cached",
@@ -115,20 +115,20 @@
       "id": "control-moat",
       "type": "control-moat",
       "copy": {
-        "title": "Design usually requires compromise. Not here.",
-        "subhead": "No compromise on aesthetics.",
+        "title": "Total design control",
+        "subhead": "Control radius, shadows, borders, spacing, and typography in a visual editor built for brand consistency.",
         "items": [
           {
             "title": "Layouts",
-            "body": "Flexible structures."
+            "body": "Accordion, list, and card structures with responsive spacing controls."
           },
           {
             "title": "Typography",
-            "body": "Complete font control."
+            "body": "Role-based typography for titles, questions, answers, and CTAs."
           },
           {
             "title": "Themes",
-            "body": "Dark/Light mode support."
+            "body": "Light and dark mode support with brand color control."
           }
         ]
       }
@@ -137,20 +137,20 @@
       "id": "global-moat",
       "type": "global-moat",
       "copy": {
-        "title": "Performance is a feature",
-        "subhead": "Speed that travels.",
+        "title": "Global delivery by default",
+        "subhead": "Combine localization, SEO, and edge delivery in one system so global pages stay fast and clear.",
         "items": [
           {
-            "title": "Edge caching",
-            "body": "Sub-millisecond delivery."
+            "title": "Edge delivery",
+            "body": "Served from edge infrastructure."
           },
           {
-            "title": "L10n",
-            "body": "Native language support."
+            "title": "Localization",
+            "body": "Up to 29 languages with override support."
           },
           {
             "title": "SEO",
-            "body": "Search engine optimized."
+            "body": "Structured answers with JSON-LD support."
           }
         ]
       }
@@ -159,20 +159,20 @@
       "id": "platform-strip",
       "type": "platform-strip",
       "copy": {
-        "title": "Architected for excellence",
-        "subhead": "The technical foundation of the world's best sites.",
+        "title": "Made for production sites",
+        "subhead": "Use standard or scriptless embeds and keep live updates predictable with explicit publish control.",
         "items": [
           {
-            "title": "SoC 2",
-            "body": "Enterprise compliance."
+            "title": "Embed modes",
+            "body": "Standard script embed and scriptless iframe options."
           },
           {
-            "title": "99.99%",
-            "body": "High availability SLA."
+            "title": "Publish control",
+            "body": "Explicit publish flow for live updates."
           },
           {
-            "title": "Global",
-            "body": "Multi-region deployment."
+            "title": "Composability",
+            "body": "Styles, content, and languages combine without forks."
           }
         ]
       }
@@ -181,8 +181,8 @@
       "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Upgrade your answers",
-        "subheadline": "Start your free trial today."
+        "headline": "Build a better FAQ experience",
+        "subheadline": "Start free, publish fast, and keep your FAQ current across every page and language."
       }
     }
   ]

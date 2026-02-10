@@ -3,8 +3,11 @@
 Purpose: quick reference for repo scripts (what they do + how to run).
 
 ## Core workflows
-- `dev-up.sh` — canonical local startup (Supabase + Tokyo + Bob + DevStudio + Prague, etc.).
-  - Run: `bash scripts/dev-up.sh` (or `bash scripts/dev-up.sh --full` for rebuild)
+- `dev-up.sh` — canonical local startup (Supabase + Tokyo + Paris + SF + Bob + DevStudio + Pitch + Prague).
+  - Run: `bash scripts/dev-up.sh`
+  - Flags:
+    - `--full` (or `--rebuild-all`): run full workspace build before startup.
+    - `--prague-l10n` (or `--l10n`): verify Prague overlays and run background regeneration when out of date.
 - `prague-sync.mjs` — Prague local alignment + l10n publish to R2.
   - Run (verify/translate only): `node scripts/prague-sync.mjs`
   - Run (background + log): `node scripts/prague-sync.mjs --background`
@@ -23,18 +26,32 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/compile-all-widgets.mjs`
 - `build-bob-cf.mjs` / `build-venice-cf.mjs` — Cloudflare builds for Bob/Venice.
   - Run: `node scripts/build-bob-cf.mjs`, `node scripts/build-venice-cf.mjs`
-- `prague-build.mjs` — Prague build orchestration.
-  - Run: `node scripts/prague-build.mjs`
 
 ## Localization / translations
+- `i18n/extract-keys.mjs` — extracts referenced i18n keys.
+  - Run: `node scripts/i18n/extract-keys.mjs`
 - `i18n/build.mjs` + `i18n/validate.mjs` — build + validate i18n bundles.
   - Run: `node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs`
 - `l10n/build.mjs` + `l10n/validate.mjs` — build + validate l10n overlays.
   - Run: `node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs`
+- `l10n/convergence-gate.mjs` — validates l10n terminal-state convergence.
+  - Run: `node scripts/l10n/convergence-gate.mjs`
+- `l10n/pull.mjs` / `l10n/push.mjs` — pull/push curated overlays from/to Supabase.
+  - Run: `node scripts/l10n/pull.mjs`, `node scripts/l10n/push.mjs`
 - `l10n/translate-instances.mjs` — generate missing locale overlays for checked-in instances via local San Francisco translator.
   - Run: `node scripts/l10n/translate-instances.mjs`
 - `prague-l10n/verify.mjs` / `prague-l10n/translate.mjs` — Prague overlay verify/translate.
-  - Run: `node scripts/prague-l10n/verify.mjs` / `node scripts/prague-l10n/translate.mjs`
+  - Run: `node scripts/prague-l10n/verify.mjs`, `node scripts/prague-l10n/translate.mjs`
+- `prague-l10n/status.mjs` / `prague-l10n/watch.mjs` — status view and local watch loop.
+  - Run: `node scripts/prague-l10n/status.mjs`, `node scripts/prague-l10n/watch.mjs`
+- `prague-blocks/validate.mjs` / `prague-blocks/diff.mjs` — validate/diff Prague page blocks.
+  - Run: `node scripts/prague-blocks/validate.mjs`, `node scripts/prague-blocks/diff.mjs`
+
+## Infra
+- `infra/ensure-queues.mjs` — ensures Cloudflare queues exist.
+  - Run: `node scripts/infra/ensure-queues.mjs --queue <queue-name>`
+- `infra/backfill-curated-instances.mjs` — backfill curated instances table from `widget_instances`.
+  - Run: `DRY_RUN=1 node scripts/infra/backfill-curated-instances.mjs`
 
 ## Verification / QA
 - `verify-contracts.mjs` — contract checks across widgets.
@@ -45,6 +62,9 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/eval-copilot.mjs`
 - `smoke-ai.mjs` — AI system smoke checks.
   - Run: `node scripts/smoke-ai.mjs`
+- `smoke-prague-copy.mjs` — verifies Prague FAQ routes render the current source copy (overview/templates/examples/features).
+  - Run: `node scripts/smoke-prague-copy.mjs`
+  - Optional flags: `--base-url`, `--market`, `--locale`
 - `validate-sdr-allowlists.mjs` — validate SDR allowlists.
   - Run: `node scripts/validate-sdr-allowlists.mjs`
 

@@ -76,6 +76,11 @@ function buildSystemPrompt(locale: string, chunkKey: string, blockKind: string):
     '- Preserve paths exactly.',
     '- Preserve URLs, emails, brand names, and placeholders (e.g. {token}, {{token}}, :token).',
     '- For richtext values, preserve existing HTML tags and attributes; do not add new tags.',
+    '- Write in natural, native marketing copy for the target locale (not literal translation).',
+    '- If literal wording sounds awkward, rewrite idiomatically while preserving intent.',
+    '- Prefer concise, fluent, modern phrasing suitable for a product website.',
+    '- Keep output length reasonably close to source unless natural phrasing requires otherwise.',
+    '- Silently self-check fluency before final output.',
   ].join('\n');
 }
 

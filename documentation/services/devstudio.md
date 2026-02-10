@@ -18,7 +18,7 @@ Route: `/#/dieter/dev-widget-workspace`
 What it does:
 - Embeds Bob in an iframe (default or via `?bob=http://localhost:3000`).
 - Loads instances via Bob’s `/api/paris/*` proxy (DevStudio never calls Paris directly).
-- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, create new version).
+- In **DevStudio Local only**, shows local-only actions (update defaults, reset instance from JSON, create curated instance, create new version, refresh Prague preview, translate locales).
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
@@ -30,6 +30,8 @@ DevStudio Local supports curated instances as the single primitive:
 - **Create curated instance**: creates `wgt_curated_{widget}.{styleSlug}.v01` from the current editor config, storing metadata (style name + tags).
 - **Create new instance version**: creates the next `vNN` for the same style slug.
 - **Update curated instance**: overwrites the selected `wgt_curated_*` config in place with the current editor state.
+- **Refresh Prague preview**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/render-snapshot?subject=devstudio` to regenerate curated snapshot artifacts (default locale `en`) for Venice/Prague.
+- **Translate locales**: calls Paris `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected?subject=devstudio` to enqueue locale jobs for the workspace active locale set.
 
 Notes:
 - Before any DevStudio save that would write to Paris, DevStudio persists any `data:`/`blob:` URLs found in config by uploading the binary to Tokyo and replacing values with stable `http(s)://` URLs.

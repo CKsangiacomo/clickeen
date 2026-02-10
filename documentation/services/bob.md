@@ -252,7 +252,7 @@ Minibob keep gate (public UX):
 - `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
 
 ### User-Facing Controls (PRD 041)
-- **Model Selection:** Users on Tier 1+ can select their preferred AI model (e.g., "Quality" (GPT-4o) vs "Speed" (Haiku)) in the **Settings** panel. Bob passes this preference in the Copilot prompt payload, and San Francisco honors it if allowed by the grant's `ai.profile`.
+- **Provider/Model Selection:** For agents and tiers that allow choice, Bob surfaces provider/model options from the policy grant metadata (for example OpenAI/Claude/DeepSeek/Groq/Amazon Nova, profile-dependent). Bob passes the selected values in the Copilot payload, and San Francisco enforces them against the grant’s `ai.profile`.
 
 ### Copilot env vars (local + Cloud-dev)
 - `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.

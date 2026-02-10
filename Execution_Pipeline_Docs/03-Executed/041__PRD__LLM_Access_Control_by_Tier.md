@@ -1,11 +1,29 @@
 # PRD 41 — LLM Access Control by Tier
 
-**Status:** EXECUTING  
+**Status:** EXECUTED  
 **Date:** 2026-02-02  
 **Executing:** 2026-02-03  
+**Executed:** 2026-02-10  
 **Owner:** Product + Engineering  
 **Type:** System enhancement (internal cost optimization + minor UX addition)  
 **User-facing change:** Settings dropdown for AI provider/model selection (Tier1+ only)
+
+---
+
+## 0) As-built execution record (authoritative)
+
+This PRD is **executed**. The canonical runtime truth is:
+- Policy + profiles: `tooling/ck-policy/src/ai.ts`
+- Grant issuance: `paris/src/domains/ai/index.ts`
+- Model/provider enforcement: `sanfrancisco/src/ai/modelRouter.ts`
+
+As-built profile surface:
+- Providers in grants can include: `deepseek`, `openai`, `anthropic`, `groq`, `amazon`.
+- Profiles remain `free_low`, `paid_standard`, `paid_premium`, `curated_premium`.
+- `curated_premium` defaults to OpenAI (`gpt-5.2`) and is used for curated/system tasks.
+- Amazon provider supports **Nova API key path** (`NOVA_API_KEY`) with Bedrock as fallback.
+
+If any section below conflicts with runtime, this section + the code files above are the source of truth.
 
 ---
 
