@@ -206,6 +206,36 @@
 
   function assertCountdownState(state) {
     assertObject(state, 'state');
+
+    assertObject(state.header, 'state.header');
+    assertBoolean(state.header.enabled, 'state.header.enabled');
+    assertString(state.header.title, 'state.header.title');
+    assertBoolean(state.header.showSubtitle, 'state.header.showSubtitle');
+    assertString(state.header.subtitleHtml, 'state.header.subtitleHtml');
+    assertString(state.header.alignment, 'state.header.alignment');
+    if (!['left', 'center', 'right'].includes(state.header.alignment)) {
+      throw new Error('[Countdown] state.header.alignment must be left|center|right');
+    }
+    assertString(state.header.placement, 'state.header.placement');
+    if (!['top', 'bottom', 'left', 'right'].includes(state.header.placement)) {
+      throw new Error('[Countdown] state.header.placement must be top|bottom|left|right');
+    }
+    assertString(state.header.ctaPlacement, 'state.header.ctaPlacement');
+    if (!['right', 'below'].includes(state.header.ctaPlacement)) {
+      throw new Error('[Countdown] state.header.ctaPlacement must be right|below');
+    }
+
+    assertObject(state.cta, 'state.cta');
+    assertBoolean(state.cta.enabled, 'state.cta.enabled');
+    assertString(state.cta.label, 'state.cta.label');
+    assertString(state.cta.href, 'state.cta.href');
+    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
+    assertString(state.cta.iconName, 'state.cta.iconName');
+    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
+    if (!['left', 'right'].includes(state.cta.iconPlacement)) {
+      throw new Error('[Countdown] state.cta.iconPlacement must be left|right');
+    }
+
     assertObject(state.timer, 'state.timer');
     if (!['date', 'personal', 'number'].includes(state.timer.mode)) {
       throw new Error('[Countdown] state.timer.mode must be date|personal|number');
@@ -253,6 +283,22 @@
     assertFill(state.appearance.textColor, 'state.appearance.textColor');
     assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
     assertString(state.appearance.separator, 'state.appearance.separator');
+    assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
+    assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
+    assertBorderConfig(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
+    assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
+    assertString(state.appearance.ctaSizePreset, 'state.appearance.ctaSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaSizePreset)) {
+      throw new Error('[Countdown] state.appearance.ctaSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
+    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
+    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
+    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaIconSizePreset)) {
+      throw new Error('[Countdown] state.appearance.ctaIconSizePreset must be xs|s|m|l|xl|custom');
+    }
+    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
     assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
     assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
     assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
@@ -436,11 +482,17 @@
       throw new Error('[Countdown] Missing CKTypography.applyTypography');
     }
     window.CKTypography.applyTypography(state.typography, countdownRoot, {
-
+      title: { varKey: 'title' },
+      body: { varKey: 'body' },
       timer: { varKey: 'timer' },
       label: { varKey: 'label' },
       button: { varKey: 'button' },
     });
+
+    if (!window.CKHeader?.applyHeader) {
+      throw new Error('[Countdown] Missing CKHeader.applyHeader');
+    }
+    window.CKHeader.applyHeader(state, widgetRoot);
 
     applyAppearanceVars(state);
     applyLayoutVars(state);
