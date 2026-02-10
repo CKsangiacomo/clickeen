@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Plantillas de FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Empieza con una plantilla de FAQ diseñada por profesionales. Personalízalo todo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Un widget, infinitas vibras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Desde el glassmorphism en tendencia hasta clásicos atemporales. Cambia de estilo al instante sin tocar el contenido."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Un widget, infinitas vibras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Desde el glassmorphism en tendencia hasta clásicos atemporales. Cambia de estilo al instante sin tocar el contenido."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Modo claro. Modo oscuro. Cualquier modo: es tu modo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Las plantillas son solo la línea de salida. Tú controlas la meta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Libertad de diseño, integrada."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "De diseños a acabados y fuentes: personalización que se siente sin esfuerzo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Diseños, a tu manera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Control de apariencia sin límites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Precisión tipográfica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Muchos sistemas de diseño, no uno solo. Estructura por breakpoint. Relleno y espaciado independientes para escritorio/móvil. Controla columnas, apilado, alineación y reflujo—al detalle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radio por esquina. Bordes con colores personalizados. Sombras externas e internas (vinculadas o independientes por lado). Fondos con degradado, imagen o vídeo. Autoridad visual total."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Seis roles distintos (titular, cuerpo, pregunta, respuesta, botón, sección). Elige entre 17 Google Fonts. Grosor, estilo, tamaño: todo personalizable por rol. Escalas dinámicas."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Cambia de motor al instante"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Cuadrícula, lista o acordeón."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Diseño de interacción incluido"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Estados hover. Estados activos. Anillos de enfoque."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipografía que se siente bien"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Trae tus propias fuentes o elige de nuestra biblioteca."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "El modo oscuro es automático"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Simplemente funciona."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perfección en móvil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Objetivos táctiles que funcionan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Crea tu FAQ nativa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "De la idea a estar en vivo en tres pasos."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Elige una base"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Ajusta los detalles"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publícalo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Selecciona la plantilla que encaje con tus vibras."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Refina colores y espaciado en el editor visual."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Un código de inserción. En vivo en todas partes."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Es hora de construir"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Empieza con una plantilla gratuita."
+    }
+  ],
+  "v": 1
+}

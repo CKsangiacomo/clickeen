@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Template FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Inizia con un modello di FAQ progettato da professionisti. Personalizza tutto."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Un widget, vibrazioni infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dal glassmorphism di tendenza ai classici senza tempo. Cambia stile all’istante senza toccare i contenuti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Un widget, vibrazioni infinite."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Dal glassmorphism di tendenza ai classici senza tempo. Cambia stile all’istante senza toccare i contenuti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Modalità chiara. Modalità scura. Qualsiasi modalità: è la tua modalità."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "I modelli sono solo la linea di partenza. Il traguardo lo decidi tu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Libertà di design, integrata."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Dai layout alle finiture ai font: una personalizzazione che sembra senza sforzo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layout, a modo tuo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Controllo dell’aspetto senza limiti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Precisione tipografica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Molti sistemi di layout, non uno solo. Struttura per breakpoint. Padding e spaziatura indipendenti per desktop e mobile. Controlla colonne, impilamento, allineamento e reflow—con precisione."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Raggio per ogni angolo. Bordi con colori personalizzati. Ombre esterne e interne (collegate o indipendenti per lato). Sfondi a gradiente, immagine o video. Autorità visiva totale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Sei ruoli distinti (titolo, corpo, domanda, risposta, pulsante, sezione). Scegli tra 17 Google Fonts. Peso, stile, dimensione: tutto personalizzabile per ruolo. Scale dinamiche."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Cambia motore all’istante"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Griglia, Elenco o Fisarmonica."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interaction design incluso"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Stati hover. Stati attivi. Anelli di messa a fuoco."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Un carattere che sembra giusto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Usa i tuoi font oppure scegli dalla nostra libreria."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "La modalità scura è automatica"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Funziona e basta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Perfezione su mobile"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Aree di tocco che funzionano."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Crea la tua FAQ nativa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dall’idea al live in tre passaggi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Scegli una base"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Metti a punto i dettagli"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Pubblicalo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Seleziona il modello che rispecchia il tuo stile."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Affina colori e spaziatura nell’editor visuale."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Un solo codice di incorporamento. Online ovunque."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "È ora di costruire"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Inizia con un modello gratuito."
+    }
+  ],
+  "v": 1
+}

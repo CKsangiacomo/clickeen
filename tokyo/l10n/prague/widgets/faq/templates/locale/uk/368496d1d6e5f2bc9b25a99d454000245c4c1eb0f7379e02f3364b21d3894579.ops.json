@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Шаблони FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Почніть із професійно створеного шаблону FAQ. Налаштуйте все."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Один віджет — нескінченні вайби."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Від трендового скляного морфізму до позачасової класики. Миттєво перемикайте стилі, не торкаючись контенту."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Один віджет — нескінченні вайби."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Від трендового скляного морфізму до позачасової класики. Миттєво перемикайте стилі, не торкаючись контенту."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Світлий режим. Темний режим. Будь-який режим — це ваш режим."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Шаблони — лише стартова лінія. Фініш — під вашим контролем."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Свобода дизайну — вбудована."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Від макетів до оздоблення й шрифтів — налаштування, що відчуваються легко."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Макети — як вам зручно"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Контроль вигляду без меж"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Типографічна точність"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Багато систем макетів, а не одна. Структура для кожного брейкпойнта. Незалежні відступи та інтервали для десктопу/мобільного. Керуйте колонками, стекінгом, вирівнюванням і перетіканням — максимально точно."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Радіус для кожного кута. Межі з власними кольорами. Тіні зовні й всередині (зв’язані або незалежні для кожного боку). Градієнтні, зображення або відео-фони. Повна візуальна влада."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Шість окремих ролей (заголовок, текст, запитання, відповідь, кнопка, секція). Обирайте з 17 Google Fonts. Вага, стиль, розмір — усе налаштовується для кожної ролі. Динамічні масштаби."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Миттєво перемикайте рушії"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Сітка, Список або Акордеон."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Дизайн взаємодії — включено"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Стани наведення. Активні стани. Кільця фокуса."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Шрифт, який відчувається правильним"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Додавайте власні шрифти або обирайте з нашої бібліотеки."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Темний режим — автоматичний"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Просто працює."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Мобільна досконалість"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Сенсорні цілі, що працюють."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Створіть свій нативний FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Від ідеї до запуску — за три кроки."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Оберіть основу"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Налаштуйте деталі"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Запустіть"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Обирайте шаблон, що відповідає вашому вайбу."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Уточніть кольори й відступи у візуальному редакторі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Один код вставки. Працює всюди."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Час будувати"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Почніть із безкоштовного шаблону."
+    }
+  ],
+  "v": 1
+}

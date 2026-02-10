@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mẫu FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bắt đầu với một mẫu FAQ được thiết kế chuyên nghiệp. Tùy biến mọi thứ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Một widget, vô hạn phong cách."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Từ glassmorphism đang thịnh hành đến những kinh điển vượt thời gian. Chuyển đổi kiểu dáng ngay lập tức mà không cần động đến nội dung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Một widget, vô hạn phong cách."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Từ glassmorphism đang thịnh hành đến những kinh điển vượt thời gian. Chuyển đổi kiểu dáng ngay lập tức mà không cần động đến nội dung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Chế độ sáng. Chế độ tối. Chế độ nào cũng được, đó là chế độ của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mẫu chỉ là vạch xuất phát. Bạn quyết định vạch đích."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Tự do thiết kế, tích hợp sẵn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Từ bố cục đến hoàn thiện đến phông chữ—tùy biến nhẹ nhàng, không tốn công."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Bố cục theo cách của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kiểm soát giao diện không giới hạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Độ chính xác typography"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Nhiều hệ thống bố cục, không chỉ một. Cấu trúc theo từng breakpoint. Padding và khoảng cách desktop/mobile độc lập. Kiểm soát cột, xếp chồng, căn chỉnh và reflow—chính xác tuyệt đối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Bo góc theo từng góc. Viền với màu tùy chỉnh. Bóng đổ ngoài và trong (liên kết hoặc độc lập theo từng cạnh). Nền gradient, hình ảnh hoặc video. Toàn quyền về mặt thị giác."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Sáu vai trò riêng biệt (headline, body, question, answer, button, section). Chọn từ 17 Google Fonts. Độ đậm, kiểu, kích thước—tất cả đều tùy chỉnh theo từng vai trò. Thang đo động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Chuyển đổi engine ngay lập tức"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Grid, List hoặc Accordion."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Đã bao gồm thiết kế tương tác"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Trạng thái hover. Trạng thái active. Vòng focus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Chữ đúng cảm giác"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Dùng phông chữ của bạn hoặc chọn từ thư viện của chúng tôi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Chế độ tối tự động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Cứ thế là chạy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Hoàn hảo trên di động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Vùng chạm hoạt động hiệu quả."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Xây dựng FAQ native của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Từ ý tưởng đến lên sóng trong ba bước."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Chọn nền tảng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Tinh chỉnh chi tiết"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Xuất bản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Chọn mẫu phù hợp với phong cách của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Tinh chỉnh màu sắc và khoảng cách trong trình chỉnh sửa trực quan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Một mã nhúng. Hiển thị mọi nơi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Đến lúc bắt tay xây dựng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bắt đầu với một mẫu miễn phí."
+    }
+  ],
+  "v": 1
+}

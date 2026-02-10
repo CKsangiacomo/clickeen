@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ टेम्पलेट्स - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "प्रो-डिज़ाइन किए गए FAQ टेम्पलेट से शुरू करें। सब कुछ कस्टमाइज़ करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "एक विजेट, अनंत वाइब्स।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ट्रेंडिंग ग्लासमॉर्फ़िज़्म से लेकर टाइमलेस क्लासिक्स तक। कंटेंट को छुए बिना स्टाइल तुरंत बदलें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "एक विजेट, अनंत वाइब्स।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "ट्रेंडिंग ग्लासमॉर्फ़िज़्म से लेकर टाइमलेस क्लासिक्स तक। कंटेंट को छुए बिना स्टाइल तुरंत बदलें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "लाइट मोड। डार्क मोड। कोई भी मोड—यह आपका मोड है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "टेम्पलेट्स तो बस शुरुआत हैं। फिनिश लाइन आप तय करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "डिज़ाइन की आज़ादी, बिल्ट-इन।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "लेआउट से लेकर फिनिश और फ़ॉन्ट्स तक—ऐसा कस्टमाइज़ेशन जो सहज लगे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "लेआउट, आपकी तरह"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "बिना सीमाओं के अपीयरेंस कंट्रोल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "टाइपोग्राफी की सटीकता"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "एक नहीं, कई लेआउट सिस्टम। प्रति-ब्रेकपॉइंट स्ट्रक्चर। डेस्कटॉप/मोबाइल के लिए अलग पैडिंग और स्पेसिंग। कॉलम, स्टैकिंग, अलाइनमेंट और रिफ़्लो—बिल्कुल सटीक नियंत्रण।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "प्रति-कोना रेडियस। कस्टम रंगों के साथ बॉर्डर्स। बाहर और अंदर शैडो (लिंक्ड या प्रति-साइड स्वतंत्र)। ग्रेडिएंट, इमेज, या वीडियो बैकग्राउंड। पूरी विज़ुअल अथॉरिटी।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "छह अलग भूमिकाएँ (headline, body, question, answer, button, section)। 17 Google Fonts में से चुनें। वज़न, स्टाइल, साइज—हर भूमिका के लिए सब कुछ कस्टमाइज़ेबल। डायनैमिक स्केल्स।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "इंजन तुरंत बदलें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Grid, List, या Accordion।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "इंटरैक्शन डिज़ाइन शामिल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover स्टेट्स। Active स्टेट्स। Focus रिंग्स।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "ऐसा टाइप जो सही लगे"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "अपने फ़ॉन्ट्स लाएँ या हमारी लाइब्रेरी से चुनें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "डार्क मोड अपने आप"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "यह बस काम करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "मोबाइल परफेक्शन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "टच टार्गेट्स जो काम करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "अपना नेटिव FAQ बनाएं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "आइडिया से लाइव तक तीन चरणों में।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "एक बेस चुनें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "डिटेल्स ट्यून करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "शिप करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "वह टेम्पलेट चुनें जो आपके वाइब से मेल खाता हो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "विज़ुअल एडिटर में रंग और स्पेसिंग को फाइन-ट्यून करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "एक एम्बेड कोड। हर जगह लाइव।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "अब बनाने का समय है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "एक मुफ़्त टेम्पलेट से शुरू करें।"
+    }
+  ],
+  "v": 1
+}

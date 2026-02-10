@@ -93,6 +93,30 @@ type RenderSnapshotEnqueueResult = { ok: true } | { ok: false; error: string };
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
 
+function normalizeOptionalBaseUrl(value: string | null | undefined): string | null {
+  const trimmed = asTrimmedString(value);
+  return trimmed ? trimmed.replace(/\/+$/, '') : null;
+}
+
+function resolveRenderIndexBases(env: Env): string[] {
+  const bases: string[] = [];
+  const append = (value: string | null | undefined) => {
+    const normalized = normalizeOptionalBaseUrl(value);
+    if (!normalized || bases.includes(normalized)) return;
+    bases.push(normalized);
+    try {
+      const origin = new URL(normalized).origin;
+      if (origin && !bases.includes(origin)) bases.push(origin);
+    } catch {
+      // Ignore malformed URL and keep the normalized candidate.
+    }
+  };
+
+  append(env.TOKYO_WORKER_BASE_URL);
+  append(requireTokyoBase(env));
+  return bases;
+}
+
 function resolveLocalTokyoWorkerBase(env: Env): string | null {
   const stage = asTrimmedString(env.ENV_STAGE) ?? 'cloud-dev';
   if (stage !== 'local') return null;
@@ -277,30 +301,35 @@ async function loadRenderIndexCurrent(args: {
   env: Env;
   publicId: string;
 }): Promise<Record<string, RenderIndexEntry> | null> {
-  const base = requireTokyoBase(args.env);
-  const url = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/index.json`;
-  const res = await fetch(url, {
-    method: 'GET',
-    cache: 'no-store',
-    headers: { 'X-Request-ID': crypto.randomUUID() },
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(`[ParisWorker] Failed to load render index (${res.status}): ${detail}`.trim());
-  }
-  const payload = (await res.json().catch(() => null)) as unknown;
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const current = (payload as Record<string, unknown>).current;
-  if (!current || typeof current !== 'object' || Array.isArray(current)) return null;
+  const bases = resolveRenderIndexBases(args.env);
+  for (const base of bases) {
+    const url = `${base}/renders/instances/${encodeURIComponent(args.publicId)}/index.json`;
+    const res = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { 'X-Request-ID': crypto.randomUUID() },
+    });
+    if (res.status === 404) continue;
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(
+        `[ParisWorker] Failed to load render index from ${base} (${res.status}): ${detail}`.trim(),
+      );
+    }
+    const payload = (await res.json().catch(() => null)) as unknown;
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) continue;
+    const current = (payload as Record<string, unknown>).current;
+    if (!current || typeof current !== 'object' || Array.isArray(current)) continue;
 
-  const out: Record<string, RenderIndexEntry> = {};
-  Object.entries(current).forEach(([locale, entry]) => {
-    const normalized = normalizeRenderIndexEntry(entry);
-    if (!normalized) return;
-    out[locale] = normalized;
-  });
-  return out;
+    const out: Record<string, RenderIndexEntry> = {};
+    Object.entries(current).forEach(([locale, entry]) => {
+      const normalized = normalizeRenderIndexEntry(entry);
+      if (!normalized) return;
+      out[locale] = normalized;
+    });
+    return out;
+  }
+  return null;
 }
 
 export async function handleWorkspaceInstanceRenderSnapshot(

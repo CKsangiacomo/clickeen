@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "686c15c7d92d19eb3d5beac6edcd50d6e5dd0995df607290701b2eb27ceb6c21",
+  "baseUpdatedAt": "2026-02-07T01:00:04.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget Câu hỏi thường gặp - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tạo một widget FAQ nhanh, đẹp. Tùy chỉnh, xuất bản và bản địa hóa chỉ trong vài phút."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Câu trả lời đẹp. Tối ưu để nhanh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Widget FAQ hoàn thiện mà website của bạn xứng đáng có. Không cần cấu hình, tự động hoàn toàn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Giúp khách truy cập tìm câu trả lời nhanh chóng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Xem FAQ của bạn tự xây dựng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Nhập URL website của bạn và chúng tôi sẽ viết câu hỏi và câu trả lời cho bạn ngay lập tức."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Mọi thứ bạn cần để xây dựng FAQ hoàn hảo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Khám phá sâu các mẫu cụ thể, ví dụ thực tế và những tính năng mạnh mẽ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Tìm phong cách của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Xem kết quả"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Mở khóa sức mạnh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Chọn từ bố cục Accordion, List và Card, rồi tinh chỉnh kiểu chữ và phong cách. Từng pixel đều có thể tùy biến để hòa hợp tự nhiên với thương hiệu của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Từ khách sạn boutique đến nhà bán lẻ lưu lượng lớn, xem cách doanh nghiệp dùng FAQ để giảm khối lượng hỗ trợ và tăng niềm tin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Vượt xa những điều cơ bản với sức mạnh cấp doanh nghiệp. Khám phá sâu tính năng chỉnh sửa Ombra AI, bản địa hóa tức thì và kiến trúc SEO-native của chúng tôi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Cả thế giới trong tầm tay bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Chào đón mọi khách truy cập website như người bản xứ. Dịch tức thì, tự nhiên cho khán giả toàn cầu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Cách đơn giản nhất để giúp khách truy cập và doanh nghiệp của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Giúp khách hàng có câu trả lời"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Ngừng lặp lại chính mình"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Đôi bên cùng có lợi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Trả lời tự nhiên những câu hỏi mà khách truy cập của bạn hỏi nhiều nhất. Họ tìm thấy điều cần ngay lập tức, ngay trên trang của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Mỗi câu hỏi widget trả lời là bớt đi một email hoặc cuộc gọi bạn phải xử lý. Tự động hóa những câu hỏi lặp lại."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Khi khách truy cập có câu trả lời, họ tiến bước với sự tự tin. Doanh nghiệp của bạn vẫn tập trung, trong khi khách hàng được hỗ trợ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Toàn quyền kiểm soát thiết kế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Bo góc. Đổ bóng. Viền. Khoảng cách. Tinh chỉnh mọi thuộc tính trong trình chỉnh sửa trực quan của chúng tôi mà không cần viết một dòng CSS nào."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "FAQ cuối cùng bạn sẽ phải cài đặt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Một phiên bản hay một nghìn. Một ngôn ngữ hay tất cả. Quản lý toàn bộ hệ thống toàn cầu của bạn mà không chút rắc rối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Mặc định cho toàn cầu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Bản địa hóa tức thì, không đau đầu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Hiệu suất"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Sức mạnh tự viết và dịch tự động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Chèn schema markup để tăng khả năng hiển thị trên tìm kiếm."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Không dịch chuyển bố cục. Tải lười."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Nền tảng cấp doanh nghiệp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Được xây dựng cho khả năng mở rộng, tốc độ và độ tin cậy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nhanh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Đáng tin cậy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dễ tiếp cận"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Phân phối tại biên (edge)."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "99,99% thời gian hoạt động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tuân thủ WCAG 2.1."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Tự động hóa hỗ trợ của bạn ngay hôm nay"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bắt đầu dùng thử miễn phí."
+    }
+  ],
+  "v": 1
+}

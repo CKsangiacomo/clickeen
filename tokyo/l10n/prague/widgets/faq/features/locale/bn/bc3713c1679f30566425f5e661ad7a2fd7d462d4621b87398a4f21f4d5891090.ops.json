@@ -1,0 +1,272 @@
+{
+  "baseFingerprint": "bc3713c1679f30566425f5e661ad7a2fd7d462d4621b87398a4f21f4d5891090",
+  "baseUpdatedAt": "2026-02-06T23:05:33.556Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ ফিচারসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "চূড়ান্ত উত্তর ইঞ্জিন। গতি, SEO, এবং AI বিল্ট-ইন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "উত্তর ইঞ্জিন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "গতি। SEO সেকশন। AI। চূড়ান্ত FAQ অবকাঠামো।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "লিখবেন না। শুধু বর্ণনা করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Ombra দ্বারা চালিত প্রাকৃতিক ভাষা সম্পাদনা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "২৯টি ভাষা। একটিমাত্র টগল।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "ভূগোল শুধু একটি প্যারামিটার।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "একবার লিখুন। সর্বত্র চালান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "একটি সত্যের উৎস।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "কেন Clickeen সবকিছু বদলে দেয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google প্রতিটি শব্দ দেখে"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "রিচ স্নিপেটস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "ডিপ লিঙ্কিং"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "সার্ভার-সাইড রেন্ডারিং মানে শূন্য লেআউট শিফট এবং নিখুঁত ইনডেক্সযোগ্যতা।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "স্বয়ংক্রিয় JSON-LD ইনজেকশন আপনাকে সার্চ রেজাল্টে আধিপত্য করতে সাহায্য করে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "স্থিতিশীল URL দিয়ে ব্যবহারকারীদের তাদের প্রয়োজনীয় নির্দিষ্ট উত্তরে নিয়ে যান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "পরবর্তী দশকের জন্য নির্মিত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "একটি জীবন্ত জ্ঞানভান্ডার, যা আপনার সঙ্গে সঙ্গে বাড়ে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "প্রতিটি ইন্টারঅ্যাকশনে আরও স্মার্ট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Clickeen ইকোসিস্টেম।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "ভুল-প্রতিরোধী"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "অপরিবর্তনীয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "এজ-ক্যাশড"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "প্রতিটি পরিবর্তনের সংস্করণ রাখা হয়। কিছু ভেঙে ফেললে সঙ্গে সঙ্গে আগের অবস্থায় ফিরিয়ে নিন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "আপনি যা প্রকাশ করেন, তারা ঠিক সেটাই দেখে। কোনো চমক নেই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "মিলিসেকেন্ড গুরুত্বপূর্ণ। আমরা আপনার ব্যবহারকারীর নিকটতম অবস্থান থেকে উত্তর পৌঁছে দিই।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "ডিজাইনে সাধারণত আপস করতে হয়। এখানে নয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "নান্দনিকতায় কোনো আপস নয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "লেআউট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "টাইপোগ্রাফি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "থিমস"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "নমনীয় কাঠামো।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "ফন্টের পূর্ণ নিয়ন্ত্রণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ডার্ক/লাইট মোড সাপোর্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "পারফরম্যান্সও একটি ফিচার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "যে গতি দূরদূরান্তে পৌঁছে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "এজ ক্যাশিং"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "L10n"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "সাব-মিলিসেকেন্ড ডেলিভারি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "স্থানীয় ভাষার নেটিভ সাপোর্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "সার্চ ইঞ্জিন অপ্টিমাইজড।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "উৎকর্ষের জন্য স্থাপত্যকৃত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "বিশ্বের সেরা সাইটগুলোর প্রযুক্তিগত ভিত্তি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "SoC 2"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "99.99%"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "গ্লোবাল"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "এন্টারপ্রাইজ কমপ্লায়েন্স।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "উচ্চ প্রাপ্যতা SLA।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "মাল্টি-রিজিয়ন ডিপ্লয়মেন্ট।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "আপনার উত্তরগুলো আপগ্রেড করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "আজই আপনার ফ্রি ট্রায়াল শুরু করুন।"
+    }
+  ],
+  "v": 1
+}

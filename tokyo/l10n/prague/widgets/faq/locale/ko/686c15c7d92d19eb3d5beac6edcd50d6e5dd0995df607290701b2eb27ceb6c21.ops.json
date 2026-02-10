@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "686c15c7d92d19eb3d5beac6edcd50d6e5dd0995df607290701b2eb27ceb6c21",
+  "baseUpdatedAt": "2026-02-07T01:00:04.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 위젯 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "빠르고 아름다운 FAQ 위젯을 만들어 보세요. 몇 분 만에 맞춤 설정하고, 게시하고, 현지화할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "아름다운 답변. 빠르게 설계되었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "당신의 사이트가 마땅히 가져야 할 완성도 높은 FAQ 위젯. 설정은 0, 완전 자동화."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "방문자가 빠르게 답변을 찾을 수 있도록 도와주세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "FAQ가 저절로 만들어지는 것을 지켜보세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "웹사이트 URL을 입력하면 질문과 답변을 즉시 작성해 드립니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "완벽한 FAQ를 만들기 위한 모든 것"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "특정 템플릿, 실제 사례, 강력한 기능을 깊이 살펴보세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "원하는 스타일을 찾으세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "결과를 확인하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "강력함을 잠금 해제하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "아코디언, 리스트, 카드 레이아웃 중에서 선택한 뒤 타이포그래피와 스타일을 세밀하게 조정하세요. 픽셀 단위까지 커스터마이징하여 브랜드에 자연스럽게 어울리도록 만들 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "부티크 호텔부터 대규모 리테일까지, 기업들이 FAQ로 문의량을 줄이고 신뢰를 높이는 방법을 확인하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "엔터프라이즈급 성능으로 기본을 뛰어넘으세요. Ombra AI 편집, 즉시 로컬라이제이션, 그리고 SEO 네이티브 아키텍처를 깊이 살펴보세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "전 세계가 당신의 무대입니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "모든 웹사이트 방문자를 현지인처럼 맞이하세요. 글로벌 고객을 위한 즉각적이고 자연스러운 번역."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "방문자와 비즈니스를 돕는 가장 쉬운 방법."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "고객이 답을 찾도록 돕기"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "같은 말을 반복하지 마세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "모두에게 윈윈"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "방문자가 가장 자주 묻는 질문에 자연스럽게 답하세요. 필요한 내용을 페이지에서 즉시 찾을 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "위젯이 답하는 질문 하나하나는 처리해야 할 이메일이나 전화가 하나 줄어든다는 뜻입니다. 반복 업무를 자동화하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "방문자가 답을 얻으면 자신 있게 다음 단계로 나아갑니다. 고객은 도움을 받고, 비즈니스는 핵심에 집중할 수 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "완전한 디자인 제어"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "모서리 반경. 그림자. 테두리. 여백. CSS 한 줄도 쓰지 않고 시각적 편집기에서 모든 속성을 조정하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "마지막으로 설치하게 될 FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "하나든 천 개든. 한 언어든 모든 언어든. 마찰 없이 전 세계 전체 운영을 관리하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "기본값부터 글로벌"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "골치 아픈 과정 없이 즉시 로컬라이제이션."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "성능"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "자동 작성 및 번역 기능."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "검색 노출을 위한 스키마 마크업 자동 삽입."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "레이아웃 시프트 0. 지연 로딩."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "엔터프라이즈급 기반"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "확장성, 속도, 신뢰성을 위해 구축되었습니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "빠름"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "신뢰성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "접근성"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "엣지 전송."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "99.99% 가동 시간."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "WCAG 2.1 준수."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "지원을 오늘부터 자동화하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "무료 체험을 시작하세요."
+    }
+  ],
+  "v": 1
+}

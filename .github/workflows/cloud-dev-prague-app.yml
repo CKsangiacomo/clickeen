@@ -6,9 +6,14 @@ on:
     paths:
       - "prague/src/**"
       - "prague/public/**"
+      - "prague/content/**"
       - "prague/astro.config.mjs"
       - "prague/package.json"
       - "prague/tsconfig.json"
+      - "tokyo/widgets/**"
+      - "tokyo/l10n/prague/**"
+      - "scripts/prague-l10n/**"
+      - "config/locales.json"
       - ".github/workflows/cloud-dev-prague-app.yml"
   workflow_dispatch: {}
 

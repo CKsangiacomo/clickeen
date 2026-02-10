@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-mallit – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Aloita ammattilaisen suunnittelemalla UKK-mallilla. Räätälöi kaikki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Yksi widget, loputtomasti fiilistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Trendikkäästä lasimorfismista ajattomiin klassikoihin. Vaihda tyyliä heti koskematta sisältöön."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Yksi widget, loputtomasti fiilistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Trendikkäästä lasimorfismista ajattomiin klassikoihin. Vaihda tyyliä heti koskematta sisältöön."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Vaalea tila. Tumma tila. Mikä tahansa tila – se on sinun tilasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mallit ovat vasta lähtöviiva. Sinä päätät maalin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Suunnittelun vapaus, sisäänrakennettuna."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Asetteluista viimeistelyihin ja fontteihin – muokkaus, joka tuntuu vaivattomalta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Asettelut, omalla tavallasi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Ulkoasun hallinta ilman rajoja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografian tarkkuutta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Monia asettelujärjestelmiä, ei vain yhtä. Rakenteet eri näyttöleveyksille. Erilliset työpöytä-/mobiilipaddingit ja välistykset. Hallitse sarakkeita, pinoamista, tasausta ja uudelleenvirtausta – täsmällisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Kulmasäde erikseen joka kulmalle. Reunukset mukautetuilla väreillä. Varjot ulko- ja sisäpuolella (sidottuna tai erillisinä per sivu). Liukuväri-, kuva- tai videotaustat. Täysi visuaalinen määräysvalta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Kuusi erillistä roolia (otsikko, leipäteksti, kysymys, vastaus, painike, osio). Valitse 17 Google Fonts -fontista. Paino, tyyli, koko – kaikki muokattavissa roolikohtaisesti. Dynaamiset skaalat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Vaihda moottoria heti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Ruudukko, lista tai haitari."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Vuorovaikutussuunnittelu mukana"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover-tilat. Aktiiviset tilat. Tarkennusrenkaat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografia, joka tuntuu oikealta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Tuo omat fonttisi tai valitse kirjastostamme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Tumma tila on automaattinen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Se vain toimii."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobiilitäydellisyys"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Kosketuskohteet, jotka toimivat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Rakenna natiivi UKK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Ideasta julkaisuun kolmessa vaiheessa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Valitse perusta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Hio yksityiskohdat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Julkaise"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Valitse malli, joka sopii fiilikseesi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Viimeistele värit ja välistykset visuaalisessa editorissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Yksi upotuskoodi. Julkaise kaikkialla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "On aika rakentaa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Aloita ilmaisella mallilla."
+    }
+  ],
+  "v": 1
+}

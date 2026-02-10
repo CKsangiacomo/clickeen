@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "686c15c7d92d19eb3d5beac6edcd50d6e5dd0995df607290701b2eb27ceb6c21",
+  "baseUpdatedAt": "2026-02-07T01:00:04.048Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Stwórz szybki, piękny widget FAQ. Dostosuj, opublikuj i zlokalizuj w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Piękne odpowiedzi. Stworzone, by działać szybko."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Dopracowany widget FAQ, na który zasługuje Twoja strona. Zero konfiguracji, pełna automatyzacja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomóż odwiedzającym szybko znaleźć odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Zobacz, jak Twoje FAQ tworzy się samo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Wpisz adres URL swojej strony, a my od razu napiszemy dla Ciebie pytania i odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Wszystko, czego potrzebujesz, by stworzyć idealne FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Zanurz się w konkretnych szablonach, przykładach z życia i potężnych funkcjach."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Znajdź swój styl"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Zobacz efekty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Odblokuj pełną moc"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Wybierz układ Accordion, Lista lub Karty, a potem dopracuj typografię i style. Każdy piksel można dostosować tak, by pasował do Twojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Od butikowych hoteli po sprzedawców o dużym wolumenie — zobacz, jak firmy wykorzystują FAQ, by zmniejszać liczbę zgłoszeń do wsparcia i budować zaufanie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Wyjdź poza podstawy dzięki mocy klasy enterprise. Poznaj edycję w Ombra AI, natychmiastową lokalizację i naszą architekturę SEO-native."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Świat stoi przed Tobą otworem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Witaj każdego odwiedzającego jak lokalny gospodarz. Natychmiastowe, naturalne tłumaczenia dla globalnej publiczności."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Najczęściej zadawane pytania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Najprostszy sposób, by pomóc odwiedzającym i Twojej firmie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Pomóż klientom znaleźć odpowiedzi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Przestań się powtarzać"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Korzyść dla wszystkich"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "W naturalny sposób odpowiadaj na pytania, które Twoi odwiedzający zadają najczęściej. Znajdą to, czego potrzebują, od razu — bezpośrednio na Twojej stronie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Każde pytanie, na które odpowiada widget, to jeden e-mail lub telefon mniej do obsłużenia. Zautomatyzuj powtórki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Gdy odwiedzający dostają odpowiedzi, idą dalej z większą pewnością. Twoja firma pozostaje skupiona, a klienci otrzymują pomoc."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Pełna kontrola nad wyglądem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Promień. Cienie. Obramowania. Odstępy. Dostosuj każdą właściwość w naszym edytorze wizualnym bez pisania choćby jednej linijki CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Ostatnie FAQ, jakie kiedykolwiek zainstalujesz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Jedna instancja albo tysiąc. Jeden język albo wszystkie. Zarządzaj całą globalną flotą bez żadnych tarć."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalnie z założenia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Natychmiastowa lokalizacja bez bólu głowy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Wydajność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Moc automatycznego pisania i tłumaczeń."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Znaczniki Schema wstrzykiwane dla lepszej widoczności w wyszukiwarce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Brak przesunięć układu. Ładowanie leniwe."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Fundament klasy enterprise"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Stworzone z myślą o skali, szybkości i niezawodności."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Szybkie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Niezawodne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dostępne"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Dostarczanie na edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "99,99% dostępności."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Zgodne z WCAG 2.1."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Zautomatyzuj swoje wsparcie już dziś"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Rozpocznij bezpłatny okres próbny."
+    }
+  ],
+  "v": 1
+}

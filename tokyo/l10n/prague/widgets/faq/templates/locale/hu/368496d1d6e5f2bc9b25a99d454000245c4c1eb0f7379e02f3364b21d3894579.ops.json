@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "368496d1d6e5f2bc9b25a99d454000245c4c1eb0f7379e02f3364b21d3894579",
+  "baseUpdatedAt": "2026-02-07T02:33:07.074Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK-sablonok – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Kezdd egy profik által megtervezett GYIK-sablonnal. Szabj testre mindent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Egy widget, végtelen hangulat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "A trendi glassmorphismtól az időtlen klasszikusokig. Válts stílust azonnal, a tartalom megérintése nélkül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Egy widget, végtelen hangulat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "A trendi glassmorphismtól az időtlen klasszikusokig. Válts stílust azonnal, a tartalom megérintése nélkül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Világos mód. Sötét mód. Bármilyen mód — ez a te módod."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "A sablonok csak a rajtvonalat jelentik. A célt te határozod meg."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Beépített tervezési szabadság."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Az elrendezésektől a felületekig és a betűtípusokig — testreszabás, ami erőfeszítés nélkülinek érződik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Elrendezések, a te módodon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Megjelenésvezérlés korlátok nélkül"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Tipográfiai precizitás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Nem egy, hanem több elrendezési rendszer. Töréspontonkénti felépítés. Független asztali/mobil térközök és belső margók. Oszlopok, egymásra rendezés, igazítás és újratördelés — pontosan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Sarokrádiusz sarkonként. Szegélyek egyéni színekkel. Külső és belső árnyékok (összekapcsolva vagy oldalaként függetlenül). Átmenetes, képes vagy videós háttér. Teljes vizuális kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Hat külön szerep (címsor, törzsszöveg, kérdés, válasz, gomb, szakasz). Válassz 17 Google Font közül. Vastagság, stílus, méret — mind szerepenként testreszabható. Dinamikus skálák."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Válts motort azonnal"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Rács, Lista vagy Harmonika."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interakciótervezéssel együtt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover állapotok. Aktív állapotok. Fókuszgyűrűk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Tipográfia, ami a helyére kerül"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Használd a saját betűtípusaidat, vagy válassz a könyvtárunkból."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "A sötét mód automatikus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Egyszerűen működik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobilon tökéletes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Érintési célfelületek, amelyek működnek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Építsd fel a natív GYIK-odat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Ötlettől az élesig három lépésben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Válassz alapot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Hangold a részleteket"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Tedd közzé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Válaszd ki a hangulatodhoz illő sablont."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Finomítsd a színeket és a térközöket a vizuális szerkesztőben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Egy beágyazási kód. Mindenhol élőben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Itt az ideje építeni"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kezdj egy ingyenes sablonnal."
+    }
+  ],
+  "v": 1
+}
