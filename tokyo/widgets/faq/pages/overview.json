@@ -13,8 +13,8 @@
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "Beautiful answers. Built to be fast.",
-        "subheadline": "The polished FAQ widget your site deserves. Zero config, fully automated."
+        "headline": "One FAQ widget. All your answers. Any language.",
+        "subheadline": "Design it your way, publish once, and every live FAQ on your site updates with the latest answers."
       },
       "curatedRef": {
         "publicId": "wgt_curated_faq.lightblurs.v01"
@@ -34,7 +34,7 @@
       "copy": {
         "heading": "Watch your FAQ build itself",
         "subhead": "Enter your website URL and we'll write questions and answers for you instantly.",
-        "cta": "Claim your design"
+        "cta": "Make this widget yours"
       },
       "mode": "extraction"
     },
@@ -43,7 +43,7 @@
       "type": "subpage-cards",
       "copy": {
         "title": "Everything you need to build the perfect FAQ",
-        "subhead": "Deep dive into specific templates, real-world examples, and powerful features.",
+        "subhead": "Explore templates, industry examples, and core features so you can ship faster with zero guesswork.",
         "items": [
           {
             "title": "Find your look",
@@ -51,11 +51,11 @@
           },
           {
             "title": "See the results",
-            "body": "From boutique hotels to high-volume retailers, see how businesses use FAQs to reduce support volume and increase trust."
+            "body": "From hotels and rentals to restaurants and tours, see how teams use one FAQ widget to answer repeat questions clearly."
           },
           {
             "title": "Unlock the power",
-            "body": "Go beyond the basics with enterprise-grade power. Deep dive into Ombra AI editing, instant localization, and our SEO-native architecture."
+            "body": "Use Ombra AI, built-in localization, and SEO-ready output to scale without extra engineering."
           }
         ]
       },
@@ -90,7 +90,7 @@
       "type": "steps",
       "copy": {
         "title": "Frequently Asked Questions",
-        "subhead": "The simplest way to help your visitors and your business.",
+        "subhead": "Give visitors instant clarity, reduce repeat support questions, and keep your team focused on higher-value work.",
         "items": [
           {
             "title": "Help customers get answers",
@@ -123,8 +123,8 @@
       "id": "big-bang",
       "type": "big-bang",
       "copy": {
-        "headline": "The last FAQ you'll ever install",
-        "body": "One instance or one thousand. One language or all of them. Manage your entire global fleet with zero friction."
+        "headline": "One FAQ widget for all your answers in any language.",
+        "body": "Edit once, click Publish, and every live page shows the latest version."
       }
     },
     {
@@ -132,19 +132,19 @@
       "type": "global-moat",
       "copy": {
         "title": "Global by default",
-        "subhead": "Instant localization without the headache.",
+        "subhead": "Reach global audiences with automatic translation and quick manual edits whenever brand wording needs a human touch.",
         "items": [
           {
             "title": "Ombra AI",
-            "body": "Auto-writing and translation power."
+            "body": "Generates and adapts copy for real UI use."
           },
           {
             "title": "SEO",
-            "body": "Schema markup injected for search visibility."
+            "body": "Search-ready schema is included automatically."
           },
           {
             "title": "Performance",
-            "body": "Zero layout shift. Lazy loaded."
+            "body": "Edge delivery keeps load times fast worldwide."
           }
         ]
       }
@@ -153,20 +153,20 @@
       "id": "platform-strip",
       "type": "platform-strip",
       "copy": {
-        "title": "Enterprise-grade foundation",
-        "subhead": "Built for scale, speed, and reliability.",
+        "title": "Built for real production traffic",
+        "subhead": "Fast edge delivery, dependable uptime behavior, and accessibility patterns that hold up on real production sites.",
         "items": [
           {
-            "title": "Fast",
-            "body": "Edge delivery."
+            "title": "Global speed",
+            "body": "Served from edge infrastructure."
           },
           {
-            "title": "Reliable",
-            "body": "99.99% uptime."
+            "title": "Reliability",
+            "body": "Designed for high uptime under real load."
           },
           {
-            "title": "Accessible",
-            "body": "WCAG 2.1 compliant."
+            "title": "Accessibility",
+            "body": "Built with accessible interaction patterns."
           }
         ]
       }
@@ -175,8 +175,8 @@
       "id": "cta",
       "type": "cta-bottom-block",
       "copy": {
-        "headline": "Automate your support today",
-        "subheadline": "Start your free trial."
+        "headline": "Build your FAQ in minutes",
+        "subheadline": "Launch free, customize your design, and publish a production-ready FAQ in minutes."
       }
     }
   ]

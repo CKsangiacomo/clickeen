@@ -6,15 +6,22 @@
     <title>Countdown Widget</title>
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
     <div class="stage" data-role="stage">
       <div class="pod" data-role="pod">
         <div class="ck-widget ck-countdown-widget" data-ck-widget="countdown" data-role="root">
-          <section class="ck-countdown" data-role="countdown">
-            <header class="ck-countdown__header">
-              <h2 class="ck-countdown__title heading-2" data-role="heading">Countdown</h2>
+          <section class="ck-countdown ck-headerLayout" data-role="countdown">
+            <header class="ck-countdown__header ck-header">
+              <div class="ck-header__text">
+                <h2 class="ck-countdown__title ck-header__title heading-4" data-role="header-title">
+                  Sales are coming soon!!!🎯
+                </h2>
+                <div class="ck-header__subtitle" data-role="header-subtitle" hidden></div>
+              </div>
+              <a class="ck-header__cta" data-role="header-cta" href="#" hidden>Action</a>
             </header>
             <div class="ck-countdown__timer" data-role="timer">
               <div class="ck-countdown__number" data-role="number-display" hidden>
@@ -50,6 +57,7 @@
             </div>
           </section>
           <script src="../shared/fill.js" defer></script>
+          <script src="../shared/header.js" defer></script>
           <script src="../shared/surface.js" defer></script>
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>

@@ -17,10 +17,7 @@
     throw new Error('[Countdown] Missing [data-role="countdown"] root');
   }
 
-  const headingEl = countdownRoot.querySelector('[data-role="heading"]');
-  if (!(headingEl instanceof HTMLElement)) {
-    throw new Error('[Countdown] Missing [data-role="heading"]');
-  }
+
 
   const timerEl = countdownRoot.querySelector('[data-role="timer"]');
   if (!(timerEl instanceof HTMLElement)) {
@@ -213,7 +210,7 @@
     if (!['date', 'personal', 'number'].includes(state.timer.mode)) {
       throw new Error('[Countdown] state.timer.mode must be date|personal|number');
     }
-    assertString(state.timer.headline, 'state.timer.headline');
+
     if (state.timer.mode === 'date') {
       assertString(state.timer.targetDate, 'state.timer.targetDate');
       assertString(state.timer.timezone, 'state.timer.timezone');
@@ -439,7 +436,7 @@
       throw new Error('[Countdown] Missing CKTypography.applyTypography');
     }
     window.CKTypography.applyTypography(state.typography, countdownRoot, {
-      heading: { varKey: 'heading' },
+
       timer: { varKey: 'timer' },
       label: { varKey: 'label' },
       button: { varKey: 'button' },
@@ -447,7 +444,7 @@
 
     applyAppearanceVars(state);
     applyLayoutVars(state);
-    applyHeading(state);
+
     applyActionsDuring(state);
     applyAfterMessage(state);
 
@@ -515,11 +512,7 @@
     countdownRoot.removeAttribute('data-layout-width');
   }
 
-  function applyHeading(state) {
-    const headingHtml = sanitizeInlineHtml(state.timer.headline);
-    headingEl.innerHTML = headingHtml;
-    headingEl.hidden = !headingHtml;
-  }
+
 
   function applyActionsDuring(state) {
     const href = normalizeHref(state.actions.during.url);
@@ -730,10 +723,10 @@
 
   const keyedPayload =
     resolvedPublicId &&
-    window.CK_WIDGETS &&
-    typeof window.CK_WIDGETS === 'object' &&
-    window.CK_WIDGETS[resolvedPublicId] &&
-    typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
+      window.CK_WIDGETS &&
+      typeof window.CK_WIDGETS === 'object' &&
+      window.CK_WIDGETS[resolvedPublicId] &&
+      typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
       ? window.CK_WIDGETS[resolvedPublicId]
       : null;
   const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);

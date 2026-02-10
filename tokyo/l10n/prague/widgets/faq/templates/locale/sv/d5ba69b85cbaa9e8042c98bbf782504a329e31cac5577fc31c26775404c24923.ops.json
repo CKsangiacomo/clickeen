@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mall för vanliga frågor – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Börja med en proffsdesignad FAQ-mall. Anpassa allt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "En FAQ-widget. Alla stilar. Alla språk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Välj en färdig stil eller designa från grunden, publicera en gång och håll alla live-FAQ:er uppdaterade."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "En FAQ-widget. Oändliga uttryck."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Växla mellan Liquid Glass, Pure Canvas, Rebel Blocks och Enterprise Prime utan att skriva om dina svar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Ljust läge. Mörkt läge. Vilket läge som helst – det är ditt läge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mallar är bara startlinjen. Du styr målgången."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designfrihet, inbyggd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Från layouts och visuella finishes till typografiska roller – varje designval går att styra i editorn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouter, på ditt sätt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Utseendekontroll utan gränser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografisk precision"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Många layoutsysten, inte bara ett. Struktur per brytpunkt. Oberoende padding och mellanrum för desktop/mobil. Styr kolumner, stapling, justering och omflöde – exakt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Hörnradius per hörn. Ramar med egna färger. Skuggor utvändigt och invändigt (länkade eller oberoende per sida). Gradient-, bild- eller videobakgrunder. Total visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Sex tydliga roller (rubrik, brödtext, fråga, svar, knapp, sektion). Välj bland 17 Google Fonts. Vikt, stil, storlek – allt kan anpassas per roll. Dynamiska skalor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Byt layout direkt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Välj Accordion, List eller Cards – och byt när som helst utan att bygga om innehållet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interaktionsdesign ingår"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover-, active- och focus-lägen är inbyggda så att din FAQ känns genomarbetad på alla enheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografi som känns rätt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Använd dina egna typsnitt eller vårt bibliotek och finjustera hierarkin för rubriker, frågor, svar och CTA:er."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Mörkt läge är automatiskt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "Din FAQ anpassar sig automatiskt till ljusa eller mörka avsnitt så att designen alltid känns naturlig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobil perfektion"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Tryckytor, avstånd och layout förblir lättlästa på mobil, surfplatta och desktop."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Bygg din FAQ i tre steg"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Välj en startstil, finjustera varje detalj och publicera en version som uppdateras överallt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Välj en stil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Anpassa allt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publicera"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Börja med mallen som matchar ditt varumärke."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Justera layout, mellanrum, färger, hörnradie och typografi i den visuella editorn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Gör en uppdatering så slår den igenom överallt där din FAQ är inbäddad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Börja med en mall. Gör den till din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Välj valfri mall, anpassa den till ditt varumärke och lansera din FAQ-widget gratis."
+    }
+  ],
+  "v": 1
+}

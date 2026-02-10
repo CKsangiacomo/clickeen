@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Eksempler på ofte stillede spørgsmål - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "FAQ-eksempler fra den virkelige verden til alle brancher."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Eksempler på FAQ-widget efter branche"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Se hvordan teams i rejse, hospitality og service bruger én FAQ-widget til at besvare gentagne spørgsmål hurtigere."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hoteller & resorts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Besvar spørgsmål om check-in, parkering og morgenmad, før gæsterne ankommer – og reducer afbrydelser ved receptionen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restauranter, caféer & barer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Hold menudetaljer, allergener og åbningstider tydelige på mobilen, så gæsterne beslutter sig hurtigere med mindre frem og tilbage med personalet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Ferieboliger & ejendomsadministratorer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Hold check-in-trin, Wi‑Fi-oplysninger og husregler ens på tværs af boliger med ét udgivelsesflow."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Globale besøgende forventer klarhed med det samme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Udgiv én gang, og servér svar på det rigtige sprog fra første klik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Turoperatører & rejsebureauer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Afklar afhentningssteder, afbestillingsregler og vejrpolitik på forhånd, så bookinger træffes med ro i maven."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Attraktioner, museer & forlystelsesparker"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Gør billetter, adgangsregler og tilgængelighedsinfo tydelig, før gæsterne dukker op – så ankomsten glider lettere for alle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Et enkelt driftsloop"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Fang gentagne spørgsmål én gang, udgiv opdateringer hurtigt, og hold alle live-sider på linje, når detaljer ændrer sig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Tilføj dine vigtigste spørgsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Udgiv én gang"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Hold alle sprog synkroniseret"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Start med de gentagne spørgsmål, besøgende stiller, før de beslutter sig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Ét klik gør dine seneste svar live på alle sider."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Når basisindholdet ændres, opdateres oversættelserne, så dit budskab forbliver konsistent."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Bygget til brug i drift"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Global edge-hastighed, fleksible indlejringsmuligheder og et enkelt udgivelsesflow, der holder svarene opdaterede."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Hurtig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Fleksibel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Opdateret"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Global edge-levering."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standard- og scriptfri indlejringsmuligheder."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Udgiv én gang for at opdatere alle live-sider."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Løs det med Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kom i gang gratis, tilpas designet til dit brand, og udgiv en live FAQ, der skalerer på tværs af sider."
+    }
+  ],
+  "v": 1
+}

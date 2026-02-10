@@ -24,9 +24,10 @@
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
 - **Tiered Execution:** Enforces `ai.profile` from the grant.
-  - `free_low`: DeepSeek Flash/Haiku.
-  - `paid_standard`: GPT-4o-mini / Haiku.
-  - `paid_premium`: GPT-4o / Sonnet 3.5.
+  - `free_low`: `deepseek-chat` by default (agent-scoped alternatives may include Nova Lite).
+  - `paid_standard`: `gpt-4o-mini` default, with provider/model choices constrained by policy + agent support (DeepSeek, OpenAI, Anthropic, Groq, Amazon Nova).
+  - `paid_premium`: `gpt-4o` default, with higher-capability choices constrained by policy + agent support.
+  - `curated_premium`: OpenAI curated set (`gpt-5.2` default).
 - Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
 
 ## Personalization Preview (acquisition)
@@ -58,7 +59,7 @@
 - Auth: `Authorization: Bearer ${PARIS_DEV_JWT}`.
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
 - Returns translated items; the caller writes overlay files under `tokyo/l10n/prague/**`.
-- Provider: OpenAI (`OPENAI_API_KEY`, `OPENAI_MODEL`).
+- Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
 
 ## Rules
 - Do not write directly to Tokyo for l10n (Paris is canonical).

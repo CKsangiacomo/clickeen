@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תבניות שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "התחילו עם תבנית שאלות נפוצות בעיצוב מקצועי. התאימו הכול."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ווידג׳ט FAQ אחד. כל סטייל. כל שפה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "בחרו סגנון מוכן או עצבו מאפס, פרסמו פעם אחת ושמרו על כל ה‑FAQ החי מעודכן תמיד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "ווידג׳ט FAQ אחד. אינסוף מראות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "עברו בין Liquid Glass, Pure Canvas, Rebel Blocks ו‑Enterprise Prime בלי לשכתב את התשובות שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "מצב בהיר. מצב כהה. כל מצב — זה המצב שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "תבניות הן רק קו הזינוק. אתם שולטים בקו הסיום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "חופש עיצובי, מובנה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "ממערכות פריסה דרך גימורים ויזואליים ועד תפקידי טיפוגרפיה — כל החלטת עיצוב נשלטת בעורך."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "פריסות, בדרך שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "שליטה במראה בלי גבולות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "דיוק טיפוגרפי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "הרבה מערכות פריסה, לא אחת. מבנה לפי נקודות שבירה. ריפוד ומרווחים נפרדים לדסקטופ/מובייל. שליטה בעמודות, ערימה, יישור וזרימה מחדש — בדיוק."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "רדיוס לכל פינה. מסגרות עם צבעים מותאמים. צללים חיצוניים ופנימיים (מקושרים או עצמאיים לכל צד). רקעי גרדיאנט, תמונה או וידאו. סמכות חזותית מלאה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "שישה תפקידים מובחנים (כותרת, גוף, שאלה, תשובה, כפתור, מקטע). בחרו מתוך 17 Google Fonts. משקל, סגנון, גודל — הכול ניתן להתאמה לכל תפקיד. קני מידה דינמיים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "מחליפים פריסות מיד"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "בחרו Accordion, List או Cards והחליפו בכל רגע בלי לבנות מחדש את התוכן."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "עיצוב אינטראקציה כלול"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "מצבי Hover, Active ו‑Focus מובנים מראש כדי שה‑FAQ ייראה מלוטש בכל מכשיר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "טיפוגרפיה שמרגישה נכון"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "השתמשו בפונטים שלכם או בספרייה שלנו, ואז כוונו את ההיררכיה לכותרות, שאלות, תשובות ו‑CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "מצב כהה הוא אוטומטי"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "ה‑FAQ שלכם מתאים את עצמו אוטומטית למקטעים בהירים או כהים, כך שהעיצוב תמיד מרגיש טבעי באתר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "שלמות במובייל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "יעדי הקשה, ריווח ופריסה נשארים קריאים בטלפונים, טאבלטים ומסכי דסקטופ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "בנו את ה‑FAQ שלכם בשלושה צעדים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "בחרו סגנון התחלה, כווננו כל פרט ופרסמו גרסה אחת שמתעדכנת בכל מקום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "בחרו סגנון"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "התאימו הכול"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "פרסמו"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "התחילו מתבנית שמתאימה למותג שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "כווננו פריסה, ריווח, צבעים, רדיוס וטיפוגרפיה בעורך הוויזואלי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "מעלים עדכון אחד והוא מתפרסם מיד בכל מקום שבו ה‑FAQ מוטמע."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "התחילו מתבנית. הפכו אותה לשלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "בחרו כל תבנית, התאימו אותה למותג שלכם והשיקו את ווידג׳ט ה‑FAQ בחינם."
+    }
+  ],
+  "v": 1
+}

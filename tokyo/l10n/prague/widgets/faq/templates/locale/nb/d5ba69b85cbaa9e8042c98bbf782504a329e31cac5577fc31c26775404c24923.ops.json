@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-maler – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Start med en proffdesignet FAQ-mal. Tilpass alt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Én FAQ-widget. Alle stiler. Hvilket som helst språk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Velg en ferdig stil eller design fra bunnen av, publiser én gang og hold alle aktive FAQ-er oppdatert."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Én FAQ-widget. Uendelig mange uttrykk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Bytt mellom Liquid Glass, Pure Canvas, Rebel Blocks og Enterprise Prime uten å skrive om svarene dine."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Lys modus. Mørk modus. Hvilken som helst modus – det er din modus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Maler er bare startstreken. Du styrer målstreken."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Designfrihet, innebygd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Fra layoutsystemer og visuelle finish til typografiske roller – hver designavgjørelse kan styres i editoren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Oppsett, på din måte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Utseendekontroll uten begrensninger"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Typografisk presisjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Mange oppsettsystemer, ikke bare ett. Struktur per breakpoint. Uavhengig padding og avstand for desktop/mobil. Styr kolonner, stabling, justering og reflow – helt presist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Radius per hjørne. Kantlinjer med egendefinerte farger. Skygger utenpå og inni (koblet eller uavhengig per side). Gradient-, bilde- eller videobakgrunner. Full visuell kontroll."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Seks ulike roller (overskrift, brødtekst, spørsmål, svar, knapp, seksjon). Velg blant 17 Google Fonts. Vekt, stil, størrelse – alt kan tilpasses per rolle. Dynamiske skalaer."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Bytt layout umiddelbart"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Velg Accordion, List eller Cards, og bytt når som helst uten å bygge innholdet på nytt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Interaksjonsdesign inkludert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Hover-, aktiv- og fokus-tilstander er innebygd, så FAQ-en føles gjennomført på alle enheter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Typografi som føles riktig"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Bruk dine egne fonter eller biblioteket vårt, og finjuster hierarki for overskrifter, spørsmål, svar og CTA-er."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Mørk modus er automatisk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQ-en tilpasser seg automatisk lyse eller mørke seksjoner, så designet alltid føles naturlig."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Mobilperfeksjon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Trykkflater, avstand og layout forblir lett å lese på mobil, nettbrett og desktop."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Bygg FAQ-en din i tre steg"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Velg en startstil, finjuster hver detalj og publiser én versjon som oppdateres overalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Velg en stil"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Tilpass alt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publiser"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Start med malen som passer merkevaren din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Juster layout, avstand, farger, radius og typografi i den visuelle editoren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Send ut én oppdatering, så går den live overalt der FAQ-en er innebygd."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Start med en mal. Gjør den til din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Velg en hvilken som helst mal, få den til å matche merkevaren din, og lanser FAQ-widgeten gratis."
+    }
+  ],
+  "v": 1
+}

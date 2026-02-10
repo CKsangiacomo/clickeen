@@ -26,9 +26,10 @@ function providerHasCredentials(env: Env, provider: AiProvider): boolean {
       return Boolean(asTrimmedString(env.GROQ_API_KEY));
     case 'amazon':
       return (
-        Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
-        Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
-        Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION))
+        Boolean(asTrimmedString(env.NOVA_API_KEY)) ||
+        (Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
+          Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
+          Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION)))
       );
     default:
       return false;
@@ -82,7 +83,7 @@ function resolveModelForProvider(args: {
   if (args.provider === 'deepseek') return args.env.DEEPSEEK_MODEL ?? 'deepseek-chat';
   if (args.provider === 'openai') return args.env.OPENAI_MODEL ?? 'gpt-5.2';
   if (args.provider === 'groq') return args.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
-  if (args.provider === 'amazon') return args.env.AMAZON_BEDROCK_MODEL_ID ?? 'amazon.nova-lite-v1:0';
+  if (args.provider === 'amazon') return args.env.NOVA_MODEL ?? args.env.AMAZON_BEDROCK_MODEL_ID ?? 'nova-2-lite-v1';
   return args.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
 }
 

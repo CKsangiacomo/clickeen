@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Rakenna nopea ja kaunis FAQ-widget. Mukauta, julkaise ja lokalisoi minuuteissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Yksi UKK-widget. Kaikki vastaukset. Millä tahansa kielellä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Muotoile omalla tyylilläsi, julkaise kerran ja kaikki sivustosi UKK:t päivittyvät automaattisesti uusimmilla vastauksilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "UKK"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Auta kävijöitä löytämään vastaukset nopeasti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Katso, kuinka UKK rakentaa itsensä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Syötä verkkosivustosi URL, niin kirjoitamme kysymykset ja vastaukset sinulle heti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Kaikki mitä tarvitset täydellisen UKK:n rakentamiseen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Tutustu malleihin, toimialaesimerkkeihin ja ydinominaisuuksiin, jotta saat julkaisun ulos nopeammin ilman arvailua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Löydä oma ilmeesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Katso tulokset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Avaa koko teho"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Valitse haitari-, lista- tai korttiasettelu, ja hienosäädä sitten typografiaa ja tyylejä. Jokainen pikseli on muokattavissa, jotta kokonaisuus tuntuu brändillesi luontaiselta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Hotelleista ja majoituksista ravintoloihin ja retkiin – katso, miten tiimit käyttävät yhtä UKK-widgetiä selkeisiin vastauksiin toistuviin kysymyksiin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Hyödynnä Ombra AI:ta, sisäänrakennettua lokalisointia ja SEO-valmista ulostuloa skaalataksesi ilman lisäkehitystä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Maailma on osterisi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Toivota jokainen sivustokävijä tervetulleeksi kuin paikallinen. Välittömät, luonnolliset käännökset globaalille yleisölle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Usein kysytyt kysymykset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Anna kävijöille heti selkeät vastaukset, vähennä toistuvia tukikysymyksiä ja pidä tiimisi keskittyneenä arvokkaampaan työhön."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Auta asiakkaita saamaan vastaukset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Lopeta saman toistaminen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Kaikki voittavat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Vastaa luontevasti kysymyksiin, joita kävijäsi esittävät useimmin. He löytävät tarvitsemansa heti, suoraan sivultasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Jokainen kysymys, johon widget vastaa, on yksi sähköposti tai puhelu vähemmän käsiteltäväksi. Automatisoi toistuvat asiat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Kun kävijät saavat vastaukset, he etenevät luottavaisin mielin. Yrityksesi pysyy keskittyneenä samalla kun asiakkaat saavat apua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Täysi hallinta designiin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Pyöristykset. Varjot. Reunukset. Välit. Säädä jokaista ominaisuutta visuaalisessa editorissamme kirjoittamatta ainuttakaan CSS-riviä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Yksi UKK-widget kaikkiin vastauksiin millä tahansa kielellä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Muokkaa kerran, paina Julkaise – ja jokainen live-sivu näyttää uusimman version."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globaali oletuksena"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Tavoita globaalit yleisöt automaattisilla käännöksillä ja tee nopeat käsinmuokkaukset aina, kun brändin sanavalinnat kaipaavat ihmisen viimeistelyä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Suorituskyky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Luo ja mukauttaa tekstit oikeaan UI-käyttöön."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Hakukonevalmis skeema sisältyy automaattisesti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Reunatoimitus pitää latausajat nopeina kaikkialla maailmassa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Rakennettu oikeaa tuotantoliikennettä varten"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Nopea reunatoimitus, luotettava käytettävyys ja saavutettavuusratkaisut, jotka kestävät oikeilla tuotantosivustoilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Globaali nopeus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Luotettavuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Saavutettavuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Toimitetaan edge-infrastruktuurista."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Suunniteltu korkeaan käytettävyyteen myös kovassa kuormassa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Rakennettu saavutettavien vuorovaikutusmallien varaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Rakenna UKK minuuteissa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Aloita maksutta, muokkaa ulkoasuasi ja julkaise tuotantovalmis UKK minuuteissa."
+    }
+  ],
+  "v": 1
+}

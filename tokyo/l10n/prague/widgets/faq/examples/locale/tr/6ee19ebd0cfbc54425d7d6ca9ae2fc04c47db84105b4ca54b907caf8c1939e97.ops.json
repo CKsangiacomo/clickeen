@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS örnekleri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Her sektör için gerçek dünyadan SSS örnekleri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Sektöre göre SSS widget örnekleri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Seyahat, konaklama ve hizmet sektöründeki ekiplerin tek bir SSS widget’ıyla tekrar eden soruları nasıl daha hızlı yanıtladığını görün."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Oteller ve Tatil Köyleri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Misafirler gelmeden önce check-in, otopark ve kahvaltı sorularını yanıtlayın; resepsiyon kesintilerini azaltın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restoranlar, Kafeler ve Barlar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Menü detaylarını, alerjenleri ve çalışma saatlerini mobilde net tutun; misafirler daha hızlı karar versin, ekip içi gereksiz yazışmalar azalsın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Tatil Kiralamaları ve Tesis Yöneticileri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Tek bir yayın akışıyla check-in adımlarını, Wi‑Fi bilgilerini ve ev kurallarını tüm mülklerde tutarlı hale getirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Global ziyaretçiler anında netlik bekler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Bir kez yayınlayın; ilk tıklamadan itibaren yanıtları doğru dilde sunun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Tur Operatörleri ve Seyahat Acenteleri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Buluşma noktalarını, iptal kurallarını ve hava durumu politikalarını baştan netleştirin; rezervasyon kararları güvenle verilsin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Gezilecek Yerler, Müzeler ve Tema Parkları"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Ziyaretçiler gelmeden önce biletleri, giriş kurallarını ve erişilebilirlik bilgilerini netleştirin; varış herkes için daha sorunsuz olsun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Basit bir çalışma döngüsü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Tekrarlanan soruları bir kez toplayın, güncellemeleri hızlıca yayınlayın ve detaylar değiştikçe tüm canlı sayfaları uyumda tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "En önemli sorularınızı ekleyin"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Bir kez yayınlayın"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Tüm dilleri senkron tutun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Ziyaretçilerin karar vermeden önce tekrar tekrar sorduğu sorularla başlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Tek tıkla en güncel yanıtlarınız her sayfada yayına alınır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Ana içerik değiştiğinde çeviriler yenilenir; mesajınız tutarlı kalır."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Prodüksiyon kullanımına hazır"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Global edge hız, esnek gömme seçenekleri ve yanıtları güncel tutan basit bir yayın akışı."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Hızlı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Esnek"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Güncel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Küresel edge dağıtımı."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standart ve scriptsiz gömme seçenekleri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Bir kez yayınlayın; tüm canlı sayfalar güncellensin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeen ile çözün"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Ücretsiz başlayın, tasarımı markanıza göre uyarlayın ve sayfalar arasında ölçeklenen canlı bir SSS yayınlayın."
+    }
+  ],
+  "v": 1
+}

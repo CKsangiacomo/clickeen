@@ -190,10 +190,21 @@
         "color": "var(--color-system-gray-5)"
       }
     },
+    "header": {
+      "enabled": true,
+      "title": "Sales are coming soon!!!🎯",
+      "showSubtitle": true,
+      "subtitleHtml": "Don't miss out on these limited time offers.",
+      "alignment": "center",
+      "placement": "top",
+      "ctaPlacement": "right",
+      "gap": 24,
+      "innerGap": 16,
+      "textGap": 8
+    },
     "timer": {
       "mode": "date",
       "repeat": "never",
-      "headline": "Sales are coming soon!!!🎯",
       "timeUnit": "hours",
       "timezone": "UTC",
       "targetDate": "2026-01-20T12:00",
@@ -207,6 +218,15 @@
     },
     "seoGeo": {
       "enabled": false
+    },
+    "seo": {
+      "businessType": "online-service",
+      "canonicalUrl": "",
+      "enableSchema": true
+    },
+    "geo": {
+      "answerFormat": "direct-first",
+      "enableDeepLinks": true
     },
     "actions": {
       "after": {
@@ -354,7 +374,7 @@
           "sizeCustom": 16,
           "sizePreset": "custom"
         },
-        "heading": {
+        "title": {
           "color": {
             "type": "color",
             "color": "var(--color-system-black)"
@@ -388,7 +408,7 @@
           "xl": "20px",
           "xs": "12px"
         },
-        "heading": {
+        "title": {
           "l": "36px",
           "m": "32px",
           "s": "28px",
@@ -418,8 +438,6 @@
     "    <tooldrawer-field-timer-number group-label='Number counter' type='valuefield' size='md' path='timer.startingNumber' label='Starting number' value='{{timer.startingNumber}}' />",
     "    <tooldrawer-field-timer-number group-label='Number counter' type='valuefield' size='md' path='timer.countDuration' label='Count duration (seconds)' value='{{timer.countDuration}}' />",
     "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-content-headline group-label='Headline' type='dropdown-edit' size='lg' path='timer.headline' label='Headline text' placeholder='Add headline' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster label='CTA (while running)'>",
     "    <tooldrawer-field-actions-during group-label='' type='dropdown-actions' size='md' path='actions.during.type' label='Action type' value='{{actions.during.type}}' options='[{&quot;label&quot;:&quot;Link&quot;,&quot;value&quot;:&quot;link&quot;}]' />",
@@ -487,9 +505,12 @@
     "</bob-panel>",
     "<bob-panel id='settings'>",
     "  <tooldrawer-cluster label='SEO/GEO'>",
-    "    <tooldrawer-field-settings-seo group-label='' type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
+    "    <tooldrawer-field-settings-seo-toggle group-label='' type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
+    "    <tooldrawer-field-settings-seo group-label='' type='toggle' size='md' path='seo.enableSchema' label='Enable schema' show-if=\"seoGeo.enabled == true\" />",
+    "    <tooldrawer-field-settings-seo group-label='' type='textfield' size='lg' path='seo.canonicalUrl' label='Canonical URL' placeholder='https://example.com/page' show-if=\"seoGeo.enabled == true\" />",
+    "    <tooldrawer-field-settings-geo group-label='' type='toggle' size='md' path='geo.enableDeepLinks' label='Enable deep links' show-if=\"seoGeo.enabled == true\" />",
     "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Branding'>",
+    "  <tooldrawer-cluster label='Clickeen Branding'>",
     "    <tooldrawer-field-behavior-settings group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
     "  </tooldrawer-cluster>",
     "</bob-panel>"

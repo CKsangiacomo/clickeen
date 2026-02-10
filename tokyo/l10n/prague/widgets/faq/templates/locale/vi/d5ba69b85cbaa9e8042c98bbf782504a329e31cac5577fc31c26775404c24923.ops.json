@@ -1,0 +1,187 @@
+{
+  "baseFingerprint": "d5ba69b85cbaa9e8042c98bbf782504a329e31cac5577fc31c26775404c24923",
+  "baseUpdatedAt": "2026-02-10T17:33:03.991Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mẫu FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bắt đầu với một mẫu FAQ được thiết kế chuyên nghiệp. Tùy biến mọi thứ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Một widget FAQ. Mọi phong cách. Mọi ngôn ngữ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Chọn một phong cách có sẵn hoặc thiết kế từ đầu, rồi chỉ cần xuất bản một lần và luôn giữ mọi FAQ đang hiển thị được cập nhật."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.headline",
+      "value": "Một widget FAQ. Vô vàn diện mạo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-trends.copy.subheadline",
+      "value": "Chuyển đổi giữa Liquid Glass, Pure Canvas, Rebel Blocks và Enterprise Prime mà không cần viết lại câu trả lời."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Chế độ sáng. Chế độ tối. Chế độ nào cũng được, đó là chế độ của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mẫu chỉ là vạch xuất phát. Bạn quyết định vạch đích."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Tự do thiết kế, tích hợp sẵn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Từ hệ thống bố cục, hoàn thiện giao diện đến vai trò kiểu chữ—mọi quyết định thiết kế đều có thể điều chỉnh trong trình biên tập."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Bố cục theo cách của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kiểm soát giao diện không giới hạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Độ chính xác typography"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Nhiều hệ thống bố cục, không chỉ một. Cấu trúc theo từng breakpoint. Padding và khoảng cách desktop/mobile độc lập. Kiểm soát cột, xếp chồng, căn chỉnh và reflow—chính xác tuyệt đối."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Bo góc theo từng góc. Viền với màu tùy chỉnh. Bóng đổ ngoài và trong (liên kết hoặc độc lập theo từng cạnh). Nền gradient, hình ảnh hoặc video. Toàn quyền về mặt thị giác."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Sáu vai trò riêng biệt (headline, body, question, answer, button, section). Chọn từ 17 Google Fonts. Độ đậm, kiểu, kích thước—tất cả đều tùy chỉnh theo từng vai trò. Thang đo động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.headline",
+      "value": "Chuyển bố cục tức thì"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-layouts.copy.subheadline",
+      "value": "Chọn Accordion, List hoặc Cards và đổi bất cứ lúc nào mà không cần dựng lại nội dung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.headline",
+      "value": "Đã bao gồm thiết kế tương tác"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-appearance.copy.subheadline",
+      "value": "Trạng thái hover, active và focus được tích hợp sẵn để FAQ của bạn luôn chỉn chu trên mọi thiết bị."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.headline",
+      "value": "Chữ đúng cảm giác"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-typography.copy.subheadline",
+      "value": "Dùng font của bạn hoặc thư viện của chúng tôi, rồi tinh chỉnh phân cấp cho tiêu đề, câu hỏi, câu trả lời và CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.headline",
+      "value": "Chế độ tối tự động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-darkmode.copy.subheadline",
+      "value": "FAQ của bạn tự động thích ứng với các section sáng hoặc tối để thiết kế luôn hài hòa như bản địa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.headline",
+      "value": "Hoàn hảo trên di động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-responsive.copy.subheadline",
+      "value": "Vùng chạm, khoảng cách và bố cục luôn rõ ràng, dễ đọc trên điện thoại, máy tính bảng và màn hình desktop."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Tạo FAQ của bạn trong ba bước"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Chọn phong cách khởi đầu, tinh chỉnh từng chi tiết và xuất bản một phiên bản cập nhật ở mọi nơi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Chọn phong cách"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Tùy chỉnh mọi thứ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Xuất bản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Bắt đầu từ mẫu phù hợp với thương hiệu của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Điều chỉnh bố cục, khoảng cách, màu sắc, bo góc và kiểu chữ trong trình biên tập trực quan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Đẩy một bản cập nhật và nó sẽ lên live ở mọi nơi bạn đã nhúng FAQ."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Bắt đầu với một mẫu. Biến nó thành của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Chọn bất kỳ mẫu nào, tùy chỉnh theo thương hiệu và ra mắt widget FAQ miễn phí."
+    }
+  ],
+  "v": 1
+}

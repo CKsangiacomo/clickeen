@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ उदाहरण - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "हर उद्योग के लिए वास्तविक दुनिया के FAQ उदाहरण।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "उद्योग के अनुसार FAQ विजेट के उदाहरण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "देखें कि ट्रैवल, हॉस्पिटैलिटी और सर्विस बिज़नेस की टीमें एक ही FAQ विजेट से बार-बार आने वाले सवालों के जवाब तेज़ी से कैसे देती हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "होटल्स और रिसॉर्ट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "मेहमानों के आने से पहले ही चेक-इन, पार्किंग और नाश्ते से जुड़े सवालों के जवाब दें और फ्रंट-डेस्क में रुकावटें कम करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "रेस्टोरेंट, कैफ़े और बार"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "मोबाइल पर मेनू विवरण, एलर्जेन और समय साफ़ रखें ताकि मेहमान कम स्टाफ़ बारीकियों के साथ जल्दी निर्णय ले सकें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "वेकेशन रेंटल्स और प्रॉपर्टी मैनेजर्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "एक ही पब्लिश फ़्लो से सभी प्रॉपर्टीज़ में चेक-इन स्टेप्स, Wi‑Fi विवरण और हाउस रूल्स एक जैसे बनाए रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ग्लोबल विज़िटर्स तुरंत स्पष्टता चाहते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "एक बार पब्लिश करें और पहले क्लिक से ही सही भाषा में जवाब दिखाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "टूर ऑपरेटर्स और ट्रैवल एजेंसियाँ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "पिकअप पॉइंट्स, कैंसिलेशन नियम और मौसम नीति पहले से स्पष्ट करें ताकि बुकिंग का फैसला भरोसे के साथ हो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "आकर्षण स्थल, म्यूज़ियम और थीम पार्क्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "विज़िटर्स के आने से पहले टिकट, एंट्री नियम और एक्सेसिबिलिटी जानकारी स्पष्ट करें ताकि सभी के लिए आगमन सहज हो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "एक सरल ऑपरेटिंग लूप"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "बार-बार पूछे जाने वाले सवाल एक बार कैप्चर करें, अपडेट्स तेज़ी से पब्लिश करें, और विवरण बदलते ही हर लाइव पेज को एक‑सा रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "अपने टॉप सवाल जोड़ें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "एक बार पब्लिश करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "हर भाषा को सिंक में रखें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "उन बार-बार आने वाले सवालों से शुरुआत करें जो विज़िटर निर्णय लेने से पहले पूछते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "एक क्लिक से आपके नए जवाब हर पेज पर लाइव हो जाते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "बेस कंटेंट बदलते ही अनुवाद अपडेट हो जाते हैं, ताकि आपका संदेश हमेशा एक‑सा रहे।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "प्रोडक्शन इस्तेमाल के लिए बनाया गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "ग्लोबल एज स्पीड, लचीले एम्बेड विकल्प, और सरल पब्लिश फ़्लो—जो जवाबों को हमेशा अपडेट रखता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "तेज़"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "लचीला"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "अप-टू-डेट"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "वैश्विक एज डिलीवरी।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "स्टैंडर्ड और स्क्रिप्टलेस एम्बेड विकल्प।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "हर लाइव पेज अपडेट करने के लिए एक बार पब्लिश करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeen के साथ इसे हल करें"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "फ्री में शुरू करें, डिज़ाइन को अपने ब्रांड के अनुसार ढालें, और ऐसा लाइव FAQ पब्लिश करें जो कई पेजों पर आसानी से स्केल हो।"
+    }
+  ],
+  "v": 1
+}

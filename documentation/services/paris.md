@@ -218,7 +218,7 @@ Current repo behavior:
 - **Auth (dev/local only):** requires `Authorization: Bearer ${PARIS_DEV_JWT}`.
 - **Agent registry:** only known `agentId`s are accepted (registry-backed, with alias support; canonical IDs returned).
 - **Policy context:** `subject` + `workspaceId` determine the policy profile (defaults to `minibob` when missing).
-- **Tiered Access (PRD 041):** Paris resolves `workspaces.tier` to an `AiProfile` (e.g., `free_low`, `paid_standard`, `paid_premium`) and stamps it into the grant.
+- **Tiered Access (PRD 041):** Paris resolves `workspaces.tier` to an `AiProfile` (e.g., `free_low`, `paid_standard`, `paid_premium`, `curated_premium`) and stamps it into the grant.
 - **Budgets are derived from policy** and capped server-side (tokens/timeout/requests) to keep the edge path safe.
 - **AI policy capsule:** grants include `ai.profile` + `ai.allowedProviders` for SF enforcement.
 - `trace.envStage` is stamped from `ENV_STAGE` (used by San Francisco learning indexes).
@@ -243,7 +243,10 @@ Response:
   "grant": "v1....",
   "exp": 1735521234,
   "agentId": "sdr.widget.copilot.v1",
-  "ai": { "profile": "paid_premium", "allowedProviders": ["openai", "anthropic"] }
+  "ai": {
+    "profile": "paid_premium",
+    "allowedProviders": ["deepseek", "openai", "anthropic", "groq", "amazon"]
+  }
 }
 ```
 

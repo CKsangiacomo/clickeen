@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Stwórz szybki, piękny widget FAQ. Dostosuj, opublikuj i zlokalizuj w kilka minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Jeden widget FAQ. Wszystkie odpowiedzi. W każdym języku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Zaprojektuj po swojemu, opublikuj raz — a każde FAQ na Twojej stronie automatycznie zaktualizuje się najnowszymi odpowiedziami."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Pomóż odwiedzającym szybko znaleźć odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Zobacz, jak Twoje FAQ tworzy się samo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Wpisz adres URL swojej strony, a my od razu napiszemy dla Ciebie pytania i odpowiedzi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Wszystko, czego potrzebujesz, by stworzyć idealne FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Poznaj szablony, przykłady z branż i kluczowe funkcje — aby wdrażać szybciej, bez zgadywania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Znajdź swój styl"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Zobacz efekty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Odblokuj pełną moc"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Wybierz układ Accordion, Lista lub Karty, a potem dopracuj typografię i style. Każdy piksel można dostosować tak, by pasował do Twojej marki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Od hoteli i najmu po restauracje i wycieczki — zobacz, jak zespoły używają jednego widgetu FAQ, by jasno odpowiadać na powtarzające się pytania."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Korzystaj z Ombra AI, wbudowanej lokalizacji i wyjścia gotowego pod SEO, aby skalować bez dodatkowych prac deweloperskich."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Świat stoi przed Tobą otworem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Witaj każdego odwiedzającego jak lokalny gospodarz. Natychmiastowe, naturalne tłumaczenia dla globalnej publiczności."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Najczęściej zadawane pytania"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Daj odwiedzającym natychmiastową jasność, ogranicz powtarzające się pytania do wsparcia i skup zespół na pracy o większej wartości."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Pomóż klientom znaleźć odpowiedzi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Przestań się powtarzać"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Korzyść dla wszystkich"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "W naturalny sposób odpowiadaj na pytania, które Twoi odwiedzający zadają najczęściej. Znajdą to, czego potrzebują, od razu — bezpośrednio na Twojej stronie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Każde pytanie, na które odpowiada widget, to jeden e-mail lub telefon mniej do obsłużenia. Zautomatyzuj powtórki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Gdy odwiedzający dostają odpowiedzi, idą dalej z większą pewnością. Twoja firma pozostaje skupiona, a klienci otrzymują pomoc."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Pełna kontrola nad wyglądem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Promień. Cienie. Obramowania. Odstępy. Dostosuj każdą właściwość w naszym edytorze wizualnym bez pisania choćby jednej linijki CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Jeden widget FAQ na wszystkie odpowiedzi, w każdym języku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Edytuj raz, kliknij Opublikuj — a każda aktywna strona pokaże najnowszą wersję."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globalnie z założenia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Docieraj do odbiorców na całym świecie dzięki automatycznym tłumaczeniom i szybkim poprawkom ręcznym, gdy język marki wymaga ludzkiego wyczucia."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Wydajność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Generuje i dopasowuje treści do realnych zastosowań w interfejsie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Schema gotowa pod wyszukiwarki jest dodawana automatycznie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Dostarczanie z edge utrzymuje szybkie czasy ładowania na całym świecie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Stworzone do prawdziwego ruchu produkcyjnego"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Szybkie dostarczanie z edge, niezawodne działanie i wzorce dostępności, które sprawdzają się na prawdziwych stronach produkcyjnych."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Globalna szybkość"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Niezawodność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Dostępność"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Serwowane z infrastruktury edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Zaprojektowane pod wysoką dostępność przy realnym obciążeniu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Zbudowane w oparciu o dostępne wzorce interakcji."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Zbuduj swoje FAQ w kilka minut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Wystartuj za darmo, dopasuj wygląd i opublikuj FAQ gotowe na produkcję w kilka minut."
+    }
+  ],
+  "v": 1
+}

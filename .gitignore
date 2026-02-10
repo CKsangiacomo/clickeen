@@ -43,6 +43,13 @@ Execution_Pipeline_Docs/01-Planning/*
 Execution_Pipeline_Docs/02-Executing/*
 !Execution_Pipeline_Docs/01-Planning/*PRD*.md
 !Execution_Pipeline_Docs/02-Executing/*PRD*.md
+!Execution_Pipeline_Docs/03-Executed/
+Execution_Pipeline_Docs/03-Executed/*
+!Execution_Pipeline_Docs/03-Executed/041__PRD__LLM_Access_Control_by_Tier.md
+!Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_GTM_System__Gigantic_Leap_FW.md
+!Execution_Pipeline_Docs/03-Executed/042__PRD__Widget_Pages_PagesDelta.md
+!Execution_Pipeline_Docs/03-Executed/043__PRD__Countdown_Gold_Standard_Uplift.md
+!Execution_Pipeline_Docs/03-Executed/044__PRD__Curated_Publish_Freshness_and_L10n_Fanout_Control.md
 BACKUP/
 
 # Font files

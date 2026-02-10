@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أداة الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "أنشئ ودجت أسئلة شائعة سريعًا وجميلًا. خصّصه وانشره ووطّنه خلال دقائق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ودجت أسئلة شائعة واحد. كل إجاباتك. بأي لغة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "صمّمه بطريقتك، وانشره مرة واحدة، وستتحدّث كل صفحة أسئلة شائعة على موقعك تلقائيًا بأحدث الإجابات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "ساعد الزوار على العثور على الإجابات بسرعة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "شاهد قسم الأسئلة الشائعة يبني نفسه"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "أدخل رابط موقعك وسنكتب لك الأسئلة والأجوبة فورًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "كل ما تحتاجه لبناء قسم الأسئلة الشائعة المثالي"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "استكشف القوالب وأمثلة القطاعات والميزات الأساسية لتطلق أسرع وبدون أي تخمين."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "اعثر على الشكل المناسب لك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "شاهد النتائج"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "أطلق القوة الكاملة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "اختر من تخطيطات الأكورديون والقائمة والبطاقات، ثم اضبط الطباعة والأنماط بدقة. كل بكسل قابل للتخصيص ليبدو منسجمًا مع علامتك التجارية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "من الفنادق والشقق إلى المطاعم والجولات، تعرّف كيف تستخدم الفرق ودجت أسئلة شائعة واحدًا للإجابة بوضوح عن الأسئلة المتكررة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "استخدم Ombra AI والتوطين المدمج ومخرجات جاهزة لـSEO للتوسّع دون هندسة إضافية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "العالم بين يديك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "استقبل كل زائر لموقعك كما لو كان من أهل البلد. ترجمات فورية وطبيعية لجمهور عالمي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "امنح الزوّار وضوحًا فوريًا، وقلّل أسئلة الدعم المتكررة، وابقِ فريقك مركزًا على العمل الأعلى قيمة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "ساعد العملاء في الحصول على إجابات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "توقّف عن تكرار نفسك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "مكسب للجميع"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "أجب بشكل طبيعي عن الأسئلة التي يطرحها زوارك كثيرًا. سيجدون ما يحتاجونه فورًا، مباشرة على صفحتك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "كل سؤال يجيب عنه الودجت يعني رسالة بريد إلكتروني أو مكالمة أقل عليك التعامل معها. أتمتة التكرار."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "عندما يحصل الزوار على إجابات، يمضون قدمًا بثقة. يبقى عملك مركزًا بينما يحصل العملاء على المساعدة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "تحكم كامل في التصميم"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "نصف القطر. الظلال. الحدود. المسافات. اضبط كل خاصية في محررنا المرئي دون كتابة سطر واحد من CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "ودجت أسئلة شائعة واحد لكل إجاباتك بأي لغة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "حرّر مرة واحدة، اضغط «نشر»، وستعرض كل صفحة مباشرة أحدث نسخة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "عالمي افتراضيًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "تواصل مع جمهور عالمي عبر الترجمة التلقائية وتعديلات يدوية سريعة عندما يحتاج أسلوب العلامة التجارية إلى لمسة بشرية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "الأداء"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "يُنشئ النص ويُكيّفه لاستخدام حقيقي داخل واجهات المستخدم."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "يتضمّن مخطط Schema جاهزًا للبحث تلقائيًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "تسليم عبر الحافة يحافظ على سرعة التحميل عالميًا."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "مصمّم لحركة مرور حقيقية في بيئات الإنتاج"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "تسليم سريع عبر الحافة، وقت تشغيل موثوق، وأنماط وصولية تصمد على مواقع الإنتاج الحقيقية."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "سرعة عالمية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "موثوقية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "إتاحة الوصول"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "يُقدَّم عبر بنية تحتية على الحافة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "مصمّم لوقت تشغيل مرتفع تحت حمل حقيقي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "مبني بأنماط تفاعل تراعي إتاحة الوصول."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "أنشئ أسئلتك الشائعة خلال دقائق"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ابدأ مجانًا، خصّص التصميم، وانشر أسئلة شائعة جاهزة للإنتاج خلال دقائق."
+    }
+  ],
+  "v": 1
+}

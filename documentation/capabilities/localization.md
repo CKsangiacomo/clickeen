@@ -35,6 +35,7 @@ Curated + user instances localize within the workspace’s **active locales** (E
 
 - **User instances** auto-enqueue l10n on publish/update (for the active locales set).
 - **Curated instances** also auto-enqueue l10n on save/update when status is published.
+- DevStudio can explicitly enqueue active locales via `POST /api/workspaces/:workspaceId/instances/:publicId/l10n/enqueue-selected` (manual/no-diff backfill path).
 
 ### Entitlement + active locales model
 

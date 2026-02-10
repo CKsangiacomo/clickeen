@@ -1,0 +1,247 @@
+{
+  "baseFingerprint": "c76dac39e32b984aa23a8cb5172c5741fed4fd4302212d39da4c4e240fc03b7e",
+  "baseUpdatedAt": "2026-02-10T05:00:23.043Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bygg en rask og vakker FAQ-widget. Tilpass, publiser og lokaliser på få minutter."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Én FAQ-widget. Alle svarene dine. På hvilket som helst språk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Design den slik du vil, publiser én gang, og alle FAQ-er på nettstedet oppdateres automatisk med de nyeste svarene."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Hjelp besøkende med å finne svar raskt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Se FAQ-en din bygge seg selv"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Skriv inn nettadressen til nettstedet ditt, så skriver vi spørsmål og svar for deg umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.title",
+      "value": "Alt du trenger for å bygge den perfekte FAQ-en"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.subhead",
+      "value": "Utforsk maler, bransjeeksempler og kjernefunksjoner – så du kan levere raskere uten gjetting."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.title",
+      "value": "Finn uttrykket ditt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.title",
+      "value": "Se resultatene"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.title",
+      "value": "Lås opp kraften"
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.0.body",
+      "value": "Velg mellom trekkspill-, liste- og kortoppsett, og finjuster deretter typografi og stiler. Hver eneste piksel kan tilpasses for å føles naturlig for merkevaren din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.1.body",
+      "value": "Fra hoteller og utleie til restauranter og turer: se hvordan team bruker én FAQ-widget til å svare tydelig på spørsmål som kommer igjen og igjen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.subpage-cards.copy.items.2.body",
+      "value": "Bruk Ombra AI, innebygd lokalisering og SEO-klar output for å skalere uten ekstra utviklingsarbeid."
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.title",
+      "value": "Hele verden står for dine føtter"
+    },
+    {
+      "op": "set",
+      "path": "blocks.locale-showcase.copy.subtitle",
+      "value": "Ta imot hver besøkende på nettstedet som en lokal. Umiddelbare, naturlige oversettelser for et globalt publikum."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Ofte stilte spørsmål"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Gi besøkende umiddelbar klarhet, reduser gjentatte supporthenvendelser og hold teamet fokusert på arbeid med høyere verdi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Hjelp kundene med å få svar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Slutt å gjenta deg selv"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "En vinn-vinn for alle"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Svar naturlig på spørsmålene besøkende stiller oftest. De finner det de trenger umiddelbart, direkte på siden din."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Hvert spørsmål widgeten svarer på, er én e-post eller telefonsamtale mindre du må håndtere. Automatiser gjentakelsene."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Når besøkende får svar, går de videre med trygghet. Virksomheten din kan holde fokus, mens kundene får hjelp."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.headline",
+      "value": "Full designkontroll"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-design.copy.subheadline",
+      "value": "Radius. Skygger. Kantlinjer. Avstand. Juster hver egenskap i vår visuelle editor uten å skrive en eneste linje CSS."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Én FAQ-widget for alle svarene dine – på alle språk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Rediger én gang, klikk Publiser, og alle sider viser alltid siste versjon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global som standard"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Nå globale målgrupper med automatisk oversettelse og raske manuelle justeringer når merkevaren trenger et menneskelig blikk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Ombra AI"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "Ytelse"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Genererer og tilpasser tekst for faktisk bruk i grensesnittet."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Søkemotor-klar schema legges automatisk til."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Edge-levering holder lastetidene raske over hele verden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Bygget for ekte produksjonstrafikk"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Rask edge-levering, pålitelig oppetid og tilgjengelighetsmønstre som fungerer på reelle produksjonssider."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Global hastighet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Pålitelighet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tilgjengelighet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Levert fra edge-infrastruktur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Utformet for høy oppetid under reell belastning."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Bygget med tilgjengelige interaksjonsmønstre."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Lag FAQ-en din på minutter"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kom i gang gratis, tilpass designet og publiser en produksjonsklar FAQ på minutter."
+    }
+  ],
+  "v": 1
+}

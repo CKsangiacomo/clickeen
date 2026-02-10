@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ फीचर्स - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "FAQ विजेट कैसे काम करता है: SEO, लोकलाइज़ेशन, पब्लिश फ़्लो और AI-सहायता प्राप्त एडिटिंग।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ विजेट कैसे काम करता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "AI ड्राफ्टिंग से लेकर लोकलाइज़ेशन और SEO तक—ये सिस्टम जवाबों को सटीक और आसानी से खोजने योग्य बनाए रखते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "एक बार बताइए। बाकी AI ड्राफ्ट कर देगा।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "एडिटर में स्ट्रक्चर्ड ड्राफ्ट बनाएं, फिर पब्लिश से पहले हर सुझाव को स्वीकारें, एडिट करें या अस्वीकार करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "एक ही विजेट में 29 तक भाषाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "अनुवादित जवाब अपने-आप दिखाएँ, और जहाँ ब्रांड टोन या बारीकी अहम हो, वहाँ शब्दों को मैन्युअली फाइन-ट्यून करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "एक बार पब्लिश करें। हर पेज अपडेट हो जाएगा।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "एक ही सोर्स में एक बार एडिट करें, फिर पब्लिश करके हर लाइव एम्बेड तक नवीनतम जवाब भेजें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "सर्च इंजन आपके जवाब पढ़ सकते हैं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "सर्वर-रेंडर्ड जवाब, स्कीमा आउटपुट और डीप लिंक सर्च इंजनों को सही कंटेंट इंडेक्स करने और दिखाने में मदद करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google हर शब्द देखता है"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "रिच स्निपेट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "डीप लिंकिंग"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "सर्वर-साइड रेंडरिंग आपके जवाबों को इंडेक्सेबल रखती है और लेआउट शिफ्ट लगभग शून्य रहता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "ऑटोमैटिक JSON-LD सर्च इंजनों को आपके जवाब दिखाने में मदद करता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "स्थिर URL के साथ यूज़र्स को उनके लिए ज़रूरी खास उत्तर तक पहुँचाइए।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "एक जीवित नॉलेज बेस, जो आपके साथ बढ़ता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "जैसे-जैसे आपका प्रोडक्ट, नीतियाँ और ऑडियंस बदलें, वैसे-वैसे जवाबों को सटीक रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "डिज़ाइन से ही भरोसेमंद"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "वर्ज़निंग के साथ पब्लिशिंग और स्पष्ट लाइव सीमाएँ टीमों के लिए बार-बार होने वाले अपडेट्स को नियंत्रित रखती हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "वर्ज़न किए गए बदलाव"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "पब्लिश सीमा"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "एज-कैश्ड"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "हर पब्लिश का वर्ज़न बनता है, ताकि टीमें नियंत्रण के साथ लगातार सुधार कर सकें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "लाइव कंटेंट केवल स्पष्ट पब्लिश के बाद ही बदलता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "मिलीसेकंड मायने रखते हैं। हम आपके यूज़र के सबसे नज़दीकी लोकेशन से उत्तर डिलीवर करते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "डिज़ाइन पर पूरा नियंत्रण"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "ब्रांड कंसिस्टेंसी के लिए बने विज़ुअल एडिटर में रेडियस, शैडो, बॉर्डर, स्पेसिंग और टाइपोग्राफी नियंत्रित करें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "लेआउट्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "टाइपोग्राफी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "थीम्स"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "रिस्पॉन्सिव स्पेसिंग कंट्रोल के साथ अकॉर्डियन, लिस्ट और कार्ड स्ट्रक्चर।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "टाइटल, सवाल, जवाब और CTA के लिए रोल-बेस्ड टाइपोग्राफी।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "ब्रांड कलर कंट्रोल के साथ लाइट और डार्क मोड सपोर्ट।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "डिफ़ॉल्ट रूप से ग्लोबल डिलीवरी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "लोकलाइज़ेशन, SEO और एज डिलीवरी को एक सिस्टम में जोड़ें, ताकि ग्लोबल पेज तेज़ और स्पष्ट रहें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "एज डिलीवरी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "लोकलाइज़ेशन"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "एज इन्फ्रास्ट्रक्चर से सर्व किया जाता है।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "ओवरराइड सपोर्ट के साथ 29 तक भाषाएँ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "JSON-LD सपोर्ट के साथ स्ट्रक्चर्ड जवाब।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "प्रोडक्शन साइट्स के लिए बनाया गया"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "स्टैंडर्ड या स्क्रिप्टलेस एम्बेड इस्तेमाल करें, और स्पष्ट पब्लिश कंट्रोल के साथ लाइव अपडेट्स को अनुमानित रखें।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "एम्बेड मोड"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "पब्लिश कंट्रोल"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "कम्पोज़ेबिलिटी"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "स्टैंडर्ड स्क्रिप्ट एम्बेड और स्क्रिप्टलेस iframe विकल्प।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "लाइव अपडेट्स के लिए स्पष्ट पब्लिश फ़्लो।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "स्टाइल, कंटेंट और भाषाएँ बिना फोर्क के साथ मिलती हैं।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "एक बेहतर FAQ अनुभव बनाएं"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "फ्री से शुरू करें, तेज़ी से पब्लिश करें, और हर पेज व भाषा में अपने FAQ को अप-टू-डेट रखें।"
+    }
+  ],
+  "v": 1
+}
