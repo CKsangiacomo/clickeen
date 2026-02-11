@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "baseUpdatedAt": "2026-02-11T02:16:10.051901+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Şimdi satın al"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Daha fazla bilgi"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Bu sınırlı süreli fırsatları kaçırmayın."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Satışlar yakında başlıyor!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.days",
+      "value": "Gün"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.hours",
+      "value": "Saat"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.minutes",
+      "value": "Dakika"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.seconds",
+      "value": "Saniye"
+    }
+  ],
+  "v": 1
+}

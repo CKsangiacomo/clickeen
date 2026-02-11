@@ -4,7 +4,7 @@ import { HttpError, json, noStore, readJson, asString, isRecord } from './http';
 import { assertCap, verifyGrant } from './grants';
 import { executeSdrCopilot } from './agents/sdrCopilot';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
-import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
+import { executeCsWidgetCopilot, executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { executeL10nJob, isL10nJob, type L10nJob } from './agents/l10nInstance';
 import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
 import { executePersonalizationPreview, type PersonalizationPreviewInput, type PersonalizationPreviewResult } from './agents/personalizationPreview';
@@ -196,6 +196,7 @@ type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Pro
 const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
   'sdr.copilot': executeSdrCopilot,
   'sdr.widget.copilot.v1': executeSdrWidgetCopilot,
+  'cs.widget.copilot.v1': executeCsWidgetCopilot,
   'debug.grantProbe': executeDebugGrantProbe,
 };
 

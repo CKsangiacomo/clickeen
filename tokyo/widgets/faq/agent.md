@@ -58,6 +58,7 @@ CTA (global primitive):
 - `cta.enabled` (boolean)
 - `cta.label` (string)
 - `cta.href` (string; must be `http(s)://` to be clickable)
+- `cta.openMode` (`same-tab` | `new-tab` | `new-window`)
 - `cta.iconEnabled` (boolean; when true, CTA renders a Dieter icon)
 - `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
 - `cta.iconPlacement` (`left` | `right`)
@@ -158,6 +159,7 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 | `cta.enabled` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` toggles visibility |
 | `cta.label` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets `.ck-header__ctaLabel.textContent` |
 | `cta.href` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets clickable `href` only for `http(s)://` |
+| `cta.openMode` | `[data-role="header-cta"]` | dom | `CKHeader.applyHeader(state, widgetRoot)` sets link target behavior (`same-tab` / `new-tab` / `new-window`) |
 | `cta.iconEnabled` | `.ck-header__ctaIcon` | dom | `CKHeader.applyHeader(state, widgetRoot)` toggles icon visibility |
 | `cta.iconName` | `.ck-headerLayout` | css-var | `CKHeader.applyHeader(state, widgetRoot)` sets `--ck-header-cta-icon` to Dieter `mask-image` url |
 | `cta.iconPlacement` | `[data-role="header-cta"]` | data-attr | `CKHeader.applyHeader(state, widgetRoot)` sets `data-icon-placement` |

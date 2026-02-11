@@ -1,0 +1,52 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "baseUpdatedAt": "2026-02-11T02:16:10.051901+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.after.text",
+      "value": ""
+    },
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Köp nu"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Läs mer"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Missa inte dessa tidsbegränsade erbjudanden."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Rean kommer snart!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.days",
+      "value": "Dagar"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.hours",
+      "value": "Timmar"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.minutes",
+      "value": "Minuter"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.seconds",
+      "value": "Sekunder"
+    }
+  ],
+  "v": 1
+}

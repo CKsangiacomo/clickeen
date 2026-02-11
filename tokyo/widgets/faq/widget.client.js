@@ -427,7 +427,7 @@
                 `
               : '';
             return `
-              <li class="ck-faq__item" data-role="faq-item" id="${escapeHtml(anchorId)}">
+              <li class="ck-faq__item" data-role="faq-item" data-ck-surface="cardwrapper" id="${escapeHtml(anchorId)}">
                 <${questionTag} class="ck-faq__q" data-role="faq-question" ${questionAttrs}>
                   <span class="ck-faq__q-text" data-role="faq-question-text">${qText}</span>
                   ${iconMarkup}

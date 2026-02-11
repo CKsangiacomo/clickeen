@@ -57,6 +57,13 @@ export type AiModelUiMeta = {
   label: string;
 };
 
+export const WIDGET_COPILOT_AGENT_ALIAS = 'widget.copilot.v1' as const;
+export const WIDGET_COPILOT_AGENT_IDS = {
+  sdr: 'sdr.widget.copilot.v1',
+  cs: 'cs.widget.copilot.v1',
+} as const;
+export type WidgetCopilotAgentId = (typeof WIDGET_COPILOT_AGENT_IDS)[keyof typeof WIDGET_COPILOT_AGENT_IDS];
+
 const SDR_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 280, timeoutMs: 15_000, maxRequests: 1 },
   paid_standard: { maxTokens: 600, timeoutMs: 25_000, maxRequests: 2 },
@@ -64,7 +71,14 @@ const SDR_BUDGETS: Record<AiProfile, AiBudget> = {
   curated_premium: { maxTokens: 1200, timeoutMs: 45_000, maxRequests: 2 },
 };
 
-const CS_BUDGETS: Record<AiProfile, AiBudget> = {
+const SDR_WIDGET_BUDGETS: Record<AiProfile, AiBudget> = {
+  free_low: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
+  paid_standard: { maxTokens: 900, timeoutMs: 45_000, maxRequests: 3 },
+  paid_premium: { maxTokens: 1400, timeoutMs: 60_000, maxRequests: 3 },
+  curated_premium: { maxTokens: 1600, timeoutMs: 60_000, maxRequests: 3 },
+};
+
+const CS_WIDGET_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
   paid_standard: { maxTokens: 900, timeoutMs: 45_000, maxRequests: 3 },
   paid_premium: { maxTokens: 1400, timeoutMs: 60_000, maxRequests: 3 },
@@ -122,17 +136,30 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     budgetsByProfile: SDR_BUDGETS,
   },
   {
-    agentId: 'sdr.widget.copilot.v1',
+    agentId: WIDGET_COPILOT_AGENT_IDS.sdr,
     category: 'copilot',
     taskClass: 'copilot.widget.editor',
-    description: 'Widget editor copilot (Minibob/Bob).',
-    supportedProviders: ['deepseek', 'openai', 'anthropic', 'groq', 'amazon'],
+    description: 'SDR widget copilot (Minibob + free tiers).',
+    supportedProviders: ['deepseek', 'amazon'],
     defaultProvider: 'deepseek',
     executionSurface: 'execute',
     allowProviderChoice: true,
     allowModelChoice: true,
     requiredEntitlements: ['budget.copilot.turns'],
-    budgetsByProfile: CS_BUDGETS,
+    budgetsByProfile: SDR_WIDGET_BUDGETS,
+  },
+  {
+    agentId: WIDGET_COPILOT_AGENT_IDS.cs,
+    category: 'copilot',
+    taskClass: 'copilot.widget.editor',
+    description: 'CS widget copilot (paid tiers + DevStudio).',
+    supportedProviders: ['deepseek', 'openai', 'anthropic', 'groq', 'amazon'],
+    defaultProvider: 'openai',
+    executionSurface: 'execute',
+    allowProviderChoice: true,
+    allowModelChoice: true,
+    requiredEntitlements: ['budget.copilot.turns'],
+    budgetsByProfile: CS_WIDGET_BUDGETS,
   },
   {
     agentId: 'l10n.instance.v1',
@@ -256,6 +283,9 @@ const MODEL_LABELS: Record<string, string> = {
   'deepseek-chat': 'DeepSeek Chat',
   'deepseek-reasoner': 'DeepSeek Reasoner',
   // OpenAI (chat completions compatible in this repo)
+  'gpt-5-mini': 'GPT-5 mini',
+  'gpt-5': 'GPT-5',
+  'gpt-5.2': 'GPT-5.2',
   'gpt-4o-mini': 'GPT-4o mini',
   'gpt-4o': 'GPT-4o',
   // Anthropic (messages API)
@@ -281,7 +311,7 @@ const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderMo
   },
   paid_standard: {
     deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat', 'deepseek-reasoner'] },
-    openai: { defaultModel: 'gpt-4o-mini', allowed: ['gpt-4o-mini'] },
+    openai: { defaultModel: 'gpt-5-mini', allowed: ['gpt-5-mini', 'gpt-4o-mini'] },
     anthropic: {
       defaultModel: 'claude-3-5-sonnet-20240620',
       allowed: ['claude-3-5-sonnet-20240620'],
@@ -297,7 +327,7 @@ const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderMo
       defaultModel: 'deepseek-reasoner',
       allowed: ['deepseek-chat', 'deepseek-reasoner'],
     },
-    openai: { defaultModel: 'gpt-4o', allowed: ['gpt-4o-mini', 'gpt-4o'] },
+    openai: { defaultModel: 'gpt-5.2', allowed: ['gpt-5-mini', 'gpt-5', 'gpt-5.2', 'gpt-4o'] },
     anthropic: {
       defaultModel: 'claude-3-5-sonnet-20240620',
       allowed: ['claude-3-5-sonnet-20240620'],
@@ -309,7 +339,7 @@ const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, ProviderMo
     },
   },
   curated_premium: {
-    openai: { defaultModel: 'gpt-5.2', allowed: ['gpt-5.2', 'gpt-4o', 'gpt-4o-mini'] },
+    openai: { defaultModel: 'gpt-5.2', allowed: ['gpt-5-mini', 'gpt-5', 'gpt-5.2', 'gpt-4o'] },
   },
 };
 
@@ -343,6 +373,31 @@ export function resolveAiAgent(
   const entry = AGENT_LOOKUP.get(requested);
   if (!entry) return null;
   return { entry, canonicalId: entry.agentId, requestedId: requested };
+}
+
+export function isWidgetCopilotAgentId(agentId: string): agentId is WidgetCopilotAgentId {
+  return agentId === WIDGET_COPILOT_AGENT_IDS.sdr || agentId === WIDGET_COPILOT_AGENT_IDS.cs;
+}
+
+export function resolveWidgetCopilotAgentId(args: {
+  policyProfile: PolicyProfile;
+}): WidgetCopilotAgentId {
+  if (args.policyProfile === 'minibob' || args.policyProfile === 'free') {
+    return WIDGET_COPILOT_AGENT_IDS.sdr;
+  }
+  return WIDGET_COPILOT_AGENT_IDS.cs;
+}
+
+export function resolveWidgetCopilotRequestedAgentId(args: {
+  requestedAgentId?: string;
+  policyProfile: PolicyProfile;
+}): string {
+  const requested = typeof args.requestedAgentId === 'string' ? args.requestedAgentId.trim() : '';
+  if (!requested) return requested;
+  if (requested === WIDGET_COPILOT_AGENT_ALIAS || isWidgetCopilotAgentId(requested)) {
+    return resolveWidgetCopilotAgentId({ policyProfile: args.policyProfile });
+  }
+  return requested;
 }
 
 export function resolveAiProfile(args: {

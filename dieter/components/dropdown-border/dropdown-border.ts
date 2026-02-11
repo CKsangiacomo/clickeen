@@ -354,21 +354,53 @@ function parseBorderJson(raw: string): { border: BorderValue; hsv: { h: number; 
   } catch {
     return null;
   }
+
+  // Backward compatibility:
+  // - stringified objects (double-encoded JSON)
+  // - plain color strings
+  // - partial objects without enabled/width
+  if (typeof parsed === 'string') {
+    const trimmed = parsed.trim();
+    if (!trimmed) return null;
+    try {
+      const nested = JSON.parse(trimmed) as unknown;
+      if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+        parsed = nested;
+      } else {
+        parsed = { color: trimmed };
+      }
+    } catch {
+      parsed = { color: trimmed };
+    }
+  }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
 
   const obj = parsed as Record<string, unknown>;
-  const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : null;
-  const width = typeof obj.width === 'number' && Number.isFinite(obj.width) ? obj.width : null;
-  const color = typeof obj.color === 'string' ? obj.color : null;
-  if (enabled == null || width == null || color == null) return null;
+  const colorRaw =
+    typeof obj.color === 'string'
+      ? obj.color
+      : obj.color && typeof obj.color === 'object' && !Array.isArray(obj.color) && typeof (obj.color as any).color === 'string'
+        ? String((obj.color as any).color)
+        : null;
+  if (!colorRaw) return null;
 
-  const hsv = parseColor(color, document.documentElement);
+  const widthRaw =
+    typeof obj.width === 'number'
+      ? obj.width
+      : typeof obj.width === 'string'
+        ? Number(obj.width)
+        : DEFAULT_BORDER.width;
+  const width = Number.isFinite(widthRaw) ? clampNumber(widthRaw, 0, 12) : DEFAULT_BORDER.width;
+  const enabled =
+    typeof obj.enabled === 'boolean' ? obj.enabled : width > 0;
+
+  const hsv = parseColor(colorRaw, document.documentElement);
   if (!hsv) return null;
 
   const border: BorderValue = {
     enabled,
-    width: clampNumber(width, 0, 12),
-    color,
+    width,
+    color: colorRaw,
   };
 
   return { border, hsv };
@@ -506,4 +538,3 @@ function formatHex(hsv: { h: number; s: number; v: number }): string {
   const toHex = (n: number) => n.toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
-

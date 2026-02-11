@@ -68,6 +68,20 @@
       flex-wrap: wrap;
     }
 
+    #superadmin-actions .dev-widget-workspace__actions-group {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    #superadmin-actions .dev-widget-workspace__actions-divider {
+      inline-size: 1px;
+      block-size: 20px;
+      background: color-mix(in oklab, var(--role-border), transparent 35%);
+      border-radius: 999px;
+    }
+
     #superadmin-actions .dev-widget-workspace__action,
     .dev-widget-workspace__modal .dev-widget-workspace__action {
       --btn-border-width: 0px;
@@ -107,6 +121,16 @@
       --action-bg: var(--color-system-brown-5);
     }
 
+    #superadmin-actions .dev-widget-workspace__action[data-tone='gray4.4'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='gray4.4'] {
+      --action-bg: color-mix(in oklab, var(--color-system-gray-4), white 80%);
+    }
+
+    #superadmin-actions .dev-widget-workspace__action[data-tone='teal.5'],
+    .dev-widget-workspace__modal .dev-widget-workspace__action[data-tone='teal.5'] {
+      --action-bg: color-mix(in oklab, var(--color-system-teal), white 90%);
+    }
+
     #l10n-status {
       display: inline-flex;
       align-items: center;
@@ -116,10 +140,11 @@
       margin-right: var(--space-2);
       border-radius: var(--control-radius-lg);
       border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-      background: var(--color-system-white);
+      background: color-mix(in oklab, var(--color-system-gray-4), white 90%);
       box-shadow: var(--shadow-floating);
       font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
       color: var(--color-text);
+      position: relative;
     }
 
     #l10n-status[data-state='hidden'] {
@@ -127,10 +152,8 @@
     }
 
     .dev-widget-workspace__l10n-label {
-      color: color-mix(in oklab, var(--color-text), transparent 45%);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: var(--fs-10);
+      color: color-mix(in oklab, var(--color-text), transparent 25%);
+      font-size: var(--fs-12);
     }
 
     .dev-widget-workspace__l10n-dot {
@@ -161,9 +184,42 @@
       background: var(--color-system-gray-7);
     }
 
+    .dev-widget-workspace__l10n-value,
     .dev-widget-workspace__l10n-meta {
-      color: color-mix(in oklab, var(--color-text), transparent 35%);
-      font-size: var(--fs-11);
+      display: none;
+    }
+
+    .dev-widget-workspace__l10n-tooltip {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 40;
+      max-inline-size: min(560px, 72vw);
+      padding: 8px 10px;
+      border-radius: var(--control-radius-md);
+      border: 1px solid color-mix(in oklab, var(--role-border), transparent 15%);
+      background: var(--color-system-gray-8, #1f2328);
+      background: color-mix(in oklab, var(--color-system-black), var(--color-system-white) 8%);
+      box-shadow: var(--shadow-floating);
+      color: var(--color-system-white);
+      font: 500 var(--fs-11) / 1.4 var(--font-ui);
+      letter-spacing: 0.01em;
+      white-space: normal;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(2px);
+      transition:
+        opacity var(--duration-base),
+        transform var(--duration-base),
+        visibility var(--duration-base);
+    }
+
+    #l10n-status:hover .dev-widget-workspace__l10n-tooltip,
+    #l10n-status:focus-visible .dev-widget-workspace__l10n-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .dev-widget-workspace-header #instance-dropdown {
@@ -393,114 +449,119 @@
     <h1 class="heading-2" style="margin: 0">Widget Workspace</h1>
     <div id="superadmin-actions">
       <div class="dev-widget-workspace__actions">
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="superadmin-update-defaults"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="purple4"
-        >
-          <span
-            class="diet-btn-ictxt__icon"
-            aria-hidden="true"
-            data-icon="arrow.trianglehead.clockwise"
-          ></span>
-          <span class="diet-btn-ictxt__label body-s">Update default config</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="superadmin-update-theme"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="orange4"
-        >
-          <span
-            class="diet-btn-ictxt__icon"
-            aria-hidden="true"
-            data-icon="paintbrush.pointed"
-          ></span>
-          <span class="diet-btn-ictxt__label body-s">Update theme</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="superadmin-reset-from-json"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="pink4"
-        >
-          <span
-            class="diet-btn-ictxt__icon"
-            aria-hidden="true"
-            data-icon="square.and.arrow.down"
-          ></span>
-          <span class="diet-btn-ictxt__label body-s">Reset instance from JSON</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="create-curated-instance"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="green4"
-        >
-          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
-          <span class="diet-btn-ictxt__label body-s">Create curated instance</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="create-curated-version"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="indigo4"
-        >
-          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
-          <span class="diet-btn-ictxt__label body-s">Create new instance version</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="update-curated-instance"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="brown.5"
-        >
-          <span
-            class="diet-btn-ictxt__icon"
-            aria-hidden="true"
-            data-icon="arrow.trianglehead.2.counterclockwise"
-          ></span>
-          <span class="diet-btn-ictxt__label body-s">Update curated instance</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="refresh-prague-preview"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="purple4"
-        >
-          <span
-            class="diet-btn-ictxt__icon"
-            aria-hidden="true"
-            data-icon="arrow.trianglehead.clockwise"
-          ></span>
-          <span class="diet-btn-ictxt__label body-s">Refresh Prague preview</span>
-        </button>
-        <button
-          type="button"
-          class="diet-btn-ictxt dev-widget-workspace__action"
-          id="translate-selected-locales"
-          data-size="md"
-          data-variant="secondary"
-          data-tone="indigo4"
-        >
-          <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="globe"></span>
-          <span class="diet-btn-ictxt__label body-s">Translate locales</span>
-        </button>
+        <div class="dev-widget-workspace__actions-group" data-group="primary">
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="superadmin-update-defaults"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="brown.5"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="arrow.trianglehead.clockwise"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Update Config</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="superadmin-reset-from-json"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="brown.5"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="square.and.arrow.down"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Reset Json</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="refresh-prague-preview"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="brown.5"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="arrow.trianglehead.clockwise"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Refresh Prague</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="translate-selected-locales"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="brown.5"
+          >
+            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="globe"></span>
+            <span class="diet-btn-ictxt__label body-s">Translate</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="superadmin-update-theme"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="brown.5"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="paintbrush.pointed"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Update Theme</span>
+          </button>
+        </div>
+        <span class="dev-widget-workspace__actions-divider" aria-hidden="true"></span>
+        <div class="dev-widget-workspace__actions-group" data-group="secondary">
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="create-curated-instance"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="gray4.4"
+          >
+            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="plus.square"></span>
+            <span class="diet-btn-ictxt__label body-s">New Curated</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="update-curated-instance"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="gray4.4"
+          >
+            <span
+              class="diet-btn-ictxt__icon"
+              aria-hidden="true"
+              data-icon="arrow.trianglehead.2.counterclockwise"
+            ></span>
+            <span class="diet-btn-ictxt__label body-s">Update Curated</span>
+          </button>
+          <button
+            type="button"
+            class="diet-btn-ictxt dev-widget-workspace__action"
+            id="create-curated-version"
+            data-size="md"
+            data-variant="secondary"
+            data-tone="gray4.4"
+          >
+            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
+            <span class="diet-btn-ictxt__label body-s">New Instance</span>
+          </button>
+        </div>
       </div>
     </div>
     <div
@@ -509,11 +570,13 @@
       aria-live="polite"
       data-state="idle"
       data-tone="unavailable"
+      tabindex="0"
     >
       <span class="dev-widget-workspace__l10n-label">Translations</span>
       <span class="dev-widget-workspace__l10n-dot" aria-hidden="true"></span>
       <span class="dev-widget-workspace__l10n-value" id="l10n-status-value">-</span>
       <span class="dev-widget-workspace__l10n-meta" id="l10n-status-meta"></span>
+      <span class="dev-widget-workspace__l10n-tooltip" id="l10n-status-tooltip"></span>
     </div>
     <div
       class="diet-dropdown"
@@ -766,6 +829,7 @@
     const l10nStatus = document.getElementById('l10n-status');
     const l10nStatusValue = document.getElementById('l10n-status-value');
     const l10nStatusMeta = document.getElementById('l10n-status-meta');
+    const l10nStatusTooltip = document.getElementById('l10n-status-tooltip');
     const curatedModal = document.getElementById('curated-modal');
     const curatedModalTitle = document.getElementById('curated-modal-title');
     const curatedModalSubtitle = document.getElementById('curated-modal-subtitle');
@@ -833,11 +897,22 @@
       if (!(l10nStatus instanceof HTMLElement)) return;
       l10nStatus.dataset.state = state || 'idle';
       l10nStatus.dataset.tone = tone || 'unavailable';
-      if (l10nStatusValue instanceof HTMLElement) l10nStatusValue.textContent = value || '-';
+      const valueLabel = value || '-';
+      const metaLabel = meta || '';
+      if (l10nStatusValue instanceof HTMLElement) l10nStatusValue.textContent = valueLabel;
       if (l10nStatusMeta instanceof HTMLElement) {
-        l10nStatusMeta.textContent = meta || '';
-        l10nStatusMeta.title = meta || '';
+        l10nStatusMeta.textContent = metaLabel;
       }
+      const hoverDetails = [valueLabel, metaLabel].filter(Boolean).join(' · ');
+      if (l10nStatusTooltip instanceof HTMLElement) {
+        l10nStatusTooltip.textContent = hoverDetails || 'No status details available.';
+      }
+      if (hoverDetails && valueLabel !== '-') {
+        l10nStatus.setAttribute('aria-label', `Translations status: ${hoverDetails}`);
+      } else {
+        l10nStatus.setAttribute('aria-label', 'Translations status');
+      }
+      l10nStatus.removeAttribute('title');
     }
 
     function summarizePublishStatus(payload) {
@@ -919,7 +994,7 @@
         failedTerminal > 0
           ? 'Inspect last error and requeue failed locales.'
           : needsEnqueue > 0
-            ? 'Click "Translate locales" to enqueue stale locales.'
+            ? 'Click "Translate" to enqueue stale locales.'
             : retrying > 0
               ? 'Retry backoff in progress; wait for next attempt.'
               : inFlight > 0
@@ -2315,7 +2390,7 @@
 
     refreshPraguePreviewBtn?.addEventListener('click', async () => {
       const labelEl = refreshPraguePreviewBtn?.querySelector('.diet-btn-ictxt__label');
-      const previousLabel = labelEl?.textContent || 'Refresh Prague preview';
+      const previousLabel = labelEl?.textContent || 'Refresh Prague';
       try {
         if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
         if (!isCuratedPublicId(currentPublicId) && !currentPublicId.startsWith('wgt_main_')) {
@@ -2335,10 +2410,10 @@
         const text = await res.text().catch(() => '');
         if (!res.ok)
           throw new Error(
-            `[DevStudio] Refresh Prague preview failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
+            `[DevStudio] Refresh Prague failed (HTTP ${res.status})${text ? `: ${text}` : ''}`,
           );
         alert(
-          `[DevStudio] Queued snapshot refresh for ${currentPublicId}. Prague should reflect within ~60s. (If your latest edits aren’t showing, click “Update curated instance” first.)`,
+          `[DevStudio] Queued snapshot refresh for ${currentPublicId}. Prague should reflect within ~60s. (If your latest edits aren’t showing, click “Update Curated” first.)`,
         );
         if (labelEl) labelEl.textContent = 'Queued';
         setTimeout(() => {
@@ -2372,7 +2447,7 @@
         const payloadText = await res.text().catch(() => '');
         if (!res.ok)
           throw new Error(
-            `[DevStudio] Translate locales failed (HTTP ${res.status})${payloadText ? `: ${payloadText}` : ''}`,
+            `[DevStudio] Translate failed (HTTP ${res.status})${payloadText ? `: ${payloadText}` : ''}`,
           );
         let payload = null;
         try {
@@ -2382,10 +2457,10 @@
         const skipped = payload?.skipped ?? null;
         if (typeof queued === 'number' && queued === 0) {
           const applyStep = isCuratedPublicId(currentPublicId)
-            ? 'Update curated instance'
-            : 'Update default config';
+            ? 'Update Curated'
+            : 'Update Config';
           alert(
-            `[DevStudio] No locale jobs were queued for ${currentPublicId}. If you edited base content in Bob, click "${applyStep}" first, then click "Translate locales".${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}`,
+            `[DevStudio] No locale jobs were queued for ${currentPublicId}. If you edited base content in Bob, click "${applyStep}" first, then click "Translate".${typeof skipped === 'number' ? ` (skipped: ${skipped})` : ''}`,
           );
         } else {
           alert(

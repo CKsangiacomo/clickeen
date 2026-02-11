@@ -3,6 +3,10 @@
   "paths": [
     { "path": "header.title", "type": "richtext" },
     { "path": "header.subtitleHtml", "type": "richtext" },
+    { "path": "timer.labels.days", "type": "string" },
+    { "path": "timer.labels.hours", "type": "string" },
+    { "path": "timer.labels.minutes", "type": "string" },
+    { "path": "timer.labels.seconds", "type": "string" },
     { "path": "cta.label", "type": "string" },
     { "path": "actions.during.text", "type": "string" },
     { "path": "actions.after.text", "type": "string" }

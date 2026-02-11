@@ -1,6 +1,10 @@
 (function () {
   if (typeof window === 'undefined') return;
 
+  var INSIDE_SHADOW_LAYER_BELOW = 'below-content';
+  var INSIDE_SHADOW_LAYER_ABOVE = 'above-content';
+  var overlayStateByScope = new WeakMap();
+
   function isRecord(value) {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
@@ -19,6 +23,12 @@
 
   function assertString(value, name) {
     if (typeof value !== 'string') throw new Error('[CKSurface] ' + name + ' must be a string');
+  }
+
+  function resolveInsideShadowLayer(insideShadow) {
+    if (!isRecord(insideShadow)) return INSIDE_SHADOW_LAYER_BELOW;
+    var raw = typeof insideShadow.layer === 'string' ? insideShadow.layer.trim() : '';
+    return raw === INSIDE_SHADOW_LAYER_ABOVE ? INSIDE_SHADOW_LAYER_ABOVE : INSIDE_SHADOW_LAYER_BELOW;
   }
 
   function tokenizeRadius(value) {
@@ -164,6 +174,144 @@
     return layers.length ? layers.join(', ') : 'none';
   }
 
+  function getOverlayState(scopeEl, key) {
+    var byKey = overlayStateByScope.get(scopeEl);
+    if (!byKey) {
+      byKey = {};
+      overlayStateByScope.set(scopeEl, byKey);
+    }
+    if (!byKey[key]) {
+      byKey[key] = { observer: null, raf: 0, active: false, fade: 'none' };
+    }
+    return byKey[key];
+  }
+
+  function collectSurfaceTargets(scopeEl, key) {
+    var selector = '[data-ck-surface="' + key + '"]';
+    var list = [];
+    if (typeof scopeEl.matches === 'function' && scopeEl.matches(selector)) list.push(scopeEl);
+    scopeEl.querySelectorAll(selector).forEach(function (el) {
+      if (el instanceof HTMLElement) list.push(el);
+    });
+    return list;
+  }
+
+  function findOverlayLayer(host, key) {
+    var children = host.children;
+    for (var i = 0; i < children.length; i += 1) {
+      var child = children[i];
+      if (!(child instanceof HTMLElement)) continue;
+      if (!child.classList.contains('ck-surface-inside-shadow-layer')) continue;
+      if (child.getAttribute('data-ck-surface-layer') !== key) continue;
+      return child;
+    }
+    return null;
+  }
+
+  function ensureOverlayHost(host) {
+    if (host.style.position === '') {
+      var computed = window.getComputedStyle ? window.getComputedStyle(host).position : '';
+      if (computed === 'static') {
+        host.style.position = 'relative';
+        host.setAttribute('data-ck-surface-overlay-position', 'true');
+      }
+    }
+    if (host.style.isolation === '') {
+      host.style.isolation = 'isolate';
+      host.setAttribute('data-ck-surface-overlay-isolation', 'true');
+    }
+  }
+
+  function cleanupOverlayHost(host) {
+    if (host.getAttribute('data-ck-surface-overlay-position') === 'true') {
+      host.style.removeProperty('position');
+      host.removeAttribute('data-ck-surface-overlay-position');
+    }
+    if (host.getAttribute('data-ck-surface-overlay-isolation') === 'true') {
+      host.style.removeProperty('isolation');
+      host.removeAttribute('data-ck-surface-overlay-isolation');
+    }
+  }
+
+  function syncOverlayLayers(scopeEl, key, insideFade) {
+    var targets = collectSurfaceTargets(scopeEl, key);
+    targets.forEach(function (host) {
+      ensureOverlayHost(host);
+      var layer = findOverlayLayer(host, key);
+      if (!(layer instanceof HTMLElement)) {
+        layer = document.createElement('div');
+        layer.className = 'ck-surface-inside-shadow-layer';
+        layer.setAttribute('data-ck-surface-layer', key);
+        layer.setAttribute('aria-hidden', 'true');
+        layer.style.position = 'absolute';
+        layer.style.inset = '0';
+        layer.style.pointerEvents = 'none';
+        layer.style.borderRadius = 'inherit';
+        layer.style.zIndex = '2';
+        host.appendChild(layer);
+      }
+      layer.style.background = insideFade;
+      layer.hidden = insideFade === 'none';
+    });
+  }
+
+  function clearOverlayLayers(scopeEl, key) {
+    if (scopeEl instanceof HTMLElement) {
+      var selfLayer = findOverlayLayer(scopeEl, key);
+      while (selfLayer instanceof HTMLElement) {
+        selfLayer.remove();
+        selfLayer = findOverlayLayer(scopeEl, key);
+      }
+      cleanupOverlayHost(scopeEl);
+    }
+
+    var selector = '.ck-surface-inside-shadow-layer[data-ck-surface-layer="' + key + '"]';
+    scopeEl.querySelectorAll(selector).forEach(function (el) {
+      if (!(el instanceof HTMLElement)) return;
+      var host = el.parentElement;
+      el.remove();
+      if (host instanceof HTMLElement && !findOverlayLayer(host, key)) cleanupOverlayHost(host);
+    });
+  }
+
+  function scheduleOverlaySync(scopeEl, key) {
+    var state = getOverlayState(scopeEl, key);
+    if (state.raf) return;
+    state.raf = window.requestAnimationFrame(function () {
+      state.raf = 0;
+      if (!state.active) return;
+      syncOverlayLayers(scopeEl, key, state.fade);
+    });
+  }
+
+  function startOverlaySync(scopeEl, key, insideFade) {
+    var state = getOverlayState(scopeEl, key);
+    state.active = true;
+    state.fade = insideFade;
+    if (!state.observer && typeof MutationObserver !== 'undefined') {
+      state.observer = new MutationObserver(function () {
+        scheduleOverlaySync(scopeEl, key);
+      });
+      state.observer.observe(scopeEl, { childList: true, subtree: true });
+    }
+    scheduleOverlaySync(scopeEl, key);
+  }
+
+  function stopOverlaySync(scopeEl, key) {
+    var state = getOverlayState(scopeEl, key);
+    state.active = false;
+    state.fade = 'none';
+    if (state.raf) {
+      window.cancelAnimationFrame(state.raf);
+      state.raf = 0;
+    }
+    if (state.observer) {
+      state.observer.disconnect();
+      state.observer = null;
+    }
+    clearOverlayLayers(scopeEl, key);
+  }
+
   function applyCard(card, scopeEl, namespace) {
     assertRecord(card, 'card');
     if (!(scopeEl instanceof HTMLElement)) throw new Error('[CKSurface] scopeEl must be an HTMLElement');
@@ -175,14 +323,21 @@
     var radius = resolveRadius(card);
     var outsideShadow = computeShadowBoxShadow(forceInset(card.shadow, false));
     var insideFade = computeInsideFadeBackground(card.insideShadow);
+    var insideLayer = resolveInsideShadowLayer(card.insideShadow);
 
     scopeEl.style.setProperty(baseVar + '-border-width', border.width);
     scopeEl.style.setProperty(baseVar + '-border-color', border.color);
     scopeEl.style.setProperty(baseVar + '-radius', radius);
     scopeEl.style.setProperty(baseVar + '-shadow', outsideShadow);
-    scopeEl.style.setProperty(baseVar + '-inside-fade', insideFade);
+    scopeEl.style.setProperty(baseVar + '-inside-fade', insideLayer === INSIDE_SHADOW_LAYER_ABOVE ? 'none' : insideFade);
 
-    return { border: border, radius: radius, shadow: outsideShadow, insideFade: insideFade };
+    if (insideLayer === INSIDE_SHADOW_LAYER_ABOVE && insideFade !== 'none') {
+      startOverlaySync(scopeEl, key, insideFade);
+    } else {
+      stopOverlaySync(scopeEl, key);
+    }
+
+    return { border: border, radius: radius, shadow: outsideShadow, insideFade: insideFade, insideLayer: insideLayer };
   }
 
   function applyCardWrapper(card, scopeEl) {

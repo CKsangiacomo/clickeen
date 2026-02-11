@@ -17,6 +17,9 @@ Set by shared Header primitive (`tokyo/widgets/shared/header.js`):
 - On `.ck-headerLayout`: `data-has-header`, `data-header-placement`
 - On `.ck-header`: `data-align`, `data-cta-placement`
 
+Set by shared Stage/Pod primitive (`tokyo/widgets/shared/stagePod.js`):
+- On `.stage`: `data-stage-floating`, `data-stage-floating-anchor`, `data-stage-floating-offset`
+
 ## Parts (query within root)
 - Main: `[data-role="countdown"]`
 - Header layout: `.ck-headerLayout` (same node as main)
@@ -44,13 +47,14 @@ Header/CTA (shared):
 - `header.placement` (`top|bottom|left|right`)
 - `header.ctaPlacement` (`right|below`)
 - `header.gap`, `header.textGap`, `header.innerGap`
-- `cta.enabled`, `cta.label`, `cta.href`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
+- `cta.enabled`, `cta.label`, `cta.href`, `cta.openMode`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
 
 Timer:
 - `timer.mode`: `date` | `personal` | `number`
 - Date mode: `timer.targetDate`, `timer.timezone`
 - Personal mode: `timer.timeAmount`, `timer.timeUnit`, `timer.repeat`
 - Number mode: `timer.startingNumber`, `timer.targetNumber`, `timer.countDuration`
+- Unit labels: `timer.labels.days`, `timer.labels.hours`, `timer.labels.minutes`, `timer.labels.seconds`
 
 Actions:
 - Running CTA: `actions.during.type|url|text|style|newTab`
@@ -58,6 +62,7 @@ Actions:
 
 Layout/Appearance:
 - `layout.position`
+- `stage.floating.enabled`, `stage.floating.anchor`, `stage.floating.offset` (shared global floating utility; opt-in per widget)
 - `appearance.theme`, `appearance.animation`, `appearance.textColor`, `appearance.itemBackground`, `appearance.separator`
 - `appearance.cardwrapper.*`, `appearance.podBorder`
 - Header CTA appearance: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPaddingLinked`, `appearance.ctaPaddingInline`, `appearance.ctaPaddingBlock`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
@@ -81,6 +86,7 @@ Shared primitives:
 - End behavior (`actions.after.*`):
   - `hide`: hide stage
   - `link`: show after-message only when URL is valid
+- Floating layout is handled globally by `CKStagePod` via `stage.floating.*` when the widget opts in.
 - `appearance.separator` updates all `[data-role="separator"]` text.
 - Card wrapper controls are applied by `CKSurface.applyCardWrapper(state.appearance.cardwrapper, countdownRoot)`.
 

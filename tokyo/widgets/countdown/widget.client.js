@@ -114,6 +114,31 @@
     'summer',
   ]);
   const ANIMATION_KEYS = new Set(['fade']);
+  const TIMER_UNIT_KEYS = ['days', 'hours', 'minutes', 'seconds'];
+  const LAYOUT_POSITION_LIST = [
+    'inline',
+    'full-width',
+    'top-bar',
+    'bottom-bar',
+    'static-top',
+    'top',
+    'bottom',
+    'left',
+    'right',
+    'center',
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+  ];
+  const LAYOUT_POSITION_KEYS = new Set(LAYOUT_POSITION_LIST);
+  const RENDER_LAYOUT_POSITION_KEYS = new Set(['inline', 'full-width', 'top-bar', 'bottom-bar', 'static-top']);
+  const DEFAULT_TIMER_LABELS = {
+    days: 'Days',
+    hours: 'Hours',
+    minutes: 'Minutes',
+    seconds: 'Seconds',
+  };
 
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') {
@@ -240,6 +265,12 @@
     if (!['date', 'personal', 'number'].includes(state.timer.mode)) {
       throw new Error('[Countdown] state.timer.mode must be date|personal|number');
     }
+    if (state.timer.labels !== undefined) {
+      assertObject(state.timer.labels, 'state.timer.labels');
+      TIMER_UNIT_KEYS.forEach((unit) => {
+        assertString(state.timer.labels[unit], `state.timer.labels.${unit}`);
+      });
+    }
 
     if (state.timer.mode === 'date') {
       assertString(state.timer.targetDate, 'state.timer.targetDate');
@@ -268,8 +299,9 @@
       }
     }
     assertObject(state.layout, 'state.layout');
-    if (!['inline', 'full-width', 'top-bar', 'bottom-bar', 'static-top'].includes(state.layout.position)) {
-      throw new Error('[Countdown] state.layout.position must be inline|full-width|top-bar|bottom-bar|static-top');
+    assertString(state.layout.position, 'state.layout.position');
+    if (!LAYOUT_POSITION_KEYS.has(state.layout.position)) {
+      throw new Error(`[Countdown] state.layout.position must be ${LAYOUT_POSITION_LIST.join('|')}`);
     }
     assertObject(state.appearance, 'state.appearance');
     assertString(state.appearance.theme, 'state.appearance.theme');
@@ -496,6 +528,7 @@
 
     applyAppearanceVars(state);
     applyLayoutVars(state);
+    applyUnitLabels(state.timer);
 
     applyActionsDuring(state);
     applyAfterMessage(state);
@@ -550,16 +583,43 @@
     });
   }
 
+  function resolveTimerLabels(timerState) {
+    const resolved = { ...DEFAULT_TIMER_LABELS };
+    const labels = timerState && typeof timerState === 'object' ? timerState.labels : null;
+    if (!labels || typeof labels !== 'object') return resolved;
+    TIMER_UNIT_KEYS.forEach((unit) => {
+      const raw = labels[unit];
+      if (typeof raw !== 'string') return;
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      resolved[unit] = trimmed;
+    });
+    return resolved;
+  }
+
+  function applyUnitLabels(timerState) {
+    const labels = resolveTimerLabels(timerState);
+    TIMER_UNIT_KEYS.forEach((unit) => {
+      const unitEl = timerEl.querySelector(`[data-unit="${unit}"]`);
+      if (!unitEl) return;
+      const labelEl = unitEl.querySelector('[data-role="label"]');
+      if (!labelEl) return;
+      labelEl.textContent = labels[unit];
+    });
+  }
+
   function applyLayoutVars(state) {
-    const position = state.layout.position;
+    const rawLayoutPosition = state.layout?.position;
+    const layoutPosition = typeof rawLayoutPosition === 'string' && RENDER_LAYOUT_POSITION_KEYS.has(rawLayoutPosition)
+      ? rawLayoutPosition
+      : 'inline';
     const stageAlignment = state.stage?.alignment;
     const derivedAlignment = stageAlignment === 'left' || stageAlignment === 'right' ? stageAlignment : 'center';
     const alignment = derivedAlignment;
 
-    countdownRoot.setAttribute('data-layout-position', position);
+    countdownRoot.setAttribute('data-layout-position', layoutPosition);
     countdownRoot.setAttribute('data-layout-align', alignment);
-
-    stageEl.setAttribute('data-layout-position', position);
+    stageEl.setAttribute('data-layout-position', layoutPosition);
     countdownRoot.style.removeProperty('--countdown-content-width');
     countdownRoot.removeAttribute('data-layout-width');
   }

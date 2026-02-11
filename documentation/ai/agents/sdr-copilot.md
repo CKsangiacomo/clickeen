@@ -185,7 +185,7 @@ CTAs are **never interruptive**. They appear as part of the natural conversation
 ### 4.1 Call chain
 
 1) UI calls Bob (same-origin):
-- `POST /api/ai/sdr-copilot`
+- `POST /api/ai/widget-copilot`
 
 2) Bob requests a short-lived grant from Paris:
 - `POST {PARIS_BASE_URL}/api/ai/grant`
@@ -193,7 +193,10 @@ CTAs are **never interruptive**. They appear as part of the natural conversation
 3) Bob executes on San Francisco:
 - `POST {SANFRANCISCO_BASE_URL}/v1/execute`
 
-4) San Francisco calls the provider (DeepSeek) and returns structured output.
+4) San Francisco calls the provider selected by grant profile + agent constraints and returns structured output.
+
+Prompt profiles (runtime persona pack):
+- `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts` defines SDR vs CS prompt objectives/focus as first-class assets.
 
 5) Bob applies ops, then waits for Keep/Undo.
 
@@ -211,9 +214,11 @@ From Bob's perspective, a single Copilot request uses **two platform services**:
 
 ## 5) API Contracts
 
-### 5.1 Bob API: `POST /api/ai/sdr-copilot`
+### 5.1 Bob API: `POST /api/ai/widget-copilot`
 
 This is the only endpoint the browser should call for Copilot execution.
+
+Compatibility note (current cloud-dev deploys): `POST /api/ai/sdr-copilot` is still served as a compatibility entrypoint and forwards into the same handler path.
 
 Request body:
 ```json
@@ -231,6 +236,8 @@ Notes:
 - `controls` must be derived from `compiled.controls[]` (binding + AI context). Controls are organized by panel (Content, Layout, Appearance, Typography) per `WidgetArchitecture.md`.
 - `sessionId` is used for learning + conversion attribution.
 - Each widget has an `agent.md` file defining editable paths, enums, and binding maps. Copilot uses this + `spec.json` to understand what's editable.
+- `agentId` (when provided by the UI) is restricted to widget-copilot IDs only: `widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`.
+- `subject` is normalized server-side. `devstudio` is accepted only in local/cloud-dev (or explicit override); otherwise requests fall back to policy-safe routing (`workspace` when `workspaceId` exists, `minibob` otherwise).
 
 Response shape (success):
 ```json
@@ -269,10 +276,15 @@ HTTP semantics:
 
 ---
 
-## 6) San Francisco agent contract
+## 6) San Francisco widget-copilot contract (SDR + CS)
 
-Current agent:
-- `agentId: "sdr.widget.copilot.v1"`
+Current request alias:
+- `agentId: "widget.copilot.v1"`
+
+Paris resolves this alias by policy profile:
+- `minibob` + `free` -> `sdr.widget.copilot.v1`
+- `tier1`/`tier2`/`tier3`/`devstudio` -> `cs.widget.copilot.v1`
+- If callers force `sdr.widget.copilot.v1` or `cs.widget.copilot.v1`, Paris still canonicalizes to the profile-resolved ID for widget-copilot requests.
 
 The agent is expected to return:
 - `message` (always)

@@ -91,7 +91,9 @@ async function sha256Hex(message: string): Promise<string> {
 
 async function hmacSha256(keyBytes: Uint8Array, message: string): Promise<Uint8Array> {
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  // Copy into a concrete ArrayBuffer-backed view to satisfy strict BufferSource typing.
+  const keyData = Uint8Array.from(keyBytes);
+  const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
   return new Uint8Array(sig);
 }

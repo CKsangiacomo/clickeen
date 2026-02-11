@@ -1,0 +1,52 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "baseUpdatedAt": "2026-02-11T02:16:10.051901+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.after.text",
+      "value": ""
+    },
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "ซื้อเลย"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "เรียนรู้เพิ่มเติม"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "อย่าพลาดข้อเสนอพิเศษในเวลาจำกัดนี้"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "การลดราคากำลังจะมาเร็วๆ นี้!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.days",
+      "value": "วัน"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.hours",
+      "value": "ชั่วโมง"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.minutes",
+      "value": "นาที"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.seconds",
+      "value": "วินาที"
+    }
+  ],
+  "v": 1
+}

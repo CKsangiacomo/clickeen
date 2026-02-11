@@ -64,6 +64,7 @@ Content:
   - `cta.enabled` (boolean)
   - `cta.label` (string)
   - `cta.href` (string; only valid `http(s)://` is clickable)
+  - `cta.openMode` (`same-tab` | `new-tab` | `new-window`)
   - `cta.iconEnabled` (boolean; when true, CTA renders a Dieter icon)
   - `cta.iconName` (string; Dieter icon id without `.svg`; allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
   - `cta.iconPlacement` (`left` | `right`)

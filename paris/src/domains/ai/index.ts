@@ -4,6 +4,9 @@ import {
   resolveAiBudgets,
   resolveAiPolicyCapsule,
   isPolicyEntitled,
+  resolveWidgetCopilotRequestedAgentId,
+  WIDGET_COPILOT_AGENT_ALIAS,
+  WIDGET_COPILOT_AGENT_IDS,
 } from '@clickeen/ck-policy';
 import type { BudgetKey, Policy, PolicyProfile } from '@clickeen/ck-policy';
 import type { AIGrant, Env, WorkspaceRow } from '../../shared/types';
@@ -277,12 +280,6 @@ export async function issueAiGrant(args: {
   trace?: { sessionId?: string; instancePublicId?: string };
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
 }): Promise<{ ok: true; grant: string; exp: number; agentId: string } | { ok: false; response: Response }> {
-  const resolvedAgent = args.agentId ? resolveAiAgent(args.agentId) : null;
-  if (!resolvedAgent) {
-    return { ok: false, response: json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 }) };
-  }
-  const entry = resolvedAgent.entry;
-
   const subject = args.subject ?? (args.workspaceId ? 'workspace' : 'minibob');
   let workspace: WorkspaceRow | null = args.workspace ?? null;
   if (subject === 'workspace') {
@@ -298,6 +295,15 @@ export async function issueAiGrant(args: {
   }
 
   const { policy, profile } = resolveAiSubjectPolicy({ subject, workspace });
+  const normalizedAgentId = resolveWidgetCopilotRequestedAgentId({
+    requestedAgentId: args.agentId,
+    policyProfile: profile,
+  });
+  const resolvedAgent = normalizedAgentId ? resolveAiAgent(normalizedAgentId) : null;
+  if (!resolvedAgent) {
+    return { ok: false, response: json([{ path: 'agentId', message: 'unknown agentId' }], { status: 422 }) };
+  }
+  const entry = resolvedAgent.entry;
 
   if (entry.requiredEntitlements?.length) {
     const denied = entry.requiredEntitlements.find((key) => !isPolicyEntitled(policy, key));
@@ -457,7 +463,7 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
   const { stage, mode } = resolveMinibobRateLimitMode(env);
   let body: unknown;
   try {
-    body = await readJson(req);
+    body = await req.json();
   } catch {
     return json([{ path: 'body', message: 'invalid JSON payload' }], { status: 422 });
   }
@@ -493,7 +499,7 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
   }
 
   const agentIdRaw = asTrimmedString((body as any).agentId);
-  if (agentIdRaw && agentIdRaw !== 'sdr.widget.copilot.v1') {
+  if (agentIdRaw && agentIdRaw !== WIDGET_COPILOT_AGENT_IDS.sdr && agentIdRaw !== WIDGET_COPILOT_AGENT_ALIAS) {
     logMinibobMintDecision({ stage, mode, decision: 'deny', reason: 'agent_not_allowed', sessionId, widgetType });
     return json([{ path: 'agentId', message: 'agentId is not allowed for minibob grants' }], { status: 403 });
   }
@@ -570,7 +576,7 @@ export async function handleAiMinibobGrant(req: Request, env: Env) {
       : { maxTokens: 420, timeoutMs: 12_000, maxRequests: 2 };
   const issued = await issueAiGrant({
     env,
-    agentId: 'sdr.widget.copilot.v1',
+    agentId: WIDGET_COPILOT_AGENT_ALIAS,
     mode: 'ops',
     requestedProvider: requestedProvider || undefined,
     requestedModel: requestedModel || undefined,

@@ -349,6 +349,7 @@
     const tileEl = isClickable ? document.createElement('a') : document.createElement('div');
     tileEl.className = 'ck-logoshowcase__logo';
     tileEl.setAttribute('data-role', 'logo');
+    tileEl.setAttribute('data-ck-surface', 'cardwrapper');
 
     const altText = String(logo.alt || '').trim();
     const nameText = String(logo.name || '').trim();

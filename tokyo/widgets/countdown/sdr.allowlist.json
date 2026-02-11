@@ -3,6 +3,10 @@
   "paths": [
     { "path": "header.title", "type": "richtext", "role": "headline" },
     { "path": "header.subtitleHtml", "type": "richtext", "role": "subhead" },
+    { "path": "timer.labels.days", "type": "string", "role": "label" },
+    { "path": "timer.labels.hours", "type": "string", "role": "label" },
+    { "path": "timer.labels.minutes", "type": "string", "role": "label" },
+    { "path": "timer.labels.seconds", "type": "string", "role": "label" },
     { "path": "cta.label", "type": "string", "role": "cta" },
     { "path": "actions.during.text", "type": "string", "role": "cta" },
     { "path": "actions.after.text", "type": "string", "role": "cta" }

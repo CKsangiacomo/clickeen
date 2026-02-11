@@ -4,6 +4,7 @@
     { "path": "header.title", "type": "richtext" },
     { "path": "header.subtitleHtml", "type": "richtext" },
     { "path": "cta.label", "type": "string" },
+    { "path": "cta.openMode", "type": "string" },
     { "path": "strips.*.logos.*.name", "type": "string" },
     { "path": "strips.*.logos.*.caption", "type": "string" },
     { "path": "strips.*.logos.*.alt", "type": "string" },

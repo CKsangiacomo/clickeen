@@ -2,6 +2,36 @@
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const resizeState = new WeakMap();
+  const FLOATING_ANCHORS = new Set([
+    'top',
+    'bottom',
+    'left',
+    'right',
+    'center',
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+  ]);
+  const FLOATING_ALIGN_MAP = {
+    top: { justify: 'center', alignItems: 'flex-start' },
+    bottom: { justify: 'center', alignItems: 'flex-end' },
+    left: { justify: 'flex-start', alignItems: 'center' },
+    right: { justify: 'flex-end', alignItems: 'center' },
+    center: { justify: 'center', alignItems: 'center' },
+    'top-left': { justify: 'flex-start', alignItems: 'flex-start' },
+    'top-right': { justify: 'flex-end', alignItems: 'flex-start' },
+    'bottom-left': { justify: 'flex-start', alignItems: 'flex-end' },
+    'bottom-right': { justify: 'flex-end', alignItems: 'flex-end' },
+  };
+  const DEFAULT_FLOATING_ANCHOR = 'bottom-right';
+  const DEFAULT_FLOATING_OFFSET = 24;
+  const FLOATING_OFFSET_MIN = 0;
+  const FLOATING_OFFSET_MAX = 400;
+  const INSIDE_SHADOW_LAYER_BELOW = 'below-content';
+  const INSIDE_SHADOW_LAYER_ABOVE = 'above-content';
+  const EDITOR_CHECKERBOARD =
+    'repeating-conic-gradient(var(--color-system-gray-6-step4) 0% 25%, var(--color-system-white) 0% 50%) 50% / 12px 12px';
 
   function getResizeState(stageEl) {
     const existing = resizeState.get(stageEl);
@@ -168,6 +198,81 @@
     return v;
   }
 
+  function isEditorPreview() {
+    if (window.parent === window) return false;
+
+    const payload = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
+    if (payload && payload.state && typeof payload.state === 'object') return false;
+
+    try {
+      return window.parent.location.origin === window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  function resolveFloatingConfig(stageCfg) {
+    const floatingRaw = stageCfg && typeof stageCfg === 'object' ? stageCfg.floating : null;
+    if (!floatingRaw || typeof floatingRaw !== 'object' || Array.isArray(floatingRaw)) {
+      return { enabled: false, anchor: DEFAULT_FLOATING_ANCHOR, offset: 0 };
+    }
+
+    const enabled = floatingRaw.enabled === true;
+    const anchorRaw = typeof floatingRaw.anchor === 'string' ? floatingRaw.anchor.trim() : '';
+    const anchor = FLOATING_ANCHORS.has(anchorRaw) ? anchorRaw : DEFAULT_FLOATING_ANCHOR;
+    const offsetRaw = toNumber(floatingRaw.offset, DEFAULT_FLOATING_OFFSET);
+    const offsetClamped = clampNumber(Math.round(offsetRaw), FLOATING_OFFSET_MIN, FLOATING_OFFSET_MAX);
+    const offset = enabled && anchor !== 'center' ? offsetClamped : 0;
+    return { enabled, anchor, offset };
+  }
+
+  function applyFloatingLayout(stageEl, podEl, floating) {
+    const fillLayer = stageEl.querySelector(':scope > .ck-fill-layer');
+    const insideLayer = stageEl.querySelector(':scope > .ck-inside-shadow-layer');
+
+    if (floating.enabled) {
+      stageEl.setAttribute('data-stage-floating', 'true');
+      stageEl.setAttribute('data-stage-floating-anchor', floating.anchor);
+      stageEl.setAttribute('data-stage-floating-offset', String(floating.offset));
+
+      stageEl.style.position = 'fixed';
+      stageEl.style.inset = `${floating.offset}px`;
+      stageEl.style.width = 'auto';
+      stageEl.style.height = 'auto';
+      stageEl.style.minHeight = '0';
+      stageEl.style.margin = '0';
+      stageEl.style.padding = '0';
+      stageEl.style.zIndex = '1000';
+      stageEl.style.pointerEvents = 'none';
+      stageEl.style.background = isEditorPreview() ? EDITOR_CHECKERBOARD : 'transparent';
+      stageEl.style.boxShadow = 'none';
+      podEl.style.pointerEvents = 'auto';
+
+      if (fillLayer instanceof HTMLElement) fillLayer.style.display = 'none';
+      if (insideLayer instanceof HTMLElement) insideLayer.style.display = 'none';
+      return;
+    }
+
+    stageEl.removeAttribute('data-stage-floating');
+    stageEl.removeAttribute('data-stage-floating-anchor');
+    stageEl.removeAttribute('data-stage-floating-offset');
+    stageEl.style.removeProperty('position');
+    stageEl.style.removeProperty('inset');
+    stageEl.style.removeProperty('width');
+    stageEl.style.removeProperty('height');
+    stageEl.style.removeProperty('min-height');
+    stageEl.style.removeProperty('margin');
+    stageEl.style.removeProperty('padding');
+    stageEl.style.removeProperty('z-index');
+    stageEl.style.removeProperty('pointer-events');
+    stageEl.style.removeProperty('background');
+    stageEl.style.removeProperty('box-shadow');
+    podEl.style.removeProperty('pointer-events');
+
+    if (fillLayer instanceof HTMLElement) fillLayer.style.removeProperty('display');
+    if (insideLayer instanceof HTMLElement) insideLayer.style.removeProperty('display');
+  }
+
   function ensureInsideShadowLayer(container) {
     const existing = container.querySelector(':scope > .ck-inside-shadow-layer');
     if (existing instanceof HTMLElement) return existing;
@@ -183,6 +288,11 @@
     return layer;
   }
 
+  function resolveInsideShadowLayer(raw) {
+    const value = typeof raw === 'string' ? raw.trim() : '';
+    return value === INSIDE_SHADOW_LAYER_ABOVE ? INSIDE_SHADOW_LAYER_ABOVE : INSIDE_SHADOW_LAYER_BELOW;
+  }
+
   function applyInsideShadowLayer(container, shadow, opts) {
     if (!(container instanceof HTMLElement)) return;
     container.style.position = 'relative';
@@ -190,13 +300,15 @@
 
     const layer = ensureInsideShadowLayer(container);
     const next = typeof shadow === 'string' && shadow.trim() ? shadow.trim() : 'none';
+    const layerPlacement = resolveInsideShadowLayer(opts && opts.layer);
     layer.style.background = next;
+    layer.style.zIndex = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE ? '2' : '1';
     layer.hidden = next === 'none';
 
     const contentEl = opts && opts.contentEl instanceof HTMLElement ? opts.contentEl : null;
     if (contentEl) {
       contentEl.style.position = 'relative';
-      contentEl.style.zIndex = '2';
+      contentEl.style.zIndex = layerPlacement === INSIDE_SHADOW_LAYER_ABOVE ? '1' : '2';
     }
   }
 
@@ -246,7 +358,10 @@
     }
     stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
     stageEl.style.setProperty('--stage-shadow', computeShadowBoxShadow(forceInset(stageCfg.shadow, false)));
-    applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), { contentEl: podEl });
+    applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), {
+      contentEl: podEl,
+      layer: stageCfg && stageCfg.insideShadow ? stageCfg.insideShadow.layer : null,
+    });
     const stagePads = resolvePaddingV2(stageCfg);
     applyPaddingVars(stageEl, 'stage-pad-desktop', stagePads.desktop);
     applyPaddingVars(stageEl, 'stage-pad-mobile', stagePads.mobile);
@@ -256,6 +371,9 @@
     stageEl.style.setProperty('--stage-fixed-width', canvas.width > 0 ? `${canvas.width}px` : 'auto');
     stageEl.style.setProperty('--stage-fixed-height', canvas.height > 0 ? `${canvas.height}px` : 'auto');
 
+    const floating = resolveFloatingConfig(stageCfg);
+    applyFloatingLayout(stageEl, podEl, floating);
+
     const alignMap = {
       left: { justify: 'flex-start', alignItems: 'center' },
       right: { justify: 'flex-end', alignItems: 'center' },
@@ -263,7 +381,7 @@
       bottom: { justify: 'center', alignItems: 'flex-end' },
       center: { justify: 'center', alignItems: 'center' },
     };
-    const resolved = alignMap[stageCfg.alignment];
+    const resolved = floating.enabled ? FLOATING_ALIGN_MAP[floating.anchor] : alignMap[stageCfg.alignment] || alignMap.center;
     stageEl.style.justifyContent = resolved.justify;
     stageEl.style.alignItems = resolved.alignItems;
 
@@ -278,7 +396,10 @@
     const radii = resolveRadius(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
     podEl.style.setProperty('--pod-shadow', computeShadowBoxShadow(forceInset(podCfg.shadow, false)));
-    applyInsideShadowLayer(podEl, computeInsideFadeBackground(podCfg.insideShadow), { contentEl: scopeEl });
+    applyInsideShadowLayer(podEl, computeInsideFadeBackground(podCfg.insideShadow), {
+      contentEl: scopeEl,
+      layer: podCfg && podCfg.insideShadow ? podCfg.insideShadow.layer : null,
+    });
 
     podEl.setAttribute('data-width-mode', podCfg.widthMode);
     podEl.style.setProperty('--content-width', `${podCfg.contentWidth}px`);

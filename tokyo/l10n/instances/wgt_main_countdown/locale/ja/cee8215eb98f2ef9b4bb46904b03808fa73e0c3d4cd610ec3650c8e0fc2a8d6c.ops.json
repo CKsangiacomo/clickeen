@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "baseUpdatedAt": "2026-02-11T02:16:10.051901+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "今すぐ購入"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "詳細はこちら"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "期間限定オファーをお見逃しなく。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "セールがまもなく開始します!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.days",
+      "value": "日"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.hours",
+      "value": "時間"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.minutes",
+      "value": "分"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.seconds",
+      "value": "秒"
+    }
+  ],
+  "v": 1
+}

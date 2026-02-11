@@ -201,6 +201,23 @@
   tr.entitlements-ai-row--model td:first-child {
     color: color-mix(in oklab, var(--color-text), transparent 10%);
   }
+
+  .entitlements-agent-row__name {
+    font-weight: 600;
+  }
+
+  .entitlements-agent-row__name--provider {
+    font-weight: 500;
+    padding-left: 14px;
+  }
+
+  tr.entitlements-agent-row--agent td {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-white) 28%);
+  }
+
+  tr.entitlements-agent-row--agent:hover td {
+    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-blue) 7%);
+  }
 </style>
 
 <h1 class="heading-2">Entitlements Matrix</h1>
@@ -213,6 +230,8 @@
   const aiAccess = window.__CK_AI_ACCESS__ || null;
   const aiAccessByTier = aiAccess?.byTier || null;
   const aiProviders = Array.isArray(aiAccess?.providers) ? aiAccess.providers : [];
+  const aiAgents = Array.isArray(aiAccess?.agents) ? aiAccess.agents : [];
+  const widgetCopilotRouting = aiAccess?.widgetCopilotRouting || null;
 
   const state = {
     matrix: null,
@@ -894,6 +913,266 @@
     return section;
   }
 
+  function renderWidgetCopilotRouting({ tiers }) {
+    const alias = typeof widgetCopilotRouting?.alias === 'string' ? widgetCopilotRouting.alias : '';
+    const byTier = widgetCopilotRouting?.byTier || null;
+    if (!alias || !byTier) return null;
+    if (!tiers.length) return null;
+
+    const section = document.createElement('section');
+    section.className = 'devstudio-page-section entitlements-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'heading-3';
+    heading.textContent = 'Widget Copilot Routing';
+    section.appendChild(heading);
+
+    const hint = document.createElement('p');
+    hint.className = 'body-s entitlements-ai__hint';
+    hint.textContent =
+      'Read-only. Requested alias is canonicalized by tier before Paris issues the grant.';
+    section.appendChild(hint);
+
+    const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const table = document.createElement('table');
+    table.className = 'body-s entitlements-table';
+
+    const colgroup = document.createElement('colgroup');
+    const colTier = document.createElement('col');
+    colTier.className = 'entitlements-table__cap-col';
+    const colRequested = document.createElement('col');
+    colRequested.className = 'entitlements-table__desc-col';
+    const colCanonical = document.createElement('col');
+    colCanonical.className = 'entitlements-table__token-col';
+    colgroup.append(colTier, colRequested, colCanonical);
+    table.appendChild(colgroup);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+
+    const tierHeader = document.createElement('th');
+    tierHeader.textContent = 'Tier';
+    tierHeader.className = 'label-s';
+    headRow.appendChild(tierHeader);
+
+    const requestedHeader = document.createElement('th');
+    requestedHeader.textContent = 'Requested Agent';
+    requestedHeader.className = 'label-s';
+    headRow.appendChild(requestedHeader);
+
+    const canonicalHeader = document.createElement('th');
+    canonicalHeader.textContent = 'Canonical Agent';
+    canonicalHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(canonicalHeader);
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    tiers.forEach((tier) => {
+      const row = document.createElement('tr');
+
+      const tierCell = document.createElement('td');
+      tierCell.className = 'body-s entitlements-table__capability';
+      tierCell.textContent = normalizeTierLabel(tier);
+      row.appendChild(tierCell);
+
+      const requestedCell = document.createElement('td');
+      requestedCell.className = 'body-s entitlements-table__token';
+      requestedCell.textContent = alias;
+      row.appendChild(requestedCell);
+
+      const canonicalCell = document.createElement('td');
+      canonicalCell.className = 'body-s entitlements-table__token';
+      canonicalCell.textContent = byTier[tier] || 'N/A';
+      row.appendChild(canonicalCell);
+
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return section;
+  }
+
+  function renderAiAgentAccess({ tiers }) {
+    if (!Array.isArray(aiAgents) || !aiAgents.length) return null;
+    if (!tiers.length) return null;
+
+    const section = document.createElement('section');
+    section.className = 'devstudio-page-section entitlements-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'heading-3';
+    heading.textContent = 'AI Agent Runtime Access';
+    section.appendChild(heading);
+
+    const hint = document.createElement('p');
+    hint.className = 'body-s entitlements-ai__hint';
+    hint.textContent = 'Read-only. Shows per-agent enforcement by tier (after profile-level provider/model access).';
+    section.appendChild(hint);
+
+    const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const table = document.createElement('table');
+    table.className = 'body-s entitlements-table';
+
+    const colgroup = document.createElement('colgroup');
+    const colName = document.createElement('col');
+    colName.className = 'entitlements-table__cap-col';
+    const colKind = document.createElement('col');
+    colKind.className = 'entitlements-table__desc-col';
+    colgroup.append(colName, colKind);
+    tiers.forEach(() => {
+      const col = document.createElement('col');
+      col.className = 'entitlements-table__tier';
+      colgroup.appendChild(col);
+    });
+    const colId = document.createElement('col');
+    colId.className = 'entitlements-table__token-col';
+    colgroup.appendChild(colId);
+    table.appendChild(colgroup);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+
+    const nameHeader = document.createElement('th');
+    nameHeader.textContent = 'Agent / Provider';
+    nameHeader.className = 'label-s';
+    headRow.appendChild(nameHeader);
+
+    const kindHeader = document.createElement('th');
+    kindHeader.textContent = 'Kind';
+    kindHeader.className = 'label-s';
+    headRow.appendChild(kindHeader);
+
+    tiers.forEach((tier) => {
+      const th = document.createElement('th');
+      th.className = 'entitlements-table__tier-head';
+      const label = document.createElement('span');
+      label.className = 'label-s entitlements-tier-label';
+      label.textContent = normalizeTierLabel(tier);
+      th.appendChild(label);
+      headRow.appendChild(th);
+    });
+
+    const idHeader = document.createElement('th');
+    idHeader.textContent = 'ID';
+    idHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(idHeader);
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    aiAgents.forEach((agent) => {
+      if (!agent || !agent.agentId) return;
+
+      const agentRow = document.createElement('tr');
+      agentRow.className = 'entitlements-agent-row entitlements-agent-row--agent';
+
+      const agentName = document.createElement('td');
+      agentName.className = 'body-s entitlements-table__capability entitlements-agent-row__name';
+      agentName.textContent = agent.description || agent.agentId;
+      agentRow.appendChild(agentName);
+
+      const agentKind = document.createElement('td');
+      agentKind.className = 'body-s entitlements-table__desc';
+      const kindParts = [
+        `${agent.category === 'copilot' ? 'Copilot' : 'Agent'} · ${agent.executionSurface}`,
+        agent.taskClass ? `Task: ${agent.taskClass}` : '',
+      ].filter(Boolean);
+      if (Array.isArray(agent.requiredEntitlements) && agent.requiredEntitlements.length) {
+        kindParts.push(`Requires: ${agent.requiredEntitlements.join(', ')}`);
+      }
+      agentKind.textContent = kindParts.join(' · ');
+      agentRow.appendChild(agentKind);
+
+      tiers.forEach((tier) => {
+        const tierEntry = agent.byTier?.[tier];
+        const enabled = Boolean(tierEntry?.enabled);
+        const blockedBy = typeof tierEntry?.deniedEntitlement === 'string' ? tierEntry.deniedEntitlement : '';
+        const title = enabled
+          ? [
+              'Enabled',
+              tierEntry?.defaultProviderLabel ? `default provider: ${tierEntry.defaultProviderLabel}` : '',
+              `provider choice: ${tierEntry?.allowProviderChoice ? 'enabled' : 'locked'}`,
+              `model choice: ${tierEntry?.allowModelChoice ? 'enabled' : 'locked'}`,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          : blockedBy
+            ? `Blocked by entitlement: ${blockedBy}`
+            : 'Not enabled';
+        agentRow.appendChild(
+          renderReadonlyToggleCell({
+            id: `ai_agent_${agent.agentId}_${tier}`,
+            checked: enabled,
+            label: `${agent.agentId} ${normalizeTierLabel(tier)} enabled`,
+            title,
+          }),
+        );
+      });
+
+      const agentId = document.createElement('td');
+      agentId.className = 'body-s entitlements-table__token';
+      agentId.textContent = agent.agentId;
+      agentRow.appendChild(agentId);
+
+      tbody.appendChild(agentRow);
+
+      const supportedProviders = Array.isArray(agent.supportedProviders) ? agent.supportedProviders : [];
+      supportedProviders.forEach((provider) => {
+        const providerRow = document.createElement('tr');
+        providerRow.className = 'entitlements-agent-row entitlements-agent-row--provider';
+
+        const providerName = document.createElement('td');
+        providerName.className = 'body-s entitlements-table__capability entitlements-agent-row__name entitlements-agent-row__name--provider';
+        providerName.textContent = provider.label || provider.provider;
+        providerRow.appendChild(providerName);
+
+        const providerKind = document.createElement('td');
+        providerKind.className = 'body-s entitlements-table__desc';
+        providerKind.textContent = 'Provider access (after tier policy + agent restrictions)';
+        providerRow.appendChild(providerKind);
+
+        tiers.forEach((tier) => {
+          const tierEntry = agent.byTier?.[tier];
+          const providers = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
+          const providerEntry = providers.find((p) => p.provider === provider.provider);
+          const isAllowed = Boolean(providerEntry);
+          const title = isAllowed
+            ? providerEntry?.defaultModelLabel
+              ? `Allowed · default model: ${providerEntry.defaultModelLabel}`
+              : 'Allowed'
+            : 'Not allowed';
+          providerRow.appendChild(
+            renderReadonlyToggleCell({
+              id: `ai_agent_provider_${agent.agentId}_${provider.provider}_${tier}`,
+              checked: isAllowed,
+              label: `${agent.agentId} ${provider.provider} ${normalizeTierLabel(tier)} allowed`,
+              title,
+            }),
+          );
+        });
+
+        const providerId = document.createElement('td');
+        providerId.className = 'body-s entitlements-table__token';
+        providerId.textContent = `${agent.agentId}:${provider.provider}`;
+        providerRow.appendChild(providerId);
+
+        tbody.appendChild(providerRow);
+      });
+    });
+
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return section;
+  }
+
   function render() {
     if (!root) return;
     root.innerHTML = '';
@@ -947,8 +1226,14 @@
     root.appendChild(renderTable({ title: 'Caps', entries: sortEntries(groups.cap), tiers }));
     root.appendChild(renderTable({ title: 'Budgets', entries: sortEntries(groups.budget), tiers }));
 
+    const widgetCopilotRoutingSection = renderWidgetCopilotRouting({ tiers });
+    if (widgetCopilotRoutingSection) root.appendChild(widgetCopilotRoutingSection);
+
     const aiSection = renderAiAccess({ tiers });
     if (aiSection) root.appendChild(aiSection);
+
+    const aiAgentSection = renderAiAgentAccess({ tiers });
+    if (aiAgentSection) root.appendChild(aiAgentSection);
   }
 
   if (!root) {

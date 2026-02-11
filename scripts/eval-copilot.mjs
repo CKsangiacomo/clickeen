@@ -4,9 +4,6 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const bobOrigin = (process.env.BOB_ORIGIN || 'http://localhost:3000').replace(/\/+$/, '');
-const promptsPath = path.join(repoRoot, 'fixtures', 'copilot', 'prompts.jsonl');
-
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
@@ -35,15 +32,53 @@ function asTrimmedString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-async function postCopilot(body, opts = {}) {
-  const forwardedFor = typeof opts.forwardedFor === 'string' ? opts.forwardedFor.trim() : '';
-  const res = await fetch(`${bobOrigin}/api/ai/sdr-copilot`, {
+function parseArgs(argv) {
+  const options = {
+    bobOrigin: (process.env.BOB_ORIGIN || 'http://localhost:3000').replace(/\/+$/, ''),
+    promptsPath: path.join(repoRoot, 'fixtures', 'copilot', 'prompts.jsonl'),
+    agentId: asTrimmedString(process.env.EVAL_COPILOT_AGENT_ID),
+    subject: asTrimmedString(process.env.EVAL_COPILOT_SUBJECT),
+  };
+
+  for (const raw of argv) {
+    if (!raw.startsWith('--')) {
+      throw new Error(`[eval-copilot] Unknown arg: ${raw}`);
+    }
+    const [flag, ...rest] = raw.split('=');
+    const value = rest.join('=').trim();
+    if (flag === '--bob-origin') {
+      if (!value) throw new Error('[eval-copilot] --bob-origin requires a value');
+      options.bobOrigin = value.replace(/\/+$/, '');
+      continue;
+    }
+    if (flag === '--prompts') {
+      if (!value) throw new Error('[eval-copilot] --prompts requires a value');
+      options.promptsPath = path.isAbsolute(value) ? value : path.join(repoRoot, value);
+      continue;
+    }
+    if (flag === '--agent-id') {
+      options.agentId = value;
+      continue;
+    }
+    if (flag === '--subject') {
+      options.subject = value;
+      continue;
+    }
+    throw new Error(`[eval-copilot] Unknown arg: ${raw}`);
+  }
+
+  return options;
+}
+
+async function postCopilot(args) {
+  const forwardedFor = asTrimmedString(args.forwardedFor);
+  const res = await fetch(`${args.bobOrigin}/api/ai/widget-copilot`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(args.body),
   });
   const text = await res.text().catch(() => '');
   if (!res.ok) {
@@ -61,10 +96,14 @@ function assert(condition, message) {
 }
 
 async function main() {
-  const prompts = readJsonLines(promptsPath);
+  const options = parseArgs(process.argv.slice(2));
+  const prompts = readJsonLines(options.promptsPath);
   const widgetFixtures = new Map();
 
-  console.log(`[eval-copilot] Bob origin: ${bobOrigin}`);
+  console.log(`[eval-copilot] Bob origin: ${options.bobOrigin}`);
+  console.log(`[eval-copilot] Prompts path: ${options.promptsPath}`);
+  if (options.agentId) console.log(`[eval-copilot] Agent override: ${options.agentId}`);
+  if (options.subject) console.log(`[eval-copilot] Subject override: ${options.subject}`);
   console.log(`[eval-copilot] Prompts: ${prompts.length}`);
 
   let failures = 0;
@@ -87,16 +126,27 @@ async function main() {
     const label = `[eval-copilot] ${name}`;
     try {
       const forwardedFor = `203.0.113.${(i % 250) + 1}`;
-      const payload = await postCopilot(
-        {
-        prompt: p.prompt,
-        widgetType,
-        sessionId,
-        currentConfig: fixture.currentConfig,
-        controls: fixture.controls,
+      const requestAgentId = asTrimmedString(p.agentId) || options.agentId;
+      const requestSubject = asTrimmedString(p.subject) || options.subject;
+      const requestWorkspaceId = asTrimmedString(p.workspaceId);
+      const requestProvider = asTrimmedString(p.provider);
+      const requestModel = asTrimmedString(p.model);
+      const payload = await postCopilot({
+        bobOrigin: options.bobOrigin,
+        forwardedFor,
+        body: {
+          prompt: p.prompt,
+          widgetType,
+          sessionId,
+          currentConfig: fixture.currentConfig,
+          controls: fixture.controls,
+          ...(requestAgentId ? { agentId: requestAgentId } : {}),
+          ...(requestSubject ? { subject: requestSubject } : {}),
+          ...(requestWorkspaceId ? { workspaceId: requestWorkspaceId } : {}),
+          ...(requestProvider ? { provider: requestProvider } : {}),
+          ...(requestModel ? { model: requestModel } : {}),
         },
-        { forwardedFor },
-      );
+      });
 
       assert(isRecord(payload), 'Response is not an object');
       assert(asTrimmedString(payload.message), 'Response missing message');
@@ -113,8 +163,18 @@ async function main() {
       assert(outcome === expectedOutcome, `outcome mismatch (expected "${expectedOutcome}", got "${outcome}")`);
 
       assert(asTrimmedString(meta.promptVersion), 'meta.promptVersion missing');
+      assert(asTrimmedString(meta.promptProfileVersion), 'meta.promptProfileVersion missing');
+      assert(asTrimmedString(meta.promptRole), 'meta.promptRole missing');
       assert(asTrimmedString(meta.policyVersion), 'meta.policyVersion missing');
       assert(asTrimmedString(meta.dictionaryHash), 'meta.dictionaryHash missing');
+      const expectedPromptRole = asTrimmedString(p.expectedPromptRole);
+      if (expectedPromptRole) {
+        const actualPromptRole = asTrimmedString(meta.promptRole);
+        assert(
+          actualPromptRole === expectedPromptRole,
+          `promptRole mismatch (expected "${expectedPromptRole}", got "${actualPromptRole}")`,
+        );
+      }
 
       const ops = Array.isArray(payload.ops) ? payload.ops : null;
       if (ops && ops.length > 0) hadOps += 1;

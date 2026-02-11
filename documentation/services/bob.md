@@ -237,10 +237,14 @@ Scopes:
 Bob includes a chat-only Copilot panel in ToolDrawer (`bob/components/CopilotPane.tsx`).
 
 Behavior:
-- Sends prompts to `/api/ai/sdr-copilot` with `{ prompt, widgetType, currentConfig, controls, sessionId, instancePublicId }`.
+- Sends prompts to `/api/ai/widget-copilot` with `{ prompt, widgetType, currentConfig, controls, sessionId, instancePublicId }`.
 - Applies returned `ops[]` locally as pure state transforms (no orchestrator-owned schema validation/coercion).
 - Requires an explicit **Keep** or **Undo** decision for any applied ops (blocks new prompts while pending; no auto-commit).
 - Reports outcomes (keep/undo/CTA clicks) via `/api/ai/outcome` (best-effort).
+- Server-side hardening in `/api/ai/widget-copilot`:
+  - Accepts only widget-copilot agent IDs (`widget.copilot.v1`, `sdr.widget.copilot.v1`, `cs.widget.copilot.v1`).
+  - Normalizes `subject` on the server. `devstudio` is honored only in local/cloud-dev (or when explicitly enabled), otherwise non-minibob calls resolve to `workspace` when `workspaceId` exists.
+  - For widget-copilot IDs (alias or canonical), grant routing is policy-resolved server-side (free/minibob -> SDR, paid/devstudio -> CS).
 
 Minibob keep gate (public UX):
 - In Minibob (`subject=minibob`), edits are preview-only until signup.
@@ -248,15 +252,21 @@ Minibob keep gate (public UX):
 - Undo remains available locally; “Keep” is gated behind signup/publish.
 
 ### AI routes (current)
-- `/api/ai/sdr-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
+- `/api/ai/widget-copilot`: Widget Copilot execution (Paris grant → San Francisco execute). Returns `422` for invalid payloads; returns `200 { message }` for upstream failures to avoid noisy “Failed to load resource” console errors.
+- `/api/ai/sdr-copilot`: Legacy compatibility shim to `/api/ai/widget-copilot`.
 - `/api/ai/outcome`: Outcome attach proxy (Bob → Paris → San Francisco). Always returns `200` (best-effort).
+
+Deployment note (verified on February 11, 2026):
+- Local Bob uses `/api/ai/widget-copilot` as primary.
+- Cloud-dev Bob (`bob.dev.clickeen.com`) now serves `/api/ai/widget-copilot` and still keeps `/api/ai/sdr-copilot` as compatibility shim.
+- Cloud-dev verification confirms profile routing works through this endpoint (`free -> SDR`, `tier3 -> CS`) via `meta.promptRole`.
 
 ### User-Facing Controls (PRD 041)
 - **Provider/Model Selection:** For agents and tiers that allow choice, Bob surfaces provider/model options from the policy grant metadata (for example OpenAI/Claude/DeepSeek/Groq/Amazon Nova, profile-dependent). Bob passes the selected values in the Copilot payload, and San Francisco enforces them against the grant’s `ai.profile`.
 
 ### Copilot env vars (local + Cloud-dev)
 - `PARIS_BASE_URL` and `PARIS_DEV_JWT` (local/dev only) are used by Bob’s AI routes to request grants and attach outcomes.
-- `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/sdr-copilot` also has local fallbacks + health probing.)
+- `SANFRANCISCO_BASE_URL` should point at the San Francisco Worker. (`/api/ai/widget-copilot` also has local fallbacks + health probing.)
 
 ---
 

@@ -26,11 +26,17 @@ import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, getTypographySampleText } from './data/typography';
 import {
   CAPABILITY_META,
+  isPolicyEntitled,
   labelAiModel,
+  listAiAgents,
   listAiModelsForUi,
   listAiProviderUi,
+  WIDGET_COPILOT_AGENT_ALIAS,
+  resolveWidgetCopilotAgentId,
+  resolveAiPolicyCapsule,
   resolveAiDefaultProvider,
   resolveAiProfile,
+  resolvePolicy,
   type AiProfile,
   type AiProvider,
   getEntitlementsMatrix,
@@ -43,6 +49,7 @@ window.__CK_ENTITLEMENTS__ = entitlements;
 window.__CK_ENTITLEMENTS_META__ = CAPABILITY_META;
 
 const aiProviderUi = listAiProviderUi();
+const aiProviderLabelByKey = new Map(aiProviderUi.map((entry) => [entry.provider, entry.label]));
 const aiAccessByTier: Partial<
   Record<
     PolicyProfile,
@@ -63,8 +70,10 @@ const aiAccessByTier: Partial<
 > = {};
 
 const allProviders = aiProviderUi.map((entry) => entry.provider);
+const widgetCopilotAliasByTier: Partial<Record<PolicyProfile, string>> = {};
 
 for (const policyProfile of entitlements.tiers) {
+  widgetCopilotAliasByTier[policyProfile] = resolveWidgetCopilotAgentId({ policyProfile });
   const aiProfile = resolveAiProfile({ policyProfile, taskClass: 'copilot.widget.editor' });
   const modelsByProvider = listAiModelsForUi({ profile: aiProfile, allowedProviders: allProviders }) as Partial<
     Record<AiProvider, { defaultModel: string; models: Array<{ model: string; label: string }> }>
@@ -98,7 +107,90 @@ for (const policyProfile of entitlements.tiers) {
   };
 }
 
-window.__CK_AI_ACCESS__ = { providers: aiProviderUi, byTier: aiAccessByTier };
+const aiAgents = listAiAgents()
+  .filter((entry) => entry.executionSurface === 'execute')
+  .filter((entry) => !entry.agentId.startsWith('debug.'));
+
+const aiAgentsByTier = aiAgents.map((entry) => {
+  const byTier: Partial<
+    Record<
+      PolicyProfile,
+      {
+        policyProfile: PolicyProfile;
+        aiProfile: AiProfile;
+        enabled: boolean;
+        deniedEntitlement: string | null;
+        allowProviderChoice: boolean;
+        allowModelChoice: boolean;
+        defaultProvider: AiProvider | '';
+        defaultProviderLabel: string;
+        providers: Array<{
+          provider: AiProvider;
+          label: string;
+          defaultModel: string;
+          defaultModelLabel: string;
+          models: Array<{ model: string; label: string }>;
+        }>;
+      }
+    >
+  > = {};
+
+  for (const policyProfile of entitlements.tiers) {
+    const policy = resolvePolicy({ profile: policyProfile, role: 'editor' });
+    const deniedEntitlement =
+      entry.requiredEntitlements?.find((entitlement) => !isPolicyEntitled(policy, entitlement)) ?? null;
+    const capsule = resolveAiPolicyCapsule({ entry, policyProfile });
+    const providers = capsule.allowedProviders.map((provider) => {
+      const modelPolicy = capsule.models?.[provider];
+      const defaultModel = modelPolicy?.defaultModel ?? '';
+      return {
+        provider,
+        label: aiProviderLabelByKey.get(provider) ?? provider,
+        defaultModel,
+        defaultModelLabel: labelAiModel(defaultModel),
+        models: Array.isArray(modelPolicy?.allowed)
+          ? modelPolicy!.allowed.map((model) => ({ model, label: labelAiModel(model) }))
+          : [],
+      };
+    });
+
+    byTier[policyProfile] = {
+      policyProfile,
+      aiProfile: capsule.profile,
+      enabled: deniedEntitlement == null,
+      deniedEntitlement,
+      allowProviderChoice: Boolean(capsule.allowProviderChoice),
+      allowModelChoice: Boolean(capsule.allowModelChoice),
+      defaultProvider: capsule.defaultProvider ?? '',
+      defaultProviderLabel: capsule.defaultProvider ? aiProviderLabelByKey.get(capsule.defaultProvider) ?? capsule.defaultProvider : '',
+      providers,
+    };
+  }
+
+  return {
+    agentId: entry.agentId,
+    description: entry.description,
+    category: entry.category,
+    taskClass: entry.taskClass,
+    executionSurface: entry.executionSurface,
+    requiredEntitlements: Array.isArray(entry.requiredEntitlements) ? entry.requiredEntitlements : [],
+    supportedProviders: entry.supportedProviders.map((provider) => ({
+      provider,
+      label: aiProviderLabelByKey.get(provider) ?? provider,
+    })),
+    byTier,
+  };
+});
+
+window.__CK_AI_ACCESS__ = {
+  providers: aiProviderUi,
+  byTier: aiAccessByTier,
+  agents: aiAgentsByTier,
+  widgetCopilotRouting: {
+    alias: WIDGET_COPILOT_AGENT_ALIAS,
+    byTier: widgetCopilotAliasByTier,
+  },
+};
 
 const appRoot = document.getElementById('app');
 if (!appRoot) {

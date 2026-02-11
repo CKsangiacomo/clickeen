@@ -1,9 +1,14 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
-import { callChatCompletion } from '../ai/chat';
+import { callChatCompletion, type ChatMessage } from '../ai/chat';
 import { extractUrlCandidates, fetchSinglePageText, isBlockedFetchUrl, normalizeUrl } from '../utils/webFetch';
 import globalDictionary from '../lexicon/global_dictionary.json';
+import {
+  WIDGET_COPILOT_PROMPT_PROFILES,
+  WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
+  type WidgetCopilotRole,
+} from './widgetCopilotPromptProfiles';
 
 type ControlSummary = {
   path: string;
@@ -42,6 +47,8 @@ type WidgetCopilotResult = {
     intent?: 'edit' | 'explain' | 'clarify';
     outcome?: 'ops_applied' | 'no_ops' | 'invalid_ops';
     promptVersion?: string;
+    promptProfileVersion?: string;
+    promptRole?: WidgetCopilotRole;
     policyVersion?: string;
     dictionaryHash?: string;
     language?: string;
@@ -77,8 +84,13 @@ type CopilotSession = {
 
 type GlobalDictionary = typeof globalDictionary;
 
-const PROMPT_VERSION = 'sdr.widget.copilot.v1@2025-12-30';
+const PROMPT_VERSION = 'widget.copilot.core.v1@2026-02-11';
 const POLICY_VERSION = 'light_edits.v1';
+
+type WidgetCopilotRuntime = {
+  agentId: 'sdr.widget.copilot.v1' | 'cs.widget.copilot.v1';
+  role: WidgetCopilotRole;
+};
 
 function fnv1aHashHex(input: string): string {
   let hash = 2166136261;
@@ -430,9 +442,9 @@ async function loadSdrAllowlist(env: Env, widgetType: string): Promise<{
   if (primary.status !== 404 && primary.json) {
     const file = primary.json as SdrAllowlistFile;
     if (file && file.v === 1 && Array.isArray(file.paths)) {
-      const entries = file.paths
+      const entries: SdrAllowlistEntry[] = file.paths
         .filter((p) => p && typeof p.path === 'string')
-        .map((p) => ({
+        .map((p): SdrAllowlistEntry => ({
           path: p.path.trim(),
           type: p.type === 'richtext' ? 'richtext' : 'string',
           ...(p.role ? { role: p.role } : {}),
@@ -452,9 +464,9 @@ async function loadSdrAllowlist(env: Env, widgetType: string): Promise<{
   if (!fallback.json) return null;
   const file = fallback.json as { v?: number; paths?: Array<{ path?: string; type?: string }> } | null;
   if (!file || file.v !== 1 || !Array.isArray(file.paths)) return null;
-  const entries = file.paths
+  const entries: SdrAllowlistEntry[] = file.paths
     .filter((p) => p && typeof p.path === 'string')
-    .map((p) => ({
+    .map((p): SdrAllowlistEntry => ({
       path: String(p.path || '').trim(),
       type: p?.type === 'richtext' ? 'richtext' : 'string',
     }))
@@ -489,15 +501,18 @@ function validateOpsAgainstAllowlist(args: {
   return issues.length ? { ok: false, issues } : { ok: true };
 }
 
-function baseMeta(
+function buildMeta(
   intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
   outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+  role: WidgetCopilotRole,
   extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence' | 'allowlistSource'>,
 ): NonNullable<WidgetCopilotResult['meta']> {
   return {
     intent,
     outcome,
     promptVersion: PROMPT_VERSION,
+    promptProfileVersion: WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
+    promptRole: role,
     policyVersion: POLICY_VERSION,
     dictionaryHash: DICTIONARY_HASH,
     ...(extras ?? {}),
@@ -1134,9 +1149,10 @@ async function putSession(env: Env, session: CopilotSession): Promise<void> {
   await env.SF_KV.put(key, JSON.stringify(session), { expirationTtl: 60 * 60 * 24 });
 }
 
-function systemPrompt(language: string): string {
+function systemPrompt(language: string, runtime: WidgetCopilotRuntime): string {
+  const profile = WIDGET_COPILOT_PROMPT_PROFILES[runtime.role];
   return [
-    "You are Clickeen's Minibob SDR agent.",
+    profile.intro,
     '',
     `All user-visible strings MUST be in locale: ${language}.`,
     'INPUT: user request + allowlisted copy fields + optional source page text.',
@@ -1147,11 +1163,11 @@ function systemPrompt(language: string): string {
     'WHAT YOU MAY DO (ONLY):',
     '1) Edit text by returning SET ops on allowlisted copy paths.',
     '2) Ask for a website URL (then consent) or ask 1 short clarifying question needed to personalize copy.',
-    '3) After a visible win, return a conversion CTA (signup/publish/upgrade).',
+    profile.objective,
     '',
     'GUARDRAILS:',
     '- Never translate the widget as a goal. Personalize copy using the website or business context.',
-    '- Keep edits minimal and conversion-focused.',
+    profile.focus,
     '- Confirm what changed in 1–2 sentences.',
     '',
     'Output MUST be JSON, with this shape:',
@@ -1165,16 +1181,24 @@ function systemPrompt(language: string): string {
   ].join('\n');
 }
 
-export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: unknown }, env: Env): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
+async function executeWidgetCopilot(
+  params: { grant: AIGrant; input: unknown },
+  env: Env,
+  runtime: WidgetCopilotRuntime,
+): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
   const input = parseWidgetCopilotInput(params.input);
   const session = await getSession(env, input.sessionId);
+  const baseMeta = (
+    intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
+    outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+    extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence' | 'allowlistSource'>,
+  ) => buildMeta(intent, outcome, runtime.role, extras);
   const languageInfo = resolveConversationLanguage(session, input.prompt);
   const conversationLanguage = languageInfo.language || 'en';
   if (!session.conversationLanguage || (session.conversationLanguage !== conversationLanguage && languageInfo.confidence >= 0.85)) {
     session.conversationLanguage = conversationLanguage;
     session.languageConfidence = languageInfo.confidence;
   }
-  session.pendingPolicy = undefined;
 
   const cfError = looksLikeCloudflareErrorPage(input.prompt);
   if (cfError) {
@@ -1294,7 +1318,10 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     };
   }
 
-  const clarification = conversationLanguage === 'en' ? maybeClarify(globalDictionary, input) : null;
+  // Keep global clarification heuristics deterministic across locales.
+  // If we gate this to English only, language/overbroad intents fall through to
+  // model freeform replies and we lose consistent UX + eval behavior.
+  const clarification = maybeClarify(globalDictionary, input);
   if (clarification) {
     session.lastActiveAtMs = Date.now();
     session.turns = [
@@ -1518,8 +1545,8 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
       .join('\n'),
   ].join('\n');
 
-  const messages = [
-    { role: 'system', content: systemPrompt(conversationLanguage) },
+  const messages: ChatMessage[] = [
+    { role: 'system', content: systemPrompt(conversationLanguage, runtime) },
     ...session.turns,
     { role: 'user', content: user },
   ];
@@ -1528,7 +1555,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   const first = await callChatCompletion({
     env,
     grant: params.grant,
-    agentId: 'sdr.widget.copilot.v1',
+    agentId: runtime.agentId,
     messages,
     temperature: 0.2,
     maxTokens,
@@ -1569,7 +1596,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
 
     const previous = content.length > 2200 ? `${content.slice(0, 2200)}\n\n[truncated]` : content;
     const repairSystem =
-      systemPrompt(conversationLanguage) +
+      systemPrompt(conversationLanguage, runtime) +
       '\n\nREPAIR MODE:\n- Return ONLY a JSON object (no markdown, no extra text).\n- Fix the schema/validation errors.\n- If you cannot produce valid ops, return message-only (no ops) and ask one short clarifying question.';
     const repairUser = [
       user,
@@ -1589,7 +1616,7 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
     const repaired = await callChatCompletion({
       env,
       grant: params.grant,
-      agentId: 'sdr.widget.copilot.v1',
+      agentId: runtime.agentId,
       messages: [
         { role: 'system', content: repairSystem },
         { role: 'user', content: repairUser },
@@ -1687,4 +1714,18 @@ export async function executeSdrWidgetCopilot(params: { grant: AIGrant; input: u
   };
 
   return { result, usage };
+}
+
+export async function executeSdrWidgetCopilot(
+  params: { grant: AIGrant; input: unknown },
+  env: Env,
+): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
+  return executeWidgetCopilot(params, env, { agentId: 'sdr.widget.copilot.v1', role: 'sdr' });
+}
+
+export async function executeCsWidgetCopilot(
+  params: { grant: AIGrant; input: unknown },
+  env: Env,
+): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
+  return executeWidgetCopilot(params, env, { agentId: 'cs.widget.copilot.v1', role: 'cs' });
 }

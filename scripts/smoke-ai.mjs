@@ -81,8 +81,8 @@ async function main() {
   console.log('[smoke-ai] ok: grant + execute');
 
   if (process.env.SMOKE_AI_UPSTREAM === '1') {
-    console.log('[smoke-ai] upstream: bob /api/ai/sdr-copilot');
-    const res = await fetch(`${BOB_BASE_URL}/api/ai/sdr-copilot`, {
+    console.log('[smoke-ai] upstream: bob /api/ai/widget-copilot');
+    const res = await fetch(`${BOB_BASE_URL}/api/ai/widget-copilot`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -98,8 +98,8 @@ async function main() {
     const text = await res.text().catch(() => '');
     if (!res.ok) throw new Error(`FAQ copilot failed (${res.status}): ${text}`);
     const payload = JSON.parse(text);
-    if (typeof payload?.message !== 'string') throw new Error('SDR copilot returned no message');
-    console.log('[smoke-ai] ok: upstream SDR copilot');
+    if (typeof payload?.message !== 'string') throw new Error('Widget copilot returned no message');
+    console.log('[smoke-ai] ok: upstream widget copilot');
   } else {
     console.log('[smoke-ai] skipping upstream (set SMOKE_AI_UPSTREAM=1 to run)');
   }

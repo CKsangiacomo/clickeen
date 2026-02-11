@@ -22,6 +22,17 @@ What it does:
 
 Source: `admin/src/html/tools/dev-widget-workspace.html`.
 
+### Entitlements matrix (AI / LLM access)
+
+DevStudio has two separate gates for Copilot behavior:
+- **Profile/model gate** (AI / LLM Access): which providers/models are allowed by tier/profile.
+- **Agent runtime gate** (per-agent execution): which agent IDs can execute for each tier/profile.
+
+Important behavior:
+- Unlimited budget values alone do not enable CS Copilot.
+- For paid profiles (`tier1|tier2|tier3|devstudio`), both gates must allow a CS-capable provider/model and runtime access for `cs.widget.copilot.v1`.
+- Free + Minibob remain constrained to `sdr.widget.copilot.v1` by design.
+
 ### Curated instances (single source of truth)
 
 DevStudio Local supports curated instances as the single primitive:

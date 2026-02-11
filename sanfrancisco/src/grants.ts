@@ -1,5 +1,17 @@
+import type { AiGrantPolicy, AiProfile, AiProvider } from '@clickeen/ck-policy';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
+
+const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
+const AI_PROFILE_SET = new Set<AiProfile>(['free_low', 'paid_standard', 'paid_premium', 'curated_premium']);
+
+function isAiProvider(value: string): value is AiProvider {
+  return AI_PROVIDER_SET.has(value as AiProvider);
+}
+
+function isAiProfile(value: string): value is AiProfile {
+  return AI_PROFILE_SET.has(value as AiProfile);
+}
 
 function base64UrlToBytes(input: string): Uint8Array {
   const padded = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
@@ -90,15 +102,18 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   return payload as AIGrant;
 }
 
-function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
+function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
   if (!isRecord(value)) return undefined;
-  const profile = asString(value.profile);
+  const profileRaw = asString(value.profile);
+  const profile = profileRaw && isAiProfile(profileRaw) ? profileRaw : null;
   const allowedProvidersRaw = (value as any).allowedProviders;
   const allowedProviders =
-    Array.isArray(allowedProvidersRaw) && allowedProvidersRaw.every((p) => typeof p === 'string' && p.trim())
-      ? (allowedProvidersRaw.map((p) => p.trim()) as string[])
+    Array.isArray(allowedProvidersRaw) &&
+    allowedProvidersRaw.every((p) => typeof p === 'string' && p.trim() && isAiProvider(String(p).trim()))
+      ? (allowedProvidersRaw.map((p) => String(p).trim()) as AiProvider[])
       : null;
-  const defaultProvider = asString((value as any).defaultProvider);
+  const defaultProviderRaw = asString((value as any).defaultProvider);
+  const defaultProvider = defaultProviderRaw && isAiProvider(defaultProviderRaw) ? defaultProviderRaw : null;
   if (!profile || !allowedProviders || allowedProviders.length === 0 || !defaultProvider) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy missing required fields' });
   }
@@ -107,18 +122,24 @@ function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
   }
   const allowProviderChoice = (value as any).allowProviderChoice === true;
   const allowModelChoice = (value as any).allowModelChoice === true;
-  const selectedProvider = asString((value as any).selectedProvider);
+  const selectedProviderRaw = asString((value as any).selectedProvider);
+  const selectedProvider = selectedProviderRaw ? (isAiProvider(selectedProviderRaw) ? selectedProviderRaw : null) : undefined;
+  if (selectedProviderRaw && !selectedProvider) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy selectedProvider is invalid' });
+  }
   if (selectedProvider && !allowedProviders.includes(selectedProvider)) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy selectedProvider is not allowed' });
   }
   const selectedModel = asString((value as any).selectedModel);
   const modelsRaw = (value as any).models;
-  const models: Record<string, { defaultModel: string; allowed: string[] }> = {};
+  const models: NonNullable<AiGrantPolicy['models']> = {};
   if (modelsRaw !== undefined) {
     if (!isRecord(modelsRaw)) {
       throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy models must be an object' });
     }
-    for (const [provider, config] of Object.entries(modelsRaw)) {
+    for (const [providerRaw, config] of Object.entries(modelsRaw)) {
+      if (!isAiProvider(providerRaw)) continue;
+      const provider = providerRaw;
       if (!allowedProviders.includes(provider)) continue;
       if (!isRecord(config)) continue;
       const defaultModel = asString((config as any).defaultModel);
@@ -135,14 +156,14 @@ function normalizeAiPolicy(value: unknown): AIGrant['ai'] | undefined {
   const tokenBudgetDay = asNumber((value as any).tokenBudgetDay);
   const tokenBudgetMonth = asNumber((value as any).tokenBudgetMonth);
 
-  const policy: AIGrant['ai'] = {
-    profile: profile as AIGrant['ai']['profile'],
-    allowedProviders: allowedProviders as AIGrant['ai']['allowedProviders'],
-    defaultProvider: defaultProvider as AIGrant['ai']['defaultProvider'],
-    ...(Object.keys(models).length ? { models: models as any } : {}),
+  const policy: AiGrantPolicy = {
+    profile,
+    allowedProviders,
+    defaultProvider,
+    ...(Object.keys(models).length ? { models } : {}),
     ...(allowProviderChoice ? { allowProviderChoice: true } : {}),
     ...(allowModelChoice ? { allowModelChoice: true } : {}),
-    ...(selectedProvider ? { selectedProvider: selectedProvider as AIGrant['ai']['selectedProvider'] } : {}),
+    ...(selectedProvider ? { selectedProvider } : {}),
     ...(selectedModel ? { selectedModel } : {}),
     ...(tokenBudgetDay != null ? { tokenBudgetDay } : {}),
     ...(tokenBudgetMonth != null ? { tokenBudgetMonth } : {}),
@@ -160,6 +181,9 @@ export function assertCap(grant: AIGrant, capability: string): void {
 export function assertProviderAllowed(grant: AIGrant, provider: string): void {
   const allowed = grant.ai?.allowedProviders;
   if (!allowed) return;
+  if (!isAiProvider(provider)) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider not allowed: ${provider}` });
+  }
   const selected = grant.ai?.selectedProvider;
   if (selected && selected !== provider) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider mismatch: ${provider} != ${selected}` });

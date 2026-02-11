@@ -1,0 +1,47 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "baseUpdatedAt": "2026-02-11T02:16:10.051901+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Acquista ora"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Scopri di più"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Non perdere queste offerte a tempo limitato."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Le vendite stanno per arrivare!!!🎯"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.days",
+      "value": "Giorni"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.hours",
+      "value": "Ore"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.minutes",
+      "value": "Minuti"
+    },
+    {
+      "op": "set",
+      "path": "timer.labels.seconds",
+      "value": "Secondi"
+    }
+  ],
+  "v": 1
+}

@@ -1,7 +1,7 @@
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
-import { callChatCompletion } from '../ai/chat';
+import { callChatCompletion, type ChatMessage } from '../ai/chat';
 
 type SdrInput = {
   sessionId: string;
@@ -96,7 +96,7 @@ export async function executeSdrCopilot(params: { grant: AIGrant; input: unknown
     '{ message: string; cta?: { kind:\"signup\"; label: string; href: string }; next: \"continue\"|\"end\" }',
   ].join('\n');
 
-  const messages = [
+  const messages: ChatMessage[] = [
     { role: 'system', content: system },
     ...session.turns,
     { role: 'user', content: input.message },

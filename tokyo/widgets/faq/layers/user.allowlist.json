@@ -5,6 +5,7 @@
     { "path": "header.subtitleHtml", "type": "richtext" },
     { "path": "cta.label", "type": "string" },
     { "path": "cta.href", "type": "string" },
+    { "path": "cta.openMode", "type": "string" },
     { "path": "sections.*.title", "type": "string" },
     { "path": "sections.*.faqs.*.question", "type": "string" },
     { "path": "sections.*.faqs.*.answer", "type": "richtext" }

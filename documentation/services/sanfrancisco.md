@@ -23,6 +23,11 @@
 - Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
+- Widget-copilot canonical IDs:
+  - `sdr.widget.copilot.v1` (Minibob + free)
+  - `cs.widget.copilot.v1` (paid tiers + DevStudio)
+- Paris resolves widget-copilot aliasing before SF execution (`widget.copilot.v1` and forced SDR/CS IDs are normalized by profile).
+- Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts` (shared execution path with SDR/CS objective differences).
 - **Tiered Execution:** Enforces `ai.profile` from the grant.
   - `free_low`: `deepseek-chat` by default (agent-scoped alternatives may include Nova Lite).
   - `paid_standard`: `gpt-4o-mini` default, with provider/model choices constrained by policy + agent support (DeepSeek, OpenAI, Anthropic, Groq, Amazon Nova).

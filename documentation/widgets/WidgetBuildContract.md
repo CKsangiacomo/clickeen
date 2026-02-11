@@ -46,14 +46,14 @@ MUST NOT
 
 ### 2) Stage/Pod (required)
 MUST
-- `defaults.stage` includes: `background`, `insideShadow`, `alignment`, `canvas.mode`, `padding.desktop`, `padding.mobile`.
+- `defaults.stage` includes: `background`, `insideShadow` (`linked`, `layer`, `all/top/right/bottom/left`), `alignment`, `canvas.mode`, `padding.desktop`, `padding.mobile`.
 - Each padding object includes: `linked, all, top, right, bottom, left`.
-- `defaults.pod` includes: `background`, `shadow` (outside), `insideShadow`, `padding.desktop`, `padding.mobile`, `widthMode`, `contentWidth`, radius fields (`radiusLinked`, `radius`, `radiusTL/TR/BR/BL`).
+- `defaults.pod` includes: `background`, `shadow` (outside), `insideShadow` (`linked`, `layer`, `all/top/right/bottom/left`), `padding.desktop`, `padding.mobile`, `widthMode`, `contentWidth`, radius fields (`radiusLinked`, `radius`, `radiusTL/TR/BR/BL`).
 - `widget.html` hierarchy:
   - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`.
 - `widget.client.js` calls `window.CKStagePod.applyStagePod(state.stage, state.pod, root)` on load and every update.
 - Appearance panel exposes `stage.background` and `pod.background` via dropdown-fill with explicit `fill-modes`.
-- Appearance panel exposes `stage.insideShadow.*` and `pod.insideShadow.*` (inside shadow) via dropdown-shadow.
+- Appearance panel exposes `stage.insideShadow.layer` and `pod.insideShadow.layer` via dropdown-actions (`below-content|above-content`) and `stage.insideShadow.*` / `pod.insideShadow.*` via dropdown-shadow.
 - Appearance panel exposes `pod.shadow` (outside shadow) via dropdown-shadow.
 
 MUST NOT
@@ -68,11 +68,11 @@ MUST NOT
 
 **Pod (container surface)**
 - ✅ Background fill (all fill types)
-- ✅ Border, ✅ Shadow (outside) + inside fade, ✅ Radius
+- ✅ Border, ✅ Shadow (outside) + inside shadow layer control (`below-content|above-content`), ✅ Radius
 
 **Item (array item/card)**
 - ✅ Background fill (**color + gradient only**)
-- ✅ Border, ✅ Shadow (outside) + inside fade, ✅ Radius
+- ✅ Border, ✅ Shadow (outside) + inside shadow layer control (`below-content|above-content`), ✅ Radius
 
 If a widget needs anything outside this rule, it must be explicitly required by the PRD.
 
@@ -91,7 +91,8 @@ MUST
 - Apply card wrapper vars via `CKSurface.applyCardWrapper(...)` on every state update.
 - Reference only `--ck-cardwrapper-*` vars in `widget.css` for card wrapper styling.
   - `--ck-cardwrapper-shadow` maps to `appearance.cardwrapper.shadow` (outside elevation only).
-  - `--ck-cardwrapper-inside-fade` maps to `appearance.cardwrapper.insideShadow.*` (inside fade channel).
+  - `--ck-cardwrapper-inside-fade` maps to `appearance.cardwrapper.insideShadow.*` when `appearance.cardwrapper.insideShadow.layer == "below-content"`.
+- If `appearance.cardwrapper.insideShadow.layer == "above-content"`, item containers MUST declare `data-ck-surface="cardwrapper"` so `CKSurface` can render the shared overlay layer.
 
 MUST NOT
 - Reimplement border/shadow/radius math per widget (use `CKSurface`).

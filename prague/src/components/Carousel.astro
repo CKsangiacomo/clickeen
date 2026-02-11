@@ -21,26 +21,31 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
 <div class="ck-carousel">
   {items && items.length > 0 ? (
     <>
-      <div class="ck-carousel__track" id={id}>
-        {items.concat(items[0]).map((item, index) => (
-          <div class="ck-carousel__item" data-index={index}>
-            {item.curatedRef ? (
-              <InstanceEmbed
-                publicId={item.curatedRef.publicId}
-                locale={item.curatedRef.locale}
-                title={item.curatedRef.title ?? `Widget preview ${index + 1}`}
-                embedMode={item.curatedRef.embedMode}
-              />
-            ) : (
-              <div class="ck-media ck-carousel__stub">Missing curatedRef</div>
-            )}
-          </div>
-        ))}
+      <div class="ck-carousel__viewport">
+        <div class="ck-carousel__track" id={id}>
+          {items.concat(items[0]).map((item, index) => (
+            <div class="ck-carousel__item" data-index={index}>
+              {item.curatedRef ? (
+                <InstanceEmbed
+                  publicId={item.curatedRef.publicId}
+                  locale={item.curatedRef.locale}
+                  title={item.curatedRef.title ?? `Widget preview ${index + 1}`}
+                  embedMode={item.curatedRef.embedMode}
+                  loading="eager"
+                />
+              ) : (
+                <div class="ck-media ck-carousel__stub">Missing curatedRef</div>
+              )}
+            </div>
+          ))}
+        </div>
+
       </div>
+
       <div class="ck-carousel__dots">
         {items.map((_, index) => (
-          <button 
-            class={`ck-carousel__dot ${index === 0 ? 'ck-carousel__dot--active' : ''}`} 
+          <button
+            class={`ck-carousel__dot ${index === 0 ? 'ck-carousel__dot--active' : ''}`}
             aria-label={`Go to slide ${index + 1}`}
             data-target={index}
           />
@@ -57,130 +62,194 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
     const track = document.getElementById(carouselId);
     if (!track) return;
 
-    const dotsContainer = track.nextElementSibling as HTMLElement;
+    const viewport = track.parentElement;
+    if (!viewport || !viewport.classList.contains('ck-carousel__viewport')) return;
+
+    const dotsContainer = viewport.nextElementSibling as HTMLElement;
     if (!dotsContainer || !dotsContainer.classList.contains('ck-carousel__dots')) return;
-    
+
+
+
     const dots = Array.from(dotsContainer.children) as HTMLButtonElement[];
     const items = Array.from(track.children) as HTMLElement[];
     const realItemCount = items.length - 1; // Last item is a clone
     let currentIndex = 0;
     let autoScrollInterval: number | undefined;
-    let isAutoScrolling = false;
+    let userIsScrolling = false;
     const AUTO_SCROLL_DELAY = 3000;
 
+    const supportsScrollend = 'onscrollend' in window;
+
+    // ── Helpers ─────────────────────────────────────────────
     const updateDots = (index: number) => {
       const normalizedIndex = index >= realItemCount ? 0 : index;
       dots.forEach((dot, i) => {
-        if (i === normalizedIndex) {
-          dot.classList.add('ck-carousel__dot--active');
-        } else {
-          dot.classList.remove('ck-carousel__dot--active');
-        }
+        dot.classList.toggle('ck-carousel__dot--active', i === normalizedIndex);
       });
     };
 
     const scrollToItem = (index: number, behavior: ScrollBehavior = 'smooth') => {
       const item = items[index];
-      if (item) {
-        if (behavior === 'smooth') isAutoScrolling = true;
-        
-        track.scrollTo({
-          left: item.offsetLeft - track.offsetLeft,
-          behavior: behavior
+      if (!item) return;
+
+      // Chrome: scroll-snap-type: mandatory fights scrollTo({ behavior: 'smooth' }).
+      // Temporarily disable snap, scroll, then re-enable after the scroll finishes.
+      if (behavior === 'smooth') {
+        track.style.scrollSnapType = 'none';
+      }
+
+      track.scrollTo({
+        left: item.offsetLeft - track.offsetLeft,
+        behavior,
+      });
+      currentIndex = index;
+      updateDots(index);
+
+      if (behavior === 'smooth') {
+        waitForScrollEnd(() => {
+          track.style.scrollSnapType = '';
         });
-        
-        if (behavior === 'auto') {
-           updateDots(index);
-           currentIndex = index;
-        } else {
-           currentIndex = index;
-           updateDots(index);
-        }
       }
     };
+
+    function waitForScrollEnd(cb: () => void) {
+      const el = track!;
+      if (supportsScrollend) {
+        el.addEventListener('scrollend', () => cb(), { once: true });
+      } else {
+        let lastLeft = el.scrollLeft;
+        let stableFrames = 0;
+        function check() {
+          const curLeft = el.scrollLeft;
+          if (curLeft === lastLeft) {
+            stableFrames++;
+            if (stableFrames >= 3) { cb(); return; }
+          } else {
+            stableFrames = 0;
+          }
+          lastLeft = curLeft;
+          requestAnimationFrame(check);
+        }
+        requestAnimationFrame(check);
+      }
+    }
 
     const nextSlide = () => {
+      if (userIsScrolling) return;
       const nextIndex = currentIndex + 1;
-      
-      if (nextIndex === realItemCount) {
-        scrollToItem(nextIndex, 'smooth');
-        setTimeout(() => {
-           scrollToItem(0, 'auto');
-           isAutoScrolling = false;
-        }, 600);
+      if (nextIndex >= realItemCount) {
+        // Infinite loop: scroll to clone, then jump back to real first slide.
+        // Handle snap disable/re-enable manually to avoid competing callbacks.
+        track.style.scrollSnapType = 'none';
+        const cloneItem = items[nextIndex];
+        if (!cloneItem) return;
+        track.scrollTo({
+          left: cloneItem.offsetLeft - track.offsetLeft,
+          behavior: 'smooth',
+        });
+        currentIndex = nextIndex;
+        updateDots(nextIndex);
+        waitForScrollEnd(() => {
+          // Jump instantly to real first slide, then restore snap
+          const firstItem = items[0];
+          if (firstItem) {
+            track.scrollTo({ left: firstItem.offsetLeft - track.offsetLeft, behavior: 'auto' });
+          }
+          currentIndex = 0;
+          updateDots(0);
+          track.style.scrollSnapType = '';
+        });
       } else {
         scrollToItem(nextIndex, 'smooth');
-        setTimeout(() => { isAutoScrolling = false; }, 600);
       }
     };
 
+    const prevSlide = () => {
+      if (currentIndex <= 0) {
+        scrollToItem(realItemCount - 1, 'smooth');
+      } else {
+        scrollToItem(currentIndex - 1, 'smooth');
+      }
+    };
+
+    // ── Auto-scroll ────────────────────────────────────────
     const startAutoScroll = () => {
-      if (autoScrollInterval) clearInterval(autoScrollInterval);
+      stopAutoScroll();
       autoScrollInterval = window.setInterval(nextSlide, AUTO_SCROLL_DELAY);
     };
 
     const stopAutoScroll = () => {
-      if (autoScrollInterval) clearInterval(autoScrollInterval);
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = undefined;
+      }
     };
 
+
+
+    // ── Dot buttons ────────────────────────────────────────
     dots.forEach((dot, index) => {
       dot.addEventListener('click', () => {
         stopAutoScroll();
         scrollToItem(index, 'smooth');
-        setTimeout(() => { isAutoScrolling = false; }, 600);
         startAutoScroll();
       });
     });
 
-    track.addEventListener('mouseenter', stopAutoScroll);
-    track.addEventListener('mouseleave', startAutoScroll);
-    track.addEventListener('touchstart', stopAutoScroll);
-    track.addEventListener('touchend', startAutoScroll);
+    // ── Pause on hover / touch ─────────────────────────────
+    viewport.addEventListener('mouseenter', stopAutoScroll);
+    viewport.addEventListener('mouseleave', startAutoScroll);
+    viewport.addEventListener('touchstart', stopAutoScroll, { passive: true });
+    viewport.addEventListener('touchend', () => setTimeout(startAutoScroll, 1000));
 
-    let isScrolling: number;
+    // ── Manual scroll detection ────────────────────────────
+    let scrollTimer: number | undefined;
     track.addEventListener('scroll', () => {
-       if (isAutoScrolling) return;
+      userIsScrolling = true;
+      stopAutoScroll();
 
-       window.clearTimeout(isScrolling);
-       isScrolling = window.setTimeout(() => {
-          const trackCenter = track.scrollLeft + track.offsetWidth / 2;
-          let closestIndex = 0;
-          let minDistance = Infinity;
-          
-          items.forEach((item, index) => {
-             const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-             const distance = Math.abs(trackCenter - itemCenter);
-             if (distance < minDistance) {
-                minDistance = distance;
-                closestIndex = index;
-             }
-          });
-          
-          if (closestIndex === realItemCount) {
-             scrollToItem(0, 'auto');
-             return;
-          }
+      if (scrollTimer) window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        userIsScrolling = false;
 
-          if (closestIndex !== currentIndex) {
-             currentIndex = closestIndex;
-             updateDots(currentIndex);
+        const trackCenter = track.scrollLeft + track.offsetWidth / 2;
+        let closestIndex = 0;
+        let minDistance = Infinity;
+
+        items.forEach((item, index) => {
+          const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+          const distance = Math.abs(trackCenter - itemCenter);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
           }
-       }, 50);
-    });
+        });
+
+        if (closestIndex >= realItemCount) {
+          scrollToItem(0, 'auto');
+        } else if (closestIndex !== currentIndex) {
+          currentIndex = closestIndex;
+          updateDots(currentIndex);
+        }
+
+        startAutoScroll();
+      }, 120);
+    }, { passive: true });
 
     startAutoScroll();
   }
 
   const tracks = document.querySelectorAll('.ck-carousel__track');
   tracks.forEach(track => {
-    if (track.id) {
-       initCarousel(track.id);
-    }
+    if (track.id) initCarousel(track.id);
   });
 </script>
 
 <style>
-  /* Carousel Logic */
+  .ck-carousel__viewport {
+    position: relative;
+  }
+
   .ck-carousel__track {
     display: flex;
     gap: var(--space-4);
@@ -188,11 +257,11 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
     scroll-snap-type: x mandatory;
     padding-bottom: var(--space-4);
     width: 100%;
-    scrollbar-width: none; 
+    scrollbar-width: none;
     -ms-overflow-style: none;
     position: relative;
   }
-  
+
   .ck-carousel__track::-webkit-scrollbar {
     display: none;
   }
@@ -202,8 +271,11 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
     flex: 0 0 100%;
     min-width: 0;
     scroll-margin: 0 var(--space-4);
+    pointer-events: none;
   }
 
+
+  /* ── Stub ── */
   .ck-carousel__stub {
     width: 100%;
     min-height: 280px;
@@ -215,7 +287,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
     border-radius: var(--radius-lg);
   }
 
-  /* Dots Navigation */
+  /* ── Dots ── */
   .ck-carousel__dots {
     display: flex;
     justify-content: center;

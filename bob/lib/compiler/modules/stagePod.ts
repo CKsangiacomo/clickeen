@@ -25,12 +25,32 @@ const canvasOptions =
     '&quot;',
   );
 
-export function buildStagePodLayoutPanelFields(): string[] {
+const floatingAnchorOptions =
+  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"}]'.replace(
+    /"/g,
+    '&quot;',
+  );
+
+type StagePodLayoutPanelOptions = {
+  includeFloating?: boolean;
+};
+
+export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptions = {}): string[] {
+  const includeFloating = options.includeFloating === true;
+  const floatingFields = includeFloating
+    ? [
+        "    <tooldrawer-field-podstagelayout group-label='' type='toggle' size='md' path='stage.floating.enabled' label='Floating' value='{{stage.floating.enabled}}' />",
+        `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='stage.floating.anchor' label='Position' value='{{stage.floating.anchor}}' show-if=\"stage.floating.enabled == true\" options='${floatingAnchorOptions}' />`,
+        "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='stage.floating.offset' label='Viewport inset (px)' value='{{stage.floating.offset}}' min='0' max='400' step='1' show-if=\"stage.floating.enabled == true && stage.floating.anchor != 'center'\" />",
+      ]
+    : [];
+
   return [
     "  <tooldrawer-cluster>",
     `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' placeholder='Choose width' value='{{pod.widthMode}}' options='${widthOptions}' />`,
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.contentWidth' label='Width in pixels' show-if=\"pod.widthMode == 'fixed'\" />",
     `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='${alignmentOptions}' />`,
+    ...floatingFields,
     "    <tooldrawer-field-podstagelayout group-label='' type='toggle' size='md' path='pod.padding.desktop.linked' label='Link pod padding (desktop)' value='{{pod.padding.desktop.linked}}' default='true' />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.desktop.all' label='Pod padding (desktop px)' show-if=\"pod.padding.desktop.linked == true\" />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.desktop.top' label='Pod top padding (desktop px)' show-if=\"pod.padding.desktop.linked == false\" />",

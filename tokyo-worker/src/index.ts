@@ -1454,7 +1454,8 @@ async function generateRenderSnapshots(args: {
 }): Promise<void> {
   const { env, publicId } = args;
   const enforcement = await loadInstanceEnforcement(env, publicId);
-  const locales = enforcement ? ['en'] : args.locales.length ? args.locales : ['en'];
+  const requestedLocales = args.locales.length ? args.locales : ['en'];
+  const locales = enforcement ? ['en'] : Array.from(new Set(['en', ...requestedLocales]));
   const existing = enforcement ? null : await loadRenderIndex(env, publicId).catch(() => null);
   const nextCurrent: Record<string, RenderIndexEntry> = existing?.current ? { ...existing.current } : {};
 

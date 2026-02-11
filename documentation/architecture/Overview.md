@@ -266,7 +266,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           AI COPILOT FLOW                               │
 │                                                                         │
-│  ┌──────────────┐   POST /api/ai/sdr-copilot   ┌─────────┐             │
+│  ┌──────────────┐  POST /api/ai/widget-copilot ┌─────────┐             │
 │  │ Browser UI   │ ────────────────────────────►│   Bob   │             │
 │  │ (ToolDrawer) │                              │  (API)  │             │
 │  └──────┬───────┘                              └────┬────┘             │
@@ -286,7 +286,8 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 │         │                                       └──────┬───────┘        │
 │         │                                              │                │
 │         │                                              ▼                │
-│         │                                         DeepSeek (LLM)        │
+│         │                       Provider selected by profile + grant    │
+│         │                    (DeepSeek / OpenAI / Anthropic / Groq / Amazon) │
 │         │                                                               │
 │         │  Response: { message, ops?, meta.requestId, usage }           │
 │         ▼                                                               │
@@ -301,6 +302,7 @@ Copilot execution is a separate, budgeted flow that never exposes provider keys 
 Notes:
 - `envStage` is stamped into grants by Paris (`ENV_STAGE`) so San Francisco can index learning data by exposure stage.
 - San Francisco stores raw interaction payloads in R2 and indexes a queryable subset in D1 (see `documentation/ai/learning.md`).
+- Deployment compatibility: local and cloud-dev both use `POST /api/ai/widget-copilot`; `/api/ai/sdr-copilot` remains as compatibility shim.
 
 ---
 
@@ -349,7 +351,7 @@ All widgets use shared modules from `tokyo/widgets/shared/`:
 |--------|-----------------|---------|
 | `fill.js` | `CKFill.toCssBackground(fill)` / `CKFill.toCssColor(fill)` | Resolve fill configs (color/gradient/image/video) to CSS |
 | `header.js` | `CKHeader.applyHeader(state, widgetRoot)` | Shared header (title/subtitle/CTA) behavior + CSS vars |
-| `surface.js` | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius) |
+| `surface.js` | `CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius + inside-shadow layer placement) |
 | `stagePod.js` | `CKStagePod.applyStagePod(stage, pod, scopeEl)` | Stage/pod layout, padding, radius, alignment |
 | `typography.js` | `CKTypography.applyTypography(typography, root, roleConfig)` | Typography with dynamic Google Fonts (17 curated fonts) |
 | `branding.js` | *(self-executing)* | Injects "Made with Clickeen" backlink + reacts to state updates |

@@ -216,8 +216,12 @@ Issues an **AI Grant** that San Francisco can verify and execute under.
 Current repo behavior:
 
 - **Auth (dev/local only):** requires `Authorization: Bearer ${PARIS_DEV_JWT}`.
+  - In cloud-dev, the deployed `PARIS_DEV_JWT` must match the worker secret for direct `/api/ai/grant` calls. Browser clients should typically go through Bob routes instead of calling this endpoint directly.
 - **Agent registry:** only known `agentId`s are accepted (registry-backed, with alias support; canonical IDs returned).
 - **Policy context:** `subject` + `workspaceId` determine the policy profile (defaults to `minibob` when missing).
+- **Widget-copilot canonicalization:** for `widget.copilot.v1`, `sdr.widget.copilot.v1`, and `cs.widget.copilot.v1`, Paris resolves to policy-safe canonical IDs:
+  - `minibob|free` -> `sdr.widget.copilot.v1`
+  - `tier1|tier2|tier3|devstudio` -> `cs.widget.copilot.v1`
 - **Tiered Access (PRD 041):** Paris resolves `workspaces.tier` to an `AiProfile` (e.g., `free_low`, `paid_standard`, `paid_premium`, `curated_premium`) and stamps it into the grant.
 - **Budgets are derived from policy** and capped server-side (tokens/timeout/requests) to keep the edge path safe.
 - **AI policy capsule:** grants include `ai.profile` + `ai.allowedProviders` for SF enforcement.
@@ -227,7 +231,7 @@ Request:
 
 ```json
 {
-  "agentId": "sdr.widget.copilot.v1",
+  "agentId": "widget.copilot.v1",
   "mode": "ops",
   "trace": { "sessionId": "anon", "instancePublicId": "wgt_..." },
   "subject": "workspace",
@@ -242,7 +246,7 @@ Response:
 {
   "grant": "v1....",
   "exp": 1735521234,
-  "agentId": "sdr.widget.copilot.v1",
+  "agentId": "cs.widget.copilot.v1",
   "ai": {
     "profile": "paid_premium",
     "allowedProviders": ["deepseek", "openai", "anthropic", "groq", "amazon"]

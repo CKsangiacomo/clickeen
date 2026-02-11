@@ -8,6 +8,16 @@ type OpenAIChatResponse = {
   model?: string;
 };
 
+function usesMaxCompletionTokens(model: string): boolean {
+  const normalized = model.trim().toLowerCase();
+  return normalized.startsWith('gpt-5');
+}
+
+function supportsCustomTemperature(model: string): boolean {
+  const normalized = model.trim().toLowerCase();
+  return !normalized.startsWith('gpt-5');
+}
+
 export async function callOpenAiChat(args: {
   env: Env;
   model: string;
@@ -37,8 +47,10 @@ export async function callOpenAiChat(args: {
         body: JSON.stringify({
           model: args.model,
           messages: args.messages,
-          temperature: args.temperature,
-          max_tokens: args.maxTokens,
+          ...(supportsCustomTemperature(args.model) ? { temperature: args.temperature } : {}),
+          ...(usesMaxCompletionTokens(args.model)
+            ? { max_completion_tokens: args.maxTokens }
+            : { max_tokens: args.maxTokens }),
         }),
       });
     } catch (err: unknown) {

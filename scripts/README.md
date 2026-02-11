@@ -8,6 +8,11 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Flags:
     - `--full` (or `--rebuild-all`): run full workspace build before startup.
     - `--prague-l10n` (or `--l10n`): verify Prague overlays and run background regeneration when out of date.
+    - `--reset`: force a clean restart of the stack managed by `dev-up`.
+  - Behavior:
+    - Maintains stack state in `.dev-up.state/` (active marker + PID registry).
+    - If an active stack is detected, `dev-up` exits instead of restarting it.
+    - Use `--reset` to intentionally tear down stale/orphaned managed processes and relaunch.
 - `prague-sync.mjs` — Prague local alignment + l10n publish to R2.
   - Run (verify/translate only): `node scripts/prague-sync.mjs`
   - Run (background + log): `node scripts/prague-sync.mjs --background`
@@ -68,6 +73,10 @@ Purpose: quick reference for repo scripts (what they do + how to run).
   - Run: `node scripts/verify-layer-pipeline.mjs`
 - `eval-copilot.mjs` — Copilot golden evaluation.
   - Run: `node scripts/eval-copilot.mjs`
+  - Optional flags:
+    - `--agent-id=<agent-id>` (e.g. `widget.copilot.v1`)
+    - `--subject=<subject>` (e.g. `devstudio`)
+    - `--prompts=<path-to-jsonl>`
 - `smoke-ai.mjs` — AI system smoke checks.
   - Run: `node scripts/smoke-ai.mjs`
 - `smoke-prague-copy.mjs` — verifies Prague FAQ routes render the current source copy (overview/templates/examples/features).

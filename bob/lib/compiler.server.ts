@@ -52,6 +52,35 @@ function stripLeadingPanelEyebrow(html: string): string {
   return html.slice(0, cursor) + html.slice(after);
 }
 
+const PANEL_SLOT_HEADER_CONTENT = '@slot:header-content';
+const PANEL_SLOT_HEADER_CONTENT_NO_CTA = '@slot:header-content-no-cta';
+const PANEL_SLOT_HEADER_LAYOUT = '@slot:header-layout';
+const PANEL_SLOT_HEADER_LAYOUT_NO_CTA = '@slot:header-layout-no-cta';
+const PANEL_SLOT_HEADER_APPEARANCE = '@slot:header-appearance';
+const PANEL_SLOT_HEADER_APPEARANCE_NO_CTA = '@slot:header-appearance-no-cta';
+const PANEL_SLOT_STAGEPOD_LAYOUT = '@slot:stagepod-layout';
+const PANEL_SLOT_STAGEPOD_CORNERS = '@slot:stagepod-corners';
+
+function injectAtSlot(lines: string[], marker: string, fields: string[]): boolean {
+  const slotIdx = lines.findIndex((line) => line.includes(marker));
+  if (slotIdx < 0) return false;
+  lines.splice(slotIdx, 1, ...fields);
+  return true;
+}
+
+function findPanelStart(lines: string[], panelId: string): number {
+  return lines.findIndex((line) => line.includes(`<bob-panel id='${panelId}'>`));
+}
+
+function findPanelEnd(lines: string[], panelStart: number): number {
+  if (panelStart < 0) return -1;
+  return lines.findIndex((line, idx) => idx > panelStart && line.includes('</bob-panel>'));
+}
+
+function stripUnusedSlotMarkers(lines: string[]): string[] {
+  return lines.filter((line) => !line.includes('@slot:'));
+}
+
 function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const rawHtml = Array.isArray(widgetJson.html) ? widgetJson.html : [];
   const htmlLines: string[] = rawHtml.filter((line): line is string => typeof line === 'string');
@@ -60,6 +89,7 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const typographyRoles = typography?.roles;
   const hasStage = (widgetJson.defaults as any)?.stage != null;
   const hasPod = (widgetJson.defaults as any)?.pod != null;
+  const hasStageFloating = (widgetJson.defaults as any)?.stage?.floating != null;
   const hasHeader = (widgetJson.defaults as any)?.header != null;
   const hasCta = (widgetJson.defaults as any)?.cta != null;
   const hasHeaderAppearance = (widgetJson.defaults as any)?.appearance != null;
@@ -97,64 +127,87 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
 
     if (!hasHeaderControls) {
       const headerFields = buildHeaderContentPanelFields();
-      const contentIdx = filtered.findIndex((line) => line.includes("<bob-panel id='content'>"));
-      if (contentIdx >= 0) {
-        const contentEndIdx = filtered.findIndex((line, idx) => idx > contentIdx && line.includes('</bob-panel>'));
-        if (contentEndIdx >= 0) {
-          const firstObjectManager = filtered.findIndex(
-            (line, idx) => idx > contentIdx && idx < contentEndIdx && line.includes("type='object-manager'"),
-          );
-          if (firstObjectManager >= 0) {
-            let insertAt = firstObjectManager;
-            for (let idx = firstObjectManager; idx > contentIdx; idx -= 1) {
-              if (filtered[idx]?.includes('<tooldrawer-cluster')) {
-                insertAt = idx;
-                break;
+      const headerFieldsNoCta = buildHeaderContentPanelFields({ includeCta: false });
+      const injectedHeaderFields =
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_CONTENT_NO_CTA, headerFieldsNoCta) ||
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_CONTENT, headerFields);
+
+      if (!injectedHeaderFields) {
+        const contentIdx = findPanelStart(filtered, 'content');
+        if (contentIdx >= 0) {
+          const contentEndIdx = findPanelEnd(filtered, contentIdx);
+          if (contentEndIdx >= 0) {
+            const firstObjectManager = filtered.findIndex(
+              (line, idx) => idx > contentIdx && idx < contentEndIdx && line.includes("type='object-manager'"),
+            );
+            if (firstObjectManager >= 0) {
+              let insertAt = firstObjectManager;
+              for (let idx = firstObjectManager; idx > contentIdx; idx -= 1) {
+                if (filtered[idx]?.includes('<tooldrawer-cluster')) {
+                  insertAt = idx;
+                  break;
+                }
               }
+              filtered.splice(insertAt, 0, ...headerFields);
+            } else {
+              filtered.splice(contentEndIdx, 0, ...headerFields);
             }
-            filtered.splice(insertAt, 0, ...headerFields);
-          } else {
-            filtered.splice(contentEndIdx, 0, ...headerFields);
           }
+        } else {
+          filtered.push("<bob-panel id='content'>", ...headerFields, '</bob-panel>');
         }
-      } else {
-        filtered.push("<bob-panel id='content'>", ...headerFields, '</bob-panel>');
       }
     }
 
     if (!hasHeaderLayoutControls) {
       const headerLayoutFields = buildHeaderLayoutPanelFields();
-      const layoutIdx = filtered.findIndex((line) => line.includes("<bob-panel id='layout'>"));
-      if (layoutIdx >= 0) {
-        filtered.splice(layoutIdx + 1, 0, ...headerLayoutFields);
-      } else {
-        filtered.push("<bob-panel id='layout'>", ...headerLayoutFields, '</bob-panel>');
+      const headerLayoutFieldsNoCta = buildHeaderLayoutPanelFields({ includeCta: false });
+      const injectedHeaderLayoutFields =
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_LAYOUT_NO_CTA, headerLayoutFieldsNoCta) ||
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_LAYOUT, headerLayoutFields);
+
+      if (!injectedHeaderLayoutFields) {
+        const layoutIdx = findPanelStart(filtered, 'layout');
+        if (layoutIdx >= 0) {
+          filtered.splice(layoutIdx + 1, 0, ...headerLayoutFields);
+        } else {
+          filtered.push("<bob-panel id='layout'>", ...headerLayoutFields, '</bob-panel>');
+        }
       }
     }
 
     if (hasHeaderAppearance && !hasHeaderAppearanceControls) {
       const headerAppearanceFields = buildHeaderAppearancePanelFields();
-      const appearanceIdx = filtered.findIndex((line) => line.includes("<bob-panel id='appearance'>"));
-      if (appearanceIdx >= 0) {
-        const appearanceEndIdx = filtered.findIndex((line, idx) => idx > appearanceIdx && line.includes('</bob-panel>'));
-        if (appearanceEndIdx >= 0) filtered.splice(appearanceEndIdx, 0, ...headerAppearanceFields);
-        else filtered.push(...headerAppearanceFields);
-      } else {
-        filtered.push("<bob-panel id='appearance'>", ...headerAppearanceFields, '</bob-panel>');
+      const headerAppearanceFieldsNoCta = buildHeaderAppearancePanelFields({ includeCta: false });
+      const injectedHeaderAppearanceFields =
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_APPEARANCE_NO_CTA, headerAppearanceFieldsNoCta) ||
+        injectAtSlot(filtered, PANEL_SLOT_HEADER_APPEARANCE, headerAppearanceFields);
+
+      if (!injectedHeaderAppearanceFields) {
+        const appearanceIdx = findPanelStart(filtered, 'appearance');
+        if (appearanceIdx >= 0) {
+          const appearanceEndIdx = findPanelEnd(filtered, appearanceIdx);
+          if (appearanceEndIdx >= 0) filtered.splice(appearanceEndIdx, 0, ...headerAppearanceFields);
+          else filtered.push(...headerAppearanceFields);
+        } else {
+          filtered.push("<bob-panel id='appearance'>", ...headerAppearanceFields, '</bob-panel>');
+        }
       }
     }
   }
 
   // Inject shared Stage/Pod layout panel if defaults declare stage/pod.
   if (hasStage || hasPod) {
-    const stagePodFields = buildStagePodLayoutPanelFields();
-    const layoutIdx = filtered.findIndex((line) => line.includes("<bob-panel id='layout'>"));
-    if (layoutIdx >= 0) {
-      const layoutEndIdx = filtered.findIndex((line, idx) => idx > layoutIdx && line.includes('</bob-panel>'));
-      if (layoutEndIdx >= 0) filtered.splice(layoutEndIdx, 0, ...stagePodFields);
-      else filtered.push(...stagePodFields);
-    } else {
-      filtered.push("<bob-panel id='layout'>", ...stagePodFields, '</bob-panel>');
+    const stagePodFields = buildStagePodLayoutPanelFields({ includeFloating: hasStageFloating });
+    if (!injectAtSlot(filtered, PANEL_SLOT_STAGEPOD_LAYOUT, stagePodFields)) {
+      const layoutIdx = findPanelStart(filtered, 'layout');
+      if (layoutIdx >= 0) {
+        const layoutEndIdx = findPanelEnd(filtered, layoutIdx);
+        if (layoutEndIdx >= 0) filtered.splice(layoutEndIdx, 0, ...stagePodFields);
+        else filtered.push(...stagePodFields);
+      } else {
+        filtered.push("<bob-panel id='layout'>", ...stagePodFields, '</bob-panel>');
+      }
     }
   }
 
@@ -162,28 +215,30 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   if (hasPod) {
     const cornerFields = buildStagePodCornerAppearanceFields();
     if (cornerFields.length > 0) {
-      const appearanceIdx = filtered.findIndex((line) => line.includes("<bob-panel id='appearance'>"));
-      if (appearanceIdx >= 0) {
-        const appearanceEndIdx = filtered.findIndex((line, idx) => idx > appearanceIdx && line.includes('</bob-panel>'));
-        if (appearanceEndIdx >= 0) {
-          let lastAppearanceField = -1;
-          for (let idx = appearanceIdx + 1; idx < appearanceEndIdx; idx += 1) {
-            if (filtered[idx]?.includes('tooldrawer-field-podstageappearance')) {
-              lastAppearanceField = idx;
+      if (!injectAtSlot(filtered, PANEL_SLOT_STAGEPOD_CORNERS, cornerFields)) {
+        const appearanceIdx = findPanelStart(filtered, 'appearance');
+        if (appearanceIdx >= 0) {
+          const appearanceEndIdx = findPanelEnd(filtered, appearanceIdx);
+          if (appearanceEndIdx >= 0) {
+            let lastAppearanceField = -1;
+            for (let idx = appearanceIdx + 1; idx < appearanceEndIdx; idx += 1) {
+              if (filtered[idx]?.includes('tooldrawer-field-podstageappearance')) {
+                lastAppearanceField = idx;
+              }
             }
-          }
 
-          if (lastAppearanceField >= 0) {
-            const clusterEndIdx = filtered.findIndex(
-              (line, idx) => idx > lastAppearanceField && idx < appearanceEndIdx && line.includes('</tooldrawer-cluster>'),
-            );
-            if (clusterEndIdx >= 0) {
-              filtered.splice(clusterEndIdx, 0, ...cornerFields);
+            if (lastAppearanceField >= 0) {
+              const clusterEndIdx = filtered.findIndex(
+                (line, idx) => idx > lastAppearanceField && idx < appearanceEndIdx && line.includes('</tooldrawer-cluster>'),
+              );
+              if (clusterEndIdx >= 0) {
+                filtered.splice(clusterEndIdx, 0, ...cornerFields);
+              } else {
+                filtered.splice(appearanceEndIdx, 0, "  <tooldrawer-cluster>", ...cornerFields, '  </tooldrawer-cluster>');
+              }
             } else {
               filtered.splice(appearanceEndIdx, 0, "  <tooldrawer-cluster>", ...cornerFields, '  </tooldrawer-cluster>');
             }
-          } else {
-            filtered.splice(appearanceEndIdx, 0, "  <tooldrawer-cluster>", ...cornerFields, '  </tooldrawer-cluster>');
           }
         }
       }
@@ -198,7 +253,7 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
     else filtered.push(...generatedTypography);
   }
 
-  return filtered;
+  return stripUnusedSlotMarkers(filtered);
 }
 
 function extractPrimaryUrl(raw: string): string | null {

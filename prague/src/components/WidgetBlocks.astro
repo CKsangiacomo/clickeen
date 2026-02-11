@@ -88,7 +88,10 @@ const heroPrimaryCta = primaryCta;
               ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: curatedEmbedMode }
               : undefined
           }
-          items={(block as any).items}
+          items={((block as any).items ?? []).map((item: any) => ({
+            ...item,
+            curatedRef: item.curatedRef ? { ...item.curatedRef, locale } : item.curatedRef,
+          }))}
         >
           <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
@@ -126,7 +129,10 @@ const heroPrimaryCta = primaryCta;
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           layout={layout}
-          items={(block as any).items ?? []}
+          items={((block as any).items ?? []).map((item: any) => ({
+            ...item,
+            curatedRef: item.curatedRef ? { ...item.curatedRef, locale } : item.curatedRef,
+          }))}
         />
       );
     }

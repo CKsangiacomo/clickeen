@@ -1,0 +1,16 @@
+{
+  "baseFingerprint": "cee8215eb98f2ef9b4bb46904b03808fa73e0c3d4cd610ec3650c8e0fc2a8d6c",
+  "publicId": "wgt_main_countdown",
+  "snapshot": {
+    "actions.after.text": "",
+    "actions.during.text": "Purchase now",
+    "cta.label": "Learn more",
+    "header.subtitleHtml": "Don't miss out on these limited time offers.",
+    "header.title": "Sales are coming soon!!!🎯",
+    "timer.labels.days": "Days",
+    "timer.labels.hours": "Hours",
+    "timer.labels.minutes": "Minutes",
+    "timer.labels.seconds": "Seconds"
+  },
+  "v": 1
+}

@@ -70,8 +70,8 @@ As of PRD 041, LLM access is strictly tiered. Paris resolves a workspace's entit
 | AI Profile | Target User | Default Access | Performance |
 |------------|-------------|----------------|-------------|
 | `free_low` | Free / Minibob | `deepseek-chat` (agent-scoped alternatives may include Nova Lite) | Fast, low-cost |
-| `paid_standard` | Tier 1 (Basic) | `gpt-4o-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova Lite/Pro where the agent allows it) | Balanced |
-| `paid_premium` | Tier 2+ (Pro) | `gpt-4o` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova Micro/Lite/Pro where the agent allows it) | Higher quality |
+| `paid_standard` | Tier 1 (Basic) | `gpt-5-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova Lite/Pro where the agent allows it) | Balanced |
+| `paid_premium` | Tier 2+ (Pro) | `gpt-5.2` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova Micro/Lite/Pro where the agent allows it) | Higher quality |
 | `curated_premium`| Internal/Special | `gpt-5.2` (OpenAI curated set) | Max capability |
 
 San Francisco enforces this profile by:
@@ -79,6 +79,19 @@ San Francisco enforces this profile by:
 2.  Resolving the allowed `Provider` and `Model` list for that profile.
 3.  Rejecting requests for providers/models not allowed by the profile.
 
+Widget copilot routing (shipped):
+- `minibob` + `free` resolve to `sdr.widget.copilot.v1`
+- `tier1`/`tier2`/`tier3`/`devstudio` resolve to `cs.widget.copilot.v1`
+- Callers may request the alias `widget.copilot.v1`; Paris resolves it by profile.
+- DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
+
+Deployment status (verified on February 11, 2026):
+- Local target behavior: browser calls `POST /api/ai/widget-copilot` (with `/api/ai/sdr-copilot` as compatibility shim).
+- Cloud-dev current behavior: `https://bob.dev.clickeen.com/api/ai/widget-copilot` is live (after Bob Pages deploy).
+- Verified post-deploy routing on cloud-dev:
+  - free workspace -> `meta.promptRole = "sdr"`
+  - tier3 workspace -> `meta.promptRole = "cs"`
+  - forcing `agentId = "sdr.widget.copilot.v1"` on paid tiers is canonicalized back to CS by Paris.
 
 ## Why This Separation Exists (GA Reality)
 At scale, AI workloads are bursty, slow, and failure-prone; instance APIs must remain boring and stable.
@@ -135,6 +148,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - Agent IDs currently recognized by the worker:
   - `sdr.copilot`
   - `sdr.widget.copilot.v1`
+  - `cs.widget.copilot.v1`
   - `debug.grantProbe` (dev only)
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
@@ -253,7 +267,7 @@ Request:
 ```json
 {
   "grant": "<string>",
-  "agentId": "sdr.widget.copilot.v1",
+  "agentId": "widget.copilot.v1",
   "input": {},
   "trace": { "requestId": "optional-uuid", "client": "minibob|bob|ops" }
 }
@@ -261,7 +275,7 @@ Request:
 
 Response:
 ```json
-{ "requestId": "uuid", "agentId": "sdr.widget.copilot.v1", "result": {}, "usage": {} }
+{ "requestId": "uuid", "agentId": "cs.widget.copilot.v1", "result": {}, "usage": {} }
 ```
 
 Behavior:
@@ -285,10 +299,10 @@ Orchestration is San Francisco’s “meat” and is built incrementally behind 
 Phase‑1 (shipped orchestration surface):
 - Multiple agents behind the same `/v1/execute` interface:
   - `sdr.copilot`
-  - `sdr.widget.copilot.v1` (Minibob/Bob widget editing Copilot)
+  - `sdr.widget.copilot.v1` / `cs.widget.copilot.v1` (profile-resolved widget editing Copilot)
   - `debug.grantProbe` (dev only)
 - Provider/model is explicit per agent; strict errors if unavailable (no silent provider switching).
-- No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: `sdr.widget.copilot.v1` includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
+- No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
 
 GA roadmap (still behind the same interface):
@@ -392,7 +406,7 @@ Status: shipped (implemented as thin proxies)
 
 Definition of done:
 - Legacy FAQ-only proxy is explicitly deprecated:
-  - `bob/app/api/ai/faq-copilot/route.ts` returns `410` and points callers to `/api/ai/sdr-copilot`.
+  - `bob/app/api/ai/faq-copilot/route.ts` returns `410` and points callers to `/api/ai/widget-copilot`.
 
 ## Open Questions (next)
 - Grant transport: return grant in `GET /api/workspaces/:workspaceId/instance/:publicId?subject=workspace` vs separate `POST /api/ai/grant` (both work; choose based on desired session semantics).
@@ -401,3 +415,4 @@ Definition of done:
 ## Links
 - Paris system PRD: `documentation/services/paris.md`
 - Bob system PRD: `documentation/services/bob.md`
+- Widget Copilot rollout runbook: `documentation/ai/widget-copilot-rollout.md`

@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import { labelAiModel, labelAiProvider, resolveAiAgent, resolveAiPolicyCapsule } from '@clickeen/ck-policy';
+import {
+  labelAiModel,
+  labelAiProvider,
+  resolveAiAgent,
+  resolveAiPolicyCapsule,
+  resolveWidgetCopilotAgentId,
+  WIDGET_COPILOT_AGENT_IDS,
+} from '@clickeen/ck-policy';
 import type { AiProvider } from '@clickeen/ck-policy';
 import { resolveParisBaseUrl } from '../lib/env/paris';
 
@@ -198,12 +205,13 @@ export function CopilotPane() {
   const subject = policyProfile === 'devstudio' || policyProfile === 'minibob' ? policyProfile : 'workspace';
   const aiSubject = subject === 'workspace' && !workspaceId ? 'minibob' : subject;
   const isMinibob = aiSubject === 'minibob';
+  const widgetCopilotAgentId = useMemo(() => resolveWidgetCopilotAgentId({ policyProfile }), [policyProfile]);
 
   const aiPolicy = useMemo(() => {
-    const resolved = resolveAiAgent('sdr.widget.copilot.v1');
+    const resolved = resolveAiAgent(widgetCopilotAgentId);
     if (!resolved) return null;
     return resolveAiPolicyCapsule({ entry: resolved.entry, policyProfile });
-  }, [policyProfile]);
+  }, [policyProfile, widgetCopilotAgentId]);
 
   const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
   useEffect(() => {
@@ -215,11 +223,12 @@ export function CopilotPane() {
   }, [aiPolicy, workspaceId, aiSubject]);
 
   const showAiSettings = useMemo(() => {
+    if (widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
     if (!aiPolicy || isMinibob || !aiSelection) return false;
     if (aiPolicy.allowProviderChoice) return true;
     const allowedModels = aiPolicy.models?.[aiSelection.provider]?.allowed ?? [];
     return Boolean(aiPolicy.allowModelChoice && allowedModels.length > 1);
-  }, [aiPolicy, isMinibob, aiSelection]);
+  }, [aiPolicy, isMinibob, aiSelection, widgetCopilotAgentId]);
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -436,11 +445,15 @@ export function CopilotPane() {
         }
       }
 
-      const selection = aiPolicy && !isMinibob ? clampAiSelection(aiSelection, aiPolicy) : null;
-      const res = await fetch('/api/ai/sdr-copilot', {
+      const selection =
+        aiPolicy && !isMinibob && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs
+          ? clampAiSelection(aiSelection, aiPolicy)
+          : null;
+      const res = await fetch('/api/ai/widget-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          agentId: widgetCopilotAgentId,
           prompt,
           widgetType,
           currentConfig: session.instanceData,
