@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "এখনই বুক করুন"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "আমাদের USA বেড অ্যান্ড ব্রেকফাস্টের আকর্ষণ ও আরাম উপভোগ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "বেড অ্যান্ড ব্রেকফাস্ট: সাধারণ প্রশ্ন (FAQs)"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "আমাদের কাছে স্ট্যান্ডার্ড, ডিলাক্স এবং স্যুইটসহ বিভিন্ন ধরনের রুম রয়েছে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "কোন কোন ধরনের রুম পাওয়া যায়?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "চেক-ইন বিকাল ৩টায়, আর চেক-আউট সকাল ১১টার মধ্যে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "চেক-ইন ও চেক-আউটের সময় কখন?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "জি, আপনার থাকার সঙ্গে বিনামূল্যের নাশতা অন্তর্ভুক্ত।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "নাশতা কি অন্তর্ভুক্ত?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "জি, আমরা রোমান্টিক গেটঅ্যাওয়ে প্যাকেজ এবং পরিবার-বান্ধব অপশনও দিই।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "আপনাদের কি কোনো বিশেষ প্যাকেজ আছে?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "সাধারণ প্রশ্ন"
+    }
+  ],
+  "v": 1
+}

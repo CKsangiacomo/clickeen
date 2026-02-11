@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "publicId": "wgt_curated_faq.hospitality.v01",
+  "snapshot": {
+    "cta.label": "Book Now",
+    "header.subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "header.title": "Bed and Breakfast FAQs",
+    "sections.0.faqs.0.answer": "We offer a variety of rooms including standard, deluxe, and suites.",
+    "sections.0.faqs.0.question": "What types of rooms are available?",
+    "sections.0.faqs.1.answer": "Check-in is at 3 PM and check-out is by 11 AM.",
+    "sections.0.faqs.1.question": "What are the check-in and check-out times?",
+    "sections.0.faqs.2.answer": "Yes, a complimentary breakfast is included with your stay.",
+    "sections.0.faqs.2.question": "Is breakfast included?",
+    "sections.0.faqs.3.answer": "Yes, we offer romantic getaway packages and family-friendly options.",
+    "sections.0.faqs.3.question": "Do you offer any special packages?",
+    "sections.0.title": "Common Questions"
+  },
+  "v": 1
+}

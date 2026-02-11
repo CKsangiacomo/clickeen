@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen on widgetien SaaS-alusta, jonka avulla lisäät viimeistellyt ja suorituskykyiset widgetit verkkosivullesi minuuteissa – ilman raskasta kehitystyötä."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "UKK"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Modernit verkkosivuwidgetit – nopea käyttöönotto, helppo räätälöidä ja suunniteltu parantamaan konversioita."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ota yhteyttä"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kyllä. Maksuton paketti sisältää 1 aktiivisen widgetin ja tärkeimmät ominaisuudet, jotta voit kokeilla Clickeeniä tuotantosivustolla."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Tarjoatteko maksutonta pakettia?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Luo widget, kopioi upotuskoodi ja liitä se verkkosivullesi juuri ennen sulkevaa </body>-tagia. Clickeenissä tekemäsi muutokset päivittyvät heti."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Miten asennan widgetin sivustolleni?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Julkaise nopeammin joustavilla muotoilusäädöillä, helpoilla päivityksillä ja luotettavalla suorituskyvyllä – jotta tiimisi voi toimittaa parannuksia ilman oman koodin ylläpitoa."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miksi käyttää Clickeeniä sen sijaan, että rakentaisit widgetit alusta asti?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Aloitus"
+    }
+  ],
+  "v": 1
+}

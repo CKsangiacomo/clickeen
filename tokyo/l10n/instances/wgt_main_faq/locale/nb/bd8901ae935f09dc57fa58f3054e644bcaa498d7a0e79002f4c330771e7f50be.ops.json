@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen er en SaaS-plattform for widgets som lar deg legge til gjennomarbeidede, høytytende widgets på nettstedet ditt på få minutter – uten omfattende utviklingsarbeid."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanlige spørsmål"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Moderne nettside-widgets – raske å lansere, enkle å tilpasse og laget for å hjelpe deg med å konvertere."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakt oss"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Ja. Gratisplanen inkluderer 1 aktiv widget med grunnleggende funksjoner, så du kan prøve Clickeen på et live nettsted."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Tilbyr dere en gratisplan?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Lag widgeten din, kopier innbyggingskoden og lim den inn rett før den avsluttende </body>-taggen på nettstedet ditt. Endringer du gjør i Clickeen oppdateres umiddelbart."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Hvordan installerer jeg en widget på nettstedet mitt?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Lanser raskere med fleksible designkontroller, enkle oppdateringer og pålitelig ytelse – så teamet ditt kan levere forbedringer uten å vedlikeholde egen kode."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Hvorfor bruke Clickeen i stedet for å bygge widgets fra bunnen av?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Kom i gang"
+    }
+  ],
+  "v": 1
+}

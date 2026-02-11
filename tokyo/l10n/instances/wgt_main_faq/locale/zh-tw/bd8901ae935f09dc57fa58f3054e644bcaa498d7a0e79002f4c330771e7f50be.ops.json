@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "快速開始"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "什麼是 Clickeen？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "有提供免費方案嗎？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "要怎麼在我的網站安裝小工具？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "為什麼要用 Clickeen，而不是從零開始做小工具？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen 是一個小工具 SaaS 平台，讓你在幾分鐘內就能把精緻且高效能的小工具加到網站上——不需要繁重的開發工作。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "有。Free 方案包含 1 個啟用中的小工具與必要功能，讓你能在正式網站上試用 Clickeen。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "建立小工具後，複製嵌入碼，貼到你網站的結尾 </body> 標籤前面即可。在 Clickeen 做的變更會立即更新。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "透過彈性的設計控制、簡單的更新流程與穩定的效能加速上線——讓團隊不用維護自訂程式碼，也能快速推出改進。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "聯絡我們"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "現代化網站小工具——快速上線、輕鬆自訂，專為提升轉換而打造。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常見問題"
+    }
+  ],
+  "v": 1
+}

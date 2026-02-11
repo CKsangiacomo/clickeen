@@ -101,7 +101,8 @@ Provider:
 KV is used for “chat thread” / short-lived session state (24h TTL).
 
 Example keys (current code):
-- `sdrw:session:${sessionId}` (SDR widget copilot session)
+- `copilot:sdr:session:${sessionId}` (SDR widget copilot session)
+- `copilot:cs:session:${sessionId}` (CS widget copilot session)
 
 ### Queue (non-blocking ingestion)
 

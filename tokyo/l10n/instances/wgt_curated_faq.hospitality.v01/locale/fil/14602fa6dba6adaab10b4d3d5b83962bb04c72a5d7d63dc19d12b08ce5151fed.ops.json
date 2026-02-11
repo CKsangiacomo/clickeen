@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Mag-book Ngayon"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tuklasin ang alindog at kaginhawaan ng aming bed and breakfast sa USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Mga FAQ sa Bed and Breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nag-aalok kami ng iba’t ibang uri ng kuwarto, kabilang ang standard, deluxe, at mga suite."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Anong mga uri ng kuwarto ang available?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Ang check-in ay 3 PM at ang check-out ay hanggang 11 AM."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ano ang oras ng check-in at check-out?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oo, may kasamang libreng almusal sa iyong pananatili."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Kasama ba ang almusal?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oo, nag-aalok kami ng mga package para sa romantikong bakasyon at mga opsyon na family-friendly."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "May iniaalok ba kayong mga espesyal na package?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Mga Karaniwang Tanong"
+    }
+  ],
+  "v": 1
+}

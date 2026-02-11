@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "احجز الآن"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "اكتشف سحر وراحة فندق المبيت والإفطار لدينا في USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة حول المبيت والإفطار"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "نقدّم مجموعة متنوعة من الغرف، بما في ذلك القياسية والديلوكس والأجنحة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما أنواع الغرف المتاحة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "تسجيل الوصول الساعة 3 مساءً وتسجيل المغادرة حتى 11 صباحًا."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "ما مواعيد تسجيل الوصول وتسجيل المغادرة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "نعم، إفطار مجاني مشمول مع إقامتك."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل الإفطار مشمول؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "نعم، نوفر باقات لعطلات رومانسية وخيارات مناسبة للعائلات."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "هل تقدمون أي باقات خاصة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "أسئلة شائعة"
+    }
+  ],
+  "v": 1
+}

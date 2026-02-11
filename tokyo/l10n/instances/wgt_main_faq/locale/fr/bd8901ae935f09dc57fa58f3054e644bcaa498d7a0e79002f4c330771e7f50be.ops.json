@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Bien démarrer"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Qu'est-ce que Clickeen ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Proposez-vous un forfait gratuit ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Comment installer un widget sur mon site ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Pourquoi utiliser Clickeen plutôt que de créer des widgets de zéro ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen est une plateforme SaaS de widgets qui vous permet d’ajouter en quelques minutes à votre site des widgets soignés et performants — sans gros travail de développement."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Oui. Le forfait Gratuit inclut 1 widget actif avec les fonctionnalités essentielles, pour tester Clickeen sur un site en production."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Créez votre widget, copiez le code d’intégration et collez-le juste avant la balise de fermeture </body> sur votre site. Les modifications apportées dans Clickeen se mettent à jour instantanément."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Lancez plus vite grâce à des contrôles de design flexibles, des mises à jour simples et des performances fiables — pour que votre équipe puisse livrer des améliorations sans maintenir de code sur mesure."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactez-nous"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Widgets modernes pour votre site web — rapides à lancer, faciles à personnaliser et conçus pour vous aider à convertir."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ"
+    }
+  ],
+  "v": 1
+}

@@ -2,11 +2,52 @@ import { HttpError, asString, isRecord } from '../http';
 import type { Env, Usage } from '../types';
 import type { ChatMessage } from '../ai/chat';
 
+type OpenAIChatMessage = {
+  content?: unknown;
+  refusal?: unknown;
+};
+
 type OpenAIChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
+  choices?: Array<{ message?: OpenAIChatMessage }>;
   usage?: { prompt_tokens?: number; completion_tokens?: number };
   model?: string;
+  output_text?: unknown;
 };
+
+function extractText(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    const parts = value
+      .map((part) => extractText(part))
+      .filter((part) => part.length > 0);
+    return parts.join('\n').trim();
+  }
+  if (!isRecord(value)) return '';
+
+  const direct =
+    asString((value as any).text) ??
+    asString((value as any).value) ??
+    asString((value as any).content) ??
+    null;
+  if (direct && direct.trim()) return direct.trim();
+
+  if (isRecord((value as any).text)) {
+    const nestedText = (value as any).text;
+    const nested =
+      asString((nestedText as any).value) ??
+      asString((nestedText as any).text) ??
+      asString((nestedText as any).content) ??
+      null;
+    if (nested && nested.trim()) return nested.trim();
+  }
+
+  const nestedContent = (value as any).content;
+  if (nestedContent !== undefined) {
+    const nested = extractText(nestedContent);
+    if (nested) return nested;
+  }
+  return '';
+}
 
 function usesMaxCompletionTokens(model: string): boolean {
   const normalized = model.trim().toLowerCase();
@@ -78,7 +119,11 @@ export async function callOpenAiChat(args: {
     }
 
     const latencyMs = Date.now() - startedAt;
-    const content = responseJson.choices?.[0]?.message?.content ?? '';
+    const firstMessage = responseJson.choices?.[0]?.message;
+    const content =
+      extractText(firstMessage?.content) ||
+      extractText(firstMessage?.refusal) ||
+      extractText(responseJson.output_text);
     if (!content) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Empty model response' });
 
     const usage: Usage = {

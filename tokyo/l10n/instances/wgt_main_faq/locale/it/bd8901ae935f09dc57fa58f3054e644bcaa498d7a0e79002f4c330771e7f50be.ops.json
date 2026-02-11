@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Per iniziare"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Cos'è Clickeen?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Offrite un piano gratuito?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Come installo un widget sul mio sito?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Perché usare Clickeen invece di creare widget da zero?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen è una piattaforma SaaS di widget che ti permette di aggiungere al tuo sito widget curati e ad alte prestazioni in pochi minuti, senza bisogno di un lavoro di sviluppo complesso."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Sì. Il piano Free include 1 widget attivo con le funzionalità essenziali, così puoi provare Clickeen su un sito live."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Crea il tuo widget, copia il codice di incorporamento e incollalo subito prima del tag di chiusura </body> sul tuo sito. Le modifiche che fai in Clickeen si aggiornano all’istante."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Lancia più velocemente con controlli di design flessibili, aggiornamenti semplici e prestazioni affidabili, così il tuo team può rilasciare miglioramenti senza dover mantenere codice personalizzato."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contattaci"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Widget moderni per il tuo sito: rapidi da lanciare, facili da personalizzare e pensati per aiutarti a convertire."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ"
+    }
+  ],
+  "v": 1
+}

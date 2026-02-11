@@ -23,11 +23,20 @@
 - Requires a Paris-minted grant; enforces `agent:*` caps and `ai` policy capsule.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
+- Provider execution retries transient upstream failures once, then falls back across eligible model candidates (and across providers when the grant does not pin `selectedProvider`).
+- OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Widget-copilot canonical IDs:
   - `sdr.widget.copilot.v1` (Minibob + free)
   - `cs.widget.copilot.v1` (paid tiers + DevStudio)
 - Paris resolves widget-copilot aliasing before SF execution (`widget.copilot.v1` and forced SDR/CS IDs are normalized by profile).
-- Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts` (shared execution path with SDR/CS objective differences).
+- Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.
+- Widget copilot now runs with shared execution plumbing + role-scoped policy behavior:
+  - SDR policy (`sdr.widget.copilot.v1`): FAQ-only sales workflow with two edit capabilities (rewrite existing Q&A, or personalize from one website URL with consent). Other requests return seller messaging + signup CTA.
+  - CS policy (`cs.widget.copilot.v1`): full in-product editor assistant behavior (control-driven edits), no SDR website/sales clarification loop.
+  - CS prompt payload expands tokenized content paths into concrete FAQ entries for rewrite intents and forbids requesting control/config dumps from users.
+- Runtime modules are split per agent:
+  - SDR executor: `sanfrancisco/src/agents/sdrWidgetCopilot.ts` (KV namespace `copilot:sdr:session:*`)
+  - CS executor: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
 - **Tiered Execution:** Enforces `ai.profile` from the grant.
   - `free_low`: `deepseek-chat` by default (agent-scoped alternatives may include Nova Lite).
   - `paid_standard`: `gpt-4o-mini` default, with provider/model choices constrained by policy + agent support (DeepSeek, OpenAI, Anthropic, Groq, Amazon Nova).

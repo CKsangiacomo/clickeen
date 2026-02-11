@@ -84,6 +84,9 @@ Widget copilot routing (shipped):
 - `tier1`/`tier2`/`tier3`/`devstudio` resolve to `cs.widget.copilot.v1`
 - Callers may request the alias `widget.copilot.v1`; Paris resolves it by profile.
 - DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
+- Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
+  - `sdr.widget.copilot.v1`: FAQ-only SDR workflow (rewrite existing Q&A or personalize from one website URL with consent). Non-supported requests return seller guidance + signup CTA.
+  - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
 
 Deployment status (verified on February 11, 2026):
 - Local target behavior: browser calls `POST /api/ai/widget-copilot` (with `/api/ai/sdr-copilot` as compatibility shim).

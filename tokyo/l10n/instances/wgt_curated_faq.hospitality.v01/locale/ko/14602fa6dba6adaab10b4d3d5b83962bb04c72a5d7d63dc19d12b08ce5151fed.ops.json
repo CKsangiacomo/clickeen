@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "지금 예약"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "미국의 매력과 편안함을 담은 저희 B&B를 만나보세요."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "B&B 자주 묻는 질문"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "스탠다드, 디럭스, 스위트 등 다양한 객실을 제공하고 있습니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "어떤 객실 유형이 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "체크인은 오후 3시, 체크아웃은 오전 11시까지입니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "체크인/체크아웃 시간은 언제인가요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "네, 숙박 시 무료 조식이 포함됩니다."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "조식이 포함되나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "네, 로맨틱한 커플 여행 패키지와 가족 친화 옵션을 제공해요."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "특별 패키지가 있나요?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "자주 묻는 질문"
+    }
+  ],
+  "v": 1
+}

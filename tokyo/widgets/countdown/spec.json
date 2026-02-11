@@ -441,25 +441,25 @@
           "xs": "32px"
         },
         "button": {
-          "l": "18px",
-          "m": "16px",
-          "s": "14px",
-          "xl": "20px",
-          "xs": "12px"
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
         },
         "title": {
-          "l": "36px",
-          "m": "32px",
-          "s": "28px",
-          "xl": "40px",
-          "xs": "24px"
+          "l": "38px",
+          "m": "28px",
+          "s": "24px",
+          "xl": "48px",
+          "xs": "20px"
         },
         "body": {
-          "l": "16px",
-          "m": "14px",
-          "s": "13px",
-          "xl": "18px",
-          "xs": "12px"
+          "l": "22px",
+          "m": "18px",
+          "s": "16px",
+          "xl": "24px",
+          "xs": "14px"
         }
       },
       "globalFamily": "Inter"

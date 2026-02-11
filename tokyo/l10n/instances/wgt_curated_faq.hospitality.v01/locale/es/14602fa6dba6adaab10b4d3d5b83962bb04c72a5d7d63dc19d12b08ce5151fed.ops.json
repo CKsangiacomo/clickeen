@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Reservar ahora"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Descubre el encanto y la comodidad de nuestro bed and breakfast en EE. UU."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Preguntas frecuentes sobre nuestro bed and breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ofrecemos una variedad de habitaciones, incluidas estándar, deluxe y suites."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "¿Qué tipos de habitaciones están disponibles?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "El check-in es a las 15:00 y el check-out es hasta las 11:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "¿Cuáles son los horarios de check-in y check-out?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sí, el desayuno está incluido sin costo adicional con tu estancia."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "¿El desayuno está incluido?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Sí, ofrecemos paquetes para escapadas románticas y opciones ideales para familias."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "¿Ofrecen paquetes especiales?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Preguntas frecuentes"
+    }
+  ],
+  "v": 1
+}

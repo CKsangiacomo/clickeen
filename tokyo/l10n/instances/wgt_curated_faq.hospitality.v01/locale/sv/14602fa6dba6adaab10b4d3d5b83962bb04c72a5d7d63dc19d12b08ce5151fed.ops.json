@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Boka nu"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Upptäck charmen och bekvämligheten på vårt bed and breakfast i USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanliga frågor om bed and breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi erbjuder olika rumstyper, bland annat standardrum, deluxerum och sviter."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Vilka rumstyper finns?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Incheckning är från kl. 15.00 och utcheckning senast kl. 11.00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Vilka är tiderna för in- och utcheckning?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, frukost ingår utan extra kostnad i vistelsen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Ingår frukost?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, vi erbjuder paket för romantiska weekendresor och familjevänliga alternativ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Erbjuder ni några specialpaket?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Vanliga frågor"
+    }
+  ],
+  "v": 1
+}

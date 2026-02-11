@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen là nền tảng widget SaaS giúp bạn thêm các widget đẹp mắt, hiệu suất cao lên website chỉ trong vài phút—không cần công việc phát triển nặng."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Câu hỏi thường gặp"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Widget website hiện đại—triển khai nhanh, dễ tùy biến và được tối ưu để tăng chuyển đổi."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Liên hệ với chúng tôi"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Có. Gói Free bao gồm 1 widget đang hoạt động với các tính năng thiết yếu để bạn dùng thử Clickeen trên website thực tế."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Bạn có gói miễn phí không?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tạo widget của bạn, sao chép mã nhúng và dán ngay trước thẻ đóng </body> trên website. Mọi thay đổi bạn thực hiện trong Clickeen sẽ cập nhật tức thì."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Làm sao để cài widget lên website của tôi?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ra mắt nhanh hơn với các tùy chọn thiết kế linh hoạt, cập nhật đơn giản và hiệu năng ổn định—để đội ngũ của bạn có thể triển khai cải tiến mà không phải duy trì mã tùy chỉnh."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Vì sao nên dùng Clickeen thay vì tự xây widget từ đầu?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Bắt đầu"
+    }
+  ],
+  "v": 1
+}

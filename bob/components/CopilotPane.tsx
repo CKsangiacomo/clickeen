@@ -56,6 +56,9 @@ function normalizeAssistantText(text: string): string {
   if (!candidate) return 'Done.';
   if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
   if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
+  if (candidate.toLowerCase().includes('empty model response')) {
+    return 'Copilot got an empty response from the model provider. Please try again, or switch model/provider in Copilot AI.';
+  }
   if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
   return candidate;
 }

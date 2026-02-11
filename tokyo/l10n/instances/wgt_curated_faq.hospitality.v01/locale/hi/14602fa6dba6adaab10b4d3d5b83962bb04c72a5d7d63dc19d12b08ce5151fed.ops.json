@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "अभी बुक करें"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "हमारे USA बेड एंड ब्रेकफ़ास्ट के आकर्षण और आराम का अनुभव करें।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "बेड एंड ब्रेकफ़ास्ट FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "हमारे पास स्टैंडर्ड, डीलक्स और सुइट्स सहित कई तरह के कमरे उपलब्ध हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "किस तरह के कमरे उपलब्ध हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "चेक-इन 3 PM पर है और चेक-आउट 11 AM तक।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "चेक-इन और चेक-आउट का समय क्या है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "हाँ, ठहरने के साथ निःशुल्क नाश्ता शामिल है।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "क्या नाश्ता शामिल है?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "हाँ, हम रोमांटिक गेटअवे पैकेज और परिवार के लिए अनुकूल विकल्प उपलब्ध कराते हैं।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "क्या आपके पास कोई विशेष पैकेज हैं?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "आम सवाल"
+    }
+  ],
+  "v": 1
+}

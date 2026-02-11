@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Clickeen 是一个小组件 SaaS 平台，让你几分钟内就能把精致、高性能的小组件添加到网站上——无需繁重的开发工作。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "常见问题"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "现代网站小组件——上线快、易定制，专为提升转化而打造。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "联系我们"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "是的。免费方案包含 1 个可用的小组件及核心功能，方便你在真实网站上试用 Clickeen。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "你们提供免费方案吗？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "创建小组件后，复制嵌入代码，并将其粘贴到你网站上关闭 </body> 标签之前。你在 Clickeen 中做出的更改会立即更新。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "我如何在网站上安装小组件？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "借助灵活的设计控制、简单的更新方式和可靠的性能更快上线——让团队无需维护自定义代码也能持续发布改进。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "为什么选择 Clickeen，而不是从零开始开发小组件？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "快速开始"
+    }
+  ],
+  "v": 1
+}

@@ -45,19 +45,25 @@ Post-deploy findings:
   - present: `free`, `tier3`
   - missing: `tier1`, `tier2`
 
-## Release package scope (CS routing + shared widget copilot)
+## Release package scope (CS routing + role-scoped policy split)
 
 Core runtime files:
 - `tooling/ck-policy/src/ai.ts`
 - `paris/src/domains/ai/index.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
+- `sanfrancisco/src/agents/csWidgetCopilot.ts`
 - `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`
 - `bob/app/api/ai/widget-copilot/handler.ts`
 - `bob/app/api/ai/widget-copilot/route.ts`
 - `bob/app/api/ai/sdr-copilot/route.ts`
 - `bob/components/CopilotPane.tsx`
 - `admin/src/html/tools/entitlements.html`
+
+Policy split notes (local runtime):
+- SDR and CS still share grant plumbing + telemetry shape, but behavior is now role-scoped in the widget copilot runtime.
+- SDR path is constrained to FAQ sales workflow (rewrite existing Q&A, or website-based FAQ personalization).
+- CS path handles general control-driven editor requests and does not use the SDR website/seller clarification loop.
 
 Verification scripts:
 - `scripts/smoke-ai.mjs`

@@ -610,25 +610,25 @@
       },
       "roleScales": {
         "body": {
-          "l": "16px",
-          "m": "14px",
-          "s": "13px",
-          "xl": "18px",
-          "xs": "12px"
+          "l": "22px",
+          "m": "18px",
+          "s": "16px",
+          "xl": "24px",
+          "xs": "14px"
         },
         "title": {
-          "l": "28px",
-          "m": "24px",
-          "s": "20px",
-          "xl": "32px",
-          "xs": "18px"
+          "l": "38px",
+          "m": "28px",
+          "s": "24px",
+          "xl": "48px",
+          "xs": "20px"
         },
         "button": {
-          "l": "15px",
-          "m": "14px",
-          "s": "13px",
-          "xl": "16px",
-          "xs": "12px"
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
         }
       },
       "globalFamily": "Inter"

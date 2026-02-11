@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Réserver maintenant"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Découvrez le charme et le confort de notre bed & breakfast aux États-Unis."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ du Bed & Breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nous proposons différents types de chambres, dont des chambres standard, deluxe et des suites."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Quels types de chambres sont disponibles ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "L’arrivée se fait à 15 h et le départ au plus tard à 11 h."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Quels sont les horaires d’arrivée et de départ ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oui, un petit déjeuner offert est inclus dans votre séjour."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Le petit déjeuner est-il inclus ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oui, nous proposons des forfaits escapade romantique et des options adaptées aux familles."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Proposez-vous des forfaits spéciaux ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Questions fréquentes"
+    }
+  ],
+  "v": 1
+}

@@ -2,7 +2,7 @@
 
 STATUS: REFERENCE / PRD (keep in sync with shipped code)
 Created: 2024-12-27
-Last updated: 2026-01-02
+Last updated: 2026-02-11
 
 ---
 
@@ -35,6 +35,13 @@ Key properties:
 - **Explicit commit**: after an edit, the user must **Keep** or **Undo** (no silent commits).
 - **Budgeted + signed**: every model execution is authorized by a short-lived **AI Grant** minted by Paris and verified by San Francisco.
 - **Conversion-aware**: Copilot includes CTAs (signup/upgrade) at appropriate moments without degrading the editing experience.
+
+Current runtime contract (February 11, 2026):
+- SDR widget copilot is constrained to FAQ sales workflow:
+  1. Rewrite existing FAQ questions/answers.
+  2. Personalize FAQ questions/answers from one website URL (single-page read, explicit consent).
+- Requests outside those two capabilities return seller guidance plus a signup CTA (no fallback style/layout edits in SDR mode).
+- Paid/devstudio users are routed to `cs.widget.copilot.v1` (CS policy), not this SDR behavior pack.
 
 **Sibling agents**: SDR Copilot is one of multiple Clickeen agents. See also: `UXWriterAgent.PRD.md` (async localization intelligence).
 

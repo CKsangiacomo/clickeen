@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "14602fa6dba6adaab10b4d3d5b83962bb04c72a5d7d63dc19d12b08ce5151fed",
+  "baseUpdatedAt": "2026-02-11T18:07:33.443931+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Zarezerwuj teraz"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Odkryj urok i komfort naszego pensjonatu B&amp;B w USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ – pensjonat B&amp;B"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Oferujemy różne rodzaje pokoi, w tym standardowe, deluxe oraz apartamenty."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Jakie rodzaje pokoi są dostępne?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Zameldowanie odbywa się od 15:00, a wymeldowanie do 11:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "W jakich godzinach jest zameldowanie i wymeldowanie?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tak, w cenie pobytu jest wliczone bezpłatne śniadanie."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy śniadanie jest wliczone w cenę?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Tak, oferujemy pakiety na romantyczny wyjazd oraz opcje przyjazne rodzinom."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Czy oferujecie jakieś specjalne pakiety?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Najczęstsze pytania"
+    }
+  ],
+  "v": 1
+}

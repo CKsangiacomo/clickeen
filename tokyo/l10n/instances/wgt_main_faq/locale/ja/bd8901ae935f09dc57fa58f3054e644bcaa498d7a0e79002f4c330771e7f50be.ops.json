@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "baseUpdatedAt": "2026-02-11T16:25:36.057756+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "はじめに"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Clickeenとは何ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "無料プランはありますか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "サイトにウィジェットを導入するにはどうすればいいですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "ウィジェットを一から作る代わりにClickeenを使う理由は？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "ClickeenはウィジェットSaaSプラットフォームです。大がかりな開発なしで、洗練された高性能ウィジェットを数分でWebサイトに追加できます。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "はい。無料プランには、基本機能を備えた有効なウィジェット1つが含まれており、実際のサイトでClickeenをお試しいただけます。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "ウィジェットを作成し、埋め込みコードをコピーして、Webサイトの閉じタグ </body> の直前に貼り付けてください。Clickeenで行った変更は即時に反映されます。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "柔軟なデザイン調整、簡単な更新、安定したパフォーマンスでリリースをスピードアップ。カスタムコードを保守せずに、チームが改善を素早く提供できます。"
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "お問い合わせ"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "すぐに公開できて、簡単にカスタマイズ可能。コンバージョン向上のために作られたモダンなWebサイトウィジェット。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "よくある質問"
+    }
+  ],
+  "v": 1
+}

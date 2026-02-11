@@ -85,8 +85,14 @@ function parseNumber(value: unknown): number | null {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) return null;
-    const num = Number(trimmed);
-    return Number.isFinite(num) ? num : null;
+    const direct = Number(trimmed);
+    if (Number.isFinite(direct)) return direct;
+    const pxMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)(?:px)$/i);
+    if (pxMatch) {
+      const px = Number(pxMatch[1]);
+      return Number.isFinite(px) ? px : null;
+    }
+    return null;
   }
   return null;
 }
