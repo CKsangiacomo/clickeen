@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "publicId": "wgt_curated_faq_minimal_techpalette",
+  "snapshot": {
+    "cta.label": "Contact Ive Engineering",
+    "header.subtitleHtml": "Your go-to for engineering solutions and services.",
+    "header.title": "Ive Engineering FAQ",
+    "sections.0.faqs.0.answer": "Ive Engineering is a global firm specializing in innovative engineering solutions and services.",
+    "sections.0.faqs.0.question": "What is Ive Engineering?",
+    "sections.0.faqs.1.answer": "Simply reach out to us, discuss your project needs, and we'll guide you through our service offerings.",
+    "sections.0.faqs.1.question": "How do I start using Ive Engineering's services?",
+    "sections.0.faqs.2.answer": "Yes, Ive Engineering offers free consultations to understand your project requirements better.",
+    "sections.0.faqs.2.question": "Is there a consultation available?",
+    "sections.0.faqs.3.answer": "Ive Engineering provides cutting-edge solutions, experienced professionals, and tailored services to meet your specific engineering needs.",
+    "sections.0.faqs.3.question": "Why should I choose Ive Engineering for my engineering needs?",
+    "sections.0.title": "All Questions"
+  },
+  "v": 1
+}

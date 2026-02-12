@@ -62,7 +62,8 @@
   font-style: var(--typo-title-style, normal);
   font-weight: var(--typo-title-weight, 600);
   font-size: var(--typo-title-size, var(--fs-18));
-  line-height: var(--lh-tight);
+  letter-spacing: var(--typo-title-tracking, 0em);
+  line-height: var(--typo-title-line-height, var(--lh-tight));
   color: var(--typo-title-color, var(--color-system-black));
 }
 
@@ -71,7 +72,8 @@
   font-style: var(--typo-body-style, normal);
   font-weight: var(--typo-body-weight, 400);
   font-size: var(--typo-body-size, var(--fs-14));
-  line-height: var(--lh-body);
+  letter-spacing: var(--typo-body-tracking, 0em);
+  line-height: var(--typo-body-line-height, var(--lh-body));
   color: var(--typo-body-color, var(--color-system-black));
 }
 
@@ -150,7 +152,8 @@
   font-style: var(--typo-button-style, normal);
   font-weight: var(--typo-button-weight, 600);
   font-size: var(--typo-button-size, var(--fs-14));
-  line-height: var(--lh-tight);
+  letter-spacing: var(--typo-button-tracking, 0em);
+  line-height: var(--typo-button-line-height, var(--lh-tight));
   white-space: nowrap;
 }
 

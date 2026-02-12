@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bce705d284d6d7b16ec925e8c62ff18f0f12479f0c44187524b049dca24298c8",
+  "baseUpdatedAt": "2026-02-12T00:37:11.926623+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Todas las preguntas"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "¿Qué es Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "¿Cómo empiezo a usar Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "¿Hay una prueba gratuita disponible?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "¿Por qué debería elegir Liquid Marketing para mis necesidades de marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing es una empresa SaaS especializada en automatización de marketing, que ofrece herramientas avanzadas para campañas de email, segmentación de clientes y analítica."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Solo tienes que registrarte, integrar tus datos y empezar a crear campañas automatizadas con nuestra plataforma intuitiva."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sí, Liquid Marketing ofrece una prueba gratuita con acceso a funciones básicas. Actualiza tu plan para obtener capacidades más avanzadas."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing ofrece una plataforma sólida con herramientas de automatización fáciles de usar, analítica detallada y un excelente servicio de atención al cliente, lo que la hace ideal para empresas que buscan optimizar sus acciones de marketing."
+    },
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contáctanos"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Tu opción de referencia para soluciones de automatización de marketing."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Preguntas frecuentes de Liquid Marketing"
+    }
+  ],
+  "v": 1
+}

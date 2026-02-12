@@ -17,7 +17,7 @@
         "subheadline": "See how teams in travel, hospitality, and service businesses use one FAQ widget to answer repeat questions faster."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -30,7 +30,7 @@
         "body": "Guests repeat check-in, parking, and breakfast questions every day. Put those answers in one FAQ widget and publish updates once. Guests get clear answers in their language before messaging the front desk."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -43,7 +43,7 @@
         "body": "Guests check menu details, allergens, and opening hours from their phones. Use the FAQ widget to keep those answers current. Visitors decide faster while staff handle fewer repeated questions."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -56,7 +56,7 @@
         "body": "Check-in instructions, Wi-Fi details, and house rules repeat across properties. Keep them in one FAQ widget and publish once. Every listing shows the latest version without manual rework."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -77,7 +77,7 @@
         "body": "Travelers need clear pickup points, cancellation rules, and weather policies. Add those answers to the FAQ widget and localize for key markets. Booking friction drops because questions are resolved before checkout."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -90,7 +90,7 @@
         "body": "Visitors ask about tickets, bag policy, accessibility, and opening times. Keep these answers in one FAQ widget and update when operations change. Arrival flow is smoother because expectations are clear before entry."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {

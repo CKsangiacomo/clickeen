@@ -26,7 +26,7 @@ function safeJsonParse(text: string): unknown | null {
 
 function isCuratedPublicId(value: string): boolean {
   if (!value) return false;
-  if (/^wgt_curated_/.test(value)) return true;
+  if (/^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(value)) return true;
   return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(value);
 }
 

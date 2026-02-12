@@ -124,26 +124,23 @@ Examples:
 These are instances created by Clickeen (via Bob) that serve as starter designs **and** Prague embeds.
 
 **Naming**
-- `wgt_curated_{widgetType}.{styleSlug}.vNN`
+- `wgt_curated_{widgetType}_{styleSlug}`
 
 Where:
 - `styleSlug` is a stable, human-chosen style key (allowed chars: `a-z 0-9 _`)
-- `vNN` is the version index for that style (zero-padded)
 - locale is a runtime parameter; it must not be encoded into `public_id`
 
 Examples:
-- `wgt_curated_faq.lightblurs.v01`
-- `wgt_curated_countdown.starter.v01`
-- `wgt_curated_logoshowcase.brutalist.v02`
+- `wgt_curated_faq_lightblurs_generic`
+- `wgt_curated_countdown_starter`
+- `wgt_curated_logoshowcase_brutalist`
 
 **Metadata**
 Curated instances also store metadata in `curated_widget_instances.meta`:
 ```
 {
-  "styleName": "Light Blurs",
-  "styleSlug": "lightblurs",
-  "version": 1,
-  "tags": { "icp": ["saas"], "objective": ["conversion"], "style": ["glass"] }
+  "styleName": "lightblurs.generic",
+  "styleSlug": "lightblurs_generic"
 }
 ```
 Metadata is used for DevStudio display + filtering; the `public_id` is still the canonical identifier.

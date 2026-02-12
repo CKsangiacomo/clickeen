@@ -16,7 +16,14 @@ import FeatureExplorer from '../blocks/feature-explorer/feature-explorer.astro';
 import MobileShowcase from '../blocks/mobile-showcase/mobile-showcase.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
-import { chooseShowcaseTiles, localeLabel, resolveTokyoInstanceLocales, sortLocaleOptions } from '../lib/instanceL10n';
+import { getPragueMarket } from '../lib/markets';
+import {
+  chooseOverviewHeroLocales,
+  chooseShowcaseTiles,
+  localeLabel,
+  resolveTokyoInstanceLocales,
+  sortLocaleOptions,
+} from '../lib/instanceL10n';
 
 type Block = {
   id: string;
@@ -54,7 +61,31 @@ const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRa
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
 const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
 const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
+const marketConfig = getPragueMarket(market);
+const overviewHeroLocaleSelection = chooseOverviewHeroLocales({ market: marketConfig, instanceLocales, max: 3 });
+const overviewHeroSubheadOne = await pragueT(locale, 'prague.hero.overview.subheadOne');
+const overviewHeroSubheadTwo = await pragueT(locale, 'prague.hero.overview.subheadTwo');
+const overviewHeroSubheadMany = await pragueT(locale, 'prague.hero.overview.subheadMany');
 const heroPrimaryCta = primaryCta;
+
+function renderOverviewHeroSubheadline(args: { selectedLocales: string[]; availableCount: number }): string | null {
+  const selected = args.selectedLocales;
+  if (selected.length === 0) return null;
+  const labels = selected.map((code) => localeLabel(code, locale));
+  const lang1 = labels[0] || '';
+  const lang2 = labels[1] || '';
+  const more = Math.max(0, Number(args.availableCount || 0) - selected.length);
+  if (selected.length === 1 || !lang2) {
+    return overviewHeroSubheadOne.replace('{lang1}', lang1);
+  }
+  if (more <= 0) {
+    return overviewHeroSubheadTwo.replace('{lang1}', lang1).replace('{lang2}', lang2);
+  }
+  return overviewHeroSubheadMany
+    .replace('{lang1}', lang1)
+    .replace('{lang2}', lang2)
+    .replace('{more}', String(more));
+}
 ---
 
 {blocks.map((block) => {
@@ -77,10 +108,43 @@ const heroPrimaryCta = primaryCta;
       const curatedEmbedModeRaw =
         block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
       const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const explicitHeroItems = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
+      const mappedHeroItems = explicitHeroItems.map((item: any) => {
+        const itemLocale = typeof item?.curatedRef?.locale === 'string' ? item.curatedRef.locale.trim() : '';
+        return {
+          ...item,
+          curatedRef: item.curatedRef ? { ...item.curatedRef, locale: itemLocale || locale } : item.curatedRef,
+        };
+      });
+      const heroPreviewPublicId = curatedPublicId || showcasePublicId;
+      const overviewHeroLocales =
+        overviewHeroLocaleSelection.locales.length > 0 ? overviewHeroLocaleSelection.locales : showcaseTiles;
+      const autoOverviewHeroItems =
+        activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewPublicId
+          ? overviewHeroLocales.map((code) => ({
+              curatedRef: {
+                publicId: heroPreviewPublicId,
+                locale: code,
+                title: `${widget} overview ${code}`,
+                embedMode: curatedEmbedMode,
+              },
+            }))
+          : [];
+      const resolvedHeroItems = mappedHeroItems.length > 0 ? mappedHeroItems : autoOverviewHeroItems;
+      const dynamicOverviewSubheadline =
+        activeSubpage === 'overview' && mappedHeroItems.length === 0
+          ? renderOverviewHeroSubheadline({
+              selectedLocales: overviewHeroLocales,
+              availableCount:
+                overviewHeroLocaleSelection.availableLocales.length > 0
+                  ? overviewHeroLocaleSelection.availableLocales.length
+                  : instanceLocales.length,
+            })
+          : null;
       return (
         <Hero
           headline={String(copy.headline ?? '')}
-          subheadline={String(copy.subheadline ?? '')}
+          subheadline={dynamicOverviewSubheadline || String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           curatedRef={
@@ -88,10 +152,7 @@ const heroPrimaryCta = primaryCta;
               ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: curatedEmbedMode }
               : undefined
           }
-          items={((block as any).items ?? []).map((item: any) => ({
-            ...item,
-            curatedRef: item.curatedRef ? { ...item.curatedRef, locale } : item.curatedRef,
-          }))}
+          items={resolvedHeroItems}
         >
           <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
@@ -129,10 +190,13 @@ const heroPrimaryCta = primaryCta;
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           layout={layout}
-          items={((block as any).items ?? []).map((item: any) => ({
-            ...item,
-            curatedRef: item.curatedRef ? { ...item.curatedRef, locale } : item.curatedRef,
-          }))}
+          items={((block as any).items ?? []).map((item: any) => {
+            const itemLocale = typeof item?.curatedRef?.locale === 'string' ? item.curatedRef.locale.trim() : '';
+            return {
+              ...item,
+              curatedRef: item.curatedRef ? { ...item.curatedRef, locale: itemLocale || locale } : item.curatedRef,
+            };
+          })}
         />
       );
     }

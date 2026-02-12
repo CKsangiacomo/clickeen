@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Skontaktuj się z Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Twoje sprawdzone źródło rozwiązań i usług inżynieryjnych."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering to globalna firma specjalizująca się w innowacyjnych rozwiązaniach i usługach inżynieryjnych."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Czym jest Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Po prostu skontaktuj się z nami, omów potrzeby projektu, a my przeprowadzimy Cię przez naszą ofertę usług."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Jak zacząć korzystać z usług Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Tak, Ive Engineering oferuje bezpłatne konsultacje, aby lepiej zrozumieć wymagania Twojego projektu."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Czy dostępna jest konsultacja?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering dostarcza nowoczesne rozwiązania, doświadczonych specjalistów oraz usługi dopasowane do Twoich konkretnych potrzeb inżynieryjnych."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Dlaczego warto wybrać Ive Engineering do realizacji potrzeb inżynieryjnych?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Wszystkie pytania"
+    }
+  ],
+  "v": 1
+}

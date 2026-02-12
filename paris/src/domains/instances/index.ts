@@ -254,11 +254,8 @@ function readCuratedMeta(raw: unknown): Record<string, unknown> | null {
 function formatCuratedDisplayName(meta: Record<string, unknown> | null, fallback: string): string {
   if (!meta) return fallback;
   const styleName = asTrimmedString(meta.styleName ?? meta.name ?? meta.title);
-  const versionRaw = meta.version;
-  const versionNum = typeof versionRaw === 'number' && Number.isFinite(versionRaw) ? versionRaw : null;
-  const versionLabel = versionNum ? ` v${String(Math.max(1, Math.round(versionNum))).padStart(2, '0')}` : '';
   if (!styleName) return fallback;
-  return `${styleName}${versionLabel}`;
+  return styleName;
 }
 
 export async function handleCuratedInstances(req: Request, env: Env) {

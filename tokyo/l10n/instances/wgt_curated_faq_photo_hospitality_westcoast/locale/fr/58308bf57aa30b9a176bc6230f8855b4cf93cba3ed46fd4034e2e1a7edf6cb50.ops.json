@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Réserver maintenant"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Découvrez le charme et le confort de notre bed and breakfast aux États-Unis."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ – Bed and Breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Nous proposons différents types de chambres, notamment des <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">chambres Standard</a>, des <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">chambres Deluxe</a> et des <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Quels types de chambres sont disponibles ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "L’arrivée se fait à 15 h et le départ au plus tard à 11 h."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Quels sont les horaires d’arrivée et de départ ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oui, un petit-déjeuner offert est inclus avec votre séjour."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Le petit-déjeuner est-il inclus ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Oui, nous proposons des forfaits <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">escapades romantiques</a> ainsi que des <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">options adaptées aux familles.</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Proposez-vous des forfaits spéciaux ?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Questions fréquentes"
+    }
+  ],
+  "v": 1
+}

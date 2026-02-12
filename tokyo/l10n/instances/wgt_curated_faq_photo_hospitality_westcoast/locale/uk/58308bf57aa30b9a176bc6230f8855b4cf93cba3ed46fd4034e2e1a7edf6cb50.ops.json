@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Забронювати зараз"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Відкрийте для себе затишок і комфорт нашого американського bed and breakfast."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Поширені запитання про Bed and Breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ми пропонуємо різні категорії номерів: <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">стандарт</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">делюкс</a>, а також <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">люкси</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Які типи номерів доступні?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Заїзд — о 15:00, виїзд — до 11:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "О котрій заїзд і виїзд?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Так, у вартість проживання входить безкоштовний сніданок."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Сніданок включено?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Так, ми пропонуємо романтичні <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">пакети для відпочинку</a> та <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">варіанти для сімей з дітьми.</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Чи є у вас спеціальні пакети?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Поширені запитання"
+    }
+  ],
+  "v": 1
+}

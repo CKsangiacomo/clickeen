@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineering ile iletişime geçin"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Mühendislik çözümleri ve hizmetleri için ilk tercihiniz."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering SSS"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering, yenilikçi mühendislik çözümleri ve hizmetlerinde uzmanlaşmış global bir firmadır."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering nedir?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Bize ulaşın, proje ihtiyaçlarınızı paylaşın; size hizmetlerimiz konusunda adım adım rehberlik edelim."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ive Engineering’in hizmetlerini kullanmaya nasıl başlarım?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Evet, Ive Engineering proje gereksinimlerinizi daha iyi anlamak için ücretsiz danışmanlık sunar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Danışmanlık hizmeti var mı?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering, en yeni çözümler, deneyimli uzmanlar ve ihtiyaçlarınıza göre uyarlanmış hizmetlerle özel mühendislik gereksinimlerinizi karşılar."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Mühendislik ihtiyaçlarım için neden Ive Engineering’i seçmeliyim?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Tüm Sorular"
+    }
+  ],
+  "v": 1
+}

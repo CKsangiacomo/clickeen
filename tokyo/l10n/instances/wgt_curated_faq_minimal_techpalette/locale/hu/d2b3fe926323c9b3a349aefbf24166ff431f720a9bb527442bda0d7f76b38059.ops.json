@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kapcsolatfelvétel az Ive Engineeringgel"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Mérnöki megoldások és szolgáltatások első számú partnere."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering GYIK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Az Ive Engineering egy globális vállalat, amely innovatív mérnöki megoldásokra és szolgáltatásokra specializálódott."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mi az Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Egyszerűen lépjen kapcsolatba velünk, beszéljük át projektje igényeit, és végigvezetjük a szolgáltatási lehetőségeinken."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hogyan kezdhetem el használni az Ive Engineering szolgáltatásait?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Igen, az Ive Engineering ingyenes konzultációt kínál, hogy jobban megértsük a projekt követelményeit."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Van lehetőség konzultációra?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Az Ive Engineering élvonalbeli megoldásokat, tapasztalt szakembereket és az Ön igényeire szabott szolgáltatásokat nyújt, hogy megfeleljen a konkrét mérnöki elvárásoknak."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miért az Ive Engineeringet válasszam mérnöki igényeimhez?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Összes kérdés"
+    }
+  ],
+  "v": 1
+}

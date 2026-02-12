@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "ติดต่อ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "ผู้ช่วยหลักของคุณด้านโซลูชันและบริการวิศวกรรม"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "คำถามที่พบบ่อยเกี่ยวกับ Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering เป็นบริษัทระดับโลกที่เชี่ยวชาญด้านโซลูชันและบริการวิศวกรรมเชิงนวัตกรรม"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineering คืออะไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "เพียงติดต่อเรา แจ้งความต้องการของโครงการ แล้วเราจะพาคุณไปรู้จักบริการต่างๆ ที่เหมาะกับคุณ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "เริ่มใช้บริการของ Ive Engineering ได้อย่างไร?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "มี Ive Engineering ให้คำปรึกษาฟรี เพื่อทำความเข้าใจความต้องการของโครงการของคุณให้ชัดเจนยิ่งขึ้น"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "มีบริการให้คำปรึกษาหรือไม่?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering มอบโซลูชันล้ำสมัย ทีมผู้เชี่ยวชาญมากประสบการณ์ และบริการที่ปรับให้เหมาะกับคุณ เพื่อตอบโจทย์ด้านวิศวกรรมของคุณโดยเฉพาะ"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "ทำไมควรเลือก Ive Engineering สำหรับความต้องการด้านวิศวกรรมของฉัน?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "คำถามทั้งหมด"
+    }
+  ],
+  "v": 1
+}

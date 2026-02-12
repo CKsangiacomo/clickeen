@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Boka nu"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Upptäck charmen och komforten på vårt bed and breakfast i USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanliga frågor om bed and breakfast"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Vi erbjuder flera olika rumstyper, bland annat <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a>, <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> och <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">sviter</a>."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Vilka typer av rum finns?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Incheckning är kl. 15.00 och utcheckning senast kl. 11.00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Vilka är tiderna för in- och utcheckning?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, frukost ingår utan extra kostnad under din vistelse."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Ingår frukost?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, vi erbjuder romantiska <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">weekendpaket</a> och <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">familjevänliga alternativ.</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Erbjuder ni några specialpaket?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Vanliga frågor"
+    }
+  ],
+  "v": 1
+}

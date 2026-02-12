@@ -15,6 +15,8 @@ const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'l
   Astro.props;
 
 const showShareChrome = (Astro.props as Props).showShareChrome !== false;
+const PRAGUE_EMBED_MIN_HEIGHT = 420;
+const PRAGUE_EMBED_MAX_HEIGHT = 800;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 
@@ -83,6 +85,8 @@ const brandSvgs = {
   id={anchorId}
   data-ck-instance-id={anchorId}
   data-ck-widget-type={widgetType}
+  data-ck-min-height={String(PRAGUE_EMBED_MIN_HEIGHT)}
+  data-ck-max-height={String(PRAGUE_EMBED_MAX_HEIGHT)}
 >
   {iframeSrc ? (
     <>
@@ -466,7 +470,9 @@ const brandSvgs = {
     background: transparent;
     position: relative;
     z-index: 1;
-    min-height: 200px; /* Minimum height while loading */
+    min-height: 420px;
+    max-height: 800px;
+    height: 420px;
   }
 
   .ck-instanceEmbed__stub {
@@ -499,8 +505,17 @@ const brandSvgs = {
         if (event.data.type !== 'ck:resize') return;
 
         const height = event.data.height;
+        const canvasMode = typeof event.data.canvasMode === 'string' ? event.data.canvasMode : '';
         if (typeof height === 'number' && height > 0) {
-          iframe.style.height = `${height}px`;
+          const rawMin = Number(instance.getAttribute('data-ck-min-height'));
+          const rawMax = Number(instance.getAttribute('data-ck-max-height'));
+          const minHeight = Number.isFinite(rawMin) ? rawMin : 420;
+          const maxHeight = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 800;
+          let next = Math.min(maxHeight, Math.max(minHeight, Math.ceil(height)));
+          if (canvasMode === 'viewport') {
+            next = maxHeight;
+          }
+          iframe.style.height = `${next}px`;
         }
       };
 

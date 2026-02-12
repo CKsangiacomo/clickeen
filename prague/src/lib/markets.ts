@@ -10,11 +10,21 @@ export type PragueMarket = {
   country: string | null;
   defaultLocale: string;
   locales: string[];
+  overviewHero: PragueMarketOverviewHero;
 };
 
 export type PragueMarketsConfig = {
   v: 1;
   markets: PragueMarket[];
+};
+
+export type PragueOverviewHeroStrategy = 'tier1' | 'native-first';
+
+export type PragueMarketOverviewHero = {
+  strategy: PragueOverviewHeroStrategy;
+  tier1Locales: string[];
+  nativeLocale: string | null;
+  regionalFallbackLocales: string[];
 };
 
 function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
@@ -88,7 +98,84 @@ function normalizeMarketsConfig(raw: unknown): PragueMarketsConfig {
       );
     }
 
-    return { key, country, defaultLocale, locales: localesUnique };
+    const overviewHeroRaw = (entry as any).overviewHero;
+    if (!overviewHeroRaw || typeof overviewHeroRaw !== 'object' || Array.isArray(overviewHeroRaw)) {
+      throw new Error(`[prague] Missing or invalid markets[${index}].overviewHero: ${MARKETS_FILE_LABEL}`);
+    }
+
+    const strategyRaw = String((overviewHeroRaw as any).strategy || '').trim().toLowerCase();
+    if (strategyRaw !== 'tier1' && strategyRaw !== 'native-first') {
+      throw new Error(
+        `[prague] Invalid markets[${index}].overviewHero.strategy "${strategyRaw}" (expected "tier1" or "native-first"): ${MARKETS_FILE_LABEL}`,
+      );
+    }
+    const strategy = strategyRaw as PragueOverviewHeroStrategy;
+
+    const ensureMarketLocale = (value: string, path: string) => {
+      if (!PRAGUE_CANONICAL_LOCALES.includes(value)) {
+        throw new Error(`[prague] Invalid ${path} "${value}" (not in config/locales.json): ${MARKETS_FILE_LABEL}`);
+      }
+      if (!localesUnique.includes(value)) {
+        throw new Error(`[prague] Invalid ${path} "${value}" (not in market locales): ${MARKETS_FILE_LABEL}`);
+      }
+    };
+
+    const regionalFallbackRaw = Array.isArray((overviewHeroRaw as any).regionalFallbackLocales)
+      ? ((overviewHeroRaw as any).regionalFallbackLocales as unknown[])
+      : [];
+    const regionalFallbackLocales = Array.from(
+      new Set(
+        regionalFallbackRaw
+          .map((l) => (typeof l === 'string' ? l.trim().toLowerCase() : ''))
+          .filter(Boolean),
+      ),
+    );
+    regionalFallbackLocales.forEach((localeValue, localeIndex) => {
+      ensureMarketLocale(
+        localeValue,
+        `markets[${index}].overviewHero.regionalFallbackLocales[${localeIndex}]`,
+      );
+    });
+
+    const tier1Raw = Array.isArray((overviewHeroRaw as any).tier1Locales)
+      ? ((overviewHeroRaw as any).tier1Locales as unknown[])
+      : [];
+    const tier1Locales = Array.from(
+      new Set(
+        tier1Raw
+          .map((l) => (typeof l === 'string' ? l.trim().toLowerCase() : ''))
+          .filter(Boolean),
+      ),
+    );
+    tier1Locales.forEach((localeValue, localeIndex) => {
+      ensureMarketLocale(localeValue, `markets[${index}].overviewHero.tier1Locales[${localeIndex}]`);
+    });
+
+    const nativeLocaleRaw = String((overviewHeroRaw as any).nativeLocale || '').trim().toLowerCase();
+    const nativeLocale = nativeLocaleRaw || null;
+    if (nativeLocale) {
+      ensureMarketLocale(nativeLocale, `markets[${index}].overviewHero.nativeLocale`);
+    }
+
+    if (strategy === 'tier1' && tier1Locales.length === 0) {
+      throw new Error(
+        `[prague] Invalid markets[${index}].overviewHero.tier1Locales (required for strategy=tier1): ${MARKETS_FILE_LABEL}`,
+      );
+    }
+    if (strategy === 'native-first' && !nativeLocale) {
+      throw new Error(
+        `[prague] Invalid markets[${index}].overviewHero.nativeLocale (required for strategy=native-first): ${MARKETS_FILE_LABEL}`,
+      );
+    }
+
+    const overviewHero: PragueMarketOverviewHero = {
+      strategy,
+      tier1Locales: strategy === 'tier1' ? tier1Locales : [],
+      nativeLocale: strategy === 'native-first' ? nativeLocale : null,
+      regionalFallbackLocales,
+    };
+
+    return { key, country, defaultLocale, locales: localesUnique, overviewHero };
   });
 
   return { v: 1, markets };

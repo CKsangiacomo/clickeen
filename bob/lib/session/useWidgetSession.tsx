@@ -126,6 +126,59 @@ type ThemeRegistry = {
 };
 
 const themePresetCache = new Map<string, Promise<WidgetPresets | null>>();
+const GLOBAL_TYPOGRAPHY_ROLE_SCALES: Record<string, Record<'xs' | 's' | 'm' | 'l' | 'xl', string>> = {
+  title: { xs: '20px', s: '28px', m: '36px', l: '44px', xl: '60px' },
+  body: { xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' },
+  section: { xs: '12px', s: '13px', m: '14px', l: '16px', xl: '18px' },
+  question: { xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' },
+  answer: { xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' },
+  button: { xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' },
+};
+
+function enforceGlobalTypographyRoleScales(config: Record<string, unknown>) {
+  const typography = config.typography;
+  if (!isPlainRecord(typography)) return;
+
+  const roles = typography.roles;
+  if (!isPlainRecord(roles)) return;
+
+  Object.values(roles).forEach((roleValue) => {
+    if (!isPlainRecord(roleValue)) return;
+    const lineHeightPreset =
+      typeof roleValue.lineHeightPreset === 'string' && roleValue.lineHeightPreset.trim()
+        ? roleValue.lineHeightPreset.trim()
+        : 'normal';
+    roleValue.lineHeightPreset = lineHeightPreset;
+    if (!Object.prototype.hasOwnProperty.call(roleValue, 'lineHeightCustom')) {
+      roleValue.lineHeightCustom = 1.4;
+    }
+
+    const trackingPreset =
+      typeof roleValue.trackingPreset === 'string' && roleValue.trackingPreset.trim()
+        ? roleValue.trackingPreset.trim()
+        : 'normal';
+    roleValue.trackingPreset = trackingPreset;
+    if (!Object.prototype.hasOwnProperty.call(roleValue, 'trackingCustom')) {
+      roleValue.trackingCustom = 0;
+    }
+  });
+
+  const roleScales = isPlainRecord(typography.roleScales)
+    ? (typography.roleScales as Record<string, unknown>)
+    : ((typography.roleScales = {}) as Record<string, unknown>);
+
+  Object.entries(GLOBAL_TYPOGRAPHY_ROLE_SCALES).forEach(([roleKey, presetMap]) => {
+    if (!isPlainRecord(roles[roleKey])) return;
+    const currentRoleScale = isPlainRecord(roleScales[roleKey])
+      ? (roleScales[roleKey] as Record<string, unknown>)
+      : ((roleScales[roleKey] = {}) as Record<string, unknown>);
+    currentRoleScale.xs = presetMap.xs;
+    currentRoleScale.s = presetMap.s;
+    currentRoleScale.m = presetMap.m;
+    currentRoleScale.l = presetMap.l;
+    currentRoleScale.xl = presetMap.xl;
+  });
+}
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -1355,6 +1408,7 @@ function useWidgetSessionInternal() {
     };
 
     merge(defaults, config);
+    enforceGlobalTypographyRoleScales(config);
     return config;
   }
 

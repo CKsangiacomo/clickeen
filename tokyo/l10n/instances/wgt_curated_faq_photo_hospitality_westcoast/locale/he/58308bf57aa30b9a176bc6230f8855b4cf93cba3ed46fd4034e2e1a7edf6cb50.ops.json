@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "להזמין עכשיו"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "גלו את הקסם והנוחות של ה-B&amp;B שלנו בארה״ב."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "שאלות נפוצות על B&amp;B"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "אנו מציעים מגוון חדרים, כולל <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סטנדרט</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">דלוקס</a> , ו-<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">סוויטות</a> ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "אילו סוגי חדרים זמינים?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "הצ׳ק-אין בשעה 15:00 והצ׳ק-אאוט עד 11:00."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "מהן שעות הצ׳ק-אין והצ׳ק-אאוט?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "כן, ארוחת בוקר חינם כלולה בשהייה."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "האם ארוחת בוקר כלולה?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "כן, אנחנו מציעים חבילות נופש רומנטיות <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> וכן <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">אפשרויות שמתאימות למשפחות.</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "האם אתם מציעים חבילות מיוחדות?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "שאלות נפוצות"
+    }
+  ],
+  "v": 1
+}

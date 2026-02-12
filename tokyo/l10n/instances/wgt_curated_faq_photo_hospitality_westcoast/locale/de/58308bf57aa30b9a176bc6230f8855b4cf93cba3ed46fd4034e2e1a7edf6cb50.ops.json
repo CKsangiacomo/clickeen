@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Jetzt buchen"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Entdecken Sie den Charme und Komfort unseres Bed and Breakfast in den USA."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Bed and Breakfast – FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Wir bieten verschiedene Zimmerkategorien an, darunter <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Deluxe</a> , und <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Suiten</a> ."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Welche Zimmertypen sind verfügbar?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Check-in ist um 15:00 Uhr und Check-out bis 11:00 Uhr."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Wann sind Check-in und Check-out?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, ein kostenloses Frühstück ist in Ihrem Aufenthalt inbegriffen."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Ist Frühstück inklusive?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ja, wir bieten romantische <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">Kurzurlaubspakete</a> sowie <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">familienfreundliche Optionen.</a>"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bieten Sie spezielle Pakete an?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Häufige Fragen"
+    }
+  ],
+  "v": 1
+}

@@ -172,6 +172,33 @@
     el.style.setProperty(`--${key}-left`, `${pad.left}px`);
   }
 
+  function parsePx(value) {
+    const n = Number.parseFloat(String(value || '0'));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function applyCenterAlignmentCompensation(stageEl, podEl, opts) {
+    const floatingEnabled = Boolean(opts && opts.floatingEnabled);
+    const alignment = typeof (opts && opts.alignment) === 'string' ? opts.alignment : 'center';
+    if (floatingEnabled || alignment !== 'center') {
+      stageEl.removeAttribute('data-stage-center-compensated');
+      podEl.style.removeProperty('left');
+      podEl.style.removeProperty('top');
+      return;
+    }
+
+    const styles = window.getComputedStyle(stageEl);
+    const offsetX = (parsePx(styles.paddingRight) - parsePx(styles.paddingLeft)) / 2;
+    const offsetY = (parsePx(styles.paddingBottom) - parsePx(styles.paddingTop)) / 2;
+
+    // Keep "center" visually centered against the full stage area,
+    // even when stage paddings are asymmetric.
+    podEl.style.position = 'relative';
+    podEl.style.left = `${offsetX}px`;
+    podEl.style.top = `${offsetY}px`;
+    stageEl.setAttribute('data-stage-center-compensated', 'true');
+  }
+
   function resolveCanvas(stageCfg) {
     const canvas = stageCfg && typeof stageCfg === 'object' ? stageCfg.canvas : null;
     if (!canvas || typeof canvas !== 'object') return { mode: 'wrap', width: 0, height: 0 };
@@ -323,7 +350,8 @@
       const height = Math.max(0, Math.ceil(rect.height));
       if (state.lastHeight != null && Math.abs(height - state.lastHeight) <= 1) return;
       state.lastHeight = height;
-      window.parent.postMessage({ type: 'ck:resize', height }, '*');
+      const canvasMode = String(stageEl.getAttribute('data-canvas-mode') || '');
+      window.parent.postMessage({ type: 'ck:resize', height, canvasMode }, '*');
     });
   }
 
@@ -384,6 +412,10 @@
     const resolved = floating.enabled ? FLOATING_ALIGN_MAP[floating.anchor] : alignMap[stageCfg.alignment] || alignMap.center;
     stageEl.style.justifyContent = resolved.justify;
     stageEl.style.alignItems = resolved.alignItems;
+    applyCenterAlignmentCompensation(stageEl, podEl, {
+      alignment: stageCfg.alignment,
+      floatingEnabled: floating.enabled,
+    });
 
     podEl.style.setProperty('--pod-bg', resolveBackgroundFill(podCfg.background));
     if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
@@ -408,12 +440,13 @@
     // Bob uses this to avoid rendering "default" HTML before the real config is applied.
     postReady(stageEl, scopeEl);
 
-    // Notify parent (Bob preview) of height changes only when the parent needs it (wrap-to-content or auto-height fixed).
+    // Notify parent (Bob/Prague/Venice embeds) of height changes when the stage can be content-driven.
+    // `viewport` must report as well; otherwise iframe hosts can get stuck at a tiny initial height.
     const shouldReport =
       typeof window !== 'undefined' &&
       window.parent &&
       window.parent !== window &&
-      (canvas.mode === 'wrap' || (canvas.mode === 'fixed' && !(canvas.height > 0)));
+      (canvas.mode === 'wrap' || canvas.mode === 'viewport' || (canvas.mode === 'fixed' && !(canvas.height > 0)));
     const state = getResizeState(stageEl);
     if (!shouldReport) {
       if (state.obs) {

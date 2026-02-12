@@ -46,11 +46,9 @@ export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptio
     : [];
 
   return [
-    "  <tooldrawer-cluster>",
+    "  <tooldrawer-cluster label='Pod layout'>",
     `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='pod.widthMode' label='Pod width' placeholder='Choose width' value='{{pod.widthMode}}' options='${widthOptions}' />`,
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.contentWidth' label='Width in pixels' show-if=\"pod.widthMode == 'fixed'\" />",
-    `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='${alignmentOptions}' />`,
-    ...floatingFields,
     "    <tooldrawer-field-podstagelayout group-label='' type='toggle' size='md' path='pod.padding.desktop.linked' label='Link pod padding (desktop)' value='{{pod.padding.desktop.linked}}' default='true' />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.desktop.all' label='Pod padding (desktop px)' show-if=\"pod.padding.desktop.linked == true\" />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.desktop.top' label='Pod top padding (desktop px)' show-if=\"pod.padding.desktop.linked == false\" />",
@@ -64,7 +62,9 @@ export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptio
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.mobile.bottom' label='Pod bottom padding (mobile px)' show-if=\"pod.padding.mobile.linked == false\" />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='pod.padding.mobile.left' label='Pod left padding (mobile px)' show-if=\"pod.padding.mobile.linked == false\" />",
     "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
+    "  <tooldrawer-cluster label='Stage layout'>",
+    `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='stage.alignment' label='Pod alignment' placeholder='Choose alignment' value='{{stage.alignment}}' options='${alignmentOptions}' />`,
+    ...floatingFields,
     `    <tooldrawer-field-podstagelayout group-label='' type='dropdown-actions' size='md' path='stage.canvas.mode' label='Stage sizing' placeholder='Choose sizing' value='{{stage.canvas.mode}}' options='${canvasOptions}' />`,
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='stage.canvas.width' label='Stage width (px)' show-if=\"stage.canvas.mode == 'fixed'\" />",
     "    <tooldrawer-field-podstagelayout group-label='' type='valuefield' size='md' path='stage.canvas.height' label='Stage height (px)' show-if=\"stage.canvas.mode == 'fixed'\" />",

@@ -1,5 +1,6 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '../../../config/locales.json';
+import type { PragueMarket } from './markets';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
@@ -93,6 +94,59 @@ export function chooseShowcaseTiles(allLocales: string[]): string[] {
     if (!picked.includes(l)) picked.push(l);
   }
   return picked.slice(0, 3);
+}
+
+type OverviewHeroLocalesArgs = {
+  market: PragueMarket | null;
+  instanceLocales: string[];
+  max?: number;
+};
+
+export function chooseOverviewHeroLocales(args: OverviewHeroLocalesArgs): { locales: string[]; availableLocales: string[] } {
+  const max = Number.isFinite(args.max) ? Math.max(1, Number(args.max)) : 3;
+  const instanceUnique = Array.from(
+    new Set(args.instanceLocales.map((l) => normalizeLocaleToken(l)).filter((l): l is string => Boolean(l))),
+  );
+  const market = args.market;
+  const marketLocales = market
+    ? Array.from(new Set(market.locales.map((l) => normalizeLocaleToken(l)).filter((l): l is string => Boolean(l))))
+    : instanceUnique;
+  const availableLocales = market ? instanceUnique.filter((l) => marketLocales.includes(l)) : instanceUnique;
+  if (!availableLocales.length) return { locales: [], availableLocales: [] };
+
+  const strategy = market?.overviewHero.strategy ?? 'tier1';
+  const priority: string[] = [];
+
+  if (strategy === 'tier1') {
+    priority.push(...(market?.overviewHero.tier1Locales ?? []));
+  } else {
+    priority.push(market?.overviewHero.nativeLocale ?? market?.defaultLocale ?? 'en');
+    priority.push('en');
+  }
+
+  priority.push(market?.defaultLocale ?? 'en');
+  priority.push(...(market?.overviewHero.regionalFallbackLocales ?? []));
+  priority.push(...availableLocales);
+
+  const selected: string[] = [];
+  for (const candidateRaw of priority) {
+    const candidate = normalizeLocaleToken(candidateRaw);
+    if (!candidate) continue;
+    if (!availableLocales.includes(candidate)) continue;
+    if (selected.includes(candidate)) continue;
+    selected.push(candidate);
+    if (selected.length >= max) break;
+  }
+
+  if (selected.length < max) {
+    for (const localeCode of availableLocales) {
+      if (selected.includes(localeCode)) continue;
+      selected.push(localeCode);
+      if (selected.length >= max) break;
+    }
+  }
+
+  return { locales: selected.slice(0, max), availableLocales };
 }
 
 export function sortLocaleOptions(locales: string[]): string[] {

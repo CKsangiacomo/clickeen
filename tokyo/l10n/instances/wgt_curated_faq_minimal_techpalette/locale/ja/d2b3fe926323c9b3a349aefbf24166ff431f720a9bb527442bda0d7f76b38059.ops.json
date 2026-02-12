@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ive Engineeringに問い合わせる"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "エンジニアリングのソリューションとサービスならお任せください。"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering よくある質問"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineeringは、革新的なエンジニアリングのソリューションとサービスを提供するグローバル企業です。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ive Engineeringとは何ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "まずはお気軽にお問い合わせください。プロジェクトのご要望を伺い、サービス内容をご案内します。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Ive Engineeringのサービス利用はどう始めればいいですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "はい。Ive Engineeringでは、プロジェクト要件をより深く理解するための無料相談をご用意しています。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "相談は可能ですか？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineeringは最先端のソリューション、経験豊富なプロフェッショナル、そしてニーズに合わせたサービスで、お客様固有のエンジニアリング課題にお応えします。"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "エンジニアリングのニーズでIve Engineeringを選ぶ理由は？"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "すべての質問"
+    }
+  ],
+  "v": 1
+}

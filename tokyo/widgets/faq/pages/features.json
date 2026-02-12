@@ -17,7 +17,7 @@
         "subheadline": "From AI drafting to localization and SEO, these are the systems that keep answers accurate and discoverable."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -30,7 +30,7 @@
         "body": "Ombra generates structured FAQ copy inside the editor. Accept, edit, override, or reject each suggestion before publish."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -43,7 +43,7 @@
         "body": "You edit one source. Clickeen serves translated answers and lets you override any line when needed."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -56,7 +56,7 @@
         "body": "After you click Publish, every live embed loads the latest content."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {

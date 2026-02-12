@@ -57,6 +57,13 @@
       "overview": "Overview",
       "pricing": "Pricing",
       "templates": "Templates"
+    },
+    "hero": {
+      "overview": {
+        "subheadOne": "Design once, publish once, and instantly see it in {lang1}.",
+        "subheadTwo": "Design once, publish once, and instantly see it in {lang1} and {lang2}.",
+        "subheadMany": "Design once, publish once, and instantly see it in {lang1}, {lang2}, and {more} more languages."
+      }
     }
   },
   "v": 1

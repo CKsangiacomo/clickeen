@@ -518,20 +518,13 @@ export default defineConfig({
             }
 
             const publicId = String(payload?.publicId || '').trim();
-            if (!publicId || publicId.length > 200 || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(publicId)) {
+            const okMainPublicId = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+            const okCuratedPublicId = /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+            const okUserPublicId = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+            if (!publicId || publicId.length > 200 || (!okMainPublicId && !okCuratedPublicId && !okUserPublicId)) {
               res.statusCode = 422;
               res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
               return;
-            }
-            // Curated instances are locale-free. Locale is a runtime parameter and must not be encoded into publicId.
-            // This prevents accidental fan-out (wgt_curated_*.<locale>) when promoting to shared cloud-dev.
-            if (publicId.startsWith('wgt_curated_')) {
-              const okCuratedPublicId = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(publicId);
-              if (!okCuratedPublicId) {
-                res.statusCode = 422;
-                res.end(JSON.stringify({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }));
-                return;
-              }
             }
 
             const widgetType = String(payload?.widgetType || '').trim().toLowerCase();
@@ -541,7 +534,7 @@ export default defineConfig({
               return;
             }
 
-            const isCuratedInstance = publicId.startsWith('wgt_curated_') || publicId.startsWith('wgt_main_');
+            const isCuratedInstance = okCuratedPublicId || okMainPublicId;
             const status = String(payload?.status || (isCuratedInstance ? 'published' : 'unpublished')).trim();
             if (status !== 'unpublished' && status !== 'published') {
               res.statusCode = 422;

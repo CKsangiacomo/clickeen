@@ -111,6 +111,14 @@
     }
   }
 
+  const QA_GAP_PRESETS = {
+    xs: 'var(--space-1)',
+    s: 'var(--space-2)',
+    m: 'var(--space-3)',
+    l: 'var(--space-4)',
+    xl: 'var(--space-5)',
+  };
+
   function assertFaqState(state) {
     assertObject(state, 'state');
     assertBoolean(state.displayCategoryTitles, 'state.displayCategoryTitles');
@@ -164,6 +172,14 @@
     assertNumber(state.layout.itemPaddingRight, 'state.layout.itemPaddingRight');
     assertNumber(state.layout.itemPaddingBottom, 'state.layout.itemPaddingBottom');
     assertNumber(state.layout.itemPaddingLeft, 'state.layout.itemPaddingLeft');
+    assertString(state.layout.itemQaGapPreset, 'state.layout.itemQaGapPreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.layout.itemQaGapPreset)) {
+      throw new Error('[FAQ] state.layout.itemQaGapPreset must be xs|s|m|l|xl|custom');
+    }
+    assertNumber(state.layout.itemQaGapCustom, 'state.layout.itemQaGapCustom');
+    if (state.layout.itemQaGapCustom < 0 || state.layout.itemQaGapCustom > 120) {
+      throw new Error('[FAQ] state.layout.itemQaGapCustom must be 0..120');
+    }
 
     assertObject(state.appearance, 'state.appearance');
     assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
@@ -488,6 +504,12 @@
 
   function applyLayout(layout) {
     faqRoot.style.setProperty('--layout-gap', `${layout.gap}px`);
+    const qaGapPreset = typeof layout.itemQaGapPreset === 'string' ? layout.itemQaGapPreset : 's';
+    const qaGapValue =
+      qaGapPreset === 'custom'
+        ? `${Math.max(0, Math.min(120, layout.itemQaGapCustom))}px`
+        : QA_GAP_PRESETS[qaGapPreset] || QA_GAP_PRESETS.s;
+    faqRoot.style.setProperty('--faq-qa-gap', qaGapValue);
     faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
     faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
     faqRoot.setAttribute('data-layout', layout.type);

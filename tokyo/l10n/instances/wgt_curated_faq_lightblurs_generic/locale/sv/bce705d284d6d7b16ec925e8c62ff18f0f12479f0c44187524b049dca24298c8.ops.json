@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bce705d284d6d7b16ec925e8c62ff18f0f12479f0c44187524b049dca24298c8",
+  "baseUpdatedAt": "2026-02-12T00:37:11.926623+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakta oss"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Din självklara partner för lösningar inom marketing automation."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Liquid Marketing – vanliga frågor"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing är ett SaaS-bolag som är specialiserat på marketing automation och erbjuder avancerade verktyg för e-postkampanjer, kundsegmentering och analys."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Vad är Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Registrera dig, integrera din data och börja skapa automatiserade kampanjer med vår intuitiva plattform."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hur börjar jag använda Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Liquid Marketing erbjuder en kostnadsfri testperiod med tillgång till grundläggande funktioner. Uppgradera för mer avancerade möjligheter."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing erbjuder en kraftfull plattform med lättanvända automatiseringsverktyg, detaljerad analys och utmärkt kundsupport, vilket gör den idealisk för företag som vill effektivisera sin marknadsföring."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Varför ska jag välja Liquid Marketing för mina marknadsföringsbehov?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Finns det en kostnadsfri testperiod?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alla frågor"
+    }
+  ],
+  "v": 1
+}

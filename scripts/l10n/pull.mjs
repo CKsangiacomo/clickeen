@@ -79,8 +79,10 @@ function prettyStableJson(value) {
 }
 
 function isCuratedPublicId(publicId) {
-  if (/^wgt_curated_/.test(publicId)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+  return (
+    /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId) ||
+    /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId)
+  );
 }
 
 async function listInstanceOverlays() {

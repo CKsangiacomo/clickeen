@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-02-04
+Last updated: 2026-02-12
 
 ---
 
@@ -50,6 +50,14 @@ There is currently no dedicated `/{market}/{locale}/widgets/` index route in thi
   - `tokyo/widgets/{widget}/pages/overview.json`
 
 This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
+
+Overview hero runtime behavior:
+- For `hero` blocks on the overview route, Prague can auto-build a locale carousel from a single instance ID (one slide per locale).
+- Locale priority is market-configured in `config/markets.json` via `markets[].overviewHero`:
+  - `strategy: "tier1"` + `tier1Locales[]` for multilingual markets
+  - `strategy: "native-first"` + `nativeLocale` for single-primary-language markets
+  - optional `regionalFallbackLocales[]` for adjacent-market fallback order
+- Selection is deterministic: intersect with instance-available locales, preserve configured order, de-duplicate, cap to 3.
 
 ### 1.3 Widget subpages
 

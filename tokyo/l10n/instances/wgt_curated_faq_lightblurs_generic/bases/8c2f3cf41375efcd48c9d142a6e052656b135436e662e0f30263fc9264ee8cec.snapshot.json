@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "8c2f3cf41375efcd48c9d142a6e052656b135436e662e0f30263fc9264ee8cec",
+  "publicId": "wgt_curated_faq_lightblurs_generic",
+  "snapshot": {
+    "cta.label": "Contact us",
+    "header.subtitleHtml": "Polished design, effortless updates, and SEO foundations—ready for any language.",
+    "header.title": "Frequently Asked Questions",
+    "sections.0.faqs.0.answer": "Embeddable super widgets with conversions built in. And it's awesome. And amazing, and it always works for Margherita. And everyone else that uses it.",
+    "sections.0.faqs.0.question": "What is <u>Clickeen</u> ?",
+    "sections.0.faqs.1.answer": "Copy the embed code and paste it before  on your site.",
+    "sections.0.faqs.1.question": "How do I install a <em>nice widget?</em>",
+    "sections.0.faqs.2.answer": "Yes, one active widget with core features.",
+    "sections.0.faqs.2.question": "Is there a free plan?",
+    "sections.0.faqs.3.answer": "Because Clickeen is an amazing new platform to make the web beautiful and easy to use.",
+    "sections.0.faqs.3.question": "Why should I use Clickeen",
+    "sections.0.title": "All Questions"
+  },
+  "v": 1
+}

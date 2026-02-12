@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactar a Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "A sua referência em soluções e serviços de engenharia."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ da Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "A Ive Engineering é uma empresa global especializada em soluções e serviços de engenharia inovadores."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "O que é a Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Basta entrar em contacto connosco, falar sobre as necessidades do seu projeto e nós orientamo-lo(a) nas nossas ofertas de serviços."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Como começo a utilizar os serviços da Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Sim, a Ive Engineering oferece consultas gratuitas para compreender melhor os requisitos do seu projeto."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Existe alguma consulta disponível?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "A Ive Engineering oferece soluções de ponta, profissionais experientes e serviços personalizados para responder às suas necessidades específicas de engenharia."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Por que devo escolher a Ive Engineering para as minhas necessidades de engenharia?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Todas as perguntas"
+    }
+  ],
+  "v": 1
+}

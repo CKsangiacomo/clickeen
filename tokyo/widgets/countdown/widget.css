@@ -221,6 +221,8 @@ body {
   font-family: var(--typo-timer-family, var(--font-ui));
   font-size: var(--typo-timer-size, var(--fs-32));
   font-weight: var(--typo-timer-weight, 700);
+  letter-spacing: var(--typo-timer-tracking, 0em);
+  line-height: var(--typo-timer-line-height, 1);
   color: var(--countdown-text-color, var(--typo-timer-color));
 }
 
@@ -229,7 +231,8 @@ body {
   font-style: var(--typo-timer-style, normal);
   font-size: var(--typo-timer-size, var(--fs-32));
   font-weight: var(--typo-timer-weight, 700);
-  line-height: 1;
+  letter-spacing: var(--typo-timer-tracking, 0em);
+  line-height: var(--typo-timer-line-height, 1);
   color: var(--countdown-text-color, var(--typo-timer-color));
 }
 
@@ -239,7 +242,8 @@ body {
   font-style: var(--typo-label-style, normal);
   font-size: var(--typo-label-size, var(--fs-12));
   font-weight: var(--typo-label-weight, 400);
-  line-height: var(--lh-tight);
+  letter-spacing: var(--typo-label-tracking, 0em);
+  line-height: var(--typo-label-line-height, var(--lh-tight));
   color: color-mix(in oklab, var(--countdown-text-color, var(--typo-label-color)), transparent 30%);
 }
 
@@ -259,6 +263,8 @@ body {
   font-style: var(--typo-button-style, normal);
   font-size: var(--typo-button-size, var(--fs-14));
   font-weight: var(--typo-button-weight, 600);
+  letter-spacing: var(--typo-button-tracking, 0em);
+  line-height: var(--typo-button-line-height, var(--lh-tight));
   color: var(--typo-button-color, var(--color-system-white));
   background: var(--countdown-cta-bg);
   border: 1px solid var(--countdown-cta-bg);
@@ -292,6 +298,8 @@ body {
   font-style: var(--typo-label-style, normal);
   font-size: var(--typo-label-size, var(--fs-12));
   font-weight: var(--typo-label-weight, 500);
+  letter-spacing: var(--typo-label-tracking, 0em);
+  line-height: var(--typo-label-line-height, var(--lh-tight));
   color: var(--countdown-text-color, var(--typo-label-color));
   text-decoration: none;
 }

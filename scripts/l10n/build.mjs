@@ -11,6 +11,11 @@ const repoRoot = path.resolve(__dirname, '../..');
 const srcRoot = path.join(repoRoot, 'l10n');
 const outRoot = path.join(repoRoot, 'tokyo', 'l10n');
 const widgetsRoot = path.join(repoRoot, 'tokyo', 'widgets');
+const KNOWN_WIDGET_TYPES = fs
+  .readdirSync(widgetsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort((a, b) => b.length - a.length);
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -225,15 +230,16 @@ function computeL10nFingerprint(config, allowlist) {
 }
 
 function resolveWidgetTypeFromPublicId(publicId) {
-  if (publicId.startsWith('wgt_curated_')) {
-    const rest = publicId.slice('wgt_curated_'.length);
-    const widgetType = rest.split('.')[0] || '';
-    return widgetType.trim() || null;
+  const curated = publicId.match(/^wgt_curated_([a-z0-9][a-z0-9_-]*)$/i);
+  if (curated) {
+    const rest = curated[1];
+    for (const widgetType of KNOWN_WIDGET_TYPES) {
+      if (rest === widgetType || rest.startsWith(`${widgetType}_`)) return widgetType;
+    }
+    return null;
   }
-  if (publicId.startsWith('wgt_main_')) {
-    const widgetType = publicId.slice('wgt_main_'.length);
-    return widgetType.trim() || null;
-  }
+  const main = publicId.match(/^wgt_main_([a-z0-9][a-z0-9_-]*)$/i);
+  if (main) return main[1];
   const user = publicId.match(/^wgt_([a-z0-9][a-z0-9_-]*)_u_[a-z0-9][a-z0-9_-]*$/i);
   if (user) return user[1];
   return null;

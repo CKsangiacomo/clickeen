@@ -1,0 +1,38 @@
+{
+  "layers": {
+    "locale": {
+      "keys": [
+        "ar",
+        "bn",
+        "cs",
+        "da",
+        "de",
+        "es",
+        "fi",
+        "fil",
+        "fr",
+        "he",
+        "hi",
+        "hu",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh-hans",
+        "zh-tw"
+      ]
+    }
+  },
+  "publicId": "wgt_curated_faq_minimal_techpalette",
+  "v": 1
+}

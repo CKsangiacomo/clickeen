@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Kontakta Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Din självklara partner för tekniska lösningar och tjänster."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Vanliga frågor om Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering är ett globalt företag som specialiserar sig på innovativa tekniska lösningar och tjänster."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Vad är Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Kontakta oss, berätta om ditt projekt och dina behov så guidar vi dig genom våra tjänster."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Hur kommer jag igång med Ive Engineerings tjänster?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Ja, Ive Engineering erbjuder kostnadsfria konsultationer för att bättre förstå dina projektkrav."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Erbjuder ni konsultation?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering erbjuder banbrytande lösningar, erfarna experter och skräddarsydda tjänster för att möta dina specifika tekniska behov."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Varför ska jag välja Ive Engineering för mina tekniska behov?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Alla frågor"
+    }
+  ],
+  "v": 1
+}

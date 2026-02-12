@@ -95,6 +95,7 @@ body {
 .ck-faq {
   --ck-header-gap: var(--layout-gap, var(--space-4));
   --ck-header-inner-gap: var(--space-3);
+  --faq-qa-gap: var(--space-2);
   padding: 0;
   background: transparent;
   box-sizing: border-box;
@@ -128,7 +129,8 @@ body {
   font-style: var(--typo-section-style, normal);
   font-weight: var(--typo-section-weight, 600);
   font-size: var(--typo-section-size, var(--fs-14));
-  line-height: var(--lh-tight);
+  letter-spacing: var(--typo-section-tracking, 0em);
+  line-height: var(--typo-section-line-height, var(--lh-tight));
   color: var(--typo-section-color);
 }
 
@@ -154,7 +156,8 @@ body {
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
-  line-height: var(--lh-tight);
+  letter-spacing: var(--typo-question-tracking, 0em);
+  line-height: var(--typo-question-line-height, var(--lh-tight));
   color: var(--typo-question-color);
   display: flex;
   align-items: center;
@@ -167,6 +170,7 @@ body {
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
+  letter-spacing: var(--typo-question-tracking, 0em);
 }
 
 .ck-faq__q-icon.diet-btn-ic {
@@ -195,7 +199,7 @@ body {
 .ck-faq[data-layout='list'] .ck-faq__q,
 .ck-faq[data-layout='multicolumn'] .ck-faq__q {
   cursor: default;
-  padding-bottom: var(--space-2);
+  padding-bottom: 0;
   background: transparent;
 }
 
@@ -213,9 +217,10 @@ body {
 .ck-faq__a {
   font: var(--typo-answer-weight, 400)
     var(--typo-answer-size, var(--faq-answer-size, var(--fs-14)))
-    / var(--lh-body)
+    / var(--typo-answer-line-height, var(--lh-body))
     var(--typo-answer-family, var(--font-ui));
   font-style: var(--typo-answer-style, normal);
+  letter-spacing: var(--typo-answer-tracking, 0em);
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__q {
@@ -241,7 +246,7 @@ body {
 
 .ck-faq__a {
   padding: 0;
-  margin-top: var(--space-2);
+  margin-top: var(--faq-qa-gap, var(--space-2));
   color: var(--typo-answer-color);
   display: none;
 }

@@ -115,10 +115,10 @@ Between load and publish:
 **Naming convention for Clickeen starters:**
 ```
   wgt_main_{widgetType}
-wgt_curated_{widgetType}.{styleSlug}.vNN
+wgt_curated_{widgetType}_{styleSlug}
 Examples:
   wgt_main_faq
-  wgt_curated_faq.lightblurs.v01
+  wgt_curated_faq_lightblurs_generic
 ```
 
 **Publishing semantics:** Curated/owned instances are always publishable. In Michael, `curated_widget_instances.status` defaults to `published` and is not used as a user-facing gate (publishing is only a user-instance workflow).
@@ -126,10 +126,8 @@ Examples:
 Curated metadata lives alongside the instance (not in the publicId):
 ```
 curated_widget_instances.meta = {
-  styleName: "Light Blurs",
-  styleSlug: "lightblurs",
-  version: 1,
-  tags: { icp: ["saas"], objective: ["conversion"], style: ["glass"] }
+  styleName: "lightblurs.generic",
+  styleSlug: "lightblurs_generic"
 }
 ```
 
@@ -220,11 +218,13 @@ Bob's compiler (`bob/lib/compiler/`) auto-generates shared functionality:
 **Auto-generated from `defaults` declarations:**
 - **Typography Panel** — If `defaults.typography.roles` exists, generates font family, size preset, custom size, style, and weight controls per role
 - **Stage/Pod Layout Panel** — If `defaults.stage`/`defaults.pod` exists, injects pod width, alignment, padding, radius controls
+- **Panel Grouping** — Layout clusters are normalized to `Widget layout`, `Item layout`, `Pod layout`, and `Stage layout` (when applicable). Surface clusters in Appearance are split into `Stage appearance` and `Pod appearance` (instead of a mixed Stage/Pod block).
 
 **Curated Typography:**
 - 17 Google Fonts with weight/style specifications
 - Dynamic loading via `CKTypography.applyTypography()`
 - Role-based size presets (xs/s/m/l/xl/custom)
+- Canonical role scales are enforced globally for shared roles (`title`, `body`, `section`/Eyebrow, `question`/Item title, `answer`/Item body, `button`) so existing and new instances stay aligned.
 
 ---
 

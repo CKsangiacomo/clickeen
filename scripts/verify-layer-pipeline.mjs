@@ -7,6 +7,11 @@ import { spawnSync } from 'node:child_process';
 
 const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const widgetsRoot = path.join(process.cwd(), 'tokyo', 'widgets');
+const KNOWN_WIDGET_TYPES = fs
+  .readdirSync(widgetsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort((a, b) => b.length - a.length);
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -228,20 +233,27 @@ function deepEqual(a, b) {
 }
 
 function isCuratedPublicId(publicId) {
-  if (/^wgt_curated_/.test(publicId)) return true;
-  return /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
+  return (
+    /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId) ||
+    /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId)
+  );
+}
+
+function resolveCuratedWidgetType(publicId) {
+  const match = /^wgt_curated_([a-z0-9][a-z0-9_-]*)$/i.exec(publicId);
+  if (!match) return null;
+  const rest = match[1];
+  for (const widgetType of KNOWN_WIDGET_TYPES) {
+    if (rest === widgetType || rest.startsWith(`${widgetType}_`)) return widgetType;
+  }
+  return null;
 }
 
 function resolveWidgetTypeFromPublicId(publicId) {
-  if (publicId.startsWith('wgt_curated_')) {
-    const rest = publicId.slice('wgt_curated_'.length);
-    const widgetType = rest.split('.')[0] || '';
-    return widgetType.trim() || null;
-  }
-  if (publicId.startsWith('wgt_main_')) {
-    const widgetType = publicId.slice('wgt_main_'.length);
-    return widgetType.trim() || null;
-  }
+  const curatedWidgetType = resolveCuratedWidgetType(publicId);
+  if (curatedWidgetType) return curatedWidgetType;
+  const main = publicId.match(/^wgt_main_([a-z0-9][a-z0-9_-]*)$/i);
+  if (main) return main[1];
   const user = publicId.match(/^wgt_([a-z0-9][a-z0-9_-]*)_u_[a-z0-9][a-z0-9_-]*$/i);
   if (user) return user[1];
   return null;

@@ -1,0 +1,62 @@
+{
+  "baseFingerprint": "bce705d284d6d7b16ec925e8c62ff18f0f12479f0c44187524b049dca24298c8",
+  "baseUpdatedAt": "2026-02-12T00:37:11.926623+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ota yhteyttä"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Luotettava valinta markkinoinnin automaatioratkaisuihin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Liquid Marketing – UKK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing on SaaS-yritys, joka on erikoistunut markkinoinnin automaatioon. Se tarjoaa edistyneet työkalut sähköpostikampanjoihin, asiakassegmentointiin ja analytiikkaan."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mikä on Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Rekisteröidy, yhdistä data ja aloita automatisoitujen kampanjoiden luonti intuitiivisella alustallamme."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Miten pääsen alkuun Liquid Marketingin käytössä?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kyllä. Liquid Marketing tarjoaa ilmaisen kokeilujakson, johon sisältyy pääsy perusominaisuuksiin. Päivitä saadaksesi käyttöön edistyneemmät ominaisuudet."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing tarjoaa vankan alustan, helppokäyttöiset automaatiotyökalut, kattavan analytiikan ja erinomaisen asiakastuen. Se sopii erityisesti yrityksille, jotka haluavat tehostaa markkinointiaan ja vähentää manuaalista työtä."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miksi valitsisin Liquid Marketingin markkinointitarpeisiini?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Onko saatavilla ilmainen kokeilu?"
+    }
+  ],
+  "v": 1
+}

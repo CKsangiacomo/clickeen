@@ -15,6 +15,9 @@
       "copy": {
         "headline": "FAQ pricing",
         "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
+      },
+      "curatedRef": {
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     }
   ]

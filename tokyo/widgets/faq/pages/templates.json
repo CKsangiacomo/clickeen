@@ -13,34 +13,34 @@
       "id": "hero",
       "type": "hero",
       "copy": {
-        "headline": "One FAQ widget. Every style. Any language.",
-        "subheadline": "Pick a ready-made style or design from scratch, then publish once and keep every live FAQ up to date."
+        "headline": "Start with a style direction, not a blank canvas.",
+        "subheadline": "Choose a polished FAQ starting point, then tune every detail to match your brand in minutes."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       },
       "items": [
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_lightblurs_generic",
             "title": "Liquid Glass"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_lightblurs_generic",
             "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_lightblurs_generic",
             "title": "Rebel Blocks"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_lightblurs_generic",
             "title": "Enterprise Prime"
           }
         }
@@ -57,25 +57,25 @@
       "items": [
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_lightblurs_generic",
             "title": "Liquid Glass"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
             "title": "Pure Canvas"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_minimal_techpalette",
             "title": "Rebel Blocks"
           }
         },
         {
           "curatedRef": {
-            "publicId": "wgt_curated_faq.lightblurs.v01",
+            "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
             "title": "Enterprise Prime"
           }
         }
@@ -142,7 +142,7 @@
         "body": "Change structure anytime without rewriting your answers."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -155,7 +155,7 @@
         "body": "Polished interaction states are built in."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -168,7 +168,7 @@
         "body": "Set typography by role and keep it consistent everywhere."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -181,7 +181,7 @@
         "body": "Your FAQ adapts to light or dark contexts automatically."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {
@@ -194,7 +194,7 @@
         "body": "Built for mobile, tablet, and desktop out of the box."
       },
       "curatedRef": {
-        "publicId": "wgt_curated_faq.lightblurs.v01"
+        "publicId": "wgt_curated_faq_lightblurs_generic"
       }
     },
     {

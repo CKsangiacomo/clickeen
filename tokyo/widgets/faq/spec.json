@@ -236,7 +236,9 @@
       "itemPaddingLeft": 20,
       "itemPaddingRight": 20,
       "itemPaddingBottom": 20,
-      "itemPaddingLinked": true
+      "itemPaddingLinked": true,
+      "itemQaGapPreset": "s",
+      "itemQaGapCustom": 8
     },
     "seoGeo": {
       "enabled": false
@@ -551,6 +553,8 @@
     "    <tooldrawer-field-type-settings group-label='' type='dropdown-actions' size='md' path='layout.cardsLayout' label='Cards layout' placeholder='Choose layout' value='{{layout.cardsLayout}}' show-if=\"layout.type == 'multicolumn'\" options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;},{&quot;label&quot;:&quot;Masonry&quot;,&quot;value&quot;:&quot;masonry&quot;}]' />",
     "  </tooldrawer-cluster>",
     "  <tooldrawer-cluster>",
+    "    <tooldrawer-field-item-spacing group-label='' type='dropdown-actions' size='md' path='layout.itemQaGapPreset' label='Q/A spacing' value='{{layout.itemQaGapPreset}}' options='[{&quot;label&quot;:&quot;X-Small&quot;,&quot;value&quot;:&quot;xs&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;s&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;m&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;l&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;Custom&quot;,&quot;value&quot;:&quot;custom&quot;}]' />",
+    "    <tooldrawer-field-item-spacing group-label='' type='valuefield' size='md' path='layout.itemQaGapCustom' label='Custom Q/A spacing (px)' value='{{layout.itemQaGapCustom}}' min='0' max='120' step='1' show-if=\"layout.itemQaGapPreset == 'custom'\" />",
     "    <tooldrawer-field-item-padding group-label='' type='toggle' size='md' path='layout.itemPaddingLinked' label='Link Q&A card padding' label-key='faq.labels.linkItemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{layout.itemPaddingLinked}}' default='true' />",
     "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPadding' label='Q&A card padding (px)' label-key='faq.labels.itemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == true\" />",
     "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPaddingTop' label='Q&A card top padding (px)' label-key='faq.labels.itemPaddingTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",

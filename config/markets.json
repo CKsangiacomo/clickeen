@@ -5,6 +5,18 @@
       "key": "us",
       "country": "US",
       "defaultLocale": "en",
+      "overviewHero": {
+        "strategy": "tier1",
+        "tier1Locales": [
+          "en",
+          "es",
+          "zh-hans"
+        ],
+        "regionalFallbackLocales": [
+          "pt",
+          "fr"
+        ]
+      },
       "locales": [
         "en",
         "es",
@@ -41,6 +53,15 @@
       "key": "uk",
       "country": "GB",
       "defaultLocale": "en",
+      "overviewHero": {
+        "strategy": "native-first",
+        "nativeLocale": "en",
+        "regionalFallbackLocales": [
+          "fr",
+          "de",
+          "es"
+        ]
+      },
       "locales": [
         "en",
         "es",
@@ -77,6 +98,16 @@
       "key": "it",
       "country": "IT",
       "defaultLocale": "it",
+      "overviewHero": {
+        "strategy": "native-first",
+        "nativeLocale": "it",
+        "regionalFallbackLocales": [
+          "en",
+          "fr",
+          "de",
+          "es"
+        ]
+      },
       "locales": [
         "en",
         "es",
@@ -113,6 +144,17 @@
       "key": "ca",
       "country": "CA",
       "defaultLocale": "en",
+      "overviewHero": {
+        "strategy": "tier1",
+        "tier1Locales": [
+          "en",
+          "fr"
+        ],
+        "regionalFallbackLocales": [
+          "zh-hans",
+          "es"
+        ]
+      },
       "locales": [
         "en",
         "es",

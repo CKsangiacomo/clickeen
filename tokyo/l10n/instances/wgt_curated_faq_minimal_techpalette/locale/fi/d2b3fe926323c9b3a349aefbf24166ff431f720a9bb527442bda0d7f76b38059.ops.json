@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Ota yhteyttä Ive Engineeringiin"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Luotettava kumppani suunnitteluratkaisuihin ja -palveluihin."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Ive Engineering – UKK"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering on maailmanlaajuinen yritys, joka on erikoistunut innovatiivisiin suunnitteluratkaisuihin ja -palveluihin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Mikä Ive Engineering on?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Ota meihin yhteyttä, kerro projektisi tarpeista, ja autamme sinua löytämään sopivat palvelut."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Miten pääsen alkuun Ive Engineeringin palveluissa?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Kyllä. Ive Engineering tarjoaa maksuttomia konsultaatioita, jotta ymmärrämme projektisi vaatimukset paremmin."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Onko konsultaatio saatavilla?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Ive Engineering tarjoaa huippuluokan ratkaisuja, kokeneita asiantuntijoita ja räätälöityjä palveluita juuri sinun suunnittelutarpeisiisi."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Miksi valitsisin Ive Engineeringin suunnittelutarpeisiini?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Kaikki kysymykset"
+    }
+  ],
+  "v": 1
+}

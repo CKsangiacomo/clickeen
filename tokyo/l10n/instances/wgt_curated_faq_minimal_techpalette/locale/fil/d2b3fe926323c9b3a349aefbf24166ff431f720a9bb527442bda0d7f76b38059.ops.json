@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Makipag-ugnayan sa Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Ang iyong katuwang para sa mga solusyon at serbisyong pang-engineering."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "FAQ ng Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ang Ive Engineering ay isang pandaigdigang kumpanya na dalubhasa sa mga makabagong solusyon at serbisyong pang-engineering."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ano ang Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Makipag-ugnayan lang sa amin, pag-usapan ang mga pangangailangan ng iyong proyekto, at gagabayan ka namin sa aming mga serbisyong inaalok."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Paano ako magsisimulang gumamit ng mga serbisyo ng Ive Engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Oo, nag-aalok ang Ive Engineering ng libreng konsultasyon para mas maunawaan ang mga pangangailangan ng iyong proyekto."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "May available bang konsultasyon?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Nagbibigay ang Ive Engineering ng mga makabagong solusyon, mga bihasang propesyonal, at mga serbisyong iniangkop para matugunan ang iyong partikular na pangangailangan sa engineering."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "Bakit ko pipiliin ang Ive Engineering para sa aking mga pangangailangan sa engineering?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Lahat ng Tanong"
+    }
+  ],
+  "v": 1
+}

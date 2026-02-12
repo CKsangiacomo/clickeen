@@ -13,7 +13,7 @@ const DEFAULT_IDS_FALLBACK = [
   'wgt_main_countdown',
   'wgt_main_faq',
   'wgt_main_logoshowcase',
-  'wgt_curated_faq.lightblurs.v01',
+  'wgt_curated_faq_lightblurs_generic',
 ];
 
 function stableStringify(value) {
@@ -493,7 +493,10 @@ function summarizeEvaluations(evaluations) {
 }
 
 function isCuratedLikePublicId(publicId) {
-  return publicId.startsWith('wgt_curated_') || publicId.startsWith('wgt_main_');
+  return (
+    /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId) ||
+    /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(publicId)
+  );
 }
 
 async function triggerCuratedEnqueue({ evaluations, parisBaseUrl, workspaceId, subject, headers }) {

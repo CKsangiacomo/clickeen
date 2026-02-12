@@ -124,7 +124,7 @@ describe('DevStudio widget workspace tool', () => {
   it('renders instance options and fetches compiled widget data', async () => {
     const instances = [
       {
-        publicId: 'wgt_curated_faq.simple.v01',
+        publicId: 'wgt_curated_faq_simple',
         widgetname: 'faq',
         displayName: 'FAQ Simple',
       },
@@ -138,15 +138,15 @@ describe('DevStudio widget workspace tool', () => {
 
     const urls = fetchMock.mock.calls.map(([input]) => (typeof input === 'string' ? input : input.toString()));
     expect(urls.some((url) => url.includes('/api/widgets/faq/compiled'))).toBe(true);
-    expect(urls.some((url) => url.includes('/api/paris/instance/wgt_curated_faq.simple.v01'))).toBe(true);
+    expect(urls.some((url) => url.includes('/api/paris/instance/wgt_curated_faq_simple'))).toBe(true);
 
     dom.window.close();
   });
 
-  it('requires a style name before enabling curated instance creation', async () => {
+  it('requires an instance name before enabling curated instance creation', async () => {
     const instances = [
       {
-        publicId: 'wgt_curated_faq.simple.v01',
+        publicId: 'wgt_curated_faq_simple',
         widgetname: 'faq',
         displayName: 'FAQ Simple',
       },
@@ -173,10 +173,10 @@ describe('DevStudio widget workspace tool', () => {
     dom.window.close();
   });
 
-  it('creates a curated instance with slugged name and requests asset persistence from Bob', async () => {
+  it('creates a curated instance with composed slug and requests asset persistence from Bob', async () => {
     const instances = [
       {
-        publicId: 'wgt_curated_faq.simple.v01',
+        publicId: 'wgt_curated_faq_simple',
         widgetname: 'faq',
         displayName: 'FAQ Simple',
       },
@@ -208,17 +208,24 @@ describe('DevStudio widget workspace tool', () => {
     const openBtn = dom.window.document.getElementById('create-curated-instance');
     const confirm = dom.window.document.getElementById('curated-modal-confirm') as HTMLButtonElement | null;
     const nameField = dom.window.document.getElementById('curated-style-name') as HTMLInputElement | null;
+    const primaryVariantField = dom.window.document.getElementById(
+      'curated-variant-primary'
+    ) as HTMLInputElement | null;
+    const secondaryVariantField = dom.window.document.getElementById(
+      'curated-variant-secondary'
+    ) as HTMLInputElement | null;
     openBtn?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
-    const tagInput = dom.window.document.querySelector<HTMLInputElement>(
-      'input[data-tag-group="icp"][value="saas"]'
-    );
     if (nameField) {
-      nameField.value = 'Clinic Friendly';
+      nameField.value = 'Lightblurs v01';
       nameField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     }
-    if (tagInput) {
-      tagInput.checked = true;
-      tagInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    if (primaryVariantField) {
+      primaryVariantField.value = 'Hospitality';
+      primaryVariantField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    }
+    if (secondaryVariantField) {
+      secondaryVariantField.value = 'Airbnb';
+      secondaryVariantField.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     }
     confirm?.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
 
@@ -234,11 +241,11 @@ describe('DevStudio widget workspace tool', () => {
     });
     expect(createCall).toBeTruthy();
     const createBody = createCall?.[1]?.body ? JSON.parse(String(createCall[1].body)) : null;
-    expect(createBody?.publicId).toBe('wgt_curated_faq.clinic_friendly.v01');
-    expect(createBody?.meta?.styleName).toBe('Clinic Friendly');
-    expect(createBody?.meta?.styleSlug).toBe('clinic_friendly');
-    expect(createBody?.meta?.version).toBe(1);
-    expect(createBody?.meta?.tags?.icp).toContain('saas');
+    expect(createBody?.publicId).toBe('wgt_curated_faq_lightblurs_hospitality_airbnb');
+    expect(createBody?.meta?.styleName).toBe('Lightblurs.Hospitality.Airbnb');
+    expect(createBody?.meta?.styleSlug).toBe('lightblurs_hospitality_airbnb');
+    expect(createBody?.meta?.variants?.primary).toBe('Hospitality');
+    expect(createBody?.meta?.variants?.secondary).toBe('Airbnb');
 
     dom.window.close();
   });

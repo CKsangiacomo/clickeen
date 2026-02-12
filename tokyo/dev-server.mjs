@@ -85,8 +85,7 @@ function normalizePublicId(raw) {
   const v = String(raw || '').trim();
   if (!v) return null;
   const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v);
-  const okCurated =
-    /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v);
+  const okCurated = /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(v);
   const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(v);
   if (!okMain && !okCurated && !okUser) return null;
   return v;
@@ -95,7 +94,8 @@ function normalizePublicId(raw) {
 function normalizeCuratedPublicId(raw) {
   const v = normalizePublicId(raw);
   if (!v) return null;
-  if (v.startsWith('wgt_curated_') || v.startsWith('wgt_main_')) return v;
+  if (/^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(v)) return v;
+  if (/^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v)) return v;
   return null;
 }
 

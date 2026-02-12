@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "58308bf57aa30b9a176bc6230f8855b4cf93cba3ed46fd4034e2e1a7edf6cb50",
+  "baseUpdatedAt": "2026-02-11T23:19:56.282307+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "এখনই বুক করুন"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "আমাদের USA বেড অ্যান্ড ব্রেকফাস্টের আকর্ষণ ও আরাম উপভোগ করুন।"
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "বেড অ্যান্ড ব্রেকফাস্ট FAQs"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "আমরা বিভিন্ন ধরনের রুম অফার করি, যার মধ্যে আছে <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> , এবং <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> ।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "কোন কোন ধরনের রুম পাওয়া যায়?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "চেক-ইন বিকেল ৩টায়, আর চেক-আউট সকাল ১১টার মধ্যে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "চেক-ইন ও চেক-আউটের সময় কখন?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "হ্যাঁ, আপনার থাকার সঙ্গে ফ্রি ব্রেকফাস্ট অন্তর্ভুক্ত থাকে।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "ব্রেকফাস্ট কি অন্তর্ভুক্ত?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "হ্যাঁ, আমরা রোমান্টিক <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">getaway packages</a> এবং <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">family-friendly options.</a> অফার করি।"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "আপনারা কি কোনো বিশেষ প্যাকেজ অফার করেন?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "সাধারণ প্রশ্ন"
+    }
+  ],
+  "v": 1
+}

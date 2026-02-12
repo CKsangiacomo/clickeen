@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "d2b3fe926323c9b3a349aefbf24166ff431f720a9bb527442bda0d7f76b38059",
+  "baseUpdatedAt": "2026-02-12T01:25:17.942928+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "تواصل مع Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "وجهتك الموثوقة للحلول والخدمات الهندسية."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "الأسئلة الشائعة لدى Ive Engineering"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Ive Engineering شركة عالمية متخصصة في تقديم حلول وخدمات هندسية مبتكرة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "ما هي Ive Engineering؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "ما عليك سوى التواصل معنا، ومشاركة احتياجات مشروعك، وسنرشدك إلى خدماتنا المناسبة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "كيف أبدأ استخدام خدمات Ive Engineering؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "نعم، تقدم Ive Engineering استشارات مجانية لفهم متطلبات مشروعك بشكل أفضل."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "هل تتوفر استشارة؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "توفر Ive Engineering حلولًا متقدمة، وخبراء ذوي خبرة، وخدمات مُخصصة لتلبية احتياجاتك الهندسية بدقة."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "لماذا أختار Ive Engineering لاحتياجاتي الهندسية؟"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "جميع الأسئلة"
+    }
+  ],
+  "v": 1
+}

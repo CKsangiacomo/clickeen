@@ -2,7 +2,7 @@
   "v": 1,
   "gitSha": "4692ac7dea3c98f889a76cf254f6da3aba0d83de",
   "instances": {
-    "wgt_curated_faq.lightblurs.v01": {
+    "wgt_curated_faq_lightblurs_generic": {
       "ar": {
         "file": "ar.28eb843e.ops.json",
         "baseUpdatedAt": "2026-01-20T00:13:15.017535+00:00"

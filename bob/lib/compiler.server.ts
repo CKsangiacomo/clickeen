@@ -81,6 +81,178 @@ function stripUnusedSlotMarkers(lines: string[]): string[] {
   return lines.filter((line) => !line.includes('@slot:'));
 }
 
+function isClusterOpenLine(line: string): boolean {
+  const lower = line.toLowerCase();
+  return lower.includes('<tooldrawer-cluster') && !lower.includes('</tooldrawer-cluster>');
+}
+
+function isClusterCloseLine(line: string): boolean {
+  return line.toLowerCase().includes('</tooldrawer-cluster>');
+}
+
+function parseClusterAttrs(line: string): Record<string, string> | null {
+  const match = line.match(/<tooldrawer-cluster([^>]*)>/i);
+  if (!match) return null;
+  return parseTooldrawerAttributes(match[1] || '');
+}
+
+function escapeSingleQuotedAttr(value: string): string {
+  return String(value || '').replace(/&/g, '&amp;').replace(/'/g, '&apos;');
+}
+
+function setClusterLabel(
+  line: string,
+  label: string,
+  options?: { labelKey?: string; labelParams?: string; labelCount?: string },
+): string {
+  const withoutLabels = line
+    .replace(/\slabel=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabel-key=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabelKey=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabel-params=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabelParams=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabel-count=(?:"[^"]*"|'[^']*')/gi, '')
+    .replace(/\slabelCount=(?:"[^"]*"|'[^']*')/gi, '');
+
+  const attrs = [`label='${escapeSingleQuotedAttr(label)}'`];
+  if (options?.labelKey) attrs.push(`label-key='${escapeSingleQuotedAttr(options.labelKey)}'`);
+  if (options?.labelParams) attrs.push(`label-params='${escapeSingleQuotedAttr(options.labelParams)}'`);
+  if (options?.labelCount) attrs.push(`label-count='${escapeSingleQuotedAttr(options.labelCount)}'`);
+  return withoutLabels.replace(/<tooldrawer-cluster\b([^>]*)>/i, `<tooldrawer-cluster$1 ${attrs.join(' ')}>`);
+}
+
+function extractPathFromLine(line: string): string | null {
+  const match = line.match(/\bpath=(?:"([^"]+)"|'([^']+)')/i);
+  if (!match) return null;
+  const path = (match[1] || match[2] || '').trim();
+  return path || null;
+}
+
+function collectTopLevelClusterRanges(panelBody: string[]): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  let depth = 0;
+  let start = -1;
+
+  for (let i = 0; i < panelBody.length; i += 1) {
+    const line = panelBody[i];
+    if (isClusterOpenLine(line)) {
+      if (depth === 0) start = i;
+      depth += 1;
+    }
+    if (isClusterCloseLine(line)) {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        ranges.push({ start, end: i });
+        start = -1;
+      }
+    }
+  }
+
+  return ranges;
+}
+
+function rewriteAppearanceCluster(clusterLines: string[]): string[] {
+  if (clusterLines.length < 2) return clusterLines;
+  const openLine = clusterLines[0];
+  const closeLine = clusterLines[clusterLines.length - 1];
+  const inner = clusterLines.slice(1, -1);
+  const attrs = parseClusterAttrs(openLine);
+  const label = String(attrs?.label || '').trim().toLowerCase();
+
+  const stageLines: string[] = [];
+  const podLines: string[] = [];
+  const otherLines: string[] = [];
+
+  inner.forEach((line) => {
+    const path = extractPathFromLine(line);
+    if (path && path.startsWith('stage.')) {
+      stageLines.push(line);
+      return;
+    }
+    if (line.includes('@slot:stagepod-corners')) {
+      podLines.push(line);
+      return;
+    }
+    if (path && (path.startsWith('pod.') || path === 'appearance.podBorder')) {
+      podLines.push(line);
+      return;
+    }
+    otherLines.push(line);
+  });
+
+  const hasStage = stageLines.length > 0;
+  const hasPod = podLines.length > 0;
+  const isLegacyMixedLabel = label === 'stage/pod' || label === 'stage/pod appearance';
+
+  if ((hasStage && hasPod) || isLegacyMixedLabel) {
+    const result: string[] = [];
+    if (stageLines.length > 0) {
+      result.push(setClusterLabel(openLine, 'Stage appearance'), ...stageLines, closeLine);
+    }
+    const nextPodLines = [...podLines, ...otherLines];
+    if (nextPodLines.length > 0) {
+      result.push(setClusterLabel(openLine, 'Pod appearance'), ...nextPodLines, closeLine);
+    }
+    return result.length > 0 ? result : clusterLines;
+  }
+
+  if (!label) {
+    if (hasStage) return [setClusterLabel(openLine, 'Stage appearance'), ...inner, closeLine];
+    if (hasPod) return [setClusterLabel(openLine, 'Pod appearance'), ...inner, closeLine];
+  }
+
+  return clusterLines;
+}
+
+function classifyLayoutClusterLabel(clusterLines: string[]): { label: string } | null {
+  const openLine = clusterLines[0];
+  const attrs = parseClusterAttrs(openLine);
+  const label = String(attrs?.label || '').trim();
+  if (label) return null;
+
+  const paths = clusterLines
+    .slice(1, -1)
+    .map((line) => extractPathFromLine(line))
+    .filter((path): path is string => Boolean(path));
+  if (paths.length === 0) return null;
+
+  const hasItem = paths.some((path) => /^layout\.item/.test(path));
+  const hasPod = paths.some((path) => /^pod\./.test(path));
+  const hasStage = paths.some((path) => /^stage\./.test(path));
+  const hasWidget = paths.some(
+    (path) => (/^layout\./.test(path) && !/^layout\.item/.test(path)) || /^behavior\./.test(path) || /^spacing\./.test(path),
+  );
+
+  if (hasItem) return { label: 'Item layout' };
+  if (hasPod && !hasStage) return { label: 'Pod layout' };
+  if (hasStage && !hasPod) return { label: 'Stage layout' };
+  if (hasWidget) return { label: 'Widget layout' };
+  if (hasStage && hasPod) return { label: 'Stage/Pod layout' };
+  return null;
+}
+
+function rewritePanelClusters(lines: string[], panelId: string, rewriter: (clusterLines: string[]) => string[]): void {
+  const panelStart = findPanelStart(lines, panelId);
+  const panelEnd = findPanelEnd(lines, panelStart);
+  if (panelStart < 0 || panelEnd < 0) return;
+
+  const body = lines.slice(panelStart + 1, panelEnd);
+  const ranges = collectTopLevelClusterRanges(body);
+  if (ranges.length === 0) return;
+
+  const rebuilt: string[] = [];
+  let cursor = 0;
+  ranges.forEach((range) => {
+    if (range.start > cursor) rebuilt.push(...body.slice(cursor, range.start));
+    const cluster = body.slice(range.start, range.end + 1);
+    rebuilt.push(...rewriter(cluster));
+    cursor = range.end + 1;
+  });
+  if (cursor < body.length) rebuilt.push(...body.slice(cursor));
+
+  lines.splice(panelStart + 1, panelEnd - panelStart - 1, ...rebuilt);
+}
+
 function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
   const rawHtml = Array.isArray(widgetJson.html) ? widgetJson.html : [];
   const htmlLines: string[] = rawHtml.filter((line): line is string => typeof line === 'string');
@@ -244,6 +416,15 @@ function buildHtmlWithGeneratedPanels(widgetJson: RawWidget): string[] {
       }
     }
   }
+
+  // Normalize cluster labels and stage/pod split so long panels stay scannable.
+  rewritePanelClusters(filtered, 'appearance', rewriteAppearanceCluster);
+  rewritePanelClusters(filtered, 'layout', (clusterLines) => {
+    const config = classifyLayoutClusterLabel(clusterLines);
+    if (!config) return clusterLines;
+    const [openLine, ...rest] = clusterLines;
+    return [setClusterLabel(openLine, config.label), ...rest];
+  });
 
   // Inject standardized Typography panel if roles are defined.
   if (typographyRoles) {

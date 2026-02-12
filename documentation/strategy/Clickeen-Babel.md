@@ -468,7 +468,7 @@ tokyo/
 │   ├── layers/*.allowlist.json      # Non-locale allowlists
 │   └── pages/*.json                 # Prague base copy
 ├── l10n/instances/
-│   └── wgt_curated_faq.lightblurs.v01/
+│   └── wgt_curated_faq_lightblurs_generic/
 │       ├── index.json               # Layer index (locale keys + fingerprints)
 │       └── locale/
 │           ├── fr/<baseFingerprint>.ops.json
@@ -532,7 +532,7 @@ tokyo/
 
 **Request flow:**
 ```
-User visits: /e/wgt_curated_faq.lightblurs.v01?locale=fr
+User visits: /e/wgt_curated_faq_lightblurs_generic?locale=fr
     ↓
 Venice receives request, resolves requested→resolved locale and selects **effective** locale (best available)
     ↓
@@ -1494,7 +1494,7 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "publicId": "wgt_curated_faq.lightblurs.v01",
+  "publicId": "wgt_curated_faq_lightblurs_generic",
   "widgetType": "faq",
   "status": "published",
   "config": {

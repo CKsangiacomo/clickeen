@@ -78,6 +78,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
   const country = req.headers.get('cf-ipcountry') ?? req.headers.get('CF-IPCountry');
   const rawLocale = (url.searchParams.get('locale') || '').trim();
   const locale = normalizeLocaleToken(rawLocale) ?? 'en';
+  const isBaseLocaleRequest = locale === 'en' || locale.startsWith('en-');
   const bypassSnapshot = req.headers.get('x-ck-snapshot-bypass') === '1';
   const enforcement = (url.searchParams.get('enforcement') || '').trim().toLowerCase();
   const frozenAt = (url.searchParams.get('frozenAt') || '').trim();
@@ -105,7 +106,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
 
   let snapshotReason: string | null = null;
   const snapshotCacheControl = ts ? 'no-store' : CACHE_PUBLISHED;
-  if (!auth && !embedToken && !bypassSnapshot) {
+  if (!auth && !embedToken && !bypassSnapshot && isBaseLocaleRequest) {
     let snapshotLocale = locale;
     let snapshot = await loadRenderSnapshot({ publicId, locale: snapshotLocale, variant: 'e' });
     if (!snapshot.ok && snapshot.reason === 'LOCALE_MISSING' && snapshotLocale !== 'en') {
@@ -157,6 +158,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ publicId: strin
     snapshotReason = 'SKIP_AUTH';
   } else if (bypassSnapshot) {
     snapshotReason = 'SKIP_BYPASS';
+  } else if (!isBaseLocaleRequest) {
+    snapshotReason = 'SKIP_NON_BASE_LOCALE';
   }
 
   const { res, body } = await parisJson<InstanceResponse | { error?: string }>(

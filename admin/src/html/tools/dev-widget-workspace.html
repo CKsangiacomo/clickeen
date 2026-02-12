@@ -399,43 +399,17 @@
       gap: var(--space-4);
     }
 
-    .dev-widget-workspace__tag-groups {
+    .dev-widget-workspace__variant-grid {
       display: grid;
       gap: var(--space-3);
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
-    .dev-widget-workspace__tag-group {
-      display: grid;
-      gap: var(--space-2);
-    }
-
-    .dev-widget-workspace__tag-group-title {
-      font: 600 var(--fs-12) / var(--lh-tight) var(--font-ui);
-      text-transform: uppercase;
-      letter-spacing: -0.01em;
-    }
-
-    .dev-widget-workspace__tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-1);
-    }
-
-    .dev-widget-workspace__tag-option {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-1);
-      padding: 6px 8px;
-      border-radius: var(--control-radius-md);
-      border: 1px solid color-mix(in oklab, var(--role-border), transparent 25%);
-      background: var(--color-system-white);
+    .dev-widget-workspace__field-helper {
       font: 500 var(--fs-12) / var(--lh-tight) var(--font-ui);
-      color: var(--color-text);
-      cursor: pointer;
-    }
-
-    .dev-widget-workspace__tag-option input {
-      accent-color: var(--color-system-blue);
+      color: color-mix(in oklab, var(--color-text), transparent 35%);
+      letter-spacing: -0.005em;
+      overflow-wrap: anywhere;
     }
 
     .dev-widget-workspace__modal-actions {
@@ -550,17 +524,6 @@
             ></span>
             <span class="diet-btn-ictxt__label body-s">Update Curated</span>
           </button>
-          <button
-            type="button"
-            class="diet-btn-ictxt dev-widget-workspace__action"
-            id="create-curated-version"
-            data-size="md"
-            data-variant="secondary"
-            data-tone="gray4.4"
-          >
-            <span class="diet-btn-ictxt__icon" aria-hidden="true" data-icon="square.on.square"></span>
-            <span class="diet-btn-ictxt__label body-s">New Instance</span>
-          </button>
         </div>
       </div>
     </div>
@@ -661,17 +624,43 @@
       <div class="dev-widget-workspace__modal-content">
         <div class="diet-textfield" data-size="md">
           <label class="diet-textfield__control">
-            <span class="diet-textfield__display-label">Curated style name:</span>
+            <span class="diet-textfield__display-label">Instance name</span>
             <input
               id="curated-style-name"
               type="text"
               class="diet-textfield__field"
-              placeholder="Liquid glass, Brutalism, Yellow..."
+              placeholder="lightblurs"
               autocomplete="off"
             />
           </label>
         </div>
-        <div class="dev-widget-workspace__tag-groups" id="curated-tag-groups"></div>
+        <div class="dev-widget-workspace__variant-grid">
+          <div class="diet-textfield" data-size="md">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label">Variant (optional)</span>
+              <input
+                id="curated-variant-primary"
+                type="text"
+                class="diet-textfield__field"
+                placeholder="hospitality"
+                autocomplete="off"
+              />
+            </label>
+          </div>
+          <div class="diet-textfield" data-size="md">
+            <label class="diet-textfield__control">
+              <span class="diet-textfield__display-label">Sub-variant (optional)</span>
+              <input
+                id="curated-variant-secondary"
+                type="text"
+                class="diet-textfield__field"
+                placeholder="airbnb"
+                autocomplete="off"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="dev-widget-workspace__field-helper" id="curated-style-preview"></div>
       </div>
       <div class="dev-widget-workspace__modal-actions">
         <button
@@ -822,7 +811,6 @@
     const superadminUpdateTheme = document.getElementById('superadmin-update-theme');
     const superadminResetFromJson = document.getElementById('superadmin-reset-from-json');
     const createCuratedInstanceBtn = document.getElementById('create-curated-instance');
-    const createCuratedVersionBtn = document.getElementById('create-curated-version');
     const updateCuratedInstanceBtn = document.getElementById('update-curated-instance');
     const refreshPraguePreviewBtn = document.getElementById('refresh-prague-preview');
     const translateSelectedLocalesBtn = document.getElementById('translate-selected-locales');
@@ -837,7 +825,9 @@
     const curatedModalCancel = document.getElementById('curated-modal-cancel');
     const curatedModalConfirm = document.getElementById('curated-modal-confirm');
     const curatedStyleNameField = document.getElementById('curated-style-name');
-    const curatedTagGroups = document.getElementById('curated-tag-groups');
+    const curatedVariantPrimaryField = document.getElementById('curated-variant-primary');
+    const curatedVariantSecondaryField = document.getElementById('curated-variant-secondary');
+    const curatedStylePreview = document.getElementById('curated-style-preview');
     const themeModal = document.getElementById('theme-modal');
     const themeModalClose = document.getElementById('theme-modal-close');
     const themeModalCancel = document.getElementById('theme-modal-cancel');
@@ -847,44 +837,6 @@
 
     const SUPERADMIN_KEY_STORAGE = 'ck.superadmin.key';
 
-    const CURATED_TAG_GROUPS = [
-      {
-        id: 'icp',
-        label: 'ICP',
-        options: [
-          { id: 'saas', label: 'SaaS' },
-          { id: 'ecommerce', label: 'E-commerce' },
-          { id: 'agencies', label: 'Agencies' },
-          { id: 'education', label: 'Education' },
-          { id: 'healthcare', label: 'Healthcare' },
-          { id: 'restaurants', label: 'Restaurants' },
-        ],
-      },
-      {
-        id: 'objective',
-        label: 'Objective',
-        options: [
-          { id: 'conversion', label: 'Conversion' },
-          { id: 'lead-gen', label: 'Lead Gen' },
-          { id: 'support-deflection', label: 'Support Deflection' },
-          { id: 'social-proof', label: 'Social Proof' },
-          { id: 'onboarding', label: 'Onboarding' },
-        ],
-      },
-      {
-        id: 'style',
-        label: 'Style',
-        options: [
-          { id: 'minimal', label: 'Minimal' },
-          { id: 'bold', label: 'Bold' },
-          { id: 'playful', label: 'Playful' },
-          { id: 'brutalist', label: 'Brutalist' },
-          { id: 'glass', label: 'Glass' },
-          { id: 'editorial', label: 'Editorial' },
-        ],
-      },
-    ];
-    const CURATED_VERSION_PAD = 2;
     let curatedModalState = null;
     let themeModalState = null;
 
@@ -1432,93 +1384,86 @@
         .replace(/^_+|_+$/g, '');
     }
 
+    function escapeRegExp(raw) {
+      return String(raw || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function normalizeCuratedNameSegment(raw, widgetSlug) {
+      const normalizedWidgetSlug = normalizeWidgetname(widgetSlug);
+      let value = String(raw || '').trim();
+      if (!value) return '';
+
+      value = value.replace(/^wgt_(?:curated|main)_/i, '');
+      if (normalizedWidgetSlug) {
+        const widgetPrefix = new RegExp(`^${escapeRegExp(normalizedWidgetSlug)}[._\\s-]*`, 'i');
+        value = value.replace(widgetPrefix, '');
+      }
+      value = value.replace(/[._\s-]*v\d+$/i, '');
+      return value.trim();
+    }
+
     function isCuratedPublicId(publicId) {
-      return typeof publicId === 'string' && publicId.startsWith('wgt_curated_');
+      return typeof publicId === 'string' && /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(publicId);
     }
 
-    function parseCuratedPublicId(publicId) {
+    function parseCuratedPublicId(publicId, widgetSlugHint) {
       if (!isCuratedPublicId(publicId)) return null;
-      const match = /^wgt_curated_([^\\.]+)\\.([^\\.]+)\\.v(\\d+)$/.exec(publicId);
+      const widgetSlug = normalizeWidgetname(widgetSlugHint);
+      if (!widgetSlug) return null;
+      const match = new RegExp(`^wgt_curated_${escapeRegExp(widgetSlug)}_([a-z0-9][a-z0-9_-]*)$`, 'i').exec(publicId);
       if (!match) return null;
-      return {
-        widgetSlug: match[1],
-        styleSlug: match[2],
-        version: Number(match[3]),
-      };
+      return { widgetSlug, styleSlug: match[1] || null };
     }
 
-    function normalizeCuratedTags(raw) {
-      const tags = {};
-      CURATED_TAG_GROUPS.forEach((group) => {
-        tags[group.id] = [];
-      });
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return tags;
-      CURATED_TAG_GROUPS.forEach((group) => {
-        const values = raw[group.id];
-        if (Array.isArray(values)) {
-          tags[group.id] = values.map((value) => String(value)).filter(Boolean);
-        }
-      });
-      return tags;
+    function normalizeCuratedVariants(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+        return {
+          primary: null,
+          secondary: null,
+        };
+      }
+      const primary = typeof raw.primary === 'string' ? raw.primary.trim() : '';
+      const secondary = typeof raw.secondary === 'string' ? raw.secondary.trim() : '';
+      return {
+        primary: primary || null,
+        secondary: secondary || null,
+      };
     }
 
     function normalizeCuratedMeta(raw) {
       if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
       const styleName = typeof raw.styleName === 'string' ? raw.styleName.trim() : '';
       const styleSlug = typeof raw.styleSlug === 'string' ? raw.styleSlug.trim() : '';
-      const version =
-        typeof raw.version === 'number' && Number.isFinite(raw.version)
-          ? Math.max(1, Math.round(raw.version))
-          : null;
-      const tags = normalizeCuratedTags(raw.tags);
+      const variants = normalizeCuratedVariants(raw.variants || raw.variant || null);
       return {
         styleName: styleName || null,
         styleSlug: styleSlug || null,
-        version,
-        tags,
+        variants,
       };
     }
 
     function resolveCuratedStyle(instance) {
       if (!instance) return null;
       const meta = normalizeCuratedMeta(instance.meta);
-      const parsed = parseCuratedPublicId(instance.publicId);
+      const parsed = parseCuratedPublicId(instance.publicId, instance.widgetSlug);
       const styleSlug = meta?.styleSlug || parsed?.styleSlug || null;
-      const styleName = meta?.styleName || (styleSlug ? styleSlug.replace(/_/g, ' ') : null);
-      const version = meta?.version ?? parsed?.version ?? null;
-      const tags = meta?.tags ?? normalizeCuratedTags(null);
+      const styleName = meta?.styleName || (styleSlug ? styleSlug.replace(/_/g, '.') : null);
+      const variants = meta?.variants ?? normalizeCuratedVariants(null);
       return {
         styleName,
         styleSlug,
-        version,
-        tags,
+        variants,
         widgetSlug: instance.widgetSlug || parsed?.widgetSlug || null,
       };
     }
 
-    function formatCuratedVersion(version) {
-      return `v${String(version).padStart(CURATED_VERSION_PAD, '0')}`;
-    }
-
-    function buildCuratedPublicId(widgetSlug, styleSlug, version) {
-      return `wgt_curated_${widgetSlug}.${styleSlug}.${formatCuratedVersion(version)}`;
-    }
-
-    function getCuratedVersions(widgetSlug, styleSlug) {
-      return instances
-        .filter((inst) => isCuratedPublicId(inst.publicId))
-        .map((inst) => resolveCuratedStyle(inst))
-        .filter(
-          (style) => style && style.widgetSlug === widgetSlug && style.styleSlug === styleSlug,
-        )
-        .map((style) => style.version)
-        .filter((version) => typeof version === 'number');
-    }
-
-    function getNextCuratedVersion(widgetSlug, styleSlug) {
-      const versions = getCuratedVersions(widgetSlug, styleSlug);
-      const max = versions.length ? Math.max(...versions) : 0;
-      return max + 1;
+    function buildCuratedPublicId(widgetSlug, styleSlug) {
+      const normalizedWidgetSlug = normalizeWidgetname(widgetSlug);
+      const normalizedStyleSlug = slugifyKey(styleSlug);
+      if (!normalizedWidgetSlug || !normalizedStyleSlug) {
+        throw new Error('[DevStudio] Invalid curated instance key.');
+      }
+      return `wgt_curated_${normalizedWidgetSlug}_${normalizedStyleSlug}`;
     }
 
     async function createWorkspaceInstance({
@@ -2105,111 +2050,101 @@
       return { publicId, config };
     }
 
-    function renderCuratedTagGroups(selectedTags) {
-      if (!curatedTagGroups) return;
-      curatedTagGroups.innerHTML = CURATED_TAG_GROUPS.map((group) => {
-        const tags = group.options
-          .map((option) => {
-            const isChecked = Array.isArray(selectedTags?.[group.id])
-              ? selectedTags[group.id].includes(option.id)
-              : false;
-            return `
-          <label class="dev-widget-workspace__tag-option">
-            <input type="checkbox" data-tag-group="${group.id}" value="${option.id}" ${isChecked ? 'checked' : ''} />
-            <span>${option.label}</span>
-          </label>
-        `;
-          })
-          .join('');
-        return `
-      <div class="dev-widget-workspace__tag-group">
-        <div class="dev-widget-workspace__tag-group-title">${group.label}</div>
-        <div class="dev-widget-workspace__tag-list">${tags}</div>
-      </div>
-    `;
-      }).join('');
+    function readCuratedCreateDraft() {
+      const widgetSlug = curatedModalState?.widgetSlug || null;
+      const styleBaseRaw =
+        curatedStyleNameField instanceof HTMLInputElement ? curatedStyleNameField.value : '';
+      const variantPrimaryRaw =
+        curatedVariantPrimaryField instanceof HTMLInputElement
+          ? curatedVariantPrimaryField.value
+          : '';
+      const variantSecondaryRaw =
+        curatedVariantSecondaryField instanceof HTMLInputElement
+          ? curatedVariantSecondaryField.value
+          : '';
+
+      const styleBase = normalizeCuratedNameSegment(styleBaseRaw, widgetSlug);
+      const variantPrimary = normalizeCuratedNameSegment(variantPrimaryRaw, widgetSlug);
+      const variantSecondary = normalizeCuratedNameSegment(variantSecondaryRaw, widgetSlug);
+      const rawSegments = [styleBase, variantPrimary, variantSecondary].filter(Boolean);
+      const slugSegments = rawSegments.map((segment) => slugifyKey(segment)).filter(Boolean);
+      return {
+        styleBase,
+        variantPrimary,
+        variantSecondary,
+        styleName: rawSegments.join('.'),
+        styleSlug: slugSegments.join('_'),
+      };
     }
 
-    function readCuratedTagSelections() {
-      const tags = {};
-      CURATED_TAG_GROUPS.forEach((group) => {
-        tags[group.id] = [];
-      });
-      if (!curatedTagGroups) return tags;
-      curatedTagGroups
-        .querySelectorAll('input[type="checkbox"][data-tag-group]')
-        .forEach((input) => {
-          if (!(input instanceof HTMLInputElement)) return;
-          if (!input.checked) return;
-          const groupId = input.dataset.tagGroup;
-          if (!groupId || !tags[groupId]) return;
-          tags[groupId].push(input.value);
-        });
-      return tags;
+    function updateCuratedModalPreview() {
+      if (!(curatedStylePreview instanceof HTMLElement)) return;
+      if (!curatedModalState) {
+        curatedStylePreview.textContent = '';
+        return;
+      }
+      const draft = readCuratedCreateDraft();
+      if (!draft.styleBase) {
+        curatedStylePreview.textContent = 'Instance key preview: add an instance name.';
+        return;
+      }
+      if (!draft.styleSlug) {
+        curatedStylePreview.textContent = 'Instance key preview: use at least one letter or number.';
+        return;
+      }
+      curatedStylePreview.textContent = `Public ID: ${buildCuratedPublicId(
+        curatedModalState.widgetSlug,
+        draft.styleSlug,
+      )}`;
     }
 
     function updateCuratedModalConfirmState() {
       if (!(curatedModalConfirm instanceof HTMLButtonElement)) return;
       if (!curatedModalState) {
         curatedModalConfirm.disabled = true;
+        updateCuratedModalPreview();
         return;
       }
-      if (curatedModalState.mode === 'create') {
-        const name =
-          curatedStyleNameField instanceof HTMLInputElement
-            ? curatedStyleNameField.value.trim()
-            : '';
-        curatedModalConfirm.disabled = !name;
-      } else {
-        curatedModalConfirm.disabled = false;
-      }
+      const draft = readCuratedCreateDraft();
+      curatedModalConfirm.disabled = !draft.styleBase || !draft.styleSlug;
+      updateCuratedModalPreview();
     }
 
-    function openCuratedModal(mode, { widgetSlug, baseInstance }) {
+    function openCuratedModal({ widgetSlug }) {
       if (
         !curatedModal ||
         !curatedModalConfirm ||
         !(curatedStyleNameField instanceof HTMLInputElement)
       )
         return;
-      const style = baseInstance ? resolveCuratedStyle(baseInstance) : null;
-      if (mode === 'version' && (!style?.styleName || !style?.styleSlug)) {
-        throw new Error('[DevStudio] Select a curated instance with a style name first.');
-      }
       curatedModalState = {
-        mode,
         widgetSlug,
-        styleName: style?.styleName ?? '',
-        styleSlug: style?.styleSlug ?? '',
       };
 
       if (curatedModalTitle instanceof HTMLElement) {
-        curatedModalTitle.textContent =
-          mode === 'create' ? 'Create curated instance' : 'Create instance version';
+        curatedModalTitle.textContent = 'Create curated instance';
       }
       if (curatedModalSubtitle instanceof HTMLElement) {
-        if (mode === 'create') {
-          curatedModalSubtitle.textContent = `Creates v01 for ${widgetSlug}.`;
-        } else {
-          const nextVersion = getNextCuratedVersion(widgetSlug, style.styleSlug);
-          curatedModalSubtitle.textContent = `Creates ${style.styleName} ${formatCuratedVersion(nextVersion)}.`;
-        }
+        curatedModalSubtitle.textContent = `Creates wgt_curated_${widgetSlug}_<name>.`;
       }
 
-      curatedStyleNameField.readOnly = mode === 'version';
-      curatedStyleNameField.value = mode === 'version' ? style.styleName : '';
+      curatedStyleNameField.readOnly = false;
+      curatedStyleNameField.value = '';
+      if (curatedVariantPrimaryField instanceof HTMLInputElement) {
+        curatedVariantPrimaryField.readOnly = false;
+        curatedVariantPrimaryField.value = '';
+      }
+      if (curatedVariantSecondaryField instanceof HTMLInputElement) {
+        curatedVariantSecondaryField.readOnly = false;
+        curatedVariantSecondaryField.value = '';
+      }
 
       const icon = curatedModalConfirm.querySelector('.diet-btn-ictxt__icon');
-      if (icon)
-        icon.setAttribute('data-icon', mode === 'create' ? 'plus.square' : 'square.on.square');
+      if (icon) icon.setAttribute('data-icon', 'plus.square');
       const label = curatedModalConfirm.querySelector('.diet-btn-ictxt__label');
-      if (label)
-        label.textContent =
-          mode === 'create' ? 'Create curated instance' : 'Create new instance version';
-      curatedModalConfirm.dataset.tone = mode === 'create' ? 'green4' : 'indigo4';
+      if (label) label.textContent = 'Create curated instance';
+      curatedModalConfirm.dataset.tone = 'green4';
 
-      const tags = mode === 'version' ? style.tags : normalizeCuratedTags(null);
-      renderCuratedTagGroups(tags);
       updateCuratedModalConfirmState();
       curatedModal.hidden = false;
       curatedStyleNameField.focus();
@@ -2219,36 +2154,29 @@
       if (curatedModal) curatedModal.hidden = true;
       curatedModalState = null;
       if (curatedStyleNameField instanceof HTMLInputElement) curatedStyleNameField.value = '';
+      if (curatedVariantPrimaryField instanceof HTMLInputElement) curatedVariantPrimaryField.value = '';
+      if (curatedVariantSecondaryField instanceof HTMLInputElement) curatedVariantSecondaryField.value = '';
+      if (curatedStylePreview instanceof HTMLElement) curatedStylePreview.textContent = '';
       updateCuratedModalConfirmState();
     }
 
     async function submitCuratedModal() {
       if (!curatedModalState) return;
       if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-      const tags = readCuratedTagSelections();
+      const draft = readCuratedCreateDraft();
+      const styleName = draft.styleName;
+      const styleSlug = draft.styleSlug;
+      const styleVariants = {
+        primary: draft.variantPrimary || null,
+        secondary: draft.variantSecondary || null,
+      };
+      if (!draft.styleBase || !styleSlug) throw new Error('[DevStudio] Enter an instance name.');
 
-      let styleName = curatedModalState.styleName;
-      let styleSlug = curatedModalState.styleSlug;
-      let version = 1;
-
-      if (curatedModalState.mode === 'create') {
-        const inputName =
-          curatedStyleNameField instanceof HTMLInputElement
-            ? curatedStyleNameField.value.trim()
-            : '';
-        styleName = inputName;
-        styleSlug = slugifyKey(inputName);
-        if (!styleName || !styleSlug) throw new Error('[DevStudio] Enter a style name.');
-        if (getCuratedVersions(curatedModalState.widgetSlug, styleSlug).length > 0) {
-          throw new Error('[DevStudio] Style already exists. Use Create new instance version.');
-        }
-        version = 1;
-      } else {
-        if (!styleName || !styleSlug) throw new Error('[DevStudio] Missing style metadata.');
-        version = getNextCuratedVersion(curatedModalState.widgetSlug, styleSlug);
+      const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug);
+      const existing = instances.find((inst) => String(inst.publicId || '').toLowerCase() === publicId.toLowerCase());
+      if (existing) {
+        throw new Error('[DevStudio] Instance key already exists. Choose a different name.');
       }
-
-      const publicId = buildCuratedPublicId(curatedModalState.widgetSlug, styleSlug, version);
       const exported = await exportInstanceDataFromBob({
         persistAssets: true,
         exportMode: 'current',
@@ -2263,9 +2191,10 @@
       const meta = {
         styleName,
         styleSlug,
-        version,
-        tags,
       };
+      if (styleVariants.primary || styleVariants.secondary) {
+        meta.variants = styleVariants;
+      }
 
       await createWorkspaceInstance({
         workspaceId: CLICKEEN_WORKSPACE_ID,
@@ -2349,21 +2278,7 @@
         if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
         const instance = instances.find((inst) => inst.publicId === currentPublicId);
         const widgetSlug = instance?.widgetSlug || requireWidgetSlugForAction();
-        openCuratedModal('create', { widgetSlug, baseInstance: instance });
-      } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
-      }
-    });
-
-    createCuratedVersionBtn?.addEventListener('click', () => {
-      try {
-        if (!currentPublicId) throw new Error('[DevStudio] Select an instance first.');
-        const instance = instances.find((inst) => inst.publicId === currentPublicId);
-        if (!instance || !isCuratedPublicId(instance.publicId)) {
-          throw new Error('[DevStudio] Select a curated instance first.');
-        }
-        const widgetSlug = instance.widgetSlug || requireWidgetSlugForAction();
-        openCuratedModal('version', { widgetSlug, baseInstance: instance });
+        openCuratedModal({ widgetSlug });
       } catch (err) {
         alert(err instanceof Error ? err.message : String(err));
       }
@@ -2526,6 +2441,12 @@
 
     if (curatedStyleNameField instanceof HTMLInputElement) {
       curatedStyleNameField.addEventListener('input', updateCuratedModalConfirmState);
+    }
+    if (curatedVariantPrimaryField instanceof HTMLInputElement) {
+      curatedVariantPrimaryField.addEventListener('input', updateCuratedModalConfirmState);
+    }
+    if (curatedVariantSecondaryField instanceof HTMLInputElement) {
+      curatedVariantSecondaryField.addEventListener('input', updateCuratedModalConfirmState);
     }
 
     async function sendInstanceToIframe(publicId) {

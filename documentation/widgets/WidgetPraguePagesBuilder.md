@@ -120,7 +120,7 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "curatedRefs": ["wgt_curated_faq.lightblurs.v01"]
+  "curatedRefs": ["wgt_curated_faq_lightblurs_generic"]
 }
 ```
 

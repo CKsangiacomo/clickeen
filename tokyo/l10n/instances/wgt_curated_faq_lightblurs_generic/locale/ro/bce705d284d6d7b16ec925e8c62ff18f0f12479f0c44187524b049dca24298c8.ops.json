@@ -1,0 +1,67 @@
+{
+  "baseFingerprint": "bce705d284d6d7b16ec925e8c62ff18f0f12479f0c44187524b049dca24298c8",
+  "baseUpdatedAt": "2026-02-12T00:37:11.926623+00:00",
+  "ops": [
+    {
+      "op": "set",
+      "path": "cta.label",
+      "value": "Contactați-ne"
+    },
+    {
+      "op": "set",
+      "path": "header.subtitleHtml",
+      "value": "Soluțiile tale de încredere pentru automatizarea marketingului."
+    },
+    {
+      "op": "set",
+      "path": "header.title",
+      "value": "Întrebări frecvente despre Liquid Marketing"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.answer",
+      "value": "Liquid Marketing este o companie SaaS specializată în automatizarea marketingului, oferind instrumente avansate pentru campanii de email, segmentarea clienților și analize."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.0.question",
+      "value": "Ce este Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.answer",
+      "value": "Trebuie doar să te înregistrezi, să îți integrezi datele și să începi să creezi campanii automatizate cu platforma noastră intuitivă."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.1.question",
+      "value": "Cum încep să folosesc Liquid Marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.answer",
+      "value": "Da, Liquid Marketing oferă o perioadă de încercare gratuită cu acces la funcțiile de bază. Poți face upgrade pentru capabilități mai avansate."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.answer",
+      "value": "Liquid Marketing oferă o platformă solidă, cu instrumente de automatizare ușor de folosit, analize detaliate și suport excelent, fiind ideală pentru companiile care vor să își eficientizeze eforturile de marketing."
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.3.question",
+      "value": "De ce să aleg Liquid Marketing pentru nevoile mele de marketing?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.faqs.2.question",
+      "value": "Există o perioadă de încercare gratuită?"
+    },
+    {
+      "op": "set",
+      "path": "sections.0.title",
+      "value": "Toate întrebările"
+    }
+  ],
+  "v": 1
+}

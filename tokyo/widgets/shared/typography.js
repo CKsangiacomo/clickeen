@@ -2,6 +2,41 @@
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const SIZE_PRESETS = new Set(['xs', 's', 'm', 'l', 'xl', 'custom']);
+  const GLOBAL_ROLE_SCALES = Object.freeze({
+    title: Object.freeze({ xs: '20px', s: '28px', m: '36px', l: '44px', xl: '60px' }),
+    body: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
+    section: Object.freeze({ xs: '12px', s: '13px', m: '14px', l: '16px', xl: '18px' }),
+    question: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
+    answer: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
+    button: Object.freeze({ xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' }),
+  });
+  const TRACKING_PRESETS = Object.freeze({
+    tighter: '-0.03em',
+    tight: '-0.015em',
+    normal: '0em',
+    wide: '0.015em',
+    wider: '0.03em',
+    custom: null,
+  });
+  const LINE_HEIGHT_PRESETS = Object.freeze({
+    snug: '1',
+    tight: '1.15',
+    normal: null,
+    relaxed: '1.4',
+    loose: '1.6',
+    custom: null,
+  });
+  const DEFAULT_ROLE_LINE_HEIGHT = Object.freeze({
+    title: 'var(--lh-tight)',
+    body: 'var(--lh-body)',
+    section: 'var(--lh-tight)',
+    question: 'var(--lh-tight)',
+    answer: 'var(--lh-body)',
+    heading: 'var(--lh-tight)',
+    timer: '1',
+    label: 'var(--lh-tight)',
+    button: 'var(--lh-tight)',
+  });
 
   const curatedFonts = {
     Cookie: 'Cookie',
@@ -97,6 +132,70 @@
     return null;
   }
 
+  function resolveTrackingValue(roleKey, role) {
+    const presetValue =
+      typeof role.trackingPreset === 'string' && role.trackingPreset.trim() ? role.trackingPreset.trim() : 'normal';
+    if (!Object.prototype.hasOwnProperty.call(TRACKING_PRESETS, presetValue)) {
+      throw new Error(`[CKTypography] Unknown trackingPreset "${presetValue}" for role "${roleKey}"`);
+    }
+
+    if (presetValue !== 'custom') {
+      return TRACKING_PRESETS[presetValue];
+    }
+
+    const customValue = role.trackingCustom;
+    if (typeof customValue === 'number' && Number.isFinite(customValue)) {
+      return `${String(customValue)}em`;
+    }
+
+    if (typeof customValue === 'string' && customValue.trim()) {
+      const trimmed = customValue.trim();
+      if (isNumericString(trimmed)) return `${trimmed}em`;
+      if (isCssLengthString(trimmed)) return trimmed;
+    }
+
+    throw new Error(`[CKTypography] Role "${roleKey}" trackingCustom must be a number or CSS length`);
+  }
+
+  function resolveLineHeightValue(roleKey, role) {
+    const presetValue =
+      typeof role.lineHeightPreset === 'string' && role.lineHeightPreset.trim()
+        ? role.lineHeightPreset.trim()
+        : 'normal';
+    if (!Object.prototype.hasOwnProperty.call(LINE_HEIGHT_PRESETS, presetValue)) {
+      throw new Error(`[CKTypography] Unknown lineHeightPreset "${presetValue}" for role "${roleKey}"`);
+    }
+
+    if (presetValue === 'normal') {
+      return DEFAULT_ROLE_LINE_HEIGHT[roleKey] || 'normal';
+    }
+    if (presetValue !== 'custom') {
+      return LINE_HEIGHT_PRESETS[presetValue];
+    }
+
+    const customValue = role.lineHeightCustom;
+    if (typeof customValue === 'number' && Number.isFinite(customValue)) {
+      if (customValue <= 0) {
+        throw new Error(`[CKTypography] Role "${roleKey}" lineHeightCustom must be > 0`);
+      }
+      return String(customValue);
+    }
+
+    if (typeof customValue === 'string' && customValue.trim()) {
+      const trimmed = customValue.trim();
+      if (isNumericString(trimmed)) {
+        if (Number(trimmed) <= 0) {
+          throw new Error(`[CKTypography] Role "${roleKey}" lineHeightCustom must be > 0`);
+        }
+        return trimmed;
+      }
+      if (trimmed === 'normal') return 'normal';
+      if (isCssLengthString(trimmed)) return trimmed;
+    }
+
+    throw new Error(`[CKTypography] Role "${roleKey}" lineHeightCustom must be a number or CSS length`);
+  }
+
   const loadedFonts = new Set();
 
   function ensureFontLoaded(family) {
@@ -146,10 +245,8 @@
       throw new Error('[CKTypography] typography.roles is required');
     }
 
-    const roleScales = typography.roleScales;
-    if (!roleScales || typeof roleScales !== 'object') {
-      throw new Error('[CKTypography] typography.roleScales is required');
-    }
+    const roleScales =
+      typography.roleScales && typeof typography.roleScales === 'object' ? typography.roleScales : {};
 
     Object.keys(roleConfig).forEach((roleKey) => {
       const cfg = roleConfig[roleKey];
@@ -213,7 +310,7 @@
         throw new Error(`[CKTypography] Unknown sizePreset "${sizePreset}" for role "${roleKey}"`);
       }
 
-      const scale = roleScales[roleKey];
+      const scale = GLOBAL_ROLE_SCALES[roleKey] || roleScales[roleKey];
       if (!scale || typeof scale !== 'object') {
         throw new Error(`[CKTypography] Missing roleScales for "${roleKey}"`);
       }
@@ -270,12 +367,16 @@
       if (scaleKind === 'number') {
         sizeValue = `${String(sizeValue).trim()}px`;
       }
+      const trackingValue = resolveTrackingValue(roleKey, role);
+      const lineHeightValue = resolveLineHeightValue(roleKey, role);
 
       root.style.setProperty(`--typo-${varKey}-family`, family);
       root.style.setProperty(`--typo-${varKey}-size`, sizeValue);
       root.style.setProperty(`--typo-${varKey}-weight`, weight);
       root.style.setProperty(`--typo-${varKey}-style`, fontStyle);
       root.style.setProperty(`--typo-${varKey}-color`, color);
+      root.style.setProperty(`--typo-${varKey}-tracking`, trackingValue);
+      root.style.setProperty(`--typo-${varKey}-line-height`, lineHeightValue);
     });
   }
 

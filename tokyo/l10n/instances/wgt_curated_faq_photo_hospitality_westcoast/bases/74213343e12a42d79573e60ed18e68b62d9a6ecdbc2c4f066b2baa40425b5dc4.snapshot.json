@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "74213343e12a42d79573e60ed18e68b62d9a6ecdbc2c4f066b2baa40425b5dc4",
+  "publicId": "wgt_curated_faq_photo_hospitality_westcoast",
+  "snapshot": {
+    "cta.label": "Book Now",
+    "header.subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "header.title": "Bed and Breakfast FAQs",
+    "sections.0.faqs.0.answer": "We offer a variety of rooms including <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">standard</a> , <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">deluxe</a> , and <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">suites</a> .",
+    "sections.0.faqs.0.question": "What types of rooms are available?",
+    "sections.0.faqs.1.answer": "Check-in is at 3 PM and check-out is by 11 AM.",
+    "sections.0.faqs.1.question": "What are the check-in and check-out times?",
+    "sections.0.faqs.2.answer": "Yes, a complimentary breakfast is included with your stay.",
+    "sections.0.faqs.2.question": "Is breakfast included?",
+    "sections.0.faqs.3.answer": "Yes, we offer romantic getaway packages and family-friendly options.",
+    "sections.0.faqs.3.question": "Do you offer any special packages?",
+    "sections.0.title": "Common Questions"
+  },
+  "v": 1
+}

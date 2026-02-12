@@ -22,6 +22,24 @@ export const TYPOGRAPHY_STYLE_OPTIONS = [
   { label: 'Italic', value: 'italic' },
 ];
 
+export const TYPOGRAPHY_TRACKING_OPTIONS = [
+  { label: 'Tighter', value: 'tighter' },
+  { label: 'Tight', value: 'tight' },
+  { label: 'Normal', value: 'normal' },
+  { label: 'Wide', value: 'wide' },
+  { label: 'Wider', value: 'wider' },
+  { label: 'Custom', value: 'custom' },
+];
+
+export const TYPOGRAPHY_LINE_HEIGHT_OPTIONS = [
+  { label: 'Snug', value: 'snug' },
+  { label: 'Tight', value: 'tight' },
+  { label: 'Normal', value: 'normal' },
+  { label: 'Relaxed', value: 'relaxed' },
+  { label: 'Loose', value: 'loose' },
+  { label: 'Custom', value: 'custom' },
+];
+
 function encodeOptions(options: Array<Record<string, string>>): string {
   return JSON.stringify(options).replace(/"/g, '&quot;');
 }
@@ -41,18 +59,25 @@ export function buildTypographyPanel(args: {
   const sizeOptions = encodeOptions(TYPOGRAPHY_SIZE_OPTIONS);
   const styleOptions = encodeOptions(TYPOGRAPHY_STYLE_OPTIONS);
   const weightOptions = encodeOptions(CK_TYPOGRAPHY_WEIGHT_OPTIONS);
+  const trackingOptions = encodeOptions(TYPOGRAPHY_TRACKING_OPTIONS);
+  const lineHeightOptions = encodeOptions(TYPOGRAPHY_LINE_HEIGHT_OPTIONS);
+  const hasRole = (roleKey: string) => {
+    if (!args.roles || !Object.prototype.hasOwnProperty.call(args.roles, roleKey)) return false;
+    const value = (args.roles as Record<string, unknown>)[roleKey];
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  };
 
   const roleEntries: Array<{ key: string; label: string }> = [
     { key: 'title', label: 'Title' },
-    { key: 'body', label: 'Subtitle' },
-    { key: 'section', label: 'Section' },
-    { key: 'question', label: 'Questions' },
-    { key: 'answer', label: 'Answers' },
+    { key: 'body', label: 'Body' },
+    { key: 'section', label: 'Eyebrow' },
+    { key: 'question', label: 'Question' },
+    { key: 'answer', label: 'Answer' },
     { key: 'heading', label: 'Heading' },
     { key: 'timer', label: 'Timer' },
     { key: 'label', label: 'Labels' },
     { key: 'button', label: 'CTA' },
-  ].filter((entry) => args.roles && Object.prototype.hasOwnProperty.call(args.roles, entry.key));
+  ].filter((entry) => hasRole(entry.key));
 
   if (roleEntries.length === 0) return [];
 
@@ -81,6 +106,18 @@ export function buildTypographyPanel(args: {
     );
     lines.push(
       `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-fill' size='md' allow-image='false' path='typography.roles.${role.key}.color' label='Color' value='{{typography.roles.${role.key}.color}}' />`,
+    );
+    lines.push(
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.lineHeightPreset' label='Line spacing' placeholder='Choose line spacing' value='{{typography.roles.${role.key}.lineHeightPreset}}' options='${lineHeightOptions}' />`,
+    );
+    lines.push(
+      `    <tooldrawer-field-typofields ${groupAttr} type='valuefield' size='md' path='typography.roles.${role.key}.lineHeightCustom' label='Custom line spacing' min='0.5' max='3' step='0.01' value='{{typography.roles.${role.key}.lineHeightCustom}}' show-if=\"typography.roles.${role.key}.lineHeightPreset == 'custom'\" />`,
+    );
+    lines.push(
+      `    <tooldrawer-field-typofields ${groupAttr} type='dropdown-actions' size='md' path='typography.roles.${role.key}.trackingPreset' label='Letter spacing' placeholder='Choose spacing' value='{{typography.roles.${role.key}.trackingPreset}}' options='${trackingOptions}' />`,
+    );
+    lines.push(
+      `    <tooldrawer-field-typofields ${groupAttr} type='valuefield' size='md' path='typography.roles.${role.key}.trackingCustom' label='Custom letter spacing (em)' min='-2' max='2' step='0.001' value='{{typography.roles.${role.key}.trackingCustom}}' show-if=\"typography.roles.${role.key}.trackingPreset == 'custom'\" />`,
     );
     lines.push('  </tooldrawer-cluster>');
   });

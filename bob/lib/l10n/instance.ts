@@ -26,7 +26,7 @@ function isNumericSegment(seg: string): boolean {
 }
 
 export function isCuratedPublicId(publicId: string): boolean {
-  if (/^wgt_curated_/.test(publicId)) return true;
+  if (/^wgt_curated_[a-z0-9][a-z0-9_-]*$/.test(publicId)) return true;
   return /^wgt_main_[a-z0-9][a-z0-9_-]*$/.test(publicId);
 }
 
