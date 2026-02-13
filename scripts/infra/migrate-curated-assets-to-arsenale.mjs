@@ -207,6 +207,7 @@ async function migrateInstanceConfig({
   instance,
   tokyoJwt,
   urlCache,
+  dryRun,
 }) {
   const accountId = String(instance.owner_account_id || PLATFORM_ACCOUNT_ID).trim();
   const publicId = String(instance.public_id || '').trim();
@@ -231,6 +232,10 @@ async function migrateInstanceConfig({
       }
 
       if (!shouldMigratePath(candidatePath)) return undefined;
+      if (dryRun) {
+        migrated += 1;
+        return undefined;
+      }
       const uploadedPath = await uploadViaCanonical({
         tokyoJwt,
         accountId,
@@ -296,7 +301,7 @@ async function main() {
   let canonicalizedUrls = 0;
 
   for (const row of candidates) {
-    const result = await migrateInstanceConfig({ instance: row, tokyoJwt, urlCache });
+    const result = await migrateInstanceConfig({ instance: row, tokyoJwt, urlCache, dryRun: DRY_RUN });
     if (!result.changed) continue;
     migratedUrls += result.migrated;
     canonicalizedUrls += result.canonicalized;
@@ -319,4 +324,3 @@ main().catch((err) => {
   console.error(message);
   process.exit(1);
 });
-
