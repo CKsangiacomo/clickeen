@@ -106,13 +106,19 @@ function pickExtension(filename: string | null, contentType: string | null): str
   return 'bin';
 }
 
-function sanitizeUploadFilename(filename: string | null, ext: string): string {
+function sanitizeUploadFilename(filename: string | null, ext: string, variant?: string | null): string {
   const raw = String(filename || '').trim();
   const basename = raw.split(/[\\/]/).pop() || '';
   const stripped = basename.split('?')[0].split('#')[0];
   const stemRaw = stripped.replace(/\.[^.]+$/, '');
   const normalizedStem = stemRaw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const safeStem = (normalizedStem || 'upload').slice(0, 64);
+  const variantStem = String(variant || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  // Avoid opaque duplicate segments like "original/original.jpg".
+  const safeStemBase = normalizedStem || 'upload';
+  const safeStem = (safeStemBase === variantStem ? 'file' : safeStemBase).slice(0, 64);
   const safeExt = String(ext || '')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '') || 'bin';
@@ -1844,7 +1850,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext);
+  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
   const contentLengthRaw = (req.headers.get('content-length') || '').trim();
@@ -1980,7 +1986,7 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext);
+  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
   const contentLengthRaw = (req.headers.get('content-length') || '').trim();
@@ -2059,7 +2065,7 @@ async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Respons
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
-  const safeFilename = sanitizeUploadFilename(filename, ext);
+  const safeFilename = sanitizeUploadFilename(filename, ext, variant);
 
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {

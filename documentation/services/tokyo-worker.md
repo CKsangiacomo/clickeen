@@ -30,6 +30,7 @@
 Asset-domain note:
 - Tokyo-worker persists canonical ownership/file metadata in `account_assets` + `account_asset_variants`.
 - Instance/path usage mapping is maintained by Paris in `account_asset_usage` during instance config writes.
+- Upload filename normalization avoids duplicate variant/file stems (for example new uploads no longer produce `.../original/original.jpg`; they normalize to `.../original/file.jpg` when needed).
 
 ## Deployment
 - Cloudflare Workers + Queues
