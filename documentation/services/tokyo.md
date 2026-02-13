@@ -76,7 +76,9 @@ Local dev:
 - `tokyo/dev-server.mjs` mirrors successful `POST /assets/upload` writes to `tokyo/arsenale/o/*` while still proxying the upload to `tokyo-worker` for metadata/budget enforcement.
 - `tokyo/dev-server.mjs` can be switched to pure worker mode (`TOKYO_ASSET_BACKEND=worker`) to proxy `/arsenale/o/*` reads directly to `tokyo-worker`.
 - `tokyo/dev-server.mjs` also accepts `/assets/accounts/*` as backward-compatible read alias.
-- One-time local mirror bootstrap for already-uploaded assets: `node scripts/infra/sync-local-arsenale-mirror.mjs`.
+- One-time local mirror bootstrap for already-uploaded assets:
+  - From local metadata/source: `SYNC_SOURCE=local node scripts/infra/sync-local-arsenale-mirror.mjs`
+  - From cloud-dev metadata/source (recommended when local mirror is empty): `SYNC_SOURCE=cloud-dev node scripts/infra/sync-local-arsenale-mirror.mjs`
 - Curated asset canonical migration tool supports both environments:
   - Local: `MIGRATION_TARGET=local node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
   - Cloud-dev: `MIGRATION_TARGET=cloud-dev node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
