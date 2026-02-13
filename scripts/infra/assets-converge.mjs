@@ -311,6 +311,22 @@ async function main() {
       SYNC_SOURCE: mirrorSource,
       DRY_RUN: DRY_RUN ? '1' : '',
     });
+    if (mirrorSource === 'cloud-dev') {
+      runStep('align-local-curated-from-cloud', 'node scripts/infra/align-local-curated-assets-from-cloud-dev.mjs', {
+        DRY_RUN: DRY_RUN ? '1' : '',
+      });
+    }
+    runStep('prune-local-arsenale-orphans', 'node scripts/infra/prune-local-arsenale-orphans.mjs', {
+      DRY_RUN: DRY_RUN ? '1' : '',
+    });
+    runStep('export-curated-catalog local', 'node scripts/infra/export-curated-asset-catalog.mjs', {
+      CATALOG_TARGET: 'local',
+    });
+  }
+  if (INCLUDE_CLOUD_DEV) {
+    runStep('export-curated-catalog cloud-dev', 'node scripts/infra/export-curated-asset-catalog.mjs', {
+      CATALOG_TARGET: 'cloud-dev',
+    });
   }
 
   if (DRY_RUN) {
@@ -334,4 +350,3 @@ main().catch((err) => {
   console.error(detail);
   process.exit(1);
 });
-

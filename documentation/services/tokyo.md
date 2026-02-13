@@ -79,12 +79,16 @@ Local dev:
 - One-time local mirror bootstrap for already-uploaded assets:
   - From local metadata/source: `SYNC_SOURCE=local node scripts/infra/sync-local-arsenale-mirror.mjs`
   - From cloud-dev metadata/source (recommended when local mirror is empty): `SYNC_SOURCE=cloud-dev node scripts/infra/sync-local-arsenale-mirror.mjs`
+- Local curated ID alignment helper (when mirror source is cloud-dev): `node scripts/infra/align-local-curated-assets-from-cloud-dev.mjs`
+- Local canonical orphan cleanup (removes `tokyo/arsenale/o/**` files not present in local `account_asset_variants`): `node scripts/infra/prune-local-arsenale-orphans.mjs`
+- Human-readable curated asset map export: `node scripts/infra/export-curated-asset-catalog.mjs` (writes `tokyo/arsenale/catalog/curated-assets.local.json`; cloud-dev via `CATALOG_TARGET=cloud-dev`)
 - Curated asset canonical migration tool supports both environments:
   - Local: `MIGRATION_TARGET=local node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
   - Cloud-dev: `MIGRATION_TARGET=cloud-dev node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
 - Legacy local files cleanup (`tokyo/curated-assets` + `tokyo/workspace-assets`, after audit confirms zero legacy refs): `node scripts/infra/prune-local-legacy-curated-assets.mjs`.
 - One-command convergence (migrate + usage reindex + legacy prune + local mirror + post-run audits):
   - `pnpm assets:converge`
+  - Default mirror source is cloud-dev (`MIRROR_SOURCE=cloud-dev`) and includes local curated ID alignment + orphan cleanup; to force local mirror source: `MIRROR_SOURCE=local pnpm assets:converge`
   - Dry run: `DRY_RUN=1 pnpm assets:converge`
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
