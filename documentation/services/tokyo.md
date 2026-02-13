@@ -83,6 +83,9 @@ Local dev:
   - Local: `MIGRATION_TARGET=local node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
   - Cloud-dev: `MIGRATION_TARGET=cloud-dev node scripts/infra/migrate-curated-assets-to-arsenale.mjs`
 - Legacy local files cleanup (`tokyo/curated-assets` + `tokyo/workspace-assets`, after audit confirms zero legacy refs): `node scripts/infra/prune-local-legacy-curated-assets.mjs`.
+- One-command convergence (migrate + usage reindex + legacy prune + local mirror + post-run audits):
+  - `pnpm assets:converge`
+  - Dry run: `DRY_RUN=1 pnpm assets:converge`
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
