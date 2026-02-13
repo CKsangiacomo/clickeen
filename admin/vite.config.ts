@@ -598,6 +598,7 @@ export default defineConfig({
                 return (
                   u.pathname.startsWith('/workspace-assets/') ||
                   u.pathname.startsWith('/curated-assets/') ||
+                  u.pathname.startsWith('/arsenale/o/') ||
                   u.pathname.startsWith('/assets/accounts/') ||
                   u.pathname.startsWith('/widgets/')
                 );
@@ -644,7 +645,7 @@ export default defineConfig({
                   issues.push({
                     path: nodePath,
                     message:
-                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, /assets/accounts/*, or /widgets/*).',
+                      'local-only URL found (localhost/127.0.0.1). Promotion requires local Tokyo URLs (http://localhost:4000/workspace-assets/*, /curated-assets/*, /arsenale/o/*, /assets/accounts/*, or /widgets/*).',
                   });
                 }
                 return;
@@ -689,6 +690,7 @@ export default defineConfig({
                   return (
                     u.pathname.startsWith('/workspace-assets/') ||
                     u.pathname.startsWith('/curated-assets/') ||
+                    u.pathname.startsWith('/arsenale/o/') ||
                     u.pathname.startsWith('/assets/accounts/')
                   );
                 } catch {
@@ -749,6 +751,8 @@ export default defineConfig({
                   endpoint = '/assets/upload';
                   headers['x-public-id'] = publicId;
                   headers['x-widget-type'] = widgetType;
+                } else if (source.pathname.startsWith('/arsenale/o/')) {
+                  endpoint = '/assets/upload';
                 } else if (source.pathname.startsWith('/assets/accounts/')) {
                   endpoint = '/assets/upload';
                 } else {

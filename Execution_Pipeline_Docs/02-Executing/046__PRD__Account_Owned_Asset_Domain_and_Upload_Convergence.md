@@ -25,7 +25,7 @@ This PRD does **not** change the existing multi-tenant collaboration model: work
 ### 0.1 Execution outcome (local validation, 2026-02-13)
 
 1. Phase 0 DB foundation is present locally: `accounts`, `workspaces.account_id`, `curated_widget_instances.owner_account_id`, `account_assets`, `account_asset_variants`.
-2. Canonical upload contract is active: `POST /assets/upload` writes account-owned paths under `/assets/accounts/{accountId}/...`.
+2. Canonical upload contract is active: `POST /assets/upload` writes account-owned paths under `/arsenale/o/{accountId}/...` (legacy `/assets/accounts/**` remains read-compatible).
 3. Legacy write endpoints are removed and fail visibly: `POST /workspace-assets/upload` and `POST /curated-assets/upload` return `410`.
 4. Bob and DevStudio now use account-first upload semantics with explicit `x-account-id`.
 5. Paris account asset APIs are active (`GET list`, `GET by assetId`, `DELETE soft-delete`) and scoped by account identity.
@@ -180,11 +180,12 @@ Design principle for this PRD:
 
 All new uploads write to:
 
-`assets/accounts/{accountId}/{assetId}/{variant}/{filename}`
+`arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
 
 Notes:
 
 1. Old paths remain readable during migration only:
+   - `/assets/accounts/**` (read alias to canonical namespace)
    - `/workspace-assets/**`
    - `/curated-assets/**`
 2. New write APIs stop writing to old roots after cutover.
@@ -221,8 +222,8 @@ Response shape (canonical):
   "ext": "jpg",
   "contentType": "image/jpeg",
   "sizeBytes": 12345,
-  "key": "assets/accounts/<accountId>/<assetId>/<variant>/<filename>",
-  "url": "https://tokyo.../assets/accounts/<accountId>/<assetId>/<variant>/<filename>"
+  "key": "arsenale/o/<accountId>/<assetId>/<variant>/<filename>",
+  "url": "https://tokyo.../arsenale/o/<accountId>/<assetId>/<variant>/<filename>"
 }
 ```
 
@@ -452,7 +453,7 @@ No asset upload call path can proceed without explicit `accountId`.
 
 ### What
 
-Implement `POST /assets/upload` and `GET /assets/accounts/**` as canonical path.
+Implement `POST /assets/upload` and `GET /arsenale/o/**` as canonical path.
 
 ### Why
 
@@ -462,9 +463,9 @@ Single contract + single namespace eliminates path split and exception complexit
 
 1. Add handler `handleUploadAccountAsset`.
 2. Validate `x-account-id`, auth, variant, payload.
-3. Write to `assets/accounts/{accountId}/{assetId}/{variant}/{filename}`.
+3. Write to `arsenale/o/{accountId}/{assetId}/{variant}/{filename}`.
 4. Emit canonical response shape.
-5. Keep `workspace-assets` and `curated-assets` reads for compatibility.
+5. Keep `/assets/accounts/**`, `workspace-assets`, and `curated-assets` reads for compatibility.
 6. Mark old write endpoints as deprecated and eventually remove.
 
 ### Gate
@@ -618,7 +619,7 @@ Phase 0 deterministic gate:
 ### 8.1 Functional
 
 1. All upload write requests include resolved `accountId`.
-2. Tokyo worker writes new uploads only under `/assets/accounts/{accountId}/...`.
+2. Tokyo worker writes new uploads only under `/arsenale/o/{accountId}/...`.
 3. DevStudio and Bob use same upload contract and response shape.
 4. Asset filenames are preserved/sanitized consistently.
 
@@ -750,7 +751,7 @@ Target:
 1. Bob route does not accept ownership scope query.
 2. Ownership resolved as `accountId` in server context.
 3. Tokyo worker writes only to:
-   - `/assets/accounts/{accountId}/{assetId}/{variant}/{filename}`
+   - `/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`
 
 ### 15.2 Identity resolution contract
 
@@ -792,7 +793,8 @@ Applied during publish/export/promote:
 
 1. Traverse config values.
 2. For each URL-like value:
-   - if already `/assets/accounts/...`, keep.
+   - if already `/arsenale/o/...`, keep.
+   - if `/assets/accounts/...`, rewrite path to `/arsenale/o/...` (no re-upload).
    - if `/workspace-assets/...` or `/curated-assets/...`, migrate.
 3. Migration step:
    - fetch object bytes from old URL

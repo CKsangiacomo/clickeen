@@ -380,7 +380,10 @@ function shouldProxyMutableToWorker(req, pathname) {
   if (req.method === 'POST' && (pathname === '/assets/upload' || pathname === '/assets/purge-deleted')) {
     return true;
   }
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/assets/accounts/')) {
+  if (
+    (req.method === 'GET' || req.method === 'HEAD') &&
+    (pathname.startsWith('/arsenale/o/') || pathname.startsWith('/assets/accounts/'))
+  ) {
     return true;
   }
   if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {

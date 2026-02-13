@@ -7,7 +7,8 @@
 ## Interfaces
 - `POST /assets/upload` (auth required; account-owned uploads; writes to R2 + Supabase metadata)
 - `POST /assets/purge-deleted` (auth required; internal retention endpoint; purges soft-deleted assets older than retention window)
-- `GET /assets/accounts/**` (public, cacheable)
+- `GET /arsenale/o/**` (public, cacheable; canonical account-owned asset reads)
+- `GET /assets/accounts/**` (public, cacheable; backward-compatible read alias)
 - `POST /workspace-assets/upload` (removed; returns `410`, use `/assets/upload`)
 - `GET /workspace-assets/**` (public, cacheable)
 - `POST /curated-assets/upload` (removed; returns `410`, use `/assets/upload`)

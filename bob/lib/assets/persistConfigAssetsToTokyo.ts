@@ -13,7 +13,7 @@ function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
   if (!v) return null;
   if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
-  if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(v)) return v;
+  if (/^\/(?:workspace-assets|curated-assets|assets\/accounts|arsenale\/o)\//i.test(v)) return v;
   const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (match && match[2]) return match[2];
   return null;
@@ -57,6 +57,25 @@ function isLegacyTokyoAssetUrl(rawUrl: string): boolean {
   return false;
 }
 
+function canonicalizeAccountAssetUrl(rawUrl: string): string {
+  const v = String(rawUrl || '').trim();
+  if (!v) return v;
+  if (/^\/assets\/accounts\//i.test(v)) return v.replace(/^\/assets\/accounts\//i, '/arsenale/o/');
+  if (/^https?:\/\//i.test(v)) {
+    try {
+      const parsed = new URL(v);
+      if (/^\/assets\/accounts\//i.test(parsed.pathname)) {
+        parsed.pathname = parsed.pathname.replace(/^\/assets\/accounts\//i, '/arsenale/o/');
+        return parsed.toString();
+      }
+      return v;
+    } catch {
+      return v;
+    }
+  }
+  return v;
+}
+
 function resolveFetchUrl(rawUrl: string): string {
   const v = String(rawUrl || '').trim();
   if (!v) return v;
@@ -79,6 +98,30 @@ function extFromMime(mime: string): string {
   if (mt === 'video/webm') return 'webm';
   if (mt === 'application/pdf') return 'pdf';
   return 'bin';
+}
+
+function filenameFromAssetUrl(rawUrl: string, mime: string): string {
+  const resolvedExt = extFromMime(mime);
+  const fallback = `upload.${resolvedExt}`;
+  const v = String(rawUrl || '').trim();
+  if (!v) return fallback;
+  let candidate = '';
+  if (/^https?:\/\//i.test(v)) {
+    try {
+      candidate = decodeURIComponent(new URL(v).pathname.split('/').filter(Boolean).pop() || '');
+    } catch {
+      candidate = '';
+    }
+  } else if (v.startsWith('/')) {
+    candidate = decodeURIComponent(v.split('/').filter(Boolean).pop() || '');
+  }
+  const clean = candidate.split('?')[0].split('#')[0].trim();
+  if (!clean || /[\\/]/.test(clean)) return fallback;
+  const extFromName = clean.includes('.') ? clean.split('.').pop()?.toLowerCase() ?? '' : '';
+  if (extFromName && /^[a-z0-9]{1,8}$/.test(extFromName)) return clean;
+  const stem = clean.replace(/\.[^.]+$/, '').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '');
+  if (!stem) return fallback;
+  return `${stem}.${resolvedExt}`;
 }
 
 async function uploadTokyoAsset({
@@ -186,6 +229,10 @@ export async function persistConfigAssetsToTokyo(
       }
       const url = extractPrimaryUrl(node);
       if (!url) return;
+      const canonicalizedUrl = canonicalizeAccountAssetUrl(url);
+      if (canonicalizedUrl && canonicalizedUrl !== url) {
+        return replacePrimaryUrl(node, canonicalizedUrl);
+      }
       const requiresUpload = isNonPersistableUrl(url) || isLegacyTokyoAssetUrl(url);
       if (!requiresUpload) return;
 
@@ -198,8 +245,7 @@ export async function persistConfigAssetsToTokyo(
           );
         }
         const blob = await sourceRes.blob();
-        const ext = extFromMime(blob.type);
-        const filename = `upload.${ext}`;
+        const filename = filenameFromAssetUrl(url, blob.type);
         const uploadedUrl = await uploadTokyoAsset({
           accountId,
           workspaceId,

@@ -51,7 +51,7 @@ Notes:
 - Curated metadata lives in `curated_widget_instances.meta`: `{ styleName, styleSlug, variants? }`.
 - DevStudio create flow keeps this intentionally minimal: required instance name + optional `variant`/`sub-variant`.
 - DevStudio uploads through the canonical Tokyo account route (`POST /assets/upload`) with explicit `x-account-id`.
-- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical account paths (`/assets/accounts/{accountId}/{assetId}/{variant}/{filename}`).
+- Curated/main flows use `PLATFORM_ACCOUNT_ID`; resulting URLs are canonical account paths (`/arsenale/o/{accountId}/{assetId}/{variant}/{filename}`) with legacy `/assets/accounts/**` read alias.
 - Legacy `workspace-assets`/`curated-assets` write paths are removed (`410`) and remain read-compat only.
 - Curated actions export the current editor state from Bob (not the last published config).
 

@@ -119,6 +119,27 @@ function sanitizeUploadFilename(filename: string | null, ext: string): string {
   return `${safeStem}.${safeExt}`;
 }
 
+const ACCOUNT_ASSET_CANONICAL_PREFIX = 'arsenale/o/';
+const ACCOUNT_ASSET_LEGACY_PREFIX = 'assets/accounts/';
+
+function buildAccountAssetKey(accountId: string, assetId: string, variant: string, filename: string): string {
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/${assetId}/${variant}/${filename}`;
+}
+
+function normalizeAccountAssetReadKey(pathname: string): string | null {
+  const key = String(pathname || '').replace(/^\/+/, '');
+  if (key.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return key;
+  if (key.startsWith(ACCOUNT_ASSET_LEGACY_PREFIX)) {
+    return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${key.slice(ACCOUNT_ASSET_LEGACY_PREFIX.length)}`;
+  }
+  return null;
+}
+
+function toLegacyAccountAssetKey(canonicalKey: string): string | null {
+  if (!canonicalKey.startsWith(ACCOUNT_ASSET_CANONICAL_PREFIX)) return null;
+  return `${ACCOUNT_ASSET_LEGACY_PREFIX}${canonicalKey.slice(ACCOUNT_ASSET_CANONICAL_PREFIX.length)}`;
+}
+
 function guessContentTypeFromExt(ext: string): string {
   switch (ext.toLowerCase()) {
     case 'css':
@@ -1898,7 +1919,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   }
 
   const assetId = crypto.randomUUID();
-  const key = `assets/accounts/${accountId}/${assetId}/${variant}/${safeFilename}`;
+  const key = buildAccountAssetKey(accountId, assetId, variant, safeFilename);
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   try {
@@ -2063,10 +2084,7 @@ async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Respons
   return json({ publicId, widgetType, assetId, variant, ext, key, url }, { status: 200 });
 }
 
-async function handleGetWorkspaceAsset(req: Request, env: Env, key: string): Promise<Response> {
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return new Response('Not found', { status: 404 });
-
+function respondImmutableR2Asset(key: string, obj: R2ObjectBody): Response {
   const ext = key.split('.').pop() || '';
   const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
   const headers = new Headers();
@@ -2075,16 +2093,31 @@ async function handleGetWorkspaceAsset(req: Request, env: Env, key: string): Pro
   return new Response(obj.body, { status: 200, headers });
 }
 
+async function handleGetWorkspaceAsset(req: Request, env: Env, key: string): Promise<Response> {
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+  return respondImmutableR2Asset(key, obj);
+}
+
 async function handleGetCuratedAsset(req: Request, env: Env, key: string): Promise<Response> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
+  return respondImmutableR2Asset(key, obj);
+}
 
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
-  const headers = new Headers();
-  headers.set('content-type', contentType);
-  headers.set('cache-control', 'public, max-age=31536000, immutable');
-  return new Response(obj.body, { status: 200, headers });
+async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
+  const canonical = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
+  if (!canonical) return new Response('Not found', { status: 404 });
+
+  const canonicalObj = await env.TOKYO_R2.get(canonical);
+  if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
+
+  // Backward-compat read alias while old `assets/accounts/**` objects still exist.
+  const legacyKey = toLegacyAccountAssetKey(canonical);
+  if (!legacyKey) return new Response('Not found', { status: 404 });
+  const legacyObj = await env.TOKYO_R2.get(legacyKey);
+  if (!legacyObj) return new Response('Not found', { status: 404 });
+  return respondImmutableR2Asset(legacyKey, legacyObj);
 }
 
 type RenderIndexEntry = { e: string; r: string; meta: string };
@@ -2432,10 +2465,10 @@ export default {
         return withCors(await handleUploadAccountAsset(req, env));
       }
 
-      if (pathname.startsWith('/assets/accounts/')) {
+      if (pathname.startsWith('/arsenale/o/') || pathname.startsWith('/assets/accounts/')) {
         if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
         const key = pathname.replace(/^\//, '');
-        return withCors(await handleGetWorkspaceAsset(req, env, key));
+        return withCors(await handleGetAccountAsset(env, key));
       }
 
       if (pathname.startsWith('/workspace-assets/')) {
