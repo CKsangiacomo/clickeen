@@ -3,6 +3,7 @@ import type { Env } from './types';
 
 export type BudgetScope =
   | { kind: 'workspace'; workspaceId: string }
+  | { kind: 'account'; accountId: string }
   | { kind: 'minibob'; sessionKey: string }
   | { kind: 'anon'; fingerprint: string };
 
@@ -29,6 +30,7 @@ function requireUsageKv(env: Env): KVNamespace | null {
 
 function scopeKey(scope: BudgetScope): string {
   if (scope.kind === 'workspace') return `ws:${scope.workspaceId}`;
+  if (scope.kind === 'account') return `acct:${scope.accountId}`;
   if (scope.kind === 'minibob') return `minibob:${scope.sessionKey}`;
   return `anon:${scope.fingerprint}`;
 }
@@ -94,4 +96,3 @@ export async function consumeBudget(args: {
   await kv.put(key, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
   return { ok: true, used, nextUsed };
 }
-

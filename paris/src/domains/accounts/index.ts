@@ -1,0 +1,366 @@
+import type { Env } from '../../shared/types';
+import { ckError } from '../../shared/errors';
+import { assertDevAuth } from '../../shared/auth';
+import { json, readJson } from '../../shared/http';
+import { supabaseFetch } from '../../shared/supabase';
+import { isUuid } from '../../shared/validation';
+
+type AccountRow = {
+  id: string;
+  status: 'active' | 'disabled';
+  is_platform: boolean;
+};
+
+type AccountAssetRow = {
+  asset_id: string;
+  account_id: string;
+  workspace_id?: string | null;
+  public_id?: string | null;
+  widget_type?: string | null;
+  source: string;
+  original_filename: string;
+  normalized_filename: string;
+  content_type: string;
+  size_bytes: number;
+  sha256?: string | null;
+  deleted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AccountAssetVariantRow = {
+  asset_id: string;
+  variant: string;
+  r2_key: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
+};
+
+function assertAccountId(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed || !isUuid(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function assertAssetId(value: string) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed || !isUuid(trimmed)) {
+    return { ok: false as const, response: ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' }, 422) };
+  }
+  return { ok: true as const, value: trimmed };
+}
+
+function resolveListLimit(req: Request): number {
+  const url = new URL(req.url);
+  const raw = Number.parseInt((url.searchParams.get('limit') || '').trim(), 10);
+  if (!Number.isFinite(raw) || raw <= 0) return 50;
+  return Math.min(raw, 200);
+}
+
+function shouldIncludeDeleted(req: Request): boolean {
+  const url = new URL(req.url);
+  const raw = (url.searchParams.get('includeDeleted') || '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
+}
+
+function resolveTokyoAssetBase(env: Env): string | null {
+  const raw = (
+    (typeof env.TOKYO_BASE_URL === 'string' ? env.TOKYO_BASE_URL : '') ||
+    (typeof env.TOKYO_WORKER_BASE_URL === 'string' ? env.TOKYO_WORKER_BASE_URL : '')
+  )
+    .trim()
+    .replace(/\/+$/, '');
+  return raw || null;
+}
+
+function normalizeAssetVariant(row: AccountAssetVariantRow, tokyoBase: string | null) {
+  const key = row.r2_key;
+  const url = tokyoBase ? `${tokyoBase}/${key.replace(/^\/+/, '')}` : null;
+  return {
+    variant: row.variant,
+    key,
+    filename: row.filename,
+    contentType: row.content_type,
+    sizeBytes: row.size_bytes,
+    createdAt: row.created_at,
+    url,
+  };
+}
+
+function normalizeAccountAsset(
+  row: AccountAssetRow,
+  variants: AccountAssetVariantRow[],
+  tokyoBase: string | null,
+) {
+  return {
+    assetId: row.asset_id,
+    accountId: row.account_id,
+    workspaceId: row.workspace_id ?? null,
+    publicId: row.public_id ?? null,
+    widgetType: row.widget_type ?? null,
+    source: row.source,
+    originalFilename: row.original_filename,
+    normalizedFilename: row.normalized_filename,
+    contentType: row.content_type,
+    sizeBytes: row.size_bytes,
+    sha256: row.sha256 ?? null,
+    deletedAt: row.deleted_at ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    variants: variants.map((variant) => normalizeAssetVariant(variant, tokyoBase)),
+  };
+}
+
+function requireOwnedAccountHeader(req: Request, accountId: string) {
+  const actorAccountId = (req.headers.get('x-account-id') || '').trim();
+  if (!actorAccountId) {
+    return ckError({ kind: 'AUTH', reasonKey: 'coreui.errors.accountId.required' }, 401);
+  }
+  if (!isUuid(actorAccountId)) {
+    return ckError({ kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' }, 422);
+  }
+  if (actorAccountId !== accountId) {
+    return ckError({ kind: 'DENY', reasonKey: 'coreui.errors.account.mismatch' }, 403);
+  }
+  return null;
+}
+
+async function loadAccount(env: Env, accountId: string): Promise<AccountRow | null> {
+  const params = new URLSearchParams({
+    select: 'id,status,is_platform',
+    id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load account (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as AccountRow[];
+  return rows?.[0] ?? null;
+}
+
+async function loadVariantsByAssetIds(
+  env: Env,
+  accountId: string,
+  assetIds: string[],
+): Promise<Map<string, AccountAssetVariantRow[]>> {
+  const out = new Map<string, AccountAssetVariantRow[]>();
+  if (assetIds.length === 0) return out;
+
+  const params = new URLSearchParams({
+    select: 'asset_id,variant,r2_key,filename,content_type,size_bytes,created_at',
+    account_id: `eq.${accountId}`,
+    asset_id: `in.(${assetIds.join(',')})`,
+    order: 'created_at.desc',
+    limit: '2000',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load account asset variants (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as AccountAssetVariantRow[];
+  rows.forEach((row) => {
+    const current = out.get(row.asset_id);
+    if (current) current.push(row);
+    else out.set(row.asset_id, [row]);
+  });
+  return out;
+}
+
+async function loadAccountAsset(
+  env: Env,
+  accountId: string,
+  assetId: string,
+  includeDeleted: boolean,
+): Promise<AccountAssetRow | null> {
+  const params = new URLSearchParams({
+    select:
+      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,deleted_at,created_at,updated_at',
+    account_id: `eq.${accountId}`,
+    asset_id: `eq.${assetId}`,
+    limit: '1',
+  });
+  if (!includeDeleted) params.set('deleted_at', 'is.null');
+  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const details = await readJson(res);
+    throw new Error(`[ParisWorker] Failed to load account asset (${res.status}): ${JSON.stringify(details)}`);
+  }
+  const rows = (await res.json()) as AccountAssetRow[];
+  return rows?.[0] ?? null;
+}
+
+export async function handleAccountAssetsList(req: Request, env: Env, accountIdRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const ownerError = requireOwnedAccountHeader(req, accountId);
+  if (ownerError) return ownerError;
+
+  let account: AccountRow | null = null;
+  try {
+    account = await loadAccount(env, accountId);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+  if (!account) {
+    return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+  }
+
+  const limit = resolveListLimit(req);
+  const includeDeleted = shouldIncludeDeleted(req);
+  const params = new URLSearchParams({
+    select:
+      'asset_id,account_id,workspace_id,public_id,widget_type,source,original_filename,normalized_filename,content_type,size_bytes,sha256,deleted_at,created_at,updated_at',
+    account_id: `eq.${accountId}`,
+    order: 'created_at.desc',
+    limit: String(limit),
+  });
+  if (!includeDeleted) params.set('deleted_at', 'is.null');
+
+  const tokyoBase = resolveTokyoAssetBase(env);
+
+  try {
+    const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
+    if (!res.ok) {
+      const details = await readJson(res);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail: JSON.stringify(details) }, 500);
+    }
+    const assets = (await res.json()) as AccountAssetRow[];
+    const assetIds = assets.map((asset) => asset.asset_id).filter(Boolean);
+    const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, assetIds);
+
+    return json({
+      accountId,
+      assets: assets.map((asset) =>
+        normalizeAccountAsset(asset, variantsByAssetId.get(asset.asset_id) ?? [], tokyoBase),
+      ),
+      pagination: {
+        limit,
+        count: assets.length,
+      },
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+}
+
+export async function handleAccountAssetGet(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const assetIdResult = assertAssetId(assetIdRaw);
+  if (!assetIdResult.ok) return assetIdResult.response;
+  const assetId = assetIdResult.value;
+
+  const ownerError = requireOwnedAccountHeader(req, accountId);
+  if (ownerError) return ownerError;
+
+  const includeDeleted = shouldIncludeDeleted(req);
+  const tokyoBase = resolveTokyoAssetBase(env);
+
+  try {
+    const account = await loadAccount(env, accountId);
+    if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+
+    const asset = await loadAccountAsset(env, accountId, assetId, includeDeleted);
+    if (!asset) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+
+    const variantsByAssetId = await loadVariantsByAssetIds(env, accountId, [assetId]);
+    return json({
+      accountId,
+      asset: normalizeAccountAsset(asset, variantsByAssetId.get(assetId) ?? [], tokyoBase),
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail }, 500);
+  }
+}
+
+export async function handleAccountAssetDelete(req: Request, env: Env, accountIdRaw: string, assetIdRaw: string) {
+  const auth = assertDevAuth(req, env);
+  if (!auth.ok) return auth.response;
+
+  const accountIdResult = assertAccountId(accountIdRaw);
+  if (!accountIdResult.ok) return accountIdResult.response;
+  const accountId = accountIdResult.value;
+
+  const assetIdResult = assertAssetId(assetIdRaw);
+  if (!assetIdResult.ok) return assetIdResult.response;
+  const assetId = assetIdResult.value;
+
+  const ownerError = requireOwnedAccountHeader(req, accountId);
+  if (ownerError) return ownerError;
+
+  try {
+    const account = await loadAccount(env, accountId);
+    if (!account) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' }, 404);
+
+    const existing = await loadAccountAsset(env, accountId, assetId, true);
+    if (!existing) return ckError({ kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' }, 404);
+    if (existing.deleted_at) {
+      return json({
+        accountId,
+        assetId,
+        deleted: false,
+        alreadyDeleted: true,
+        deletedAt: existing.deleted_at,
+      });
+    }
+
+    const deletedAt = new Date().toISOString();
+    const patchParams = new URLSearchParams({
+      select: 'asset_id,deleted_at',
+      account_id: `eq.${accountId}`,
+      asset_id: `eq.${assetId}`,
+      deleted_at: 'is.null',
+    });
+    const patchRes = await supabaseFetch(env, `/rest/v1/account_assets?${patchParams.toString()}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ deleted_at: deletedAt }),
+    });
+    if (!patchRes.ok) {
+      const details = await readJson(patchRes);
+      return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail: JSON.stringify(details) }, 500);
+    }
+    const rows = (await patchRes.json().catch(() => [])) as Array<{ asset_id?: string; deleted_at?: string | null }>;
+    const row = rows?.[0];
+    if (!row) {
+      const latest = await loadAccountAsset(env, accountId, assetId, true);
+      return json({
+        accountId,
+        assetId,
+        deleted: false,
+        alreadyDeleted: Boolean(latest?.deleted_at),
+        deletedAt: latest?.deleted_at ?? null,
+      });
+    }
+
+    return json({
+      accountId,
+      assetId,
+      deleted: true,
+      deletedAt: row.deleted_at ?? deletedAt,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return ckError({ kind: 'INTERNAL', reasonKey: 'coreui.errors.db.writeFailed', detail }, 500);
+  }
+}

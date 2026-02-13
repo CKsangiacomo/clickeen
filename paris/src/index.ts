@@ -29,6 +29,11 @@ import {
   handleWorkspaceUpdateInstance,
 } from './domains/workspaces';
 import {
+  handleAccountAssetDelete,
+  handleAccountAssetGet,
+  handleAccountAssetsList,
+} from './domains/accounts';
+import {
   handleL10nGenerateReport,
   handleL10nGenerateRetries,
   handleWorkspaceInstanceLayerDelete,
@@ -230,6 +235,22 @@ export default {
         if (!workspaceIdResult.ok) return workspaceIdResult.response;
         if (req.method === 'GET') return handleWorkspaceBusinessProfileGet(req, env, workspaceIdResult.value);
         if (req.method === 'POST') return handleWorkspaceBusinessProfileUpsert(req, env, workspaceIdResult.value);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountAssetsMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/assets$/);
+      if (accountAssetsMatch) {
+        const accountId = decodeURIComponent(accountAssetsMatch[1]);
+        if (req.method === 'GET') return handleAccountAssetsList(req, env, accountId);
+        return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+      }
+
+      const accountAssetMatch = pathname.match(/^\/api\/accounts\/([^/]+)\/assets\/([^/]+)$/);
+      if (accountAssetMatch) {
+        const accountId = decodeURIComponent(accountAssetMatch[1]);
+        const assetId = decodeURIComponent(accountAssetMatch[2]);
+        if (req.method === 'GET') return handleAccountAssetGet(req, env, accountId, assetId);
+        if (req.method === 'DELETE') return handleAccountAssetDelete(req, env, accountId, assetId);
         return json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       }
 

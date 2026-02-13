@@ -218,17 +218,18 @@ ToolDrawer has a single, global vertical rhythm. **Only clusters and groups defi
 ### Built-in editor actions (current)
 - Undo is supported for the last applied ops batch (`undoSnapshot` in `useWidgetSession`).
 
-### Asset persistence (workspace + curated uploads)
+### Asset persistence (account-owned uploads)
 
 Before publish (and during certain DevStudio superadmin flows), Bob scans config for `data:`/`blob:` URLs, uploads binaries to Tokyo, and rewrites the config with stable `http(s)` URLs.
 
 Implementation:
 - Client persistence utility: `bob/lib/assets/persistConfigAssetsToTokyo.ts`
-- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to Tokyo `workspace-assets` or `curated-assets` uploads)
+- Upload proxy: `bob/app/api/assets/upload/route.ts` (proxies to Tokyo `POST /assets/upload`)
 
 Scopes:
-- **Workspace instances** → `tokyo/workspace-assets/{workspaceId}/...`
-- **Curated instances** (`wgt_main_*`, `wgt_curated_*`) → `tokyo/curated-assets/{widgetType}/{publicId}/...`
+- **Canonical ownership**: every upload carries `x-account-id` and writes to `assets/accounts/{accountId}/{assetId}/{variant}/{filename}`
+- **Trace context (optional)**: `workspaceId`, `publicId`, `widgetType`, `source` are persisted for diagnostics/attribution only
+- Legacy writes (`/workspace-assets/upload`, `/curated-assets/upload`) are removed and fail visibly (`410`)
 
 ---
 

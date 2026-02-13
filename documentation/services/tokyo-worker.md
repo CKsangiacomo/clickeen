@@ -5,9 +5,12 @@
 - Purpose: Serve workspace assets and materialize **instance** localization overlays + **published render snapshots** into Tokyo/R2.
 
 ## Interfaces
-- `POST /workspace-assets/upload` (auth required; writes to R2)
+- `POST /assets/upload` (auth required; account-owned uploads; writes to R2 + Supabase metadata)
+- `POST /assets/purge-deleted` (auth required; internal retention endpoint; purges soft-deleted assets older than retention window)
+- `GET /assets/accounts/**` (public, cacheable)
+- `POST /workspace-assets/upload` (removed; returns `410`, use `/assets/upload`)
 - `GET /workspace-assets/**` (public, cacheable)
-- `POST /curated-assets/upload` (auth required; writes to R2)
+- `POST /curated-assets/upload` (removed; returns `410`, use `/assets/upload`)
 - `GET /curated-assets/**` (public, cacheable)
 - `POST /l10n/publish` (internal; publish or delete a layer overlay; body: `{ publicId, layer, layerKey, action? }`)
 - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev auth; direct overlay write)

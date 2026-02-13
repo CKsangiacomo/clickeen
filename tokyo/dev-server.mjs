@@ -24,6 +24,10 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
 const baseDir = __dirname;
+const tokyoWorkerBase = String(process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791')
+  .trim()
+  .replace(/\/+$/, '');
+const TOKYO_L10N_BRIDGE_HEADER = 'x-tokyo-l10n-bridge';
 
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -85,7 +89,7 @@ function normalizePublicId(raw) {
   const v = String(raw || '').trim();
   if (!v) return null;
   const okMain = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v);
-  const okCurated = /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(v);
+  const okCurated = /^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v);
   const okUser = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i.test(v);
   if (!okMain && !okCurated && !okUser) return null;
   return v;
@@ -94,7 +98,7 @@ function normalizePublicId(raw) {
 function normalizeCuratedPublicId(raw) {
   const v = normalizePublicId(raw);
   if (!v) return null;
-  if (/^wgt_curated_[a-z0-9][a-z0-9_-]*$/i.test(v)) return v;
+  if (/^wgt_curated_[a-z0-9]([a-z0-9_-]*[a-z0-9])?([.][a-z0-9]([a-z0-9_-]*[a-z0-9])?)*$/i.test(v)) return v;
   if (/^wgt_main_[a-z0-9][a-z0-9_-]*$/i.test(v)) return v;
   return null;
 }
@@ -346,10 +350,92 @@ function pickExtension({ filename, contentType }) {
   return 'bin';
 }
 
+function sanitizeUploadFilename(filename, ext) {
+  const raw = String(filename || '').trim();
+  const basename = raw.split(/[\\/]/).pop() || '';
+  const stripped = basename.split('?')[0].split('#')[0];
+  const stemRaw = stripped.replace(/\.[^.]+$/, '');
+  const normalizedStem = stemRaw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const safeStem = (normalizedStem || 'upload').slice(0, 64);
+  const safeExt = String(ext || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') || 'bin';
+  return `${safeStem}.${safeExt}`;
+}
+
 function sendJson(res, status, payload) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
+}
+
+function isTokyoWorkerBridgeRequest(req) {
+  const raw = req.headers[TOKYO_L10N_BRIDGE_HEADER];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return String(value || '').trim() === '1';
+}
+
+function shouldProxyMutableToWorker(req, pathname) {
+  if (isTokyoWorkerBridgeRequest(req)) return false;
+  if (req.method === 'POST' && (pathname === '/assets/upload' || pathname === '/assets/purge-deleted')) {
+    return true;
+  }
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/assets/accounts/')) {
+    return true;
+  }
+  if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {
+    return true;
+  }
+  return false;
+}
+
+function buildWorkerProxyHeaders(req) {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers || {})) {
+    if (!value) continue;
+    const lower = key.toLowerCase();
+    if (lower === 'host' || lower === 'connection' || lower === 'content-length') continue;
+    if (Array.isArray(value)) {
+      headers.set(key, value.join(', '));
+    } else {
+      headers.set(key, String(value));
+    }
+  }
+  return headers;
+}
+
+async function proxyMutableToWorker(req, res) {
+  const method = req.method || 'GET';
+  const target = `${tokyoWorkerBase}${req.url || '/'}`;
+  const hasBody = method !== 'GET' && method !== 'HEAD';
+  const body = hasBody ? await readRequestBody(req) : undefined;
+
+  const upstream = await fetch(target, {
+    method,
+    headers: buildWorkerProxyHeaders(req),
+    body: hasBody ? body : undefined,
+  });
+
+  res.statusCode = upstream.status;
+  upstream.headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    if (
+      lower === 'content-length' ||
+      lower === 'connection' ||
+      lower === 'transfer-encoding' ||
+      lower === 'content-encoding'
+    ) {
+      return;
+    }
+    res.setHeader(key, value);
+  });
+
+  if (method === 'HEAD' || upstream.status === 204 || upstream.status === 304) {
+    res.end();
+    return;
+  }
+  const bytes = Buffer.from(await upstream.arrayBuffer());
+  res.end(bytes);
 }
 
 function serveStatic(req, res, prefix) {
@@ -429,10 +515,10 @@ function serveStatic(req, res, prefix) {
 const server = http.createServer((req, res) => {
   // Allow local origins (Bob 3000, DevStudio 5173, etc.)
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, authorization, x-workspace-id, x-widget-type, x-filename, x-asset-id, x-variant'
+    'Content-Type, authorization, x-account-id, x-workspace-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-variant, x-source, x-tokyo-l10n-bridge'
   );
 
   if (req.method === 'OPTIONS') {
@@ -453,7 +539,7 @@ const server = http.createServer((req, res) => {
 
   if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/renders/')) {
     (async () => {
-      const upstream = await fetch(`http://localhost:8791${req.url}`, { method: req.method });
+      const upstream = await fetch(`${tokyoWorkerBase}${req.url}`, { method: req.method });
       res.statusCode = upstream.status;
       const contentType = upstream.headers.get('content-type');
       if (contentType) res.setHeader('Content-Type', contentType);
@@ -473,52 +559,25 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (shouldProxyMutableToWorker(req, pathname)) {
+    proxyMutableToWorker(req, res).catch((err) => {
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      sendJson(res, 502, {
+        error: 'WORKER_PROXY_FAILED',
+        detail: err instanceof Error ? err.message : 'Bad gateway',
+      });
+    });
+    return;
+  }
+
   if (req.method === 'POST' && pathname === '/workspace-assets/upload') {
-    (async () => {
-      const workspaceId = normalizeWorkspaceId(req.headers['x-workspace-id']);
-      if (!workspaceId) {
-        sendJson(res, 422, { error: 'INVALID_WORKSPACE_ID' });
-        return;
-      }
-
-      const filename = String(req.headers['x-filename'] || '').trim();
-      const variant = String(req.headers['x-variant'] || 'original').trim() || 'original';
-      if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-        sendJson(res, 422, { error: 'INVALID_VARIANT' });
-        return;
-      }
-
-      const assetId = (() => {
-        const requested = String(req.headers['x-asset-id'] || '').trim();
-        if (requested) return /^[a-f0-9-]{36}$/i.test(requested) ? requested : null;
-        return crypto.randomUUID();
-      })();
-      if (!assetId) {
-        sendJson(res, 422, { error: 'INVALID_ASSET_ID' });
-        return;
-      }
-
-      const body = await readRequestBody(req);
-      if (!body || body.length === 0) {
-        sendJson(res, 422, { error: 'EMPTY_BODY' });
-        return;
-      }
-
-      const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
-      const baseRel = path.posix.join('workspace-assets', workspaceId, assetId);
-      const relativePath = path.posix.join(baseRel, `${variant}.${ext}`);
-      const absDir = path.join(baseDir, baseRel);
-      const absPath = path.join(baseDir, relativePath);
-      ensureDir(absDir);
-      fs.writeFileSync(absPath, body);
-
-      const host = req.headers.host || `localhost:${port}`;
-      const publicUrl = `http://${host}/${relativePath}`;
-      sendJson(res, 200, { workspaceId, assetId, variant, ext, relativePath, url: publicUrl });
-    })().catch((err) => {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end(err instanceof Error ? err.message : 'Internal server error');
+    sendJson(res, 410, {
+      error: {
+        kind: 'DENY',
+        reasonKey: 'tokyo.errors.assets.legacyUploadRemoved',
+        detail: 'Use POST /assets/upload',
+      },
     });
     return;
   }
@@ -737,9 +796,10 @@ const server = http.createServer((req, res) => {
       }
 
       const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
+      const safeFilename = sanitizeUploadFilename(filename, ext);
       const baseRel = path.posix.join('widgets', widgetType, 'assets', 'uploads', assetId);
-      const relativePath = path.posix.join(baseRel, `${variant}.${ext}`);
-      const absDir = path.join(baseDir, baseRel);
+      const relativePath = path.posix.join(baseRel, variant, safeFilename);
+      const absDir = path.join(baseDir, baseRel, variant);
       const absPath = path.join(baseDir, relativePath);
       ensureDir(absDir);
       fs.writeFileSync(absPath, body);
@@ -756,48 +816,12 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && pathname === '/curated-assets/upload') {
-    (async () => {
-      const publicId = normalizeCuratedPublicId(req.headers['x-public-id']);
-      if (!publicId) {
-        sendJson(res, 422, { error: 'INVALID_PUBLIC_ID' });
-        return;
-      }
-
-      const widgetType = normalizeWidgetType(req.headers['x-widget-type']);
-      if (!widgetType) {
-        sendJson(res, 422, { error: 'INVALID_WIDGET_TYPE' });
-        return;
-      }
-
-      const filename = String(req.headers['x-filename'] || '').trim();
-      const variant = String(req.headers['x-variant'] || 'original').trim() || 'original';
-      if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
-        sendJson(res, 422, { error: 'INVALID_VARIANT' });
-        return;
-      }
-
-      const assetId = crypto.randomUUID();
-      const body = await readRequestBody(req);
-      if (!body || body.length === 0) {
-        sendJson(res, 422, { error: 'EMPTY_BODY' });
-        return;
-      }
-
-      const ext = pickExtension({ filename, contentType: req.headers['content-type'] });
-      const baseRel = path.posix.join('curated-assets', widgetType, publicId, assetId);
-      const relativePath = path.posix.join(baseRel, `${variant}.${ext}`);
-      const absDir = path.join(baseDir, baseRel);
-      const absPath = path.join(baseDir, relativePath);
-      ensureDir(absDir);
-      fs.writeFileSync(absPath, body);
-
-      const host = req.headers.host || `localhost:${port}`;
-      const publicUrl = `http://${host}/${relativePath}`;
-      sendJson(res, 200, { widgetType, publicId, assetId, variant, ext, relativePath, url: publicUrl });
-    })().catch((err) => {
-      res.statusCode = 500;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end(err instanceof Error ? err.message : 'Internal server error');
+    sendJson(res, 410, {
+      error: {
+        kind: 'DENY',
+        reasonKey: 'tokyo.errors.assets.legacyUploadRemoved',
+        detail: 'Use POST /assets/upload',
+      },
     });
     return;
   }

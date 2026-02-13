@@ -57,6 +57,18 @@ function resolveL10nHttpBase(env: Env): string | null {
   return raw.replace(/\/+$/, '');
 }
 
+const TOKYO_L10N_BRIDGE_HEADER = 'x-tokyo-l10n-bridge';
+
+function buildL10nBridgeHeaders(env: Env, init?: HeadersInit): Headers {
+  const headers = new Headers(init);
+  headers.set(TOKYO_L10N_BRIDGE_HEADER, '1');
+  const token = (env.TOKYO_DEV_JWT || '').trim();
+  if (token && !headers.has('authorization')) {
+    headers.set('authorization', `Bearer ${token}`);
+  }
+  return headers;
+}
+
 async function supabaseFetch(env: Env, pathnameWithQuery: string, init?: RequestInit) {
   const baseUrl = requireSupabaseEnv(env, 'SUPABASE_URL').replace(/\/+$/, '');
   const key = requireSupabaseEnv(env, 'SUPABASE_SERVICE_ROLE_KEY');
@@ -94,6 +106,19 @@ function pickExtension(filename: string | null, contentType: string | null): str
   return 'bin';
 }
 
+function sanitizeUploadFilename(filename: string | null, ext: string): string {
+  const raw = String(filename || '').trim();
+  const basename = raw.split(/[\\/]/).pop() || '';
+  const stripped = basename.split('?')[0].split('#')[0];
+  const stemRaw = stripped.replace(/\.[^.]+$/, '');
+  const normalizedStem = stemRaw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const safeStem = (normalizedStem || 'upload').slice(0, 64);
+  const safeExt = String(ext || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') || 'bin';
+  return `${safeStem}.${safeExt}`;
+}
+
 function guessContentTypeFromExt(ext: string): string {
   switch (ext.toLowerCase()) {
     case 'css':
@@ -129,8 +154,11 @@ function guessContentTypeFromExt(ext: string): string {
 function withCors(res: Response): Response {
   const headers = new Headers(res.headers);
   headers.set('access-control-allow-origin', '*');
-  headers.set('access-control-allow-methods', 'GET,POST,PUT,OPTIONS');
-  headers.set('access-control-allow-headers', 'authorization, content-type, x-workspace-id, x-filename, x-variant');
+  headers.set('access-control-allow-methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  headers.set(
+    'access-control-allow-headers',
+    'authorization, content-type, x-account-id, x-workspace-id, x-filename, x-variant, x-public-id, x-widget-type, x-source, x-tokyo-l10n-bridge',
+  );
   return new Response(res.body, { status: res.status, headers });
 }
 
@@ -395,23 +423,97 @@ async function cleanOldLayerOutputs(
   } while (cursor);
 }
 
-async function deleteLayerArtifacts(env: Env, publicId: string, layer: string, layerKey: string): Promise<void> {
+function layerOverlayPath(publicId: string, layer: string, layerKey: string, outName: string): string {
+  return `l10n/instances/${publicId}/${layer}/${layerKey}/${outName}`;
+}
+
+function layerBaseSnapshotPath(publicId: string, baseFingerprint: string): string {
+  return `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
+}
+
+function layerIndexPath(publicId: string): string {
+  return `l10n/instances/${publicId}/index.json`;
+}
+
+async function putLayerOverlayArtifactDirect(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+  overlay: L10nOverlay,
+  opts?: { cleanupOld?: boolean },
+): Promise<string> {
+  const stable = prettyStableJson(overlay);
+  const fingerprint = overlay.baseFingerprint ?? '';
+  if (!/^[a-f0-9]{64}$/i.test(fingerprint)) {
+    throw new Error('[tokyo] Missing baseFingerprint for deterministic l10n path');
+  }
+  const outName = `${fingerprint}.ops.json`;
+  const key = layerOverlayPath(publicId, layer, layerKey, outName);
+
+  await env.TOKYO_R2.put(key, stable, {
+    httpMetadata: {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: 'public, max-age=31536000, immutable',
+    },
+  });
+
+  if (opts?.cleanupOld) {
+    await cleanOldLayerOutputs(env, publicId, layer, layerKey, key);
+  }
+  return outName;
+}
+
+async function deleteLayerArtifactsDirectWithResult(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+): Promise<boolean> {
+  const prefix = `l10n/instances/${publicId}/${layer}/${layerKey}/`;
+  let deleted = false;
+  let cursor: string | undefined = undefined;
+  do {
+    const list = await env.TOKYO_R2.list({ prefix, cursor });
+    for (const obj of list.objects) {
+      if (!obj.key.endsWith('.ops.json')) continue;
+      deleted = true;
+      await env.TOKYO_R2.delete(obj.key);
+    }
+    cursor = list.truncated ? list.cursor : undefined;
+  } while (cursor);
+
+  return deleted;
+}
+
+async function deleteLayerArtifactsWithResult(
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+): Promise<boolean> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(
       `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/${encodeURIComponent(layer)}/${encodeURIComponent(
         layerKey
       )}`,
-      { method: 'DELETE' }
+      { method: 'DELETE', headers: buildL10nBridgeHeaders(env) },
     );
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
       throw new Error(`[tokyo] HTTP delete failed (${res.status}): ${detail}`);
     }
-    return;
+    const payload = (await res.json().catch(() => null)) as { deleted?: unknown } | null;
+    if (typeof payload?.deleted === 'boolean') return payload.deleted;
+    return true;
   }
 
-  await cleanOldLayerOutputs(env, publicId, layer, layerKey, '');
+  return deleteLayerArtifactsDirectWithResult(env, publicId, layer, layerKey);
+}
+
+async function deleteLayerArtifacts(env: Env, publicId: string, layer: string, layerKey: string): Promise<void> {
+  await deleteLayerArtifactsWithResult(env, publicId, layer, layerKey);
 }
 
 async function publishLayerOverlayArtifacts(
@@ -429,11 +531,11 @@ async function publishLayerOverlayArtifacts(
       )}`,
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: buildL10nBridgeHeaders(env, { 'content-type': 'application/json' }),
         body: JSON.stringify({
           ...overlay,
         }),
-      }
+      },
     );
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
@@ -447,22 +549,7 @@ async function publishLayerOverlayArtifacts(
     return file;
   }
 
-  const stable = prettyStableJson(overlay);
-  const fingerprint = overlay.baseFingerprint ?? '';
-  if (!/^[a-f0-9]{64}$/i.test(fingerprint)) {
-    throw new Error('[tokyo] Missing baseFingerprint for deterministic l10n path');
-  }
-  const outName = `${fingerprint}.ops.json`;
-  const key = `l10n/instances/${publicId}/${layer}/${layerKey}/${outName}`;
-
-  await env.TOKYO_R2.put(key, stable, {
-    httpMetadata: {
-      contentType: 'application/json; charset=utf-8',
-      cacheControl: 'public, max-age=31536000, immutable',
-    },
-  });
-
-  return outName;
+  return putLayerOverlayArtifactDirect(env, publicId, layer, layerKey, overlay);
 }
 
 async function loadL10nBaseSnapshot(
@@ -501,6 +588,26 @@ async function loadL10nBaseSnapshot(
   return snapshot;
 }
 
+async function putBaseSnapshotArtifactDirect(
+  env: Env,
+  publicId: string,
+  baseFingerprint: string,
+  snapshot: Record<string, string>,
+): Promise<string> {
+  const payload: L10nBaseSnapshot = { v: 1, publicId, baseFingerprint, snapshot };
+  const stable = prettyStableJson(payload);
+  const outName = `${baseFingerprint}.snapshot.json`;
+  const key = layerBaseSnapshotPath(publicId, baseFingerprint);
+
+  await env.TOKYO_R2.put(key, stable, {
+    httpMetadata: {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: 'public, max-age=31536000, immutable',
+    },
+  });
+  return outName;
+}
+
 async function publishBaseSnapshotArtifact(
   env: Env,
   publicId: string,
@@ -510,17 +617,14 @@ async function publishBaseSnapshotArtifact(
   const baseFingerprint = normalizeSha256Hex(baseFingerprintRaw);
   if (!baseFingerprint) return;
 
-  const payload: L10nBaseSnapshot = { v: 1, publicId, baseFingerprint, snapshot };
-  const stable = prettyStableJson(payload);
-
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(
       `${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/bases/${encodeURIComponent(baseFingerprint)}`,
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: stable,
+        headers: buildL10nBridgeHeaders(env, { 'content-type': 'application/json' }),
+        body: prettyStableJson({ v: 1, publicId, baseFingerprint, snapshot }),
       },
     );
     if (!res.ok) {
@@ -530,13 +634,7 @@ async function publishBaseSnapshotArtifact(
     return;
   }
 
-  const key = `l10n/instances/${publicId}/bases/${baseFingerprint}.snapshot.json`;
-  await env.TOKYO_R2.put(key, stable, {
-    httpMetadata: {
-      contentType: 'application/json; charset=utf-8',
-      cacheControl: 'public, max-age=31536000, immutable',
-    },
-  });
+  await putBaseSnapshotArtifactDirect(env, publicId, baseFingerprint, snapshot);
 }
 
 async function loadInstanceOverlayRow(
@@ -575,17 +673,147 @@ async function loadInstanceOverlaysForPublicId(env: Env, publicId: string): Prom
   return ((await res.json().catch(() => [])) as InstanceOverlayRow[]).filter(Boolean);
 }
 
+function assertLayerIndexShape(payload: any, publicId: string): LayerIndex {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('[tokyo] layer index must be an object');
+  }
+  if (payload.v !== 1) {
+    throw new Error('[tokyo] layer index.v must be 1');
+  }
+  const pid = typeof payload.publicId === 'string' ? payload.publicId.trim() : '';
+  if (pid && pid !== publicId) {
+    throw new Error('[tokyo] layer index.publicId mismatch');
+  }
+  const rawLayers = payload.layers;
+  if (!rawLayers || typeof rawLayers !== 'object' || Array.isArray(rawLayers)) {
+    throw new Error('[tokyo] layer index.layers must be an object');
+  }
+
+  const layers: Record<string, LayerIndexEntry> = {};
+  for (const [rawLayer, rawEntry] of Object.entries(rawLayers)) {
+    const layer = normalizeLayer(rawLayer);
+    if (!layer || !rawEntry || typeof rawEntry !== 'object' || Array.isArray(rawEntry)) continue;
+    const entryRecord = rawEntry as Record<string, unknown>;
+    const rawKeys = Array.isArray(entryRecord.keys) ? entryRecord.keys : [];
+    const keys: string[] = [];
+    for (const candidate of rawKeys) {
+      const normalized = normalizeLayerKey(layer, String(candidate ?? ''));
+      if (!normalized || keys.includes(normalized)) continue;
+      keys.push(normalized);
+    }
+    if (!keys.length) continue;
+    keys.sort((a, b) => a.localeCompare(b));
+
+    const entry: LayerIndexEntry = { keys };
+
+    const rawFingerprints = entryRecord.lastPublishedFingerprint;
+    if (rawFingerprints && typeof rawFingerprints === 'object' && !Array.isArray(rawFingerprints)) {
+      const mapped: Record<string, string> = {};
+      for (const [rawKey, rawFingerprint] of Object.entries(rawFingerprints as Record<string, unknown>)) {
+        const normalizedKey = normalizeLayerKey(layer, rawKey);
+        const fingerprint = normalizeSha256Hex(rawFingerprint);
+        if (!normalizedKey || !fingerprint) continue;
+        mapped[normalizedKey] = fingerprint;
+      }
+      if (Object.keys(mapped).length) {
+        entry.lastPublishedFingerprint = mapped;
+      }
+    }
+
+    if (layer === 'locale') {
+      const rawGeoTargets = entryRecord.geoTargets;
+      if (rawGeoTargets && typeof rawGeoTargets === 'object' && !Array.isArray(rawGeoTargets)) {
+        const mapped: Record<string, string[]> = {};
+        for (const [rawKey, rawCountries] of Object.entries(rawGeoTargets as Record<string, unknown>)) {
+          const normalizedKey = normalizeLayerKey(layer, rawKey);
+          const normalizedGeo = normalizeGeoCountries(rawCountries);
+          if (!normalizedKey || !normalizedGeo) continue;
+          mapped[normalizedKey] = normalizedGeo;
+        }
+        if (Object.keys(mapped).length) {
+          entry.geoTargets = mapped;
+        }
+      }
+    }
+
+    layers[layer] = entry;
+  }
+
+  return { v: 1, publicId, layers };
+}
+
+async function loadLayerIndexDirect(env: Env, publicId: string): Promise<LayerIndex | null> {
+  const obj = await env.TOKYO_R2.get(layerIndexPath(publicId));
+  if (!obj) return null;
+  const payload = (await obj.json().catch(() => null)) as any;
+  if (!payload) return null;
+  return assertLayerIndexShape(payload, publicId);
+}
+
+async function putLayerIndexDirect(env: Env, index: LayerIndex): Promise<void> {
+  await env.TOKYO_R2.put(layerIndexPath(index.publicId), prettyStableJson(index), {
+    httpMetadata: {
+      contentType: 'application/json; charset=utf-8',
+      cacheControl: 'public, max-age=300, stale-while-revalidate=600',
+    },
+  });
+}
+
+async function deleteLayerIndexDirect(env: Env, publicId: string): Promise<void> {
+  await env.TOKYO_R2.delete(layerIndexPath(publicId));
+}
+
+async function removeLayerIndexEntryDirect(env: Env, publicId: string, layer: string, layerKey: string): Promise<void> {
+  const index = await loadLayerIndexDirect(env, publicId);
+  if (!index?.layers?.[layer]) return;
+  const current = index.layers[layer]!;
+  const nextKeys = current.keys.filter((key) => key !== layerKey);
+  if (!nextKeys.length) {
+    delete index.layers[layer];
+  } else {
+    const nextEntry: LayerIndexEntry = { ...current, keys: nextKeys };
+    if (nextEntry.lastPublishedFingerprint) {
+      const fp = { ...nextEntry.lastPublishedFingerprint };
+      delete fp[layerKey];
+      if (!Object.keys(fp).length) {
+        delete nextEntry.lastPublishedFingerprint;
+      } else {
+        nextEntry.lastPublishedFingerprint = fp;
+      }
+    }
+    if (layer === 'locale' && nextEntry.geoTargets) {
+      const geo = { ...nextEntry.geoTargets };
+      delete geo[layerKey];
+      if (!Object.keys(geo).length) {
+        delete nextEntry.geoTargets;
+      } else {
+        nextEntry.geoTargets = geo;
+      }
+    }
+    index.layers[layer] = nextEntry;
+  }
+
+  if (!Object.keys(index.layers).length) {
+    await deleteLayerIndexDirect(env, publicId);
+    return;
+  }
+  await putLayerIndexDirect(env, index);
+}
+
 async function deleteLayerIndex(env: Env, publicId: string): Promise<void> {
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
-    const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, { method: 'DELETE' });
+    const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, {
+      method: 'DELETE',
+      headers: buildL10nBridgeHeaders(env),
+    });
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
       throw new Error(`[tokyo] HTTP index delete failed (${res.status}): ${detail}`);
     }
     return;
   }
-  await env.TOKYO_R2.delete(`l10n/instances/${publicId}/index.json`);
+  await deleteLayerIndexDirect(env, publicId);
 }
 
 async function publishLayerIndex(env: Env, publicId: string): Promise<void> {
@@ -631,14 +859,13 @@ async function publishLayerIndex(env: Env, publicId: string): Promise<void> {
   }
 
   const index: LayerIndex = { v: 1, publicId, layers };
-  const payload = prettyStableJson(index);
 
   const httpBase = resolveL10nHttpBase(env);
   if (httpBase) {
     const res = await fetch(`${httpBase}/l10n/instances/${encodeURIComponent(publicId)}/index`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: payload,
+      headers: buildL10nBridgeHeaders(env, { 'content-type': 'application/json' }),
+      body: prettyStableJson(index),
     });
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
@@ -647,12 +874,7 @@ async function publishLayerIndex(env: Env, publicId: string): Promise<void> {
     return;
   }
 
-  await env.TOKYO_R2.put(`l10n/instances/${publicId}/index.json`, payload, {
-    httpMetadata: {
-      contentType: 'application/json; charset=utf-8',
-      cacheControl: 'public, max-age=300, stale-while-revalidate=600',
-    },
-  });
+  await putLayerIndexDirect(env, index);
 }
 
 async function handlePutL10nOverlay(
@@ -680,8 +902,108 @@ async function handlePutL10nOverlay(
     return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail } }, { status: 422 });
   }
 
-  const outName = await publishLayerOverlayArtifacts(env, publicId, layer, layerKey, overlay);
+  const outName = await putLayerOverlayArtifactDirect(env, publicId, layer, layerKey, overlay, { cleanupOld: true });
   return json({ publicId, layer, layerKey, file: outName }, { status: 200 });
+}
+
+async function handleDeleteL10nOverlay(
+  req: Request,
+  env: Env,
+  publicId: string,
+  layer: string,
+  layerKey: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  const deleted = await deleteLayerArtifactsDirectWithResult(env, publicId, layer, layerKey);
+  await removeLayerIndexEntryDirect(env, publicId, layer, layerKey);
+  return json({ publicId, layer, layerKey, deleted }, { status: 200 });
+}
+
+async function handlePutL10nLayerIndex(req: Request, env: Env, publicId: string): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  let payload: any;
+  try {
+    payload = await req.json();
+  } catch {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }, { status: 422 });
+  }
+
+  let index: LayerIndex;
+  try {
+    index = assertLayerIndexShape(payload, publicId);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail } }, { status: 422 });
+  }
+
+  if (!Object.keys(index.layers).length) {
+    await deleteLayerIndexDirect(env, publicId);
+    return json({ publicId, layers: {} }, { status: 200 });
+  }
+
+  await putLayerIndexDirect(env, index);
+  return json({ publicId, layers: index.layers }, { status: 200 });
+}
+
+async function handleDeleteL10nLayerIndex(req: Request, env: Env, publicId: string): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+  await deleteLayerIndexDirect(env, publicId);
+  return json({ publicId, deleted: true }, { status: 200 });
+}
+
+async function handlePutL10nBaseSnapshot(
+  req: Request,
+  env: Env,
+  publicId: string,
+  baseFingerprint: string,
+): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  let payload: any;
+  try {
+    payload = await req.json();
+  } catch {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }, { status: 422 });
+  }
+
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 });
+  }
+  if (payload.v !== 1) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail: 'snapshot.v must be 1' } }, { status: 422 });
+  }
+  if (payload.publicId && String(payload.publicId) !== publicId) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail: 'snapshot.publicId mismatch' } },
+      { status: 422 },
+    );
+  }
+  if (payload.baseFingerprint && normalizeSha256Hex(payload.baseFingerprint) !== baseFingerprint) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail: 'snapshot.baseFingerprint mismatch' } },
+      { status: 422 },
+    );
+  }
+  if (!payload.snapshot || typeof payload.snapshot !== 'object' || Array.isArray(payload.snapshot)) {
+    return json(
+      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid', detail: 'snapshot.snapshot must be an object' } },
+      { status: 422 },
+    );
+  }
+
+  const snapshot: Record<string, string> = {};
+  for (const [key, value] of Object.entries(payload.snapshot as Record<string, unknown>)) {
+    if (typeof value !== 'string') continue;
+    snapshot[String(key)] = value;
+  }
+
+  const outName = await putBaseSnapshotArtifactDirect(env, publicId, baseFingerprint, snapshot);
+  return json({ publicId, baseFingerprint, file: outName }, { status: 200 });
 }
 
 function isPublishJob(value: unknown): value is L10nPublishQueueJob {
@@ -764,10 +1086,10 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
   try {
     payload = await req.json();
   } catch {
-    return json({ error: 'INVALID_JSON' }, { status: 422 });
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } }, { status: 422 });
   }
   if (!payload || typeof payload !== 'object') {
-    return json({ error: 'INVALID_PAYLOAD' }, { status: 422 });
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 });
   }
 
   const { publicId: rawPublicId, layer: rawLayer, layerKey: rawLayerKey, action } = payload as L10nPublishRequest;
@@ -775,7 +1097,7 @@ async function handlePublishLocaleRequest(req: Request, env: Env): Promise<Respo
   const layer = normalizeLayer(String(rawLayer || ''));
   const layerKey = layer ? normalizeLayerKey(layer, String(rawLayerKey || '')) : null;
   if (!publicId || !layer || !layerKey) {
-    return json({ error: 'INVALID_L10N_PATH' }, { status: 422 });
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 });
   }
 
   const resolvedAction = action === 'delete' ? 'delete' : 'upsert';
@@ -963,6 +1285,41 @@ async function consumeWorkspaceBudget(args: {
   return { ok: true, used, nextUsed };
 }
 
+async function consumeAccountBudget(args: {
+  env: Env;
+  accountId: string;
+  budgetKey: string;
+  max: number | null;
+  amount?: number;
+}): Promise<
+  | { ok: true; used: number; nextUsed: number }
+  | { ok: false; used: number; max: number; reasonKey: 'coreui.upsell.reason.budgetExceeded'; detail: string }
+> {
+  const amount = typeof args.amount === 'number' ? args.amount : 1;
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('[tokyo] consumeAccountBudget amount must be positive');
+  if (args.max == null) return { ok: true, used: 0, nextUsed: amount };
+  const max = Math.max(0, Math.floor(args.max));
+  const kv = args.env.USAGE_KV;
+  if (!kv) return { ok: true, used: 0, nextUsed: amount };
+
+  const periodKey = getUtcPeriodKey(new Date());
+  const counterKey = `usage.budget.v1.${args.budgetKey}.${periodKey}.acct:${args.accountId}`;
+  const used = await readKvCounter(kv, counterKey);
+  const nextUsed = used + amount;
+  if (nextUsed > max) {
+    return {
+      ok: false,
+      used,
+      max,
+      reasonKey: 'coreui.upsell.reason.budgetExceeded',
+      detail: `${args.budgetKey} budget exceeded (max=${max})`,
+    };
+  }
+
+  await kv.put(counterKey, String(nextUsed), { expirationTtl: 400 * 24 * 60 * 60 });
+  return { ok: true, used, nextUsed };
+}
+
 function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
   const entry = matrix.capabilities[L10N_VERSION_CAP_KEY];
@@ -1033,6 +1390,277 @@ async function loadWorkspaceTier(env: Env, workspaceId: string): Promise<string 
   }
   const rows = (await res.json().catch(() => [])) as Array<{ tier?: string | null }>;
   return rows?.[0]?.tier ?? null;
+}
+
+type WorkspaceUploadContext = {
+  tier: string | null;
+  accountId: string | null;
+};
+
+async function loadWorkspaceUploadContext(env: Env, workspaceId: string): Promise<WorkspaceUploadContext | null> {
+  if (!isUuid(workspaceId)) return null;
+  const params = new URLSearchParams({
+    select: 'tier,account_id',
+    id: `eq.${workspaceId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/workspaces?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase workspace read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{
+    tier?: string | null;
+    account_id?: string | null;
+  }>;
+  const row = rows?.[0];
+  if (!row) return null;
+  return {
+    tier: typeof row.tier === 'string' ? row.tier : null,
+    accountId: typeof row.account_id === 'string' ? row.account_id : null,
+  };
+}
+
+type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
+
+function normalizeAccountAssetSource(raw: string | null): AccountAssetSource | null {
+  const value = String(raw || '').trim();
+  if (!value) return 'api';
+  if (value === 'bob.publish' || value === 'bob.export' || value === 'devstudio' || value === 'promotion' || value === 'api') {
+    return value;
+  }
+  return null;
+}
+
+type AccountUploadProfile = {
+  status: 'active' | 'disabled';
+  isPlatform: boolean;
+};
+
+async function loadAccountUploadProfile(env: Env, accountId: string): Promise<AccountUploadProfile | null> {
+  if (!isUuid(accountId)) return null;
+  const params = new URLSearchParams({
+    select: 'status,is_platform',
+    id: `eq.${accountId}`,
+    limit: '1',
+  });
+  const res = await supabaseFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account read failed (${res.status}) ${text}`.trim());
+  }
+  const rows = (await res.json().catch(() => [])) as Array<{ status?: unknown; is_platform?: unknown }>;
+  const row = rows?.[0];
+  if (!row) return null;
+  const status = row.status === 'disabled' ? 'disabled' : row.status === 'active' ? 'active' : null;
+  if (!status) return null;
+  return {
+    status,
+    isPlatform: row.is_platform === true,
+  };
+}
+
+async function persistAccountAssetMetadata(args: {
+  env: Env;
+  accountId: string;
+  assetId: string;
+  variant: string;
+  key: string;
+  source: AccountAssetSource;
+  originalFilename: string;
+  normalizedFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  sha256: string;
+  workspaceId?: string | null;
+  publicId?: string | null;
+  widgetType?: string | null;
+}): Promise<void> {
+  const assetRow = {
+    asset_id: args.assetId,
+    account_id: args.accountId,
+    workspace_id: args.workspaceId ?? null,
+    public_id: args.publicId ?? null,
+    widget_type: args.widgetType ?? null,
+    source: args.source,
+    original_filename: args.originalFilename,
+    normalized_filename: args.normalizedFilename,
+    content_type: args.contentType,
+    size_bytes: args.sizeBytes,
+    sha256: args.sha256,
+  };
+  const assetRes = await supabaseFetch(args.env, '/rest/v1/account_assets', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify(assetRow),
+  });
+  if (!assetRes.ok) {
+    const text = await assetRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_assets insert failed (${assetRes.status}) ${text}`.trim());
+  }
+
+  const variantRow = {
+    asset_id: args.assetId,
+    account_id: args.accountId,
+    variant: args.variant,
+    r2_key: args.key,
+    filename: args.normalizedFilename,
+    content_type: args.contentType,
+    size_bytes: args.sizeBytes,
+  };
+  const variantRes = await supabaseFetch(args.env, '/rest/v1/account_asset_variants', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify(variantRow),
+  });
+  if (!variantRes.ok) {
+    const text = await variantRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_variants insert failed (${variantRes.status}) ${text}`.trim());
+  }
+}
+
+type DeletedAccountAssetRow = {
+  asset_id: string;
+  account_id: string;
+  deleted_at: string;
+};
+
+type DeletedAccountAssetVariantRow = {
+  asset_id: string;
+  r2_key: string;
+};
+
+function parseBooleanFlag(raw: string | null): boolean {
+  const value = String(raw || '').trim().toLowerCase();
+  return value === '1' || value === 'true' || value === 'yes';
+}
+
+function parseBoundedInt(raw: string | null, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseInt(String(raw || '').trim(), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (parsed < min) return min;
+  if (parsed > max) return max;
+  return parsed;
+}
+
+async function loadDeletedAccountAssetsForPurge(env: Env, cutoffIso: string, limit: number): Promise<DeletedAccountAssetRow[]> {
+  const params = new URLSearchParams({
+    select: 'asset_id,account_id,deleted_at',
+    deleted_at: `lte.${cutoffIso}`,
+    order: 'deleted_at.asc',
+    limit: String(limit),
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_assets?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase deleted account_assets list failed (${res.status}) ${text}`.trim());
+  }
+  return ((await res.json().catch(() => [])) as DeletedAccountAssetRow[]).filter(
+    (row) => Boolean(row?.asset_id && row?.account_id),
+  );
+}
+
+async function loadDeletedAccountAssetVariantKeys(
+  env: Env,
+  assetIds: string[],
+): Promise<DeletedAccountAssetVariantRow[]> {
+  if (!assetIds.length) return [];
+  const params = new URLSearchParams({
+    select: 'asset_id,r2_key',
+    asset_id: `in.(${assetIds.join(',')})`,
+    limit: String(Math.max(200, assetIds.length * 8)),
+  });
+  const res = await supabaseFetch(env, `/rest/v1/account_asset_variants?${params.toString()}`, { method: 'GET' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_variants list failed (${res.status}) ${text}`.trim());
+  }
+  return ((await res.json().catch(() => [])) as DeletedAccountAssetVariantRow[]).filter((row) =>
+    Boolean(row?.asset_id && row?.r2_key),
+  );
+}
+
+async function deleteDeletedAccountAssetsAndVariants(env: Env, assetIds: string[], cutoffIso: string): Promise<void> {
+  if (!assetIds.length) return;
+
+  const variantsDeleteParams = new URLSearchParams({
+    asset_id: `in.(${assetIds.join(',')})`,
+  });
+  const deleteVariantsRes = await supabaseFetch(env, `/rest/v1/account_asset_variants?${variantsDeleteParams.toString()}`, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!deleteVariantsRes.ok) {
+    const text = await deleteVariantsRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_asset_variants delete failed (${deleteVariantsRes.status}) ${text}`.trim());
+  }
+
+  const assetsDeleteParams = new URLSearchParams({
+    asset_id: `in.(${assetIds.join(',')})`,
+    deleted_at: `lte.${cutoffIso}`,
+  });
+  const deleteAssetsRes = await supabaseFetch(env, `/rest/v1/account_assets?${assetsDeleteParams.toString()}`, {
+    method: 'DELETE',
+    headers: { Prefer: 'return=minimal' },
+  });
+  if (!deleteAssetsRes.ok) {
+    const text = await deleteAssetsRes.text().catch(() => '');
+    throw new Error(`[tokyo] Supabase account_assets delete failed (${deleteAssetsRes.status}) ${text}`.trim());
+  }
+}
+
+async function handlePurgeDeletedAccountAssets(req: Request, env: Env): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  const url = new URL(req.url);
+  const dryRun = parseBooleanFlag(url.searchParams.get('dryRun'));
+  const limit = parseBoundedInt(url.searchParams.get('limit'), 100, 1, 200);
+  const retentionDays = parseBoundedInt(url.searchParams.get('retentionDays'), 30, 1, 365);
+  const cutoffIso = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const candidates = await loadDeletedAccountAssetsForPurge(env, cutoffIso, limit);
+  if (!candidates.length) {
+    return json({
+      ok: true,
+      dryRun,
+      retentionDays,
+      cutoffIso,
+      candidates: 0,
+      purgedAssets: 0,
+      purgedObjects: 0,
+    });
+  }
+
+  const assetIds = candidates.map((candidate) => candidate.asset_id);
+  const variantRows = await loadDeletedAccountAssetVariantKeys(env, assetIds);
+
+  if (dryRun) {
+    return json({
+      ok: true,
+      dryRun: true,
+      retentionDays,
+      cutoffIso,
+      candidates: candidates.length,
+      candidateAssetIds: assetIds,
+      candidateObjects: variantRows.length,
+    });
+  }
+
+  for (const row of variantRows) {
+    await env.TOKYO_R2.delete(row.r2_key);
+  }
+
+  await deleteDeletedAccountAssetsAndVariants(env, assetIds, cutoffIso);
+  return json({
+    ok: true,
+    dryRun: false,
+    retentionDays,
+    cutoffIso,
+    candidates: candidates.length,
+    purgedAssets: assetIds.length,
+    purgedObjects: variantRows.length,
+  });
 }
 
 async function recordL10nOverlayVersion(env: Env, result: L10nPublishResult): Promise<void> {
@@ -1140,6 +1768,187 @@ async function handleGetL10nAsset(env: Env, key: string): Promise<Response> {
   return new Response(obj.body, { status: 200, headers });
 }
 
+async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
+  const authErr = requireDevAuth(req, env);
+  if (authErr) return authErr;
+
+  const accountId = (req.headers.get('x-account-id') || '').trim();
+  if (!accountId || !isUuid(accountId)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
+  }
+
+  const account = await loadAccountUploadProfile(env, accountId);
+  if (!account) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } }, { status: 404 });
+  }
+  if (account.status !== 'active') {
+    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
+  }
+
+  const source = normalizeAccountAssetSource(req.headers.get('x-source'));
+  if (!source) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
+  }
+
+  const workspaceId = (req.headers.get('x-workspace-id') || '').trim();
+  let tier: string | null = account.isPlatform ? 'devstudio' : null;
+  if (workspaceId) {
+    if (!isUuid(workspaceId)) {
+      return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
+    }
+    const workspace = await loadWorkspaceUploadContext(env, workspaceId);
+    if (!workspace) {
+      return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.workspaceId.invalid' } }, { status: 422 });
+    }
+    if (!workspace.accountId || workspace.accountId !== accountId) {
+      return json(
+        { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.account.workspaceMismatch' } },
+        { status: 422 },
+      );
+    }
+    tier = workspace.tier ?? tier;
+  }
+
+  const publicIdRaw = (req.headers.get('x-public-id') || '').trim();
+  const publicId = publicIdRaw ? normalizePublicId(publicIdRaw) : null;
+  if (publicIdRaw && !publicId) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.publicId.invalid' } }, { status: 422 });
+  }
+
+  const widgetTypeRaw = (req.headers.get('x-widget-type') || '').trim();
+  const widgetType = widgetTypeRaw ? normalizeWidgetType(widgetTypeRaw) : null;
+  if (widgetTypeRaw && !widgetType) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } }, { status: 422 });
+  }
+
+  const variant = (req.headers.get('x-variant') || '').trim() || 'original';
+  if (!/^[a-z0-9][a-z0-9_-]{0,31}$/i.test(variant)) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.variant.invalid' } }, { status: 422 });
+  }
+
+  const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
+  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
+  const ext = pickExtension(filename, contentType);
+  const safeFilename = sanitizeUploadFilename(filename, ext);
+
+  const maxBytes = resolveUploadSizeLimitBytes(tier);
+  const contentLengthRaw = (req.headers.get('content-length') || '').trim();
+  const contentLength = contentLengthRaw ? Number.parseInt(contentLengthRaw, 10) : NaN;
+  if (maxBytes != null && Number.isFinite(contentLength) && contentLength > maxBytes) {
+    return json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.upsell.reason.capReached',
+          upsell: 'UP',
+          detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`,
+        },
+      },
+      { status: 413 },
+    );
+  }
+
+  const body = await req.arrayBuffer();
+  if (!body || body.byteLength === 0) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
+  }
+  if (maxBytes != null && body.byteLength > maxBytes) {
+    return json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.upsell.reason.capReached',
+          upsell: 'UP',
+          detail: `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`,
+        },
+      },
+      { status: 413 },
+    );
+  }
+
+  const uploadsMax = account.isPlatform ? null : resolveUploadsCountBudgetMax(tier);
+  const uploadsBytesMax = account.isPlatform ? null : resolveUploadsBytesBudgetMax(tier);
+
+  const bytesBudget = await consumeAccountBudget({
+    env,
+    accountId,
+    budgetKey: UPLOADS_BYTES_BUDGET_KEY,
+    max: uploadsBytesMax,
+    amount: body.byteLength,
+  });
+  if (!bytesBudget.ok) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: bytesBudget.reasonKey, upsell: 'UP', detail: bytesBudget.detail } },
+      { status: 403 },
+    );
+  }
+
+  const uploadBudget = await consumeAccountBudget({
+    env,
+    accountId,
+    budgetKey: UPLOADS_COUNT_BUDGET_KEY,
+    max: uploadsMax,
+    amount: 1,
+  });
+  if (!uploadBudget.ok) {
+    return json(
+      { error: { kind: 'DENY', reasonKey: uploadBudget.reasonKey, upsell: 'UP', detail: uploadBudget.detail } },
+      { status: 403 },
+    );
+  }
+
+  const assetId = crypto.randomUUID();
+  const key = `assets/accounts/${accountId}/${assetId}/${variant}/${safeFilename}`;
+  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
+
+  try {
+    await persistAccountAssetMetadata({
+      env,
+      accountId,
+      assetId,
+      variant,
+      key,
+      source,
+      originalFilename: filename,
+      normalizedFilename: safeFilename,
+      contentType,
+      sizeBytes: body.byteLength,
+      sha256: await sha256Hex(body),
+      workspaceId: workspaceId || null,
+      publicId,
+      widgetType,
+    });
+  } catch (error) {
+    await env.TOKYO_R2.delete(key);
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(
+      { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.assets.metadataWriteFailed', detail } },
+      { status: 500 },
+    );
+  }
+
+  const origin = new URL(req.url).origin;
+  const url = `${origin}/${key}`;
+  return json(
+    {
+      accountId,
+      assetId,
+      variant,
+      filename: safeFilename,
+      ext,
+      contentType,
+      sizeBytes: body.byteLength,
+      key,
+      url,
+      source,
+      workspaceId: workspaceId || null,
+      publicId: publicId ?? null,
+      widgetType: widgetType ?? null,
+    },
+    { status: 200 },
+  );
+}
+
 async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Response> {
   const authErr = requireDevAuth(req, env);
   if (authErr) return authErr;
@@ -1159,6 +1968,7 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
+  const safeFilename = sanitizeUploadFilename(filename, ext);
 
   const maxBytes = resolveUploadSizeLimitBytes(tier);
   const contentLengthRaw = (req.headers.get('content-length') || '').trim();
@@ -1207,7 +2017,7 @@ async function handleUploadWorkspaceAsset(req: Request, env: Env): Promise<Respo
   }
 
   const assetId = crypto.randomUUID();
-  const key = `workspace-assets/${workspaceId}/${assetId}/${variant}.${ext}`;
+  const key = `workspace-assets/${workspaceId}/${assetId}/${variant}/${safeFilename}`;
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   const origin = new URL(req.url).origin;
@@ -1237,6 +2047,7 @@ async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Respons
   const filename = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
   const ext = pickExtension(filename, contentType);
+  const safeFilename = sanitizeUploadFilename(filename, ext);
 
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
@@ -1244,7 +2055,7 @@ async function handleUploadCuratedAsset(req: Request, env: Env): Promise<Respons
   }
 
   const assetId = crypto.randomUUID();
-  const key = `curated-assets/${widgetType}/${publicId}/${assetId}/${variant}.${ext}`;
+  const key = `curated-assets/${widgetType}/${publicId}/${assetId}/${variant}/${safeFilename}`;
   await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
   const origin = new URL(req.url).origin;
@@ -1602,9 +2413,29 @@ export default {
         return withCors(await handlePublishLocaleRequest(req, env));
       }
 
-      if (pathname === '/workspace-assets/upload') {
+      if (pathname === '/assets/purge-deleted') {
         if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        return withCors(await handleUploadWorkspaceAsset(req, env));
+        return withCors(await handlePurgeDeletedAccountAssets(req, env));
+      }
+
+      if (pathname === '/workspace-assets/upload') {
+        return withCors(
+          json(
+            { error: { kind: 'DENY', reasonKey: 'tokyo.errors.assets.legacyUploadRemoved', detail: 'Use POST /assets/upload' } },
+            { status: 410 },
+          ),
+        );
+      }
+
+      if (pathname === '/assets/upload') {
+        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        return withCors(await handleUploadAccountAsset(req, env));
+      }
+
+      if (pathname.startsWith('/assets/accounts/')) {
+        if (req.method !== 'GET') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const key = pathname.replace(/^\//, '');
+        return withCors(await handleGetWorkspaceAsset(req, env, key));
       }
 
       if (pathname.startsWith('/workspace-assets/')) {
@@ -1614,8 +2445,12 @@ export default {
       }
 
       if (pathname === '/curated-assets/upload') {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
-        return withCors(await handleUploadCuratedAsset(req, env));
+        return withCors(
+          json(
+            { error: { kind: 'DENY', reasonKey: 'tokyo.errors.assets.legacyUploadRemoved', detail: 'Use POST /assets/upload' } },
+            { status: 410 },
+          ),
+        );
       }
 
       if (pathname.startsWith('/curated-assets/')) {
@@ -1624,16 +2459,47 @@ export default {
         return withCors(await handleGetCuratedAsset(req, env, key));
       }
 
+      const l10nIndexMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/index$/);
+      if (l10nIndexMatch) {
+        if (req.method !== 'POST' && req.method !== 'DELETE') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
+        const publicId = normalizePublicId(decodeURIComponent(l10nIndexMatch[1]));
+        if (!publicId) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        }
+        if (req.method === 'POST') {
+          return withCors(await handlePutL10nLayerIndex(req, env, publicId));
+        }
+        return withCors(await handleDeleteL10nLayerIndex(req, env, publicId));
+      }
+
+      const l10nBaseSnapshotMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/bases\/([^/]+)$/);
+      if (l10nBaseSnapshotMatch) {
+        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        const publicId = normalizePublicId(decodeURIComponent(l10nBaseSnapshotMatch[1]));
+        const baseFingerprint = normalizeSha256Hex(decodeURIComponent(l10nBaseSnapshotMatch[2]));
+        if (!publicId || !baseFingerprint) {
+          return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
+        }
+        return withCors(await handlePutL10nBaseSnapshot(req, env, publicId, baseFingerprint));
+      }
+
       const l10nLayerMatch = pathname.match(/^\/l10n\/instances\/([^/]+)\/([^/]+)\/([^/]+)$/);
       if (l10nLayerMatch) {
-        if (req.method !== 'POST') return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        if (req.method !== 'POST' && req.method !== 'DELETE') {
+          return withCors(json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 }));
+        }
         const publicId = normalizePublicId(decodeURIComponent(l10nLayerMatch[1]));
         const layer = normalizeLayer(decodeURIComponent(l10nLayerMatch[2]));
         const layerKey = layer ? normalizeLayerKey(layer, decodeURIComponent(l10nLayerMatch[3])) : null;
         if (!publicId || !layer || !layerKey) {
           return withCors(json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalid' } }, { status: 422 }));
         }
-        return withCors(await handlePutL10nOverlay(req, env, publicId, layer, layerKey));
+        if (req.method === 'POST') {
+          return withCors(await handlePutL10nOverlay(req, env, publicId, layer, layerKey));
+        }
+        return withCors(await handleDeleteL10nOverlay(req, env, publicId, layer, layerKey));
       }
 
       const l10nVersionedMatch = pathname.match(/^\/l10n\/v\/[^/]+\/(.+)$/);

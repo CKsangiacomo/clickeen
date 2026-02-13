@@ -71,12 +71,15 @@ Local dev:
 - `tokyo/dev-server.mjs` serves `/i18n/*` from `tokyo/i18n/*`.
 - `tokyo/dev-server.mjs` serves `/workspace-assets/*` from `tokyo/workspace-assets/*` (gitignored).
 - `tokyo/dev-server.mjs` serves `/curated-assets/*` from `tokyo/curated-assets/*` (gitignored).
+- `tokyo/dev-server.mjs` proxies `/assets/accounts/*` reads to `tokyo-worker` for canonical account-owned assets.
 - `tokyo/dev-server.mjs` serves `/l10n/*` from `tokyo/l10n/*`.
 - `tokyo/dev-server.mjs` proxies `/renders/*` to `tokyo-worker` (so Venice can fetch published render snapshots from the same Tokyo origin).
 - `tokyo/dev-server.mjs` also supports versioned l10n fetches by rewriting `/l10n/v/<token>/*` → `/l10n/*` (used by Prague deploys).
 - `tokyo/dev-server.mjs` supports local upload endpoints:
-  - `POST /workspace-assets/upload` (workspace-scoped assets; required header: `x-workspace-id`)
-  - `POST /curated-assets/upload` (curated instance assets; required headers: `x-public-id`, `x-widget-type`)
+  - `POST /assets/upload` (account-owned uploads; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
+  - `POST /assets/purge-deleted` (internal retention helper; optional `retentionDays`, `limit`, `dryRun`)
+  - `POST /workspace-assets/upload` (removed; returns `410`, use `/assets/upload`)
+  - `POST /curated-assets/upload` (removed; returns `410`, use `/assets/upload`)
   - `POST /widgets/upload` (platform/widget-scoped assets; required header: `x-widget-type`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
   - `DELETE /l10n/instances/:publicId/:layer/:layerKey` (dev-only; layered path)
@@ -107,9 +110,12 @@ Build command (repo root):
 
 Cloud-dev:
 - `tokyo-worker` provides a Cloudflare Worker for workspace asset uploads + serving:
-  - `POST /workspace-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-workspace-id`)
+  - `POST /assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required header: `x-account-id`; optional trace headers: `x-workspace-id`, `x-public-id`, `x-widget-type`, `x-source`)
+  - `POST /assets/purge-deleted` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; retention purge for soft-deleted account assets)
+  - `GET /assets/accounts/**` (public, cacheable; canonical account-owned asset reads)
+  - `POST /workspace-assets/upload` (removed; returns `410`, use `/assets/upload`)
   - `GET /workspace-assets/**` (public, cacheable; content-addressed by `assetId`)
-  - `POST /curated-assets/upload` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`; required headers: `x-public-id`, `x-widget-type`)
+  - `POST /curated-assets/upload` (removed; returns `410`, use `/assets/upload`)
   - `GET /curated-assets/**` (public, cacheable; content-addressed by `assetId`)
   - `POST /l10n/instances/:publicId/:layer/:layerKey` (requires `Authorization: Bearer ${TOKYO_DEV_JWT}`)
   - `GET /l10n/**` (public; deterministic overlay paths; immutable by fingerprint, except `index.json`)

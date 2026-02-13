@@ -97,6 +97,7 @@ See [Bob Architecture](./bob.md) and [Widget Architecture](../widgets/WidgetArch
 - `PUT /api/instance/:publicId` — Updates instance `config`/`status` (dev auth in this repo snapshot; production will be workspace-auth)
 - `GET /api/instances` — Dev tooling list (requires dev auth)
 - `GET /api/curated-instances` — Curated/baseline list (requires dev auth)
+  - Query: `includeConfig=0|1` (default `1`). Use `includeConfig=0` for lightweight list UIs that lazy-load config per selected instance.
 - `POST /api/instance` — Creates the instance if missing; otherwise returns the existing snapshot (idempotent)
 
 **Workspace-scoped endpoints (dev tooling + promotion):**
@@ -124,7 +125,7 @@ Curated writes are gated by `PARIS_DEV_JWT` and allowed only in **local** and **
   - **AI**: Paris consumes budgets when issuing grants (ex: `budget.copilot.turns`, personalization budgets for onboarding agents).
   - **Localization**: Paris consumes `budget.l10n.publishes` on overlay publish actions.
   - **Snapshots**: Paris consumes `budget.snapshots.regens` when triggering published render snapshot regeneration.
-  - **Uploads**: Tokyo-worker enforces `uploads.size.max` and consumes `budget.uploads.count` on `/workspace-assets/upload`.
+  - **Uploads**: Tokyo-worker enforces `uploads.size.max` and consumes upload budgets on `/assets/upload`, keyed by account scope (`acct:<accountId>`).
   - **Views**: Venice `/embed/pixel` signs and forwards view events to Paris `POST /api/usage` (capped tiers only) → Frozen Billboard enforcement.
 - Flags are intentionally minimal (currently only `branding.remove` is tiered).
 

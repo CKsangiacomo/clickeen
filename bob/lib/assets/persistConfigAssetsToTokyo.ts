@@ -1,6 +1,9 @@
 'use client';
 
+import { resolveTokyoBaseUrl } from '../env/tokyo';
+
 type PersistScope = 'workspace' | 'curated';
+type PersistSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -10,6 +13,7 @@ function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
   if (!v) return null;
   if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
+  if (/^\/(?:workspace-assets|curated-assets|assets\/accounts)\//i.test(v)) return v;
   const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (match && match[2]) return match[2];
   return null;
@@ -38,6 +42,32 @@ function isNonPersistableUrl(rawUrl: string): boolean {
   return /^(?:data|blob):/i.test(v);
 }
 
+function isLegacyTokyoAssetUrl(rawUrl: string): boolean {
+  const v = String(rawUrl || '').trim();
+  if (!v) return false;
+  if (/^\/workspace-assets\//i.test(v) || /^\/curated-assets\//i.test(v)) return true;
+  if (/^https?:\/\//i.test(v)) {
+    try {
+      const parsed = new URL(v);
+      return /^\/workspace-assets\//i.test(parsed.pathname) || /^\/curated-assets\//i.test(parsed.pathname);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+function resolveFetchUrl(rawUrl: string): string {
+  const v = String(rawUrl || '').trim();
+  if (!v) return v;
+  if (/^(?:data|blob):/i.test(v) || /^https?:\/\//i.test(v)) return v;
+  if (/^\//.test(v)) {
+    const tokyoBase = resolveTokyoBaseUrl().replace(/\/+$/, '');
+    return `${tokyoBase}${v}`;
+  }
+  return v;
+}
+
 function extFromMime(mime: string): string {
   const mt = String(mime || '').toLowerCase();
   if (mt === 'image/png') return 'png';
@@ -52,49 +82,61 @@ function extFromMime(mime: string): string {
 }
 
 async function uploadTokyoAsset({
-  scope,
+  accountId,
   workspaceId,
   publicId,
   widgetType,
+  source = 'api',
   blob,
   filename,
   variant = 'original',
   uploadEndpoint,
 }: {
-  scope: PersistScope;
+  accountId: string;
   workspaceId?: string;
   publicId?: string;
   widgetType?: string;
+  source?: PersistSource;
   blob: Blob;
   filename: string;
   variant?: string;
   uploadEndpoint: string;
 }): Promise<string> {
+  if (!accountId) throw new Error('[persistConfigAssetsToTokyo] Missing accountId for asset upload');
+
   const headers = new Headers();
   headers.set('content-type', blob.type || 'application/octet-stream');
   headers.set('x-filename', filename || 'upload.bin');
   headers.set('x-variant', variant);
+  headers.set('x-account-id', accountId);
+  headers.set('x-source', source);
+  if (workspaceId) headers.set('x-workspace-id', workspaceId);
+  if (publicId) headers.set('x-public-id', publicId);
+  if (widgetType) headers.set('x-widget-type', widgetType);
 
-  if (scope === 'workspace') {
-    if (!workspaceId) throw new Error('[persistConfigAssetsToTokyo] Missing workspaceId for workspace asset upload');
-    headers.set('x-workspace-id', workspaceId);
-  } else if (scope === 'curated') {
-    if (!publicId) throw new Error('[persistConfigAssetsToTokyo] Missing publicId for curated asset upload');
-    if (!widgetType) throw new Error('[persistConfigAssetsToTokyo] Missing widgetType for curated asset upload');
-    headers.set('x-public-id', publicId);
-    headers.set('x-widget-type', widgetType);
-  } else {
-    throw new Error(`[persistConfigAssetsToTokyo] Unknown asset upload scope: ${String(scope)}`);
-  }
-
-  const endpoint = `${uploadEndpoint.replace(/\/$/, '')}?scope=${encodeURIComponent(scope)}&_t=${Date.now()}`;
+  const endpoint = `${uploadEndpoint.replace(/\/$/, '')}?_t=${Date.now()}`;
   const res = await fetch(endpoint, { method: 'POST', headers, body: blob });
   const text = await res.text().catch(() => '');
   if (!res.ok) {
     throw new Error(`[persistConfigAssetsToTokyo] Asset upload failed (HTTP ${res.status})${text ? `: ${text}` : ''}`);
   }
   const json = text ? (JSON.parse(text) as any) : null;
-  const url = json?.url;
+  const keyCandidate =
+    typeof json?.key === 'string'
+      ? json.key.trim()
+      : typeof json?.relativePath === 'string'
+        ? json.relativePath.trim()
+        : '';
+  const url =
+    typeof json?.url === 'string' && json.url.trim()
+      ? json.url.trim()
+      : keyCandidate
+        ? /^https?:\/\//i.test(keyCandidate)
+          ? keyCandidate
+          : keyCandidate.startsWith('/')
+            ? keyCandidate
+            : `/${keyCandidate}`
+        : null;
   if (!url || typeof url !== 'string') throw new Error('[persistConfigAssetsToTokyo] Asset upload missing url');
   return url;
 }
@@ -102,19 +144,25 @@ async function uploadTokyoAsset({
 export async function persistConfigAssetsToTokyo(
   config: Record<string, unknown>,
   {
+    accountId,
     scope = 'workspace',
     workspaceId,
     publicId,
     widgetType,
+    source = 'api',
     uploadEndpoint = '/api/assets/upload',
   }: {
+    accountId: string;
     scope?: PersistScope;
     workspaceId?: string;
     publicId?: string;
     widgetType?: string;
+    source?: PersistSource;
     uploadEndpoint?: string;
   }
 ): Promise<Record<string, unknown>> {
+  void scope;
+  const resolvedSource: PersistSource = source;
   const next = cloneJson(config);
   const cache = new Map<string, string>();
 
@@ -137,17 +185,27 @@ export async function persistConfigAssetsToTokyo(
         }
       }
       const url = extractPrimaryUrl(node);
-      if (!url || !isNonPersistableUrl(url)) return;
+      if (!url) return;
+      const requiresUpload = isNonPersistableUrl(url) || isLegacyTokyoAssetUrl(url);
+      if (!requiresUpload) return;
 
       if (!cache.has(url)) {
-        const blob = await fetch(url).then((r) => r.blob());
+        const fetchUrl = resolveFetchUrl(url);
+        const sourceRes = await fetch(fetchUrl);
+        if (!sourceRes.ok) {
+          throw new Error(
+            `[persistConfigAssetsToTokyo] Failed to fetch source asset (HTTP ${sourceRes.status})`
+          );
+        }
+        const blob = await sourceRes.blob();
         const ext = extFromMime(blob.type);
         const filename = `upload.${ext}`;
         const uploadedUrl = await uploadTokyoAsset({
-          scope,
+          accountId,
           workspaceId,
           publicId,
           widgetType,
+          source: resolvedSource,
           blob,
           filename,
           variant: 'original',
